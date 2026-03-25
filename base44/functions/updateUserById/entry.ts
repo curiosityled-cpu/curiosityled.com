@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 
 Deno.serve(async (req) => {
   try {
@@ -21,13 +21,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'userId and userData are required' }, { status: 400 });
     }
 
-    // Get all users and find by id
-    const allUsers = await base44.asServiceRole.entities.User.list();
-    const targetUser = allUsers.find(u => u.id === userId);
-
-    if (!targetUser) {
+    // Get the target user first to check permissions
+    const users = await base44.asServiceRole.entities.User.filter({ id: userId });
+    if (users.length === 0) {
       return Response.json({ error: 'User not found' }, { status: 404 });
     }
+
+    const targetUser = users[0];
 
     // Apply role-based access control
     if (currentUser.app_role === 'Super Administrator' && currentUser.client_id) {
@@ -48,40 +48,31 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Strip read-only/system fields before updating
-    const { id, created_date, updated_date, email, app_id, is_service, role, _app_role, ...cleanData } = userData;
-
     // Update user using service role
-    await base44.asServiceRole.entities.User.update(userId, cleanData);
+    await base44.asServiceRole.entities.User.update(userId, userData);
 
-    // Log the activity (only include required fields)
-    try {
-      await base44.asServiceRole.entities.ActivityLog.create({
-        timestamp: new Date().toISOString(),
-        initiator_user_email: currentUser.email,
-        action_type: 'USER_ROLE_CHANGE',
-        target_user_email: targetUser.email,
-        client_id: targetUser.client_id || currentUser.client_id || 'platform',
-        metadata: {
-          updated_by: currentUser.full_name,
-          changes: Object.keys(cleanData)
-        }
-      });
-    } catch (logError) {
-      // Log failure is non-fatal
-      console.warn('Activity log failed:', logError.message);
-    }
+    // Log the activity
+    await base44.asServiceRole.entities.ActivityLog.create({
+      timestamp: new Date().toISOString(),
+      initiator_user_email: currentUser.email,
+      action_type: 'USER_ROLE_CHANGE',
+      target_user_email: targetUser.email,
+      metadata: { 
+        updated_by: currentUser.full_name,
+        changes: userData
+      }
+    });
 
-    return Response.json({
+    return Response.json({ 
       success: true,
       message: 'User updated successfully'
     });
 
   } catch (error) {
     console.error('Error updating user:', error);
-    return Response.json({
+    return Response.json({ 
       success: false,
-      error: error.message
+      error: error.message 
     }, { status: 500 });
   }
 });
