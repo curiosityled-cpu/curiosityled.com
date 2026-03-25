@@ -148,7 +148,7 @@ export default function RequestSubmissionForm({ onSuccess, onCancel }) {
       return;
     }
 
-    if (!user?.email || !user?.client_id) {
+    if (!user?.email) {
       toast.error("User information is missing. Please try logging in again.");
       return;
     }
