@@ -1,0 +1,169 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+
+/**
+ * Cascade goals to multiple users based on organizational criteria
+ * Input: {
+ *   goalTemplate: { title, description, category, due_date, milestones },
+ *   targetCriteria: { app_role?, department?, cohort_id?, specific_emails? },
+ *   assignedBy: 'manager@example.com',
+ *   cascadeGoalId: 'master-goal-id' // Optional: link to master template goal
+ * }
+ */
+Deno.serve(async (req) => {
+    try {
+        const base44 = createClientFromRequest(req);
+        
+        // Verify user is authenticated
+        const currentUser = await base44.auth.me();
+        if (!currentUser) {
+            return Response.json({
+                success: false,
+                error: 'Unauthorized'
+            }, { status: 401 });
+        }
+
+        const { goalTemplate, targetCriteria, assignedBy, cascadeGoalId } = await req.json();
+        
+        if (!goalTemplate || !goalTemplate.title) {
+            return Response.json({
+                success: false,
+                error: 'Goal template with title is required'
+            }, { status: 400 });
+        }
+        
+        if (!targetCriteria || Object.keys(targetCriteria).length === 0) {
+            return Response.json({
+                success: false,
+                error: 'Target criteria is required'
+            }, { status: 400 });
+        }
+        
+        // Build filter for users based on criteria
+        const userFilter = {};
+        
+        if (targetCriteria.app_role) {
+            userFilter.app_role = targetCriteria.app_role;
+        }
+        
+        if (targetCriteria.department) {
+            userFilter.department = targetCriteria.department;
+        }
+        
+        // Get targeted users
+        let targetUsers = [];
+        
+        if (targetCriteria.specific_emails && targetCriteria.specific_emails.length > 0) {
+            // Use specific emails
+            targetUsers = await base44.asServiceRole.entities.User.filter({
+                email: { $in: targetCriteria.specific_emails }
+            });
+        } else if (targetCriteria.cohort_id) {
+            // Get users from cohort
+            const cohort = await base44.asServiceRole.entities.Cohort.get(targetCriteria.cohort_id);
+            if (cohort && cohort.participant_emails) {
+                targetUsers = await base44.asServiceRole.entities.User.filter({
+                    email: { $in: cohort.participant_emails }
+                });
+            }
+        } else {
+            // Use role/department filters
+            targetUsers = await base44.asServiceRole.entities.User.filter(userFilter);
+        }
+        
+        if (targetUsers.length === 0) {
+            return Response.json({
+                success: false,
+                error: 'No users found matching the criteria'
+            }, { status: 400 });
+        }
+        
+        const results = {
+            successful: [],
+            failed: []
+        };
+        
+        for (const user of targetUsers) {
+            try {
+                // Create cascaded goal for this user
+                const goalData = {
+                    ...goalTemplate,
+                    user_email: user.email,
+                    assigned_by: assignedBy || currentUser.email,
+                    status: 'pending_acceptance',
+                    completion_percentage: 0
+                };
+                
+                if (cascadeGoalId) {
+                    goalData.cascaded_goal_id = cascadeGoalId;
+                }
+                
+                const createdGoal = await base44.asServiceRole.entities.Goal.create(goalData);
+                
+                // Create notification
+                try {
+                    await base44.functions.invoke('createNotification', {
+                        user_email: user.email,
+                        type: 'goal_assignment',
+                        title: 'New Cascaded Goal',
+                        message: `${assignedBy || currentUser.full_name} has cascaded a goal to you: "${goalTemplate.title}"`,
+                        priority: 'medium',
+                        related_entity_type: 'Goal',
+                        related_entity_id: createdGoal.id,
+                        action_url: '/Goals',
+                        scheduled_for: new Date().toISOString()
+                    });
+                } catch (notifError) {
+                    console.error('Failed to create notification for:', user.email, notifError);
+                }
+                
+                results.successful.push({
+                    userEmail: user.email,
+                    userName: user.full_name,
+                    goalId: createdGoal.id
+                });
+                
+            } catch (error) {
+                console.error(`Failed to cascade goal to ${user.email}:`, error);
+                results.failed.push({
+                    userEmail: user.email,
+                    userName: user.full_name,
+                    error: error.message
+                });
+            }
+        }
+        
+        // Log the cascade action
+        try {
+            await base44.asServiceRole.entities.ActivityLog.create({
+                timestamp: new Date().toISOString(),
+                initiator_user_email: currentUser.email,
+                action_type: 'GOAL_CASCADE',
+                metadata: {
+                    goalTitle: goalTemplate.title,
+                    targetCriteria: targetCriteria,
+                    successCount: results.successful.length,
+                    failureCount: results.failed.length,
+                    cascadeGoalId: cascadeGoalId
+                }
+            });
+        } catch (logError) {
+            console.error('Failed to log cascade action:', logError);
+        }
+        
+        return Response.json({
+            success: true,
+            totalTargeted: targetUsers.length,
+            successCount: results.successful.length,
+            failureCount: results.failed.length,
+            results: results
+        });
+        
+    } catch (error) {
+        console.error('Cascade goals error:', error);
+        return Response.json({
+            success: false,
+            error: error.message,
+            stack: error.stack
+        }, { status: 500 });
+    }
+});

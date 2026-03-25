@@ -1,0 +1,111 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    
+    // Authenticate
+    const user = await base44.auth.me();
+    if (!user) {
+      return Response.json({ 
+        success: false, 
+        error: 'Unauthorized' 
+      }, { status: 401 });
+    }
+
+    const { journey_id, user_emails, cohort_ids, assigner_email } = await req.json();
+
+    if (!journey_id) {
+      return Response.json({ 
+        success: false, 
+        error: 'journey_id is required' 
+      }, { status: 400 });
+    }
+
+    if (!user_emails || !Array.isArray(user_emails) || user_emails.length === 0) {
+      return Response.json({ 
+        success: false, 
+        error: 'user_emails array is required' 
+      }, { status: 400 });
+    }
+
+    // Get the journey
+    const [journey] = await base44.asServiceRole.entities.LearningJourney.filter({ id: journey_id });
+    
+    if (!journey) {
+      return Response.json({ 
+        success: false, 
+        error: 'Journey not found' 
+      }, { status: 404 });
+    }
+
+    // Update journey with assignments
+    const updatedEmails = [...new Set([...(journey.assigned_to_emails || []), ...user_emails])];
+    const updatedCohortIds = cohort_ids ? 
+      [...new Set([...(journey.assigned_to_cohort_ids || []), ...cohort_ids])] : 
+      journey.assigned_to_cohort_ids;
+
+    await base44.asServiceRole.entities.LearningJourney.update(journey_id, {
+      assigned_to_emails: updatedEmails,
+      assigned_to_cohort_ids: updatedCohortIds,
+      status: 'published',
+      last_modified_by: assigner_email || user.email
+    });
+
+    // Create enrollments and notifications
+    const enrollmentsCreated = [];
+    
+    for (const email of user_emails) {
+      // Check if enrollment already exists
+      const existing = await base44.asServiceRole.entities.JourneyEnrollment.filter({
+        journey_id,
+        user_email: email
+      });
+
+      if (existing.length === 0) {
+        // Create enrollment
+        const enrollment = await base44.asServiceRole.entities.JourneyEnrollment.create({
+          journey_id,
+          user_email: email,
+          enrolled_by: assigner_email || user.email,
+          enrolled_date: new Date().toISOString(),
+          status: 'not_started',
+          completion_percentage: 0,
+          content_progress: (journey.content_structure || []).map(item => ({
+            learning_resource_id: item.learning_resource_id,
+            status: 'not_started'
+          }))
+        });
+
+        enrollmentsCreated.push(enrollment);
+
+        // Create notification
+        await base44.asServiceRole.entities.Notification.create({
+          user_email: email,
+          type: 'learning_assigned',
+          title: 'New Learning Journey Assigned',
+          message: `You have been assigned to: ${journey.title}`,
+          priority: 'medium',
+          related_entity_type: 'LearningJourney',
+          related_entity_id: journey_id,
+          action_url: `/MyJourneys?journeyId=${journey_id}`,
+          status: 'pending',
+          is_read: false
+        });
+      }
+    }
+
+    return Response.json({
+      success: true,
+      message: `Journey assigned to ${user_emails.length} users`,
+      enrollments_created: enrollmentsCreated.length
+    });
+
+  } catch (error) {
+    console.error('Error in bulkAssignJourneys:', error);
+    return Response.json({ 
+      success: false, 
+      error: error.message 
+    }, { status: 500 });
+  }
+});

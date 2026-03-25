@@ -1,0 +1,43 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+
+    if (!user || user.app_role !== 'Platform Admin') {
+      return Response.json({ error: 'Unauthorized - Platform Admin only' }, { status: 401 });
+    }
+
+    const partnerData = await req.json();
+
+    // Validate required fields
+    if (!partnerData.name || !partnerData.slug || !partnerData.contact_email) {
+      return Response.json({ 
+        error: 'Missing required fields: name, slug, contact_email' 
+      }, { status: 400 });
+    }
+
+    // Check if slug already exists
+    const existing = await base44.entities.Partner.filter({ slug: partnerData.slug });
+    if (existing.length > 0) {
+      return Response.json({ 
+        error: 'A partner with this slug already exists' 
+      }, { status: 400 });
+    }
+
+    // Create partner
+    const partner = await base44.entities.Partner.create(partnerData);
+
+    return Response.json({ 
+      partner,
+      message: 'Partner created successfully' 
+    });
+
+  } catch (error) {
+    console.error('Error creating partner:', error);
+    return Response.json({ 
+      error: error.message || 'Failed to create partner' 
+    }, { status: 500 });
+  }
+});

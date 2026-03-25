@@ -1,0 +1,79 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { jsPDF } from 'npm:jspdf@2.5.1';
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+
+    if (!user || user.app_role !== 'Platform Admin') {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { analytics } = await req.json();
+
+    const doc = new jsPDF();
+    
+    doc.setFontSize(20);
+    doc.text('Journey Analytics Report', 20, 20);
+    
+    doc.setFontSize(10);
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 30);
+
+    let y = 45;
+    doc.setFontSize(14);
+    doc.text('Content Health', 20, y);
+    y += 10;
+    
+    doc.setFontSize(10);
+    doc.text(`Total Journeys: ${analytics.contentHealth.totalJourneys}`, 20, y);
+    y += 7;
+    doc.text(`Published: ${analytics.contentHealth.publishedJourneys}`, 20, y);
+    y += 7;
+    doc.text(`Draft: ${analytics.contentHealth.draftJourneys}`, 20, y);
+    y += 7;
+    doc.text(`New (Last 30 Days): ${analytics.contentHealth.newJourneysLast30Days}`, 20, y);
+    y += 15;
+
+    doc.setFontSize(14);
+    doc.text('Engagement & Completion', 20, y);
+    y += 10;
+    
+    doc.setFontSize(10);
+    doc.text(`Total Enrollments: ${analytics.coverage.totalEnrollments}`, 20, y);
+    y += 7;
+    doc.text(`Unique Learners: ${analytics.coverage.uniqueLearnersEnrolled}`, 20, y);
+    y += 7;
+    doc.text(`Completion Rate: ${analytics.completion.completionRate}%`, 20, y);
+    y += 7;
+    doc.text(`Drop-off Rate: ${analytics.engagement.dropOffRate}%`, 20, y);
+    y += 15;
+
+    doc.setFontSize(14);
+    doc.text('Top Performing Journeys', 20, y);
+    y += 10;
+
+    doc.setFontSize(8);
+    analytics.completion.topPerformingJourneys.slice(0, 20).forEach(j => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(`${j.title} - ${j.completions} completions (${j.rate}%)`, 20, y);
+      y += 5;
+    });
+
+    const pdfBytes = doc.output('arraybuffer');
+
+    return new Response(pdfBytes, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'attachment; filename=journey-analytics.pdf'
+      }
+    });
+  } catch (error) {
+    console.error('Error exporting PDF:', error);
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+});
