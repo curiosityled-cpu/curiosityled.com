@@ -8,7 +8,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 /**
- * Mobile-aware calendar picker that uses Drawer on mobile and Popover on desktop
+ * Mobile-aware calendar picker that uses Drawer on mobile and Popover on desktop.
  */
 export default function MobileAwareCalendar({
   selected,
