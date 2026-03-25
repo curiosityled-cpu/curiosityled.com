@@ -46,6 +46,10 @@ function CompetencyManagement() {
   };
 
   const handleCreate = async () => {
+    if (!formData.name.trim() || !formData.category.trim() || !formData.definition.trim()) {
+      toast.error('Name, Category, and Definition are required');
+      return;
+    }
     try {
       await base44.entities.Competency.create(formData);
       toast.success('Competency created successfully');
