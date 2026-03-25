@@ -1,5 +1,25 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 
-import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+// Recursive function to get all subordinates up to maxDepth
+function getAllSubordinateEmails(managerEmail, allUsers, maxDepth = 10, currentDepth = 0, visited = new Set()) {
+  if (currentDepth >= maxDepth || visited.has(managerEmail)) {
+    return [];
+  }
+  
+  visited.add(managerEmail);
+  
+  // Find direct reports
+  const directReports = allUsers.filter(u => u.manager_email === managerEmail);
+  const allSubordinates = [...directReports];
+  
+  // Recursively get reports of reports
+  for (const report of directReports) {
+    const nestedReports = getAllSubordinateEmails(report.email, allUsers, maxDepth, currentDepth + 1, visited);
+    allSubordinates.push(...nestedReports);
+  }
+  
+  return allSubordinates;
+}
 
 Deno.serve(async (req) => {
   try {
@@ -15,13 +35,13 @@ Deno.serve(async (req) => {
       }, { status: 401 });
     }
 
-    // Allow Platform Admin, Super Admin, Admin Level 1, Admin Level 2, and User Level 3
-    const allowedRoles = ['Platform Admin', 'Super Administrator', 'Admin Level 1', 'Admin Level 2', 'User Level 3'];
+    // Allow Platform Admin, Super Admin, Analyst, Admin Level 1, Admin Level 2, User Level 2, and User Level 3
+    const allowedRoles = ['Platform Admin', 'Super Administrator', 'Analyst', 'Partner Business Administrator', 'Admin Level 1', 'Admin Level 2', 'User Level 2', 'User Level 3'];
     if (!allowedRoles.includes(user.app_role)) {
       return Response.json({ 
         success: false, 
         error: 'Unauthorized - Insufficient permissions',
-        details: 'This endpoint requires admin or organizational leadership privileges'
+        details: 'This endpoint requires admin or leadership privileges'
       }, { status: 403 });
     }
 
@@ -41,8 +61,8 @@ Deno.serve(async (req) => {
       }
     };
 
-    // Fetch all necessary data
-    console.log('Starting journey analytics data fetch...');
+    // Fetch all necessary data including all experience types
+    console.log('Starting experience analytics data fetch...');
     
     const [
       journeys,
@@ -51,7 +71,12 @@ Deno.serve(async (req) => {
       clients,
       assessments,
       goals,
-      learningResources
+      learningResources,
+      programs,
+      cohorts,
+      classes,
+      coachingEngagements,
+      coachingSessions
     ] = await Promise.all([
       fetchWithTimeout(
         base44.asServiceRole.entities.LearningJourney.list('-updated_date'),
@@ -87,28 +112,104 @@ Deno.serve(async (req) => {
         base44.asServiceRole.entities.LearningResource.list(),
         10000,
         'Learning Resources'
+      ),
+      fetchWithTimeout(
+        base44.asServiceRole.entities.Program.list('-updated_date'),
+        10000,
+        'Programs'
+      ),
+      fetchWithTimeout(
+        base44.asServiceRole.entities.Cohort.list('-updated_date'),
+        10000,
+        'Cohorts'
+      ),
+      fetchWithTimeout(
+        base44.asServiceRole.entities.Class.list('-updated_date'),
+        10000,
+        'Classes'
+      ),
+      fetchWithTimeout(
+        base44.asServiceRole.entities.CoachingEngagement.list('-updated_date'),
+        10000,
+        'Coaching Engagements'
+      ),
+      fetchWithTimeout(
+        base44.asServiceRole.entities.CoachingSession.list('-session_date'),
+        10000,
+        'Coaching Sessions'
       )
     ]);
 
-    console.log('Data fetched successfully:', {
-      journeys: journeys?.length || 0,
-      enrollments: enrollments?.length || 0,
-      users: users?.length || 0,
-      clients: clients?.length || 0,
-      assessments: assessments?.length || 0,
-      goals: goals?.length || 0,
-      learningResources: learningResources?.length || 0
-    });
+    console.log('Data fetched successfully');
 
-    // Calculate comprehensive analytics
-    const analytics = calculateJourneyAnalytics({
+    // Filter data based on user role
+    let filteredUsers = users;
+    let filteredEnrollments = enrollments;
+    let filteredAssessments = assessments;
+    let filteredGoals = goals;
+    let filteredPrograms = programs;
+    let filteredCohorts = cohorts;
+    let filteredClasses = classes;
+    let filteredCoachingEngagements = coachingEngagements;
+    let filteredCoachingSessions = coachingSessions;
+    let scopeLabel = 'Platform';
+
+    if (user.app_role === 'User Level 2') {
+      // Manager - filter to vertical (all subordinates up to 10 levels deep)
+      const subordinates = getAllSubordinateEmails(user.email, users, 10);
+      const subordinateEmails = new Set([user.email, ...subordinates.map(u => u.email)]);
+      
+      filteredUsers = users.filter(u => subordinateEmails.has(u.email));
+      filteredEnrollments = enrollments.filter(e => subordinateEmails.has(e.user_email));
+      filteredAssessments = assessments.filter(a => subordinateEmails.has(a.email));
+      filteredGoals = goals.filter(g => subordinateEmails.has(g.created_by));
+      filteredPrograms = programs.filter(p => (p.participant_emails || []).some(e => subordinateEmails.has(e)));
+      filteredCohorts = cohorts.filter(c => (c.participant_emails || []).some(e => subordinateEmails.has(e)));
+      filteredClasses = classes.filter(c => (c.enrolled_emails || []).some(e => subordinateEmails.has(e)));
+      filteredCoachingEngagements = coachingEngagements.filter(ce => subordinateEmails.has(ce.coachee_email));
+      filteredCoachingSessions = coachingSessions.filter(cs => {
+        const engagement = coachingEngagements.find(ce => ce.id === cs.engagement_id);
+        return engagement && subordinateEmails.has(engagement.coachee_email);
+      });
+      
+      scopeLabel = `${user.full_name || 'Manager'}'s Team`;
+    } else if (user.app_role === 'User Level 3' || user.app_role === 'Analyst') {
+      // Org Leader or Analyst - filter to client
+      if (user.client_id) {
+        filteredUsers = users.filter(u => u.client_id === user.client_id);
+        const clientUserEmails = new Set(filteredUsers.map(u => u.email));
+        filteredEnrollments = enrollments.filter(e => clientUserEmails.has(e.user_email));
+        filteredAssessments = assessments.filter(a => clientUserEmails.has(a.email));
+        filteredGoals = goals.filter(g => clientUserEmails.has(g.created_by));
+        filteredPrograms = programs.filter(p => p.client_id === user.client_id);
+        filteredCohorts = cohorts.filter(c => c.client_id === user.client_id);
+        filteredClasses = classes.filter(c => c.client_id === user.client_id);
+        filteredCoachingEngagements = coachingEngagements.filter(ce => ce.client_id === user.client_id);
+        filteredCoachingSessions = coachingSessions.filter(cs => {
+          const engagement = coachingEngagements.find(ce => ce.id === cs.engagement_id);
+          return engagement && engagement.client_id === user.client_id;
+        });
+        
+        const client = clients.find(c => c.id === user.client_id);
+        scopeLabel = client?.name || 'Organization';
+      }
+    }
+
+    // Calculate comprehensive analytics including all experience types
+    const analytics = calculateExperienceAnalytics({
       journeys: Array.isArray(journeys) ? journeys : [],
-      enrollments: Array.isArray(enrollments) ? enrollments : [],
-      users: Array.isArray(users) ? users : [],
+      enrollments: Array.isArray(filteredEnrollments) ? filteredEnrollments : [],
+      users: Array.isArray(filteredUsers) ? filteredUsers : [],
       clients: Array.isArray(clients) ? clients : [],
-      assessments: Array.isArray(assessments) ? assessments : [],
-      goals: Array.isArray(goals) ? goals : [],
-      learningResources: Array.isArray(learningResources) ? learningResources : []
+      assessments: Array.isArray(filteredAssessments) ? filteredAssessments : [],
+      goals: Array.isArray(filteredGoals) ? filteredGoals : [],
+      learningResources: Array.isArray(learningResources) ? learningResources : [],
+      programs: Array.isArray(filteredPrograms) ? filteredPrograms : [],
+      cohorts: Array.isArray(filteredCohorts) ? filteredCohorts : [],
+      classes: Array.isArray(filteredClasses) ? filteredClasses : [],
+      coachingEngagements: Array.isArray(filteredCoachingEngagements) ? filteredCoachingEngagements : [],
+      coachingSessions: Array.isArray(filteredCoachingSessions) ? filteredCoachingSessions : [],
+      scopeLabel
     });
 
     return Response.json({
@@ -127,7 +228,7 @@ Deno.serve(async (req) => {
   }
 });
 
-function calculateJourneyAnalytics({ journeys, enrollments, users, clients, assessments, goals, learningResources }) {
+function calculateExperienceAnalytics({ journeys, enrollments, users, clients, assessments, goals, learningResources, programs, cohorts, classes, coachingEngagements, coachingSessions, scopeLabel }) {
   // 1. Journey Creation & Content Health
   const totalJourneys = journeys.length;
   const publishedJourneys = journeys.filter(j => j.status === 'published').length;
@@ -386,7 +487,7 @@ function calculateJourneyAnalytics({ journeys, enrollments, users, clients, asse
   const completersWithAssessments = [];
   
   journeyCompleters.forEach(enrollment => {
-    const userAssessments = assessments.filter(a => a.user_email === enrollment.user_email); // Changed a.email to a.user_email as per typical SDK user object
+    const userAssessments = assessments.filter(a => a.email === enrollment.user_email);
     if (userAssessments.length >= 2) {
       // Sort by date to get before/after
       const sortedAssessments = userAssessments.sort((a, b) => 
@@ -410,7 +511,7 @@ function calculateJourneyAnalytics({ journeys, enrollments, users, clients, asse
   const journeyCompleterEmails = new Set(journeyCompleters.map(e => e.user_email));
   
   // Goal completion rate for journey completers
-  const completersGoals = goals.filter(g => journeyCompleterEmails.has(g.user_email));
+  const completersGoals = goals.filter(g => journeyCompleterEmails.has(g.created_by));
   const completersCompletedGoals = completersGoals.filter(g => g.status === 'completed').length;
   const goalCompletionRateForJourneyCompleters = completersGoals.length > 0
     ? Math.round((completersCompletedGoals / completersGoals.length) * 100)
@@ -459,8 +560,103 @@ function calculateJourneyAnalytics({ journeys, enrollments, users, clients, asse
     });
   }
 
+  // === PROGRAMS ANALYTICS ===
+  const totalPrograms = programs.length;
+  const activePrograms = programs.filter(p => p.status === 'active').length;
+  const totalProgramParticipants = new Set(programs.flatMap(p => p.participant_emails || [])).size;
+  
+  const programsByType = {};
+  programs.forEach(p => {
+    const type = p.program_type || 'custom';
+    programsByType[type] = (programsByType[type] || 0) + 1;
+  });
+
+  const programCompletionRates = programs.map(p => {
+    const participants = p.participant_emails?.length || 0;
+    // Estimate completion based on metrics if available
+    const completionRate = p.metrics?.avg_completion_rate || 0;
+    return {
+      id: p.id,
+      name: p.name,
+      type: p.program_type,
+      participants,
+      completionRate: Math.round(completionRate)
+    };
+  }).filter(p => p.participants > 0);
+
+  // === CLASSES ANALYTICS ===
+  const totalClasses = classes.length;
+  const completedClasses = classes.filter(c => c.status === 'completed').length;
+  const upcomingClasses = classes.filter(c => {
+    const classDate = new Date(c.session_date);
+    return classDate > new Date() && c.status !== 'cancelled';
+  }).length;
+  
+  const totalClassAttendees = classes.reduce((sum, c) => sum + (c.enrolled_emails?.length || 0), 0);
+  const avgClassAttendance = totalClasses > 0 ? Math.round(totalClassAttendees / totalClasses) : 0;
+
+  const classesByType = {};
+  classes.forEach(c => {
+    const type = c.class_type || 'workshop';
+    classesByType[type] = (classesByType[type] || 0) + 1;
+  });
+
+  // === COACHING ANALYTICS ===
+  const totalCoachingEngagements = coachingEngagements.length;
+  const activeCoachingEngagements = coachingEngagements.filter(ce => ce.status === 'active').length;
+  const completedCoachingEngagements = coachingEngagements.filter(ce => ce.status === 'completed').length;
+  
+  const totalCoachingSessions = coachingSessions.length;
+  const completedSessions = coachingSessions.filter(cs => cs.status === 'completed').length;
+  const avgSessionsPerEngagement = totalCoachingEngagements > 0 
+    ? (totalCoachingSessions / totalCoachingEngagements).toFixed(1) 
+    : 0;
+
+  const uniqueCoachees = new Set(coachingEngagements.map(ce => ce.coachee_email)).size;
+  const uniqueCoaches = new Set(coachingEngagements.map(ce => ce.coach_email)).size;
+
+  // Coaching completion rate
+  const coachingCompletionRate = totalCoachingEngagements > 0
+    ? Math.round((completedCoachingEngagements / totalCoachingEngagements) * 100)
+    : 0;
+
+  // === COHORTS ANALYTICS ===
+  const totalCohorts = cohorts.length;
+  const activeCohorts = cohorts.filter(c => c.status === 'active').length;
+  const totalCohortParticipants = new Set(cohorts.flatMap(c => c.participant_emails || [])).size;
+
+  // === COMBINED EXPERIENCE SUMMARY ===
+  const totalExperiences = totalJourneys + totalPrograms + totalClasses + totalCoachingEngagements;
+  const totalParticipants = new Set([
+    ...enrollments.map(e => e.user_email),
+    ...programs.flatMap(p => p.participant_emails || []),
+    ...classes.flatMap(c => c.enrolled_emails || []),
+    ...coachingEngagements.map(ce => ce.coachee_email)
+  ]).size;
+
+  // Experience type distribution
+  const experienceTypeDistribution = [
+    { name: 'Journeys', value: totalJourneys, color: '#0202ff' },
+    { name: 'Programs', value: totalPrograms, color: '#10b981' },
+    { name: 'Classes', value: totalClasses, color: '#f59e0b' },
+    { name: 'Coaching', value: totalCoachingEngagements, color: '#8b5cf6' }
+  ].filter(e => e.value > 0);
+
   // Return comprehensive analytics object
   return {
+    scopeLabel,
+
+    // Combined Experience Summary
+    summary: {
+      totalExperiences,
+      totalParticipants,
+      experienceTypeDistribution,
+      totalJourneys,
+      totalPrograms,
+      totalClasses,
+      totalCoachingEngagements
+    },
+    
     // Journey Creation & Content Health
     contentHealth: {
       totalJourneys,
@@ -533,6 +729,44 @@ function calculateJourneyAnalytics({ journeys, enrollments, users, clients, asse
     },
     
     // Trends
-    trends
+    trends,
+
+    // Programs Analytics
+    programs: {
+      totalPrograms,
+      activePrograms,
+      totalParticipants: totalProgramParticipants,
+      programsByType,
+      programCompletionRates: programCompletionRates.slice(0, 10)
+    },
+
+    // Classes Analytics
+    classes: {
+      totalClasses,
+      completedClasses,
+      upcomingClasses,
+      avgAttendance: avgClassAttendance,
+      classesByType
+    },
+
+    // Coaching Analytics
+    coaching: {
+      totalEngagements: totalCoachingEngagements,
+      activeEngagements: activeCoachingEngagements,
+      completedEngagements: completedCoachingEngagements,
+      totalSessions: totalCoachingSessions,
+      completedSessions,
+      avgSessionsPerEngagement: parseFloat(avgSessionsPerEngagement),
+      uniqueCoachees,
+      uniqueCoaches,
+      completionRate: coachingCompletionRate
+    },
+
+    // Cohorts Analytics
+    cohorts: {
+      totalCohorts,
+      activeCohorts,
+      totalParticipants: totalCohortParticipants
+    }
   };
 }

@@ -148,7 +148,7 @@ export default function RequestSubmissionForm({ onSuccess, onCancel }) {
       return;
     }
 
-    if (!user?.email) {
+    if (!user?.email || !user?.client_id) {
       toast.error("User information is missing. Please try logging in again.");
       return;
     }
@@ -167,7 +167,7 @@ export default function RequestSubmissionForm({ onSuccess, onCancel }) {
         risk_level: formData.risk_level,
         risk_categories: formData.risk_categories.length > 0 ? formData.risk_categories : ["none"],
         requested_by_email: user.email,
-        ...(user.client_id ? { client_id: user.client_id } : {}),
+        client_id: user.client_id,
         budget_amount: formData.budget_amount ? parseFloat(formData.budget_amount) : undefined,
         audience_size: formData.audience_size ? parseInt(formData.audience_size) : undefined,
         estimated_effort_hours: formData.estimated_effort_hours ? parseFloat(formData.estimated_effort_hours) : undefined,

@@ -46,10 +46,6 @@ function CompetencyManagement() {
   };
 
   const handleCreate = async () => {
-    if (!formData.name.trim() || !formData.category.trim() || !formData.definition.trim()) {
-      toast.error('Name, Category, and Definition are required');
-      return;
-    }
     try {
       await base44.entities.Competency.create(formData);
       toast.success('Competency created successfully');
@@ -64,7 +60,7 @@ function CompetencyManagement() {
       await loadCompetencies();
     } catch (error) {
       console.error('Error creating competency:', error);
-      toast.error(error.message || 'Failed to create competency');
+      toast.error('Failed to create competency');
     }
   };
 
