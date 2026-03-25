@@ -15,6 +15,7 @@ export default function MobileAwareCalendar({
   buttonClassName,
   placeholder,
   mode,
+  id,
   ...calendarProps
 }) {
   const resolvedPlaceholder = placeholder || "Select date";
