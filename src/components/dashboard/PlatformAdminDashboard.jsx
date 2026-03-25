@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -87,16 +87,12 @@ export default function PlatformAdminDashboard() {
   const [programs, setPrograms] = useState([]);
   const [activityLogs, setActivityLogs] = useState([]);
 
-  const loadingRef = useRef(false);
-
   // Memoized function for data loading
   const loadData = async (isRetry = false) => {
-    if (loadingRef.current) return; // Hard block — no concurrent loads of any kind
-    loadingRef.current = true;
     if (!isRetry) {
-      setLoading(true);
+      setLoading(true); // Only show full loading spinner for initial load
     }
-    setError(null);
+    setError(null); // Clear any previous errors on new load attempt
 
     try {
       console.log('Fetching platform analytics...', { attempt: retryCount + 1, isRetry });
@@ -167,18 +163,19 @@ export default function PlatformAdminDashboard() {
       }
     } finally {
       setLoading(false);
-      loadingRef.current = false;
     }
   };
 
   useEffect(() => {
     loadData();
     
-    // Refresh every 5 minutes (not 60s) to avoid log spam
-    const interval = setInterval(() => loadData(true), 300000);
+    // Set up interval for refreshing data every 60 seconds
+    const interval = setInterval(() => loadData(true), 60000); // Pass true to avoid toast on every automated refresh
     
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      clearInterval(interval);
+    };
+  }, []); // Empty dependency array means this effect runs once on mount
 
   useEffect(() => {
     if (!loading) {

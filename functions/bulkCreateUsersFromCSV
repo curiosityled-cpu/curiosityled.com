@@ -1,0 +1,227 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+
+/**
+ * Bulk creates users from CSV data
+ * Supports both creating new users and updating existing ones
+ */
+Deno.serve(async (req) => {
+    try {
+        const base44 = createClientFromRequest(req);
+        const currentUser = await base44.auth.me();
+        
+        if (!currentUser) {
+            return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Only admins can bulk create users
+        if (!['Admin Level 2', 'Admin Level 3'].includes(currentUser.app_role)) {
+            return Response.json({ 
+                success: false, 
+                error: 'Forbidden - Only Admin Level 2 and Admin Level 3 can bulk create users' 
+            }, { status: 403 });
+        }
+
+        const { users, updateDuplicates, duplicateUsers } = await req.json();
+        
+        if (!users || !Array.isArray(users)) {
+            return Response.json({ 
+                success: false, 
+                error: 'Request must include "users" array' 
+            }, { status: 400 });
+        }
+
+        const results = {
+            successful: [],
+            failed: [],
+            updated: []
+        };
+
+        const validAppRoles = ["User Level 1", "User Level 2", "User Level 3", "Admin Level 1", "Admin Level 2", "Admin Level 3"];
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        // Get existing users for duplicate checking
+        const existingUsers = await base44.asServiceRole.entities.User.list();
+        const existingUsersByEmail = new Map(existingUsers.map(u => [u.email.toLowerCase(), u]));
+
+        // Process new users
+        for (const userData of users) {
+            try {
+                // Validation
+                if (!userData.email || !emailRegex.test(userData.email)) {
+                    results.failed.push({ user: userData, reason: 'Invalid or missing email' });
+                    continue;
+                }
+
+                if (!userData.full_name || userData.full_name.trim().length < 2) {
+                    results.failed.push({ user: userData, reason: 'Full name required (min 2 characters)' });
+                    continue;
+                }
+
+                if (!userData.current_role || !userData.current_role.trim()) {
+                    results.failed.push({ user: userData, reason: 'Current role required' });
+                    continue;
+                }
+
+                if (!userData.department || !userData.department.trim()) {
+                    results.failed.push({ user: userData, reason: 'Department required' });
+                    continue;
+                }
+
+                if (!userData.manager_email || !emailRegex.test(userData.manager_email)) {
+                    results.failed.push({ user: userData, reason: 'Valid manager email required' });
+                    continue;
+                }
+
+                if (userData.email.toLowerCase() === userData.manager_email.toLowerCase()) {
+                    results.failed.push({ user: userData, reason: 'User cannot be their own manager' });
+                    continue;
+                }
+
+                if (userData.app_role && !validAppRoles.includes(userData.app_role)) {
+                    results.failed.push({ user: userData, reason: 'Invalid app_role' });
+                    continue;
+                }
+
+                if (userData.start_date) {
+                    const date = new Date(userData.start_date);
+                    if (isNaN(date.getTime()) || date > new Date()) {
+                        results.failed.push({ user: userData, reason: 'Invalid start_date' });
+                        continue;
+                    }
+                }
+
+                const cleanedData = {
+                    email: userData.email.trim().toLowerCase(),
+                    full_name: userData.full_name.trim(),
+                    app_role: userData.app_role || 'User Level 1',
+                    current_role: userData.current_role.trim(),
+                    department: userData.department.trim(),
+                    sector: userData.sector?.trim() || null,
+                    manager_email: userData.manager_email.trim().toLowerCase(),
+                    start_date: userData.start_date || null
+                };
+
+                // Check if user exists
+                if (existingUsersByEmail.has(cleanedData.email)) {
+                    results.failed.push({ user: userData, reason: 'Email already exists' });
+                    continue;
+                }
+
+                // Create user
+                const newUser = await base44.asServiceRole.entities.User.create(cleanedData);
+
+                // Send welcome email
+                const loginUrl = req.headers.get('origin') || 'https://app.curiosityled.com';
+                await base44.asServiceRole.integrations.invoke('Core', 'SendEmail', {
+                    to: cleanedData.email,
+                    subject: "Welcome to Curiosity Led! Your Leadership Journey Awaits",
+                    body: `
+                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                            <h2>Hello ${cleanedData.full_name},</h2>
+                            <p>Welcome to Curiosity Led! We're excited to have you on board.</p>
+                            <p>Your account has been set up with the role: <strong>${cleanedData.app_role}</strong>.</p>
+                            <div style="background-color: #eff6ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                                <p style="margin: 5px 0;"><strong>Your Username:</strong> ${cleanedData.email}</p>
+                                <p style="margin: 5px 0;"><strong>Department:</strong> ${cleanedData.department}</p>
+                                <p style="margin: 5px 0;"><strong>Current Role:</strong> ${cleanedData.current_role}</p>
+                            </div>
+                            <p>To get started, please log in here:</p>
+                            <p><a href="${loginUrl}" style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Log In to Curiosity Led</a></p>
+                            <p style="margin-top: 20px;">If this is your first time logging in, or you have forgotten your password, you can reset it through the login page.</p>
+                            <p>If you have any questions, please contact your administrator.</p>
+                            <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;"/>
+                            <p style="color: #6b7280; font-size: 14px;">Best regards,<br/>The Curiosity Led Team</p>
+                        </div>
+                    `,
+                    from_name: 'Curiosity Led'
+                });
+
+                results.successful.push({ user: userData, id: newUser.id });
+
+            } catch (createError) {
+                results.failed.push({ user: userData, reason: createError.message });
+            }
+        }
+
+        // Process duplicate users if updateDuplicates is true
+        if (updateDuplicates && duplicateUsers && Array.isArray(duplicateUsers)) {
+            for (const userData of duplicateUsers) {
+                try {
+                    const existingUser = existingUsersByEmail.get(userData.email.toLowerCase());
+                    if (!existingUser) {
+                        results.failed.push({ user: userData, reason: 'User not found for update' });
+                        continue;
+                    }
+
+                    const updateData = {
+                        full_name: userData.full_name.trim(),
+                        app_role: userData.app_role || existingUser.app_role,
+                        current_role: userData.current_role.trim(),
+                        department: userData.department.trim(),
+                        sector: userData.sector?.trim() || null,
+                        manager_email: userData.manager_email.trim().toLowerCase(),
+                        start_date: userData.start_date || existingUser.start_date
+                    };
+
+                    await base44.asServiceRole.entities.User.update(existingUser.id, updateData);
+
+                    // Send update notification
+                    await base44.asServiceRole.integrations.invoke('Core', 'SendEmail', {
+                        to: userData.email,
+                        subject: "Your Curiosity Led Profile Has Been Updated",
+                        body: `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                                <h2>Hello ${updateData.full_name},</h2>
+                                <p>Your Curiosity Led profile has been updated by an administrator.</p>
+                                <p>Please log in to review the changes: <a href="${req.headers.get('origin') || ''}">Curiosity Led Platform</a></p>
+                                <p>Best regards,<br/>The Curiosity Led Team</p>
+                            </div>
+                        `,
+                        from_name: 'Curiosity Led'
+                    });
+
+                    results.updated.push({ user: userData, id: existingUser.id });
+
+                } catch (updateError) {
+                    results.failed.push({ user: userData, reason: updateError.message });
+                }
+            }
+        }
+
+        // Log bulk activity
+        if (results.successful.length > 0 || results.updated.length > 0) {
+            await base44.asServiceRole.entities.ActivityLog.create({
+                timestamp: new Date().toISOString(),
+                initiator_user_email: currentUser.email,
+                action_type: 'USERS_BULK_CREATED',
+                metadata: {
+                    created_count: results.successful.length,
+                    updated_count: results.updated.length,
+                    failed_count: results.failed.length,
+                    total_attempted: users.length + (duplicateUsers?.length || 0),
+                    admin_name: currentUser.full_name
+                }
+            });
+        }
+
+        return Response.json({
+            success: true,
+            successful: results.successful,
+            updated: results.updated,
+            failed: results.failed,
+            summary: {
+                total: users.length + (duplicateUsers?.length || 0),
+                created: results.successful.length,
+                updated: results.updated.length,
+                failed: results.failed.length
+            }
+        });
+
+    } catch (error) {
+        console.error('Bulk user creation failed:', error);
+        return Response.json({ 
+            success: false, 
+            error: error.message 
+        }, { status: 500 });
+    }
+});

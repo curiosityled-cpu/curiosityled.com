@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -12,9 +12,6 @@ export default function LogoUploader({ logoUrl, faviconUrl, onChange }) {
   const [logoPreview, setLogoPreview] = useState(logoUrl);
   const [faviconPreview, setFaviconPreview] = useState(faviconUrl);
 
-  React.useEffect(() => { setLogoPreview(logoUrl); }, [logoUrl]);
-  React.useEffect(() => { setFaviconPreview(faviconUrl); }, [faviconUrl]);
-
   const handleUpload = async (file, type) => {
     if (!file) return;
 
@@ -26,7 +23,7 @@ export default function LogoUploader({ logoUrl, faviconUrl, onChange }) {
 
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await base44.integrations.invoke('Core', 'UploadFile', { file });
       
       if (type === 'logo') {
         setLogoPreview(file_url);

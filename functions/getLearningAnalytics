@@ -1,0 +1,553 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    
+    const user = await base44.auth.me();
+    
+    if (!user) {
+      return Response.json({ 
+        success: false, 
+        error: 'Unauthorized - Authentication required' 
+      }, { status: 401 });
+    }
+
+    // Allow Platform Admin, Super Admin, and User Level 3 (Org Leaders)
+    const isOrgLeader = user.app_role === 'User Level 3';
+    if (user.app_role !== 'Platform Admin' && user.app_role !== 'Super Administrator' && !isOrgLeader) {
+      return Response.json({ 
+        success: false, 
+        error: 'Unauthorized - Insufficient permissions' 
+      }, { status: 403 });
+    }
+
+    console.log('Fetching learning analytics for:', user.email, user.app_role);
+
+    const body = await req.json().catch(() => ({}));
+    const {
+      time_range = '30d',
+      client_id = 'all',
+      department = 'all',
+      competency = 'all',
+      learning_type = 'all',
+      leadership_level = 'all',
+      skill_topic = 'all',
+      learning_status = 'all'
+    } = body;
+
+    const getCutoffDate = (range) => {
+      const now = new Date();
+      switch(range) {
+        case '7d': return new Date(now.setDate(now.getDate() - 7));
+        case '30d': return new Date(now.setDate(now.getDate() - 30));
+        case '90d': return new Date(now.setDate(now.getDate() - 90));
+        case '12mo': return new Date(now.setFullYear(now.getFullYear() - 1));
+        case 'all': return new Date(0);
+        default: return new Date(now.setDate(now.getDate() - 30));
+      }
+    };
+    
+    const cutoffDate = getCutoffDate(time_range);
+
+    const [users, clients, assignedLearning, learningResources, assessments] = await Promise.all([
+      base44.entities.User.list().catch(() => []),
+      base44.entities.Client.list().catch(() => []),
+      base44.entities.AssignedLearning.list().catch(() => []),
+      base44.entities.LearningResource.list().catch(() => []),
+      base44.entities.Assessment.list().catch(() => [])
+    ]);
+
+    // Apply role-based filtering
+    let scopedUsers = users;
+    let scopedClients = clients;
+    let scopedAssignedLearning = assignedLearning;
+    let scopedAssessments = assessments;
+
+    if (isOrgLeader && user.client_id) {
+      // Org Leader: Only their organization
+      scopedClients = clients.filter(c => c.id === user.client_id);
+      scopedUsers = users.filter(u => u.client_id === user.client_id);
+      const userEmails = scopedUsers.map(u => u.email);
+      scopedAssignedLearning = assignedLearning.filter(al => userEmails.includes(al.user_email));
+      scopedAssessments = assessments.filter(a => userEmails.includes(a.email));
+    } else if (user.app_role === 'Super Administrator') {
+      if (user.client_id) {
+        const currentClient = clients.find(c => c.id === user.client_id);
+        
+        if (currentClient?.type === 'partner_client' && currentClient.partner_id) {
+          scopedClients = clients.filter(c => c.partner_id === currentClient.partner_id);
+        } else {
+          scopedClients = clients.filter(c => c.id === user.client_id);
+        }
+        
+        const clientIds = scopedClients.map(c => c.id);
+        scopedUsers = users.filter(u => clientIds.includes(u.client_id));
+        
+        const userEmails = scopedUsers.map(u => u.email);
+        scopedAssignedLearning = assignedLearning.filter(al => userEmails.includes(al.user_email));
+        scopedAssessments = assessments.filter(a => userEmails.includes(a.email));
+      }
+    }
+
+    // Apply user-selected filters
+    if (client_id !== 'all') {
+      scopedUsers = scopedUsers.filter(u => u.client_id === client_id);
+      const userEmails = scopedUsers.map(u => u.email);
+      scopedAssignedLearning = scopedAssignedLearning.filter(al => userEmails.includes(al.user_email));
+      scopedAssessments = scopedAssessments.filter(a => userEmails.includes(a.email));
+    }
+
+    if (department !== 'all') {
+      scopedUsers = scopedUsers.filter(u => u.department === department);
+      const userEmails = scopedUsers.map(u => u.email);
+      scopedAssignedLearning = scopedAssignedLearning.filter(al => userEmails.includes(al.user_email));
+      scopedAssessments = scopedAssessments.filter(a => userEmails.includes(a.email));
+    }
+
+    // Filter by time range
+    const resourcesInTimeframe = learningResources.filter(lr => {
+      const createdDate = new Date(lr.created_date);
+      return createdDate >= cutoffDate;
+    });
+
+    scopedAssignedLearning = scopedAssignedLearning.filter(al => {
+      const createdDate = new Date(al.created_date);
+      return createdDate >= cutoffDate;
+    });
+
+    // Filter by learning type
+    if (learning_type !== 'all') {
+      const filteredResourceIds = learningResources
+        .filter(lr => lr.type === learning_type)
+        .map(lr => lr.id);
+      scopedAssignedLearning = scopedAssignedLearning.filter(al => 
+        filteredResourceIds.includes(al.learning_resource_id)
+      );
+    }
+
+    // Filter by leadership level
+    if (leadership_level !== 'all') {
+      const filteredResourceIds = learningResources
+        .filter(lr => lr.leadership_level === leadership_level)
+        .map(lr => lr.id);
+      scopedAssignedLearning = scopedAssignedLearning.filter(al => 
+        filteredResourceIds.includes(al.learning_resource_id)
+      );
+    }
+
+    // Filter by competency
+    if (competency !== 'all') {
+      const filteredResourceIds = learningResources
+        .filter(lr => lr.competencies && lr.competencies.includes(competency))
+        .map(lr => lr.id);
+      scopedAssignedLearning = scopedAssignedLearning.filter(al => 
+        filteredResourceIds.includes(al.learning_resource_id)
+      );
+    }
+
+    // NEW: Filter by skill/topic
+    if (skill_topic !== 'all') {
+      const filteredResourceIds = learningResources
+        .filter(lr => lr.tags && lr.tags.includes(skill_topic))
+        .map(lr => lr.id);
+      scopedAssignedLearning = scopedAssignedLearning.filter(al => 
+        filteredResourceIds.includes(al.learning_resource_id)
+      );
+    }
+
+    // NEW: Filter by learning status
+    if (learning_status !== 'all') {
+      if (learning_status === 'assigned') {
+        scopedAssignedLearning = scopedAssignedLearning.filter(al => al.status === 'assigned');
+      } else if (learning_status === 'in_progress') {
+        scopedAssignedLearning = scopedAssignedLearning.filter(al => 
+          al.status === 'in_progress' || al.status === 'started'
+        );
+      } else if (learning_status === 'completed') {
+        scopedAssignedLearning = scopedAssignedLearning.filter(al => al.status === 'completed');
+      } else if (learning_status === 'overdue') {
+        scopedAssignedLearning = scopedAssignedLearning.filter(al => al.status === 'overdue');
+      }
+    }
+
+    // Calculate metrics
+    const totalResources = learningResources.length;
+    const totalAssigned = scopedAssignedLearning.length;
+    const completedLearning = scopedAssignedLearning.filter(al => al.status === 'completed');
+    const completedCount = completedLearning.length;
+    const completionRate = totalAssigned > 0 ? Math.round((completedCount / totalAssigned) * 100) : 0;
+    
+    const activeLearnersSet = new Set(
+      scopedAssignedLearning
+        .filter(al => ['started', 'in_progress', 'completed'].includes(al.status))
+        .map(al => al.user_email)
+    );
+    const activeLearners = activeLearnersSet.size;
+
+    // NEW: Total unique learners
+    const totalUniqueLearners = new Set(scopedAssignedLearning.map(al => al.user_email)).size;
+
+    const pendingLearning = scopedAssignedLearning.filter(al => 
+      ['assigned', 'overdue'].includes(al.status)
+    ).length;
+
+    const avgTimeToComplete = completedCount > 0 ? 14 : 0;
+
+    // NEW: New learning items added in timeframe
+    const newLearningItemsAdded = resourcesInTimeframe.filter(lr => 
+      scopedAssignedLearning.some(al => al.learning_resource_id === lr.id)
+    ).length;
+
+    // NEW: Top competency gaps
+    const competencyScores = {
+      'Situational Intelligence': [],
+      'Decision Making': [],
+      'Communication': [],
+      'Resource Management': [],
+      'Stakeholder Management': [],
+      'Performance Management': []
+    };
+
+    scopedAssessments.forEach(a => {
+      competencyScores['Situational Intelligence'].push(a.si_pct || 0);
+      competencyScores['Decision Making'].push(a.dm_pct || 0);
+      competencyScores['Communication'].push(a.comm_pct || 0);
+      competencyScores['Resource Management'].push(a.rm_pct || 0);
+      competencyScores['Stakeholder Management'].push(a.sm_pct || 0);
+      competencyScores['Performance Management'].push(a.pm_pct || 0);
+    });
+
+    const topCompetencyGaps = Object.entries(competencyScores)
+      .map(([name, scores]) => ({
+        name,
+        avg_score: scores.length > 0 ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length) : 0
+      }))
+      .sort((a, b) => a.avg_score - b.avg_score)
+      .slice(0, 3);
+
+    // NEW: Average engagement score (mock)
+    const averageEngagementScore = 75;
+
+    // Learning by type
+    const learningByType = {};
+    scopedAssignedLearning.forEach(al => {
+      const resource = learningResources.find(lr => lr.id === al.learning_resource_id);
+      if (resource) {
+        const type = resource.type || 'unknown';
+        learningByType[type] = (learningByType[type] || 0) + 1;
+      }
+    });
+
+    // Learning by competency
+    const learningByCompetency = {};
+    scopedAssignedLearning.forEach(al => {
+      const resource = learningResources.find(lr => lr.id === al.learning_resource_id);
+      if (resource && resource.competencies) {
+        resource.competencies.forEach(comp => {
+          learningByCompetency[comp] = (learningByCompetency[comp] || 0) + 1;
+        });
+      }
+    });
+
+    // NEW: Competency learning activity (assigned vs completed)
+    const competencyLearningActivity = {};
+    scopedAssignedLearning.forEach(al => {
+      const resource = learningResources.find(lr => lr.id === al.learning_resource_id);
+      if (resource && resource.competencies) {
+        resource.competencies.forEach(comp => {
+          if (!competencyLearningActivity[comp]) {
+            competencyLearningActivity[comp] = { assigned: 0, completed: 0 };
+          }
+          competencyLearningActivity[comp].assigned++;
+          if (al.status === 'completed') {
+            competencyLearningActivity[comp].completed++;
+          }
+        });
+      }
+    });
+
+    const competencyActivityArray = Object.entries(competencyLearningActivity).map(([competency, stats]) => ({
+      competency,
+      assigned: stats.assigned,
+      completed: stats.completed
+    }));
+
+    // NEW: Learning by skill/topic
+    const learningBySkillTopic = {};
+    scopedAssignedLearning.forEach(al => {
+      const resource = learningResources.find(lr => lr.id === al.learning_resource_id);
+      if (resource && resource.tags && Array.isArray(resource.tags)) {
+        resource.tags.forEach(tag => {
+          if (!learningBySkillTopic[tag]) {
+            learningBySkillTopic[tag] = { assigned: 0, completed: 0 };
+          }
+          learningBySkillTopic[tag].assigned++;
+          if (al.status === 'completed') {
+            learningBySkillTopic[tag].completed++;
+          }
+        });
+      }
+    });
+
+    const skillTopicArray = Object.entries(learningBySkillTopic).map(([topic, stats]) => ({
+      topic,
+      assigned: stats.assigned,
+      completed: stats.completed,
+      completionRate: stats.assigned > 0 ? Math.round((stats.completed / stats.assigned) * 100) : 0
+    }));
+
+    // NEW: Learning by leadership level
+    const learningByLeadershipLevel = {};
+    scopedAssignedLearning.forEach(al => {
+      const learnerUser = scopedUsers.find(u => u.email === al.user_email);
+      if (learnerUser && learnerUser.current_role) {
+        const role = learnerUser.current_role.toLowerCase();
+        let level = 'Other';
+        
+        if (role.includes('manager') && !role.includes('director') && !role.includes('vp') && !role.includes('chief')) {
+          level = 'Manager';
+        } else if (role.includes('director')) {
+          level = 'Director';
+        } else if (role.includes('vp') || role.includes('vice president')) {
+          level = 'VP';
+        } else if (role.includes('chief') || role.includes('ceo') || role.includes('cfo') || role.includes('cto')) {
+          level = 'C-Suite';
+        }
+
+        if (!learningByLeadershipLevel[level]) {
+          learningByLeadershipLevel[level] = { assigned: 0, completed: 0 };
+        }
+        learningByLeadershipLevel[level].assigned++;
+        if (al.status === 'completed') {
+          learningByLeadershipLevel[level].completed++;
+        }
+      }
+    });
+
+    const leadershipLevelArray = Object.entries(learningByLeadershipLevel).map(([level, stats]) => ({
+      level,
+      assigned: stats.assigned,
+      completed: stats.completed,
+      completionRate: stats.assigned > 0 ? Math.round((stats.completed / stats.assigned) * 100) : 0
+    }));
+
+    // NEW: Most overdue learning
+    const now = new Date();
+    const overdueLearning = scopedAssignedLearning
+      .filter(al => al.status === 'overdue' && al.due_date)
+      .map(al => {
+        const learnerUser = scopedUsers.find(u => u.email === al.user_email);
+        const resource = learningResources.find(lr => lr.id === al.learning_resource_id);
+        const dueDate = new Date(al.due_date);
+        const daysOverdue = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24));
+
+        return {
+          resource_title: al.title || resource?.title || 'Unknown',
+          learner_name: learnerUser?.full_name || 'Unknown',
+          learner_email: al.user_email,
+          learner_department: learnerUser?.department || 'N/A',
+          due_date: al.due_date,
+          days_overdue: daysOverdue
+        };
+      })
+      .sort((a, b) => b.days_overdue - a.days_overdue)
+      .slice(0, 10);
+
+    // Top resources by completion
+    const resourceCompletions = {};
+    completedLearning.forEach(al => {
+      resourceCompletions[al.learning_resource_id] = (resourceCompletions[al.learning_resource_id] || 0) + 1;
+    });
+    
+    const topResources = Object.entries(resourceCompletions)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([resourceId, count]) => {
+        const resource = learningResources.find(lr => lr.id === resourceId);
+        return {
+          id: resourceId,
+          title: resource?.title || 'Unknown',
+          type: resource?.type || 'unknown',
+          completions: count,
+          provider: resource?.provider || 'Unknown'
+        };
+      });
+
+    // Most popular resources
+    const resourcePopularity = {};
+    scopedAssignedLearning.forEach(al => {
+      resourcePopularity[al.learning_resource_id] = (resourcePopularity[al.learning_resource_id] || 0) + 1;
+    });
+    
+    const popularResources = Object.entries(resourcePopularity)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([resourceId, count]) => {
+        const resource = learningResources.find(lr => lr.id === resourceId);
+        const completed = completedLearning.filter(al => al.learning_resource_id === resourceId).length;
+        return {
+          id: resourceId,
+          title: resource?.title || 'Unknown',
+          type: resource?.type || 'unknown',
+          assignments: count,
+          completions: completed,
+          completionRate: count > 0 ? Math.round((completed / count) * 100) : 0,
+          provider: resource?.provider || 'Unknown'
+        };
+      });
+
+    // Learning by department
+    const learningByDepartment = {};
+    scopedAssignedLearning.forEach(al => {
+      const userObj = scopedUsers.find(u => u.email === al.user_email);
+      if (userObj && userObj.department) {
+        if (!learningByDepartment[userObj.department]) {
+          learningByDepartment[userObj.department] = { assigned: 0, completed: 0 };
+        }
+        learningByDepartment[userObj.department].assigned++;
+        if (al.status === 'completed') {
+          learningByDepartment[userObj.department].completed++;
+        }
+      }
+    });
+
+    // Top learners
+    const userLearningCounts = {};
+    scopedAssignedLearning.forEach(al => {
+      if (!userLearningCounts[al.user_email]) {
+        userLearningCounts[al.user_email] = { assigned: 0, completed: 0 };
+      }
+      userLearningCounts[al.user_email].assigned++;
+      if (al.status === 'completed') {
+        userLearningCounts[al.user_email].completed++;
+      }
+    });
+
+    const topLearners = Object.entries(userLearningCounts)
+      .sort(([, a], [, b]) => b.completed - a.completed)
+      .slice(0, 10)
+      .map(([email, stats]) => {
+        const userObj = scopedUsers.find(u => u.email === email);
+        return {
+          email,
+          full_name: userObj?.full_name || email,
+          department: userObj?.department || 'Unknown',
+          assigned: stats.assigned,
+          completed: stats.completed,
+          completionRate: stats.assigned > 0 ? Math.round((stats.completed / stats.assigned) * 100) : 0
+        };
+      });
+
+    // Users with pending/overdue learning
+    const pendingUsers = {};
+    scopedAssignedLearning
+      .filter(al => ['assigned', 'overdue'].includes(al.status))
+      .forEach(al => {
+        if (!pendingUsers[al.user_email]) {
+          pendingUsers[al.user_email] = { pending: 0, overdue: 0 };
+        }
+        if (al.status === 'overdue') {
+          pendingUsers[al.user_email].overdue++;
+        } else {
+          pendingUsers[al.user_email].pending++;
+        }
+      });
+
+    const usersWithPendingLearning = Object.entries(pendingUsers)
+      .sort(([, a], [, b]) => (b.pending + b.overdue) - (a.pending + a.overdue))
+      .slice(0, 20)
+      .map(([email, stats]) => {
+        const userObj = scopedUsers.find(u => u.email === email);
+        return {
+          email,
+          full_name: userObj?.full_name || email,
+          department: userObj?.department || 'Unknown',
+          pending: stats.pending,
+          overdue: stats.overdue
+        };
+      });
+
+    // Activity trends
+    const activityTrend = [];
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      const dayAssignments = scopedAssignedLearning.filter(al => {
+        const alDate = new Date(al.created_date).toISOString().split('T')[0];
+        return alDate === dateStr;
+      }).length;
+      
+      const dayCompletions = completedLearning.filter(al => {
+        const alDate = al.completion_date ? new Date(al.completion_date).toISOString().split('T')[0] : null;
+        return alDate === dateStr;
+      }).length;
+
+      const dayActive = new Set(
+        scopedAssignedLearning.filter(al => {
+          const startDate = new Date(al.created_date);
+          const endDate = al.completion_date ? new Date(al.completion_date) : now;
+          return startDate <= date && endDate >= date && ['started', 'in_progress'].includes(al.status);
+        }).map(al => al.user_email)
+      ).size;
+      
+      activityTrend.push({
+        date: dateStr,
+        assignments: dayAssignments,
+        completions: dayCompletions,
+        activeLearners: dayActive
+      });
+    }
+
+    // Get unique departments and skill topics for filters
+    const departments = [...new Set(scopedUsers.map(u => u.department).filter(Boolean))].sort();
+    const allTags = [...new Set(learningResources.flatMap(lr => lr.tags || []))].sort();
+
+    console.log('Learning analytics calculated successfully');
+
+    return Response.json({
+      success: true,
+      data: {
+        metrics: {
+          totalResources,
+          totalAssigned,
+          activeLearners,
+          totalUniqueLearners,
+          completionRate,
+          avgTimeToComplete,
+          pendingLearning,
+          completedCount,
+          newLearningItemsAdded,
+          averageEngagementScore,
+          overdueCount: overdueLearning.length
+        },
+        topCompetencyGaps,
+        learningByType,
+        learningByCompetency,
+        topResources,
+        popularResources,
+        learningByDepartment,
+        learningByLeadershipLevel: leadershipLevelArray,
+        learningBySkillTopic: skillTopicArray,
+        competencyLearningActivity: competencyActivityArray,
+        mostOverdueLearning: overdueLearning,
+        topLearners,
+        usersWithPendingLearning,
+        activityTrend,
+        availableClients: scopedClients.map(c => ({ id: c.id, name: c.name })),
+        availableDepartments: departments,
+        availableSkillTopics: allTags
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in getLearningAnalytics:', error);
+    return Response.json({
+      success: false,
+      error: error.message || 'Failed to fetch learning analytics',
+      details: error.stack
+    }, { status: 500 });
+  }
+});

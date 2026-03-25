@@ -5,8 +5,6 @@ import { Home, BarChart3, BookOpen, Target, Brain, Menu, X, Map, Sparkles, Bell,
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AuthProvider, useAuth } from "@/components/useAuth";
-import { useBranding } from "@/components/useBranding";
-import { BrandingProvider } from "@/components/BrandingProvider";
 import AtreusCoach from "@/components/ai/AtreusCoach";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { motion, AnimatePresence } from "framer-motion";
@@ -57,61 +55,6 @@ function LayoutContent({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, appRole, roleDisplayName, loading, isPlatformAdmin, isSuperAdmin, isPartnerBusinessAdmin, isOrgLeader, isManagerOfManagers, isProgramManager, hasProgramManagerAccess, hasPermission, hasAnyPermission, userPermissions } = useAuth();
-  const { branding, loading: brandingLoading } = useBranding();
-
-  // Apply branding as CSS custom properties on the root and inline styles
-  React.useEffect(() => {
-    if (brandingLoading || !branding || Object.keys(branding).length === 0) return;
-    
-    const root = document.documentElement;
-    
-    // Apply colors to CSS variables
-    if (branding.primary_color) {
-      root.style.setProperty('--brand-primary', branding.primary_color);
-    }
-    if (branding.secondary_color) root.style.setProperty('--brand-secondary', branding.secondary_color);
-    if (branding.header_bg_color) root.style.setProperty('--brand-header-bg', branding.header_bg_color);
-    if (branding.text_color) root.style.setProperty('--brand-text', branding.text_color);
-    if (branding.background_color) root.style.setProperty('--brand-bg', branding.background_color);
-    
-    // Apply fonts
-    if (branding.heading_font) root.style.setProperty('--brand-heading-font', branding.heading_font);
-    if (branding.body_font) {
-      root.style.setProperty('--brand-body-font', branding.body_font);
-      document.body.style.fontFamily = branding.body_font;
-    }
-    
-    // Inject Google Fonts link if provided
-    const existingFontLink = document.getElementById('brand-font-link');
-    const fontUrl = branding.font_url;
-    const isFontUrl = fontUrl && (fontUrl.includes('fonts.googleapis.com') || fontUrl.includes('fonts.google.com'));
-    const normalizedFontUrl = fontUrl && fontUrl.includes('fonts.google.com/specimen/')
-      ? `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontUrl.split('/specimen/')[1].split('?')[0])}&display=swap`
-      : fontUrl;
-
-    if (isFontUrl && normalizedFontUrl) {
-      if (!existingFontLink) {
-        const link = document.createElement('link');
-        link.id = 'brand-font-link';
-        link.rel = 'stylesheet';
-        link.href = normalizedFontUrl;
-        document.head.appendChild(link);
-      } else {
-        existingFontLink.href = normalizedFontUrl;
-      }
-    } else if (existingFontLink) {
-      existingFontLink.remove();
-    }
-    
-    console.log('[Branding Applied]', {
-      platform_name: branding.platform_name,
-      primary_color: branding.primary_color,
-      header_bg_color: branding.header_bg_color,
-      client_id: branding.client_id,
-      partner_id: branding.partner_id,
-      body_font: branding.body_font
-    });
-  }, [branding, brandingLoading]);
   const pageIntelligence = usePageIntelligence();
   const activityTracker = useActivityTracker();
   const [showAtreus, setShowAtreus] = useState(false);
@@ -140,7 +83,6 @@ function LayoutContent({ children }) {
   const [showUATCoach, setShowUATCoach] = useState(false);
   const [uatAssignedTests, setUatAssignedTests] = useState([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [clientName, setClientName] = useState(null);
 
     const [dynamicPageContext, setDynamicPageContext] = useState({});
     const [previousPageContext, setPreviousPageContext] = useState(null);
@@ -157,21 +99,6 @@ function LayoutContent({ children }) {
   }, [location.pathname]);
 
   useEffect(() => {
-    const fetchClientName = async () => {
-      if (!user?.client_id) {
-        setClientName(null);
-        return;
-      }
-      try {
-        const client = await base44.entities.Client.list();
-        const currentClient = client.find(c => c.id === user.client_id);
-        setClientName(currentClient?.name || null);
-      } catch (error) {
-        console.warn('Could not fetch client name:', error.message);
-        setClientName(null);
-      }
-    };
-
     const fetchNotifications = async () => {
       if (!user?.email) {
         setUnreadCount(0);
@@ -197,13 +124,10 @@ function LayoutContent({ children }) {
       }
     };
 
-    if (user?.email) {
-      fetchClientName();
-      fetchNotifications();
-      const interval = setInterval(fetchNotifications, 600000);
-      return () => clearInterval(interval);
-    }
-  }, [user?.email, user?.client_id]);
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 600000);
+    return () => clearInterval(interval);
+  }, [user?.email]);
 
   useEffect(() => {
     if (Object.keys(dynamicPageContext).length > 0) {
@@ -460,9 +384,6 @@ function LayoutContent({ children }) {
         case 'dashboard':
           return 'Dashboard';
         case 'experiences':
-          if (isPlatformAdmin) {
-            return 'ExperienceAnalytics';
-          }
           if (hasPermission('experiences.manage_org')) {
             return 'ExperienceManagement';
           } else if (hasPermission('experiences.view_analytics') || hasPermission('analytics.view_org')) {
@@ -817,9 +738,6 @@ function LayoutContent({ children }) {
                             <div className="px-2 py-1.5">
                               <p className="text-sm font-medium">{user.full_name}</p>
                               <p className="text-xs text-gray-500">{user.email}</p>
-                              {clientName && (
-                                <p className="text-xs text-gray-400 mt-1">{clientName}</p>
-                              )}
                               <Badge variant="outline" className="text-xs mt-1">
                                 {roleDisplayName}
                               </Badge>
@@ -934,9 +852,6 @@ function LayoutContent({ children }) {
                               <DrawerHeader>
                               <DrawerTitle>{user.full_name}</DrawerTitle>
                               <p className="text-xs text-gray-500">{user.email}</p>
-                              {clientName && (
-                                <p className="text-xs text-gray-400 mt-1">{clientName}</p>
-                              )}
                               <Badge variant="outline" className="text-xs mt-1 w-fit">
                                 {roleDisplayName}
                               </Badge>
@@ -1477,9 +1392,7 @@ export default function Layout({ children }) {
   return (
     <AuthProvider>
       <ContextProviders>
-        <BrandingProvider>
-          <LayoutContent>{children}</LayoutContent>
-        </BrandingProvider>
+        <LayoutContent>{children}</LayoutContent>
       </ContextProviders>
     </AuthProvider>
   );

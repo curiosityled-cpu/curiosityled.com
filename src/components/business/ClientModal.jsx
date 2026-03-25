@@ -98,9 +98,9 @@ export default function ClientModal({ client, onClose, onSuccess, preselectedPar
     try {
       if (client) {
         console.log('Updating client:', { clientId: client.id, clientData: formData });
-        const response = await base44.functions.invoke('clientUpdate', {
-          client_id: client.id,
-          updates: formData
+        const response = await base44.functions.invoke('updateClient', {
+          clientId: client.id,
+          clientData: formData
         });
         
         console.log('Update response:', response);

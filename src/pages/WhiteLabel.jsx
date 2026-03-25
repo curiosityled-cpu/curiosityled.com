@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useBranding } from "@/components/useBranding";
 import { withAuthProtection } from "@/components/hoc/withAuthProtection";
@@ -26,7 +27,7 @@ import { useAuth } from "@/components/useAuth";
 function WhiteLabel() {
   const location = useLocation();
   const { user, isPlatformAdmin, isSuperAdmin, isPartnerBusinessAdmin } = useAuth();
-  const { branding, refreshBranding } = useBranding();
+  const { branding } = useBranding();
   const [localBranding, setLocalBranding] = useState(branding || {});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -187,27 +188,21 @@ function WhiteLabel() {
 
   const loadEntityBranding = async (entityType, entityId) => {
     try {
-      let configs = [];
-
+      let filter = {};
+      
       if (entityType === 'client') {
-        configs = await base44.entities.BrandingConfiguration.filter({ client_id: entityId, is_active: true });
+        filter = { client_id: entityId, partner_id: null, is_active: true };
       } else if (entityType === 'partner') {
-        configs = await base44.entities.BrandingConfiguration.filter({ partner_id: entityId, is_active: true });
+        filter = { partner_id: entityId, client_id: null, is_active: true };
       } else {
-        // Platform default - filter all active configs and find the one with no client/partner
-        const all = await base44.entities.BrandingConfiguration.filter({ is_active: true });
-        configs = all.filter(c => !c.client_id && !c.partner_id);
+        // Platform default
+        filter = { client_id: null, partner_id: null, is_active: true };
       }
+
+      const configs = await base44.entities.BrandingConfiguration.filter(filter);
       
       if (configs.length > 0) {
-        const loaded = configs[0];
-        // Ensure font modes exist (for backward compatibility)
-        const withModes = {
-          ...loaded,
-          heading_font_mode: loaded.heading_font_mode || 'dropdown',
-          body_font_mode: loaded.body_font_mode || 'dropdown'
-        };
-        setLocalBranding(withModes);
+        setLocalBranding(configs[0]);
       } else {
         // No custom branding, use defaults
         setLocalBranding({
@@ -218,9 +213,7 @@ function WhiteLabel() {
           header_bg_color: '#FFFFFF',
           text_color: '#1F2937',
           heading_font: 'Inter, sans-serif',
-          heading_font_mode: 'dropdown',
           body_font: 'Inter, sans-serif',
-          body_font_mode: 'dropdown',
           font_url: '',
           platform_name: 'Curiosity Led',
           tagline: 'Leadership Development Platform',
@@ -251,15 +244,7 @@ function WhiteLabel() {
         filter = { client_id: null, partner_id: null, is_active: true };
       }
 
-      let existingConfigs = [];
-      if (editingMode === 'client') {
-        existingConfigs = await base44.entities.BrandingConfiguration.filter({ client_id: targetClientId, is_active: true });
-      } else if (editingMode === 'partner') {
-        existingConfigs = await base44.entities.BrandingConfiguration.filter({ partner_id: targetPartnerId, is_active: true });
-      } else {
-        const all = await base44.entities.BrandingConfiguration.filter({ is_active: true });
-        existingConfigs = all.filter(c => !c.client_id && !c.partner_id);
-      }
+      const existingConfigs = await base44.entities.BrandingConfiguration.filter(filter);
       const existingConfig = existingConfigs.length > 0 ? existingConfigs[0] : null;
 
       const brandingData = {
@@ -276,9 +261,9 @@ function WhiteLabel() {
       }
 
       // Log the change
-      let changeType = 'colors_changed';
-      if (editingMode === 'client') changeType = 'platform_name_changed';
-      if (editingMode === 'partner') changeType = 'welcome_message_changed';
+      let changeType = 'platform_default_updated';
+      if (editingMode === 'client') changeType = 'client_branding_updated';
+      if (editingMode === 'partner') changeType = 'partner_branding_updated';
 
       await base44.entities.BrandingChangeLog.create({
         changed_by: user.email,
@@ -291,9 +276,7 @@ function WhiteLabel() {
       });
 
       setHasUnsavedChanges(false);
-      toast.success('Branding saved successfully!');
-      // Refresh the global branding cache so all consumers see the new values immediately
-      await refreshBranding();
+      toast.success('Branding updated! Refresh the page to see changes.');
     } catch (error) {
       console.error('Save error:', error);
       toast.error('Failed to save branding changes');
@@ -308,18 +291,21 @@ function WhiteLabel() {
     }
 
     try {
-      let resetConfigs = [];
+      let filter = {};
       if (editingMode === 'client') {
-        resetConfigs = await base44.entities.BrandingConfiguration.filter({ client_id: targetClientId, is_active: true });
+        filter = { client_id: targetClientId, partner_id: null, is_active: true };
       } else if (editingMode === 'partner') {
-        resetConfigs = await base44.entities.BrandingConfiguration.filter({ partner_id: targetPartnerId, is_active: true });
+        filter = { partner_id: targetPartnerId, client_id: null, is_active: true };
       } else {
-        const all = await base44.entities.BrandingConfiguration.filter({ is_active: true });
-        resetConfigs = all.filter(c => !c.client_id && !c.partner_id);
+        filter = { client_id: null, partner_id: null, is_active: true };
       }
 
-      if (resetConfigs.length > 0) {
-        await base44.entities.BrandingConfiguration.update(resetConfigs[0].id, { is_active: false });
+      const existingConfigs = await base44.entities.BrandingConfiguration.filter(filter);
+      
+      if (existingConfigs.length > 0) {
+        await base44.entities.BrandingConfiguration.update(existingConfigs[0].id, {
+          is_active: false
+        });
       }
 
       // Log the reset
@@ -336,6 +322,13 @@ function WhiteLabel() {
       console.error('Reset error:', error);
       toast.error('Failed to reset branding');
     }
+  };
+
+  const getBackLink = () => {
+    if (editingMode === 'client' || editingMode === 'partner') {
+      return createPageUrl("BusinessManager");
+    }
+    return createPageUrl("Dashboard");
   };
 
   const getContextBanner = () => {
@@ -391,11 +384,11 @@ function WhiteLabel() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <Link 
-            to={createPageUrl("Dashboard")} 
+            to={getBackLink()} 
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
+            Back to {editingMode === 'client' || editingMode === 'partner' ? 'Business Manager' : 'Dashboard'}
           </Link>
           
           {getContextBanner()}
@@ -490,8 +483,6 @@ function WhiteLabel() {
                   headingFont={localBranding?.heading_font || 'Inter, sans-serif'}
                   bodyFont={localBranding?.body_font || 'Inter, sans-serif'}
                   fontUrl={localBranding?.font_url || ''}
-                  headingFontMode={localBranding?.heading_font_mode || 'dropdown'}
-                  bodyFontMode={localBranding?.body_font_mode || 'dropdown'}
                   onChange={handleChange}
                 />
               </TabsContent>

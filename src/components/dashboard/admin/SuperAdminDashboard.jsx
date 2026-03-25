@@ -94,8 +94,9 @@ export default function SuperAdminDashboard({ user, loading }) {
     { label: 'User Management', icon: Users, link: createPageUrl('UserManagement'), description: 'Manage all users' },
     { label: 'Programs & Cohorts', icon: Target, link: createPageUrl('CommandCenter'), description: 'Manage programs' },
     { label: 'Assessments', icon: BarChart3, link: createPageUrl('HRAssessmentDashboard'), description: 'Assessment dashboard' },
-    { label: 'Analytics', icon: TrendingUp, link: createPageUrl('OrgPerformance'), description: 'Org analytics' },
+    { label: 'Analytics', icon: TrendingUp, link: createPageUrl('EnterpriseAnalytics'), description: 'Org analytics' },
     { label: 'Branding', icon: Palette, link: createPageUrl('WhiteLabel'), description: 'Customize branding' },
+    { label: 'Billing', icon: CreditCard, link: createPageUrl('Billing'), description: 'Subscription & billing' }
   ];
 
   return (

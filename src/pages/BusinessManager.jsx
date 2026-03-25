@@ -168,27 +168,10 @@ function BusinessManager() {
     window.location.href = `${createPageUrl('WhiteLabel')}?partner_id=${partner.id}`;
   };
 
-  const handleDeletePartner = async (partner) => {
-    if (confirm(`Are you sure you want to delete ${partner.name}? This action cannot be undone.`)) {
-      try {
-        const response = await base44.functions.invoke('deletePartner', { partnerId: partner.id });
-        if (response.data?.success) {
-          toast.success('Partner deleted successfully');
-          loadData();
-        } else {
-          toast.error(response.data?.error || 'Failed to delete partner');
-        }
-      } catch (error) {
-        console.error('Error deleting partner:', error);
-        toast.error('Failed to delete partner');
-      }
-    }
-  };
-
   const handleDeleteClient = async (client) => {
     if (confirm(`Are you sure you want to delete ${client.name}? This action cannot be undone.`)) {
       try {
-        await base44.functions.invoke('clientDelete', { client_id: client.id });
+        await base44.functions.invoke('deleteClient', { clientId: client.id });
         toast.success('Client deleted successfully');
         loadData();
       } catch (error) {
@@ -585,30 +568,13 @@ function BusinessManager() {
                               <Paintbrush className="w-4 h-4 mr-2" />
                               Branding
                             </Button>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <MoreVertical className="w-4 h-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleEditPartner(partner)}>
-                                  <Edit className="w-4 h-4 mr-2" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  onSelect={(e) => {
-                                    e.preventDefault();
-                                    handleDeletePartner(partner);
-                                  }}
-                                  className="text-red-600 focus:text-red-600"
-                                >
-                                  <Trash2 className="w-4 h-4 mr-2" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditPartner(partner)}
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
                           </div>
                         </div>
                       </motion.div>

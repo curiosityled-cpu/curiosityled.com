@@ -34,8 +34,7 @@ export default function Profile() {
   const { updatePageContext } = usePageContext();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [clientName, setClientName] = useState(null);
+  const [isEditing, setIsEditing] = useState(false); // New state for editing mode
   const [profileData, setProfileData] = useState({
     display_name: '',
     current_role: '',
@@ -52,18 +51,6 @@ export default function Profile() {
     // Wait for auth to load before loading profile
     if (!authLoading && user) {
       loadProfile();
-      // Fetch client name if user has a client_id
-      if (user.client_id) {
-        base44.entities.Client.list()
-          .then(clients => {
-            const currentClient = clients.find(c => c.id === user.client_id);
-            setClientName(currentClient?.name || null);
-          })
-          .catch(error => {
-            console.error('Error fetching client:', error);
-            setClientName(null);
-          });
-      }
     }
   }, [authLoading, user]);
 
@@ -311,39 +298,29 @@ export default function Profile() {
                 </div>
 
                 <div>
-                   <Label className="text-gray-600">Application Role</Label>
-                   <div className="mt-2">
-                     <Badge variant="outline" className="px-3 py-1.5">
-                       <Shield className="w-3 h-3 mr-1" />
-                       {roleDisplayName}
-                     </Badge>
-                   </div>
-                   <p className="text-xs text-gray-500 mt-1">
-                     Role assigned by administrator
-                   </p>
-                 </div>
+                  <Label className="text-gray-600">Application Role</Label>
+                  <div className="mt-2">
+                    <Badge variant="outline" className="px-3 py-1.5">
+                      <Shield className="w-3 h-3 mr-1" />
+                      {roleDisplayName}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Role assigned by administrator
+                  </p>
+                </div>
 
-                 {user.client_id && (
-                   <div>
-                     <Label className="text-gray-600">Organization</Label>
-                     <div className="flex items-center gap-2 mt-2 p-3 bg-gray-50 rounded-lg">
-                       <Building2 className="w-4 h-4 text-gray-500" />
-                       <span className="text-gray-900">{clientName || 'Loading...'}</span>
-                     </div>
-                   </div>
-                 )}
-
-                 {user.created_date && (
-                   <div>
-                     <Label className="text-gray-600">Member Since</Label>
-                     <div className="flex items-center gap-2 mt-2 p-3 bg-gray-50 rounded-lg">
-                       <Calendar className="w-4 h-4 text-gray-500" />
-                       <span className="text-gray-900">
-                         {format(new Date(user.created_date), 'MMMM d, yyyy')}
-                       </span>
-                     </div>
-                   </div>
-                 )}
+                {user.created_date && (
+                  <div>
+                    <Label className="text-gray-600">Member Since</Label>
+                    <div className="flex items-center gap-2 mt-2 p-3 bg-gray-50 rounded-lg">
+                      <Calendar className="w-4 h-4 text-gray-500" />
+                      <span className="text-gray-900">
+                        {format(new Date(user.created_date), 'MMMM d, yyyy')}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

@@ -15,8 +15,7 @@ import { AccessDeniedPage } from '@/components/AccessDeniedPage';
 export function withAuthProtection(Component, options = {}) {
   return function ProtectedComponent(props) {
     const { user, appRole, loading, isPlatformAdmin } = useAuth();
-    const allowedRoles = Array.isArray(options) ? options : (options.allowedRoles || []);
-    const checkAccess = Array.isArray(options) ? null : options.checkAccess;
+    const { allowedRoles = [], checkAccess } = options;
     const [redirectAttempted, setRedirectAttempted] = React.useState(false);
     const redirectTimeoutRef = React.useRef(null);
     const isMountedRef = React.useRef(true);

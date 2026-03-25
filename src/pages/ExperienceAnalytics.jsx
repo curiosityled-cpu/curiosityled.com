@@ -793,7 +793,7 @@ function ExperienceAnalytics() {
               <SubNavMenu
                 items={viewTabs}
                 activeId={activeView}
-                onItemClick={setActiveView}
+                onItemClick={(id) => id === 'experience-management' ? navigate(createPageUrl('ExperienceManagement')) : setActiveView(id)}
                 variant="header"
               />
             )
