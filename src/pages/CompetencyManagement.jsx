@@ -64,7 +64,7 @@ function CompetencyManagement() {
       await loadCompetencies();
     } catch (error) {
       console.error('Error creating competency:', error);
-      toast.error('Failed to create competency');
+      toast.error(error.message || 'Failed to create competency');
     }
   };
 
