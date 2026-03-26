@@ -738,11 +738,11 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                 </CardTitle>
                 <p className="text-sm text-gray-600 mt-1">Strategic synthesis of your organizational leadership data</p>
               </div>
-              {/* Only show Regenerate when a briefing already exists — hides the cold-start LLM call from the demo default path */}
+              {/* Refresh button only appears after a briefing has been generated in-session */}
               {executiveBriefing && (
                 <Button variant="outline" size="sm" onClick={generateExecutiveBriefing} disabled={generatingBriefing}>
-                  {generatingBriefing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-                  Refresh Briefing
+                  <RefreshCw className={`w-4 h-4 mr-2 ${generatingBriefing ? 'animate-spin' : ''}`} />
+                  Refresh
                 </Button>
               )}
             </div>
@@ -753,8 +753,11 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                 <p className="text-gray-700 leading-relaxed whitespace-pre-line">{executiveBriefing}</p>
               </div>
             ) : (
-              <div className="py-6 text-gray-500 text-sm text-center">
-                Executive briefing can be refreshed as new activity is collected.
+              <div className="flex items-start gap-3 py-4 px-2">
+                <Sparkles className="w-5 h-5 text-purple-400 mt-0.5 shrink-0" />
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  Executive briefings update as leadership activity and assessments are completed.
+                </p>
               </div>
             )}
           </CardContent>
