@@ -95,7 +95,8 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
     goals: [],
     assignedLearning: [],
     journeyEnrollments: [],
-    allUsers: []
+    allUsers: [],
+    assessmentInsights: []
   });
   
   const [aiInsights, setAiInsights] = useState([]);
@@ -112,12 +113,13 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const [assessments, goals, assignedLearning, journeyEnrollments, allUsers] = await Promise.all([
+      const [assessments, goals, assignedLearning, journeyEnrollments, allUsers, assessmentInsights] = await Promise.all([
         base44.entities.Assessment.list(),
         base44.entities.Goal.list(),
         base44.entities.AssignedLearning.list(),
         base44.entities.JourneyEnrollment.list(),
-        base44.entities.User.list()
+        base44.entities.User.list(),
+        base44.entities.AssessmentInsights.filter({ status: 'generated' }).catch(() => [])
       ]);
 
       setRawData({
@@ -125,7 +127,8 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
         goals: goals || [],
         assignedLearning: assignedLearning || [],
         journeyEnrollments: journeyEnrollments || [],
-        allUsers: allUsers || []
+        allUsers: allUsers || [],
+        assessmentInsights: assessmentInsights || []
       });
     } catch (error) {
       console.error('Error loading data:', error);
@@ -339,7 +342,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
     // Update parent metrics
     if (onMetricsUpdate) {
       onMetricsUpdate({
-        totalInsights: aiInsights.length || 0,
+        totalInsights: rawData.assessmentInsights.length || aiInsights.length || 0,
         actionItems: strategicOpportunities.length + strategicRisks.length,
         completionRate: goalCompletionRate
       });
@@ -929,6 +932,108 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
               <strong>Insight:</strong> This chart reveals the correlation between leadership capability and execution effectiveness. 
               Leaders in the upper-right quadrant demonstrate both strong capability and high performance.
             </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Pre-Generated Leader Insights (from AssessmentInsights entity) */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
+        <Card className="border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-600" />
+              Leader Insight Profiles
+            </CardTitle>
+            <p className="text-sm text-gray-600 mt-1">
+              Pre-generated AI insights from completed assessments — updated automatically after each submission
+            </p>
+          </CardHeader>
+          <CardContent>
+            {rawData.assessmentInsights.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Sparkles className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                <p className="font-medium">Insights processing...</p>
+                <p className="text-sm mt-1">Leader insights are generated automatically after each assessment is submitted.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {rawData.assessmentInsights.slice(0, 10).map((insight, idx) => {
+                  const user = rawData.allUsers.find(u => u.email === insight.user_email);
+                  return (
+                    <div key={insight.id || idx} className="p-4 border rounded-lg bg-white hover:shadow-md transition-shadow">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="font-semibold text-gray-900">{user?.full_name || insight.user_email}</p>
+                          <p className="text-xs text-gray-500">{user?.current_role || ''} {user?.department ? `· ${user.department}` : ''}</p>
+                        </div>
+                        <Badge className="bg-purple-100 text-purple-800 shrink-0">{insight.archetype || 'Processing...'}</Badge>
+                      </div>
+
+                      {insight.summary && (
+                        <p className="text-sm text-gray-700 mb-3 leading-relaxed">{insight.summary}</p>
+                      )}
+
+                      <div className="grid md:grid-cols-3 gap-3">
+                        {insight.top_strengths?.length > 0 && (
+                          <div>
+                            <p className="text-xs font-semibold text-green-700 mb-1 flex items-center gap-1">
+                              <CheckCircle className="w-3 h-3" /> Top Strengths
+                            </p>
+                            <ul className="space-y-0.5">
+                              {insight.top_strengths.slice(0, 3).map((s, i) => (
+                                <li key={i} className="text-xs text-gray-600">· {s}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {insight.development_areas?.length > 0 && (
+                          <div>
+                            <p className="text-xs font-semibold text-orange-700 mb-1 flex items-center gap-1">
+                              <Target className="w-3 h-3" /> Development Areas
+                            </p>
+                            <ul className="space-y-0.5">
+                              {insight.development_areas.slice(0, 3).map((d, i) => (
+                                <li key={i} className="text-xs text-gray-600">· {d}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {insight.risk_flags?.length > 0 && (
+                          <div>
+                            <p className="text-xs font-semibold text-red-700 mb-1 flex items-center gap-1">
+                              <AlertTriangle className="w-3 h-3" /> Risk Flags
+                            </p>
+                            <ul className="space-y-0.5">
+                              {insight.risk_flags.map((r, i) => (
+                                <li key={i} className="text-xs text-gray-600">· {r.replace(/_/g, ' ')}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+
+                      {insight.recommendations?.length > 0 && (
+                        <div className="mt-3 pt-3 border-t">
+                          <p className="text-xs font-semibold text-blue-700 mb-1 flex items-center gap-1">
+                            <Zap className="w-3 h-3" /> Recommendations
+                          </p>
+                          <ul className="space-y-0.5">
+                            {insight.recommendations.slice(0, 2).map((rec, i) => (
+                              <li key={i} className="text-xs text-gray-600">· {rec}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                {rawData.assessmentInsights.length > 10 && (
+                  <p className="text-sm text-center text-gray-500">
+                    Showing 10 of {rawData.assessmentInsights.length} leader insights
+                  </p>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       </motion.div>
