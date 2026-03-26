@@ -85,5 +85,39 @@ module.exports = {
   		}
   	}
   },
+  safelist: [
+    // OrgInsightsView — PRIORITY_COLORS object (dynamic key lookup)
+    'bg-red-100', 'text-red-800', 'border-red-200',
+    'bg-yellow-100', 'text-yellow-800', 'border-yellow-200',
+    'bg-green-100', 'text-green-800', 'border-green-200',
+    'bg-blue-100', 'text-blue-800', 'border-blue-200',
+
+    // PlatformInsightsCards — SuccessionPipelineCard healthBg/healthColor ternaries
+    'bg-green-100', 'text-green-600',
+    'bg-yellow-100', 'text-yellow-600',
+    'bg-red-100', 'text-red-600',
+
+    // PlatformInsightsCards — LearningVelocityCard, DecisionMakingCard Badge ternaries
+    'text-green-700', 'text-yellow-700', 'text-red-700',
+
+    // PlatformInsightsCards — FlightRiskCard severity dot colors
+    'bg-red-500', 'bg-yellow-500', 'bg-blue-500',
+
+    // PlatformInsightsCards — FlightRiskCard overall risk text ternary
+    'text-yellow-600',
+
+    // ProgramAdminInsightsView — at-risk card gradient/border ternary
+    'from-orange-50', 'border-orange-200',
+    'from-gray-50', 'border-gray-200',
+    'text-orange-600', 'text-orange-700', 'text-gray-700',
+
+    // ProgramManagerDashboard (admin) — program status Badge ternaries
+    'bg-green-100', 'text-green-700',
+    'bg-gray-100', 'text-gray-700',
+    'bg-blue-100', 'text-blue-700',
+
+    // ProgramManagerDashboard — action item priority ternaries
+    'bg-red-100', 'bg-amber-100', 'text-red-600', 'text-amber-600',
+  ],
   plugins: [require("tailwindcss-animate")],
 }
