@@ -42,6 +42,7 @@ export default function CompetencySelector({ open, onOpenChange }) {
   }, [open, selectedCompetencies]);
 
   const canConfigure = isSuperAdmin || isHRAdmin || isPartnerBusinessAdmin || isPlatformAdmin;
+  const isPlatformAdminWithoutClient = isPlatformAdmin && !user?.client_id;
 
   // Group competencies by category
   const competenciesByCategory = allCompetencies.reduce((acc, comp) => {
@@ -127,12 +128,14 @@ export default function CompetencySelector({ open, onOpenChange }) {
 
         <div className="space-y-4">
           {/* Info Banner */}
-          <Alert className={competenciesConfigured ? "bg-green-50 border-green-200" : "bg-amber-50 border-amber-200"}>
-            <Info className={`w-4 h-4 ${competenciesConfigured ? 'text-green-600' : 'text-amber-600'}`} />
-            <AlertDescription className={competenciesConfigured ? 'text-green-800' : 'text-amber-800'}>
-              {competenciesConfigured 
-                ? "Your organization's core competencies are configured. You can update them at any time."
-                : "Your organization hasn't selected core competencies yet. Please select 3-5 competencies that are most relevant for your organization. Situational Intelligence is always included."}
+          <Alert className={isPlatformAdminWithoutClient ? "bg-blue-50 border-blue-200" : competenciesConfigured ? "bg-green-50 border-green-200" : "bg-amber-50 border-amber-200"}>
+            <Info className={`w-4 h-4 ${isPlatformAdminWithoutClient ? 'text-blue-600' : competenciesConfigured ? 'text-green-600' : 'text-amber-600'}`} />
+            <AlertDescription className={isPlatformAdminWithoutClient ? 'text-blue-800' : competenciesConfigured ? 'text-green-800' : 'text-amber-800'}>
+              {isPlatformAdminWithoutClient
+                ? "As Platform Admin, all competencies are available by default. To configure per-client competencies, log in as that client's Super Administrator."
+                : competenciesConfigured 
+                  ? "Your organization's core competencies are configured. You can update them at any time."
+                  : "Your organization hasn't selected core competencies yet. Please select 3-5 competencies that are most relevant for your organization. Situational Intelligence is always included."}
             </AlertDescription>
           </Alert>
 
@@ -232,7 +235,7 @@ export default function CompetencySelector({ open, onOpenChange }) {
           </Button>
           <Button 
             onClick={handleSave}
-            disabled={saving || coreSelectedCount < 3}
+            disabled={saving || coreSelectedCount < 3 || isPlatformAdminWithoutClient}
             className="bg-blue-600 hover:bg-blue-700"
           >
             {saving ? (

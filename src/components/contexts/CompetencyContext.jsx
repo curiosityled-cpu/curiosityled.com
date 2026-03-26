@@ -108,7 +108,11 @@ export const CompetencyProvider = ({ children }) => {
 
   // Update selected competencies (for admin use)
   const updateSelectedCompetencies = async (competencyIds) => {
-    if (!client) return { success: false, error: 'No client found' };
+    if (!client) {
+      // Platform Admins have no client — save directly to competency records or just update local state
+      // For Platform Admin, competencies are always "all", so just refresh
+      return { success: false, error: 'No client record found. Platform Admins use all competencies by default — select an org client to configure per-client competencies.' };
+    }
 
     try {
       await base44.entities.Client.update(client.id, {

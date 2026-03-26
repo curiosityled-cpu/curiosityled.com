@@ -46,7 +46,7 @@ const STATUS_COLORS = {
 };
 
 export default function ProgramsManagement({ onTabChange, activeSubTab }) {
-  const { user, hasPermission } = useAuth();
+  const { user, hasPermission, isPlatformAdmin, isSuperAdmin, isHRAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -107,17 +107,21 @@ export default function ProgramsManagement({ onTabChange, activeSubTab }) {
   const loadPrograms = async () => {
     setLoading(true);
     try {
-      // Load all programs and filter client-side for complex $or queries
       const allPrograms = await base44.entities.Program.list();
-      const data = allPrograms.filter(p => 
-        p.manager_emails?.includes(user.email) ||
-        p.primary_manager_email === user.email ||
-        p.program_manager_email === user.email
-      );
+      // Platform Admins and org-level admins see all programs they have RLS access to
+      // Program Managers only see programs they manage
+      const isAdmin = isPlatformAdmin || isSuperAdmin || isHRAdmin;
+      const data = isAdmin
+        ? allPrograms
+        : allPrograms.filter(p =>
+            p.manager_emails?.includes(user.email) ||
+            p.primary_manager_email === user.email ||
+            p.program_manager_email === user.email
+          );
       setPrograms(data);
     } catch (error) {
       console.error('Error loading programs:', error);
-      toast.error('Failed to load programs');
+      toast.error(`Failed to load programs: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -154,7 +158,7 @@ export default function ProgramsManagement({ onTabChange, activeSubTab }) {
       loadPrograms();
     } catch (error) {
       console.error('Error saving program:', error);
-      toast.error('Failed to save program');
+      toast.error(`Failed to save program: ${error.message}`);
     } finally {
       setSaving(false);
     }
