@@ -26,6 +26,8 @@ import SuccessionReadinessCard from "../components/results/SuccessionReadinessCa
 import ArchetypeProfileCard from "../components/results/ArchetypeProfileCard";
 import ProficiencyScoresCard from "../components/results/ProficiencyScoresCard";
 import DevelopmentInsightsCard from "../components/results/DevelopmentInsightsCard";
+import CreateGoalModal from "@/components/goals/CreateGoalModal";
+import AssignLearningModal from "@/components/learning/AssignLearningModal";
 
 function AssessmentResults() {
   const { updatePageContext } = usePageContext();
