@@ -12,6 +12,8 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 // MVP Role-Based Pages
 import MVPLayout, { getMVPRole } from '@/components/mvp/MVPLayout';
 import MyLeadership from './pages/MyLeadership';
+import MyGoalsMVP from './pages/MyGoalsMVP';
+import ReportBuilderMVP from './pages/ReportBuilderMVP';
 import ProgramOverview from './pages/ProgramOverview';
 import ManagerDetail from './pages/ManagerDetail';
 import LeadershipIntelligenceHub from './pages/LeadershipIntelligenceHub';
@@ -68,10 +70,11 @@ const AuthenticatedApp = () => {
       } />
       {/* MVP Role-Based Routes */}
       <Route path="/my-leadership" element={<MVPLayout><MyLeadership /></MVPLayout>} />
+      <Route path="/my-goals" element={<MVPLayout><MyGoalsMVP /></MVPLayout>} />
       <Route path="/program-overview" element={<MVPLayout><ProgramOverview /></MVPLayout>} />
       <Route path="/manager-detail/:id" element={<MVPLayout><ManagerDetail /></MVPLayout>} />
       <Route path="/leadership-intelligence" element={<MVPLayout><LeadershipIntelligenceHub /></MVPLayout>} />
-      <Route path="/ask-atreus" element={<MVPLayout><MyLeadership /></MVPLayout>} />
+      <Route path="/report-builder-mvp" element={<MVPLayout><ReportBuilderMVP /></MVPLayout>} />
       {Object.entries(Pages).map(([path, Page]) => (
         <Route
           key={path}

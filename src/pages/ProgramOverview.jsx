@@ -3,10 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { Users, AlertTriangle, TrendingUp, CheckCircle, Loader2, Search, ChevronRight } from "lucide-react";
+import {
+  Users, AlertTriangle, TrendingUp, CheckCircle, Loader2, Search,
+  ChevronRight, Map, BookOpen, Plus
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 const getRiskLevel = (insight) => {
   if (!insight) return { label: 'No Data', color: 'text-gray-500', bg: 'bg-gray-50 border-gray-200', dot: 'bg-gray-400' };
@@ -16,10 +21,133 @@ const getRiskLevel = (insight) => {
   return { label: 'At Risk', color: 'text-red-700', bg: 'bg-red-50 border-red-200', dot: 'bg-red-500' };
 };
 
+// Assignment templates for HR/L&D buyers
+const PROGRAM_TEMPLATES = [
+  {
+    id: 'onboarding',
+    label: 'New Manager Onboarding Journey',
+    icon: Map,
+    description: 'A structured 30/60/90-day onboarding journey for first-time managers.',
+    color: 'bg-blue-50 border-blue-200 text-blue-700',
+    iconBg: 'bg-blue-100',
+    type: 'journey',
+  },
+  {
+    id: 'learning',
+    label: 'Leadership Development Learning Path',
+    icon: BookOpen,
+    description: 'A curated learning path covering communication, decision-making, and team leadership.',
+    color: 'bg-purple-50 border-purple-200 text-purple-700',
+    iconBg: 'bg-purple-100',
+    type: 'journey',
+  },
+];
+
+function AssignTemplateDialog({ open, onClose, managers }) {
+  const [selected, setSelected] = useState(null);
+  const [selectedManagers, setSelectedManagers] = useState([]);
+  const [assigning, setAssigning] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleAssign = async () => {
+    if (!selected || selectedManagers.length === 0) return;
+    setAssigning(true);
+    // Simulate assignment (in real app would call a backend function or create AssignedLearning records)
+    await new Promise(r => setTimeout(r, 1000));
+    setAssigning(false);
+    setSuccess(true);
+    setTimeout(() => {
+      setSuccess(false);
+      setSelected(null);
+      setSelectedManagers([]);
+      onClose();
+    }, 1500);
+  };
+
+  const toggleManager = (id) => {
+    setSelectedManagers(prev =>
+      prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]
+    );
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Assign Program Template</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          {/* Template selection */}
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-2">Choose a Template</p>
+            <div className="space-y-2">
+              {PROGRAM_TEMPLATES.map(t => {
+                const Icon = t.icon;
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => setSelected(t.id)}
+                    className={`w-full flex items-start gap-3 p-3 rounded-xl border text-left transition-all ${
+                      selected === t.id ? 'border-[#0202ff] bg-[#0202ff]/5 ring-1 ring-[#0202ff]' : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${t.iconBg}`}>
+                      <Icon className="w-4 h-4 text-gray-700" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">{t.label}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{t.description}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Manager selection */}
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-2">Assign to Managers</p>
+            <div className="max-h-48 overflow-y-auto space-y-1 border rounded-lg p-2">
+              {managers.length === 0 && (
+                <p className="text-sm text-gray-400 text-center py-4">No managers found</p>
+              )}
+              {managers.map(m => (
+                <button
+                  key={m.id}
+                  onClick={() => toggleManager(m.id)}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors ${
+                    selectedManagers.includes(m.id) ? 'bg-[#0202ff]/10 text-[#0202ff]' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="w-6 h-6 rounded-full bg-[#0202ff]/10 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-bold text-[#0202ff]">{m.full_name?.[0] || m.email?.[0]}</span>
+                  </div>
+                  <span className="text-sm truncate">{m.full_name || m.email}</span>
+                  {selectedManagers.includes(m.id) && <CheckCircle className="w-4 h-4 ml-auto flex-shrink-0" />}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button
+            onClick={handleAssign}
+            disabled={!selected || selectedManagers.length === 0 || assigning}
+            className="bg-[#0202ff] hover:bg-[#0101dd] text-white"
+          >
+            {assigning ? 'Assigning...' : success ? '✓ Assigned!' : `Assign to ${selectedManagers.length} Manager${selectedManagers.length !== 1 ? 's' : ''}`}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function ManagerRow({ manager, insight, onClick }) {
   const risk = getRiskLevel(insight);
   const initial = manager.full_name?.[0] || manager.email?.[0] || '?';
-
   return (
     <button
       onClick={() => onClick(manager, insight)}
@@ -47,28 +175,27 @@ export default function ProgramOverview() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [showAssignDialog, setShowAssignDialog] = useState(false);
 
-  const { data: managers, isLoading: loadingManagers } = useQuery({
+  const { data: managers = [], isLoading: loadingManagers } = useQuery({
     queryKey: ['managers', user?.client_id],
     queryFn: async () => {
-      const users = await base44.entities.User.filter({
+      return await base44.entities.User.filter({
         client_id: user.client_id,
         app_role: { $in: ['User Level 1', 'User Level 2'] }
       });
-      return users;
     },
     enabled: !!user?.client_id,
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: allInsights, isLoading: loadingInsights } = useQuery({
+  const { data: allInsights = {}, isLoading: loadingInsights } = useQuery({
     queryKey: ['all-insights', user?.client_id],
     queryFn: async () => {
       const insights = await base44.entities.AssessmentInsights.filter({
         client_id: user.client_id,
         status: 'generated'
       });
-      // Index by user_email for fast lookup
       return insights.reduce((acc, i) => { acc[i.user_email] = i; return acc; }, {});
     },
     enabled: !!user?.client_id,
@@ -77,20 +204,18 @@ export default function ProgramOverview() {
 
   const isLoading = loadingManagers || loadingInsights;
 
-  const filteredManagers = (managers || []).filter(m => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return m.full_name?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q);
-  });
+  const filteredManagers = useMemo(() =>
+    managers.filter(m => {
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return m.full_name?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q);
+    }), [managers, search]);
 
-  // Summary stats
-  const stats = React.useMemo(() => {
-    if (!managers || !allInsights) return null;
+  const stats = useMemo(() => {
     let atRisk = 0, developing = 0, onTrack = 0, noData = 0;
     managers.forEach(m => {
-      const insight = allInsights[m.email];
-      const flags = insight?.risk_flags?.length || 0;
-      if (!insight) noData++;
+      const flags = allInsights[m.email]?.risk_flags?.length;
+      if (flags == null) noData++;
       else if (flags === 0) onTrack++;
       else if (flags === 1) developing++;
       else atRisk++;
@@ -112,53 +237,77 @@ export default function ProgramOverview() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Program Overview</h1>
-        <p className="text-sm text-gray-500 mt-1">Monitor your managers' leadership development and risk signals.</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Program Overview</h1>
+          <p className="text-sm text-gray-500 mt-1">Monitor your managers' development and assign programs.</p>
+        </div>
+        <Button
+          className="bg-[#0202ff] hover:bg-[#0101dd] text-white flex-shrink-0"
+          onClick={() => setShowAssignDialog(true)}
+        >
+          <Plus className="w-4 h-4 mr-1" /> Assign Program
+        </Button>
+      </div>
+
+      {/* Program Templates */}
+      <div className="grid grid-cols-2 gap-3">
+        {PROGRAM_TEMPLATES.map(t => {
+          const Icon = t.icon;
+          return (
+            <Card key={t.id} className={`border shadow-sm cursor-pointer hover:shadow-md transition-shadow ${t.color}`} onClick={() => setShowAssignDialog(true)}>
+              <CardContent className="py-4 px-4 flex items-start gap-3">
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${t.iconBg}`}>
+                  <Icon className="w-4 h-4 text-gray-700" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold leading-snug">{t.label}</p>
+                  <p className="text-xs opacity-80 mt-0.5 line-clamp-2">{t.description}</p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Summary Cards */}
-      {stats && (
-        <div className="grid grid-cols-3 gap-3">
-          <Card className="border-0 shadow-sm text-center">
-            <CardContent className="py-4">
-              <div className="flex items-center justify-center w-8 h-8 bg-red-50 rounded-full mx-auto mb-2">
-                <AlertTriangle className="w-4 h-4 text-red-500" />
-              </div>
-              <p className="text-2xl font-bold text-gray-900">{stats.atRisk}</p>
-              <p className="text-xs text-gray-500 mt-0.5">At Risk</p>
-            </CardContent>
-          </Card>
-          <Card className="border-0 shadow-sm text-center">
-            <CardContent className="py-4">
-              <div className="flex items-center justify-center w-8 h-8 bg-amber-50 rounded-full mx-auto mb-2">
-                <TrendingUp className="w-4 h-4 text-amber-500" />
-              </div>
-              <p className="text-2xl font-bold text-gray-900">{stats.developing}</p>
-              <p className="text-xs text-gray-500 mt-0.5">Developing</p>
-            </CardContent>
-          </Card>
-          <Card className="border-0 shadow-sm text-center">
-            <CardContent className="py-4">
-              <div className="flex items-center justify-center w-8 h-8 bg-emerald-50 rounded-full mx-auto mb-2">
-                <CheckCircle className="w-4 h-4 text-emerald-500" />
-              </div>
-              <p className="text-2xl font-bold text-gray-900">{stats.onTrack}</p>
-              <p className="text-xs text-gray-500 mt-0.5">On Track</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <div className="grid grid-cols-3 gap-3">
+        <Card className="border-0 shadow-sm text-center">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-center w-8 h-8 bg-red-50 rounded-full mx-auto mb-2">
+              <AlertTriangle className="w-4 h-4 text-red-500" />
+            </div>
+            <p className="text-2xl font-bold text-gray-900">{stats.atRisk}</p>
+            <p className="text-xs text-gray-500 mt-0.5">At Risk</p>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm text-center">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-center w-8 h-8 bg-amber-50 rounded-full mx-auto mb-2">
+              <TrendingUp className="w-4 h-4 text-amber-500" />
+            </div>
+            <p className="text-2xl font-bold text-gray-900">{stats.developing}</p>
+            <p className="text-xs text-gray-500 mt-0.5">Developing</p>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm text-center">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-center w-8 h-8 bg-emerald-50 rounded-full mx-auto mb-2">
+              <CheckCircle className="w-4 h-4 text-emerald-500" />
+            </div>
+            <p className="text-2xl font-bold text-gray-900">{stats.onTrack}</p>
+            <p className="text-xs text-gray-500 mt-0.5">On Track</p>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Manager List */}
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
-              <Users className="w-4 h-4 text-[#0202ff]" />
-              Managers ({filteredManagers.length})
-            </CardTitle>
-          </div>
+          <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
+            <Users className="w-4 h-4 text-[#0202ff]" />
+            Managers ({filteredManagers.length})
+          </CardTitle>
           <div className="relative mt-2">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <Input
@@ -176,19 +325,23 @@ export default function ProgramOverview() {
               <p className="text-sm">No managers found</p>
             </div>
           ) : (
-            <div>
-              {filteredManagers.map(manager => (
-                <ManagerRow
-                  key={manager.id}
-                  manager={manager}
-                  insight={allInsights?.[manager.email]}
-                  onClick={handleManagerClick}
-                />
-              ))}
-            </div>
+            filteredManagers.map(manager => (
+              <ManagerRow
+                key={manager.id}
+                manager={manager}
+                insight={allInsights[manager.email]}
+                onClick={handleManagerClick}
+              />
+            ))
           )}
         </CardContent>
       </Card>
+
+      <AssignTemplateDialog
+        open={showAssignDialog}
+        onClose={() => setShowAssignDialog(false)}
+        managers={managers}
+      />
     </div>
   );
 }
