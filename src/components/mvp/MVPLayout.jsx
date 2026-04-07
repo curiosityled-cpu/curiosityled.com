@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AtreusCoach from "@/components/ai/AtreusCoach";
+import { AuthProvider as FullAuthProvider } from "@/components/useAuth";
 
 // Role detection helpers
 export const getMVPRole = (appRole) => {
@@ -208,14 +209,16 @@ export default function MVPLayout({ children }) {
         </button>
       )}
 
-      {/* Atreus Coach Panel */}
+      {/* Atreus Coach Panel — wrapped in full AuthProvider so AtreusCoach's useAuth works */}
       {showAtreus && (
-        <AtreusCoach
-          context={atreusContext}
-          isMinimized={false}
-          onMinimize={() => setShowAtreus(false)}
-          onClose={() => setShowAtreus(false)}
-        />
+        <FullAuthProvider>
+          <AtreusCoach
+            context={atreusContext}
+            isMinimized={false}
+            onMinimize={() => setShowAtreus(false)}
+            onClose={() => setShowAtreus(false)}
+          />
+        </FullAuthProvider>
       )}
     </div>
   );
