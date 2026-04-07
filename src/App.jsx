@@ -9,6 +9,12 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+// MVP Role-Based Pages
+import MVPLayout, { getMVPRole } from '@/components/mvp/MVPLayout';
+import MyLeadership from './pages/MyLeadership';
+import ProgramOverview from './pages/ProgramOverview';
+import ManagerDetail from './pages/ManagerDetail';
+import LeadershipIntelligenceHub from './pages/LeadershipIntelligenceHub';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -19,7 +25,7 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   : <>{children}</>;
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin, user } = useAuth();
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -41,14 +47,31 @@ const AuthenticatedApp = () => {
     }
   }
 
+  // Redirect root based on MVP role
+  const mvpRole = getMVPRole(user?.app_role);
+
   // Render the main app
   return (
     <Routes>
       <Route path="/" element={
-        <LayoutWrapper currentPageName={mainPageKey}>
-          <MainPage />
-        </LayoutWrapper>
+        mvpRole === 'manager' ? (
+          <MVPLayout><MyLeadership /></MVPLayout>
+        ) : mvpRole === 'buyer' ? (
+          <MVPLayout><ProgramOverview /></MVPLayout>
+        ) : mvpRole === 'executive' ? (
+          <MVPLayout><LeadershipIntelligenceHub /></MVPLayout>
+        ) : (
+          <LayoutWrapper currentPageName={mainPageKey}>
+            <MainPage />
+          </LayoutWrapper>
+        )
       } />
+      {/* MVP Role-Based Routes */}
+      <Route path="/my-leadership" element={<MVPLayout><MyLeadership /></MVPLayout>} />
+      <Route path="/program-overview" element={<MVPLayout><ProgramOverview /></MVPLayout>} />
+      <Route path="/manager-detail/:id" element={<MVPLayout><ManagerDetail /></MVPLayout>} />
+      <Route path="/leadership-intelligence" element={<MVPLayout><LeadershipIntelligenceHub /></MVPLayout>} />
+      <Route path="/ask-atreus" element={<MVPLayout><MyLeadership /></MVPLayout>} />
       {Object.entries(Pages).map(([path, Page]) => (
         <Route
           key={path}
