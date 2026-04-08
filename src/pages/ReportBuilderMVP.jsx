@@ -1,17 +1,14 @@
 /**
- * ReportBuilderMVP - MVP-formatted wrapper for ReportBuilder.
- * Ensures proper layout and context wrapping for the report builder interface.
+ * ReportBuilderMVP - renders the full ReportBuilder inside the MVP layout.
+ * Wraps in FullAuthProvider so components that use @/components/useAuth work correctly.
  */
 import { AuthProvider as FullAuthProvider } from "@/components/useAuth";
-import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import ReportBuilder from "./ReportBuilder";
 
 export default function ReportBuilderMVP() {
   return (
-    <MVPPageLayout title="Report Builder" subtitle="Create and manage analytics reports">
-      <FullAuthProvider>
-        <ReportBuilder />
-      </FullAuthProvider>
-    </MVPPageLayout>
+    <FullAuthProvider>
+      <ReportBuilder />
+    </FullAuthProvider>
   );
 }
