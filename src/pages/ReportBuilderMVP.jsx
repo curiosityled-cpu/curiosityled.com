@@ -4,11 +4,14 @@
  */
 import { AuthProvider as FullAuthProvider } from "@/components/useAuth";
 import ReportBuilder from "./ReportBuilder";
+import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 
 export default function ReportBuilderMVP() {
   return (
-    <FullAuthProvider>
-      <ReportBuilder />
-    </FullAuthProvider>
+    <MVPPageLayout title="Report Builder" subtitle="Build and customize organizational reports.">
+      <FullAuthProvider>
+        <ReportBuilder />
+      </FullAuthProvider>
+    </MVPPageLayout>
   );
 }
