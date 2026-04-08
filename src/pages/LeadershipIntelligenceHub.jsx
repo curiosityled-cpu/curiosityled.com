@@ -6,6 +6,7 @@ import { AlertTriangle, TrendingUp, CheckCircle, BarChart2, Users } from "lucide
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 
 const COLORS = {
   'At Risk': '#ef4444',
@@ -93,16 +94,12 @@ export default function LeadershipIntelligenceHub() {
   ].filter(d => d.value > 0) : [];
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Leadership Intelligence</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          {stats
-            ? `Real-time view across ${stats.total} manager${stats.total !== 1 ? 's' : ''}.`
-            : 'Organizational leadership health at a glance.'}
-        </p>
-      </div>
-
+    <MVPPageLayout
+      title="Leadership Intelligence"
+      subtitle={stats
+        ? `Real-time view across ${stats.total} manager${stats.total !== 1 ? 's' : ''}.`
+        : 'Organizational leadership health at a glance.'}
+    >
       {isLoading ? <LoadingSkeleton /> : !stats || stats.total === 0 ? (
         <Card className="border border-dashed border-gray-200 shadow-sm rounded-2xl">
           <CardContent className="py-16 text-center">
@@ -184,6 +181,6 @@ export default function LeadershipIntelligenceHub() {
           </Card>
         </>
       )}
-    </div>
+    </MVPPageLayout>
   );
 }
