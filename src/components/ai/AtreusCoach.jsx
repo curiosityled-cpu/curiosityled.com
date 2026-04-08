@@ -1671,19 +1671,17 @@ Remember: You're not just a chatbot - you're an intelligent assistant that under
                               })()}
                             </p>
                           </div>
-                          {conv.id !== conversationId && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setConversationToDelete(conv.id);
-                              }}
-                              className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                            >
-                              <Trash2 className="w-3 h-3 text-red-600" />
-                            </Button>
-                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setConversationToDelete(conv.id);
+                            }}
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                          >
+                            <Trash2 className="w-3 h-3 text-red-600" />
+                          </Button>
                         </div>
                       </div>
                     ))}
