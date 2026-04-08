@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Calendar } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import PageHeader from "@/components/common/PageHeader";
+
 import {
   FileText,
   Plus,
@@ -1471,26 +1471,32 @@ export default function ReportBuilder() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <PageHeader
-          title="Report Builder"
-          subtitle={getPageSubtitle()}
-          badges={[
-            { text: roleDisplayName || appRole, className: 'bg-white text-purple-600' },
-            { text: `${reports.length} Reports`, className: 'bg-white text-blue-600' }
-          ]}
-          onRefresh={loadReports}
-          additionalHeaderContent={
-            viewTabs.length > 1 && (
-              <SubNavMenu
-                items={viewTabs}
-                activeId={activeView}
-                onItemClick={setActiveView}
-              />
-            )
-          }
-        />
+    <div className="min-h-screen bg-gray-50 pb-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+        <div className="flex items-start justify-between gap-4 mb-8">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight leading-tight">
+              Report Builder
+            </h1>
+            <p className="text-sm text-gray-600 mt-1">{getPageSubtitle()}</p>
+          </div>
+          <div className="flex-shrink-0">
+            <Button
+              onClick={loadReports}
+              variant="ghost"
+              size="icon"
+              className="text-gray-600 hover:bg-gray-200"
+              title="Refresh data"
+              disabled={loading}
+            >
+              {loading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Zap className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
+        </div>
 
         {/* Action Buttons */}
         <motion.div
@@ -1515,12 +1521,6 @@ export default function ReportBuilder() {
             <Plus className="w-4 h-4 mr-2" />
             Start from Scratch
           </Button>
-          <Link to={createPageUrl("Automations") + "?scope=reports"}>
-            <Button variant="outline">
-              <Zap className="w-4 h-4 mr-2" />
-              Manage Automations
-            </Button>
-          </Link>
         </motion.div>
 
         {/* Bulk Actions Bar */}
@@ -1598,11 +1598,10 @@ export default function ReportBuilder() {
               <div className="flex items-center justify-between mb-4">
                 <CardTitle className="text-lg">Your Reports</CardTitle>
                 <div className="flex gap-2">
-                  {/* Filter dropdowns */}
-                  <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
+                   <Select value={filterStatus} onValueChange={setFilterStatus}>
+                     <SelectTrigger className="w-32">
+                       <SelectValue placeholder="All Status" />
+                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Status</SelectItem>
                       <SelectItem value="active">Active</SelectItem>
