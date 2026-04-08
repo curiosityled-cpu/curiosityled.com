@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 
 function InsightCard({ insight }) {
   const riskCount = insight.risk_flags?.length || 0;
@@ -247,12 +248,10 @@ export default function MyLeadership() {
   const firstName = user?.full_name?.split(' ')[0] || 'Leader';
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 space-y-5">
-      <div className="mb-2">
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">My Leadership</h1>
-        <p className="text-sm text-gray-500 mt-1">Welcome back, {firstName}. Here's your leadership snapshot.</p>
-      </div>
-
+    <MVPPageLayout
+      title="My Leadership"
+      subtitle={`Welcome back, ${firstName}. Here's your leadership snapshot.`}
+    >
       {loadingInsight || loadingGoals || loadingAssignments ? (
         <LoadingSkeleton />
       ) : (
@@ -262,6 +261,6 @@ export default function MyLeadership() {
           <LearningCard assignments={assignments} />
         </>
       )}
-    </div>
+    </MVPPageLayout>
   );
 }

@@ -6,6 +6,7 @@ import { ArrowLeft, Star, TrendingUp, AlertTriangle, Target, Loader2, CheckCircl
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 
 const getRiskLevel = (insight) => {
   if (!insight) return { label: 'No Data', color: 'text-gray-500', bg: 'bg-gray-100' };
@@ -77,7 +78,7 @@ export default function ManagerDetail() {
   const initial = manager.full_name?.[0] || manager.email?.[0] || '?';
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8 space-y-5">
+    <MVPPageLayout>
       {/* Back + Header */}
       <div>
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 mb-4 transition-colors">
@@ -200,6 +201,6 @@ export default function ManagerDetail() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </MVPPageLayout>
   );
 }

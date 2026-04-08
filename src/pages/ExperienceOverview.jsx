@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 
 const getRiskLevel = (insight) => {
   if (!insight) return { label: 'No Data', color: 'text-gray-500', bg: 'bg-gray-50 border-gray-200', dot: 'bg-gray-400' };
@@ -305,19 +306,18 @@ export default function ExperienceOverview() {
   ];
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Experience Overview</h1>
-          <p className="text-sm text-gray-500 mt-1">Monitor your managers' development and assign programs.</p>
-        </div>
+    <MVPPageLayout
+      title="Experience Overview"
+      subtitle="Monitor your managers' development and assign programs."
+      action={
         <Button
-          className="bg-[#0202ff] hover:bg-[#0101dd] text-white flex-shrink-0"
+          className="bg-[#0202ff] hover:bg-[#0101dd] text-white"
           onClick={() => setShowAssignDialog(true)}
         >
           <Plus className="w-4 h-4 mr-1.5" /> Assign Program
         </Button>
-      </div>
+      }
+    >
 
       {isLoading ? <LoadingSkeleton /> : (
         <>
@@ -443,6 +443,6 @@ export default function ExperienceOverview() {
         onClose={() => setShowAssignDialog(false)}
         managers={managers}
       />
-    </div>
+    </MVPPageLayout>
   );
 }
