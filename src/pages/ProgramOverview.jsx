@@ -240,18 +240,19 @@ export default function ProgramOverview() {
   };
 
   return (
-    <MVPPageLayout
-      title="Program Overview"
-      subtitle="Monitor your managers' development and assign programs."
-      action={
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Program Overview</h1>
+          <p className="text-sm text-gray-500 mt-1">Monitor your managers' development and assign programs.</p>
+        </div>
         <Button
-          className="bg-[#0202ff] hover:bg-[#0101dd] text-white"
+          className="bg-[#0202ff] hover:bg-[#0101dd] text-white flex-shrink-0"
           onClick={() => setShowAssignDialog(true)}
         >
           <Plus className="w-4 h-4 mr-1.5" /> Assign Program
         </Button>
-      }
-    >
+      </div>
 
       {isLoading ? <LoadingSkeleton /> : (
         <>
@@ -344,6 +345,6 @@ export default function ProgramOverview() {
         onClose={() => setShowAssignDialog(false)}
         managers={managers}
       />
-    </MVPPageLayout>
+    </div>
   );
 }
