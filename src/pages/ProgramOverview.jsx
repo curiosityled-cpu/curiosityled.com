@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 
 const getRiskLevel = (insight) => {
   if (!insight) return { label: 'No Data', color: 'text-gray-500', bg: 'bg-gray-50 border-gray-200', dot: 'bg-gray-400' };
@@ -241,18 +240,20 @@ export default function ProgramOverview() {
   };
 
   return (
-    <MVPPageLayout
-      title="Program Overview"
-      subtitle="Monitor your managers' development and assign programs."
-      action={
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Program Overview</h1>
+          <p className="text-sm text-gray-500 mt-1">Monitor your managers' development and assign programs.</p>
+        </div>
         <Button
-          className="bg-[#0202ff] hover:bg-[#0101dd] text-white"
+          className="bg-[#0202ff] hover:bg-[#0101dd] text-white flex-shrink-0"
           onClick={() => setShowAssignDialog(true)}
         >
           <Plus className="w-4 h-4 mr-1.5" /> Assign Program
         </Button>
-      }
-    >
+      </div>
+
       {isLoading ? <LoadingSkeleton /> : (
         <>
           {/* Program Templates */}
@@ -344,6 +345,6 @@ export default function ProgramOverview() {
         onClose={() => setShowAssignDialog(false)}
         managers={managers}
       />
-    </MVPPageLayout>
+    </div>
   );
 }
