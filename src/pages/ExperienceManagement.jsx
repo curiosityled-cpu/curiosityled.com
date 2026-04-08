@@ -10,6 +10,7 @@ import {
   ClipboardList
 } from "lucide-react";
 import { useAuth } from "@/components/useAuth";
+import { getMVPRole } from "@/components/mvp/MVPLayout";
 import PageHeader from "@/components/common/PageHeader";
 import SubNavMenu from "@/components/common/SubNavMenu";
 import { useLocation } from "react-router-dom";
@@ -36,27 +37,32 @@ import { Button } from "@/components/ui/button";
 export default function ExperienceManagement() {
   const { user, hasPermission, roleDisplayName, loading: authLoading, isHRAdmin, isProgramManager, isAnyAdmin, isPlatformAdmin } = useAuth();
   const location = useLocation();
+  const mvpRole = getMVPRole(user?.app_role);
+  const isMVPBuyer = mvpRole === 'buyer';
+
+  // Define tab items — restrict to Programs & Journeys for MVP buyers
+  const allTabItems = [
+    { id: 'requests', label: 'Requests', icon: Inbox },
+    { id: 'builders', label: 'Builders', icon: Wrench },
+    { id: 'programs', label: 'Programs', icon: Users },
+    { id: 'templates', label: 'Templates', icon: Bookmark }
+  ];
+  const tabItems = isMVPBuyer
+    ? [{ id: 'programs', label: 'Programs', icon: Users }]
+    : allTabItems;
 
   // Initialize activeTab from URL hash
   const getInitialTab = () => {
     const hash = location.hash.replace('#', '');
-    const validTabs = ['requests', 'builders', 'programs', 'templates'];
-    return validTabs.includes(hash) ? hash : 'requests';
+    const validTabs = tabItems.map(t => t.id);
+    return validTabs.includes(hash) ? hash : tabItems[0].id;
   };
   
   const [activeTab, setActiveTab] = useState(getInitialTab);
   
   // Get subtab from URL params
   const searchParams = new URLSearchParams(location.search);
-  const subtab = searchParams.get('subtab');
-
-  // Define tab items for SubNavMenu
-  const tabItems = [
-    { id: 'requests', label: 'Requests', icon: Inbox },
-    { id: 'builders', label: 'Builders', icon: Wrench },
-    { id: 'programs', label: 'Programs', icon: Users },
-    { id: 'templates', label: 'Templates', icon: Bookmark }
-  ];
+  const subtab = isMVPBuyer ? 'journeys' : searchParams.get('subtab');
 
   // Requests tab state
   const [requests, setRequests] = useState([]);
@@ -254,7 +260,7 @@ export default function ExperienceManagement() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <PageHeader
-          title="Organizational Experience Administration"
+          title={isMVPBuyer ? "Experience Overview" : "Organizational Experience Administration"}
           subtitle="Create, deploy, and manage learning experiences across your organization"
           badges={[
             { text: roleDisplayName, className: "bg-white text-[#0201ff]" }

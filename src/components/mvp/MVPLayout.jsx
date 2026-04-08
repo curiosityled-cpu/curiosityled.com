@@ -36,7 +36,7 @@ const NAV_CONFIG = {
     { label: 'My Goals', path: '/my-goals', icon: Target },
   ],
   buyer: [
-    { label: 'Program Overview', path: '/program-overview', icon: Users },
+    { label: 'Experiences Overview', path: '/ExperienceManagement#programs', icon: Users },
     { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: BarChart3 },
     { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 },
   ],
@@ -103,8 +103,8 @@ export default function MVPLayout({ children }) {
 
   const NavItem = ({ item, showLabel = true }) => {
     const Icon = item.icon;
-    const itemPath = item.path.split('?')[0];
-    const isActive = location.pathname === itemPath || location.pathname === item.path;
+    const itemPath = item.path.split('?')[0].split('#')[0];
+    const isActive = location.pathname === itemPath || location.pathname === item.path.split('?')[0].split('#')[0];
     return (
       <Link
         to={item.path}
