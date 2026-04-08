@@ -44,8 +44,14 @@ function Insights() {
     hasPermission 
   } = useAuth();
 
+  // Read ?tab= from URL to allow direct deep-linking
+  const urlParams = new URLSearchParams(window.location.search);
+  const tabParam = urlParams.get('tab');
+  const forcedOrgView = tabParam === 'org';
+
   // Platform Admins should see org-wide intelligence by default
   const getInitialView = () => {
+    if (tabParam === 'org') return VIEW_SCOPES.ORG;
     if (isPlatformAdmin || isSuperAdmin || isPartnerBusinessAdmin) {
       return VIEW_SCOPES.ORG;
     }
@@ -197,12 +203,15 @@ function Insights() {
   };
 
   // View toggle tabs - only include tabs user has access to
-  const viewTabs = [
-    ...(canViewPersonal ? [{ id: VIEW_SCOPES.MY, label: 'Insights', icon: Sparkles }] : []),
-    ...(canViewTeamInsights ? [{ id: VIEW_SCOPES.TEAM, label: 'Team Insights', icon: Users }] : []),
-    ...(canViewAdminInsights ? [{ id: VIEW_SCOPES.ADMIN, label: 'Administration Insights', icon: GraduationCap }] : []),
-    ...(canViewOrgInsights ? [{ id: VIEW_SCOPES.ORG, label: 'Leadership Intelligence Hub', icon: Building2 }] : [])
-  ];
+  // When navigated via MVP nav (?tab=org), only show the Leadership Intelligence Hub tab
+  const viewTabs = forcedOrgView
+    ? (canViewOrgInsights ? [{ id: VIEW_SCOPES.ORG, label: 'Leadership Intelligence Hub', icon: Building2 }] : [])
+    : [
+        ...(canViewPersonal ? [{ id: VIEW_SCOPES.MY, label: 'Insights', icon: Sparkles }] : []),
+        ...(canViewTeamInsights ? [{ id: VIEW_SCOPES.TEAM, label: 'Team Insights', icon: Users }] : []),
+        ...(canViewAdminInsights ? [{ id: VIEW_SCOPES.ADMIN, label: 'Administration Insights', icon: GraduationCap }] : []),
+        ...(canViewOrgInsights ? [{ id: VIEW_SCOPES.ORG, label: 'Leadership Intelligence Hub', icon: Building2 }] : [])
+      ];
 
   const renderInsightsContent = () => {
     switch (currentView) {

@@ -37,11 +37,11 @@ const NAV_CONFIG = {
   ],
   buyer: [
     { label: 'Program Overview', path: '/program-overview', icon: Users },
-    { label: 'Leadership Intelligence', path: '/leadership-intelligence', icon: BarChart3 },
+    { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: BarChart3 },
     { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 },
   ],
   executive: [
-    { label: 'Leadership Intelligence', path: '/leadership-intelligence', icon: BarChart2 },
+    { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: BarChart2 },
   ],
 };
 
@@ -103,7 +103,8 @@ export default function MVPLayout({ children }) {
 
   const NavItem = ({ item, showLabel = true }) => {
     const Icon = item.icon;
-    const isActive = location.pathname === item.path;
+    const itemPath = item.path.split('?')[0];
+    const isActive = location.pathname === itemPath || location.pathname === item.path;
     return (
       <Link
         to={item.path}
