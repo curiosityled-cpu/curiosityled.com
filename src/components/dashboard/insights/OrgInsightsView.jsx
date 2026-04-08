@@ -626,7 +626,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Tenure</SelectItem>
-                  <SelectItem value="<1">&lt;1 Year</SelectItem>
+                  <SelectItem value="<1">Under 1 Year</SelectItem>
                   <SelectItem value="1-2">1 - 2 Years</SelectItem>
                   <SelectItem value="3-5">3 - 5 Years</SelectItem>
                   <SelectItem value="6-10">6 - 10 Years</SelectItem>
