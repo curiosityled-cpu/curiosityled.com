@@ -21,6 +21,9 @@ import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import Notifications from './pages/Notifications';
 import PrivacySettings from './pages/PrivacySettings';
+import Insights from './pages/Insights';
+import ReportBuilder from './pages/ReportBuilder';
+import { AuthProvider as FullAuthProvider } from '@/components/useAuth';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -56,6 +59,13 @@ const AuthenticatedApp = () => {
   // Redirect root based on MVP role
   const mvpRole = getMVPRole(user?.app_role);
 
+  // Helper: wrap a page component for MVP users (needs FullAuthProvider for legacy pages)
+  const MVPPage = ({ children }) => (
+    <MVPLayout>
+      <FullAuthProvider>{children}</FullAuthProvider>
+    </MVPLayout>
+  );
+
   // Render the main app
   return (
     <Routes>
@@ -72,30 +82,36 @@ const AuthenticatedApp = () => {
           </LayoutWrapper>
         )
       } />
-      {/* MVP Role-Based Routes */}
+
+      {/* MVP-specific routes */}
       <Route path="/my-leadership" element={<MVPLayout><MyLeadership /></MVPLayout>} />
       <Route path="/my-goals" element={<MVPLayout><MyGoalsMVP /></MVPLayout>} />
       <Route path="/program-overview" element={<MVPLayout><ProgramOverview /></MVPLayout>} />
       <Route path="/manager-detail/:id" element={<MVPLayout><ManagerDetail /></MVPLayout>} />
       <Route path="/leadership-intelligence" element={<MVPLayout><LeadershipIntelligenceHub /></MVPLayout>} />
       <Route path="/report-builder-mvp" element={<MVPLayout><ReportBuilderMVP /></MVPLayout>} />
-      {/* MVP users: shared pages in MVPLayout */}
-      {mvpRole && (
-        <>
-          <Route path="/Profile" element={<MVPLayout><Profile /></MVPLayout>} />
-          <Route path="/Settings" element={<MVPLayout><Settings /></MVPLayout>} />
-          <Route path="/Notifications" element={<MVPLayout><Notifications /></MVPLayout>} />
-          <Route path="/PrivacySettings" element={<MVPLayout><PrivacySettings /></MVPLayout>} />
-        </>
-      )}
+
+      {/* Shared pages — MVP users get MVPLayout, others get legacy LayoutWrapper */}
+      <Route path="/Insights" element={mvpRole ? <MVPPage><Insights /></MVPPage> : <LayoutWrapper currentPageName="Insights"><Insights /></LayoutWrapper>} />
+      <Route path="/ReportBuilder" element={mvpRole ? <MVPPage><ReportBuilder /></MVPPage> : <LayoutWrapper currentPageName="ReportBuilder"><ReportBuilder /></LayoutWrapper>} />
+      <Route path="/Profile" element={mvpRole ? <MVPPage><Profile /></MVPPage> : <LayoutWrapper currentPageName="Profile"><Profile /></LayoutWrapper>} />
+      <Route path="/Settings" element={mvpRole ? <MVPPage><Settings /></MVPPage> : <LayoutWrapper currentPageName="Settings"><Settings /></LayoutWrapper>} />
+      <Route path="/Notifications" element={mvpRole ? <MVPPage><Notifications /></MVPPage> : <LayoutWrapper currentPageName="Notifications"><Notifications /></LayoutWrapper>} />
+      <Route path="/PrivacySettings" element={mvpRole ? <MVPPage><PrivacySettings /></MVPPage> : <LayoutWrapper currentPageName="PrivacySettings"><PrivacySettings /></LayoutWrapper>} />
+
+      {/* All other legacy pages — MVP users still get MVPLayout shell */}
       {Object.entries(Pages).map(([path, Page]) => (
         <Route
           key={path}
           path={`/${path}`}
           element={
-            <LayoutWrapper currentPageName={path}>
-              <Page />
-            </LayoutWrapper>
+            mvpRole ? (
+              <MVPPage><Page /></MVPPage>
+            ) : (
+              <LayoutWrapper currentPageName={path}>
+                <Page />
+              </LayoutWrapper>
+            )
           }
         />
       ))}
