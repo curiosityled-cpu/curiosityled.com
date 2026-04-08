@@ -1,6 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
+import { AuthProvider as FullAuthProvider } from "@/components/useAuth";
 import { Loader2, Target } from "lucide-react";
 
 // Reuse the existing GoalsSection component directly
@@ -31,6 +32,7 @@ export default function MyGoalsMVP() {
         </h1>
         <p className="text-sm text-gray-500 mt-1">Track and manage your leadership development goals.</p>
       </div>
+      <FullAuthProvider>
       <Suspense fallback={
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-8 h-8 animate-spin text-[#0202ff]" />
@@ -42,6 +44,7 @@ export default function MyGoalsMVP() {
           onRefresh={() => setRefreshTrigger(p => p + 1)}
         />
       </Suspense>
+      </FullAuthProvider>
     </div>
   );
 }
