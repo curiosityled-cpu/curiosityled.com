@@ -17,6 +17,10 @@ import ReportBuilderMVP from './pages/ReportBuilderMVP';
 import ProgramOverview from './pages/ProgramOverview';
 import ManagerDetail from './pages/ManagerDetail';
 import LeadershipIntelligenceHub from './pages/LeadershipIntelligenceHub';
+import Profile from './pages/Profile';
+import Settings from './pages/Settings';
+import Notifications from './pages/Notifications';
+import PrivacySettings from './pages/PrivacySettings';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -75,6 +79,15 @@ const AuthenticatedApp = () => {
       <Route path="/manager-detail/:id" element={<MVPLayout><ManagerDetail /></MVPLayout>} />
       <Route path="/leadership-intelligence" element={<MVPLayout><LeadershipIntelligenceHub /></MVPLayout>} />
       <Route path="/report-builder-mvp" element={<MVPLayout><ReportBuilderMVP /></MVPLayout>} />
+      {/* MVP users: shared pages in MVPLayout */}
+      {mvpRole && (
+        <>
+          <Route path="/Profile" element={<MVPLayout><Profile /></MVPLayout>} />
+          <Route path="/Settings" element={<MVPLayout><Settings /></MVPLayout>} />
+          <Route path="/Notifications" element={<MVPLayout><Notifications /></MVPLayout>} />
+          <Route path="/PrivacySettings" element={<MVPLayout><PrivacySettings /></MVPLayout>} />
+        </>
+      )}
       {Object.entries(Pages).map(([path, Page]) => (
         <Route
           key={path}
