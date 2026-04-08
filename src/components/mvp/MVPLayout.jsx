@@ -36,7 +36,7 @@ const NAV_CONFIG = {
     { label: 'My Goals', path: '/my-goals', icon: Target },
   ],
   buyer: [
-    { label: 'Experiences Overview', path: '/ExperienceManagement#programs', icon: Users },
+    { label: 'Experience Overview', path: '/experience-overview', icon: Users },
     { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: BarChart3 },
     { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 },
   ],

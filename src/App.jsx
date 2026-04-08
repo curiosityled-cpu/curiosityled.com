@@ -15,6 +15,7 @@ import MyLeadership from './pages/MyLeadership';
 import MyGoalsMVP from './pages/MyGoalsMVP';
 import ReportBuilderMVP from './pages/ReportBuilderMVP';
 import ProgramOverview from './pages/ProgramOverview';
+import ExperienceOverview from './pages/ExperienceOverview';
 import ManagerDetail from './pages/ManagerDetail';
 import LeadershipIntelligenceHub from './pages/LeadershipIntelligenceHub';
 import Profile from './pages/Profile';
@@ -87,6 +88,7 @@ const AuthenticatedApp = () => {
       <Route path="/my-leadership" element={<MVPLayout><MyLeadership /></MVPLayout>} />
       <Route path="/my-goals" element={<MVPLayout><MyGoalsMVP /></MVPLayout>} />
       <Route path="/program-overview" element={<MVPLayout><ProgramOverview /></MVPLayout>} />
+      <Route path="/experience-overview" element={<MVPLayout><ExperienceOverview /></MVPLayout>} />
       <Route path="/manager-detail/:id" element={<MVPLayout><ManagerDetail /></MVPLayout>} />
       <Route path="/report-builder-mvp" element={<MVPLayout><ReportBuilderMVP /></MVPLayout>} />
 
