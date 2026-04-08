@@ -258,11 +258,13 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
       const tenureUsers = filteredUsers.filter(u => {
         if (!u.start_date) return false;
         const monthsEmployed = Math.floor((new Date() - new Date(u.start_date)) / (1000 * 60 * 60 * 24 * 30));
-        if (filters.tenure === '0-6') return monthsEmployed >= 0 && monthsEmployed <= 6;
-        if (filters.tenure === '6-12') return monthsEmployed > 6 && monthsEmployed <= 12;
-        if (filters.tenure === '1-2') return monthsEmployed > 12 && monthsEmployed <= 24;
-        if (filters.tenure === '2-5') return monthsEmployed > 24 && monthsEmployed <= 60;
-        if (filters.tenure === '5plus') return monthsEmployed > 60;
+        if (filters.tenure === '<1') return monthsEmployed < 12;
+        if (filters.tenure === '1-2') return monthsEmployed >= 12 && monthsEmployed < 36;
+        if (filters.tenure === '3-5') return monthsEmployed >= 36 && monthsEmployed < 60;
+        if (filters.tenure === '6-10') return monthsEmployed >= 60 && monthsEmployed < 120;
+        if (filters.tenure === '11-15') return monthsEmployed >= 120 && monthsEmployed < 180;
+        if (filters.tenure === '16-20') return monthsEmployed >= 180 && monthsEmployed < 240;
+        if (filters.tenure === '20+') return monthsEmployed >= 240;
         return false;
       });
       const tenureEmails = new Set(tenureUsers.map(u => u.email));
@@ -624,11 +626,13 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Tenure</SelectItem>
-                  <SelectItem value="0-6">0-6 months</SelectItem>
-                  <SelectItem value="6-12">6-12 months</SelectItem>
-                  <SelectItem value="1-2">1-2 years</SelectItem>
-                  <SelectItem value="2-5">2-5 years</SelectItem>
-                  <SelectItem value="5plus">5+ years</SelectItem>
+                  <SelectItem value="<1">&lt;1 Year</SelectItem>
+                  <SelectItem value="1-2">1 - 2 Years</SelectItem>
+                  <SelectItem value="3-5">3 - 5 Years</SelectItem>
+                  <SelectItem value="6-10">6 - 10 Years</SelectItem>
+                  <SelectItem value="11-15">11 - 15 Years</SelectItem>
+                  <SelectItem value="16-20">16 - 20 Years</SelectItem>
+                  <SelectItem value="20+">20+ Years</SelectItem>
                 </SelectContent>
               </Select>
 
