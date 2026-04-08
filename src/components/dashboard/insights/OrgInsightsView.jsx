@@ -291,15 +291,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
       }
     }
 
-    // Apply industry filter
-    if (filters.industry !== 'all') {
-      const industryUsers = filteredUsers.filter(u => u.industry === filters.industry);
-      const industryEmails = new Set(industryUsers.map(u => u.email));
-      filteredAssessments = filteredAssessments.filter(a => industryEmails.has(a.email));
-      filteredGoals = filteredGoals.filter(g => industryEmails.has(g.created_by));
-      filteredLearning = filteredLearning.filter(l => industryEmails.has(l.user_email));
-      filteredJourneys = filteredJourneys.filter(j => industryEmails.has(j.user_email));
-    }
+
 
     return {
       assessments: filteredAssessments,
@@ -647,29 +639,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                 </SelectContent>
               </Select>
 
-              <Select value={filters.industry} onValueChange={(value) => setFilters({ ...filters, industry: value })}>
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Industries</SelectItem>
-                  <SelectItem value="Technology">Technology</SelectItem>
-                  <SelectItem value="Healthcare">Healthcare</SelectItem>
-                  <SelectItem value="Financial Services">Financial Services</SelectItem>
-                  <SelectItem value="Manufacturing">Manufacturing</SelectItem>
-                  <SelectItem value="Retail">Retail</SelectItem>
-                  <SelectItem value="Energy">Energy</SelectItem>
-                  <SelectItem value="Telecommunications">Telecommunications</SelectItem>
-                  <SelectItem value="Professional Services">Professional Services</SelectItem>
-                  <SelectItem value="Education">Education</SelectItem>
-                  <SelectItem value="Government">Government</SelectItem>
-                  <SelectItem value="Non-Profit">Non-Profit</SelectItem>
-                  <SelectItem value="Real Estate">Real Estate</SelectItem>
-                  <SelectItem value="Transportation">Transportation</SelectItem>
-                  <SelectItem value="Hospitality">Hospitality</SelectItem>
-                  <SelectItem value="Media & Entertainment">Media & Entertainment</SelectItem>
-                </SelectContent>
-              </Select>
+
               </div>
               </CardContent>
               </Card>
