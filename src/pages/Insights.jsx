@@ -17,6 +17,7 @@ import { useAuth } from "@/components/useAuth";
 import { toast } from "sonner";
 import { withAuthProtection } from "@/components/hoc/withAuthProtection";
 import SubNavMenu from "@/components/common/SubNavMenu";
+import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 
 // Import insights views directly (not lazy) to avoid module resolution issues
 import MyInsightsView from "@/components/dashboard/insights/MyInsightsView";
@@ -229,89 +230,65 @@ function Insights() {
   };
 
   return (
-    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto">
-        {/* Dynamic Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <Card className="border-0 shadow-xl text-white" style={{ backgroundColor: '#0201ff' }}>
-            <CardContent className="p-8">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                  <h1 className="text-3xl font-bold mb-2">{headerConfig.title}</h1>
-                  <p className="opacity-90">{headerConfig.subtitle}</p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {viewTabs.length > 1 && (
-                    <SubNavMenu
-                      items={viewTabs}
-                      activeId={currentView}
-                      onItemClick={setCurrentView}
-                    />
-                  )}
-                  {headerConfig.badges.map((badge, index) => (
-                    <Badge 
-                      key={index} 
-                      variant="outline"
-                      className="bg-white text-[#0201ff] border-white"
-                    >
-                      {badge.text}
-                    </Badge>
-                  ))}
-                  <Button
-                    onClick={handleRefresh}
-                    variant="ghost"
-                    size="icon"
-                    className="text-white hover:bg-white/20"
-                    title="Refresh data"
-                    disabled={refreshing}
-                  >
-                    {refreshing ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="w-4 h-4" />
-                    )}
-                  </Button>
-                  <Button
-                    onClick={handleExportCSV}
-                    variant="ghost"
-                    size="icon"
-                    className="text-white hover:bg-white/20"
-                    title="Export to CSV"
-                    disabled={exportingCSV}
-                  >
-                    {exportingCSV ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <FileText className="w-4 h-4" />
-                    )}
-                  </Button>
-                  <Button
-                    onClick={handleExportPDF}
-                    variant="ghost"
-                    size="icon"
-                    className="text-white hover:bg-white/20"
-                    title="Export to PDF"
-                    disabled={exportingPDF}
-                  >
-                    {exportingPDF ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <FileDown className="w-4 h-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {renderInsightsContent()}
-      </div>
-    </div>
+    <MVPPageLayout
+      title={headerConfig.title}
+      subtitle={headerConfig.subtitle}
+      action={
+        <div className="flex flex-wrap items-center gap-2">
+          {viewTabs.length > 1 && (
+            <SubNavMenu
+              items={viewTabs}
+              activeId={currentView}
+              onItemClick={setCurrentView}
+            />
+          )}
+          <Button
+            onClick={handleRefresh}
+            variant="ghost"
+            size="icon"
+            className="text-gray-600 hover:bg-gray-200"
+            title="Refresh data"
+            disabled={refreshing}
+          >
+            {refreshing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4" />
+            )}
+          </Button>
+          <Button
+            onClick={handleExportCSV}
+            variant="ghost"
+            size="icon"
+            className="text-gray-600 hover:bg-gray-200"
+            title="Export to CSV"
+            disabled={exportingCSV}
+          >
+            {exportingCSV ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <FileText className="w-4 h-4" />
+            )}
+          </Button>
+          <Button
+            onClick={handleExportPDF}
+            variant="ghost"
+            size="icon"
+            className="text-gray-600 hover:bg-gray-200"
+            title="Export to PDF"
+            disabled={exportingPDF}
+          >
+            {exportingPDF ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <FileDown className="w-4 h-4" />
+            )}
+          </Button>
+        </div>
+      }
+    >
+      {renderInsightsContent()}
+    </MVPPageLayout>
   );
 }
 

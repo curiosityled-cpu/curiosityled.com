@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { AlertTriangle, TrendingUp, CheckCircle, BarChart2, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 const COLORS = {
@@ -93,15 +94,12 @@ export default function LeadershipIntelligenceHub() {
   ].filter(d => d.value > 0) : [];
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Leadership Intelligence</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          {stats
-            ? `Real-time view across ${stats.total} manager${stats.total !== 1 ? 's' : ''}.`
-            : 'Organizational leadership health at a glance.'}
-        </p>
-      </div>
+    <MVPPageLayout
+      title="Leadership Intelligence"
+      subtitle={stats
+        ? `Real-time view across ${stats.total} manager${stats.total !== 1 ? 's' : ''}.`
+        : 'Organizational leadership health at a glance.'}
+    >
 
       {isLoading ? <LoadingSkeleton /> : !stats || stats.total === 0 ? (
         <Card className="border border-dashed border-gray-200 shadow-sm rounded-2xl">
@@ -166,10 +164,10 @@ export default function LeadershipIntelligenceHub() {
           )}
 
           {/* Narrative Summary */}
-          <Card className="border-0 shadow-sm rounded-2xl bg-gradient-to-br from-[#0202ff]/5 to-blue-50">
+          <Card className="border-0 shadow-sm rounded-2xl bg-gray-50">
             <CardContent className="py-5 px-6">
-              <p className="text-xs font-semibold text-[#0202ff] uppercase tracking-wider mb-2">90-Day Leadership Story</p>
-              <p className="text-sm text-gray-700 leading-relaxed">
+              <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">90-Day Leadership Story</p>
+              <p className="text-sm text-gray-900 leading-relaxed">
                 {stats.atRisk > 0
                   ? `${stats.atRisk} manager${stats.atRisk !== 1 ? 's are' : ' is'} showing risk signals that warrant early intervention. `
                   : 'No managers currently showing critical risk signals — strong foundation across the board. '}
@@ -184,6 +182,6 @@ export default function LeadershipIntelligenceHub() {
           </Card>
         </>
       )}
-    </div>
+    </MVPPageLayout>
   );
 }
