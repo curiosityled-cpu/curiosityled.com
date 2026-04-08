@@ -10,7 +10,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 const getRiskLevel = (insight) => {
@@ -21,25 +21,22 @@ const getRiskLevel = (insight) => {
   return { label: 'At Risk', color: 'text-red-700', bg: 'bg-red-50 border-red-200', dot: 'bg-red-500' };
 };
 
-// Assignment templates for HR/L&D buyers
 const PROGRAM_TEMPLATES = [
   {
     id: 'onboarding',
     label: 'New Manager Onboarding Journey',
     icon: Map,
     description: 'A structured 30/60/90-day onboarding journey for first-time managers.',
-    color: 'bg-blue-50 border-blue-200 text-blue-700',
+    color: 'bg-blue-50 border-blue-200 text-blue-800',
     iconBg: 'bg-blue-100',
-    type: 'journey',
   },
   {
     id: 'learning',
     label: 'Leadership Development Learning Path',
     icon: BookOpen,
     description: 'A curated learning path covering communication, decision-making, and team leadership.',
-    color: 'bg-purple-50 border-purple-200 text-purple-700',
+    color: 'bg-purple-50 border-purple-200 text-purple-800',
     iconBg: 'bg-purple-100',
-    type: 'journey',
   },
 ];
 
@@ -52,7 +49,6 @@ function AssignTemplateDialog({ open, onClose, managers }) {
   const handleAssign = async () => {
     if (!selected || selectedManagers.length === 0) return;
     setAssigning(true);
-    // Simulate assignment (in real app would call a backend function or create AssignedLearning records)
     await new Promise(r => setTimeout(r, 1000));
     setAssigning(false);
     setSuccess(true);
@@ -76,8 +72,7 @@ function AssignTemplateDialog({ open, onClose, managers }) {
         <DialogHeader>
           <DialogTitle>Assign Program Template</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-2">
-          {/* Template selection */}
+        <div className="space-y-5 py-2">
           <div>
             <p className="text-sm font-medium text-gray-700 mb-2">Choose a Template</p>
             <div className="space-y-2">
@@ -87,8 +82,8 @@ function AssignTemplateDialog({ open, onClose, managers }) {
                   <button
                     key={t.id}
                     onClick={() => setSelected(t.id)}
-                    className={`w-full flex items-start gap-3 p-3 rounded-xl border text-left transition-all ${
-                      selected === t.id ? 'border-[#0202ff] bg-[#0202ff]/5 ring-1 ring-[#0202ff]' : 'border-gray-200 hover:border-gray-300'
+                    className={`w-full flex items-start gap-3 p-3.5 rounded-xl border text-left transition-all ${
+                      selected === t.id ? 'border-[#0202ff] bg-[#0202ff]/5 ring-1 ring-[#0202ff]' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                     }`}
                   >
                     <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${t.iconBg}`}>
@@ -103,11 +98,14 @@ function AssignTemplateDialog({ open, onClose, managers }) {
               })}
             </div>
           </div>
-
-          {/* Manager selection */}
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">Assign to Managers</p>
-            <div className="max-h-48 overflow-y-auto space-y-1 border rounded-lg p-2">
+            <p className="text-sm font-medium text-gray-700 mb-2">
+              Assign to Managers
+              {selectedManagers.length > 0 && (
+                <span className="ml-2 text-xs text-[#0202ff] font-normal">{selectedManagers.length} selected</span>
+              )}
+            </p>
+            <div className="max-h-48 overflow-y-auto space-y-1 border border-gray-200 rounded-xl p-2">
               {managers.length === 0 && (
                 <p className="text-sm text-gray-400 text-center py-4">No managers found</p>
               )}
@@ -115,21 +113,20 @@ function AssignTemplateDialog({ open, onClose, managers }) {
                 <button
                   key={m.id}
                   onClick={() => toggleManager(m.id)}
-                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors ${
-                    selectedManagers.includes(m.id) ? 'bg-[#0202ff]/10 text-[#0202ff]' : 'hover:bg-gray-50'
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors ${
+                    selectedManagers.includes(m.id) ? 'bg-[#0202ff]/10 text-[#0202ff]' : 'hover:bg-gray-50 text-gray-700'
                   }`}
                 >
-                  <div className="w-6 h-6 rounded-full bg-[#0202ff]/10 flex items-center justify-center flex-shrink-0">
+                  <div className="w-7 h-7 rounded-full bg-[#0202ff]/10 flex items-center justify-center flex-shrink-0">
                     <span className="text-xs font-bold text-[#0202ff]">{m.full_name?.[0] || m.email?.[0]}</span>
                   </div>
-                  <span className="text-sm truncate">{m.full_name || m.email}</span>
+                  <span className="text-sm truncate flex-1">{m.full_name || m.email}</span>
                   {selectedManagers.includes(m.id) && <CheckCircle className="w-4 h-4 ml-auto flex-shrink-0" />}
                 </button>
               ))}
             </div>
           </div>
         </div>
-
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button
@@ -137,7 +134,7 @@ function AssignTemplateDialog({ open, onClose, managers }) {
             disabled={!selected || selectedManagers.length === 0 || assigning}
             className="bg-[#0202ff] hover:bg-[#0101dd] text-white"
           >
-            {assigning ? 'Assigning...' : success ? '✓ Assigned!' : `Assign to ${selectedManagers.length} Manager${selectedManagers.length !== 1 ? 's' : ''}`}
+            {assigning ? 'Assigning...' : success ? '✓ Assigned!' : `Assign to ${selectedManagers.length || 0} Manager${selectedManagers.length !== 1 ? 's' : ''}`}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -151,14 +148,14 @@ function ManagerRow({ manager, insight, onClick }) {
   return (
     <button
       onClick={() => onClick(manager, insight)}
-      className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors text-left border-b border-gray-100 last:border-0"
+      className="w-full flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors text-left border-b border-gray-100 last:border-0"
     >
       <div className="w-9 h-9 rounded-full bg-[#0202ff]/10 flex items-center justify-center flex-shrink-0">
         <span className="text-sm font-bold text-[#0202ff]">{initial}</span>
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-gray-900 truncate">{manager.full_name || manager.email}</p>
-        <p className="text-xs text-gray-500 truncate">{insight?.archetype || 'Assessment pending'}</p>
+        <p className="text-xs text-gray-400 truncate mt-0.5">{insight?.archetype || 'Assessment pending'}</p>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
         <span className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${risk.bg} ${risk.color}`}>
@@ -171,6 +168,23 @@ function ManagerRow({ manager, insight, onClick }) {
   );
 }
 
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-3">
+        <Skeleton className="h-24 rounded-2xl" />
+        <Skeleton className="h-24 rounded-2xl" />
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <Skeleton className="h-20 rounded-2xl" />
+        <Skeleton className="h-20 rounded-2xl" />
+        <Skeleton className="h-20 rounded-2xl" />
+      </div>
+      <Skeleton className="h-64 rounded-2xl" />
+    </div>
+  );
+}
+
 export default function ProgramOverview() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -179,12 +193,10 @@ export default function ProgramOverview() {
 
   const { data: managers = [], isLoading: loadingManagers } = useQuery({
     queryKey: ['managers', user?.client_id],
-    queryFn: async () => {
-      return await base44.entities.User.filter({
-        client_id: user.client_id,
-        app_role: { $in: ['User Level 1', 'User Level 2'] }
-      });
-    },
+    queryFn: async () => base44.entities.User.filter({
+      client_id: user.client_id,
+      app_role: { $in: ['User Level 1', 'User Level 2'] }
+    }),
     enabled: !!user?.client_id,
     staleTime: 5 * 60 * 1000,
   });
@@ -227,115 +239,106 @@ export default function ProgramOverview() {
     navigate(`/manager-detail/${manager.id}`, { state: { manager, insight } });
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0202ff]" />
-      </div>
-    );
-  }
-
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-      <div className="flex items-start justify-between">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Program Overview</h1>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Program Overview</h1>
           <p className="text-sm text-gray-500 mt-1">Monitor your managers' development and assign programs.</p>
         </div>
         <Button
           className="bg-[#0202ff] hover:bg-[#0101dd] text-white flex-shrink-0"
           onClick={() => setShowAssignDialog(true)}
         >
-          <Plus className="w-4 h-4 mr-1" /> Assign Program
+          <Plus className="w-4 h-4 mr-1.5" /> Assign Program
         </Button>
       </div>
 
-      {/* Program Templates */}
-      <div className="grid grid-cols-2 gap-3">
-        {PROGRAM_TEMPLATES.map(t => {
-          const Icon = t.icon;
-          return (
-            <Card key={t.id} className={`border shadow-sm cursor-pointer hover:shadow-md transition-shadow ${t.color}`} onClick={() => setShowAssignDialog(true)}>
-              <CardContent className="py-4 px-4 flex items-start gap-3">
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${t.iconBg}`}>
-                  <Icon className="w-4 h-4 text-gray-700" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold leading-snug">{t.label}</p>
-                  <p className="text-xs opacity-80 mt-0.5 line-clamp-2">{t.description}</p>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-3 gap-3">
-        <Card className="border-0 shadow-sm text-center">
-          <CardContent className="py-4">
-            <div className="flex items-center justify-center w-8 h-8 bg-red-50 rounded-full mx-auto mb-2">
-              <AlertTriangle className="w-4 h-4 text-red-500" />
-            </div>
-            <p className="text-2xl font-bold text-gray-900">{stats.atRisk}</p>
-            <p className="text-xs text-gray-500 mt-0.5">At Risk</p>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-sm text-center">
-          <CardContent className="py-4">
-            <div className="flex items-center justify-center w-8 h-8 bg-amber-50 rounded-full mx-auto mb-2">
-              <TrendingUp className="w-4 h-4 text-amber-500" />
-            </div>
-            <p className="text-2xl font-bold text-gray-900">{stats.developing}</p>
-            <p className="text-xs text-gray-500 mt-0.5">Developing</p>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-sm text-center">
-          <CardContent className="py-4">
-            <div className="flex items-center justify-center w-8 h-8 bg-emerald-50 rounded-full mx-auto mb-2">
-              <CheckCircle className="w-4 h-4 text-emerald-500" />
-            </div>
-            <p className="text-2xl font-bold text-gray-900">{stats.onTrack}</p>
-            <p className="text-xs text-gray-500 mt-0.5">On Track</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Manager List */}
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
-            <Users className="w-4 h-4 text-[#0202ff]" />
-            Managers ({filteredManagers.length})
-          </CardTitle>
-          <div className="relative mt-2">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <Input
-              placeholder="Search managers..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="pl-9 h-9 text-sm"
-            />
+      {isLoading ? <LoadingSkeleton /> : (
+        <>
+          {/* Program Templates */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {PROGRAM_TEMPLATES.map(t => {
+              const Icon = t.icon;
+              return (
+                <Card
+                  key={t.id}
+                  className={`border shadow-sm cursor-pointer hover:shadow-md transition-all rounded-2xl overflow-hidden ${t.color}`}
+                  onClick={() => setShowAssignDialog(true)}
+                >
+                  <CardContent className="py-4 px-5 flex items-start gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${t.iconBg}`}>
+                      <Icon className="w-5 h-5 text-gray-700" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold leading-snug">{t.label}</p>
+                      <p className="text-xs opacity-75 mt-1 line-clamp-2">{t.description}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {filteredManagers.length === 0 ? (
-            <div className="text-center py-10 text-gray-400">
-              <Users className="w-8 h-8 mx-auto mb-2 opacity-40" />
-              <p className="text-sm">No managers found</p>
-            </div>
-          ) : (
-            filteredManagers.map(manager => (
-              <ManagerRow
-                key={manager.id}
-                manager={manager}
-                insight={allInsights[manager.email]}
-                onClick={handleManagerClick}
-              />
-            ))
-          )}
-        </CardContent>
-      </Card>
+
+          {/* Summary Stats */}
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { label: 'At Risk', value: stats.atRisk, icon: AlertTriangle, iconBg: 'bg-red-50', iconColor: 'text-red-500' },
+              { label: 'Developing', value: stats.developing, icon: TrendingUp, iconBg: 'bg-amber-50', iconColor: 'text-amber-500' },
+              { label: 'On Track', value: stats.onTrack, icon: CheckCircle, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-500' },
+            ].map(({ label, value, icon: Icon, iconBg, iconColor }) => (
+              <Card key={label} className="border-0 shadow-sm text-center rounded-2xl">
+                <CardContent className="py-5">
+                  <div className={`flex items-center justify-center w-9 h-9 ${iconBg} rounded-full mx-auto mb-2.5`}>
+                    <Icon className={`w-4 h-4 ${iconColor}`} />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">{value}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{label}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Manager List */}
+          <Card className="border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
+            <CardHeader className="pb-3 pt-5 px-6">
+              <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                <Users className="w-4 h-4 text-[#0202ff]" />
+                Managers
+                <span className="text-sm font-normal text-gray-400">({filteredManagers.length})</span>
+              </CardTitle>
+              <div className="relative mt-3">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Input
+                  placeholder="Search managers..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  className="pl-9 h-9 text-sm bg-gray-50 border-gray-200"
+                />
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              {filteredManagers.length === 0 ? (
+                <div className="text-center py-12 text-gray-400">
+                  <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                  <p className="text-sm font-medium">
+                    {managers.length === 0 ? 'No managers in this organization yet.' : 'No managers match your search.'}
+                  </p>
+                </div>
+              ) : (
+                filteredManagers.map(manager => (
+                  <ManagerRow
+                    key={manager.id}
+                    manager={manager}
+                    insight={allInsights[manager.email]}
+                    onClick={handleManagerClick}
+                  />
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       <AssignTemplateDialog
         open={showAssignDialog}
