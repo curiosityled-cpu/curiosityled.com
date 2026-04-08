@@ -1,14 +1,25 @@
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+
 import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
 import {
   Brain, Target, Home, BarChart2, Users, LogOut, Menu, X,
-  ChevronRight, ChevronLeft, BarChart3, Map
+  ChevronRight, ChevronLeft, BarChart3, Map, Bell, User,
+  Settings, Shield
 } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import AtreusCoach from "@/components/ai/AtreusCoach";
 import { AuthProvider as FullAuthProvider } from "@/components/useAuth";
+import { createPageUrl } from "@/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 // Role detection helpers
 export const getMVPRole = (appRole) => {
@@ -47,6 +58,35 @@ export default function MVPLayout({ children }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showAtreus, setShowAtreus] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [recentNotifications, setRecentNotifications] = useState([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user?.email) return;
+    const fetchNotifications = async () => {
+      try {
+        const [unread, recent] = await Promise.all([
+          base44.entities.Notification.filter({ user_email: user.email, is_read: false }, '-scheduled_for'),
+          base44.entities.Notification.filter({ user_email: user.email }, '-scheduled_for', 5),
+        ]);
+        setUnreadCount(unread.length);
+        setRecentNotifications(recent);
+      } catch {}
+    };
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60000);
+    return () => clearInterval(interval);
+  }, [user?.email]);
+
+  const handleNotificationClick = (id) => {
+    if (id) {
+      setUnreadCount(prev => Math.max(0, prev - 1));
+      setRecentNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+      base44.entities.Notification.update(id, { is_read: true }).catch(() => {});
+    }
+    navigate(createPageUrl('Notifications'));
+  };
 
   const mvpRole = getMVPRole(user?.app_role);
   const navItems = NAV_CONFIG[mvpRole] || [];
@@ -135,23 +175,133 @@ export default function MVPLayout({ children }) {
         {/* User footer */}
         <div className="border-t border-gray-100 p-2">
           {!collapsed ? (
-            <div className="flex items-center gap-2 px-2 py-2 rounded-lg">
+            <div className="flex items-center gap-1 px-2 py-2 rounded-lg">
               <div className="w-7 h-7 rounded-full bg-[#0202ff]/10 flex items-center justify-center flex-shrink-0">
                 <span className="text-xs font-bold text-[#0202ff]">
                   {user?.full_name?.[0] || user?.email?.[0] || '?'}
                 </span>
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 px-1">
                 <p className="text-xs font-medium text-gray-900 truncate">{user?.full_name || user?.email}</p>
               </div>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleLogout} title="Log out">
-                <LogOut className="w-3.5 h-3.5 text-gray-400" />
-              </Button>
+              {/* Notifications */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 relative">
+                    <Bell className="w-3.5 h-3.5 text-gray-400" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#0202ff] text-white text-[9px] flex items-center justify-center font-bold">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="top" align="end" className="w-72">
+                  <div className="px-3 py-2 border-b">
+                    <p className="font-semibold text-sm">Notifications</p>
+                    {unreadCount > 0 && <p className="text-xs text-gray-500">{unreadCount} unread</p>}
+                  </div>
+                  {recentNotifications.length === 0 ? (
+                    <div className="px-3 py-6 text-center text-gray-400 text-sm">No notifications yet</div>
+                  ) : (
+                    recentNotifications.map(n => (
+                      <DropdownMenuItem key={n.id} onClick={() => handleNotificationClick(n.id)} className="px-3 py-2.5 cursor-pointer">
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-medium truncate ${!n.is_read ? 'text-gray-900' : 'text-gray-500'}`}>{n.title}</p>
+                          <p className="text-xs text-gray-400 truncate">{n.message}</p>
+                        </div>
+                        {!n.is_read && <span className="w-2 h-2 rounded-full bg-[#0202ff] flex-shrink-0 ml-2" />}
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {/* Profile */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                    <User className="w-3.5 h-3.5 text-gray-400" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="top" align="end" className="w-56">
+                  <div className="px-3 py-2">
+                    <p className="text-sm font-semibold">{user?.full_name}</p>
+                    <p className="text-xs text-gray-500">{user?.email}</p>
+                    <Badge variant="outline" className="text-xs mt-1">{user?.app_role || 'User'}</Badge>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate(createPageUrl('Profile'))} className="cursor-pointer">
+                    <User className="w-4 h-4 mr-2" /> My Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate(createPageUrl('Settings'))} className="cursor-pointer">
+                    <Settings className="w-4 h-4 mr-2" /> Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate(createPageUrl('PrivacySettings'))} className="cursor-pointer">
+                    <Shield className="w-4 h-4 mr-2" /> Privacy & Security
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
+                    <LogOut className="w-4 h-4 mr-2" /> Log Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           ) : (
-            <Button variant="ghost" size="icon" className="w-full h-9" onClick={handleLogout} title="Log out">
-              <LogOut className="w-4 h-4 text-gray-400" />
-            </Button>
+            <div className="flex flex-col items-center gap-1">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="w-9 h-9 relative">
+                    <Bell className="w-4 h-4 text-gray-400" />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-[#0202ff] text-white text-[9px] flex items-center justify-center font-bold">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="right" align="end" className="w-72">
+                  <div className="px-3 py-2 border-b">
+                    <p className="font-semibold text-sm">Notifications</p>
+                  </div>
+                  {recentNotifications.length === 0 ? (
+                    <div className="px-3 py-4 text-center text-gray-400 text-sm">No notifications yet</div>
+                  ) : (
+                    recentNotifications.map(n => (
+                      <DropdownMenuItem key={n.id} onClick={() => handleNotificationClick(n.id)} className="px-3 py-2.5 cursor-pointer">
+                        <p className="text-sm truncate">{n.title}</p>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="w-9 h-9">
+                    <User className="w-4 h-4 text-gray-400" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="right" align="end" className="w-56">
+                  <div className="px-3 py-2">
+                    <p className="text-sm font-semibold">{user?.full_name}</p>
+                    <p className="text-xs text-gray-500">{user?.email}</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate(createPageUrl('Profile'))} className="cursor-pointer">
+                    <User className="w-4 h-4 mr-2" /> My Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate(createPageUrl('Settings'))} className="cursor-pointer">
+                    <Settings className="w-4 h-4 mr-2" /> Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate(createPageUrl('PrivacySettings'))} className="cursor-pointer">
+                    <Shield className="w-4 h-4 mr-2" /> Privacy & Security
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
+                    <LogOut className="w-4 h-4 mr-2" /> Log Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           )}
         </div>
       </aside>
