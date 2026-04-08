@@ -14,7 +14,6 @@ import MVPLayout, { getMVPRole } from '@/components/mvp/MVPLayout';
 import MyLeadership from './pages/MyLeadership';
 import MyGoalsMVP from './pages/MyGoalsMVP';
 import ReportBuilderMVP from './pages/ReportBuilderMVP';
-import MVPAIInsights from './pages/MVPAIInsights';
 import ProgramOverview from './pages/ProgramOverview';
 import ManagerDetail from './pages/ManagerDetail';
 import LeadershipIntelligenceHub from './pages/LeadershipIntelligenceHub';
@@ -80,7 +79,6 @@ const AuthenticatedApp = () => {
       <Route path="/manager-detail/:id" element={<MVPLayout><ManagerDetail /></MVPLayout>} />
       <Route path="/leadership-intelligence" element={<MVPLayout><LeadershipIntelligenceHub /></MVPLayout>} />
       <Route path="/report-builder-mvp" element={<MVPLayout><ReportBuilderMVP /></MVPLayout>} />
-      <Route path="/mvp-ai-insights" element={<MVPLayout><MVPAIInsights /></MVPLayout>} />
       {/* MVP users: shared pages in MVPLayout */}
       {mvpRole && (
         <>

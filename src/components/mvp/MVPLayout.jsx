@@ -37,11 +37,11 @@ const NAV_CONFIG = {
   ],
   buyer: [
     { label: 'Program Overview', path: '/program-overview', icon: Users },
-    { label: 'Leadership Intelligence', path: '/mvp-ai-insights', icon: BarChart3 },
+    { label: 'Leadership Intelligence', path: '/leadership-intelligence', icon: BarChart3 },
     { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 },
   ],
   executive: [
-    { label: 'Leadership Intelligence', path: '/mvp-ai-insights', icon: BarChart2 },
+    { label: 'Leadership Intelligence', path: '/leadership-intelligence', icon: BarChart2 },
   ],
 };
 
