@@ -88,7 +88,6 @@ const AuthenticatedApp = () => {
       <Route path="/my-goals" element={<MVPLayout><MyGoalsMVP /></MVPLayout>} />
       <Route path="/program-overview" element={<MVPLayout><ProgramOverview /></MVPLayout>} />
       <Route path="/manager-detail/:id" element={<MVPLayout><ManagerDetail /></MVPLayout>} />
-      <Route path="/leadership-intelligence" element={<MVPLayout><LeadershipIntelligenceHub /></MVPLayout>} />
       <Route path="/report-builder-mvp" element={<MVPLayout><ReportBuilderMVP /></MVPLayout>} />
 
       {/* Shared pages — MVP users get MVPLayout, others get legacy LayoutWrapper */}
