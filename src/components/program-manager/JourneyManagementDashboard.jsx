@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/useAuth';
 import { useLocation } from 'react-router-dom';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { getMVPRole } from '@/components/mvp/MVPLayout';
 
 import ProgramsManagement from './ProgramsManagement';
 import JourneysManagement from './JourneysManagement';
@@ -11,12 +12,13 @@ import CoachingManagement from './CoachingManagement';
 import CertificateManagement from './CertificateManagement';
 
 export default function JourneyManagementDashboard() {
-  const { hasPermission } = useAuth();
+  const { user } = useAuth();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const subtabFromUrl = searchParams.get('subtab');
+  const isMVPBuyer = getMVPRole(user?.app_role) === 'buyer';
   
-  const [activeTab, setActiveTab] = useState(subtabFromUrl || 'programs');
+  const [activeTab, setActiveTab] = useState(subtabFromUrl || (isMVPBuyer ? 'journeys' : 'programs'));
 
   useEffect(() => {
     if (subtabFromUrl) {
@@ -28,7 +30,7 @@ export default function JourneyManagementDashboard() {
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsContent value="programs" className="mt-0">
-          <ProgramsManagement onTabChange={setActiveTab} activeSubTab={activeTab} />
+          <ProgramsManagement onTabChange={setActiveTab} activeSubTab={activeTab} isMVPBuyer={isMVPBuyer} />
         </TabsContent>
 
         <TabsContent value="journeys" className="mt-0">

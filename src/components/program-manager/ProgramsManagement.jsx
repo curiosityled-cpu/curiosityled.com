@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import JourneySelector from './JourneySelector';
 import ParticipantProgressView from './ParticipantProgressView';
 import SubNavMenu from "@/components/common/SubNavMenu";
+import { getMVPRole } from "@/components/mvp/MVPLayout";
 
 const PROGRAM_TYPES = [
   { id: 'executive_development', label: 'Executive Development' },
@@ -45,7 +46,7 @@ const STATUS_COLORS = {
   archived: 'bg-slate-100 text-slate-800'
 };
 
-export default function ProgramsManagement({ onTabChange, activeSubTab }) {
+export default function ProgramsManagement({ onTabChange, activeSubTab, isMVPBuyer }) {
   const { user, hasPermission, isPlatformAdmin, isSuperAdmin, isHRAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -76,7 +77,7 @@ export default function ProgramsManagement({ onTabChange, activeSubTab }) {
   const [journeys, setJourneys] = useState([]);
   const [showParticipantProgress, setShowParticipantProgress] = useState(false);
 
-  const tabItems = [
+  const allTabItems = [
     { id: 'programs', label: 'Programs', icon: BookOpen },
     { id: 'journeys', label: 'Journeys', icon: Map },
     { id: 'classes', label: 'Classes', icon: GraduationCap },
@@ -84,6 +85,13 @@ export default function ProgramsManagement({ onTabChange, activeSubTab }) {
     { id: 'certificates', label: 'Certificates', icon: Award },
     { id: 'participants', label: 'Participants', icon: Users },
   ];
+  // MVP buyers: Journeys first, then Programs; hide the rest
+  const tabItems = isMVPBuyer
+    ? [
+        { id: 'journeys', label: 'Journeys', icon: Map },
+        { id: 'programs', label: 'Programs', icon: BookOpen },
+      ]
+    : allTabItems;
 
   useEffect(() => {
     if (user) {
