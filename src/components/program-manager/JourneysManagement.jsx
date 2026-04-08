@@ -175,74 +175,88 @@ export default function JourneysManagement() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-              <Route className="w-5 h-5 text-blue-600" />
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-wrap divide-x divide-gray-100">
+            {/* Content */}
+            <div className="flex gap-4 px-4 first:pl-0">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-md bg-blue-100 flex items-center justify-center">
+                  <Route className="w-4 h-4 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Journeys</p>
+                  <p className="text-lg font-bold leading-tight">{stats.total}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-md bg-green-100 flex items-center justify-center">
+                  <Target className="w-4 h-4 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Onboarding</p>
+                  <p className="text-lg font-bold leading-tight">{stats.onboardingTotal}</p>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-2xl font-bold">{stats.total}</p>
-              <p className="text-sm text-gray-600">Journeys</p>
+
+            {/* Status */}
+            <div className="flex gap-4 px-4">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-md bg-emerald-100 flex items-center justify-center">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Published</p>
+                  <p className="text-lg font-bold leading-tight">{stats.published}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-md bg-gray-100 flex items-center justify-center">
+                  <Clock className="w-4 h-4 text-gray-500" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Draft</p>
+                  <p className="text-lg font-bold leading-tight">{stats.draft}</p>
+                </div>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-              <Target className="w-5 h-5 text-green-600" />
+
+            {/* Enrollment */}
+            <div className="flex gap-4 px-4">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-md bg-purple-100 flex items-center justify-center">
+                  <Users className="w-4 h-4 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Enrolled</p>
+                  <p className="text-lg font-bold leading-tight">{stats.totalEnrollments}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-md bg-amber-100 flex items-center justify-center">
+                  <Play className="w-4 h-4 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">In Progress</p>
+                  <p className="text-lg font-bold leading-tight">{stats.activeEnrollments + stats.onboardingActive}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-md bg-teal-100 flex items-center justify-center">
+                  <BookOpen className="w-4 h-4 text-teal-600" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Completed</p>
+                  <p className="text-lg font-bold leading-tight">
+                    {journeys.reduce((sum, j) => sum + (j.completedCount || 0), 0) + onboardingPlans.filter(p => p.status === 'completed').length}
+                  </p>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-2xl font-bold">{stats.onboardingTotal}</p>
-              <p className="text-sm text-gray-600">Onboarding</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{stats.published}</p>
-              <p className="text-sm text-gray-600">Published</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-              <Clock className="w-5 h-5 text-gray-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{stats.draft}</p>
-              <p className="text-sm text-gray-600">Draft</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-              <Users className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{stats.totalEnrollments}</p>
-              <p className="text-sm text-gray-600">Enrollments</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-              <Play className="w-5 h-5 text-amber-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{stats.activeEnrollments + stats.onboardingActive}</p>
-              <p className="text-sm text-gray-600">In Progress</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
