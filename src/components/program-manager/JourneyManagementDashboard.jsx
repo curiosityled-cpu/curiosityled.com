@@ -11,20 +11,22 @@ import ClassManagement from './ClassManagement';
 import CoachingManagement from './CoachingManagement';
 import CertificateManagement from './CertificateManagement';
 
-export default function JourneyManagementDashboard() {
+export default function JourneyManagementDashboard({ initialSubTab }) {
   const { user } = useAuth();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const subtabFromUrl = searchParams.get('subtab');
   const isMVPBuyer = getMVPRole(user?.app_role) === 'buyer';
   
-  const [activeTab, setActiveTab] = useState(subtabFromUrl || (isMVPBuyer ? 'journeys' : 'programs'));
+  const [activeTab, setActiveTab] = useState(initialSubTab || subtabFromUrl || (isMVPBuyer ? 'journeys' : 'programs'));
 
   useEffect(() => {
-    if (subtabFromUrl) {
+    if (initialSubTab) {
+      setActiveTab(initialSubTab);
+    } else if (subtabFromUrl) {
       setActiveTab(subtabFromUrl);
     }
-  }, [subtabFromUrl]);
+  }, [initialSubTab, subtabFromUrl]);
 
   return (
     <div className="space-y-6">

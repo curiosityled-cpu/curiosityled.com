@@ -7,7 +7,8 @@ import {
   Users, 
   Bookmark,
   Loader2,
-  ClipboardList
+  ClipboardList,
+  Map
 } from "lucide-react";
 import { useAuth } from "@/components/useAuth";
 import { getMVPRole } from "@/components/mvp/MVPLayout";
@@ -48,7 +49,10 @@ export default function ExperienceManagement() {
     { id: 'templates', label: 'Templates', icon: Bookmark }
   ];
   const tabItems = isMVPBuyer
-    ? [{ id: 'programs', label: 'Programs', icon: Users }]
+    ? [
+        { id: 'journeys', label: 'Journeys', icon: Map },
+        { id: 'programs', label: 'Programs', icon: Users },
+      ]
     : allTabItems;
 
   // Initialize activeTab from URL hash
@@ -63,6 +67,19 @@ export default function ExperienceManagement() {
   // Get subtab from URL params
   const searchParams = new URLSearchParams(location.search);
   const subtab = isMVPBuyer ? 'journeys' : searchParams.get('subtab');
+
+  // For MVP buyers, map the top-level tab selection to the right subtab
+  const handleMVPBuyerTabClick = (tabId) => {
+    if (tabId === 'journeys') {
+      setActiveTab('programs');
+      setActiveMVPSubTab('journeys');
+    } else {
+      setActiveTab('programs');
+      setActiveMVPSubTab('programs');
+    }
+  };
+
+  const [activeMVPSubTab, setActiveMVPSubTab] = useState(isMVPBuyer ? 'journeys' : null);
 
   // Requests tab state
   const [requests, setRequests] = useState([]);
@@ -269,8 +286,8 @@ export default function ExperienceManagement() {
           additionalHeaderContent={
             <SubNavMenu
               items={tabItems}
-              activeId={activeTab}
-              onItemClick={setActiveTab}
+              activeId={isMVPBuyer ? (activeMVPSubTab || 'journeys') : activeTab}
+              onItemClick={isMVPBuyer ? handleMVPBuyerTabClick : setActiveTab}
             />
           }
         />
@@ -416,7 +433,7 @@ export default function ExperienceManagement() {
 
           {activeTab === 'programs' && (
             <Suspense fallback={<div className="flex justify-center p-8"><Loader2 className="w-12 h-12 animate-spin text-blue-600" /></div>}>
-              <JourneyManagementDashboard initialSubTab={subtab} />
+              <JourneyManagementDashboard initialSubTab={isMVPBuyer ? activeMVPSubTab : subtab} />
             </Suspense>
           )}
 
