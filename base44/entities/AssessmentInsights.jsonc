@@ -93,6 +93,9 @@
           "user_email": "{{user.email}}"
         },
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "user_condition": {
             "role": "User Level 2"
           },
@@ -132,6 +135,9 @@
       "$or": [
         {
           "user_email": "{{user.email}}"
+        },
+        {
+          "created_by": "{{user.email}}"
         },
         {
           "user_condition": {

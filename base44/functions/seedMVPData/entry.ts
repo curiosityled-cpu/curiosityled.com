@@ -84,7 +84,7 @@ function daysAgo(n) {
   return new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();
 }
 
-// v4 - force redeploy
+// v5 - use service role to bypass write RLS
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -101,8 +101,11 @@ Deno.serve(async (req) => {
 
     // The email to seed data for (defaults to calling user)
     const seedEmail = target_email || user.email;
-    // client_id may be null for Platform Admin — that's OK, seed without it
+    // client_id may be null for demo users — that's OK
     const clientId = user.client_id || null;
+
+    // Use service role to bypass write RLS constraints
+    const db = base44.asServiceRole;
 
     const results = { assessments: 0, insights: 0, goals: 0, learning: 0 };
 
@@ -110,7 +113,7 @@ Deno.serve(async (req) => {
     const profile = pickRandom(SCORE_PROFILES);
     const bandMap = (pct) => pct >= 85 ? 'Mastery' : pct >= 70 ? 'Proficient' : pct >= 55 ? 'Developing' : 'Awareness';
 
-    const assessment = await base44.entities.Assessment.create({
+    const assessment = await db.entities.Assessment.create({
       client_id: clientId,
       email: seedEmail,
       response_id: `demo-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -160,14 +163,14 @@ Deno.serve(async (req) => {
       }
     };
     console.log('[SEED] Creating AssessmentInsights with payload:', JSON.stringify(insightPayload));
-    const insight = await base44.entities.AssessmentInsights.create(insightPayload);
+    const insight = await db.entities.AssessmentInsights.create(insightPayload);
     console.log('[SEED] AssessmentInsights created:', JSON.stringify(insight));
     results.insights++;
 
     // ── 3. Create Goals ────────────────────────────────────────────────────
     const goalsToCreate = pickN(GOAL_TEMPLATES, randomInt(3, 5));
     for (const goalTemplate of goalsToCreate) {
-      await base44.entities.Goal.create({
+      await db.entities.Goal.create({
         ...goalTemplate,
         client_id: clientId,
         created_by: seedEmail,
@@ -179,7 +182,7 @@ Deno.serve(async (req) => {
     // ── 4. Create Assigned Learning ─────────────────────────────────────────
     const learningToCreate = pickN(LEARNING_TEMPLATES, randomInt(3, 4));
     for (const l of learningToCreate) {
-      await base44.entities.AssignedLearning.create({
+      await db.entities.AssignedLearning.create({
         client_id: clientId,
         user_email: seedEmail,
         learning_resource_id: `demo-resource-${Math.random().toString(36).slice(2)}`,
