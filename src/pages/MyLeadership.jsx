@@ -215,41 +215,48 @@ function LoadingSkeleton() {
 }
 
 export default function MyLeadership() {
-  const { user } = useAuth();
+  const { user, isLoadingAuth } = useAuth();
 
   const { data: insight, isLoading: loadingInsight } = useQuery({
-    queryKey: ['my-insight', user?.email],
+    queryKey: ['my-insight-v2', user?.email],
     queryFn: async () => {
-      // Use list() so RLS filters by the authenticated user automatically
       const results = await base44.entities.AssessmentInsights.list('-created_date', 5);
       return results[0] || null;
     },
-    enabled: !!user?.email,
+    enabled: !isLoadingAuth && !!user,
     staleTime: 0,
+    gcTime: 0,
+    retry: 2,
   });
 
   const { data: goals = [], isLoading: loadingGoals } = useQuery({
-    queryKey: ['my-goals-summary', user?.email],
+    queryKey: ['my-goals-summary-v2', user?.email],
     queryFn: async () => base44.entities.Goal.list('-created_date', 10),
-    enabled: !!user?.email,
+    enabled: !isLoadingAuth && !!user,
     staleTime: 0,
+    gcTime: 0,
+    retry: 2,
   });
 
   const { data: assignments = [], isLoading: loadingAssignments } = useQuery({
-    queryKey: ['my-assignments', user?.email],
+    queryKey: ['my-assignments-v2', user?.email],
     queryFn: async () => base44.entities.AssignedLearning.list('-created_date', 10),
-    enabled: !!user?.email,
+    enabled: !isLoadingAuth && !!user,
     staleTime: 0,
+    gcTime: 0,
+    retry: 2,
   });
 
   const firstName = user?.full_name?.split(' ')[0] || 'Leader';
+
+  const isLoading = isLoadingAuth || loadingInsight || loadingGoals || loadingAssignments;
 
   return (
     <MVPPageLayout
       title="My Leadership"
       subtitle={`Welcome back, ${firstName}. Here's your leadership snapshot.`}
     >
-      {loadingInsight || loadingGoals || loadingAssignments ? (
+      {isLoading ? (
         <LoadingSkeleton />
       ) : (
         <>
