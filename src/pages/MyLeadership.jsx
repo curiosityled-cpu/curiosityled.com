@@ -1,10 +1,9 @@
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { Link } from "react-router-dom";
 import {
-  Sparkles, Target, Zap, ChevronRight, Loader2, Star,
+  Sparkles, Target, Zap, ChevronRight, Star,
   TrendingUp, ArrowRight, CheckCircle2, Clock, BookOpen
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -216,40 +215,52 @@ function LoadingSkeleton() {
 
 export default function MyLeadership() {
   const { user, isLoadingAuth } = useAuth();
+  const [directData, setDirectData] = React.useState(null);
+  const [directLoading, setDirectLoading] = React.useState(true);
+  const [directError, setDirectError] = React.useState(null);
 
-  const { data: insight, isLoading: loadingInsight } = useQuery({
-    queryKey: ['my-insight-v2', user?.email],
-    queryFn: async () => {
-      const results = await base44.entities.AssessmentInsights.list('-created_date', 5);
-      return results[0] || null;
-    },
-    enabled: !isLoadingAuth && !!user,
-    staleTime: 0,
-    gcTime: 0,
-    retry: 2,
-  });
-
-  const { data: goals = [], isLoading: loadingGoals } = useQuery({
-    queryKey: ['my-goals-summary-v2', user?.email],
-    queryFn: async () => base44.entities.Goal.list('-created_date', 10),
-    enabled: !isLoadingAuth && !!user,
-    staleTime: 0,
-    gcTime: 0,
-    retry: 2,
-  });
-
-  const { data: assignments = [], isLoading: loadingAssignments } = useQuery({
-    queryKey: ['my-assignments-v2', user?.email],
-    queryFn: async () => base44.entities.AssignedLearning.list('-created_date', 10),
-    enabled: !isLoadingAuth && !!user,
-    staleTime: 0,
-    gcTime: 0,
-    retry: 2,
-  });
+  // Direct fetch bypassing React Query entirely to rule out caching issues
+  React.useEffect(() => {
+    let cancelled = false;
+    const fetchAll = async () => {
+      try {
+        setDirectLoading(true);
+        const [insightsRaw, goalsRaw, learningRaw] = await Promise.all([
+          base44.entities.AssessmentInsights.list('-created_date', 5),
+          base44.entities.Goal.list('-created_date', 10),
+          base44.entities.AssignedLearning.list('-created_date', 10),
+        ]);
+        if (!cancelled) {
+          setDirectData({
+            insight: insightsRaw[0] || null,
+            goals: goalsRaw,
+            assignments: learningRaw,
+          });
+          setDirectLoading(false);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setDirectError(err?.message || 'Unknown error');
+          setDirectLoading(false);
+        }
+      }
+    };
+    fetchAll();
+    return () => { cancelled = true; };
+  }, []);
 
   const firstName = user?.full_name?.split(' ')[0] || 'Leader';
+  const isLoading = isLoadingAuth || directLoading;
 
-  const isLoading = isLoadingAuth || loadingInsight || loadingGoals || loadingAssignments;
+  if (directError) {
+    return (
+      <MVPPageLayout title="My Leadership" subtitle={`Welcome back, ${firstName}.`}>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
+          Error loading data: {directError}
+        </div>
+      </MVPPageLayout>
+    );
+  }
 
   return (
     <MVPPageLayout
@@ -260,9 +271,9 @@ export default function MyLeadership() {
         <LoadingSkeleton />
       ) : (
         <>
-          {insight ? <InsightCard insight={insight} /> : <NoInsightState />}
-          <GoalsCard goals={goals} />
-          <LearningCard assignments={assignments} />
+          {directData?.insight ? <InsightCard insight={directData.insight} /> : <NoInsightState />}
+          <GoalsCard goals={directData?.goals || []} />
+          <LearningCard assignments={directData?.assignments || []} />
         </>
       )}
     </MVPPageLayout>
