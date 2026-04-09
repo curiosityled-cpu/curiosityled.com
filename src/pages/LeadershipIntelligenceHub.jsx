@@ -45,16 +45,17 @@ function LoadingSkeleton() {
 }
 
 export default function LeadershipIntelligenceHub() {
-  const { user } = useAuth();
+  const { user, isLoadingAuth } = useAuth();
 
   const { data: insightsList = [], isLoading: loadingInsights } = useQuery({
     queryKey: ['exec-insights', user?.email],
     queryFn: async () => base44.entities.AssessmentInsights.list('-created_date', 50),
-    enabled: !!user,
+    enabled: !isLoadingAuth && !!user,
     staleTime: 0,
+    gcTime: 0,
   });
 
-  const isLoading = loadingInsights;
+  const isLoading = isLoadingAuth || loadingInsights;
 
   const stats = React.useMemo(() => {
     if (!insightsList.length) return null;

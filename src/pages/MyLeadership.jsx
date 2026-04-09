@@ -215,48 +215,47 @@ function LoadingSkeleton() {
 
 export default function MyLeadership() {
   const { user, isLoadingAuth } = useAuth();
-  const [directData, setDirectData] = React.useState(null);
-  const [directLoading, setDirectLoading] = React.useState(true);
-  const [directError, setDirectError] = React.useState(null);
+  const [data, setData] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
 
-  // Direct fetch bypassing React Query entirely to rule out caching issues
+  // Only fetch once auth is fully resolved and user is available
   React.useEffect(() => {
+    if (isLoadingAuth) return; // wait for auth
     let cancelled = false;
     const fetchAll = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        setDirectLoading(true);
         const [insightsRaw, goalsRaw, learningRaw] = await Promise.all([
           base44.entities.AssessmentInsights.list('-created_date', 5),
           base44.entities.Goal.list('-created_date', 10),
           base44.entities.AssignedLearning.list('-created_date', 10),
         ]);
         if (!cancelled) {
-          setDirectData({
+          setData({
             insight: insightsRaw[0] || null,
             goals: goalsRaw,
             assignments: learningRaw,
           });
-          setDirectLoading(false);
         }
       } catch (err) {
-        if (!cancelled) {
-          setDirectError(err?.message || 'Unknown error');
-          setDirectLoading(false);
-        }
+        if (!cancelled) setError(err?.message || 'Unknown error');
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
     fetchAll();
     return () => { cancelled = true; };
-  }, []);
+  }, [isLoadingAuth]); // re-run only when auth state changes
 
   const firstName = user?.full_name?.split(' ')[0] || 'Leader';
-  const isLoading = isLoadingAuth || directLoading;
 
-  if (directError) {
+  if (error) {
     return (
       <MVPPageLayout title="My Leadership" subtitle={`Welcome back, ${firstName}.`}>
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
-          Error loading data: {directError}
+          Error loading data: {error}
         </div>
       </MVPPageLayout>
     );
@@ -267,13 +266,13 @@ export default function MyLeadership() {
       title="My Leadership"
       subtitle={`Welcome back, ${firstName}. Here's your leadership snapshot.`}
     >
-      {isLoading ? (
+      {isLoadingAuth || loading ? (
         <LoadingSkeleton />
       ) : (
         <>
-          {directData?.insight ? <InsightCard insight={directData.insight} /> : <NoInsightState />}
-          <GoalsCard goals={directData?.goals || []} />
-          <LearningCard assignments={directData?.assignments || []} />
+          {data?.insight ? <InsightCard insight={data.insight} /> : <NoInsightState />}
+          <GoalsCard goals={data?.goals || []} />
+          <LearningCard assignments={data?.assignments || []} />
         </>
       )}
     </MVPPageLayout>
