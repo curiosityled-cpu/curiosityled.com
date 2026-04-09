@@ -146,6 +146,7 @@ Deno.serve(async (req) => {
       development_areas: devAreas,
       recommendations,
       risk_flags: profile.overall < 65 ? ['low_overall_score'] : [],
+      status: 'generated',
       overall_score: profile.overall,
       competency_scores: {
         situational_intelligence: profile.si,

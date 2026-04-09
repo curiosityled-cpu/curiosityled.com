@@ -60,8 +60,7 @@ export default function LeadershipIntelligenceHub() {
   const { data: insightsList = [], isLoading: loadingInsights } = useQuery({
     queryKey: ['exec-insights', user?.client_id],
     queryFn: async () => base44.entities.AssessmentInsights.filter({
-      client_id: user.client_id,
-      status: 'generated'
+      client_id: user.client_id
     }),
     enabled: !!user?.client_id,
     staleTime: 5 * 60 * 1000,

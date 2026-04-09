@@ -227,8 +227,7 @@ export default function ExperienceOverview() {
     queryKey: ['all-insights', user?.client_id],
     queryFn: async () => {
       const insights = await base44.entities.AssessmentInsights.filter({
-        client_id: user.client_id,
-        status: 'generated'
+        client_id: user.client_id
       });
       return insights.reduce((acc, i) => { acc[i.user_email] = i; return acc; }, {});
     },
