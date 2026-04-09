@@ -220,29 +220,26 @@ export default function MyLeadership() {
   const { data: insight, isLoading: loadingInsight } = useQuery({
     queryKey: ['my-insight', user?.email],
     queryFn: async () => {
-      const results = await base44.entities.AssessmentInsights.filter(
-        { user_email: user.email },
-        '-created_date',
-        1
-      );
+      // Use list() so RLS filters by the authenticated user automatically
+      const results = await base44.entities.AssessmentInsights.list('-created_date', 5);
       return results[0] || null;
     },
     enabled: !!user?.email,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 0,
   });
 
   const { data: goals = [], isLoading: loadingGoals } = useQuery({
     queryKey: ['my-goals-summary', user?.email],
-    queryFn: async () => base44.entities.Goal.filter({ created_by: user.email }, '-created_date', 10),
+    queryFn: async () => base44.entities.Goal.list('-created_date', 10),
     enabled: !!user?.email,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   });
 
   const { data: assignments = [], isLoading: loadingAssignments } = useQuery({
     queryKey: ['my-assignments', user?.email],
-    queryFn: async () => base44.entities.AssignedLearning.filter({ user_email: user.email }, '-created_date', 10),
+    queryFn: async () => base44.entities.AssignedLearning.list('-created_date', 10),
     enabled: !!user?.email,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   });
 
   const firstName = user?.full_name?.split(' ')[0] || 'Leader';
