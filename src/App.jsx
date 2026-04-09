@@ -77,7 +77,7 @@ const AuthenticatedApp = () => {
         mvpRole === 'manager' ? (
           <MVPLayout><MyLeadership /></MVPLayout>
         ) : mvpRole === 'buyer' ? (
-          <MVPLayout><ProgramOverview /></MVPLayout>
+          <MVPLayout><ExperienceOverview /></MVPLayout>
         ) : mvpRole === 'executive' ? (
           <MVPLayout><LeadershipIntelligenceHub /></MVPLayout>
         ) : (

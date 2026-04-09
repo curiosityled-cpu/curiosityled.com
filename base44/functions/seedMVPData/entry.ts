@@ -84,6 +84,7 @@ function daysAgo(n) {
   return new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();
 }
 
+// v4 - force redeploy
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -100,7 +101,8 @@ Deno.serve(async (req) => {
 
     // The email to seed data for (defaults to calling user)
     const seedEmail = target_email || user.email;
-    const clientId = user.client_id;
+    // client_id may be null for Platform Admin — that's OK, seed without it
+    const clientId = user.client_id || null;
 
     const results = { assessments: 0, insights: 0, goals: 0, learning: 0 };
 
@@ -108,7 +110,7 @@ Deno.serve(async (req) => {
     const profile = pickRandom(SCORE_PROFILES);
     const bandMap = (pct) => pct >= 85 ? 'Mastery' : pct >= 70 ? 'Proficient' : pct >= 55 ? 'Developing' : 'Awareness';
 
-    const assessment = await base44.asServiceRole.entities.Assessment.create({
+    const assessment = await base44.entities.Assessment.create({
       client_id: clientId,
       email: seedEmail,
       response_id: `demo-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -136,12 +138,12 @@ Deno.serve(async (req) => {
     const devAreas = pickN(DEVELOPMENT_POOL, 3);
     const recommendations = pickN(RECOMMENDATIONS_POOL, 3);
 
-    await base44.asServiceRole.entities.AssessmentInsights.create({
+    const insightPayload = {
       assessment_id: assessment.id,
       user_email: seedEmail,
       client_id: clientId,
       archetype,
-      summary: `${archetype} leaders like you consistently drive outcomes through a unique blend of strategic clarity and interpersonal effectiveness. Your assessment reveals a leader who is ready to scale impact — with targeted development, you're well-positioned for the next level of responsibility.`,
+      summary: `${archetype} leaders consistently drive outcomes through strategic clarity and interpersonal effectiveness.`,
       top_strengths: strengths,
       development_areas: devAreas,
       recommendations,
@@ -156,13 +158,16 @@ Deno.serve(async (req) => {
         stakeholder_management: profile.sm,
         performance_management: profile.pm
       }
-    });
+    };
+    console.log('[SEED] Creating AssessmentInsights with payload:', JSON.stringify(insightPayload));
+    const insight = await base44.entities.AssessmentInsights.create(insightPayload);
+    console.log('[SEED] AssessmentInsights created:', JSON.stringify(insight));
     results.insights++;
 
     // ── 3. Create Goals ────────────────────────────────────────────────────
     const goalsToCreate = pickN(GOAL_TEMPLATES, randomInt(3, 5));
     for (const goalTemplate of goalsToCreate) {
-      await base44.asServiceRole.entities.Goal.create({
+      await base44.entities.Goal.create({
         ...goalTemplate,
         client_id: clientId,
         created_by: seedEmail,
@@ -174,7 +179,7 @@ Deno.serve(async (req) => {
     // ── 4. Create Assigned Learning ─────────────────────────────────────────
     const learningToCreate = pickN(LEARNING_TEMPLATES, randomInt(3, 4));
     for (const l of learningToCreate) {
-      await base44.asServiceRole.entities.AssignedLearning.create({
+      await base44.entities.AssignedLearning.create({
         client_id: clientId,
         user_email: seedEmail,
         learning_resource_id: `demo-resource-${Math.random().toString(36).slice(2)}`,
