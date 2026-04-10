@@ -1,9 +1,10 @@
 import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { Link } from "react-router-dom";
 import {
-  Sparkles, Target, Zap, ChevronRight, Star,
+  Sparkles, Target, Zap, ChevronRight, Loader2, Star,
   TrendingUp, ArrowRight, CheckCircle2, Clock, BookOpen
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -214,65 +215,50 @@ function LoadingSkeleton() {
 }
 
 export default function MyLeadership() {
-  const { user, isLoadingAuth } = useAuth();
-  const [data, setData] = React.useState(null);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState(null);
+  const { user } = useAuth();
 
-  // Only fetch once auth is fully resolved and user is available
-  React.useEffect(() => {
-    if (isLoadingAuth) return; // wait for auth
-    let cancelled = false;
-    const fetchAll = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const [insightsRaw, goalsRaw, learningRaw] = await Promise.all([
-          base44.entities.AssessmentInsights.list('-created_date', 5),
-          base44.entities.Goal.list('-created_date', 10),
-          base44.entities.AssignedLearning.list('-created_date', 10),
-        ]);
-        if (!cancelled) {
-          setData({
-            insight: insightsRaw[0] || null,
-            goals: goalsRaw,
-            assignments: learningRaw,
-          });
-        }
-      } catch (err) {
-        if (!cancelled) setError(err?.message || 'Unknown error');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    fetchAll();
-    return () => { cancelled = true; };
-  }, [isLoadingAuth]); // re-run only when auth state changes
+  const { data: insight, isLoading: loadingInsight } = useQuery({
+    queryKey: ['my-insight', user?.email],
+    queryFn: async () => {
+      const results = await base44.entities.AssessmentInsights.filter(
+        { user_email: user.email },
+        '-created_date',
+        1
+      );
+      return results[0] || null;
+    },
+    enabled: !!user?.email,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const { data: goals = [], isLoading: loadingGoals } = useQuery({
+    queryKey: ['my-goals-summary', user?.email],
+    queryFn: async () => base44.entities.Goal.filter({ created_by: user.email }, '-created_date', 10),
+    enabled: !!user?.email,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: assignments = [], isLoading: loadingAssignments } = useQuery({
+    queryKey: ['my-assignments', user?.email],
+    queryFn: async () => base44.entities.AssignedLearning.filter({ user_email: user.email }, '-created_date', 10),
+    enabled: !!user?.email,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const firstName = user?.full_name?.split(' ')[0] || 'Leader';
-
-  if (error) {
-    return (
-      <MVPPageLayout title="My Leadership" subtitle={`Welcome back, ${firstName}.`}>
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
-          Error loading data: {error}
-        </div>
-      </MVPPageLayout>
-    );
-  }
 
   return (
     <MVPPageLayout
       title="My Leadership"
       subtitle={`Welcome back, ${firstName}. Here's your leadership snapshot.`}
     >
-      {isLoadingAuth || loading ? (
+      {loadingInsight || loadingGoals || loadingAssignments ? (
         <LoadingSkeleton />
       ) : (
         <>
-          {data?.insight ? <InsightCard insight={data.insight} /> : <NoInsightState />}
-          <GoalsCard goals={data?.goals || []} />
-          <LearningCard assignments={data?.assignments || []} />
+          {insight ? <InsightCard insight={insight} /> : <NoInsightState />}
+          <GoalsCard goals={goals} />
+          <LearningCard assignments={assignments} />
         </>
       )}
     </MVPPageLayout>

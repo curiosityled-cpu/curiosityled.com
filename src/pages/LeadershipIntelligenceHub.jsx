@@ -45,31 +45,46 @@ function LoadingSkeleton() {
 }
 
 export default function LeadershipIntelligenceHub() {
-  const { user, isLoadingAuth } = useAuth();
+  const { user } = useAuth();
 
-  const { data: insightsList = [], isLoading: loadingInsights } = useQuery({
-    queryKey: ['exec-insights', user?.email],
-    queryFn: async () => base44.entities.AssessmentInsights.list('-created_date', 50),
-    enabled: !isLoadingAuth && !!user,
-    staleTime: 0,
-    gcTime: 0,
+  const { data: managers = [], isLoading: loadingManagers } = useQuery({
+    queryKey: ['exec-managers', user?.client_id],
+    queryFn: async () => base44.entities.User.filter({
+      client_id: user.client_id,
+      app_role: { $in: ['User Level 1', 'User Level 2'] }
+    }),
+    enabled: !!user?.client_id,
+    staleTime: 5 * 60 * 1000,
   });
 
-  const isLoading = isLoadingAuth || loadingInsights;
+  const { data: insightsList = [], isLoading: loadingInsights } = useQuery({
+    queryKey: ['exec-insights', user?.client_id],
+    queryFn: async () => base44.entities.AssessmentInsights.filter({
+      client_id: user.client_id,
+      status: 'generated'
+    }),
+    enabled: !!user?.client_id,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const isLoading = loadingManagers || loadingInsights;
 
   const stats = React.useMemo(() => {
-    if (!insightsList.length) return null;
-    let atRisk = 0, developing = 0, onTrack = 0;
-    insightsList.forEach(insight => {
+    if (!managers.length) return null;
+    const insightMap = insightsList.reduce((acc, i) => { acc[i.user_email] = i; return acc; }, {});
+    let atRisk = 0, developing = 0, onTrack = 0, noData = 0;
+    managers.forEach(m => {
+      const insight = insightMap[m.email];
+      if (!insight) { noData++; return; }
       const flags = insight.risk_flags?.length || 0;
       if (flags === 0) onTrack++;
       else if (flags === 1) developing++;
       else atRisk++;
     });
-    const total = insightsList.length;
+    const total = managers.length;
     const pct = (n) => total > 0 ? Math.round((n / total) * 100) : 0;
-    return { atRisk, developing, onTrack, noData: 0, total, pctAtRisk: pct(atRisk), pctDeveloping: pct(developing), pctOnTrack: pct(onTrack) };
-  }, [insightsList]);
+    return { atRisk, developing, onTrack, noData, total, pctAtRisk: pct(atRisk), pctDeveloping: pct(developing), pctOnTrack: pct(onTrack) };
+  }, [managers, insightsList]);
 
   const chartData = stats ? [
     { name: 'At Risk', value: stats.atRisk },
@@ -82,7 +97,7 @@ export default function LeadershipIntelligenceHub() {
     <MVPPageLayout
       title="Leadership Intelligence"
       subtitle={stats
-        ? `Real-time view across ${stats.total} leader${stats.total !== 1 ? 's' : ''}.`
+        ? `Real-time view across ${stats.total} manager${stats.total !== 1 ? 's' : ''}.`
         : 'Organizational leadership health at a glance.'}
     >
 
@@ -154,14 +169,14 @@ export default function LeadershipIntelligenceHub() {
               <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">90-Day Leadership Story</p>
               <p className="text-sm text-gray-900 leading-relaxed">
                 {stats.atRisk > 0
-                  ? `${stats.atRisk} leader${stats.atRisk !== 1 ? 's are' : ' is'} showing risk signals that warrant early intervention. `
-                  : 'No leaders currently showing critical risk signals — strong foundation across the board. '}
+                  ? `${stats.atRisk} manager${stats.atRisk !== 1 ? 's are' : ' is'} showing risk signals that warrant early intervention. `
+                  : 'No managers currently showing critical risk signals — strong foundation across the board. '}
                 {stats.onTrack > 0
-                  ? `${stats.onTrack} leader${stats.onTrack !== 1 ? 's are' : ' is'} progressing well on their leadership journey. `
+                  ? `${stats.onTrack} manager${stats.onTrack !== 1 ? 's are' : ' is'} progressing well on their leadership journey. `
                   : ''}
-                {stats.developing > 0
-                  ? `${stats.developing} leader${stats.developing !== 1 ? 's are' : ' is'} actively developing key capabilities.`
-                  : 'All leaders have completed their assessments.'}
+                {stats.noData > 0
+                  ? `${stats.noData} manager${stats.noData !== 1 ? 's have' : ' has'} not yet completed their assessment.`
+                  : 'All managers have completed their assessments.'}
               </p>
             </CardContent>
           </Card>

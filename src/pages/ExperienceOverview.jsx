@@ -214,27 +214,25 @@ export default function ExperienceOverview() {
   const [expandedCategory, setExpandedCategory] = useState(null); // 'atRisk' | 'developing' | 'onTrack'
 
   const { data: managers = [], isLoading: loadingManagers } = useQuery({
-    queryKey: ['managers', user?.client_id, user?.email],
-    queryFn: async () => {
-      if (user.client_id) {
-        return base44.entities.User.filter({
-          client_id: user.client_id,
-          app_role: { $in: ['User Level 1', 'User Level 2'] }
-        });
-      }
-      return [];
-    },
-    enabled: !!user,
+    queryKey: ['managers', user?.client_id],
+    queryFn: async () => base44.entities.User.filter({
+      client_id: user.client_id,
+      app_role: { $in: ['User Level 1', 'User Level 2'] }
+    }),
+    enabled: !!user?.client_id,
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: allInsights = {}, isLoading: loadingInsights } = useQuery({
-    queryKey: ['all-insights', user?.client_id, user?.email],
+    queryKey: ['all-insights', user?.client_id],
     queryFn: async () => {
-      const insights = await base44.entities.AssessmentInsights.list();
+      const insights = await base44.entities.AssessmentInsights.filter({
+        client_id: user.client_id,
+        status: 'generated'
+      });
       return insights.reduce((acc, i) => { acc[i.user_email] = i; return acc; }, {});
     },
-    enabled: !!user,
+    enabled: !!user?.client_id,
     staleTime: 5 * 60 * 1000,
   });
 

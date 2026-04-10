@@ -333,6 +333,15 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
       pm: Math.round(assessments.reduce((sum, a) => sum + (a.pm_pct || 0), 0) / (assessments.length || 1))
     };
 
+    // Update parent metrics
+    if (onMetricsUpdate) {
+      onMetricsUpdate({
+        totalInsights: rawData.assessmentInsights.length || aiInsights.length || 0,
+        actionItems: strategicOpportunities.length + strategicRisks.length,
+        completionRate: goalCompletionRate
+      });
+    }
+
     return {
       avgLeadershipScore,
       goalCompletionRate,
@@ -348,16 +357,6 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
       competencyAverages
     };
   }, [filteredData, aiInsights, strategicOpportunities, strategicRisks, onMetricsUpdate]);
-
-  useEffect(() => {
-    if (onMetricsUpdate) {
-      onMetricsUpdate({
-        totalInsights: rawData.assessmentInsights.length || aiInsights.length || 0,
-        actionItems: strategicOpportunities.length + strategicRisks.length,
-        completionRate: metrics.goalCompletionRate
-      });
-    }
-  }, [metrics.goalCompletionRate, rawData.assessmentInsights.length, aiInsights.length, strategicOpportunities.length, strategicRisks.length]);
 
   const chartData = useMemo(() => {
     const { assessments, goals, assignedLearning } = filteredData;
