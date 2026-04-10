@@ -14,7 +14,6 @@ import MVPLayout, { getMVPRole } from '@/components/mvp/MVPLayout';
 import MyLeadership from './pages/MyLeadership';
 import MyGoalsMVP from './pages/MyGoalsMVP';
 import ReportBuilderMVP from './pages/ReportBuilderMVP';
-import ProgramOverview from './pages/ProgramOverview';
 import ExperienceOverview from './pages/ExperienceOverview';
 import ManagerDetail from './pages/ManagerDetail';
 import LeadershipIntelligenceHub from './pages/LeadershipIntelligenceHub';
@@ -77,7 +76,7 @@ const AuthenticatedApp = () => {
         mvpRole === 'manager' ? (
           <MVPLayout><MyLeadership /></MVPLayout>
         ) : mvpRole === 'buyer' ? (
-          <MVPLayout><ProgramOverview /></MVPLayout>
+          <MVPLayout><ExperienceOverview /></MVPLayout>
         ) : mvpRole === 'executive' ? (
           <MVPLayout><LeadershipIntelligenceHub /></MVPLayout>
         ) : (
@@ -90,10 +89,9 @@ const AuthenticatedApp = () => {
       {/* MVP-specific routes */}
       <Route path="/my-leadership" element={<MVPLayout><MyLeadership /></MVPLayout>} />
       <Route path="/my-goals" element={<MVPLayout><MyGoalsMVP /></MVPLayout>} />
-      <Route path="/program-overview" element={<MVPLayout><ProgramOverview /></MVPLayout>} />
       <Route path="/experience-overview" element={<MVPLayout><ExperienceOverview /></MVPLayout>} />
-      <Route path="/manager-detail/:id" element={<MVPLayout><ManagerDetail /></MVPLayout>} />
       <Route path="/report-builder-mvp" element={<MVPLayout><ReportBuilderMVP /></MVPLayout>} />
+      <Route path="/manager-detail/:id" element={<MVPLayout><ManagerDetail /></MVPLayout>} />
 
       {/* Shared pages — MVP users get MVPLayout, others get legacy LayoutWrapper */}
       <Route path="/Insights" element={mvpRole ? <MVPPage><Insights /></MVPPage> : <LayoutWrapper currentPageName="Insights"><Insights /></LayoutWrapper>} />
