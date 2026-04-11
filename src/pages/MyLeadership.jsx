@@ -194,7 +194,7 @@ function NoInsightState() {
         <p className="text-sm text-gray-500 max-w-sm mx-auto mb-6 leading-relaxed">
           Take your leadership assessment to unlock your personalized archetype, strengths, and recommended next steps.
         </p>
-        <Link to="/Assessments">
+        <Link to="/LeadershipAssessment">
           <Button className="bg-[#0202ff] hover:bg-[#0101dd] text-white px-6">
             Take Assessment <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
