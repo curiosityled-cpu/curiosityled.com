@@ -319,10 +319,29 @@ Deno.serve(async (req) => {
     console.log(`[Webhook ${requestId}] Proficiency band: ${band_overall}`);
 
     // ============================================
+    // STEP 7.5: LOOKUP USER'S CLIENT_ID
+    // ============================================
+    let client_id = formResponse.hidden?.client_id || null;
+    if (!client_id) {
+      try {
+        const users = await base44.asServiceRole.entities.User.filter({ email });
+        if (users.length > 0 && users[0].client_id) {
+          client_id = users[0].client_id;
+          console.log(`[Webhook ${requestId}] ✅ Resolved client_id from user record: ${client_id}`);
+        } else {
+          console.warn(`[Webhook ${requestId}] ⚠️ No client_id found for user ${email}`);
+        }
+      } catch (err) {
+        console.warn(`[Webhook ${requestId}] Could not lookup user for client_id: ${err.message}`);
+      }
+    }
+
+    // ============================================
     // STEP 8: CREATE ASSESSMENT RECORD
     // ============================================
     const assessmentData = {
       email,
+      client_id,
       response_id: formResponse.response_id,
       submission_ts: formResponse.submitted_at,
       overall_pct,
