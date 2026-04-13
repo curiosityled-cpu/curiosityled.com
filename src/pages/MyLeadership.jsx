@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
+import ShareResultsModal from "@/components/mvp/ShareResultsModal";
 import { Link } from "react-router-dom";
 import {
   Sparkles, Target, Zap, ChevronRight, Loader2, Star,
-  TrendingUp, ArrowRight, CheckCircle2, Clock, BookOpen
+  TrendingUp, ArrowRight, CheckCircle2, Clock, BookOpen, Share2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +15,8 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 
-function InsightCard({ insight }) {
+function InsightCard({ insight, user }) {
+  const [showShare, setShowShare] = useState(false);
   const riskCount = insight.risk_flags?.length || 0;
   const riskLabel = riskCount === 0 ? 'On Track' : riskCount <= 1 ? 'Developing' : 'Needs Focus';
   const riskStyle = riskCount === 0
@@ -31,9 +33,14 @@ function InsightCard({ insight }) {
             <Sparkles className="w-4 h-4 text-[#0202ff]" />
             My Leadership Insight
           </CardTitle>
-          <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${riskStyle}`}>
-            {riskLabel}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${riskStyle}`}>
+              {riskLabel}
+            </span>
+            <Button variant="outline" size="sm" className="text-xs h-7 border-[#0202ff]/30 text-[#0202ff] hover:bg-blue-50" onClick={() => setShowShare(true)}>
+              <Share2 className="w-3 h-3 mr-1" /> Share
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-5 px-6 pb-6">
@@ -85,6 +92,7 @@ function InsightCard({ insight }) {
           </div>
         )}
       </CardContent>
+      <ShareResultsModal isOpen={showShare} onClose={() => setShowShare(false)} insight={insight} user={user} />
     </Card>
   );
 }
@@ -256,7 +264,7 @@ export default function MyLeadership() {
         <LoadingSkeleton />
       ) : (
         <>
-          {insight ? <InsightCard insight={insight} /> : <NoInsightState />}
+          {insight ? <InsightCard insight={insight} user={user} /> : <NoInsightState />}
           <GoalsCard goals={goals} />
           <LearningCard assignments={assignments} />
         </>
