@@ -53,7 +53,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import ShareReportDialog from "../components/reports/ShareReportDialog";
 import SubNavMenu from "@/components/common/SubNavMenu";
-
+import PageHeader from "@/components/common/PageHeader";
 const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
 import {
   LineChart,

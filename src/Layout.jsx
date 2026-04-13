@@ -1,5 +1,6 @@
 import React, { useState, useEffect, createContext, useContext, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
 import { Home, BarChart3, BookOpen, Target, Brain, Menu, X, Map, Sparkles, Bell, User, Settings as SettingsIcon, LogOut, CreditCard, Building2, Shield, Users as UsersIcon, CheckCircle, LayoutGrid, FileText, GraduationCap, Eye, ClipboardList, Trophy, FlaskConical, Minimize2, Mail, Paintbrush, ArrowLeft, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";

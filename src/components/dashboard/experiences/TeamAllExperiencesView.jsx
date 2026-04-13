@@ -18,6 +18,7 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/components/useAuth";
 import { base44 } from "@/api/base44Client";
 import { format } from "date-fns";
+import { createPageUrl } from "@/utils";
 
 export default function TeamAllExperiencesView() {
   const { user } = useAuth();

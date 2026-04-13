@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { CreditCard, Loader2, CheckCircle } from "lucide-react";
+import { format } from "date-fns";
 
 export default function LicenseManagementModal({ isOpen, onClose, user, onSuccess }) {
   const [licenseType, setLicenseType] = useState(user?.license_type || "full");

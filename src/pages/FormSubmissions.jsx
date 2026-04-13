@@ -344,8 +344,7 @@ function FormSubmissions() {
             <BulkResponseActions 
               submissions={submissions} 
               onUpdate={() => {
-                loadSubmissions();
-                loadForm();
+                loadData();
               }} 
             />
           </TabsContent>

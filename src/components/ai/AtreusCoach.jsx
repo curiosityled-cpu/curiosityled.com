@@ -89,19 +89,7 @@ export default function AtreusCoach({
   const [uploadingFile, setUploadingFile] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Helper function using request queue
-  const handleApiCall = async (apiFunc, priority = 'normal') => {
-    return queueRequest(apiFunc, priority);
-  };
-
-  // Render specialized components for different modes
-  if (strategicMode && riskData) {
-    return <StrategicAssistant riskData={riskData} onClose={onClose} onMinimize={onMinimize} user={user} appRole={appRole} />;
-  }
-
-  if (learningModuleMode && moduleData) {
-    return <LearningModuleCoach moduleData={moduleData} onClose={onClose} user={user} />;
-  }
+  const handleApiCall = async (apiFunc, priority = 'normal') => queueRequest(apiFunc, priority);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -1589,6 +1577,9 @@ Remember: You're not just a chatbot - you're an intelligent assistant that under
   };
 
 
+
+  if (strategicMode && riskData) return <StrategicAssistant riskData={riskData} onClose={onClose} onMinimize={onMinimize} user={user} appRole={appRole} />;
+  if (learningModuleMode && moduleData) return <LearningModuleCoach moduleData={moduleData} onClose={onClose} user={user} />;
 
   const getConversationPreview = (conversation) => {
     if (!conversation.messages || conversation.messages.length === 0) {

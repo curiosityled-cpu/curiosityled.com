@@ -404,7 +404,7 @@ function LeadershipAssessment() {
           <CardContent className="p-0 h-full">
             {user?.email && (
               <iframe
-                src={`${TYPEFORM_URL}#email=${encodeURIComponent(user.email)}&name=${encodeURIComponent(user.full_name || '')}`}
+                src={`${TYPEFORM_URL}?email=${encodeURIComponent(user.email)}&name=${encodeURIComponent(user.full_name || '')}`}
                 style={{ width: '100%', height: '100%', border: 'none' }}
                 title="Leadership Assessment"
                 allow="geolocation; microphone; camera; fullscreen"

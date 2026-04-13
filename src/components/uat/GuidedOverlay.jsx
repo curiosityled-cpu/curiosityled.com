@@ -31,10 +31,7 @@ export default function GuidedOverlay({ steps = [], onComplete, onSkip, onNeedHe
   }, [steps.length, currentStepIndex]);
 
   // Validate steps
-  if (!steps || steps.length === 0) {
-    console.warn('GuidedOverlay: No steps provided');
-    return null;
-  }
+  const stepsInvalid = !steps || steps.length === 0;
 
   const currentStep = steps[currentStepIndex];
   const isFirstStep = currentStepIndex === 0;
@@ -191,6 +188,11 @@ export default function GuidedOverlay({ steps = [], onComplete, onSkip, onNeedHe
       };
     }
   }, [currentStep, currentStepIndex]);
+
+  if (stepsInvalid) {
+    console.warn('GuidedOverlay: No steps provided');
+    return null;
+  }
 
   if (!currentStep) {
     console.warn('GuidedOverlay: Current step is undefined');

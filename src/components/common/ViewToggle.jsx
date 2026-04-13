@@ -26,21 +26,20 @@ export default function ViewToggle({
   const { hasPermission } = useAuth();
   
   const config = SECTION_VIEW_CONFIG[section];
-  
+
+  // Memoize available views to prevent recalculation on every render
+  const availableViews = useMemo(() => {
+    if (!config) return [];
+    return Object.entries(config.views).filter(([key, viewConfig]) => {
+      if (key === VIEW_SCOPES.MY) return true;
+      return viewConfig.permission && hasPermission(viewConfig.permission);
+    });
+  }, [config, hasPermission]);
+
   if (!config) {
     console.warn(`ViewToggle: Unknown section "${section}"`);
     return null;
   }
-
-  // Memoize available views to prevent recalculation on every render
-  const availableViews = useMemo(() => {
-    return Object.entries(config.views).filter(([key, viewConfig]) => {
-      // 'my' view is always available
-      if (key === VIEW_SCOPES.MY) return true;
-      // Other views require the specified permission
-      return viewConfig.permission && hasPermission(viewConfig.permission);
-    });
-  }, [config.views, hasPermission]);
 
   // If only "My" view is available, don't render the toggle at all
   if (availableViews.length <= 1) {

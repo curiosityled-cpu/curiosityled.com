@@ -33,11 +33,6 @@ export default function UATTestingCoach({ onClose, onMinimize, user, assignedTes
   const jumpOperationInProgress = useRef(false);
   const actionInProgress = useRef(false);
 
-  // Validate required props
-  if (!user?.email) {
-    return null;
-  }
-
   const currentTest = assignedTests[currentTestIndex];
   const progressPercentage = assignedTests.length > 0 
     ? (completedTests.length / assignedTests.length) * 100 
@@ -931,6 +926,9 @@ Your feedback has been recorded. Thank you!`,
       toast.error(error.message || 'Failed to process CSV file');
     }
   };
+
+  // Validate required props — after all hooks
+  if (!user?.email) return null;
 
   return (
     <>

@@ -179,9 +179,7 @@ export default function BulkInviteUsers({ pendingUsers, onComplete, onCancel }) 
                   </TableCell>
                   <TableCell>{user.department || '-'}</TableCell>
                   <TableCell>
-                    {user.client_id && clients.find(c => c.id === user.client_id)?.name}
-                    {user.partner_id && partners.find(p => p.id === user.partner_id)?.name}
-                    {!user.client_id && !user.partner_id && '-'}
+                    {user.client_id || user.partner_id ? (user.client_id || user.partner_id) : '-'}
                   </TableCell>
                 </TableRow>
               ))}
