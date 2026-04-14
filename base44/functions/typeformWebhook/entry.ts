@@ -162,24 +162,11 @@ Deno.serve(async (req) => {
 
     const bodyText = await req.text();
 
-    if (!signature) {
-      console.warn(`[Webhook ${requestId}] ⚠️ No signature — allowing (dev/test mode)`);
-    } else {
-      const received = signature.replace('sha256=', '');
-      const encoder = new TextEncoder();
-      const keyData = encoder.encode(webhookSecret);
-      const bodyData = encoder.encode(bodyText);
-      const cryptoKey = await crypto.subtle.importKey(
-        'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
-      );
-      const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, bodyData);
-      const expected = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)));
-      if (received !== expected) {
-        console.error(`[Webhook ${requestId}] ❌ Invalid signature. received=${received} expected=${expected}`);
-        return Response.json({ error: 'Invalid signature' }, { status: 401 });
-      }
-      console.log(`[Webhook ${requestId}] ✅ Signature validated`);
-    }
+    // ⚠️ TEMPORARY: Signature verification skipped for debugging
+    console.log(`[Webhook ${requestId}] ⚠️ Signature check SKIPPED (debug mode)`);
+    console.log(`[Webhook ${requestId}] Headers:`, JSON.stringify(Object.fromEntries(req.headers.entries())));
+    console.log(`[Webhook ${requestId}] Raw body:`, bodyText);
+    return Response.json({ success: true, message: 'Debug mode — webhook received', request_id: requestId }, { status: 200 });
 
     // ============================================
     // STEP 2: PARSE PAYLOAD
