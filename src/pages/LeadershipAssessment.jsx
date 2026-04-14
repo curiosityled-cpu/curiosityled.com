@@ -77,7 +77,7 @@ function LeadershipAssessment() {
             toast.success('Assessment results ready!');
             
             setTimeout(() => {
-              navigate(createPageUrl('AssessmentResults'));
+              navigate('/my-leadership');
             }, 1000);
             return;
           }
@@ -131,12 +131,24 @@ function LeadershipAssessment() {
   }, []);
 
   useEffect(() => {
+    // Detect Typeform completion via postMessage (iframe submission)
+    const handleMessage = (event) => {
+      if (
+        event.origin.includes('typeform.com') &&
+        event.data?.type === 'form-submit'
+      ) {
+        startPollingForResults();
+      }
+    };
+    window.addEventListener('message', handleMessage);
+
+    // Also detect if redirected back with ?from_typeform=true
     const urlParams = new URLSearchParams(window.location.search);
-    const fromTypeform = urlParams.get('from_typeform');
-    
-    if (fromTypeform === 'true' && user) {
+    if (urlParams.get('from_typeform') === 'true' && user) {
       startPollingForResults();
     }
+
+    return () => window.removeEventListener('message', handleMessage);
   }, [user, startPollingForResults]);
 
   if (loading) {

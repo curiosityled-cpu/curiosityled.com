@@ -1,0 +1,155 @@
+{
+  "name": "AssessmentInsights",
+  "type": "object",
+  "properties": {
+    "assessment_id": {
+      "type": "string",
+      "description": "ID of the Assessment record this insight was derived from."
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user this insight belongs to."
+    },
+    "client_id": {
+      "type": "string",
+      "description": "ID of the Client (org) this insight belongs to."
+    },
+    "archetype": {
+      "type": "string",
+      "description": "Leadership archetype label derived from the assessment."
+    },
+    "top_strengths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of top strength labels identified from the assessment scores."
+    },
+    "development_areas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of competency areas identified as development priorities."
+    },
+    "risk_flags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of risk signals detected."
+    },
+    "summary": {
+      "type": "string",
+      "description": "AI-generated narrative summary of the assessment results."
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of AI-generated actionable development recommendations."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "generated",
+        "failed"
+      ],
+      "default": "pending",
+      "description": "Generation status."
+    },
+    "error_message": {
+      "type": "string",
+      "description": "Human-readable error detail captured when status=failed."
+    },
+    "retry_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of times insight generation has been attempted and failed."
+    },
+    "last_attempted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp of the most recent generation attempt."
+    }
+  },
+  "required": [
+    "assessment_id",
+    "user_email"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "User Level 2"
+          },
+          "user_email": {
+            "$in": "{{user.subordinate_emails}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Analyst",
+                "Admin Level 2",
+                "Super Administrator"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

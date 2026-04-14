@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -95,8 +95,45 @@ function AssessmentResults() {
     }
   ];
 
+  // When Typeform redirects here with ?response_id=..., poll for the new assessment
+  // and redirect to /my-leadership once it's ready
+  const pollingRef = useRef(null);
   useEffect(() => {
-    loadAssessmentData();
+    const urlParams = new URLSearchParams(window.location.search);
+    const responseId = urlParams.get('response_id');
+    if (!responseId) {
+      loadAssessmentData();
+      return;
+    }
+
+    // Typeform just redirected here — start polling for the new assessment
+    setLoading(true);
+    const startTime = Date.now();
+    pollingRef.current = setInterval(async () => {
+      try {
+        const currentUser = await base44.auth.me();
+        if (!currentUser?.email) return;
+        const assessments = await base44.entities.Assessment.filter(
+          { email: currentUser.email },
+          '-created_date',
+          1
+        );
+        if (assessments.length > 0) {
+          const age = Date.now() - new Date(assessments[0].created_date).getTime();
+          if (age < 10 * 60 * 1000) { // created within last 10 min
+            clearInterval(pollingRef.current);
+            window.location.href = '/my-leadership';
+            return;
+          }
+        }
+        if (Date.now() - startTime > 90000) {
+          clearInterval(pollingRef.current);
+          loadAssessmentData(); // fallback: just show whatever we have
+        }
+      } catch (e) { /* keep polling */ }
+    }, 3000);
+
+    return () => clearInterval(pollingRef.current);
   }, []);
 
   const loadAssessmentData = async () => {
