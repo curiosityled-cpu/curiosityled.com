@@ -1,16 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Brain, CheckCircle, Clock, Loader2, AlertCircle, ArrowRight, BarChart3, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { base44 } from "@/api/base44Client"; // Added base44 import
+import { base44 } from "@/api/base44Client";
 import { withAuthProtection } from "@/components/hoc/withAuthProtection";
 import { useNavigate, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
-// import { createTestAssessment } from "@/functions/createTestAssessment"; // This import is removed as per the changes
 
 const POLLING_INTERVAL = 2000;
 const MAX_POLLING_TIME = 60000;
@@ -22,17 +21,17 @@ function LeadershipAssessment() {
   const [loading, setLoading] = useState(true);
   const [processingResults, setProcessingResults] = useState(false);
   const [pollingAttempts, setPollingAttempts] = useState(0);
-  const [processingTimeout, setProcessingTimeout] = useState(false); // Corrected this line
+  const [processingTimeout, setProcessingTimeout] = useState(false);
   const [testMode, setTestMode] = useState(false);
   const navigate = useNavigate();
 
   const loadUser = async () => {
     try {
-      const currentUser = await base44.auth.me(); // Changed from User.me()
+      const currentUser = await base44.auth.me();
       setUser(currentUser);
 
       if (currentUser?.email) {
-        const assessments = await base44.entities.Assessment.filter( // Changed from Assessment.filter
+        const assessments = await base44.entities.Assessment.filter(
           { email: currentUser.email },
           '-created_date',
           1
@@ -50,7 +49,7 @@ function LeadershipAssessment() {
     }
   };
 
-  const startPollingForResults = React.useCallback(() => {
+  const startPollingForResults = useCallback(() => {
     if (!user?.email) return;
 
     setProcessingResults(true);
@@ -60,7 +59,7 @@ function LeadershipAssessment() {
     const startTime = Date.now();
     const pollInterval = setInterval(async () => {
       try {
-        const assessments = await base44.entities.Assessment.filter( // Changed from Assessment.filter
+        const assessments = await base44.entities.Assessment.filter(
           { email: user.email },
           '-created_date',
           1
@@ -68,14 +67,10 @@ function LeadershipAssessment() {
 
         if (assessments.length > 0) {
           const latestAssessment = assessments[0];
-          
           const assessmentAge = Date.now() - new Date(latestAssessment.created_date).getTime();
-          // Check if the assessment is recent enough (e.g., created within the last 5 minutes)
-          // This prevents picking up an old assessment if a new one is being processed.
-          if (assessmentAge < 5 * 60 * 1000) { 
+          if (assessmentAge < 5 * 60 * 1000) {
             clearInterval(pollInterval);
             toast.success('Assessment results ready!');
-            
             setTimeout(() => {
               navigate('/my-leadership');
             }, 1000);
@@ -105,19 +100,18 @@ function LeadershipAssessment() {
       setProcessingResults(true);
       toast.info(`Creating test assessment (${scenario})...`);
 
-      // Changed from createTestAssessment function to base44.functions.invoke
       const { data } = await base44.functions.invoke('createTestAssessment', { 
         scenario,
         replace_existing: true 
       });
 
-      if (data.success) { // Changed from result.success
+      if (data.success) {
         toast.success('Test assessment created!');
         setTimeout(() => {
           navigate(createPageUrl('AssessmentResults'));
         }, 1000);
       } else {
-        throw new Error(data.error || 'Failed to create test assessment'); // Changed from result.error
+        throw new Error(data.error || 'Failed to create test assessment');
       }
     } catch (error) {
       console.error('Error creating mock assessment:', error);
@@ -131,7 +125,6 @@ function LeadershipAssessment() {
   }, []);
 
   useEffect(() => {
-    // Detect Typeform completion via postMessage (iframe submission)
     const handleMessage = (event) => {
       if (
         event.origin.includes('typeform.com') &&
@@ -142,7 +135,6 @@ function LeadershipAssessment() {
     };
     window.addEventListener('message', handleMessage);
 
-    // Also detect if redirected back with ?from_typeform=true
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('from_typeform') === 'true' && user) {
       startPollingForResults();
@@ -199,15 +191,8 @@ function LeadershipAssessment() {
               {[0, 1, 2].map((i) => (
                 <motion.div
                   key={i}
-                  animate={{
-                    scale: [1, 1.5, 1],
-                    opacity: [0.3, 1, 0.3]
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    delay: i * 0.2
-                  }}
+                  animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
+                  transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
                   className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: '#0043ef' }}
                 />
@@ -340,46 +325,17 @@ function LeadershipAssessment() {
                       <p className="text-sm font-medium text-gray-700 mb-2">
                         Test Assessment Scenarios:
                       </p>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => createMockAssessment('high_performer')}
-                      >
-                        High Performer (87%)
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => createMockAssessment('average')}
-                      >
-                        Average Leader (72%)
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => createMockAssessment('developing')}
-                      >
-                        Developing Leader (58%)
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => createMockAssessment('at_risk')}
-                      >
-                        At Risk (45%)
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => createMockAssessment('incomplete')}
-                      >
-                        Incomplete Data
-                      </Button>
+                      {['high_performer', 'average', 'developing', 'at_risk', 'incomplete'].map((scenario) => (
+                        <Button
+                          key={scenario}
+                          size="sm"
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => createMockAssessment(scenario)}
+                        >
+                          {scenario.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                        </Button>
+                      ))}
                       <p className="text-xs text-gray-500 mt-2">
                         These test buttons replace your existing assessment with mock data
                       </p>
@@ -414,15 +370,14 @@ function LeadershipAssessment() {
 
         <Card className="shadow-xl border-0" style={{ height: '700px' }}>
           <CardContent className="p-0 h-full">
-            {user?.email && (
+            {user?.email ? (
               <iframe
                 src={`${TYPEFORM_URL}#email=${encodeURIComponent(user.email)}`}
                 style={{ width: '100%', height: '100%', border: 'none' }}
                 title="Leadership Assessment"
                 allow="geolocation; microphone; camera; fullscreen"
               />
-            )}
-            {!user?.email && (
+            ) : (
               <div className="flex items-center justify-center h-full text-gray-500">
                 Loading Typeform... ensure you are logged in.
               </div>
@@ -453,41 +408,22 @@ function LeadershipAssessment() {
                   🧪 Test Mode: Create Mock Assessments
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => createMockAssessment('high_performer')}
-                  >
-                    High Performer
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => createMockAssessment('average')}
-                  >
-                    Average
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => createMockAssessment('developing')}
-                  >
-                    Developing
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => createMockAssessment('at_risk')}
-                  >
-                    At Risk
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => createMockAssessment('incomplete')}
-                  >
-                    Incomplete
-                  </Button>
+                  {[
+                    { label: 'High Performer', scenario: 'high_performer' },
+                    { label: 'Average', scenario: 'average' },
+                    { label: 'Developing', scenario: 'developing' },
+                    { label: 'At Risk', scenario: 'at_risk' },
+                    { label: 'Incomplete', scenario: 'incomplete' },
+                  ].map(({ label, scenario }) => (
+                    <Button
+                      key={scenario}
+                      size="sm"
+                      variant="outline"
+                      onClick={() => createMockAssessment(scenario)}
+                    >
+                      {label}
+                    </Button>
+                  ))}
                 </div>
                 <p className="text-xs text-gray-600 mt-2">
                   Click any scenario to create a test assessment and see the results immediately
@@ -503,23 +439,15 @@ function LeadershipAssessment() {
 
 export default withAuthProtection(LeadershipAssessment, {
   checkAccess: (user) => {
-    // Users and Team Leaders can always access
     if (['User Level 1', 'User Level 2'].includes(user.app_role)) {
       return true;
     }
-    
-    // Admins can only access if they have User or Team Leader add-on permission
     if (['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Partner Business Administrator', 'Platform Admin'].includes(user.app_role)) {
-      // Check for personal assessment permissions (indicates User add-on)
       const hasUserAddon = user.permissions?.includes('personal.assessments.view') || 
                           user.permissions?.includes('personal.assessments.take');
-      
-      // Check for team permissions (indicates Team Leader add-on)
       const hasTeamLeaderAddon = user.permissions?.includes('team.assessments.view');
-      
       return hasUserAddon || hasTeamLeaderAddon;
     }
-    
     return false;
   }
 });
