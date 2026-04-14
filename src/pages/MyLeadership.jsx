@@ -191,7 +191,9 @@ function LearningCard({ assignments }) {
   );
 }
 
-function NoInsightState() {
+function NoInsightState({ userEmail }) {
+  const typeformUrl = `https://leadershipindexassessment.typeform.com/leadershipindex#email=${encodeURIComponent(userEmail || '')}`;
+
   return (
     <Card className="shadow-sm border border-dashed border-gray-200 bg-white rounded-2xl">
       <CardContent className="py-14 px-6 text-center">
@@ -202,11 +204,11 @@ function NoInsightState() {
         <p className="text-sm text-gray-500 max-w-sm mx-auto mb-6 leading-relaxed">
           Take your leadership assessment to unlock your personalized archetype, strengths, and recommended next steps.
         </p>
-        <Link to="/LeadershipAssessment">
+        <a href={typeformUrl} target="_blank" rel="noopener noreferrer">
           <Button className="bg-[#0202ff] hover:bg-[#0101dd] text-white px-6">
             Take Assessment <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
-        </Link>
+        </a>
       </CardContent>
     </Card>
   );
@@ -264,7 +266,7 @@ export default function MyLeadership() {
         <LoadingSkeleton />
       ) : (
         <>
-          {insight ? <InsightCard insight={insight} user={user} /> : <NoInsightState />}
+          {insight ? <InsightCard insight={insight} user={user} /> : <NoInsightState userEmail={user?.email} />}
           <GoalsCard goals={goals} />
           <LearningCard assignments={assignments} />
         </>
