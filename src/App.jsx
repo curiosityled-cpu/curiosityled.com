@@ -73,16 +73,12 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/" element={
-        mvpRole === 'manager' ? (
-          <MVPLayout><MyLeadership /></MVPLayout>
-        ) : mvpRole === 'buyer' ? (
+        mvpRole === 'buyer' ? (
           <MVPLayout><ExperienceOverview /></MVPLayout>
         ) : mvpRole === 'executive' ? (
           <MVPLayout><LeadershipIntelligenceHub /></MVPLayout>
         ) : (
-          <LayoutWrapper currentPageName={mainPageKey}>
-            <MainPage />
-          </LayoutWrapper>
+          <MVPLayout><MyLeadership /></MVPLayout>
         )
       } />
 
