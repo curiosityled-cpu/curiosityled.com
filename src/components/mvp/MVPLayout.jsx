@@ -23,11 +23,11 @@ import { Badge } from "@/components/ui/badge";
 
 // Role detection helpers
 export const getMVPRole = (appRole) => {
-  if (!appRole) return null;
-  if (appRole === 'User Level 1' || appRole === 'User Level 2') return 'manager';
+  if (!appRole) return 'manager'; // default new users to manager view
+  if (appRole === 'User Level 1' || appRole === 'User Level 2' || appRole === 'user') return 'manager';
   if (appRole === 'Admin Level 1' || appRole === 'Admin Level 2' || appRole === 'Super Administrator') return 'buyer';
   if (appRole === 'Analyst') return 'executive';
-  return null;
+  return 'manager'; // fallback all unknown roles to manager (My Leadership)
 };
 
 const NAV_CONFIG = {
