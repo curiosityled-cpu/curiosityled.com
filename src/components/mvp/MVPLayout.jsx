@@ -25,7 +25,7 @@ import { Badge } from "@/components/ui/badge";
 export const getMVPRole = (appRole) => {
   if (!appRole) return null;
   if (appRole === 'User Level 1' || appRole === 'User Level 2') return 'manager';
-  if (appRole === 'Admin Level 1' || appRole === 'Admin Level 2' || appRole === 'Super Administrator') return 'buyer';
+  if (appRole === 'Admin Level 1' || appRole === 'Admin Level 2' || appRole === 'Super Administrator' || appRole === 'admin') return 'buyer';
   if (appRole === 'Analyst') return 'executive';
   return null;
 };

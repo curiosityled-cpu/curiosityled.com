@@ -58,7 +58,7 @@ const AuthenticatedApp = () => {
   }
 
   // Redirect root based on MVP role
-  const mvpRole = getMVPRole(user?.app_role);
+  const mvpRole = getMVPRole(user?.app_role || user?.role);
 
   // Helper: wrap a page component for MVP users (needs FullAuthProvider for legacy pages)
   const MVPPage = ({ children }) => (
