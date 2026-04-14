@@ -14,7 +14,7 @@ import { Progress } from "@/components/ui/progress";
 
 const POLLING_INTERVAL = 2000;
 const MAX_POLLING_TIME = 60000;
-const TYPEFORM_URL = "https://leadershipindexassessment.typeform.com/leadershipindex";
+const TYPEFORM_URL = "https://leadershipindexassessment.typeform.com/to/ANSx7zGW"; // Updated Typeform URL
 
 function LeadershipAssessment() {
   const [user, setUser] = useState(null);
@@ -404,7 +404,7 @@ function LeadershipAssessment() {
           <CardContent className="p-0 h-full">
             {user?.email && (
               <iframe
-                src={`${TYPEFORM_URL}#email=${encodeURIComponent(user.email)}`}
+                src={`${TYPEFORM_URL}?email=${encodeURIComponent(user.email)}&name=${encodeURIComponent(user.full_name || '')}`}
                 style={{ width: '100%', height: '100%', border: 'none' }}
                 title="Leadership Assessment"
                 allow="geolocation; microphone; camera; fullscreen"
