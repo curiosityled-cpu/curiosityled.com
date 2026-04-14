@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 /**
  * ============================================
@@ -362,7 +362,7 @@ Deno.serve(async (req) => {
     const assessmentData = {
       email,
       client_id,
-      response_id: formResponse.response_id,
+      response_id: formResponse.token || formResponse.response_id || `tf_${Date.now()}`,
       submission_ts: formResponse.submitted_at,
       overall_pct,
       si_pct,
