@@ -165,11 +165,17 @@ Deno.serve(async (req) => {
     if (!signature) {
       console.warn(`[Webhook ${requestId}] ⚠️ No signature — allowing (dev/test mode)`);
     } else {
-      const crypto = await import('node:crypto');
-      const expected = crypto.createHmac('sha256', webhookSecret).update(bodyText).digest('base64');
       const received = signature.replace('sha256=', '');
+      const encoder = new TextEncoder();
+      const keyData = encoder.encode(webhookSecret);
+      const bodyData = encoder.encode(bodyText);
+      const cryptoKey = await crypto.subtle.importKey(
+        'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+      );
+      const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, bodyData);
+      const expected = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)));
       if (received !== expected) {
-        console.error(`[Webhook ${requestId}] ❌ Invalid signature`);
+        console.error(`[Webhook ${requestId}] ❌ Invalid signature. received=${received} expected=${expected}`);
         return Response.json({ error: 'Invalid signature' }, { status: 401 });
       }
       console.log(`[Webhook ${requestId}] ✅ Signature validated`);
