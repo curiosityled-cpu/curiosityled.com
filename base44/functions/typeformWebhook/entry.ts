@@ -152,7 +152,8 @@ Deno.serve(async (req) => {
     // ============================================
     // STEP 1: VERIFY SIGNATURE
     // ============================================
-    const signature = req.headers.get('typeform-signature');
+    const bodyText = await req.text();
+    const signatureHeader = req.headers.get('typeform-signature');
     const webhookSecret = Deno.env.get('TYPEFORM_WEBHOOK_SECRET');
 
     if (!webhookSecret) {
@@ -160,24 +161,36 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Webhook secret not configured' }, { status: 500 });
     }
 
-    const bodyText = await req.text();
-
-    if (!signature) {
-      console.warn(`[Webhook ${requestId}] ⚠️ No signature — allowing (dev/test mode)`);
-    } else {
-      const received = signature.replace('sha256=', '').replace('sha256-', '');
-      const encoder = new TextEncoder();
-      const cryptoKey = await crypto.subtle.importKey(
-        'raw', encoder.encode(webhookSecret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
-      );
-      const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(bodyText));
-      const expected = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)));
-      if (received !== expected) {
-        console.error(`[Webhook ${requestId}] ❌ Invalid signature. received=${received} expected=${expected}`);
-        return Response.json({ error: 'Invalid signature' }, { status: 401 });
-      }
-      console.log(`[Webhook ${requestId}] ✅ Signature validated`);
+    if (!signatureHeader) {
+      console.warn(`[Webhook ${requestId}] ⚠️ No typeform-signature header present`);
+      return Response.json({ error: 'Missing signature' }, { status: 401 });
     }
+
+    // Header format: "sha256-<base64hash>"
+    const receivedHash = signatureHeader.startsWith('sha256-')
+      ? signatureHeader.slice('sha256-'.length)
+      : signatureHeader;
+
+    const encoder = new TextEncoder();
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(webhookSecret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(bodyText));
+    const computedHash = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)));
+
+    console.log(`[Webhook ${requestId}] Received hash:  ${receivedHash}`);
+    console.log(`[Webhook ${requestId}] Computed hash:  ${computedHash}`);
+
+    if (receivedHash !== computedHash) {
+      console.error(`[Webhook ${requestId}] ❌ Signature mismatch`);
+      return Response.json({ error: 'Invalid signature' }, { status: 401 });
+    }
+
+    console.log(`[Webhook ${requestId}] ✅ Signature validated`);
 
     // ============================================
     // STEP 2: PARSE PAYLOAD
