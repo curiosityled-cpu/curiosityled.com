@@ -92,6 +92,13 @@ function InsightCard({ insight, user }) {
           </div>
         )}
       </CardContent>
+      <div className="px-6 pb-5">
+        <Link to="/Insights">
+          <Button variant="outline" className="w-full text-[#0202ff] border-[#0202ff]/30 hover:bg-blue-50">
+            View Full Insights <ArrowRight className="w-4 h-4 ml-1" />
+          </Button>
+        </Link>
+      </div>
       <ShareResultsModal isOpen={showShare} onClose={() => setShowShare(false)} insight={insight} user={user} />
     </Card>
   );
@@ -191,9 +198,7 @@ function LearningCard({ assignments }) {
   );
 }
 
-function NoInsightState({ userEmail }) {
-  const typeformUrl = `https://leadershipindexassessment.typeform.com/leadershipindex#email=${encodeURIComponent(userEmail || '')}`;
-
+function NoInsightState() {
   return (
     <Card className="shadow-sm border border-dashed border-gray-200 bg-white rounded-2xl">
       <CardContent className="py-14 px-6 text-center">
@@ -204,11 +209,11 @@ function NoInsightState({ userEmail }) {
         <p className="text-sm text-gray-500 max-w-sm mx-auto mb-6 leading-relaxed">
           Take your leadership assessment to unlock your personalized archetype, strengths, and recommended next steps.
         </p>
-        <a href={typeformUrl} target="_blank" rel="noopener noreferrer">
+        <Link to="/LeadershipAssessment">
           <Button className="bg-[#0202ff] hover:bg-[#0101dd] text-white px-6">
             Take Assessment <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
-        </a>
+        </Link>
       </CardContent>
     </Card>
   );
@@ -230,15 +235,50 @@ export default function MyLeadership() {
   const { data: insight, isLoading: loadingInsight } = useQuery({
     queryKey: ['my-insight', user?.email],
     queryFn: async () => {
-      const results = await base44.entities.AssessmentInsights.filter(
+      // Primary: try AssessmentInsights (AI-generated narratives)
+      const insights = await base44.entities.AssessmentInsights.filter(
         { user_email: user.email },
         '-created_date',
         1
       );
-      return results[0] || null;
+      if (insights[0]) return { source: 'insights', ...insights[0] };
+
+      // Fallback: read directly from Assessment (what the webhook populates)
+      const assessments = await base44.entities.Assessment.filter(
+        { email: user.email },
+        '-created_date',
+        1
+      );
+      if (!assessments[0]) return null;
+      const a = assessments[0];
+
+      // Map Assessment fields to the same shape InsightCard expects
+      const competencies = [
+        { key: 'Situational Intelligence', pct: a.si_pct },
+        { key: 'Decision Making', pct: a.dm_pct },
+        { key: 'Communication', pct: a.comm_pct },
+        { key: 'Resource Management', pct: a.rm_pct },
+        { key: 'Stakeholder Management', pct: a.sm_pct },
+        { key: 'Performance Management', pct: a.pm_pct },
+      ].filter(c => c.pct != null).sort((a, b) => b.pct - a.pct);
+
+      const strengths = competencies.slice(0, 2).map(c => `${c.key} (${c.pct}%)`);
+      const devAreas = competencies.slice(-2).reverse().map(c => `${c.key} (${c.pct}%)`);
+
+      return {
+        source: 'assessment',
+        assessment_id: a.id,
+        id: a.id,
+        archetype: a.archetype_label,
+        summary: a.record?.scoring_notes || `Overall score: ${a.overall_pct}% — ${a.band_overall} level`,
+        top_strengths: strengths,
+        development_areas: devAreas,
+        recommendations: [],
+        risk_flags: a.overall_pct < 50 ? ['score_below_threshold'] : [],
+      };
     },
     enabled: !!user?.email,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: goals = [], isLoading: loadingGoals } = useQuery({
@@ -266,7 +306,7 @@ export default function MyLeadership() {
         <LoadingSkeleton />
       ) : (
         <>
-          {insight ? <InsightCard insight={insight} user={user} /> : <NoInsightState userEmail={user?.email} />}
+          {insight ? <InsightCard insight={insight} user={user} /> : <NoInsightState />}
           <GoalsCard goals={goals} />
           <LearningCard assignments={assignments} />
         </>
