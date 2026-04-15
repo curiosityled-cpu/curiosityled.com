@@ -72,7 +72,7 @@ function LeadershipAssessment() {
             clearInterval(pollInterval);
             toast.success('Assessment results ready!');
             setTimeout(() => {
-              navigate('/my-leadership');
+              navigate('/my-leadership', { replace: true });
             }, 1000);
             return;
           }
@@ -81,9 +81,9 @@ function LeadershipAssessment() {
         const elapsedTime = Date.now() - startTime;
         if (elapsedTime > MAX_POLLING_TIME) {
           clearInterval(pollInterval);
-          setProcessingTimeout(true);
           setProcessingResults(false);
-          toast.error('Processing is taking longer than expected');
+          toast.info('Check back shortly — your results may still be processing.');
+          navigate('/my-leadership', { replace: true });
         } else {
           setPollingAttempts(prev => prev + 1);
         }
@@ -223,7 +223,7 @@ function LeadershipAssessment() {
             </p>
 
             <div className="space-y-3">
-              <Link to={createPageUrl('AssessmentResults')} className="block">
+              <Link to="/my-leadership" className="block">
                 <Button className="w-full bg-blue-600 hover:bg-blue-700">
                   <BarChart3 className="w-4 h-4 mr-2" />
                   Check Results Now
@@ -242,7 +242,7 @@ function LeadershipAssessment() {
                 Try Again
               </Button>
 
-              <Link to={createPageUrl('Dashboard')} className="block">
+              <Link to="/my-leadership" className="block">
                 <Button variant="ghost" className="w-full">
                   Return to Dashboard
                 </Button>
@@ -292,7 +292,7 @@ function LeadershipAssessment() {
               </div>
 
               <div className="flex flex-col gap-3">
-                <Link to={createPageUrl('AssessmentResults')} className="block">
+                <Link to="/my-leadership" className="block">
                   <Button 
                     className="w-full"
                     style={{ backgroundColor: '#0043ef' }}
@@ -343,7 +343,7 @@ function LeadershipAssessment() {
                   )}
                 </AnimatePresence>
 
-                <Link to={createPageUrl('Dashboard')} className="block">
+                <Link to="/my-leadership" className="block">
                   <Button variant="ghost" className="w-full">
                     Return to Dashboard
                   </Button>
@@ -372,7 +372,7 @@ function LeadershipAssessment() {
           <CardContent className="p-0 h-full">
             {user?.email ? (
               <iframe
-                src={`${TYPEFORM_URL}#email=${encodeURIComponent(user.email)}`}
+                src={`${TYPEFORM_URL}?email=${encodeURIComponent(user.email)}`}
                 style={{ width: '100%', height: '100%', border: 'none' }}
                 title="Leadership Assessment"
                 allow="geolocation; microphone; camera; fullscreen"

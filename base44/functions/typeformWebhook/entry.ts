@@ -162,7 +162,9 @@ Deno.serve(async (req) => {
     console.log(`[Webhook ${requestId}] DEBUG TYPEFORM_WEBHOOK_SECRET length: ${webhookSecret ? webhookSecret.length : 'NOT SET'}`);
 
     if (webhookSecret && signatureHeader) {
-      const receivedHash = signatureHeader.startsWith('sha256-')
+      const receivedHash = signatureHeader.startsWith('sha256=')
+        ? signatureHeader.slice('sha256='.length)
+        : signatureHeader.startsWith('sha256-')
         ? signatureHeader.slice('sha256-'.length)
         : signatureHeader;
 
