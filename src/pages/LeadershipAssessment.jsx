@@ -11,8 +11,8 @@ import { createPageUrl } from "@/utils";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 
-const POLLING_INTERVAL = 2000;
-const MAX_POLLING_TIME = 60000;
+const POLLING_INTERVAL = 3000;
+const MAX_POLLING_TIME = 45000;
 const TYPEFORM_URL = "https://leadershipindexassessment.typeform.com/leadershipindex";
 
 function LeadershipAssessment() {
@@ -55,6 +55,9 @@ function LeadershipAssessment() {
     setProcessingResults(true);
     setPollingAttempts(0);
     setProcessingTimeout(false);
+
+    // Record what we had before so we can detect a NEW assessment
+    const submittedAt = Date.now();
     
     const startTime = Date.now();
     const pollInterval = setInterval(async () => {
@@ -67,25 +70,25 @@ function LeadershipAssessment() {
 
         if (assessments.length > 0) {
           const latestAssessment = assessments[0];
-          const assessmentAge = Date.now() - new Date(latestAssessment.created_date).getTime();
-          if (assessmentAge < 5 * 60 * 1000) {
+          const createdAt = new Date(latestAssessment.created_date).getTime();
+          // Accept any assessment created after we started polling (new submission)
+          if (createdAt >= submittedAt - 10000) {
             clearInterval(pollInterval);
             toast.success('Assessment results ready!');
             setTimeout(() => {
               navigate('/my-leadership', { replace: true });
-            }, 1000);
+            }, 800);
             return;
           }
         }
 
         const elapsedTime = Date.now() - startTime;
+        setPollingAttempts(Math.round((elapsedTime / MAX_POLLING_TIME) * 100));
+
         if (elapsedTime > MAX_POLLING_TIME) {
           clearInterval(pollInterval);
           setProcessingResults(false);
-          toast.info('Check back shortly — your results may still be processing.');
           navigate('/my-leadership', { replace: true });
-        } else {
-          setPollingAttempts(prev => prev + 1);
         }
       } catch (error) {
         console.error('Error polling for assessment:', error);
@@ -180,11 +183,8 @@ function LeadershipAssessment() {
             </p>
 
             <div className="space-y-3 mb-6">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Progress</span>
-                <span className="font-medium text-gray-700">Attempt {pollingAttempts}/{Math.ceil(MAX_POLLING_TIME / POLLING_INTERVAL)}</span>
-              </div>
-              <Progress value={Math.min(100, (pollingAttempts / (MAX_POLLING_TIME / POLLING_INTERVAL)) * 100)} className="h-2" />
+              <Progress value={Math.min(95, pollingAttempts)} className="h-2" />
+              <p className="text-xs text-gray-500">Analyzing your responses...</p>
             </div>
 
             <div className="flex justify-center gap-1">
