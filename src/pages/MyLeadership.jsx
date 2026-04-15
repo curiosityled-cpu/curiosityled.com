@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import ShareResultsModal from "@/components/mvp/ShareResultsModal";
@@ -231,6 +231,14 @@ function LoadingSkeleton() {
 
 export default function MyLeadership() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  // Always refetch on mount so fresh results appear after returning from assessment
+  useEffect(() => {
+    if (user?.email) {
+      queryClient.invalidateQueries({ queryKey: ['my-insight', user.email] });
+    }
+  }, [user?.email]);
 
   const { data: insight, isLoading: loadingInsight } = useQuery({
     queryKey: ['my-insight', user?.email],
@@ -278,7 +286,7 @@ export default function MyLeadership() {
       };
     },
     enabled: !!user?.email,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   });
 
   const { data: goals = [], isLoading: loadingGoals } = useQuery({
