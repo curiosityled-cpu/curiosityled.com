@@ -73,7 +73,9 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/" element={
-        mvpRole === 'buyer' ? (
+        !mvpRole ? (
+          <LayoutWrapper currentPageName="Dashboard"><Pages.Dashboard /></LayoutWrapper>
+        ) : mvpRole === 'buyer' ? (
           <MVPLayout><ExperienceOverview /></MVPLayout>
         ) : mvpRole === 'executive' ? (
           <MVPLayout><LeadershipIntelligenceHub /></MVPLayout>
@@ -82,8 +84,8 @@ const AuthenticatedApp = () => {
         )
       } />
 
-      {/* Redirect legacy Dashboard route to root */}
-      <Route path="/Dashboard" element={<Navigate to="/" replace />} />
+      {/* Legacy Dashboard — always accessible with full layout */}
+      <Route path="/Dashboard" element={<LayoutWrapper currentPageName="Dashboard"><Pages.Dashboard /></LayoutWrapper>} />
 
       {/* MVP-specific routes */}
       <Route path="/my-leadership" element={<MVPLayout><MyLeadership /></MVPLayout>} />
