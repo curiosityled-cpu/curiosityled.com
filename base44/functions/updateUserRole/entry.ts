@@ -89,12 +89,14 @@ Deno.serve(async (req) => {
             app_role: newRole 
         });
 
-        // Log the role change
+        // Log the role change (client_id is required by ActivityLog schema)
+        const logClientId = currentUser.client_id || targetUser.client_id || 'platform';
         await base44.asServiceRole.entities.ActivityLog.create({
             timestamp: new Date().toISOString(),
             initiator_user_email: currentUser.email,
             action_type: 'USER_ROLE_CHANGE',
             target_user_email: targetUser.email,
+            client_id: logClientId,
             old_value: oldRole || targetUser.app_role,
             new_value: newRole,
             metadata: { changed_by: currentUser.full_name }
