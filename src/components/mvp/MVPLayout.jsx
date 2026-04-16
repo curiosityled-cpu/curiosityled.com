@@ -198,7 +198,9 @@ export default function MVPLayout({ children }) {
                 </span>
               </div>
               <div className="flex-1 min-w-0 px-1">
-                <p className="text-xs font-medium text-gray-900 truncate">{user?.full_name || user?.email}</p>
+                <p className="text-xs font-medium text-gray-900 truncate">
+                  {user?.full_name?.includes(' ') ? user.full_name : user?.email}
+                </p>
               </div>
               {/* Notifications */}
               <DropdownMenu>
@@ -241,7 +243,7 @@ export default function MVPLayout({ children }) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="top" align="end" className="w-56">
                   <div className="px-3 py-2">
-                    <p className="text-sm font-semibold">{user?.full_name}</p>
+                    <p className="text-sm font-semibold">{user?.full_name?.includes(' ') ? user.full_name : user?.email}</p>
                     <p className="text-xs text-gray-500">{user?.email}</p>
                     <Badge variant="outline" className="text-xs mt-1">{getFriendlyRoleLabel(user?.app_role)}</Badge>
                   </div>
