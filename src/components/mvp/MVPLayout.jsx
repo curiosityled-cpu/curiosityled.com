@@ -198,7 +198,7 @@ export default function MVPLayout({ children }) {
                 </span>
               </div>
               <div className="flex-1 min-w-0 px-1">
-                <p className="text-xs font-medium text-gray-900 truncate">{user?.full_name || user?.email}</p>
+                <p className="text-xs font-medium text-gray-900 truncate">{user?.display_name || user?.full_name || user?.email}</p>
               </div>
               {/* Notifications */}
               <DropdownMenu>
