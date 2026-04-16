@@ -30,6 +30,21 @@ export const getMVPRole = (appRole) => {
   return null;
 };
 
+// Friendly display labels for app roles (shown to end users)
+export const getFriendlyRoleLabel = (appRole) => {
+  const labels = {
+    'User Level 1': 'User',
+    'User Level 2': 'Team Leader',
+    'Analyst': 'Analyst',
+    'Admin Level 1': 'Program Admin',
+    'Admin Level 2': 'HR Admin',
+    'Super Administrator': 'Super Administrator',
+    'Partner Business Administrator': 'Partner Administrator',
+    'Platform Admin': 'Platform Admin',
+  };
+  return labels[appRole] || appRole || 'User';
+};
+
 const NAV_CONFIG = {
   manager: [
   { label: 'My Leadership', path: '/my-leadership', icon: Home },
@@ -228,7 +243,7 @@ export default function MVPLayout({ children }) {
                   <div className="px-3 py-2">
                     <p className="text-sm font-semibold">{user?.full_name}</p>
                     <p className="text-xs text-gray-500">{user?.email}</p>
-                    <Badge variant="outline" className="text-xs mt-1">{user?.app_role || 'User'}</Badge>
+                    <Badge variant="outline" className="text-xs mt-1">{getFriendlyRoleLabel(user?.app_role)}</Badge>
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate(createPageUrl('Profile'))} className="cursor-pointer">
