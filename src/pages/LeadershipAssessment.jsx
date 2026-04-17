@@ -20,40 +20,44 @@ function TypeformEmbed({ formId, email, onSubmit }) {
   const containerRef = React.useRef(null);
 
   React.useEffect(() => {
-    if (!containerRef.current || !email) return;
+    if (!email) return;
 
-    // Inject the embed script if not already present
-    const scriptId = 'typeform-embed-script';
-    if (!document.getElementById(scriptId)) {
-      const script = document.createElement('script');
-      script.id = scriptId;
-      script.src = '//embed.typeform.com/next/embed.js';
-      script.async = true;
-      document.body.appendChild(script);
-    }
-
-    // Set the data attributes on the container div
-    const div = containerRef.current;
-    div.setAttribute('data-tf-live', formId);
-    div.setAttribute('data-tf-hidden', `email=${encodeURIComponent(email)}`);
-
-    // Listen for Typeform submit message
+    // Listen for Typeform submit message — catch all event types from Typeform
     const handleMessage = (event) => {
-      if (event.origin.includes('typeform.com') && event.data?.type === 'form-submit') {
+      if (!event.origin.includes('typeform.com')) return;
+      const type = event.data?.type || event.data;
+      if (type === 'form-submit' || type === 'typeform:submit' || (typeof type === 'string' && type.includes('submit'))) {
         if (onSubmit) onSubmit();
       }
     };
     window.addEventListener('message', handleMessage);
 
-    // Re-initialize Typeform if already loaded
-    if (window.tf) {
-      window.tf.load();
+    // Inject embed script
+    const scriptId = 'typeform-embed-script';
+    const existing = document.getElementById(scriptId);
+    if (existing) {
+      // Script already loaded — just re-init
+      if (window.tf) window.tf.load();
+    } else {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = '//embed.typeform.com/next/embed.js';
+      script.async = true;
+      script.onload = () => { if (window.tf) window.tf.load(); };
+      document.body.appendChild(script);
     }
 
     return () => window.removeEventListener('message', handleMessage);
-  }, [formId, email, onSubmit]);
+  }, [email, onSubmit]);
 
-  return <div ref={containerRef} style={{ width: '100%', minHeight: '700px' }} />;
+  return (
+    <div
+      ref={containerRef}
+      data-tf-live={formId}
+      data-tf-hidden={`email=${encodeURIComponent(email)}`}
+      style={{ width: '100%', height: '100%' }}
+    />
+  );
 }
 
 function LeadershipAssessment() {
@@ -113,7 +117,8 @@ function LeadershipAssessment() {
           const latestAssessment = assessments[0];
           const createdAt = new Date(latestAssessment.created_date).getTime();
           // Accept any assessment created after we started polling (new submission)
-          if (createdAt >= submittedAt - 10000) {
+          // Allow 60s back-window to catch webhook processing delay
+          if (createdAt >= submittedAt - 60000) {
             clearInterval(pollInterval);
             toast.success('Assessment results ready!');
             setTimeout(() => {
@@ -386,76 +391,72 @@ function LeadershipAssessment() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-      <div className="max-w-5xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-            Leadership Index Assessment
-          </h1>
-          <p className="text-gray-600">
-            Complete this assessment to discover your leadership strengths and opportunities
-          </p>
-        </div>
+    <div className="flex flex-col" style={{ height: '100vh' }}>
+      <div className="px-6 pt-6 pb-3 bg-gradient-to-br from-slate-50 to-blue-50">
+        <h1 className="text-2xl font-semibold text-gray-900 mb-1">
+          Leadership Index Assessment
+        </h1>
+        <p className="text-gray-600 text-sm">
+          Complete this assessment to discover your leadership strengths and opportunities
+        </p>
+      </div>
 
-        <Card className="shadow-xl border-0" style={{ minHeight: '700px' }}>
-          <CardContent className="p-0">
-            {user?.email ? (
-              <TypeformEmbed formId={TYPEFORM_FORM_ID} email={user.email} onSubmit={startPollingForResults} />
-            ) : (
-              <div className="flex items-center justify-center h-96 text-gray-500">
-                Loading Typeform... ensure you are logged in.
+      <div className="flex-1 overflow-hidden">
+        {user?.email ? (
+          <TypeformEmbed formId={TYPEFORM_FORM_ID} email={user.email} onSubmit={startPollingForResults} />
+        ) : (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            Loading Typeform... ensure you are logged in.
+          </div>
+        )}
+      </div>
+
+      <div className="px-6 py-3 bg-gradient-to-br from-slate-50 to-blue-50 text-center">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setTestMode(!testMode)}
+        >
+          <Sparkles className="w-4 h-4 mr-2" />
+          {testMode ? 'Hide' : 'Show'} Test Mode
+        </Button>
+
+        <AnimatePresence>
+          {testMode && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: 'auto' }}
+              exit={{ opacity: 0, y: -10, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="mt-2 p-4 bg-yellow-50 border border-yellow-200 rounded-lg overflow-hidden"
+            >
+              <p className="text-sm font-medium text-yellow-800 mb-3">
+                🧪 Test Mode: Create Mock Assessments
+              </p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {[
+                  { label: 'High Performer', scenario: 'high_performer' },
+                  { label: 'Average', scenario: 'average' },
+                  { label: 'Developing', scenario: 'developing' },
+                  { label: 'At Risk', scenario: 'at_risk' },
+                  { label: 'Incomplete', scenario: 'incomplete' },
+                ].map(({ label, scenario }) => (
+                  <Button
+                    key={scenario}
+                    size="sm"
+                    variant="outline"
+                    onClick={() => createMockAssessment(scenario)}
+                  >
+                    {label}
+                  </Button>
+                ))}
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <div className="mt-6 text-center">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setTestMode(!testMode)}
-          >
-            <Sparkles className="w-4 h-4 mr-2" />
-            {testMode ? 'Hide' : 'Show'} Test Mode
-          </Button>
-
-          <AnimatePresence>
-            {testMode && (
-              <motion.div
-                initial={{ opacity: 0, y: -10, height: 0 }}
-                animate={{ opacity: 1, y: 0, height: 'auto' }}
-                exit={{ opacity: 0, y: -10, height: 0 }}
-                transition={{ duration: 0.3 }}
-                className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg overflow-hidden"
-              >
-                <p className="text-sm font-medium text-yellow-800 mb-3">
-                  🧪 Test Mode: Create Mock Assessments
-                </p>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {[
-                    { label: 'High Performer', scenario: 'high_performer' },
-                    { label: 'Average', scenario: 'average' },
-                    { label: 'Developing', scenario: 'developing' },
-                    { label: 'At Risk', scenario: 'at_risk' },
-                    { label: 'Incomplete', scenario: 'incomplete' },
-                  ].map(({ label, scenario }) => (
-                    <Button
-                      key={scenario}
-                      size="sm"
-                      variant="outline"
-                      onClick={() => createMockAssessment(scenario)}
-                    >
-                      {label}
-                    </Button>
-                  ))}
-                </div>
-                <p className="text-xs text-gray-600 mt-2">
-                  Click any scenario to create a test assessment and see the results immediately
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+              <p className="text-xs text-gray-600 mt-2">
+                Click any scenario to create a test assessment and see the results immediately
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
