@@ -71,6 +71,7 @@ import InactiveUsersWidget from "../components/users/InactiveUsersWidget";
 import LicenseInfoBanner from "../components/users/LicenseInfoBanner";
 import EditUserModal from "../components/users/EditUserModal";
 import InviteUserModal from "../components/users/InviteUserModal";
+import BulkUserEditCSV from "../components/users/BulkUserEditCSV";
 import CreateRoleModal from "../components/roles/CreateRoleModal";
 
 const ROLE_COLORS = [
@@ -90,6 +91,7 @@ function UserManagement() {
   const [sortConfig, setSortConfig] = useState({ key: 'created_date', direction: 'desc' });
   const [impersonating, setImpersonating] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
+  const [showBulkEditCSV, setShowBulkEditCSV] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showAssignRoleModal, setShowAssignRoleModal] = useState(false);
   const [selectedUserForRole, setSelectedUserForRole] = useState(null);
@@ -1146,6 +1148,10 @@ function UserManagement() {
                 <Download className="w-4 h-4 mr-2" />
                 Export CSV
               </Button>
+              <Button onClick={() => setShowBulkEditCSV(true)} variant="outline">
+                <Edit className="w-4 h-4 mr-2" />
+                Bulk Edit CSV
+              </Button>
               <Button onClick={() => setShowBulkUpload(true)} variant="outline">
                 <Upload className="w-4 h-4 mr-2" />
                 Upload CSV
@@ -1943,6 +1949,14 @@ function UserManagement() {
         onClose={() => setShowBulkRoleAssignment(false)}
         onSuccess={loadData}
       />
+
+      {showBulkEditCSV && (
+        <BulkUserEditCSV
+          users={users}
+          onSuccess={loadData}
+          onClose={() => setShowBulkEditCSV(false)}
+        />
+      )}
     </div>
   );
 }
