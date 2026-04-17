@@ -51,29 +51,12 @@ function TypeformEmbed({ formId, email, onSubmit }) {
   }, [email, onSubmit]);
 
   return (
-    <>
-      <style>{`
-        [data-tf-live] iframe,
-        .tf-v1-widget iframe,
-        .typeform-widget iframe {
-          width: 100% !important;
-          height: 100% !important;
-          border: none !important;
-        }
-        [data-tf-live],
-        .tf-v1-widget,
-        .typeform-widget {
-          width: 100% !important;
-          height: 100% !important;
-        }
-      `}</style>
-      <div
-        ref={containerRef}
-        data-tf-live={formId}
-        data-tf-hidden={`email=${encodeURIComponent(email)}`}
-        style={{ width: '100%', height: '100%' }}
-      />
-    </>
+    <div
+      ref={containerRef}
+      data-tf-live={formId}
+      data-tf-hidden={`email=${encodeURIComponent(email)}`}
+      style={{ width: '100%', height: '100%' }}
+    />
   );
 }
 
@@ -408,7 +391,7 @@ function LeadershipAssessment() {
   }
 
   return (
-    <div className="flex flex-col" style={{ height: '100vh', overflow: 'hidden' }}>
+    <div className="flex flex-col" style={{ height: '100vh' }}>
       <div className="px-6 pt-6 pb-3 bg-gradient-to-br from-slate-50 to-blue-50">
         <h1 className="text-2xl font-semibold text-gray-900 mb-1">
           Leadership Index Assessment
@@ -418,7 +401,7 @@ function LeadershipAssessment() {
         </p>
       </div>
 
-      <div className="flex-1" style={{ minHeight: 0, overflow: 'hidden' }}>
+      <div className="flex-1 overflow-hidden">
         {user?.email ? (
           <TypeformEmbed formId={TYPEFORM_FORM_ID} email={user.email} onSubmit={startPollingForResults} />
         ) : (
