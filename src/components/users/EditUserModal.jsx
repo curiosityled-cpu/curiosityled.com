@@ -19,16 +19,13 @@ export default function EditUserModal({ open, onOpenChange, editingUser, setEdit
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <Label>Full Name</Label>
-              <Input
-                value={editingUser.full_name || ''}
-                onChange={(e) => setEditingUser({ ...editingUser, full_name: e.target.value })}
-              />
-              <p className="text-xs text-gray-400 mt-1">Read-only in the platform auth system — for display only</p>
+              <Input value={editingUser.full_name || ''} disabled className="bg-gray-50 text-gray-500" />
+              <p className="text-xs text-gray-400 mt-1">Managed by the auth system — cannot be edited here</p>
             </div>
 
             <div>
               <Label>Email</Label>
-              <Input type="email" defaultValue={editingUser.email} disabled />
+              <Input type="email" value={editingUser.email || ''} disabled className="bg-gray-50 text-gray-500" />
             </div>
 
             <div>

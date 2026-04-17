@@ -272,7 +272,9 @@ function UserManagement() {
 
   const handleUpdateUser = async (userId, userData) => {
     try {
-      const response = await base44.functions.invoke('updateUserById', { userId, userData });
+      // Strip read-only auth fields before sending
+      const { full_name, email, created_date, updated_date, id, ...editableData } = userData;
+      const response = await base44.functions.invoke('updateUserById', { userId, userData: editableData });
       if (response.data?.success) {
         toast.success('User updated successfully');
         setShowEditUserModal(false);
