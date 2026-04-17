@@ -391,8 +391,8 @@ function LeadershipAssessment() {
   }
 
   return (
-    <div className="flex flex-col" style={{ height: 'calc(100vh - 130px)' }}>
-      <div className="px-6 pt-4 pb-2 bg-gradient-to-br from-slate-50 to-blue-50 shrink-0">
+    <div className="flex flex-col" style={{ height: '100vh' }}>
+      <div className="px-6 pt-6 pb-3 bg-gradient-to-br from-slate-50 to-blue-50">
         <h1 className="text-2xl font-semibold text-gray-900 mb-1">
           Leadership Index Assessment
         </h1>
@@ -401,11 +401,7 @@ function LeadershipAssessment() {
         </p>
       </div>
 
-      <div className="flex-1 min-h-0">
-        <style>{`
-          [data-tf-live] { width: 100% !important; height: 100% !important; display: block !important; }
-          [data-tf-live] iframe { width: 100% !important; height: 100% !important; border: none !important; display: block !important; }
-        `}</style>
+      <div className="flex-1 overflow-hidden">
         {user?.email ? (
           <TypeformEmbed formId={TYPEFORM_FORM_ID} email={user.email} onSubmit={startPollingForResults} />
         ) : (
