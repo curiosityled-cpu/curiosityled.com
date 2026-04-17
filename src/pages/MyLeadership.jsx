@@ -198,7 +198,15 @@ function LearningCard({ assignments }) {
   );
 }
 
-function NoInsightState() {
+function NoInsightState({ onRefresh }) {
+  const [checking, setChecking] = useState(false);
+
+  const handleCheck = async () => {
+    setChecking(true);
+    await onRefresh?.();
+    setTimeout(() => setChecking(false), 1500);
+  };
+
   return (
     <Card className="shadow-sm border border-dashed border-gray-200 bg-white rounded-2xl">
       <CardContent className="py-14 px-6 text-center">
@@ -208,12 +216,19 @@ function NoInsightState() {
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Complete Your Assessment</h3>
         <p className="text-sm text-gray-500 max-w-sm mx-auto mb-6 leading-relaxed">
           Take your leadership assessment to unlock your personalized archetype, strengths, and recommended next steps.
+          If you've already submitted, your results may still be processing.
         </p>
-        <Link to="/LeadershipAssessment">
-          <Button className="bg-[#0202ff] hover:bg-[#0101dd] text-white px-6">
-            Take Assessment <ChevronRight className="w-4 h-4 ml-1" />
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link to="/LeadershipAssessment">
+            <Button className="bg-[#0202ff] hover:bg-[#0101dd] text-white px-6">
+              Take Assessment <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </Link>
+          <Button variant="outline" onClick={handleCheck} disabled={checking} className="border-gray-300">
+            {checking ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+            Check for Results
           </Button>
-        </Link>
+        </div>
       </CardContent>
     </Card>
   );
@@ -240,23 +255,33 @@ export default function MyLeadership() {
     }
   }, [user?.email]);
 
-  const { data: insight, isLoading: loadingInsight } = useQuery({
+  const { data: insight, isLoading: loadingInsight, error: insightError, refetch: refetchInsight } = useQuery({
     queryKey: ['my-insight', user?.email],
     queryFn: async () => {
       // Primary: try AssessmentInsights (AI-generated narratives)
-      const insights = await base44.entities.AssessmentInsights.filter(
-        { user_email: user.email },
-        '-created_date',
-        1
-      );
+      let insights = [];
+      try {
+        insights = await base44.entities.AssessmentInsights.filter(
+          { user_email: user.email },
+          '-created_date',
+          1
+        );
+      } catch (e) {
+        console.warn('[MyLeadership] AssessmentInsights fetch failed:', e.message);
+      }
       if (insights[0]) return { source: 'insights', ...insights[0] };
 
       // Fallback: read directly from Assessment (what the webhook populates)
-      const assessments = await base44.entities.Assessment.filter(
-        { email: user.email },
-        '-created_date',
-        1
-      );
+      let assessments = [];
+      try {
+        assessments = await base44.entities.Assessment.filter(
+          { email: user.email },
+          '-created_date',
+          1
+        );
+      } catch (e) {
+        console.warn('[MyLeadership] Assessment fetch failed:', e.message);
+      }
       if (!assessments[0]) return null;
       const a = assessments[0];
 
@@ -314,7 +339,7 @@ export default function MyLeadership() {
         <LoadingSkeleton />
       ) : (
         <>
-          {insight ? <InsightCard insight={insight} user={user} /> : <NoInsightState />}
+          {insight ? <InsightCard insight={insight} user={user} /> : <NoInsightState onRefresh={refetchInsight} />}
           <GoalsCard goals={goals} />
           <LearningCard assignments={assignments} />
         </>
