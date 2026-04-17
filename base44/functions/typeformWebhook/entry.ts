@@ -235,7 +235,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Email not found' }, { status: 400 });
     }
 
-    email = email.toLowerCase().trim();
+    // Decode URL-encoded email (e.g. eosoria%40curiosityled.com → eosoria@curiosityled.com)
+    email = decodeURIComponent(email).toLowerCase().trim();
     console.log(`[Webhook ${requestId}] ✅ Email: ${email}`);
 
     // ============================================
