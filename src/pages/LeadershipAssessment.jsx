@@ -13,7 +13,48 @@ import { Progress } from "@/components/ui/progress";
 
 const POLLING_INTERVAL = 3000;
 const MAX_POLLING_TIME = 45000;
-const TYPEFORM_URL = "https://leadershipindexassessment.typeform.com/leadershipindex";
+const TYPEFORM_FORM_ID = "01KPER4JBCGJ85PG55KACC0K85";
+
+// Typeform embed component using the official embed.js script
+function TypeformEmbed({ formId, email, onSubmit }) {
+  const containerRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!containerRef.current || !email) return;
+
+    // Inject the embed script if not already present
+    const scriptId = 'typeform-embed-script';
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = '//embed.typeform.com/next/embed.js';
+      script.async = true;
+      document.body.appendChild(script);
+    }
+
+    // Set the data attributes on the container div
+    const div = containerRef.current;
+    div.setAttribute('data-tf-live', formId);
+    div.setAttribute('data-tf-hidden', `email=${encodeURIComponent(email)}`);
+
+    // Listen for Typeform submit message
+    const handleMessage = (event) => {
+      if (event.origin.includes('typeform.com') && event.data?.type === 'form-submit') {
+        if (onSubmit) onSubmit();
+      }
+    };
+    window.addEventListener('message', handleMessage);
+
+    // Re-initialize Typeform if already loaded
+    if (window.tf) {
+      window.tf.load();
+    }
+
+    return () => window.removeEventListener('message', handleMessage);
+  }, [formId, email, onSubmit]);
+
+  return <div ref={containerRef} style={{ width: '100%', minHeight: '700px' }} />;
+}
 
 function LeadershipAssessment() {
   const [user, setUser] = useState(null);
@@ -128,22 +169,10 @@ function LeadershipAssessment() {
   }, []);
 
   useEffect(() => {
-    const handleMessage = (event) => {
-      if (
-        event.origin.includes('typeform.com') &&
-        event.data?.type === 'form-submit'
-      ) {
-        startPollingForResults();
-      }
-    };
-    window.addEventListener('message', handleMessage);
-
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('from_typeform') === 'true' && user) {
       startPollingForResults();
     }
-
-    return () => window.removeEventListener('message', handleMessage);
   }, [user, startPollingForResults]);
 
   if (loading) {
@@ -368,17 +397,12 @@ function LeadershipAssessment() {
           </p>
         </div>
 
-        <Card className="shadow-xl border-0" style={{ height: '700px' }}>
-          <CardContent className="p-0 h-full">
+        <Card className="shadow-xl border-0" style={{ minHeight: '700px' }}>
+          <CardContent className="p-0">
             {user?.email ? (
-              <iframe
-                src={`${TYPEFORM_URL}#email=${encodeURIComponent(user.email)}`}
-                style={{ width: '100%', height: '100%', border: 'none' }}
-                title="Leadership Assessment"
-                allow="geolocation; microphone; camera; fullscreen"
-              />
+              <TypeformEmbed formId={TYPEFORM_FORM_ID} email={user.email} onSubmit={startPollingForResults} />
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-500">
+              <div className="flex items-center justify-center h-96 text-gray-500">
                 Loading Typeform... ensure you are logged in.
               </div>
             )}
