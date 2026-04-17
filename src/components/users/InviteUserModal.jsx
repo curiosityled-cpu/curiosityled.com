@@ -8,19 +8,18 @@ import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { Loader2, UserPlus } from "lucide-react";
 
-const DEFAULT_FORM = { full_name: '', email: '', role: 'User Level 1' };
+const DEFAULT_FORM = { email: '', role: 'User Level 1' };
 
 export default function InviteUserModal({ open, onOpenChange, onSuccess, isPlatformAdmin }) {
   const [form, setForm] = useState(DEFAULT_FORM);
   const [inviting, setInviting] = useState(false);
 
   const handleInvite = async () => {
-    if (!form.full_name.trim()) { toast.error('Full name is required'); return; }
     if (!form.email.trim()) { toast.error('Email is required'); return; }
 
     setInviting(true);
     try {
-      await base44.users.inviteUser(form.email.trim(), form.role, form.full_name.trim());
+      await base44.users.inviteUser(form.email.trim(), form.role);
       toast.success(`Invitation sent to ${form.email}`);
       setForm(DEFAULT_FORM);
       onOpenChange(false);
@@ -43,16 +42,6 @@ export default function InviteUserModal({ open, onOpenChange, onSuccess, isPlatf
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
-          <div>
-            <Label>Full Name <span className="text-red-500">*</span></Label>
-            <Input
-              placeholder="e.g. Jane Smith"
-              value={form.full_name}
-              onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-            />
-            <p className="text-xs text-gray-500 mt-1">This will be set as the user's name in the platform.</p>
-          </div>
-
           <div>
             <Label>Email Address <span className="text-red-500">*</span></Label>
             <Input
