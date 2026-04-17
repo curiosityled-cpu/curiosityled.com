@@ -1,16 +1,20 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 /**
- * One-time admin utility to manually create an Assessment + trigger insights
+ * One-time admin utility to manually create Assessment + AssessmentInsights
  * for a user whose webhook submission failed to persist.
- * Requires Platform Admin role.
  */
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    if (!user || user.app_role !== 'Platform Admin') {
-      return Response.json({ error: 'Forbidden' }, { status: 403 });
+
+    console.log('Auth user:', JSON.stringify({ email: user?.email, role: user?.role, app_role: user?.app_role }));
+
+    // Accept Platform Admin by either role field
+    const isAdmin = user?.role === 'admin' || user?.app_role === 'Platform Admin';
+    if (!user || !isAdmin) {
+      return Response.json({ error: 'Forbidden', user_role: user?.role, user_app_role: user?.app_role }, { status: 403 });
     }
 
     const body = await req.json();
@@ -20,11 +24,26 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'email and scores required' }, { status: 400 });
     }
 
-    // Look up user's client_id
+    // Look up target user's data
     const users = await base44.asServiceRole.entities.User.filter({ email });
-    const client_id = users[0]?.client_id || null;
+    const targetUser = users[0];
+    const client_id = targetUser?.client_id || targetUser?.data?.client_id || null;
+    console.log(`Target user found: ${!!targetUser}, client_id: ${client_id}`);
 
-    console.log(`Creating assessment for ${email}, client_id: ${client_id}`);
+    // Check for existing assessment to avoid duplicates
+    const existing = await base44.asServiceRole.entities.Assessment.filter({ email, response_id: scores.response_id });
+    if (existing.length > 0) {
+      console.log('Assessment already exists:', existing[0].id);
+      // Check if insight exists too
+      const existingInsight = await base44.asServiceRole.entities.AssessmentInsights.filter({ assessment_id: existing[0].id });
+      return Response.json({
+        success: true,
+        already_existed: true,
+        assessment_id: existing[0].id,
+        insight_id: existingInsight[0]?.id || null,
+        email,
+      });
+    }
 
     const assessmentData = {
       email,
@@ -51,10 +70,10 @@ Deno.serve(async (req) => {
       }
     };
 
+    console.log('Creating Assessment...');
     const assessment = await base44.asServiceRole.entities.Assessment.create(assessmentData);
     console.log('Assessment created:', assessment.id);
 
-    // Now create the AssessmentInsights record directly (no need to trigger automation)
     const insightData = {
       assessment_id: assessment.id,
       user_email: email,
@@ -68,6 +87,7 @@ Deno.serve(async (req) => {
       status: 'generated',
     };
 
+    console.log('Creating AssessmentInsights...');
     const insight = await base44.asServiceRole.entities.AssessmentInsights.create(insightData);
     console.log('AssessmentInsights created:', insight.id);
 
@@ -78,7 +98,7 @@ Deno.serve(async (req) => {
       email,
     });
   } catch (error) {
-    console.error('Error:', error.message);
+    console.error('Error:', error.message, error.stack);
     return Response.json({ success: false, error: error.message }, { status: 500 });
   }
 });

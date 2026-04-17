@@ -4,7 +4,7 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    if (!user || user.app_role !== 'Platform Admin') {
+    if (!user || (user.app_role !== 'Platform Admin' && user.role !== 'admin')) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
     const { email } = await req.json();
