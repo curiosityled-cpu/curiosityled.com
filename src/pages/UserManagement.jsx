@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -70,6 +69,9 @@ import BulkAccountActions from "../components/users/BulkAccountActions";
 import ExpirationStatusBadge from "../components/users/ExpirationStatusBadge";
 import InactiveUsersWidget from "../components/users/InactiveUsersWidget";
 import LicenseInfoBanner from "../components/users/LicenseInfoBanner";
+import EditUserModal from "../components/users/EditUserModal";
+import InviteUserModal from "../components/users/InviteUserModal";
+import CreateRoleModal from "../components/roles/CreateRoleModal";
 
 const ROLE_COLORS = [
   '#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444',
@@ -88,6 +90,7 @@ function UserManagement() {
   const [sortConfig, setSortConfig] = useState({ key: 'created_date', direction: 'desc' });
   const [impersonating, setImpersonating] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const [showAssignRoleModal, setShowAssignRoleModal] = useState(false);
   const [selectedUserForRole, setSelectedUserForRole] = useState(null);
   const [showEditUserModal, setShowEditUserModal] = useState(false);
@@ -1141,9 +1144,13 @@ function UserManagement() {
                 <Download className="w-4 h-4 mr-2" />
                 Export CSV
               </Button>
-              <Button onClick={() => setShowBulkUpload(true)} className="bg-blue-600 hover:bg-blue-700">
+              <Button onClick={() => setShowBulkUpload(true)} variant="outline">
                 <Upload className="w-4 h-4 mr-2" />
                 Upload CSV
+              </Button>
+              <Button onClick={() => setShowInviteModal(true)} className="bg-blue-600 hover:bg-blue-700">
+                <UserPlus className="w-4 h-4 mr-2" />
+                Invite User
               </Button>
             </div>
 
@@ -1849,234 +1856,17 @@ function UserManagement() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showEditUserModal} onOpenChange={setShowEditUserModal}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-          </DialogHeader>
-          {editingUser && (
-            <div className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="edit_full_name">Full Name</Label>
-                  <Input
-                    id="edit_full_name"
-                    defaultValue={editingUser.full_name}
-                    onChange={(e) => setEditingUser({...editingUser, full_name: e.target.value})}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="edit_email">Email</Label>
-                  <Input
-                    id="edit_email"
-                    type="email"
-                    defaultValue={editingUser.email}
-                    disabled
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="edit_display_name">Display Name</Label>
-                  <Input
-                    id="edit_display_name"
-                    defaultValue={editingUser.display_name || ''}
-                    onChange={(e) => setEditingUser({...editingUser, display_name: e.target.value})}
-                    placeholder="Optional display name"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="edit_app_role">Platform Role</Label>
-                  <Select
-                    value={editingUser.app_role}
-                    onValueChange={(value) => setEditingUser({...editingUser, app_role: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="User Level 1">User (User Level 1)</SelectItem>
-                      <SelectItem value="User Level 2">Team Leader (User Level 2)</SelectItem>
-                      <SelectItem value="Analyst">Analyst (Read-Only Analytics)</SelectItem>
-                      <SelectItem value="Admin Level 1">Program Admin (Admin Level 1)</SelectItem>
-                      <SelectItem value="Admin Level 2">HR Admin (Admin Level 2)</SelectItem>
-                      <SelectItem value="Partner Business Administrator">Partner Business Administrator</SelectItem>
-                      {isPlatformAdmin && (
-                        <>
-                          <SelectItem value="Super Administrator">Super Administrator</SelectItem>
-                          <SelectItem value="Platform Admin">Platform Admin</SelectItem>
-                        </>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="edit_client">Client Organization</Label>
-                  <Select
-                    value={editingUser.client_id || 'none'}
-                    onValueChange={(value) => setEditingUser({...editingUser, client_id: value === 'none' ? null : value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No Client</SelectItem>
-                      {clients.map(client => (
-                        <SelectItem key={client.id} value={client.id}>
-                          {client.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="edit_partner">Partner Organization</Label>
-                  <Select
-                    value={editingUser.partner_id || 'none'}
-                    onValueChange={(value) => setEditingUser({...editingUser, partner_id: value === 'none' ? null : value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No Partner</SelectItem>
-                      {partners.map(partner => (
-                        <SelectItem key={partner.id} value={partner.id}>
-                          {partner.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="edit_current_role">Job Title</Label>
-                  <Input
-                    id="edit_current_role"
-                    defaultValue={editingUser.current_role}
-                    onChange={(e) => setEditingUser({...editingUser, current_role: e.target.value})}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="edit_department">Department</Label>
-                  <Input
-                    id="edit_department"
-                    defaultValue={editingUser.department}
-                    onChange={(e) => setEditingUser({...editingUser, department: e.target.value})}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="edit_sector">Industry Sector</Label>
-                  <Input
-                    id="edit_sector"
-                    defaultValue={editingUser.sector}
-                    onChange={(e) => setEditingUser({...editingUser, sector: e.target.value})}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="edit_manager_email">Manager Email</Label>
-                  <Input
-                    id="edit_manager_email"
-                    type="email"
-                    defaultValue={editingUser.manager_email}
-                    onChange={(e) => setEditingUser({...editingUser, manager_email: e.target.value})}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="edit_start_date">Start Date</Label>
-                  <Input
-                    id="edit_start_date"
-                    type="date"
-                    defaultValue={editingUser.start_date}
-                    onChange={(e) => setEditingUser({...editingUser, start_date: e.target.value})}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="edit_addon_role">Addon Role</Label>
-                  <Select
-                    value={editingUser.custom_role_id || 'none'}
-                    onValueChange={(value) => setEditingUser({...editingUser, custom_role_id: value === 'none' ? null : value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No Addon Role</SelectItem>
-                      {addonRoles.map(role => (
-                        <SelectItem key={role.id} value={role.id}>
-                          {role.role_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-gray-500 mt-1">Adds permissions on top of base role</p>
-                </div>
-
-                <div className="md:col-span-2">
-                  <div className="flex items-start gap-3 p-4 border rounded-lg bg-purple-50 border-purple-200">
-                    <Checkbox
-                      id="is_uat_tester"
-                      checked={editingUser.is_uat_tester || false}
-                      onCheckedChange={(checked) => setEditingUser({...editingUser, is_uat_tester: checked})}
-                    />
-                    <div className="flex-1">
-                      <Label htmlFor="is_uat_tester" className="font-medium cursor-pointer">
-                        UAT Tester
-                      </Label>
-                      <p className="text-xs text-gray-600 mt-1">
-                        Enable UAT testing mode for this user. They'll get access to the UAT testing coach and assigned test cases.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="md:col-span-2">
-                  <div className="p-4 border rounded-lg bg-yellow-50 border-yellow-200">
-                    <Label className="font-medium text-yellow-900">Account Status</Label>
-                    <p className="text-xs text-yellow-800 mt-1 mb-3">
-                      Pending users must activate their license via password reset before accessing the platform.
-                    </p>
-                    <Select
-                      value={editingUser.account_status || 'pending_activation'}
-                      onValueChange={(value) => setEditingUser({...editingUser, account_status: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending_activation">Pending Activation</SelectItem>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="suspended">Suspended</SelectItem>
-                        <SelectItem value="locked">Locked</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button variant="outline" onClick={() => setShowEditUserModal(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => handleUpdateUser(editingUser.id, editingUser)}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  Save Changes
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <EditUserModal
+        open={showEditUserModal}
+        onOpenChange={setShowEditUserModal}
+        editingUser={editingUser}
+        setEditingUser={setEditingUser}
+        onSave={handleUpdateUser}
+        clients={clients}
+        partners={partners}
+        addonRoles={addonRoles}
+        isPlatformAdmin={isPlatformAdmin}
+      />
 
       <Dialog open={showAssignRoleModal} onOpenChange={setShowAssignRoleModal}>
         <DialogContent>
@@ -2127,189 +1917,24 @@ function UserManagement() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showCreateRoleModal} onOpenChange={setShowCreateRoleModal}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {editingRole ? 'Edit Role' : 'Create Custom Role'}
-            </DialogTitle>
-          </DialogHeader>
+      <CreateRoleModal
+        open={showCreateRoleModal}
+        onOpenChange={setShowCreateRoleModal}
+        editingRole={editingRole}
+        roleFormData={roleFormData}
+        setRoleFormData={setRoleFormData}
+        selectedPermissions={selectedPermissions}
+        groupedPermissions={groupedPermissions}
+        onTogglePermission={handleTogglePermission}
+        onSave={handleSaveRole}
+      />
 
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="role_name">Role Name *</Label>
-                <Input
-                  id="role_name"
-                  value={roleFormData.role_name}
-                  onChange={(e) => setRoleFormData({ ...roleFormData, role_name: e.target.value })}
-                  placeholder="e.g., Content Manager, Analytics Viewer"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={roleFormData.description}
-                  onChange={(e) => setRoleFormData({ ...roleFormData, description: e.target.value })}
-                  placeholder="Describe what this role is responsible for..."
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <Label>Color</Label>
-                <div className="flex gap-2 mt-2">
-                  {ROLE_COLORS.map(color => (
-                    <button
-                      key={color}
-                      onClick={() => setRoleFormData({ ...roleFormData, color })}
-                      className={`w-8 h-8 rounded-full border-2 transition-all ${
-                        roleFormData.color === color ? 'border-gray-900 scale-110' : 'border-gray-300'
-                      }`}
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-4 border-t">
-                <Label className="text-base font-medium mb-3 block">Role Type</Label>
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setRoleFormData({ ...roleFormData, is_addon: false })}
-                    className={`p-4 border-2 rounded-lg text-left transition-all ${
-                      !roleFormData.is_addon 
-                        ? 'border-purple-500 bg-purple-50' 
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <Shield className="w-5 h-5 text-purple-600" />
-                      <span className="font-medium">Standalone Role</span>
-                    </div>
-                    <p className="text-xs text-gray-600">
-                      Replaces the user's base role permissions when assigned
-                    </p>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRoleFormData({ ...roleFormData, is_addon: true })}
-                    className={`p-4 border-2 rounded-lg text-left transition-all ${
-                      roleFormData.is_addon 
-                        ? 'border-indigo-500 bg-indigo-50' 
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <Plus className="w-5 h-5 text-indigo-600" />
-                      <span className="font-medium">Addon Role</span>
-                    </div>
-                    <p className="text-xs text-gray-600">
-                      Merges with user's base role permissions (additive)
-                    </p>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-lg font-semibold mb-4 block">
-                Permissions * ({selectedPermissions.length} selected)
-              </Label>
-
-              <Tabs defaultValue={Object.keys(groupedPermissions)[0]}>
-                <TabsList className="grid grid-cols-5 w-full">
-                  {Object.keys(groupedPermissions).slice(0, 5).map(category => (
-                    <TabsTrigger key={category} value={category} className="capitalize">
-                      {category}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-
-                {Object.keys(groupedPermissions).slice(0, 5).map(category => (
-                  <TabsContent key={category} value={category} className="space-y-3 mt-4">
-                    {groupedPermissions[category].map(permission => (
-                      <div
-                        key={permission.permission_key}
-                        className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-gray-50"
-                      >
-                        <Checkbox
-                          id={permission.permission_key}
-                          checked={selectedPermissions.includes(permission.permission_key)}
-                          onCheckedChange={() => handleTogglePermission(permission.permission_key)}
-                        />
-                        <div className="flex-1">
-                          <Label
-                            htmlFor={permission.permission_key}
-                            className="font-medium cursor-pointer"
-                          >
-                            {permission.name}
-                          </Label>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {permission.description}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </TabsContent>
-                ))}
-              </Tabs>
-
-              {Object.keys(groupedPermissions).length > 5 && (
-                <Tabs defaultValue={Object.keys(groupedPermissions)[5]} className="mt-4">
-                  <TabsList className="grid grid-cols-5 w-full">
-                    {Object.keys(groupedPermissions).slice(5).map(category => (
-                      <TabsTrigger key={category} value={category} className="capitalize">
-                        {category}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-
-                  {Object.keys(groupedPermissions).slice(5).map(category => (
-                    <TabsContent key={category} value={category} className="space-y-3 mt-4">
-                      {groupedPermissions[category].map(permission => (
-                        <div
-                          key={permission.permission_key}
-                          className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-gray-50"
-                        >
-                          <Checkbox
-                            id={permission.permission_key}
-                            checked={selectedPermissions.includes(permission.permission_key)}
-                            onCheckedChange={() => handleTogglePermission(permission.permission_key)}
-                          />
-                          <div className="flex-1">
-                            <Label
-                              htmlFor={permission.permission_key}
-                              className="font-medium cursor-pointer"
-                            >
-                              {permission.name}
-                            </Label>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {permission.description}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </TabsContent>
-                  ))}
-                </Tabs>
-              )}
-            </div>
-
-            <div className="flex justify-end gap-3 pt-4 border-t">
-              <Button variant="outline" onClick={() => setShowCreateRoleModal(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleSaveRole} className="bg-purple-600 hover:bg-purple-700">
-                {editingRole ? 'Update Role' : 'Create Role'}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <InviteUserModal
+        open={showInviteModal}
+        onOpenChange={setShowInviteModal}
+        onSuccess={loadData}
+        isPlatformAdmin={isPlatformAdmin}
+      />
 
       <BulkRoleAssignment
         open={showBulkRoleAssignment}
