@@ -365,7 +365,7 @@ Deno.serve(async (req) => {
       email,
       client_id,
       response_id: formResponse.token || formResponse.response_id || `tf_${Date.now()}`,
-      submission_ts: formResponse.submitted_at,
+      submission_ts: formResponse.submitted_at || formResponse.landed_at || new Date().toISOString(),
       overall_pct,
       si_pct,
       dm_pct,
@@ -387,8 +387,7 @@ Deno.serve(async (req) => {
         // Scoring metadata
         scoring_notes: scores.scoring_notes || null,
         qa_count: qaPairs.length,
-        // Raw data
-        raw_payload: payload,
+        // Metadata only (no raw_payload — too large)
         calculation_timestamp: new Date().toISOString(),
         webhook_request_id: requestId,
       },

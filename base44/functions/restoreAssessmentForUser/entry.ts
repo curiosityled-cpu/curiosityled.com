@@ -1,5 +1,10 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
+/**
+ * One-time admin utility to manually create an Assessment + trigger insights
+ * for a user whose webhook submission failed to persist.
+ * Requires Platform Admin role.
+ */
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -8,12 +13,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { email, scores } = await req.json();
+    const body = await req.json();
+    const { email, scores } = body;
+
+    if (!email || !scores) {
+      return Response.json({ error: 'email and scores required' }, { status: 400 });
+    }
 
     // Look up user's client_id
     const users = await base44.asServiceRole.entities.User.filter({ email });
-    const targetUser = users[0] || null;
-    const client_id = targetUser?.client_id || null;
+    const client_id = users[0]?.client_id || null;
 
     console.log(`Creating assessment for ${email}, client_id: ${client_id}`);
 
@@ -39,21 +48,37 @@ Deno.serve(async (req) => {
         qa_count: scores.qa_count || 0,
         restored: true,
         restored_at: new Date().toISOString(),
-        original_webhook_id: scores.original_webhook_id || null,
       }
     };
 
-    // Try with user-scoped client (Platform Admin has write access per RLS)
-    const assessment = await base44.entities.Assessment.create(assessmentData);
-    console.log('Assessment created (user-scoped):', assessment.id);
+    const assessment = await base44.asServiceRole.entities.Assessment.create(assessmentData);
+    console.log('Assessment created:', assessment.id);
 
-    // Verify it's readable
-    const verify = await base44.asServiceRole.entities.Assessment.filter({ id: assessment.id });
-    console.log('Verify read count:', verify.length);
+    // Now create the AssessmentInsights record directly (no need to trigger automation)
+    const insightData = {
+      assessment_id: assessment.id,
+      user_email: email,
+      client_id,
+      archetype: scores.archetype_label,
+      top_strengths: scores.top_strengths || [],
+      development_areas: scores.development_areas || [],
+      risk_flags: scores.risk_flags || [],
+      summary: scores.summary || scores.scoring_notes || '',
+      recommendations: scores.recommendations || [],
+      status: 'generated',
+    };
 
-    return Response.json({ success: true, assessment_id: assessment.id, email, client_id, verified: verify.length > 0 });
+    const insight = await base44.asServiceRole.entities.AssessmentInsights.create(insightData);
+    console.log('AssessmentInsights created:', insight.id);
+
+    return Response.json({
+      success: true,
+      assessment_id: assessment.id,
+      insight_id: insight.id,
+      email,
+    });
   } catch (error) {
-    console.error('Error:', error.message, error.stack);
+    console.error('Error:', error.message);
     return Response.json({ success: false, error: error.message }, { status: 500 });
   }
 });
