@@ -20,7 +20,7 @@ export default function EditUserModal({ open, onOpenChange, editingUser, setEdit
             <div>
               <Label>Full Name</Label>
               <Input
-                defaultValue={editingUser.full_name}
+                value={editingUser.full_name || ''}
                 onChange={(e) => setEditingUser({ ...editingUser, full_name: e.target.value })}
               />
               <p className="text-xs text-gray-400 mt-1">Read-only in the platform auth system — for display only</p>
@@ -34,7 +34,7 @@ export default function EditUserModal({ open, onOpenChange, editingUser, setEdit
             <div>
               <Label>Display Name</Label>
               <Input
-                defaultValue={editingUser.display_name || ''}
+                value={editingUser.display_name || ''}
                 onChange={(e) => setEditingUser({ ...editingUser, display_name: e.target.value })}
                 placeholder="Optional display name"
               />
@@ -85,27 +85,27 @@ export default function EditUserModal({ open, onOpenChange, editingUser, setEdit
 
             <div>
               <Label>Job Title</Label>
-              <Input defaultValue={editingUser.current_role} onChange={(e) => setEditingUser({ ...editingUser, current_role: e.target.value })} />
+              <Input value={editingUser.current_role || ''} onChange={(e) => setEditingUser({ ...editingUser, current_role: e.target.value })} />
             </div>
 
             <div>
               <Label>Department</Label>
-              <Input defaultValue={editingUser.department} onChange={(e) => setEditingUser({ ...editingUser, department: e.target.value })} />
+              <Input value={editingUser.department || ''} onChange={(e) => setEditingUser({ ...editingUser, department: e.target.value })} />
             </div>
 
             <div>
               <Label>Industry Sector</Label>
-              <Input defaultValue={editingUser.sector} onChange={(e) => setEditingUser({ ...editingUser, sector: e.target.value })} />
+              <Input value={editingUser.sector || ''} onChange={(e) => setEditingUser({ ...editingUser, sector: e.target.value })} />
             </div>
 
             <div>
               <Label>Manager Email</Label>
-              <Input type="email" defaultValue={editingUser.manager_email} onChange={(e) => setEditingUser({ ...editingUser, manager_email: e.target.value })} />
+              <Input type="email" value={editingUser.manager_email || ''} onChange={(e) => setEditingUser({ ...editingUser, manager_email: e.target.value })} />
             </div>
 
             <div>
               <Label>Start Date</Label>
-              <Input type="date" defaultValue={editingUser.start_date} onChange={(e) => setEditingUser({ ...editingUser, start_date: e.target.value })} />
+              <Input type="date" value={editingUser.start_date || ''} onChange={(e) => setEditingUser({ ...editingUser, start_date: e.target.value })} />
             </div>
 
             <div>
