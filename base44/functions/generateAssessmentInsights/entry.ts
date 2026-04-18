@@ -159,9 +159,14 @@ Deno.serve(async (req) => {
       `Archetype (rule-based): ${assessment.archetype_label ?? 'N/A'}`,
     ].join('\n');
 
-    const userBlock = userContext.full_name
-      ? `Leader: ${userContext.full_name}\nCurrent Role: ${userContext.current_role ?? 'Not specified'}\nDepartment: ${userContext.department ?? 'Not specified'}\nLeadership Level: ${userContext.leadership_level ?? 'Not specified'}\nSector: ${userContext.sector ?? 'Not specified'}`
-      : 'User context: not available';
+    // Only use full_name if it looks like a real name (not an email or email prefix)
+    const validName = userContext.full_name && !userContext.full_name.includes('@') && userContext.full_name.trim().length > 0
+      ? userContext.full_name
+      : null;
+
+    const userBlock = validName
+      ? `Leader: ${validName}\nCurrent Role: ${userContext.current_role ?? 'Not specified'}\nDepartment: ${userContext.department ?? 'Not specified'}\nLeadership Level: ${userContext.leadership_level ?? 'Not specified'}\nSector: ${userContext.sector ?? 'Not specified'}`
+      : 'User context: not available (refer to the leader generically in your response)';
 
     const prompt = `You are an expert leadership development coach analyzing a completed Leadership Index assessment.
 

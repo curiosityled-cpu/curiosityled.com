@@ -328,12 +328,15 @@ export default function MyLeadership() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const firstName = user?.full_name?.split(' ')[0] || 'Leader';
+  // Use full display name; fall back gracefully but never use email prefix
+  const displayName = user?.full_name && user.full_name.trim() && !user.full_name.includes('@')
+    ? user.full_name.split(' ')[0]
+    : 'there';
 
   return (
     <MVPPageLayout
       title="My Leadership"
-      subtitle={`Welcome back, ${firstName}. Here's your leadership snapshot.`}
+      subtitle={`Welcome back, ${displayName}. Here's your leadership snapshot.`}
     >
       {loadingInsight || loadingGoals || loadingAssignments ? (
         <LoadingSkeleton />
