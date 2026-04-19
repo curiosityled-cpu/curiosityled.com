@@ -148,108 +148,120 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
 
       {/* ── 1. Leadership Profile Hero ──────────────────────────── */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50">
-          <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-              {/* Left: Profile */}
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Leadership Profile{firstName ? ` for ${firstName}` : ""}
+        <Card className="border-0 shadow-lg overflow-hidden">
+          {/* Top banner */}
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-5">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-bold text-white">
+                  Leadership Profile{firstName ? ` · ${firstName}` : ""}
                 </h2>
                 {user?.current_role && (
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-indigo-200 text-sm mt-0.5">
                     {user.current_role}{user?.sector ? ` · ${user.sector}` : ""}
                   </p>
                 )}
-
+              </div>
+              <div className="flex items-center gap-3">
                 {hasInsight && storedInsight.archetype && (
-                  <div className="mt-4">
-                    <Badge className="bg-purple-100 text-purple-800 text-sm px-3 py-1 mb-3">
-                      {storedInsight.archetype}
-                    </Badge>
-                    <p className="text-gray-700 leading-relaxed text-sm mt-2">
-                      {storedInsight.summary || "Your personalized summary is ready."}
-                    </p>
-                  </div>
+                  <Badge className="bg-white/20 text-white border-white/30 border text-sm px-3 py-1">
+                    {storedInsight.archetype}
+                  </Badge>
                 )}
-
-                {!hasInsight && (
-                  <ProcessingPlaceholder label="Complete an assessment to generate your leadership profile." />
-                )}
-
-                {/* Strengths & Dev Areas inline */}
-                {hasInsight && (
-                  <div className="mt-4 grid sm:grid-cols-2 gap-4">
-                    {storedInsight.top_strengths?.length > 0 && (
-                      <div>
-                        <div className="flex items-center gap-1 mb-2">
-                          <Star className="w-4 h-4 text-green-600" />
-                          <span className="text-sm font-semibold text-green-800">Natural Strengths</span>
-                        </div>
-                        <ul className="space-y-1">
-                          {storedInsight.top_strengths.slice(0, 3).map((s, i) => (
-                            <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                              <CheckCircle className="w-3.5 h-3.5 text-green-500 mt-0.5 shrink-0" />
-                              {s}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {storedInsight.development_areas?.length > 0 && (
-                      <div>
-                        <div className="flex items-center gap-1 mb-2">
-                          <Target className="w-4 h-4 text-blue-600" />
-                          <span className="text-sm font-semibold text-blue-800">Primary Development Focus</span>
-                        </div>
-                        <ul className="space-y-1">
-                          {storedInsight.development_areas.slice(0, 3).map((d, i) => (
-                            <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                              <Lightbulb className="w-3.5 h-3.5 text-blue-500 mt-0.5 shrink-0" />
-                              {d}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                {latestAssessment?.overall_pct != null && (
+                  <div className="text-right shrink-0">
+                    <div className="text-3xl font-extrabold text-white leading-none">{latestAssessment.overall_pct}%</div>
+                    <div className="text-indigo-200 text-xs mt-0.5">Leadership Index</div>
                   </div>
                 )}
               </div>
+            </div>
+          </div>
 
-              {/* Right: Radar + Score */}
-              {radarData && (
-                <div className="md:w-72 shrink-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-semibold text-gray-700">Competency Scores</span>
-                    {latestAssessment?.overall_pct != null && (
-                      <div className="text-right">
-                        <span className="text-3xl font-bold text-indigo-700">{latestAssessment.overall_pct}%</span>
-                        <p className="text-xs text-gray-400">Leadership Index</p>
+          <CardContent className="p-0">
+            {!hasInsight && !latestAssessment ? (
+              <div className="px-6 py-8">
+                <ProcessingPlaceholder label="Complete an assessment to generate your leadership profile." />
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+
+                {/* Left: Summary + Strengths/Dev Areas */}
+                <div className="px-6 py-6 space-y-5">
+                  {hasInsight && storedInsight.summary && (
+                    <p className="text-gray-600 leading-relaxed text-sm">
+                      {storedInsight.summary}
+                    </p>
+                  )}
+
+                  <div className="grid sm:grid-cols-2 gap-5">
+                    {storedInsight?.top_strengths?.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="p-1.5 bg-green-100 rounded-md">
+                            <Star className="w-3.5 h-3.5 text-green-600" />
+                          </div>
+                          <span className="text-sm font-semibold text-gray-800">Natural Strengths</span>
+                        </div>
+                        <ul className="space-y-2">
+                          {storedInsight.top_strengths.slice(0, 3).map((s, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                              <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
+                              <span>{s}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {storedInsight?.development_areas?.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="p-1.5 bg-blue-100 rounded-md">
+                            <Target className="w-3.5 h-3.5 text-blue-600" />
+                          </div>
+                          <span className="text-sm font-semibold text-gray-800">Development Focus</span>
+                        </div>
+                        <ul className="space-y-2">
+                          {storedInsight.development_areas.slice(0, 3).map((d, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                              <Lightbulb className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
+                              <span>{d}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     )}
                   </div>
-                  <div className="h-52">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RadarChart data={radarData}>
-                        <PolarGrid />
-                        <PolarAngleAxis dataKey="competency" tick={{ fontSize: 11 }} />
-                        <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} />
-                        <Radar name="Your Score" dataKey="score" stroke="#6366f1" fill="#6366f1" fillOpacity={0.5} />
-                        <RechartsTooltip formatter={(v, n, p) => [`${v}%`, p.payload.fullName]} />
-                      </RadarChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
-                    {radarData.map((d) => (
-                      <div key={d.competency} className="flex items-center gap-1.5 text-xs text-gray-500">
-                        <span className="font-semibold text-gray-700">{d.competency}</span>
-                        <span>— {d.fullName}</span>
-                      </div>
-                    ))}
-                  </div>
                 </div>
-              )}
-            </div>
+
+                {/* Right: Radar chart + legend */}
+                {radarData && (
+                  <div className="px-6 py-6">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Competency Scores</p>
+                    <div className="h-56">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RadarChart data={radarData}>
+                          <PolarGrid stroke="#e5e7eb" />
+                          <PolarAngleAxis dataKey="competency" tick={{ fontSize: 12, fontWeight: 600, fill: "#6366f1" }} />
+                          <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
+                          <Radar name="Your Score" dataKey="score" stroke="#6366f1" fill="#6366f1" fillOpacity={0.35} strokeWidth={2} />
+                          <RechartsTooltip formatter={(v, n, p) => [`${v}%`, p.payload.fullName]} />
+                        </RadarChart>
+                      </ResponsiveContainer>
+                    </div>
+                    {/* Legend */}
+                    <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1.5 border-t border-gray-100 pt-3">
+                      {radarData.map((d) => (
+                        <div key={d.competency} className="flex items-center gap-2 text-xs text-gray-500">
+                          <span className="font-bold text-indigo-600 w-8 shrink-0">{d.competency}</span>
+                          <span>{d.fullName}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       </motion.div>
