@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Target, ChevronDown, ChevronUp, Plus, CheckCircle, Loader2, TrendingUp } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Target, ChevronDown, ChevronUp, Plus, CheckCircle, Loader2, TrendingUp, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -113,37 +113,58 @@ function RecommendedGoalCard({ rec, userEmail, onCreated }) {
   );
 }
 
-export default function RecommendedGoalsSection({ recommendations, userEmail, goals }) {
+export default function RecommendedGoalsSection({ recommendations, userEmail, goals, assessment }) {
+  const [enriched, setEnriched] = useState([]);
+  const [loading, setLoading]   = useState(true);
+
+  useEffect(() => {
+    if (recommendations?.length > 0) expandGoals();
+  }, [recommendations]);
+
+  const expandGoals = async () => {
+    setLoading(true);
+    try {
+      const result = await base44.functions.invoke("expandRecommendations", {
+        recommendations,
+        assessment: assessment ? {
+          overall_pct: assessment.overall_pct,
+          archetype_label: assessment.archetype_label,
+        } : null,
+      });
+      if (result?.data?.goals?.length > 0) {
+        setEnriched(result.data.goals.map(g => ({ ...g, progress: 0 })));
+      } else {
+        // simple fallback if AI fails
+        setEnriched(recommendations.map(rec => ({
+          title: rec.length > 80 ? rec.slice(0, 80) + "…" : rec,
+          description: rec,
+          type: "Development",
+          priority: "medium",
+          competency: "",
+          business_impact: "",
+          progress: 0,
+        })));
+      }
+    } catch {
+      setEnriched(recommendations.map(rec => ({
+        title: rec.length > 80 ? rec.slice(0, 80) + "…" : rec,
+        description: rec,
+        type: "Development",
+        priority: "medium",
+        competency: "",
+        business_impact: "",
+        progress: 0,
+      })));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!recommendations || recommendations.length === 0) return null;
 
   const completedCount = goals?.filter(g => g.status === "completed").length || 0;
   const totalGoals     = goals?.length || 0;
   const overallProgress = totalGoals > 0 ? Math.round((completedCount / totalGoals) * 100) : 0;
-
-  // Map raw recommendation strings into rich objects
-  const enriched = recommendations.map((rec, i) => {
-    const types       = ["Strategic", "Operational", "Development"];
-    const priorities  = ["high", "medium", "low"];
-    const competencies = ["Stakeholder Management", "Communication", "Situational Intelligence", "Decision Making", "Resource Management", "Performance Management"];
-    const impacts = [
-      "Increase project approval rate by 30%",
-      "Reduce meeting time by 25% through clearer communication",
-      "Improve team response time to market changes by 40%",
-      "Increase employee engagement scores by 15%",
-      "Reduce escalations by 20% through proactive stakeholder alignment",
-      "Drive 15% improvement in team output quality",
-    ];
-
-    return {
-      title:           rec.length > 80 ? rec.substring(0, 80) + "…" : rec,
-      description:     rec,
-      type:            types[i % types.length],
-      priority:        priorities[i % priorities.length],
-      competency:      competencies[i % competencies.length],
-      business_impact: impacts[i % impacts.length],
-      progress:        0,
-    };
-  });
 
   return (
     <Card className="border-0 shadow-lg">
@@ -155,13 +176,19 @@ export default function RecommendedGoalsSection({ recommendations, userEmail, go
             </div>
             <div>
               <CardTitle>Recommended Development Goals</CardTitle>
-              <p className="text-sm text-gray-500 mt-0.5">All suggested goals based on your assessment results</p>
+              <p className="text-sm text-gray-500 mt-0.5">AI-expanded development goals based on your assessment results</p>
             </div>
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {enriched.map((rec, i) => (
+        {loading ? (
+          <div className="flex items-center gap-2 py-6 text-gray-400 text-sm">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <Sparkles className="w-4 h-4 text-purple-400" />
+            AI is expanding your recommendations into structured goals...
+          </div>
+        ) : enriched.map((rec, i) => (
           <RecommendedGoalCard key={i} rec={rec} userEmail={userEmail} />
         ))}
 

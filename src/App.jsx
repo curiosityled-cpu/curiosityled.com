@@ -22,6 +22,7 @@ import Settings from './pages/Settings';
 import Notifications from './pages/Notifications';
 import PrivacySettings from './pages/PrivacySettings';
 import AdminDataRestore from './pages/AdminDataRestore';
+import OrgBusinessGoals from './pages/OrgBusinessGoals';
 import Insights from './pages/Insights';
 import ReportBuilder from './pages/ReportBuilder';
 import { AuthProvider as FullAuthProvider } from '@/components/useAuth';
@@ -103,6 +104,7 @@ const AuthenticatedApp = () => {
       <Route path="/Notifications" element={mvpRole ? <MVPPage><Notifications /></MVPPage> : <LayoutWrapper currentPageName="Notifications"><Notifications /></LayoutWrapper>} />
       <Route path="/PrivacySettings" element={mvpRole ? <MVPPage><PrivacySettings /></MVPPage> : <LayoutWrapper currentPageName="PrivacySettings"><PrivacySettings /></LayoutWrapper>} />
       <Route path="/AdminDataRestore" element={<AdminDataRestore />} />
+      <Route path="/OrgBusinessGoals" element={mvpRole ? <MVPPage><OrgBusinessGoals /></MVPPage> : <LayoutWrapper currentPageName="OrgBusinessGoals"><OrgBusinessGoals /></LayoutWrapper>} />
 
       {/* All other legacy pages — MVP users still get MVPLayout shell */}
       {Object.entries(Pages).map(([path, Page]) => (

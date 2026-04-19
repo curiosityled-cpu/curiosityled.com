@@ -40,6 +40,7 @@ import CompetencyExpandableCard from "./sections/CompetencyExpandableCard";
 import SuccessionReadinessSection from "./sections/SuccessionReadinessSection";
 import BusinessGoalsSection from "./sections/BusinessGoalsSection";
 import RecommendedGoalsSection from "./sections/RecommendedGoalsSection";
+import AssessmentTrendSection from "./sections/AssessmentTrendSection";
 
 function ProcessingPlaceholder({ label }) {
   return (
@@ -54,6 +55,7 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
   const [loading, setLoading]             = useState(true);
   const [storedInsight, setStoredInsight] = useState(null);
   const [latestAssessment, setLatestAssessment] = useState(null);
+  const [assessments, setAssessments]     = useState([]);
   const [goals, setGoals]                 = useState([]);
 
   useEffect(() => {
@@ -65,7 +67,7 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
     try {
       const [insights, assessments, goalList, assignedLearning, journeyEnrollments] = await Promise.all([
         base44.entities.AssessmentInsights.filter({ user_email: user.email, status: "generated" }, "-created_date", 1).catch(() => []),
-        base44.entities.Assessment.filter({ email: user.email }, "-submission_ts", 5).catch(() => []),
+        base44.entities.Assessment.filter({ email: user.email }, "-submission_ts", 10).catch(() => []),
         base44.entities.Goal.filter({ created_by: user.email }).catch(() => []),
         base44.entities.AssignedLearning.filter({ user_email: user.email }).catch(() => []),
         base44.entities.JourneyEnrollment.filter({ user_email: user.email }).catch(() => []),
@@ -75,6 +77,7 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
       const latest = assessments[0] || null;
       setStoredInsight(best);
       setLatestAssessment(latest);
+      setAssessments(assessments);
       setGoals(goalList);
 
       const completedGoals  = goalList.filter(g => g.status === "completed").length;
@@ -334,7 +337,12 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
             </CardHeader>
             <CardContent className="space-y-2">
               {competencies.map((c) => (
-                <CompetencyExpandableCard key={c.fieldKey} fieldKey={c.fieldKey} score={c.score} />
+                <CompetencyExpandableCard
+                  key={c.fieldKey}
+                  fieldKey={c.fieldKey}
+                  score={c.score}
+                  leadershipLevel={user?.leadership_level || null}
+                />
               ))}
             </CardContent>
           </Card>
@@ -353,7 +361,15 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
             recommendations={storedInsight.recommendations}
             userEmail={user?.email}
             goals={goals}
+            assessment={latestAssessment}
           />
+        </motion.div>
+      )}
+
+      {/* ── 5b. Assessment Trend (only if multiple assessments) ──── */}
+      {assessments.length >= 2 && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}>
+          <AssessmentTrendSection assessments={assessments} />
         </motion.div>
       )}
 
