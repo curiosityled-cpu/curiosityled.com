@@ -14,6 +14,7 @@ import {
   Zap,
   AlertTriangle,
   Star,
+  Eye,
   Clock,
   Loader2,
   CheckCircle,
@@ -245,9 +246,83 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
         </Card>
       </motion.div>
 
-      {/* ── 2+3. Understanding Your Competencies (with AI narrative summary) ── */}
-      {competencies.length > 0 && (
+      {/* ── 2. AI-Powered Insights (strengths / dev priority / quick tip / risk) ── */}
+      {hasInsight && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <Card className="border-0 shadow-lg">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-yellow-100 rounded-lg">
+                  <Sparkles className="w-5 h-5 text-yellow-600" />
+                </div>
+                <div>
+                  <CardTitle>AI-Powered Insights</CardTitle>
+                  <p className="text-sm text-gray-500 mt-0.5">Personalized analysis based on your leadership competency scores</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {/* Top strength */}
+              {storedInsight.top_strengths?.[0] && (
+                <div className="border border-green-200 rounded-xl p-4 bg-green-50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-green-600" />
+                      <span className="text-sm font-semibold text-green-800">Top Strength</span>
+                    </div>
+                    {latestAssessment?.pm_pct && <span className="text-sm text-green-700 font-bold">{latestAssessment.pm_pct}%</span>}
+                  </div>
+                  <p className="text-sm text-green-700 mt-2">{storedInsight.top_strengths[0]}</p>
+                </div>
+              )}
+
+              {/* Top development priority */}
+              {storedInsight.development_areas?.[0] && (
+                <div className="border border-amber-200 rounded-xl p-4 bg-amber-50">
+                  <div className="flex items-center gap-2 mb-1">
+                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                    <span className="text-sm font-semibold text-amber-800">Top Development Priority</span>
+                  </div>
+                  <p className="text-sm text-amber-700">{storedInsight.development_areas[0]}</p>
+                </div>
+              )}
+
+              {/* Quick tip */}
+              {storedInsight.recommendations?.[0] && (
+                <div className="border border-blue-200 rounded-xl p-4 bg-blue-50">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Zap className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-semibold text-blue-800">Your Quick Tip</span>
+                  </div>
+                  <p className="text-sm text-blue-700">{storedInsight.recommendations[0]}</p>
+                </div>
+              )}
+
+              {/* Risk flags */}
+              {storedInsight.risk_flags?.length > 0 && (
+                <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Eye className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm font-semibold text-gray-700">AI Analysis Note</span>
+                  </div>
+                  <ul className="space-y-1">
+                    {storedInsight.risk_flags.map((r, i) => (
+                      <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
+                        <AlertTriangle className="w-3.5 h-3.5 text-red-400 mt-0.5 shrink-0" />
+                        {r.replace(/_/g, " ")}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* ── 3. Understanding Your Competencies (expandable) ─────── */}
+      {competencies.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <Card className="border-0 shadow-lg">
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
@@ -256,91 +331,19 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
                 </div>
                 <div>
                   <CardTitle>Understanding Your Competencies</CardTitle>
-                  <p className="text-sm text-gray-500 mt-0.5">Each competency reflects specific leadership behaviors. Expand any to see details.</p>
+                  <p className="text-sm text-gray-500 mt-0.5">Each competency reflects specific leadership behaviors. Expand to see details.</p>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-
-              {/* AI Narrative Summary */}
-              {hasInsight && (
-                <div className="rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-purple-50 p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-indigo-500" />
-                    <span className="text-sm font-semibold text-indigo-800">AI-Powered Insight Summary</span>
-                  </div>
-
-                  {/* Narrative paragraph */}
-                  {storedInsight.summary && (
-                    <p className="text-sm text-gray-700 leading-relaxed">
-                      {storedInsight.summary}
-                    </p>
-                  )}
-
-                  <div className="grid sm:grid-cols-2 gap-3 pt-1">
-                    {/* Top strength */}
-                    {storedInsight.top_strengths?.[0] && (
-                      <div className="flex items-start gap-2 bg-green-50 border border-green-200 rounded-lg p-3">
-                        <TrendingUp className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
-                        <div>
-                          <p className="text-xs font-semibold text-green-800 mb-0.5">Where you excel</p>
-                          <p className="text-sm text-green-700">{storedInsight.top_strengths[0]}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Top development priority */}
-                    {storedInsight.development_areas?.[0] && (
-                      <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3">
-                        <Target className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-                        <div>
-                          <p className="text-xs font-semibold text-amber-800 mb-0.5">Priority growth area</p>
-                          <p className="text-sm text-amber-700">{storedInsight.development_areas[0]}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Actionable recommendation */}
-                  {storedInsight.recommendations?.[0] && (
-                    <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <Zap className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-xs font-semibold text-blue-800 mb-0.5">Recommended next step</p>
-                        <p className="text-sm text-blue-700">{storedInsight.recommendations[0]}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Risk flags */}
-                  {storedInsight.risk_flags?.length > 0 && (
-                    <div className="flex items-start gap-2 bg-gray-50 border border-gray-200 rounded-lg p-3">
-                      <AlertTriangle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-xs font-semibold text-gray-700 mb-1">Areas to watch</p>
-                        <ul className="space-y-0.5">
-                          {storedInsight.risk_flags.map((r, i) => (
-                            <li key={i} className="text-sm text-gray-600">{r.replace(/_/g, " ")}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Competency Cards */}
-              <div className="space-y-2">
-                {competencies.map((c) => (
-                  <CompetencyExpandableCard
-                    key={c.fieldKey}
-                    fieldKey={c.fieldKey}
-                    score={c.score}
-                    leadershipLevel={user?.leadership_level || null}
-                  />
-                ))}
-              </div>
-
+            <CardContent className="space-y-2">
+              {competencies.map((c) => (
+                <CompetencyExpandableCard
+                  key={c.fieldKey}
+                  fieldKey={c.fieldKey}
+                  score={c.score}
+                  leadershipLevel={user?.leadership_level || null}
+                />
+              ))}
             </CardContent>
           </Card>
         </motion.div>
