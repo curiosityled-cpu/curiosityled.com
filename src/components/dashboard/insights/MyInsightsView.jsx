@@ -150,7 +150,7 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <Card className="border-0 shadow-lg overflow-hidden">
           {/* Top banner */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-5">
+          <div className="px-6 py-5" style={{ background: 'linear-gradient(to right, #0012ff, #3b30ff)' }}>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <h2 className="text-xl font-bold text-white">
@@ -242,9 +242,9 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
                       <ResponsiveContainer width="100%" height="100%">
                         <RadarChart data={radarData}>
                           <PolarGrid stroke="#e5e7eb" />
-                          <PolarAngleAxis dataKey="competency" tick={{ fontSize: 12, fontWeight: 600, fill: "#6366f1" }} />
+                          <PolarAngleAxis dataKey="competency" tick={{ fontSize: 12, fontWeight: 600, fill: "#0012ff" }} />
                           <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
-                          <Radar name="Your Score" dataKey="score" stroke="#6366f1" fill="#6366f1" fillOpacity={0.35} strokeWidth={2} />
+                          <Radar name="Your Score" dataKey="score" stroke="#0012ff" fill="#0012ff" fillOpacity={0.25} strokeWidth={2} />
                           <RechartsTooltip formatter={(v, n, p) => [`${v}%`, p.payload.fullName]} />
                         </RadarChart>
                       </ResponsiveContainer>
@@ -253,7 +253,7 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
                     <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1.5 border-t border-gray-100 pt-3">
                       {radarData.map((d) => (
                         <div key={d.competency} className="flex items-center gap-2 text-xs text-gray-500">
-                          <span className="font-bold text-indigo-600 w-8 shrink-0">{d.competency}</span>
+                          <span className="font-bold w-8 shrink-0" style={{ color: '#0012ff' }}>{d.competency}</span>
                           <span>{d.fullName}</span>
                         </div>
                       ))}
