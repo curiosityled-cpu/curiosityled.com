@@ -3,30 +3,27 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import {
   Sparkles,
   TrendingUp,
   Target,
   BookOpen,
-  Award,
-  Brain,
-  Loader2,
   BarChart3,
-  Users,
-  CheckCircle,
-  ArrowRight,
   Map,
   Zap,
   AlertTriangle,
+  Star,
+  Eye,
+  Clock,
+  Loader2,
+  CheckCircle,
   ChevronDown,
   ChevronUp,
   Lightbulb,
-  Star,
-  Eye,
-  Clock
+  Brain,
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
 import {
   RadarChart,
@@ -35,128 +32,63 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   ResponsiveContainer,
-  Tooltip as RechartsTooltip
-} from 'recharts';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger
-} from "@/components/ui/collapsible";
+  Tooltip as RechartsTooltip,
+} from "recharts";
 
-// ─── Sub-components ───────────────────────────────────────────────
-
-function InsightCard({ insight, onAction }) {
-  const [expanded, setExpanded] = useState(false);
-
-  const badgeClass = {
-    high: 'bg-red-100 text-red-700',
-    medium: 'bg-amber-100 text-amber-700',
-    low: 'bg-green-100 text-green-700',
-  }[insight.priority?.toLowerCase()] || 'bg-gray-100 text-gray-700';
-
-  return (
-    <Collapsible open={expanded} onOpenChange={setExpanded}>
-      <div className="border rounded-lg bg-white hover:shadow-md transition-shadow">
-        <CollapsibleTrigger className="w-full">
-          <div className="p-4 flex items-start justify-between">
-            <div className="flex-1 text-left">
-              <h4 className="font-semibold text-gray-900">{insight.title}</h4>
-              <p className="text-sm text-gray-600 mt-1 line-clamp-2">{insight.description}</p>
-            </div>
-            <div className="flex items-center gap-2 ml-4">
-              <Badge className={badgeClass}>{insight.priority || 'Medium'}</Badge>
-              {expanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-            </div>
-          </div>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <div className="px-4 pb-4 pt-0">
-            {insight.recommended_action && (
-              <div className="bg-blue-50 rounded-lg p-3 mb-3">
-                <p className="text-sm text-blue-800">{insight.recommended_action}</p>
-              </div>
-            )}
-            <Button size="sm" variant="outline" onClick={() => onAction(insight.action_type || 'update_goals')} className="gap-2">
-              Take Action <ArrowRight className="w-3 h-3" />
-            </Button>
-          </div>
-        </CollapsibleContent>
-      </div>
-    </Collapsible>
-  );
-}
+// Section components
+import CompetencyExpandableCard from "./sections/CompetencyExpandableCard";
+import SuccessionReadinessSection from "./sections/SuccessionReadinessSection";
+import BusinessGoalsSection from "./sections/BusinessGoalsSection";
+import RecommendedGoalsSection from "./sections/RecommendedGoalsSection";
 
 function ProcessingPlaceholder({ label }) {
   return (
-    <div className="flex items-center gap-2 py-4 text-gray-400 text-sm">
+    <div className="flex items-center gap-2 py-6 text-gray-400 text-sm">
       <Clock className="w-4 h-4 shrink-0" />
-      <span>{label || 'Insights processing...'}</span>
+      <span>{label || "Insights processing..."}</span>
     </div>
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────
-
 export default function MyInsightsView({ user, onMetricsUpdate }) {
-  const [loading, setLoading] = useState(true);
-  // Stored AI insights from AssessmentInsights entity
+  const [loading, setLoading]             = useState(true);
   const [storedInsight, setStoredInsight] = useState(null);
-  // Computed metrics from backend (no OpenAI, just data math)
-  const [metrics, setMetrics] = useState(null);
-  // Raw assessment for competency radar
   const [latestAssessment, setLatestAssessment] = useState(null);
+  const [goals, setGoals]                 = useState([]);
 
   useEffect(() => {
-    if (user?.email) {
-      loadData();
-    }
+    if (user?.email) loadData();
   }, [user?.email]);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      // Parallel: stored insights + latest assessment + basic goal/learning counts
-      const [insights, assessments, goals, assignedLearning, journeyEnrollments] = await Promise.all([
-        base44.entities.AssessmentInsights.filter({ user_email: user.email, status: 'generated' }, '-created_date', 1).catch(() => []),
-        base44.entities.Assessment.filter({ email: user.email }, '-submission_ts', 5).catch(() => []),
+      const [insights, assessments, goalList, assignedLearning, journeyEnrollments] = await Promise.all([
+        base44.entities.AssessmentInsights.filter({ user_email: user.email, status: "generated" }, "-created_date", 1).catch(() => []),
+        base44.entities.Assessment.filter({ email: user.email }, "-submission_ts", 5).catch(() => []),
         base44.entities.Goal.filter({ created_by: user.email }).catch(() => []),
         base44.entities.AssignedLearning.filter({ user_email: user.email }).catch(() => []),
         base44.entities.JourneyEnrollment.filter({ user_email: user.email }).catch(() => []),
       ]);
 
-      const best = insights[0] || null;
-      setStoredInsight(best);
-
+      const best   = insights[0] || null;
       const latest = assessments[0] || null;
+      setStoredInsight(best);
       setLatestAssessment(latest);
+      setGoals(goalList);
 
-      // Compute simple metrics locally — no AI needed
-      const completedGoals = goals.filter(g => g.status === 'completed').length;
-      const goalCompletionRate = goals.length > 0 ? Math.round((completedGoals / goals.length) * 100) : 0;
-      const completedLearning = assignedLearning.filter(l => l.status === 'completed').length;
-      const learningRate = assignedLearning.length > 0 ? Math.round((completedLearning / assignedLearning.length) * 100) : 0;
-      const overdueGoals = goals.filter(g => g.status === 'overdue').length;
-
-      const computed = {
-        currentAssessmentScore: latest?.overall_pct ?? null,
-        goalCompletionRate,
-        learningRate,
-        overdueGoals,
-        activeGoals: goals.filter(g => ['active', 'at_risk', 'overdue'].includes(g.status)).length,
-        activeJourneys: journeyEnrollments.filter(j => j.status === 'in_progress').length,
-      };
-      setMetrics(computed);
+      const completedGoals  = goalList.filter(g => g.status === "completed").length;
+      const goalCompletionRate = goalList.length > 0 ? Math.round((completedGoals / goalList.length) * 100) : 0;
+      const completedLearning  = assignedLearning.filter(l => l.status === "completed").length;
+      const learningRate       = assignedLearning.length > 0 ? Math.round((completedLearning / assignedLearning.length) * 100) : 0;
+      const overdueGoals       = goalList.filter(g => g.status === "overdue").length;
 
       if (onMetricsUpdate) {
         const insightCount = (best?.top_strengths?.length || 0) + (best?.development_areas?.length || 0) + (best?.recommendations?.length || 0);
-        onMetricsUpdate({
-          totalInsights: insightCount,
-          actionItems: overdueGoals,
-          completionRate: goalCompletionRate,
-        });
+        onMetricsUpdate({ totalInsights: insightCount, actionItems: overdueGoals, completionRate: goalCompletionRate });
       }
     } catch (err) {
-      console.error('[MyInsightsView] Error loading data:', err);
+      console.error("[MyInsightsView] Error:", err);
     } finally {
       setLoading(false);
     }
@@ -164,292 +96,276 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
 
   const handleQuickAction = (action) => {
     const routes = {
-      take_assessment: 'LeadershipAssessment',
-      update_goals: 'Performance',
-      view_learning: 'LearningLibrary',
-      continue_journey: 'MyJourneys',
-      view_career_path: 'CareerPathExplorer',
-      update_profile: 'Profile',
+      take_assessment:  "LeadershipAssessment",
+      update_goals:     "Performance",
+      view_learning:    "LearningLibrary",
+      view_career_path: "CareerPathExplorer",
     };
     const page = routes[action];
     if (page) window.location.href = createPageUrl(page);
-    else toast.info('Action not implemented');
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex items-center justify-center py-16">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     );
   }
 
-  // ── Derive display data from stored insight ──────────────────────
   const hasInsight = !!storedInsight;
 
   const radarData = latestAssessment ? [
-    { competency: 'SI',   score: latestAssessment.si_pct   || 0, fullName: 'Situational Intelligence' },
-    { competency: 'DM',   score: latestAssessment.dm_pct   || 0, fullName: 'Decision Making' },
-    { competency: 'Comm', score: latestAssessment.comm_pct || 0, fullName: 'Communication' },
-    { competency: 'RM',   score: latestAssessment.rm_pct   || 0, fullName: 'Resource Management' },
-    { competency: 'SM',   score: latestAssessment.sm_pct   || 0, fullName: 'Stakeholder Management' },
-    { competency: 'PM',   score: latestAssessment.pm_pct   || 0, fullName: 'Performance Management' },
+    { competency: "SI",   score: latestAssessment.si_pct   || 0, fullName: "Situational Intelligence" },
+    { competency: "DM",   score: latestAssessment.dm_pct   || 0, fullName: "Decision Making" },
+    { competency: "Comm", score: latestAssessment.comm_pct || 0, fullName: "Communication" },
+    { competency: "RM",   score: latestAssessment.rm_pct   || 0, fullName: "Resource Management" },
+    { competency: "SM",   score: latestAssessment.sm_pct   || 0, fullName: "Stakeholder Management" },
+    { competency: "PM",   score: latestAssessment.pm_pct   || 0, fullName: "Performance Management" },
   ] : null;
 
-  // Build insight cards from stored data
-  const insightCards = hasInsight ? [
-    storedInsight.summary && {
-      title: 'Your Leadership Profile',
-      description: storedInsight.summary,
-      priority: 'medium',
-      action_type: 'take_assessment',
-    },
-    ...(storedInsight.recommendations || []).slice(0, 3).map(rec => ({
-      title: 'Recommendation',
-      description: rec,
-      priority: 'medium',
-      action_type: 'view_learning',
-    })),
-  ].filter(Boolean) : [];
+  const competencies = latestAssessment ? [
+    { fieldKey: "si",   score: latestAssessment.si_pct   || 0 },
+    { fieldKey: "dm",   score: latestAssessment.dm_pct   || 0 },
+    { fieldKey: "comm", score: latestAssessment.comm_pct || 0 },
+    { fieldKey: "rm",   score: latestAssessment.rm_pct   || 0 },
+    { fieldKey: "sm",   score: latestAssessment.sm_pct   || 0 },
+    { fieldKey: "pm",   score: latestAssessment.pm_pct   || 0 },
+  ] : [];
+
+  // First name for greeting
+  const firstName = (() => {
+    const name = user?.full_name || "";
+    if (!name || name.includes("@")) return null;
+    return name.split(" ")[0];
+  })();
 
   return (
     <div className="space-y-6">
 
-      {/* ── Leader Profile (stored AI) ──────────────────────────── */}
+      {/* ── 1. Leadership Profile Hero ──────────────────────────── */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-        <Card className="border-0 shadow-lg bg-gradient-to-r from-purple-50 to-blue-50">
-          <CardHeader className="pb-2">
-            <div className="flex items-start justify-between">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50">
+          <CardContent className="pt-6">
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+              {/* Left: Profile */}
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Leadership Profile{firstName ? ` for ${firstName}` : ""}
+                </h2>
+                {user?.current_role && (
+                  <p className="text-sm text-gray-500 mt-1">
+                    {user.current_role}{user?.sector ? ` · ${user.sector}` : ""}
+                  </p>
+                )}
+
+                {hasInsight && storedInsight.archetype && (
+                  <div className="mt-4">
+                    <Badge className="bg-purple-100 text-purple-800 text-sm px-3 py-1 mb-3">
+                      {storedInsight.archetype}
+                    </Badge>
+                    <p className="text-gray-700 leading-relaxed text-sm mt-2">
+                      {storedInsight.summary || "Your personalized summary is ready."}
+                    </p>
+                  </div>
+                )}
+
+                {!hasInsight && (
+                  <ProcessingPlaceholder label="Complete an assessment to generate your leadership profile." />
+                )}
+
+                {/* Strengths & Dev Areas inline */}
+                {hasInsight && (
+                  <div className="mt-4 grid sm:grid-cols-2 gap-4">
+                    {storedInsight.top_strengths?.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-1 mb-2">
+                          <Star className="w-4 h-4 text-green-600" />
+                          <span className="text-sm font-semibold text-green-800">Natural Strengths</span>
+                        </div>
+                        <ul className="space-y-1">
+                          {storedInsight.top_strengths.slice(0, 3).map((s, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                              <CheckCircle className="w-3.5 h-3.5 text-green-500 mt-0.5 shrink-0" />
+                              {s}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {storedInsight.development_areas?.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-1 mb-2">
+                          <Target className="w-4 h-4 text-blue-600" />
+                          <span className="text-sm font-semibold text-blue-800">Primary Development Focus</span>
+                        </div>
+                        <ul className="space-y-1">
+                          {storedInsight.development_areas.slice(0, 3).map((d, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                              <Lightbulb className="w-3.5 h-3.5 text-blue-500 mt-0.5 shrink-0" />
+                              {d}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Right: Radar + Score */}
+              {radarData && (
+                <div className="md:w-72 shrink-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-semibold text-gray-700">Competency Scores</span>
+                    {latestAssessment?.overall_pct != null && (
+                      <div className="text-right">
+                        <span className="text-3xl font-bold text-indigo-700">{latestAssessment.overall_pct}%</span>
+                        <p className="text-xs text-gray-400">Leadership Index</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="h-52">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart data={radarData}>
+                        <PolarGrid />
+                        <PolarAngleAxis dataKey="competency" tick={{ fontSize: 11 }} />
+                        <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} />
+                        <Radar name="Your Score" dataKey="score" stroke="#6366f1" fill="#6366f1" fillOpacity={0.5} />
+                        <RechartsTooltip formatter={(v, n, p) => [`${v}%`, p.payload.fullName]} />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* ── 2. AI-Powered Insights (strengths / dev priority / quick tip / risk) ── */}
+      {hasInsight && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <Card className="border-0 shadow-lg">
+            <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Sparkles className="w-5 h-5 text-purple-600" />
+                <div className="p-2 bg-yellow-100 rounded-lg">
+                  <Sparkles className="w-5 h-5 text-yellow-600" />
                 </div>
                 <div>
-                  <CardTitle>Your Leader Profile</CardTitle>
-                  <p className="text-sm text-gray-500 mt-0.5">Derived from your latest assessment</p>
+                  <CardTitle>AI-Powered Insights</CardTitle>
+                  <p className="text-sm text-gray-500 mt-0.5">Personalized analysis based on your leadership competency scores</p>
                 </div>
               </div>
-              {hasInsight && storedInsight.archetype && (
-                <Badge className="bg-purple-100 text-purple-800 text-sm px-3 py-1">
-                  {storedInsight.archetype}
-                </Badge>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {/* Top strength */}
+              {storedInsight.top_strengths?.[0] && (
+                <div className="border border-green-200 rounded-xl p-4 bg-green-50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-green-600" />
+                      <span className="text-sm font-semibold text-green-800">Top Strength</span>
+                    </div>
+                    {latestAssessment?.pm_pct && <span className="text-sm text-green-700 font-bold">{latestAssessment.pm_pct}%</span>}
+                  </div>
+                  <p className="text-sm text-green-700 mt-2">{storedInsight.top_strengths[0]}</p>
+                </div>
               )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {hasInsight ? (
-              <p className="text-gray-700 leading-relaxed">
-                {storedInsight.summary || 'Your personalized summary is ready.'}
-              </p>
-            ) : (
-              <ProcessingPlaceholder label="Insights processing... Complete an assessment to generate your leader profile." />
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
 
-      {/* ── Insights Cards ──────────────────────────────────────── */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-        <Card className="border-0 shadow-lg">
-          <CardHeader className="pb-2">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Brain className="w-5 h-5 text-purple-600" />
-              </div>
-              <div>
-                <CardTitle>AI-Generated Insights</CardTitle>
-                <p className="text-sm text-gray-500 mt-0.5">Personalized recommendations based on your assessment</p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {insightCards.length > 0 ? (
-              <div className="space-y-3">
-                {insightCards.map((insight, idx) => (
-                  <InsightCard key={idx} insight={insight} onAction={handleQuickAction} />
-                ))}
-              </div>
-            ) : (
-              <ProcessingPlaceholder label="Insights processing... Complete your assessment to unlock personalized recommendations." />
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
+              {/* Top development priority */}
+              {storedInsight.development_areas?.[0] && (
+                <div className="border border-amber-200 rounded-xl p-4 bg-amber-50">
+                  <div className="flex items-center gap-2 mb-1">
+                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                    <span className="text-sm font-semibold text-amber-800">Top Development Priority</span>
+                  </div>
+                  <p className="text-sm text-amber-700">{storedInsight.development_areas[0]}</p>
+                </div>
+              )}
 
-      {/* ── Strengths / Development / Risk Flags ────────────────── */}
-      <div className="grid md:grid-cols-3 gap-4">
-        {/* Strengths */}
+              {/* Quick tip */}
+              {storedInsight.recommendations?.[0] && (
+                <div className="border border-blue-200 rounded-xl p-4 bg-blue-50">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Zap className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-semibold text-blue-800">Your Quick Tip</span>
+                  </div>
+                  <p className="text-sm text-blue-700">{storedInsight.recommendations[0]}</p>
+                </div>
+              )}
+
+              {/* Risk flags */}
+              {storedInsight.risk_flags?.length > 0 && (
+                <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Eye className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm font-semibold text-gray-700">AI Analysis Note</span>
+                  </div>
+                  <ul className="space-y-1">
+                    {storedInsight.risk_flags.map((r, i) => (
+                      <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
+                        <AlertTriangle className="w-3.5 h-3.5 text-red-400 mt-0.5 shrink-0" />
+                        {r.replace(/_/g, " ")}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* ── 3. Understanding Your Competencies (expandable) ─────── */}
+      {competencies.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <Card className="border-0 shadow-lg h-full border-l-4 border-l-green-500">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <Star className="w-5 h-5 text-green-600" />
-                <CardTitle className="text-base">Your Strengths</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {hasInsight && storedInsight.top_strengths?.length > 0 ? (
-                <ul className="space-y-2">
-                  {storedInsight.top_strengths.map((s, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm">
-                      <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span>{s}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <ProcessingPlaceholder />
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Development Areas */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <Card className="border-0 shadow-lg h-full border-l-4 border-l-amber-500">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <Lightbulb className="w-5 h-5 text-amber-600" />
-                <CardTitle className="text-base">Development Areas</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {hasInsight && storedInsight.development_areas?.length > 0 ? (
-                <ul className="space-y-2">
-                  {storedInsight.development_areas.map((d, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm">
-                      <Target className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                      <span>{d}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <ProcessingPlaceholder />
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Risk Flags */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <Card className="border-0 shadow-lg h-full border-l-4 border-l-red-500">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <Eye className="w-5 h-5 text-red-600" />
-                <CardTitle className="text-base">Watch Areas</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {hasInsight && storedInsight.risk_flags?.length > 0 ? (
-                <ul className="space-y-2">
-                  {storedInsight.risk_flags.map((r, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm">
-                      <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-                      <span>{r.replace(/_/g, ' ')}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <ProcessingPlaceholder />
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-
-      {/* ── Performance Metrics (computed locally) ──────────────── */}
-      {metrics && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
           <Card className="border-0 shadow-lg">
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <TrendingUp className="w-5 h-5 text-blue-600" />
+                <div className="p-2 bg-indigo-100 rounded-lg">
+                  <Brain className="w-5 h-5 text-indigo-600" />
                 </div>
-                <CardTitle>Performance Snapshot</CardTitle>
+                <div>
+                  <CardTitle>Understanding Your Competencies</CardTitle>
+                  <p className="text-sm text-gray-500 mt-0.5">Each competency reflects specific leadership behaviors. Expand to see details.</p>
+                </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-gray-900">
-                    {metrics.currentAssessmentScore != null ? `${metrics.currentAssessmentScore}%` : '—'}
-                  </div>
-                  <div className="text-sm text-gray-600 mt-1">Assessment Score</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-gray-900">{metrics.goalCompletionRate}%</div>
-                  <div className="text-sm text-gray-600 mt-1">Goal Completion</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-gray-900">{metrics.learningRate}%</div>
-                  <div className="text-sm text-gray-600 mt-1">Learning Completion</div>
-                </div>
-                <div className="text-center">
-                  <div className={`text-3xl font-bold ${metrics.overdueGoals > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                    {metrics.overdueGoals}
-                  </div>
-                  <div className="text-sm text-gray-600 mt-1">Overdue Goals</div>
-                </div>
-              </div>
+            <CardContent className="space-y-2">
+              {competencies.map((c) => (
+                <CompetencyExpandableCard key={c.fieldKey} fieldKey={c.fieldKey} score={c.score} />
+              ))}
             </CardContent>
           </Card>
         </motion.div>
       )}
 
-      {/* ── Competency Radar (from raw assessment scores) ───────── */}
-      {radarData && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="w-5 h-5 text-purple-600" />
-                Competency Profile
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart data={radarData}>
-                    <PolarGrid />
-                    <PolarAngleAxis dataKey="competency" />
-                    <PolarRadiusAxis angle={90} domain={[0, 100]} />
-                    <Radar name="Your Scores" dataKey="score" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.6} />
-                    <RechartsTooltip formatter={(value, name, props) => [`${value}%`, props.payload.fullName]} />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
+      {/* ── 4. Business Goals Your Development Supports ─────────── */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+        <BusinessGoalsSection user={user} />
+      </motion.div>
 
-      {/* ── Recommendations (from stored insight) ───────────────── */}
+      {/* ── 5. Recommended Development Goals (actionable) ───────── */}
       {hasInsight && storedInsight.recommendations?.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
-          <Card className="border-0 shadow-lg border-l-4 border-l-blue-500">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="w-5 h-5 text-blue-600" />
-                Recommended Next Steps
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-3">
-                {storedInsight.recommendations.map((rec, idx) => (
-                  <li key={idx} className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                    <CheckCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-blue-900">{rec}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <RecommendedGoalsSection
+            recommendations={storedInsight.recommendations}
+            userEmail={user?.email}
+            goals={goals}
+          />
         </motion.div>
       )}
 
-      {/* ── Quick Actions ────────────────────────────────────────── */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+      {/* ── 6. Succession Readiness Profile ─────────────────────── */}
+      {latestAssessment && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+          <SuccessionReadinessSection user={user} assessment={latestAssessment} />
+        </motion.div>
+      )}
+
+      {/* ── 7. Quick Actions footer ──────────────────────────────── */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
         <Card className="border-0 shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -458,23 +374,23 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid md:grid-cols-4 gap-3">
-              <Button variant="outline" className="h-auto py-4 flex-col items-start hover:bg-blue-50" onClick={() => handleQuickAction('update_goals')}>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <Button variant="outline" className="h-auto py-4 flex-col items-start hover:bg-blue-50" onClick={() => handleQuickAction("update_goals")}>
                 <Target className="w-5 h-5 text-blue-600 mb-2" />
                 <span className="font-semibold">Update Goals</span>
                 <span className="text-xs text-gray-500 mt-1">Track your progress</span>
               </Button>
-              <Button variant="outline" className="h-auto py-4 flex-col items-start hover:bg-purple-50" onClick={() => handleQuickAction('take_assessment')}>
+              <Button variant="outline" className="h-auto py-4 flex-col items-start hover:bg-purple-50" onClick={() => handleQuickAction("take_assessment")}>
                 <BarChart3 className="w-5 h-5 text-purple-600 mb-2" />
                 <span className="font-semibold">Take Assessment</span>
                 <span className="text-xs text-gray-500 mt-1">Measure your growth</span>
               </Button>
-              <Button variant="outline" className="h-auto py-4 flex-col items-start hover:bg-green-50" onClick={() => handleQuickAction('view_learning')}>
+              <Button variant="outline" className="h-auto py-4 flex-col items-start hover:bg-green-50" onClick={() => handleQuickAction("view_learning")}>
                 <BookOpen className="w-5 h-5 text-green-600 mb-2" />
                 <span className="font-semibold">Browse Learning</span>
                 <span className="text-xs text-gray-500 mt-1">Find resources</span>
               </Button>
-              <Button variant="outline" className="h-auto py-4 flex-col items-start hover:bg-indigo-50" onClick={() => handleQuickAction('view_career_path')}>
+              <Button variant="outline" className="h-auto py-4 flex-col items-start hover:bg-indigo-50" onClick={() => handleQuickAction("view_career_path")}>
                 <Map className="w-5 h-5 text-indigo-600 mb-2" />
                 <span className="font-semibold">Explore Careers</span>
                 <span className="text-xs text-gray-500 mt-1">Plan your path</span>

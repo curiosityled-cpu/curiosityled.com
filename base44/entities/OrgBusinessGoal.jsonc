@@ -1,0 +1,97 @@
+{
+  "name": "OrgBusinessGoal",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client organization this goal belongs to"
+    },
+    "title": {
+      "type": "string",
+      "description": "Business goal title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the business goal"
+    },
+    "target_metric": {
+      "type": "string",
+      "description": "Measurable target (e.g., 'Increase Q1 Customer Satisfaction to 4.2/5')"
+    },
+    "progress": {
+      "type": "number",
+      "default": 0,
+      "description": "Progress percentage (0-100)"
+    },
+    "linked_competencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Competency names that support this business goal (e.g., 'Communication', 'Decision Making')"
+    },
+    "business_impact": {
+      "type": "string",
+      "description": "Expected business impact or value (e.g., '$400K revenue retention')"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Target completion date for this business goal"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this goal is currently active and visible to users"
+    },
+    "quarter": {
+      "type": "string",
+      "description": "Quarter label (e.g., 'Q1 2025', 'Q2 2025')"
+    }
+  },
+  "required": [
+    "client_id",
+    "title"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "is_active": true,
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}
