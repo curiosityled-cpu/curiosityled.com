@@ -1,15 +1,16 @@
 /**
  * MVPPageLayout — consistent page shell for all MVP pages.
- * - Fluid width (no hard max-w) so it breathes with collapsed/expanded sidebar in Teams.
- * - Clean header slot + optional action slot.
- * - Consistent padding, background, and spacing.
+ * Expands/contracts fluidly as the sidebar collapses/expands.
  */
 import React from "react";
+import { useSidebar } from "./MVPLayout";
 
 export default function MVPPageLayout({ title, subtitle, action, children }) {
+  const { collapsed } = useSidebar();
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+    <div className="min-h-screen bg-gray-50 transition-all duration-200">
+      <div className={`w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 transition-all duration-200 ${collapsed ? 'max-w-6xl' : 'max-w-4xl'}`}>
         {/* Page header */}
         {(title || action) && (
           <div className="flex items-start justify-between gap-4">

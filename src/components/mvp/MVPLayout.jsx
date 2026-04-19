@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, createContext, useContext } from "react";
+
+export const SidebarContext = createContext({ collapsed: false });
+export const useSidebar = () => useContext(SidebarContext);
 
 import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
@@ -141,6 +144,7 @@ export default function MVPLayout({ children }) {
   const sidebarWidth = collapsed ? 'w-16' : 'w-64';
 
   return (
+    <SidebarContext.Provider value={{ collapsed }}>
     <div className="min-h-screen bg-gray-50 flex">
       {/* Desktop Sidebar */}
       <aside className={`hidden md:flex flex-col ${sidebarWidth} bg-white border-r border-gray-200 fixed inset-y-0 left-0 z-20 transition-all duration-200`}>
@@ -386,6 +390,7 @@ export default function MVPLayout({ children }) {
         
         </FullAuthProvider>
       }
-    </div>);
+    </div>
+    </SidebarContext.Provider>);
 
 }
