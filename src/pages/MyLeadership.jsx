@@ -27,85 +27,78 @@ function InsightCard({ insight, user }) {
 
   return (
     <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 pt-5 pb-3">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-[#0202ff]" />
-          <span className="text-base font-semibold text-gray-900">My Leadership Insight</span>
+      <CardHeader className="pb-3 pt-5 px-6">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[#0202ff]" />
+            My Leadership Insight
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${riskStyle}`}>
+              {riskLabel}
+            </span>
+            <Button variant="outline" size="sm" className="text-xs h-7 border-[#0202ff]/30 text-[#0202ff] hover:bg-blue-50" onClick={() => setShowShare(true)}>
+              <Share2 className="w-3 h-3 mr-1" /> Share
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${riskStyle}`}>{riskLabel}</span>
-          <Button variant="outline" size="sm" className="text-xs h-7 border-[#0202ff]/30 text-[#0202ff] hover:bg-blue-50" onClick={() => setShowShare(true)}>
-            <Share2 className="w-3 h-3 mr-1" /> Share
-          </Button>
-        </div>
-      </div>
-
-      <CardContent className="space-y-4 px-6 pb-5">
-        {/* Archetype */}
+      </CardHeader>
+      <CardContent className="space-y-5 px-6 pb-6">
         {insight.archetype && (
           <div className="bg-gradient-to-br from-[#0202ff]/5 to-blue-50 rounded-xl p-4 border border-[#0202ff]/10">
             <p className="text-xs text-[#0202ff] font-semibold uppercase tracking-wider mb-1">Your Leadership Archetype</p>
-            <p className="text-lg font-bold text-gray-900">{insight.archetype}</p>
+            <p className="text-xl font-bold text-gray-900">{insight.archetype}</p>
           </div>
         )}
-
-        {/* Summary */}
         {insight.summary && (
           <p className="text-sm text-gray-600 leading-relaxed">{insight.summary}</p>
         )}
-
-        {/* Strengths + Growth */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {insight.top_strengths?.length > 0 && (
-            <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
-              <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <Star className="w-3 h-3" /> Core Strengths
+            <div className="bg-gray-50 rounded-xl p-4">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                <Star className="w-3.5 h-3.5 text-amber-500" /> Core Strengths
               </p>
-              <ul className="space-y-1.5">
+              <ul className="space-y-2">
                 {insight.top_strengths.slice(0, 3).map((s, i) => (
-                  <li key={i} className="text-xs text-gray-700 flex items-start gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1 flex-shrink-0" />{s}
+                  <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0" />{s}
                   </li>
                 ))}
               </ul>
             </div>
           )}
           {insight.development_areas?.length > 0 && (
-            <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
-              <p className="text-xs font-semibold text-blue-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <TrendingUp className="w-3 h-3" /> Growth Areas
+            <div className="bg-gray-50 rounded-xl p-4">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                <TrendingUp className="w-3.5 h-3.5 text-blue-500" /> Growth Areas
               </p>
-              <ul className="space-y-1.5">
+              <ul className="space-y-2">
                 {insight.development_areas.slice(0, 3).map((d, i) => (
-                  <li key={i} className="text-xs text-gray-700 flex items-start gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1 flex-shrink-0" />{d}
+                  <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 flex-shrink-0" />{d}
                   </li>
                 ))}
               </ul>
             </div>
           )}
         </div>
-
-        {/* Focus tip */}
         {insight.recommendations?.[0] && (
-          <div className="bg-amber-50 border border-amber-100 rounded-xl p-3">
-            <p className="text-xs font-semibold text-amber-700 mb-1 flex items-center gap-1.5">
+          <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
+            <p className="text-xs font-semibold text-amber-700 mb-1.5 flex items-center gap-1.5">
               <Zap className="w-3.5 h-3.5" /> Focus This Week
             </p>
             <p className="text-sm text-gray-800 leading-relaxed">{insight.recommendations[0]}</p>
           </div>
         )}
       </CardContent>
-
       <div className="px-6 pb-5">
         <Link to="/Insights">
-          <Button variant="outline" className="w-full text-[#0202ff] border-[#0202ff]/30 hover:bg-blue-50 text-sm">
+          <Button variant="outline" className="w-full text-[#0202ff] border-[#0202ff]/30 hover:bg-blue-50">
             View Full Insights <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
         </Link>
       </div>
-
       <ShareResultsModal isOpen={showShare} onClose={() => setShowShare(false)} insight={insight} user={user} />
     </Card>
   );
