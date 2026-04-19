@@ -239,6 +239,14 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
                       </RadarChart>
                     </ResponsiveContainer>
                   </div>
+                  <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
+                    {radarData.map((d) => (
+                      <div key={d.competency} className="flex items-center gap-1.5 text-xs text-gray-500">
+                        <span className="font-semibold text-gray-700">{d.competency}</span>
+                        <span>— {d.fullName}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
