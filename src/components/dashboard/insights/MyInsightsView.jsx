@@ -41,6 +41,7 @@ import SuccessionReadinessSection from "./sections/SuccessionReadinessSection";
 import BusinessGoalsSection from "./sections/BusinessGoalsSection";
 import RecommendedGoalsSection from "./sections/RecommendedGoalsSection";
 import AssessmentTrendSection from "./sections/AssessmentTrendSection";
+import CompetencyLearningSection from "@/components/mvp/CompetencyLearningSection";
 
 function ProcessingPlaceholder({ label }) {
   return (
@@ -118,13 +119,16 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
 
   const hasInsight = !!storedInsight;
 
+  // Industry benchmarks (Corporate sector, First-Line manager level targets)
+  const BENCHMARKS = { SI: 68, DM: 70, Comm: 72, RM: 71, SM: 72, PM: 69 };
+
   const radarData = latestAssessment ? [
-    { competency: "SI",   score: latestAssessment.si_pct   || 0, fullName: "Situational Intelligence" },
-    { competency: "DM",   score: latestAssessment.dm_pct   || 0, fullName: "Decision Making" },
-    { competency: "Comm", score: latestAssessment.comm_pct || 0, fullName: "Communication" },
-    { competency: "RM",   score: latestAssessment.rm_pct   || 0, fullName: "Resource Management" },
-    { competency: "SM",   score: latestAssessment.sm_pct   || 0, fullName: "Stakeholder Management" },
-    { competency: "PM",   score: latestAssessment.pm_pct   || 0, fullName: "Performance Management" },
+    { competency: "SI",   score: latestAssessment.si_pct   || 0, benchmark: BENCHMARKS.SI,   fullName: "Situational Intelligence" },
+    { competency: "DM",   score: latestAssessment.dm_pct   || 0, benchmark: BENCHMARKS.DM,   fullName: "Decision Making" },
+    { competency: "Comm", score: latestAssessment.comm_pct || 0, benchmark: BENCHMARKS.Comm, fullName: "Communication" },
+    { competency: "RM",   score: latestAssessment.rm_pct   || 0, benchmark: BENCHMARKS.RM,   fullName: "Resource Management" },
+    { competency: "SM",   score: latestAssessment.sm_pct   || 0, benchmark: BENCHMARKS.SM,   fullName: "Stakeholder Management" },
+    { competency: "PM",   score: latestAssessment.pm_pct   || 0, benchmark: BENCHMARKS.PM,   fullName: "Performance Management" },
   ] : null;
 
   const competencies = latestAssessment ? [
@@ -237,15 +241,26 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
                 {/* Right: Radar chart + legend */}
                 {radarData && (
                   <div className="px-6 py-6">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Competency Scores</p>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Competency Scores</p>
+                    <div className="flex items-center gap-4 mb-3">
+                      <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                        <span className="inline-block w-3 h-0.5 rounded" style={{ backgroundColor: '#0012ff' }} />
+                        Your Score
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                        <span className="inline-block w-3 h-0.5 rounded border-dashed border border-amber-500" style={{ backgroundColor: 'transparent' }} />
+                        Industry Benchmark
+                      </div>
+                    </div>
                     <div className="h-56">
                       <ResponsiveContainer width="100%" height="100%">
                         <RadarChart data={radarData}>
                           <PolarGrid stroke="#e5e7eb" />
                           <PolarAngleAxis dataKey="competency" tick={{ fontSize: 12, fontWeight: 600, fill: "#0012ff" }} />
                           <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
+                          <Radar name="Industry Benchmark" dataKey="benchmark" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.08} strokeWidth={1.5} strokeDasharray="4 3" />
                           <Radar name="Your Score" dataKey="score" stroke="#0012ff" fill="#0012ff" fillOpacity={0.25} strokeWidth={2} />
-                          <RechartsTooltip formatter={(v, n, p) => [`${v}%`, p.payload.fullName]} />
+                          <RechartsTooltip formatter={(v, n, p) => [`${v}%`, n === "Your Score" ? p.payload.fullName : `${p.payload.fullName} Benchmark`]} />
                         </RadarChart>
                       </ResponsiveContainer>
                     </div>
@@ -254,7 +269,7 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
                       {radarData.map((d) => (
                         <div key={d.competency} className="flex items-center gap-2 text-xs text-gray-500">
                           <span className="font-bold w-8 shrink-0" style={{ color: '#0012ff' }}>{d.competency}</span>
-                          <span>{d.fullName}</span>
+                          <span>{d.score}% <span className="text-gray-400">/ {d.benchmark}% target</span></span>
                         </div>
                       ))}
                     </div>
@@ -318,6 +333,11 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
           <AssessmentTrendSection assessments={assessments} />
         </motion.div>
       )}
+
+      {/* ── 5c. LinkedIn Learning Courses ────────────────────────── */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }}>
+        <CompetencyLearningSection user={user} assessmentScores={latestAssessment} />
+      </motion.div>
 
       {/* ── 6. Succession Readiness Profile ─────────────────────── */}
       {latestAssessment && (
