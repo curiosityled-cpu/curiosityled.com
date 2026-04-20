@@ -217,6 +217,11 @@ function CompetencyManagement() {
   };
 
   const handleCreate = async () => {
+    const total = (formData.key_components || []).reduce((sum, c) => sum + (Number(c.weight) || 0), 0);
+    if (formData.key_components?.length > 0 && total !== 100) {
+      toast.error(`Key component weights must add up to 100% (currently ${total}%)`);
+      return;
+    }
     try {
       await base44.entities.Competency.create(formData);
       toast.success('Competency created');
@@ -229,6 +234,11 @@ function CompetencyManagement() {
   };
 
   const handleUpdate = async () => {
+    const total = (formData.key_components || []).reduce((sum, c) => sum + (Number(c.weight) || 0), 0);
+    if (formData.key_components?.length > 0 && total !== 100) {
+      toast.error(`Key component weights must add up to 100% (currently ${total}%)`);
+      return;
+    }
     try {
       await base44.entities.Competency.update(editingCompetency.id, formData);
       toast.success('Competency updated');
