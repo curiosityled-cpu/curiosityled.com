@@ -8,7 +8,7 @@ import { base44 } from "@/api/base44Client";
 import {
   Brain, Target, Home, BarChart2, Users, LogOut, Menu, X,
   ChevronRight, ChevronLeft, BarChart3, Map, Bell, User,
-  Settings, Shield } from
+  Settings, Shield, BookOpen } from
 "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -51,7 +51,8 @@ export const getFriendlyRoleLabel = (appRole) => {
 const NAV_CONFIG = {
   manager: [
   { label: 'My Leadership', path: '/my-leadership', icon: Home },
-  { label: 'My Goals', path: '/my-goals', icon: Target }],
+  { label: 'My Goals', path: '/my-goals', icon: Target },
+  { label: 'My Learning', path: '/LearningLibrary', icon: BookOpen }],
 
   buyer: [
   { label: 'Experience Overview', path: '/experience-overview', icon: Users },

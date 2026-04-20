@@ -22,6 +22,7 @@ import {
   ChevronUp,
   Lightbulb,
   Brain,
+  ExternalLink,
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
@@ -42,6 +43,117 @@ import BusinessGoalsSection from "./sections/BusinessGoalsSection";
 import RecommendedGoalsSection from "./sections/RecommendedGoalsSection";
 import AssessmentTrendSection from "./sections/AssessmentTrendSection";
 import CompetencyLearningSection from "@/components/mvp/CompetencyLearningSection";
+import AddToPlanModal from "@/components/mvp/AddToPlanModal";
+
+const COMP_SCORE_MAP = {
+  "Situational Intelligence": "si_pct",
+  "Decision Making": "dm_pct",
+  "Communication": "comm_pct",
+  "Resource Management": "rm_pct",
+  "Stakeholder Management": "sm_pct",
+  "Performance Management": "pm_pct",
+};
+
+function TopGapCoursesSection({ assessment, user, onAddToPlan }) {
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Identify top 3 competency gaps (lowest scores)
+  const gaps = Object.entries(COMP_SCORE_MAP)
+    .map(([name, key]) => ({ name, score: assessment[key] ?? 100 }))
+    .sort((a, b) => a.score - b.score)
+    .slice(0, 3)
+    .map(g => g.name);
+
+  useEffect(() => {
+    if (!gaps.length) { setLoading(false); return; }
+    const load = async () => {
+      try {
+        const resources = await base44.entities.LearningResource.filter({ provider: "LinkedIn Learning", is_active: true });
+        // Keep only courses for the top 3 gap competencies, sorted by gap priority
+        const filtered = [];
+        gaps.forEach(gap => {
+          const gapCourses = resources.filter(r => r.competencies?.includes(gap));
+          gapCourses.slice(0, 2).forEach(c => filtered.push({ ...c, _gapName: gap }));
+        });
+        setCourses(filtered);
+      } catch (e) {
+        console.warn("[TopGapCoursesSection]", e.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [assessment?.id]);
+
+  if (loading || !courses.length) return null;
+
+  return (
+    <Card className="border-0 shadow-lg">
+      <CardHeader className="pb-2">
+        <div className="flex items-center gap-2">
+          <div className="p-2 bg-amber-100 rounded-lg">
+            <BookOpen className="w-5 h-5 text-amber-600" />
+          </div>
+          <div>
+            <CardTitle>Recommended Learning</CardTitle>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Courses matched to your top 3 development areas. Add any to your plan.
+            </p>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {gaps.map(gap => {
+          const gapCourses = courses.filter(c => c._gapName === gap);
+          if (!gapCourses.length) return null;
+          const score = assessment[COMP_SCORE_MAP[gap]];
+          return (
+            <div key={gap} className="rounded-xl border border-gray-100 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-gray-800">{gap}</span>
+                  {score != null && (
+                    <span className="text-xs text-amber-600 font-medium bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">
+                      {score}% — development focus
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="divide-y divide-gray-50">
+                {gapCourses.map(course => (
+                  <div key={course.id} className="px-4 py-3 flex items-start gap-3 bg-white">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 leading-snug">{course.title}</p>
+                      {course.author && <p className="text-xs text-gray-500 mt-0.5">{course.author}</p>}
+                      {course.duration_string && <p className="text-xs text-gray-400 mt-0.5">{course.duration_string}</p>}
+                      <a
+                        href={course.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-[#0077b5] font-medium hover:underline mt-1.5"
+                      >
+                        <ExternalLink className="w-3 h-3" /> View on LinkedIn Learning
+                      </a>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs h-8 shrink-0 text-[#0202ff] border-[#0202ff]/30 hover:bg-blue-50"
+                      onClick={() => onAddToPlan(course)}
+                    >
+                      + Add to Plan
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </CardContent>
+    </Card>
+  );
+}
 
 function ProcessingPlaceholder({ label }) {
   return (
@@ -58,6 +170,7 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
   const [latestAssessment, setLatestAssessment] = useState(null);
   const [assessments, setAssessments]     = useState([]);
   const [goals, setGoals]                 = useState([]);
+  const [addToPlanResource, setAddToPlanResource] = useState(null);
 
   useEffect(() => {
     if (user?.email) loadData();
@@ -334,10 +447,23 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
         </motion.div>
       )}
 
-      {/* ── 5c. LinkedIn Learning Courses ────────────────────────── */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }}>
-        <CompetencyLearningSection user={user} assessmentScores={latestAssessment} />
-      </motion.div>
+      {/* ── 5c. Contextual Courses — Top 3 Competency Gaps ───────── */}
+      {latestAssessment && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }}>
+          <TopGapCoursesSection
+            assessment={latestAssessment}
+            user={user}
+            onAddToPlan={(resource) => setAddToPlanResource(resource)}
+          />
+        </motion.div>
+      )}
+
+      <AddToPlanModal
+        isOpen={!!addToPlanResource}
+        onClose={() => setAddToPlanResource(null)}
+        resource={addToPlanResource}
+        userEmail={user?.email}
+      />
 
       {/* ── 6. Succession Readiness Profile ─────────────────────── */}
       {latestAssessment && (
