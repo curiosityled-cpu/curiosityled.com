@@ -2,26 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Clock, CheckCircle2, TrendingUp, Calendar, Library, Plus, Layers, GraduationCap } from "lucide-react";
+import { BookOpen, Clock, CheckCircle2, Library, Plus, Layers, GraduationCap, Pencil, Briefcase, ExternalLink } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import CertificateViewer from "@/components/learning/CertificateViewer";
-import ExperienceFormModal from "@/components/development/ExperienceFormModal";
+import CreateDevelopmentPlanModal from "@/components/development/CreateDevelopmentPlanModal";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
-
-const EXPERIENCE_TYPE_LABELS = {
-  leadership_coaching: "Leadership Coaching",
-  stretch_project: "Stretch Project",
-  leadership_opportunity: "Leadership Opportunity",
-  mentorship: "Mentorship",
-  conference_event: "Conference / Event",
-  volunteer_leadership: "Volunteer Leadership",
-  cross_functional_project: "Cross-Functional Project",
-  speaking_opportunity: "Speaking Opportunity",
-  other: "Other",
-};
 
 const PRIORITY_DOT = {
   urgent: "bg-red-500",
@@ -37,27 +25,30 @@ const STATUS_BADGE = {
   completed: "bg-emerald-100 text-emerald-700",
   overdue: "bg-red-100 text-red-700",
   planned: "bg-purple-100 text-purple-700",
+  active: "bg-blue-100 text-blue-700",
+  paused: "bg-amber-100 text-amber-700",
   cancelled: "bg-gray-100 text-gray-500",
 };
 
 export default function MyDevelopment() {
   const { user } = useAuth();
   const [assignedLearning, setAssignedLearning] = useState([]);
-  const [devExperiences, setDevExperiences] = useState([]);
+  const [devPlans, setDevPlans] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [section, setSection] = useState("plans"); // "plans" | "learning"
+  const [section, setSection] = useState("plans");
   const [activeTab, setActiveTab] = useState("active");
   const [showModal, setShowModal] = useState(false);
+  const [editingPlan, setEditingPlan] = useState(null);
 
   const load = async () => {
     if (!user) return;
     try {
-      const [assigned, experiences] = await Promise.all([
+      const [assigned, plans] = await Promise.all([
         base44.entities.AssignedLearning.filter({ user_email: user.email }),
-        base44.entities.DevelopmentExperience.filter({ user_email: user.email }),
+        base44.entities.DevelopmentPlan.filter({ user_email: user.email }),
       ]);
       setAssignedLearning(assigned);
-      setDevExperiences(experiences);
+      setDevPlans(plans);
     } catch (e) {
       console.error("Error loading development data:", e);
     } finally {
@@ -67,8 +58,8 @@ export default function MyDevelopment() {
 
   useEffect(() => { load(); }, [user]);
 
-  const activePlans = devExperiences.filter(e => e.status !== "completed" && e.status !== "cancelled");
-  const completedPlans = devExperiences.filter(e => e.status === "completed");
+  const activePlans = devPlans.filter(p => p.status === "active" || p.status === "paused");
+  const completedPlans = devPlans.filter(p => p.status === "completed");
   const activeLearning = assignedLearning.filter(a => a.status !== "completed");
   const completedLearning = assignedLearning.filter(a => a.status === "completed");
 
@@ -77,6 +68,9 @@ export default function MyDevelopment() {
     { label: "Active Learning", value: activeLearning.length, color: "text-blue-600", bg: "bg-blue-50" },
     { label: "Completed", value: completedPlans.length + completedLearning.length, color: "text-emerald-600", bg: "bg-emerald-50" },
   ];
+
+  const openCreate = () => { setEditingPlan(null); setShowModal(true); };
+  const openEdit = (plan) => { setEditingPlan(plan); setShowModal(true); };
 
   if (loading) {
     return (
@@ -149,11 +143,7 @@ export default function MyDevelopment() {
           <>
             {activeTab === "active" && (
               <div className="space-y-3">
-                <Button
-                  size="sm"
-                  className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white"
-                  onClick={() => setShowModal(true)}
-                >
+                <Button size="sm" className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white" onClick={openCreate}>
                   <Plus className="w-4 h-4 mr-1.5" /> New Development Plan
                 </Button>
                 {activePlans.length === 0 ? (
@@ -161,29 +151,46 @@ export default function MyDevelopment() {
                     <CardContent className="p-8 text-center">
                       <Layers className="w-10 h-10 text-gray-300 mx-auto mb-3" />
                       <p className="font-semibold text-gray-800">No active development plans</p>
-                      <p className="text-sm text-gray-500 mt-1">Add a coaching session, stretch project, mentorship, and more.</p>
+                      <p className="text-sm text-gray-500 mt-1">Create a plan combining coaching, projects, and learning resources.</p>
                     </CardContent>
                   </Card>
                 ) : (
-                  activePlans.map((exp, i) => (
-                    <motion.div key={exp.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
+                  activePlans.map((plan, i) => (
+                    <motion.div key={plan.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
                       <Card className="shadow-sm border border-gray-100 rounded-2xl hover:shadow-md transition-shadow">
                         <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
-                            <div className="w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 bg-purple-400" />
+                          <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-gray-900 leading-snug">{exp.title}</p>
-                              {exp.description && <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{exp.description}</p>}
-                              <div className="flex flex-wrap items-center gap-2 mt-2">
-                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_BADGE[exp.status] || "bg-gray-100 text-gray-700"}`}>
-                                  {exp.status?.replace("_", " ")}
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className="font-medium text-gray-900 leading-snug">{plan.title}</p>
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_BADGE[plan.status] || "bg-gray-100 text-gray-700"}`}>
+                                  {plan.status}
                                 </span>
-                                <span className="text-xs text-gray-400">{EXPERIENCE_TYPE_LABELS[exp.type] || exp.type}</span>
-                                {exp.expected_impact && (
-                                  <span className="text-xs text-purple-600 font-medium">+{exp.expected_impact}% impact</span>
+                              </div>
+                              {plan.description && <p className="text-xs text-gray-500 line-clamp-2 mb-2">{plan.description}</p>}
+                              <div className="flex flex-wrap gap-1 mb-2">
+                                {plan.target_competencies?.slice(0, 3).map(c => (
+                                  <span key={c} className="text-xs px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-100">{c}</span>
+                                ))}
+                                {plan.target_competencies?.length > 3 && (
+                                  <span className="text-xs text-gray-400">+{plan.target_competencies.length - 3} more</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3 text-xs text-gray-500">
+                                {plan.experiences?.length > 0 && (
+                                  <span className="flex items-center gap-1"><Briefcase className="w-3 h-3" /> {plan.experiences.length} experience{plan.experiences.length !== 1 ? "s" : ""}</span>
+                                )}
+                                {plan.learning_items?.length > 0 && (
+                                  <span className="flex items-center gap-1"><BookOpen className="w-3 h-3" /> {plan.learning_items.length} resource{plan.learning_items.length !== 1 ? "s" : ""}</span>
+                                )}
+                                {plan.target_date && (
+                                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Due {new Date(plan.target_date).toLocaleDateString()}</span>
                                 )}
                               </div>
                             </div>
+                            <button onClick={() => openEdit(plan)} className="text-gray-400 hover:text-[#0202ff] transition-colors flex-shrink-0 mt-0.5">
+                              <Pencil className="w-4 h-4" />
+                            </button>
                           </div>
                         </CardContent>
                       </Card>
@@ -199,19 +206,21 @@ export default function MyDevelopment() {
                     <CardContent className="p-8 text-center">
                       <CheckCircle2 className="w-10 h-10 text-gray-300 mx-auto mb-3" />
                       <p className="font-semibold text-gray-800">No completed plans yet</p>
-                      <p className="text-sm text-gray-500 mt-1">Completed experiences will appear here.</p>
                     </CardContent>
                   </Card>
                 ) : (
-                  completedPlans.map((exp, i) => (
-                    <motion.div key={exp.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
+                  completedPlans.map((plan, i) => (
+                    <motion.div key={plan.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
                       <Card className="shadow-sm border border-gray-100 rounded-2xl bg-emerald-50/40">
                         <CardContent className="p-4">
                           <div className="flex items-start gap-3">
                             <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-gray-900 leading-snug">{exp.title}</p>
-                              <p className="text-xs text-gray-500 mt-0.5">{EXPERIENCE_TYPE_LABELS[exp.type] || exp.type}</p>
+                              <p className="font-medium text-gray-900 leading-snug">{plan.title}</p>
+                              <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                                {plan.experiences?.length > 0 && <span>{plan.experiences.length} experience{plan.experiences.length !== 1 ? "s" : ""}</span>}
+                                {plan.learning_items?.length > 0 && <span>{plan.learning_items.length} resource{plan.learning_items.length !== 1 ? "s" : ""}</span>}
+                              </div>
                             </div>
                             <Badge className="text-xs bg-emerald-100 text-emerald-700 border-0">Done</Badge>
                           </div>
@@ -316,13 +325,13 @@ export default function MyDevelopment() {
         )}
       </motion.div>
 
-      {showModal && (
-        <ExperienceFormModal
-          userEmail={user?.email}
-          onClose={() => setShowModal(false)}
-          onSave={() => { setShowModal(false); load(); }}
-        />
-      )}
+      <CreateDevelopmentPlanModal
+        open={showModal}
+        onClose={() => { setShowModal(false); setEditingPlan(null); }}
+        onSaved={() => { setShowModal(false); setEditingPlan(null); load(); }}
+        userEmail={user?.email}
+        plan={editingPlan}
+      />
     </MVPPageLayout>
   );
 }

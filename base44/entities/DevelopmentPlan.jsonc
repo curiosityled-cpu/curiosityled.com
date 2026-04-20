@@ -1,0 +1,149 @@
+{
+  "name": "DevelopmentPlan",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user this plan belongs to"
+    },
+    "title": {
+      "type": "string",
+      "description": "Name of the development plan"
+    },
+    "description": {
+      "type": "string",
+      "description": "Overview of what this plan aims to achieve"
+    },
+    "target_competencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Competencies this plan targets"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "completed",
+        "paused",
+        "cancelled"
+      ],
+      "default": "active",
+      "description": "Current status of the plan"
+    },
+    "target_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Target completion date"
+    },
+    "experiences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "provider_or_sponsor": {
+            "type": "string"
+          },
+          "start_date": {
+            "type": "string"
+          },
+          "end_date": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "default": "planned"
+          },
+          "expected_impact": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "Off-platform development experiences included in this plan"
+    },
+    "learning_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "resource_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "default": "not_started"
+          }
+        }
+      },
+      "description": "Learning resources / courses included in this plan"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Client ID for multi-tenant support"
+    }
+  },
+  "required": [
+    "user_email",
+    "title",
+    "target_competencies"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        }
+      ]
+    }
+  }
+}
