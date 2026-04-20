@@ -46,21 +46,24 @@ const COURSES = [
 ];
 
 Deno.serve(async (req) => {
-  const base44 = createClientFromRequest(req);
+  try {
+    const base44 = createClientFromRequest(req);
 
+    // Check if already seeded
+    const existing = await base44.asServiceRole.entities.LearningResource.filter({ provider: "LinkedIn Learning" });
+    if (existing.length > 0) {
+      return Response.json({ message: `Already seeded: ${existing.length} courses exist`, skipped: true });
+    }
 
+    const results = [];
+    for (const course of COURSES) {
+      const created = await base44.asServiceRole.entities.LearningResource.create(course);
+      results.push(created.id);
+    }
 
-  // Check if already seeded
-  const existing = await base44.asServiceRole.entities.LearningResource.filter({ provider: "LinkedIn Learning" });
-  if (existing.length > 0) {
-    return Response.json({ message: `Already seeded: ${existing.length} courses exist`, skipped: true });
+    return Response.json({ success: true, created: results.length, ids: results });
+  } catch (error) {
+    console.error("Seed error:", error.message, error.data || "");
+    return Response.json({ error: error.message }, { status: 500 });
   }
-
-  const results = [];
-  for (const course of COURSES) {
-    const created = await base44.asServiceRole.entities.LearningResource.create(course);
-    results.push(created.id);
-  }
-
-  return Response.json({ success: true, created: results.length, ids: results });
 });
