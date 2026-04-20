@@ -39,7 +39,7 @@ const COURSES = [
   { title: "Building High-Performance Teams", provider: "LinkedIn Learning", author: "Chris Croft", url: "https://www.linkedin.com/learning/building-high-performance-teams", competencies: ["Team Leadership"], leadership_level: "Senior Manager / Business Unit Leader (leads larger teams, cross-functional groups, or business units)", difficulty_level: "advanced", type: "course", duration_string: "1h 45m", access: "Subscription", year: 2023, is_active: true, is_premium: true },
   // Delegation
   { title: "Delegating Tasks", provider: "LinkedIn Learning", author: "Kevin Eikenberry", url: "https://www.linkedin.com/learning/delegating-tasks", competencies: ["Delegation"], leadership_level: "Individual Contributor to First-Time Manager (entry-level leaders, frontline managers, new supervisors)", difficulty_level: "beginner", type: "course", duration_string: "49 min", access: "Subscription", year: 2022, is_active: true, is_premium: true },
-  { title: "Delegating Tasks", provider: "LinkedIn Learning", author: "Dorie Clark", url: "https://www.linkedin.com/learning/delegating-tasks", competencies: ["Delegation"], leadership_level: "Mid-Level Manager (managers of managers, experienced team leads, functional leads)", difficulty_level: "intermediate", type: "course", duration_string: "34 min", access: "Subscription", year: 2018, is_active: true, is_premium: true },
+  { title: "The Art of Delegation: Become a Better Manager", provider: "LinkedIn Learning", author: "Dave Crenshaw", url: "https://www.linkedin.com/learning/the-art-of-delegation-become-a-better-manager", competencies: ["Delegation"], leadership_level: "Mid-Level Manager (managers of managers, experienced team leads, functional leads)", difficulty_level: "intermediate", type: "course", duration_string: "1h 14m", access: "Subscription", year: 2023, is_active: true, is_premium: true },
   // Developing Others
   { title: "Coaching Skills for Leaders and Managers", provider: "LinkedIn Learning", author: "Sara Canaday", url: "https://www.linkedin.com/learning/coaching-skills-for-leaders-and-managers", competencies: ["Developing Others"], leadership_level: "Mid-Level Manager (managers of managers, experienced team leads, functional leads)", difficulty_level: "intermediate", type: "course", duration_string: "1h 21m", access: "Subscription", year: 2022, is_active: true, is_premium: true },
   { title: "Coaching and Developing Employees", provider: "LinkedIn Learning", author: "Lisa Gates", url: "https://www.linkedin.com/learning/coaching-and-developing-employees-22657884", competencies: ["Developing Others"], leadership_level: "Individual Contributor to First-Time Manager (entry-level leaders, frontline managers, new supervisors)", difficulty_level: "beginner", type: "course", duration_string: "1h 25m", access: "Subscription", year: 2023, is_active: true, is_premium: true },
@@ -49,19 +49,22 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Check if already seeded
-    const existing = await base44.asServiceRole.entities.LearningResource.filter({ provider: "LinkedIn Learning" });
-    if (existing.length > 0) {
-      return Response.json({ message: `Already seeded: ${existing.length} courses exist`, skipped: true });
+    // Delete all existing LinkedIn Learning records first
+    const existing = await base44.asServiceRole.entities.LearningResource.filter({ provider: "LinkedIn Learning" }, null, 100);
+    let deleted = 0;
+    for (const record of existing) {
+      await base44.asServiceRole.entities.LearningResource.delete(record.id);
+      deleted++;
     }
 
+    // Create fresh records
     const results = [];
     for (const course of COURSES) {
       const created = await base44.asServiceRole.entities.LearningResource.create(course);
       results.push(created.id);
     }
 
-    return Response.json({ success: true, created: results.length, ids: results });
+    return Response.json({ success: true, deleted, created: results.length });
   } catch (error) {
     console.error("Seed error:", error.message, error.data || "");
     return Response.json({ error: error.message }, { status: 500 });
