@@ -146,7 +146,25 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── 4. Build prompt ───────────────────────────────────────
+    // ── 4. Fetch live competency definitions ─────────────────
+    let competencyModelBlock = '';
+    try {
+      const competencies = await base44.asServiceRole.entities.Competency.filter({ is_platform_default: true });
+      if (competencies.length > 0) {
+        const lines = competencies.map(c => {
+          const components = (c.key_components || [])
+            .map(kc => `${kc.name} (${kc.weight}%)`)
+            .join(', ');
+          return `${c.name.toUpperCase()} (${c.field_key || c.category})\nCategory: ${c.category}\nDefinition: ${c.definition || 'N/A'}\nKey Components: ${components || 'N/A'}`;
+        });
+        competencyModelBlock = lines.join('\n\n');
+        console.log(`[AssessmentInsights] Loaded ${competencies.length} competencies from DB`);
+      }
+    } catch (err) {
+      console.warn('[AssessmentInsights] Could not fetch competencies (non-fatal):', err.message);
+    }
+
+    // ── 5. Build prompt ───────────────────────────────────────
     const scoreBlock = [
       `Overall Leadership Score: ${assessment.overall_pct ?? 'N/A'}%`,
       `Situational Intelligence (SI): ${assessment.si_pct ?? 'N/A'}%`,
@@ -178,37 +196,9 @@ ASSESSMENT SCORES:
 ${scoreBlock}
 
 === COMPETENCY MODEL REFERENCE ===
-The assessment measures 6 core competencies. Use this evidence-based framework for depth and accuracy:
+The assessment measures leadership competencies across Tactical, Self Leadership, People Leadership, and Situational Intelligence categories. Use this live competency framework for depth and accuracy in your analysis:
 
-SITUATIONAL INTELLIGENCE (SI) — Meta-Competency
-Sub-components: Situational Assessment (25%), Outcome Prediction (30%), Contextual Adaptation (25%), Decision Calibration (20%).
-Research base: Enables leaders to read complex environments and make context-appropriate decisions.
-Industry benchmark (Corporate, First-Line): Target 68%, Exceptional 77%.
-
-DECISION MAKING (DM) — Self Leadership
-Sub-components: Critical analysis (35%), Risk assessment (25%), Option evaluation (25%), Timely execution (15%).
-Research base: Dunst et al. meta-analysis — critical analysis correlates r=.61 with leader effectiveness (N=15,701). Risk assessment r=.57.
-Benchmark (Corporate, First-Line): Target 70%, Exceptional 78%.
-
-COMMUNICATION (COMM) — People Leadership
-Sub-components: Message clarity (35%), Active listening (25%), Audience adaptation (22%), Two-way dialogue (18%).
-Research base: Dunst et al. — motivational communication r=.66 with leader effectiveness. Active listening r=.54.
-Benchmark (Corporate, First-Line): Target 72%, Exceptional 80%.
-
-RESOURCE MANAGEMENT (RM) — Tactical
-Sub-components: Planning & prioritization (35%), Budget allocation (25%), Resource optimization (25%), Deadline management (15%).
-Research base: Planning/prioritization correlates r=.37 with performance (N=39,433). Resource allocation r=.27–.37.
-Benchmark (Corporate, First-Line): Target 71%, Exceptional 79%.
-
-STAKEHOLDER MANAGEMENT (SM) — People Leadership
-Sub-components: Upward influence (35%), Priority alignment (25%), Political awareness (22%), Advocacy skills (18%).
-Research base: Upward influence predicts all career outcomes (Malaysian study N=338, B=0.267 for salary progression).
-Benchmark (Corporate, First-Line): Target 72%, Exceptional 80%.
-
-PERFORMANCE MANAGEMENT (PM) — Tactical
-Sub-components: Goal setting (34%), Continuous feedback (28%), Coaching delivery (31%), Performance measurement (25%).
-Research base: Goal setting explains 34% variance in team performance. Coaching effectiveness accounts for 31% variance in subordinate growth.
-Benchmark (Corporate, First-Line): Target 69%, Exceptional 77%.
+${competencyModelBlock || 'Competency model data unavailable — use general leadership development principles.'}
 
 === LEADERSHIP ARCHETYPES ===
 Match the leader's pattern to the most fitting archetype. Each archetype has predictable strengths, blind spots, and development paths:
@@ -242,7 +232,7 @@ Based on these results, generate a structured leadership insight report with the
 
 Be precise. Do not hallucinate strengths or risks not supported by score data. Treat missing or zero scores as insufficient data. Use benchmark comparisons to add context where helpful.`;
 
-    // ── 5. Call OpenAI ────────────────────────────────────────
+    // ── 6. Call OpenAI ────────────────────────────────────────
     console.log(`[AssessmentInsights] Calling LLM for assessment ${assessmentId} (attempt ${retryCount + 1})`);
 
     let aiResult;
@@ -281,7 +271,7 @@ Be precise. Do not hallucinate strengths or risks not supported by score data. T
       });
     }
 
-    // ── 6. Validate AI output ─────────────────────────────────
+    // ── 7. Validate AI output ─────────────────────────────────
     if (!aiResult?.archetype || !aiResult?.summary) {
       const errMsg = 'LLM returned incomplete output (missing archetype or summary)';
       console.error(`[AssessmentInsights] ${errMsg} for assessment ${assessmentId}`, JSON.stringify(aiResult));
@@ -292,7 +282,7 @@ Be precise. Do not hallucinate strengths or risks not supported by score data. T
       return Response.json({ success: false, assessment_id: assessmentId, error: errMsg, retryable: true });
     }
 
-    // ── 7. Write final generated record ──────────────────────
+    // ── 8. Write final generated record ──────────────────────
     const saved = await upsertInsights(base44, assessmentId, pendingRecord, {
       status: 'generated',
       archetype:         aiResult.archetype,
