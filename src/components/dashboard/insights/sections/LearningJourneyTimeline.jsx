@@ -363,7 +363,7 @@ export default function LearningJourneyTimeline({ assessment, user }) {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-indigo-600" />
-          <span className="text-sm font-semibold text-gray-800">Learning Journey Planner</span>
+          <span className="text-sm font-semibold text-gray-800">Journey Planner</span>
           {totalPlaced > 0 && (
             <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs">
               <Sparkles className="w-3 h-3 mr-1" />

@@ -64,7 +64,7 @@ export default function MyDevelopment() {
   const completedLearning = assignedLearning.filter(a => a.status === "completed");
 
   const stats = [
-    { label: "Active Plans", value: activePlans.length, color: "text-purple-600", bg: "bg-purple-50" },
+    { label: "Active Journeys", value: activePlans.length, color: "text-purple-600", bg: "bg-purple-50" },
     { label: "Active Learning", value: activeLearning.length, color: "text-blue-600", bg: "bg-blue-50" },
     { label: "Completed", value: completedPlans.length + completedLearning.length, color: "text-emerald-600", bg: "bg-emerald-50" },
   ];
@@ -101,7 +101,7 @@ export default function MyDevelopment() {
             onClick={() => { setSection("plans"); setActiveTab("active"); }}
             className={`flex-1 flex items-center justify-center gap-1.5 text-sm font-medium py-2 rounded-lg transition-all ${section === "plans" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
           >
-            <Layers className="w-3.5 h-3.5" /> Development Plans
+            <Layers className="w-3.5 h-3.5" /> Journeys
           </button>
           <button
             onClick={() => { setSection("learning"); setActiveTab("active"); }}
@@ -144,14 +144,14 @@ export default function MyDevelopment() {
             {activeTab === "active" && (
               <div className="space-y-3">
                 <Button size="sm" className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white" onClick={openCreate}>
-                  <Plus className="w-4 h-4 mr-1.5" /> New Development Plan
+                  <Plus className="w-4 h-4 mr-1.5" /> New Journey
                 </Button>
                 {activePlans.length === 0 ? (
                   <Card className="shadow-sm border border-gray-100 rounded-2xl">
                     <CardContent className="p-8 text-center">
                       <Layers className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                      <p className="font-semibold text-gray-800">No active development plans</p>
-                      <p className="text-sm text-gray-500 mt-1">Create a plan combining coaching, projects, and learning resources.</p>
+                      <p className="font-semibold text-gray-800">No active journeys</p>
+                      <p className="text-sm text-gray-500 mt-1">Create a journey combining coaching, projects, and learning resources.</p>
                     </CardContent>
                   </Card>
                 ) : (
@@ -205,7 +205,7 @@ export default function MyDevelopment() {
                   <Card className="shadow-sm border border-gray-100 rounded-2xl">
                     <CardContent className="p-8 text-center">
                       <CheckCircle2 className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                      <p className="font-semibold text-gray-800">No completed plans yet</p>
+                      <p className="font-semibold text-gray-800">No completed journeys yet</p>
                     </CardContent>
                   </Card>
                 ) : (
