@@ -6,7 +6,7 @@ import ShareResultsModal from "@/components/mvp/ShareResultsModal";
 import { Link } from "react-router-dom";
 import {
   Sparkles, Target, Zap, ChevronRight, Loader2, Star,
-  TrendingUp, ArrowRight, CheckCircle2, Clock, BookOpen, Share2, ExternalLink
+  TrendingUp, ArrowRight, CheckCircle2, Clock, BookOpen, Share2, ExternalLink, Layers, Briefcase
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -167,60 +167,66 @@ function GoalsCard({ goals }) {
   );
 }
 
-function LearningCard({ assignments }) {
-  const active = assignments.filter(a => a.status !== 'completed');
-  const completed = assignments.filter(a => a.status === 'completed');
+function DevelopmentCard({ assignments, experiences }) {
+  const activeLearning = assignments.filter(a => a.status !== 'completed');
+  const completedLearning = assignments.filter(a => a.status === 'completed');
+  const activePlans = experiences.filter(e => e.status === 'planned' || e.status === 'in_progress');
+  const completedPlans = experiences.filter(e => e.status === 'completed');
   const [tab, setTab] = useState('active');
+
+  const activeTotal = activeLearning.length + activePlans.length;
+  const completedTotal = completedLearning.length + completedPlans.length;
 
   return (
     <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
       <CardHeader className="pb-3 pt-5 px-6">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-purple-500" />
-            My Learning
+            <Layers className="w-4 h-4 text-[#0202ff]" />
+            My Development
           </CardTitle>
-          <Link to="/LearningLibrary">
+          <Link to="/MyDevelopment">
             <Button variant="ghost" size="sm" className="text-[#0202ff] text-xs h-7 hover:bg-blue-50">
-              Browse Library <ExternalLink className="w-3 h-3 ml-1" />
+              View All <ArrowRight className="w-3 h-3 ml-1" />
             </Button>
           </Link>
         </div>
-        {/* Tabs */}
         <div className="flex gap-1 mt-3 bg-gray-100 rounded-lg p-1">
           <button
             onClick={() => setTab('active')}
             className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-all ${tab === 'active' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
           >
-            Active {active.length > 0 && <span className="ml-1 text-[#0202ff]">({active.length})</span>}
+            Active {activeTotal > 0 && <span className="ml-1 text-[#0202ff]">({activeTotal})</span>}
           </button>
           <button
             onClick={() => setTab('completed')}
             className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-all ${tab === 'completed' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
           >
-            Completed {completed.length > 0 && <span className="ml-1 text-emerald-600">({completed.length})</span>}
+            Completed {completedTotal > 0 && <span className="ml-1 text-emerald-600">({completedTotal})</span>}
           </button>
         </div>
       </CardHeader>
       <CardContent className="space-y-2 px-6 pb-6">
         {tab === 'active' ? (
-          active.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 text-center py-6">
-              <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl p-4 w-full">
-                <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-                All caught up — no active learning.
+          activeTotal === 0 ? (
+            <Link to="/MyDevelopment">
+              <div className="flex items-center justify-between p-4 bg-[#0202ff] text-white rounded-xl hover:bg-[#0101dd] transition-colors cursor-pointer">
+                <p className="text-sm font-semibold">Start Your Development Journey</p>
+                <ArrowRight className="w-4 h-4 flex-shrink-0" />
               </div>
-              <Link to="/LearningLibrary" className="w-full">
-                <Button variant="outline" size="sm" className="w-full text-[#0202ff] border-[#0202ff]/30 hover:bg-blue-50 text-xs">
-                  <BookOpen className="w-3.5 h-3.5 mr-1.5" /> Browse Learning Library
-                </Button>
-              </Link>
-            </div>
+            </Link>
           ) : (
             <>
-              {active.slice(0, 4).map(a => (
+              {activePlans.slice(0, 2).map(e => (
+                <div key={e.id} className="flex items-center gap-3 p-3 bg-blue-50/60 rounded-xl">
+                  <Briefcase className="w-4 h-4 text-[#0202ff] flex-shrink-0" />
+                  <p className="text-sm text-gray-800 truncate flex-1">{e.title}</p>
+                  <Badge variant="outline" className="text-xs capitalize flex-shrink-0">{e.status?.replace('_', ' ')}</Badge>
+                </div>
+              ))}
+              {activeLearning.slice(0, 2).map(a => (
                 <div key={a.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${a.priority === 'urgent' ? 'bg-red-500' : a.priority === 'high' ? 'bg-amber-500' : 'bg-blue-400'}`} />
+                  <BookOpen className="w-4 h-4 text-purple-400 flex-shrink-0" />
                   <p className="text-sm text-gray-800 truncate flex-1">{a.title}</p>
                   <Badge variant="outline" className="text-xs capitalize flex-shrink-0">{a.status}</Badge>
                 </div>
@@ -228,19 +234,28 @@ function LearningCard({ assignments }) {
             </>
           )
         ) : (
-          completed.length === 0 ? (
+          completedTotal === 0 ? (
             <div className="flex items-center gap-3 text-sm text-gray-500 bg-gray-50 border border-gray-100 rounded-xl p-4">
               <Clock className="w-5 h-5 flex-shrink-0" />
-              No completed learning yet.
+              Nothing completed yet.
             </div>
           ) : (
-            completed.slice(0, 4).map(a => (
-              <div key={a.id} className="flex items-center gap-3 p-3 bg-emerald-50/60 rounded-xl">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                <p className="text-sm text-gray-800 truncate flex-1">{a.title}</p>
-                <Badge className="text-xs bg-emerald-100 text-emerald-700 border-0 flex-shrink-0">Done</Badge>
-              </div>
-            ))
+            <>
+              {completedPlans.slice(0, 2).map(e => (
+                <div key={e.id} className="flex items-center gap-3 p-3 bg-emerald-50/60 rounded-xl">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                  <p className="text-sm text-gray-800 truncate flex-1">{e.title}</p>
+                  <Badge className="text-xs bg-emerald-100 text-emerald-700 border-0 flex-shrink-0">Done</Badge>
+                </div>
+              ))}
+              {completedLearning.slice(0, 2).map(a => (
+                <div key={a.id} className="flex items-center gap-3 p-3 bg-emerald-50/60 rounded-xl">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                  <p className="text-sm text-gray-800 truncate flex-1">{a.title}</p>
+                  <Badge className="text-xs bg-emerald-100 text-emerald-700 border-0 flex-shrink-0">Done</Badge>
+                </div>
+              ))}
+            </>
           )
         )}
       </CardContent>
@@ -378,6 +393,13 @@ export default function MyLeadership() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: experiences = [], isLoading: loadingExperiences } = useQuery({
+    queryKey: ['my-experiences-summary', user?.email],
+    queryFn: async () => base44.entities.DevelopmentExperience.filter({ user_email: user.email }, '-created_date', 10),
+    enabled: !!user?.email,
+    staleTime: 5 * 60 * 1000,
+  });
+
   // Use full display name; fall back gracefully but never use email prefix
   const displayName = user?.full_name && user.full_name.trim() && !user.full_name.includes('@')
     ? user.full_name.split(' ')[0]
@@ -388,13 +410,17 @@ export default function MyLeadership() {
       title="My Leadership"
       subtitle={`Welcome back, ${displayName}. Here's your leadership snapshot.`}
     >
-      {loadingInsight || loadingGoals || loadingAssignments ? (
-        <LoadingSkeleton />
+      {loadingInsight || loadingGoals || loadingAssignments || loadingExperiences ? (
+        <div className="space-y-5">
+          <Skeleton className="h-64 w-full rounded-2xl" />
+          <Skeleton className="h-40 w-full rounded-2xl" />
+          <Skeleton className="h-32 w-full rounded-2xl" />
+        </div>
       ) : (
         <>
           {insight ? <InsightCard insight={insight} user={user} /> : <NoInsightState onRefresh={refetchInsight} />}
           <GoalsCard goals={goals} />
-          <LearningCard assignments={assignments} />
+          <DevelopmentCard assignments={assignments} experiences={experiences} />
         </>
       )}
     </MVPPageLayout>
