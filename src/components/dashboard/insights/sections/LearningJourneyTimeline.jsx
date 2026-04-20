@@ -214,7 +214,6 @@ export default function LearningJourneyTimeline({ assessment, user }) {
   const [showTray, setShowTray] = useState(false);
   const [trayFilter, setTrayFilter] = useState(null);
   const [trayTab, setTrayTab] = useState("courses"); // "courses" | "experiences"
-  const [savingJourney, setSavingJourney] = useState(false);
 
   const months = getMonthLabels(6);
 
@@ -349,35 +348,6 @@ export default function LearningJourneyTimeline({ assessment, user }) {
     .slice(0, 3)
     .map((c) => c.name);
 
-  const handleSaveJourney = async () => {
-    if (totalPlaced === 0) return;
-    setSavingJourney(true);
-    try {
-      const planData = {
-        user_email: user?.email,
-        title: `Journey Plan — ${new Date().toLocaleDateString()}`,
-        description: `Planned journey with ${totalPlaced} learning item${totalPlaced !== 1 ? "s" : ""}.`,
-        target_competencies: gapCompetencies,
-        status: "active",
-        experiences: Object.values(plan).flat().filter(item => item._kind === "experience"),
-        learning_items: Object.values(plan).flat().filter(item => item._kind !== "experience").map(item => ({
-          resource_id: item.id,
-          title: item.title,
-          provider: item.provider || "",
-          url: item.url || "",
-          status: "not_started",
-        })),
-      };
-      await base44.entities.DevelopmentPlan.create(planData);
-      setPlan({});
-      setShowTray(false);
-    } catch (e) {
-      console.error("[LearningJourneyTimeline] Error saving journey:", e);
-    } finally {
-      setSavingJourney(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -406,37 +376,15 @@ export default function LearningJourneyTimeline({ assessment, user }) {
             <Info className="w-3 h-3" />
             Drag courses into months to plan your journey
           </span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="text-xs h-7 border-blue-200 text-blue-700 hover:bg-blue-50"
-              onClick={() => setShowTray((v) => !v)}
-            >
-              <BookOpen className="w-3 h-3 mr-1" />
-              {showTray ? "Hide" : "Browse"} Courses
-            </Button>
-            {totalPlaced > 0 && (
-              <Button
-                size="sm"
-                className="text-xs h-7 bg-emerald-600 hover:bg-emerald-700 text-white"
-                onClick={handleSaveJourney}
-                disabled={savingJourney}
-              >
-                {savingJourney ? (
-                  <>
-                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                    Saving…
-                  </>
-                ) : (
-                  <>
-                    <Star className="w-3 h-3 mr-1" />
-                    Save Journey
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-xs h-7 border-blue-200 text-blue-700 hover:bg-blue-50"
+            onClick={() => setShowTray((v) => !v)}
+          >
+            <BookOpen className="w-3 h-3 mr-1" />
+            {showTray ? "Hide" : "Browse"} Courses
+          </Button>
         </div>
       </div>
 
