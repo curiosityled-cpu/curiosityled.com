@@ -4,14 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+
 import {
   BookOpen,
   Search,
   Sparkles,
   Loader2,
   RefreshCw,
-  Zap
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
@@ -430,254 +429,155 @@ Return as a JSON array of recommendations.`;
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading learning library...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-8 h-8 border-4 border-gray-200 border-t-[#0202ff] rounded-full animate-spin" />
       </div>
     );
   }
 
+  const hasActiveFilters = searchTerm || selectedCompetencies.length > 0 || selectedLevel !== "all" || selectedType !== "all" || selectedAccess !== "all";
+  const clearFilters = () => { setSearchTerm(""); setSelectedCompetencies([]); setSelectedLevel("all"); setSelectedType("all"); setSelectedAccess("all"); };
+
   return (
-    <div className="space-y-6">
-      <div>
-
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-                Learning Library
-              </h1>
-              <p className="text-gray-600">
-                Discover resources to accelerate your leadership development
-              </p>
-            </div>
-            <div className="flex gap-2">
-              {hasAssessment && (
-                <Button
-                  onClick={generateAIRecommendations}
-                  disabled={recommendationsLoading}
-                  className="bg-purple-600 hover:bg-purple-700"
-                >
-                  {recommendationsLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Generating...
-                    </>
-                  ) : aiRecommendations ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Refresh AI Picks
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Get AI Recommendations
-                    </>
-                  )}
-                </Button>
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Learning Library</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Discover resources to accelerate your leadership development</p>
+        </div>
+        <div className="flex gap-2">
+          {hasAssessment && (
+            <Button
+              onClick={generateAIRecommendations}
+              disabled={recommendationsLoading}
+              size="sm"
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              {recommendationsLoading ? (
+                <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Generating...</>
+              ) : aiRecommendations ? (
+                <><RefreshCw className="w-4 h-4 mr-1.5" /> Refresh AI Picks</>
+              ) : (
+                <><Sparkles className="w-4 h-4 mr-1.5" /> AI Recommendations</>
               )}
-              <Link to={createPageUrl("Automations") + "?scope=learning"}>
-                <Button variant="outline">
-                  <Zap className="w-4 h-4 mr-2" />
-                  Automations
-                </Button>
-              </Link>
-            </div>
-          </div>
-
-          {/* AI Recommendations Summary */}
-          {aiRecommendations && aiRecommendations.length > 0 && (
-            <Alert className="border-purple-200 bg-purple-50">
-              <Sparkles className="h-4 w-4 text-purple-600" />
-              <AlertDescription className="text-purple-900">
-                <strong>AI found {aiRecommendations.length} personalized learning resources</strong> based on your assessment results and development goals
-              </AlertDescription>
-            </Alert>
-          )}
-        </motion.div>
-
-        {/* Search and Filters */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white rounded-xl shadow-lg p-6 mb-6"
-        >
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="lg:col-span-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  placeholder="Search resources by title, author, or topic..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-              <SelectTrigger>
-                <SelectValue placeholder="Leadership Level" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Levels</SelectItem>
-                {levelOptions.map(opt => (
-                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={selectedType} onValueChange={setSelectedType}>
-              <SelectTrigger>
-                <SelectValue placeholder="Resource Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                {typeOptions.map(opt => (
-                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-4 mt-4">
-            <MultiSelectFilter
-              title="Competencies"
-              options={competencyOptions}
-              selectedValues={selectedCompetencies}
-              onSelectionChange={setSelectedCompetencies}
-            />
-
-            <Select value={selectedAccess} onValueChange={setSelectedAccess}>
-              <SelectTrigger>
-                <SelectValue placeholder="Access Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Access Types</SelectItem>
-                <SelectItem value="Free">Free</SelectItem>
-                <SelectItem value="Subscription">Subscription</SelectItem>
-                <SelectItem value="Purchase">Purchase</SelectItem>
-                <SelectItem value="Program">Program</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {(searchTerm || selectedCompetencies.length > 0 || selectedLevel !== "all" || selectedType !== "all" || selectedAccess !== "all") && (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSearchTerm("");
-                  setSelectedCompetencies([]);
-                  setSelectedLevel("all");
-                  setSelectedType("all");
-                  setSelectedAccess("all");
-                }}
-              >
-                Clear Filters
-              </Button>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Results Count */}
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-gray-600">
-            Showing <strong>{filteredResources.length}</strong> of <strong>{allResources.length}</strong> resources
-          </p>
-          {aiRecommendations && aiRecommendations.length > 0 && (
-            <Badge className="bg-purple-100 text-purple-800">
-              <Sparkles className="w-3 h-3 mr-1" />
-              {aiRecommendations.length} AI Recommended
-            </Badge>
+            </Button>
           )}
         </div>
+      </motion.div>
 
-        {/* Resources Grid */}
-        <AnimatePresence mode="wait">
-          {filteredResources.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <Card className="border-0 shadow-lg">
-                <CardContent className="p-12 text-center">
-                  <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    No Resources Found
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    {searchTerm || selectedCompetencies.length > 0 || selectedLevel !== "all" || selectedType !== "all" || selectedAccess !== "all"
-                      ? 'Try adjusting your search or filters'
-                      : 'Learning resources will appear here once added by administrators'
-                    }
-                  </p>
-                  {(searchTerm || selectedCompetencies.length > 0 || selectedLevel !== "all" || selectedType !== "all" || selectedAccess !== "all") && (
-                    <Button
-                      onClick={() => {
-                        setSearchTerm("");
-                        setSelectedCompetencies([]);
-                        setSelectedLevel("all");
-                        setSelectedType("all");
-                        setSelectedAccess("all");
-                      }}
-                      variant="outline"
-                    >
-                      Clear Filters
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
-            >
-              {filteredResources.map((resource, index) => {
-                const recommendation = getRecommendation(resource.id);
+      {/* AI Banner */}
+      {aiRecommendations && aiRecommendations.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 bg-purple-50 border border-purple-200 rounded-xl px-4 py-3 text-sm text-purple-800">
+          <Sparkles className="w-4 h-4 text-purple-600 flex-shrink-0" />
+          <span><strong>{aiRecommendations.length} AI-recommended resources</strong> are surfaced first based on your assessment results and goals.</span>
+        </motion.div>
+      )}
 
-                return (
-                  <motion.div
-                    key={resource.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <ResourceCard
-                      resource={resource}
-                      recommendation={recommendation}
-                      onAssignClick={handleAssignClick}
-                      showAssignButton={isAnyAdmin}
-                    />
-                  </motion.div>
-                );
-              })}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      {/* Search & Filters */}
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+        <Card className="shadow-sm border border-gray-100 rounded-2xl">
+          <CardContent className="p-4 space-y-3">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="lg:col-span-2 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  placeholder="Search by title, author, or topic..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                <SelectTrigger><SelectValue placeholder="Leadership Level" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Levels</SelectItem>
+                  {levelOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={selectedType} onValueChange={setSelectedType}>
+                <SelectTrigger><SelectValue placeholder="Resource Type" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  {typeOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-wrap gap-3 items-center">
+              <MultiSelectFilter
+                title="Competencies"
+                options={competencyOptions}
+                selectedValues={selectedCompetencies}
+                onSelectionChange={setSelectedCompetencies}
+              />
+              <Select value={selectedAccess} onValueChange={setSelectedAccess}>
+                <SelectTrigger className="w-44"><SelectValue placeholder="Access Type" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Access Types</SelectItem>
+                  <SelectItem value="Free">Free</SelectItem>
+                  <SelectItem value="Subscription">Subscription</SelectItem>
+                  <SelectItem value="Purchase">Purchase</SelectItem>
+                  <SelectItem value="Program">Program</SelectItem>
+                </SelectContent>
+              </Select>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="text-gray-500 hover:text-gray-800 text-xs">
+                  Clear filters
+                </Button>
+              )}
+              <span className="ml-auto text-sm text-gray-400">
+                {filteredResources.length} of {allResources.length} resources
+                {aiRecommendations?.length > 0 && (
+                  <span className="ml-2 text-purple-600 font-medium">· {aiRecommendations.length} AI picks</span>
+                )}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Resources Grid */}
+      <AnimatePresence mode="wait">
+        {filteredResources.length === 0 ? (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <Card className="shadow-sm border border-gray-100 rounded-2xl">
+              <CardContent className="p-12 text-center">
+                <BookOpen className="w-14 h-14 text-gray-200 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-800 mb-1">No Resources Found</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  {hasActiveFilters ? "Try adjusting your search or filters." : "Learning resources will appear here once added."}
+                </p>
+                {hasActiveFilters && <Button variant="outline" size="sm" onClick={clearFilters}>Clear Filters</Button>}
+              </CardContent>
+            </Card>
+          </motion.div>
+        ) : (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredResources.map((resource, index) => (
+              <motion.div
+                key={resource.id}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: Math.min(index * 0.04, 0.4) }}
+              >
+                <ResourceCard
+                  resource={resource}
+                  recommendation={getRecommendation(resource.id)}
+                  onAssignClick={handleAssignClick}
+                  showAssignButton={isAnyAdmin}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Assignment Modal */}
       {showAssignModal && (
         <AssignLearningModal
           open={showAssignModal}
-          onClose={() => {
-            setShowAssignModal(false);
-            setSelectedResource(null);
-          }}
-          onSuccess={() => {
-            setShowAssignModal(false);
-            setSelectedResource(null);
-          }}
+          onClose={() => { setShowAssignModal(false); setSelectedResource(null); }}
+          onSuccess={() => { setShowAssignModal(false); setSelectedResource(null); }}
           resource={selectedResource}
           assignedBy={user.email}
         />
