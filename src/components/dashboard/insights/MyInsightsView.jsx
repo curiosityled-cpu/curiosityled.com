@@ -136,9 +136,9 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
     { fieldKey: "pm",   score: latestAssessment.pm_pct   || 0 },
   ] : [];
 
-  // First name for greeting
+  // First name for greeting — prefer display_name, fall back to full_name
   const firstName = (() => {
-    const name = user?.full_name || "";
+    const name = user?.display_name || user?.full_name || "";
     if (!name || name.includes("@")) return null;
     return name.split(" ")[0];
   })();

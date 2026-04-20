@@ -168,7 +168,7 @@ Deno.serve(async (req) => {
       ? `Leader: ${validName}\nCurrent Role: ${userContext.current_role ?? 'Not specified'}\nDepartment: ${userContext.department ?? 'Not specified'}\nLeadership Level: ${userContext.leadership_level ?? 'Not specified'}\nSector: ${userContext.sector ?? 'Not specified'}`
       : 'User context: not available (refer to the leader generically in your response)';
 
-    const prompt = `You are an expert leadership development coach analyzing a completed Leadership Index assessment.
+    const prompt = `You are an expert leadership development coach analyzing a completed Leadership Index assessment. You have deep knowledge of the Curiosity Led Leadership Competency Model and Leadership Archetypes framework.
 
 ORGANIZATION: ${orgName}${orgIndustry ? ` (${orgIndustry})` : ''}
 
@@ -177,21 +177,70 @@ ${userBlock}
 ASSESSMENT SCORES:
 ${scoreBlock}
 
+=== COMPETENCY MODEL REFERENCE ===
+The assessment measures 6 core competencies. Use this evidence-based framework for depth and accuracy:
+
+SITUATIONAL INTELLIGENCE (SI) — Meta-Competency
+Sub-components: Situational Assessment (25%), Outcome Prediction (30%), Contextual Adaptation (25%), Decision Calibration (20%).
+Research base: Enables leaders to read complex environments and make context-appropriate decisions.
+Industry benchmark (Corporate, First-Line): Target 68%, Exceptional 77%.
+
+DECISION MAKING (DM) — Self Leadership
+Sub-components: Critical analysis (35%), Risk assessment (25%), Option evaluation (25%), Timely execution (15%).
+Research base: Dunst et al. meta-analysis — critical analysis correlates r=.61 with leader effectiveness (N=15,701). Risk assessment r=.57.
+Benchmark (Corporate, First-Line): Target 70%, Exceptional 78%.
+
+COMMUNICATION (COMM) — People Leadership
+Sub-components: Message clarity (35%), Active listening (25%), Audience adaptation (22%), Two-way dialogue (18%).
+Research base: Dunst et al. — motivational communication r=.66 with leader effectiveness. Active listening r=.54.
+Benchmark (Corporate, First-Line): Target 72%, Exceptional 80%.
+
+RESOURCE MANAGEMENT (RM) — Tactical
+Sub-components: Planning & prioritization (35%), Budget allocation (25%), Resource optimization (25%), Deadline management (15%).
+Research base: Planning/prioritization correlates r=.37 with performance (N=39,433). Resource allocation r=.27–.37.
+Benchmark (Corporate, First-Line): Target 71%, Exceptional 79%.
+
+STAKEHOLDER MANAGEMENT (SM) — People Leadership
+Sub-components: Upward influence (35%), Priority alignment (25%), Political awareness (22%), Advocacy skills (18%).
+Research base: Upward influence predicts all career outcomes (Malaysian study N=338, B=0.267 for salary progression).
+Benchmark (Corporate, First-Line): Target 72%, Exceptional 80%.
+
+PERFORMANCE MANAGEMENT (PM) — Tactical
+Sub-components: Goal setting (34%), Continuous feedback (28%), Coaching delivery (31%), Performance measurement (25%).
+Research base: Goal setting explains 34% variance in team performance. Coaching effectiveness accounts for 31% variance in subordinate growth.
+Benchmark (Corporate, First-Line): Target 69%, Exceptional 77%.
+
+=== LEADERSHIP ARCHETYPES ===
+Match the leader's pattern to the most fitting archetype. Each archetype has predictable strengths, blind spots, and development paths:
+
+- The Adaptive Strategist: High SI + high DM. Systems thinking, change navigation. Blind spot: analysis paralysis, over-complexity. Dev focus: execution translation.
+- The Influential Connector: High COMM + high SM. Relationship capital, stakeholder alignment. Blind spot: consensus-seeking delays. Dev focus: decisive leadership.
+- The Resourceful Optimizer: High RM + high PM. Operational excellence, efficiency. Blind spot: efficiency over innovation. Dev focus: people-centered leadership.
+- The Performance Catalyst: High PM + high COMM. Talent development, coaching. Blind spot: development over delivery. Dev focus: strategic balance.
+- The Steady Operator: High RM + PM with low adaptability. Stability, quality assurance. Blind spot: change resistance. Dev focus: adaptive flexibility.
+- The Change Navigator: High SI + high adaptability. Transformation, innovation. Blind spot: change fatigue blindness. Dev focus: change sustainability.
+- The Collaborative Problem-Solver: High COMM + SM + balanced profile. Inclusive decision-making. Blind spot: decision speed. Dev focus: decisive leadership.
+- The Visionary Architect: High SI + high DM with strategic orientation. Long-term vision, purpose alignment. Blind spot: implementation gaps. Dev focus: execution excellence.
+
+=== INDUSTRY BENCHMARKS (for percentile context) ===
+Percentile framework: <25th = Development Need (intensive coaching), 25-49th = Emerging (targeted development), 50-74th = Proficient (meeting expectations), 75-89th = Advanced (stretch assignments), ≥90th = Exceptional (succession candidate).
+Healthcare adds +3-5pts to DM and SI benchmarks. Government adds +2-3pts to SM. Corporate highest standards for COMM executive presence.
+
 Based on these results, generate a structured leadership insight report with the following fields:
 
-1. archetype (string): A refined leadership archetype label. Use one of these if applicable: "The Adaptive Strategist", "The Influential Connector", "The Resourceful Optimizer", "The Performance Catalyst", "The Steady Operator", "The Change Navigator", "The Collaborative Problem-Solver", "The Visionary Architect". Otherwise generate an appropriate new label.
+1. archetype (string): Match to one of the 8 archetypes above. Use the exact label (e.g. "The Adaptive Strategist"). If scores don't clearly fit, use the closest match.
 
-2. top_strengths (array of 3-5 strings): Specific competency-based strengths supported by the scores. Reference actual score areas.
+2. top_strengths (array of 3-5 strings): Specific competency-based strengths supported by the scores. Reference actual score areas and sub-components where scores are ≥65%. Include evidence-based context.
 
-3. development_areas (array of 3-5 strings): Competency gaps grounded in lower scores. Be specific and constructive.
+3. development_areas (array of 3-5 strings): Competency gaps grounded in lower scores. Reference sub-components. Be specific, constructive, and grounded in the research (e.g. "Coaching delivery — currently below the 69% PM benchmark for this level, affecting subordinate growth").
 
 4. risk_flags (array of 0-3 strings): Only include if genuinely warranted. Use labels like "low_situational_intelligence", "critical_communication_gap", "resource_management_deficit", "stakeholder_alignment_risk". Return empty array if no material risks.
 
-5. summary (string, 3-4 sentences): Professional narrative summary for an L&D professional audience.
+5. summary (string, 3-4 sentences): Professional narrative for an L&D audience. Reference the archetype, key score patterns, and one meaningful benchmark comparison.
 
-6. recommendations (array of 4-6 strings): Specific, actionable development recommendations grounded in the scores.
+6. recommendations (array of 4-6 strings): Specific, actionable development recommendations grounded in the competency model. Each recommendation should reference a specific sub-component or research-backed practice (e.g. "Practice the BLUF communication method to improve message clarity, the highest-weighted sub-component of Communication at 35%").
 
-Be precise. Do not hallucinate strengths or risks not supported by score data. Treat missing or zero scores as insufficient data.`;
+Be precise. Do not hallucinate strengths or risks not supported by score data. Treat missing or zero scores as insufficient data. Use benchmark comparisons to add context where helpful.`;
 
     // ── 5. Call OpenAI ────────────────────────────────────────
     console.log(`[AssessmentInsights] Calling LLM for assessment ${assessmentId} (attempt ${retryCount + 1})`);
