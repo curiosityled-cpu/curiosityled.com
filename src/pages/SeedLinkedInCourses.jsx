@@ -39,7 +39,7 @@ export default function SeedLinkedInCourses() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-gray-600">
-            This will create {COURSES.length} LinkedIn Learning courses across 12 competency areas
+            This will create 30 LinkedIn Learning courses across 12 competency areas
             into the LearningResource library. Run once only.
           </p>
           {message && (
@@ -50,7 +50,7 @@ export default function SeedLinkedInCourses() {
           {status === "running" && (
             <div className="flex items-center gap-2 text-sm text-blue-600">
               <Loader2 className="w-4 h-4 animate-spin" />
-              Creating course {count} of {COURSES.length}...
+              Creating courses...
             </div>
           )}
           {status === "done" && (

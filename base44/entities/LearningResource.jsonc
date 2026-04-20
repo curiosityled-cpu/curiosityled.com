@@ -1,0 +1,202 @@
+{
+  "name": "LearningResource",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Resource title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of the resource"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "book",
+        "course",
+        "article",
+        "video",
+        "whitepaper",
+        "podcast",
+        "assessment_tool"
+      ],
+      "description": "Type of learning resource"
+    },
+    "provider": {
+      "type": "string",
+      "description": "Content provider (e.g., LinkedIn Learning, Harvard Business Review)"
+    },
+    "author": {
+      "type": "string",
+      "description": "Content author or creator"
+    },
+    "url": {
+      "type": "string",
+      "description": "URL to the resource"
+    },
+    "competencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Competencies this resource addresses"
+    },
+    "leadership_level": {
+      "type": "string",
+      "enum": [
+        "Individual Contributor to First-Time Manager (entry-level leaders, frontline managers, new supervisors)",
+        "Mid-Level Manager (managers of managers, experienced team leads, functional leads)",
+        "Senior Manager / Business Unit Leader (leads larger teams, cross-functional groups, or business units)",
+        "Director / Senior Director (enterprise-level strategic oversight, multiple functions, major initiatives)",
+        "Executive / C-Suite (enterprise leadership, board-level strategy, organizational transformation)"
+      ],
+      "description": "Target leadership level for this resource"
+    },
+    "difficulty_level": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced"
+      ],
+      "description": "Maps to Team Lead, Mid-Level, and Director levels"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for content categorization (e.g., audience level)"
+    },
+    "thumbnail_url": {
+      "type": "string",
+      "description": "URL to thumbnail image"
+    },
+    "cost_string": {
+      "type": "string",
+      "description": "The cost represented as a string (e.g., 'Free', '$15-25')"
+    },
+    "is_premium": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if the resource is not free"
+    },
+    "duration_string": {
+      "type": "string",
+      "description": "Estimated duration as a string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this resource is currently available"
+    },
+    "year": {
+      "type": "number",
+      "description": "Publication or release year of the resource"
+    },
+    "access": {
+      "type": "string",
+      "enum": [
+        "Free",
+        "Subscription",
+        "Purchase",
+        "Program"
+      ],
+      "description": "How the resource is accessed (e.g., free content, requires a subscription, etc.)"
+    },
+    "prerequisite_resource_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of LearningResource IDs that must be completed before accessing this resource"
+    },
+    "prerequisite_conversational_learning_module_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of ConversationalLearningModule IDs that must be completed before accessing this resource"
+    },
+    "points_value": {
+      "type": "number",
+      "description": "Number of gamification points awarded for completing this resource (overrides default)"
+    }
+  },
+  "required": [
+    "title",
+    "type",
+    "url",
+    "competencies",
+    "leadership_level",
+    "year",
+    "access"
+  ],
+  "rls": {
+    "create": {},
+    "read": {
+      "$or": [
+        {
+          "is_active": true
+        },
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Analyst",
+                "Admin Level 1",
+                "Admin Level 2",
+                "Super Administrator",
+                "Partner Business Administrator",
+                "Platform Admin"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}
