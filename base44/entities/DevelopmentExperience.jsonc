@@ -1,0 +1,140 @@
+{
+  "name": "DevelopmentExperience",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user this experience belongs to"
+    },
+    "title": {
+      "type": "string",
+      "description": "Title of the development experience"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of what this experience involves"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "leadership_coaching",
+        "stretch_project",
+        "leadership_opportunity",
+        "mentorship",
+        "conference_event",
+        "volunteer_leadership",
+        "cross_functional_project",
+        "speaking_opportunity",
+        "other"
+      ],
+      "description": "Type of development experience"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planned",
+        "in_progress",
+        "completed",
+        "cancelled"
+      ],
+      "default": "planned",
+      "description": "Current status of the experience"
+    },
+    "planned_month": {
+      "type": "string",
+      "description": "Month this is planned for (YYYY-MM format)"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Start date of the experience"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "End date of the experience"
+    },
+    "competencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Competencies this experience develops"
+    },
+    "expected_impact": {
+      "type": "number",
+      "default": 5,
+      "description": "Estimated competency score boost (percentage points)"
+    },
+    "provider_or_sponsor": {
+      "type": "string",
+      "description": "Name of the coaching firm, project sponsor, or organizer"
+    },
+    "reflection_notes": {
+      "type": "string",
+      "description": "User's notes or reflections on the experience"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Client ID for multi-tenant support"
+    }
+  },
+  "required": [
+    "user_email",
+    "title",
+    "type",
+    "competencies"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "User Level 2"
+              ]
+            }
+          },
+          "user_email": {
+            "$in": "{{user.subordinate_emails}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        }
+      ]
+    }
+  }
+}

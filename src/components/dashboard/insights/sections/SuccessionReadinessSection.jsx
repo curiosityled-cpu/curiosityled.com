@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { base44 } from "@/api/base44Client";
 import LearningJourneyTimeline from "./LearningJourneyTimeline";
+import DevelopmentPlanView from "@/components/development/DevelopmentPlanView";
 
 const CONTRIBUTING_FACTORS = (assessment) => [
   { label: "Assessment Score",   value: assessment?.overall_pct ?? 0 },
@@ -217,10 +218,13 @@ export default function SuccessionReadinessSection({ user, assessment }) {
           </Button>
         </div>
 
-        {/* Learning Journey Timeline */}
+        {/* Learning Journey Timeline + Off-Platform Experiences */}
         {showTimeline && (
-          <div className="pt-4 border-t mt-2">
+          <div className="pt-4 border-t mt-2 space-y-6">
             <LearningJourneyTimeline assessment={assessment} user={user} />
+            <div className="border-t pt-4">
+              <DevelopmentPlanView user={user} assessment={assessment} />
+            </div>
           </div>
         )}
       </CardContent>

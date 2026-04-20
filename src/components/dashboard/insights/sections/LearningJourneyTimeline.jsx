@@ -12,8 +12,21 @@ import {
   Plus,
   Loader2,
   Info,
+  Star,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+const EXPERIENCE_TYPE_EMOJI = {
+  leadership_coaching: "🎯",
+  stretch_project: "🚀",
+  leadership_opportunity: "⭐",
+  mentorship: "🤝",
+  conference_event: "🎤",
+  volunteer_leadership: "🌱",
+  cross_functional_project: "🔗",
+  speaking_opportunity: "📢",
+  other: "💡",
+};
 
 // Competency → assessment score key
 const COMP_SCORE_MAP = {
@@ -87,7 +100,8 @@ function ScoreBar({ current, target, projected, label }) {
   );
 }
 
-function CourseChip({ course, monthKey, onRemove, isDragging }) {
+function CourseChip({ course, monthKey, onRemove }) {
+  const isExperience = course._kind === "experience";
   return (
     <motion.div
       layout
@@ -101,19 +115,29 @@ function CourseChip({ course, monthKey, onRemove, isDragging }) {
         e.dataTransfer.effectAllowed = "move";
       }}
       className={`group flex items-start gap-1.5 p-2 rounded-lg border text-xs cursor-grab active:cursor-grabbing
-        ${isDragging ? "opacity-50" : "opacity-100"}
-        bg-white border-blue-100 shadow-sm hover:border-blue-300 hover:shadow-md transition-all`}
+        ${isExperience
+          ? "bg-amber-50 border-amber-200 hover:border-amber-400"
+          : "bg-white border-blue-100 hover:border-blue-300"}
+        shadow-sm hover:shadow-md transition-all`}
     >
-      <GripVertical className="w-3 h-3 text-gray-400 mt-0.5 shrink-0" />
+      {isExperience ? (
+        <span className="text-sm shrink-0">{EXPERIENCE_TYPE_EMOJI[course.type] || "💡"}</span>
+      ) : (
+        <GripVertical className="w-3 h-3 text-gray-400 mt-0.5 shrink-0" />
+      )}
       <div className="flex-1 min-w-0">
         <p className="font-medium text-gray-800 leading-tight line-clamp-2">{course.title}</p>
         {course.competencies?.[0] && (
-          <span className="inline-block mt-1 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-medium">
+          <span className={`inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] font-medium
+            ${isExperience ? "bg-amber-100 text-amber-700" : "bg-blue-50 text-blue-600"}`}>
             {course.competencies[0]}
           </span>
         )}
-        {course.duration_string && (
+        {!isExperience && course.duration_string && (
           <span className="ml-1 text-gray-400 text-[10px]">{course.duration_string}</span>
+        )}
+        {isExperience && (
+          <span className="ml-1 text-amber-600 text-[10px] font-semibold">+{course.expected_impact || 5}%</span>
         )}
       </div>
       <button
@@ -183,12 +207,13 @@ function MonthColumn({ month, courses, onDrop, onRemove, dragOverMonth, setDragO
 
 export default function LearningJourneyTimeline({ assessment, user }) {
   const [availableCourses, setAvailableCourses] = useState([]);
+  const [userExperiences, setUserExperiences] = useState([]);
   const [loading, setLoading] = useState(true);
   const [plan, setPlan] = useState({}); // { "2025-05": [course, ...], ... }
   const [dragOverMonth, setDragOverMonth] = useState(null);
-  const [draggingFromTray, setDraggingFromTray] = useState(null);
   const [showTray, setShowTray] = useState(false);
   const [trayFilter, setTrayFilter] = useState(null);
+  const [trayTab, setTrayTab] = useState("courses"); // "courses" | "experiences"
 
   const months = getMonthLabels(6);
 
@@ -199,32 +224,58 @@ export default function LearningJourneyTimeline({ assessment, user }) {
     target: 75, // default target
   }));
 
-  // Count how many courses for each competency are placed in the plan
-  const placedCourseIds = new Set(Object.values(plan).flat().map((c) => c.id));
+  const placedItemIds = new Set(Object.values(plan).flat().map((c) => c.id));
 
   const boostedScores = compScores.map((c) => {
-    const placed = Object.values(plan).flat().filter((course) =>
-      course.competencies?.includes(c.name)
-    ).length;
-    return { ...c, projected: Math.min(100, c.current + placed * BOOST_PER_COURSE) };
+    const placedItems = Object.values(plan).flat().filter((item) =>
+      item.competencies?.includes(c.name)
+    );
+    const courseBoost = placedItems.filter((i) => i._kind !== "experience").length * BOOST_PER_COURSE;
+    const expBoost = placedItems
+      .filter((i) => i._kind === "experience")
+      .reduce((sum, e) => sum + (e.expected_impact || 5), 0);
+    return { ...c, projected: Math.min(100, c.current + courseBoost + expBoost) };
   });
 
   useEffect(() => {
-    loadCourses();
-  }, [assessment?.id]);
+    loadData();
+  }, [assessment?.id, user?.email]);
 
-  const loadCourses = async () => {
+  const loadData = async () => {
     setLoading(true);
     try {
-      const resources = await base44.entities.LearningResource.filter({
-        provider: "LinkedIn Learning",
-        is_active: true,
-      });
-      // Only show courses for competencies present in assessment
+      const [resources, exps] = await Promise.all([
+        base44.entities.LearningResource.filter({ provider: "LinkedIn Learning", is_active: true }),
+        user?.email ? base44.entities.DevelopmentExperience.filter({ user_email: user.email }) : Promise.resolve([]),
+      ]);
       const relevant = resources.filter((r) =>
         r.competencies?.some((c) => COMP_SCORE_MAP[c] !== undefined)
       );
       setAvailableCourses(relevant);
+      // Tag experiences so we can distinguish them in the timeline
+      const tagged = exps.map((e) => ({ ...e, _kind: "experience" }));
+      setUserExperiences(tagged);
+
+      // Pre-populate plan with experiences that already have a planned_month
+      const prePlanned = {};
+      tagged.forEach((e) => {
+        if (e.planned_month) {
+          prePlanned[e.planned_month] = [...(prePlanned[e.planned_month] || []), e];
+        }
+      });
+      setPlan((prev) => {
+        // Merge: keep user-dragged courses, add pre-planned experiences
+        const merged = { ...prev };
+        Object.entries(prePlanned).forEach(([month, items]) => {
+          const existingIds = new Set((merged[month] || []).map((x) => x.id));
+          items.forEach((item) => {
+            if (!existingIds.has(item.id)) {
+              merged[month] = [...(merged[month] || []), item];
+            }
+          });
+        });
+        return merged;
+      });
     } catch (e) {
       console.warn("[LearningJourneyTimeline]", e);
     } finally {
@@ -235,11 +286,10 @@ export default function LearningJourneyTimeline({ assessment, user }) {
   const handleDropOnMonth = (courseId, fromMonth, toMonth) => {
     if (fromMonth === toMonth) return;
 
-    const allCourses = [...availableCourses];
     let course = null;
 
     if (fromMonth === "tray") {
-      course = allCourses.find((c) => c.id === courseId);
+      course = [...availableCourses, ...userExperiences].find((c) => c.id === courseId);
     } else {
       const fromList = plan[fromMonth] || [];
       course = fromList.find((c) => c.id === courseId);
@@ -288,6 +338,10 @@ export default function LearningJourneyTimeline({ assessment, user }) {
   const filteredTray = trayFilter
     ? availableCourses.filter((c) => c.competencies?.includes(trayFilter))
     : availableCourses.filter((c) => c.competencies?.some((cc) => COMP_SCORE_MAP[cc] !== undefined));
+
+  const filteredExpTray = trayFilter
+    ? userExperiences.filter((e) => e.competencies?.includes(trayFilter))
+    : userExperiences;
 
   const gapCompetencies = [...compScores]
     .sort((a, b) => a.current - b.current)
@@ -389,9 +443,25 @@ export default function LearningJourneyTimeline({ assessment, user }) {
                   ))}
                 </div>
               </div>
+              {/* Tab switcher */}
+              <div className="flex gap-1 mb-2">
+                <button
+                  onClick={() => setTrayTab("courses")}
+                  className={`text-xs px-3 py-1 rounded-full border transition-colors ${trayTab === "courses" ? "bg-indigo-600 text-white border-indigo-600" : "border-gray-300 text-gray-500 hover:border-indigo-400"}`}
+                >
+                  📚 Courses ({filteredTray.length})
+                </button>
+                <button
+                  onClick={() => setTrayTab("experiences")}
+                  className={`text-xs px-3 py-1 rounded-full border transition-colors ${trayTab === "experiences" ? "bg-amber-500 text-white border-amber-500" : "border-gray-300 text-gray-500 hover:border-amber-400"}`}
+                >
+                  ⭐ My Experiences ({filteredExpTray.length})
+                </button>
+              </div>
+
               <div className="flex flex-wrap gap-2 max-h-44 overflow-y-auto">
-                {filteredTray.map((course) => {
-                  const alreadyPlaced = placedCourseIds.has(course.id);
+                {trayTab === "courses" && filteredTray.map((course) => {
+                  const alreadyPlaced = placedItemIds.has(course.id);
                   return (
                     <div
                       key={course.id}
@@ -417,6 +487,38 @@ export default function LearningJourneyTimeline({ assessment, user }) {
                     </div>
                   );
                 })}
+
+                {trayTab === "experiences" && filteredExpTray.map((exp) => {
+                  const alreadyPlaced = placedItemIds.has(exp.id);
+                  return (
+                    <div
+                      key={exp.id}
+                      draggable={!alreadyPlaced}
+                      onDragStart={(e) => {
+                        if (alreadyPlaced) { e.preventDefault(); return; }
+                        e.dataTransfer.setData("courseId", exp.id);
+                        e.dataTransfer.setData("fromMonth", "tray");
+                        e.dataTransfer.effectAllowed = "move";
+                      }}
+                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs transition-all
+                        ${alreadyPlaced
+                          ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed opacity-60"
+                          : "bg-amber-50 border-amber-200 text-gray-700 cursor-grab active:cursor-grabbing hover:border-amber-400 hover:shadow-sm"
+                        }`}
+                    >
+                      <span className="text-base shrink-0">{EXPERIENCE_TYPE_EMOJI[exp.type] || "💡"}</span>
+                      <div className="min-w-0">
+                        <span className="font-medium block truncate max-w-[140px]">{exp.title}</span>
+                        <span className="text-[10px] text-amber-600 block">{exp.competencies?.[0]} · +{exp.expected_impact || 5}%</span>
+                      </div>
+                      {alreadyPlaced && <Badge className="text-[9px] px-1 py-0 bg-emerald-100 text-emerald-600 border-0 ml-1 shrink-0">planned</Badge>}
+                    </div>
+                  );
+                })}
+
+                {trayTab === "experiences" && filteredExpTray.length === 0 && (
+                  <p className="text-xs text-gray-400 py-2">No experiences added yet. Use the "Off-Platform Experiences" section below to add some.</p>
+                )}
               </div>
             </div>
           </motion.div>
