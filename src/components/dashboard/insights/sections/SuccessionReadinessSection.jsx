@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { TrendingUp, Loader2, Sparkles, AlertCircle } from "lucide-react";
+import { TrendingUp, Loader2, Sparkles, AlertCircle, ChevronDown, ChevronUp, Map } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { base44 } from "@/api/base44Client";
+import LearningJourneyTimeline from "./LearningJourneyTimeline";
 
 const CONTRIBUTING_FACTORS = (assessment) => [
   { label: "Assessment Score",   value: assessment?.overall_pct ?? 0 },
@@ -26,6 +27,7 @@ export default function SuccessionReadinessSection({ user, assessment }) {
   const [readinessScore, setReadiness] = useState(null);
   const [steps, setSteps]             = useState([]);
   const [aiGenerated, setAiGenerated] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(false);
 
   useEffect(() => {
     if (user?.email && assessment) loadReadiness();
@@ -196,14 +198,31 @@ export default function SuccessionReadinessSection({ user, assessment }) {
         )}
 
         {/* CTA */}
-        <div className="flex gap-3 pt-2 border-t flex-wrap">
+        <div className="flex gap-3 pt-2 border-t flex-wrap items-center">
           <Button variant="outline" size="sm" onClick={() => window.location.href = "/Performance"}>
             Speak to Manager
           </Button>
           <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white" onClick={() => window.location.href = "/Performance"}>
             Create Development Plan
           </Button>
+          <Button
+            size="sm"
+            variant={showTimeline ? "secondary" : "outline"}
+            className="ml-auto flex items-center gap-1.5 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+            onClick={() => setShowTimeline((v) => !v)}
+          >
+            <Map className="w-4 h-4" />
+            {showTimeline ? "Hide" : "Plan My Journey"}
+            {showTimeline ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </Button>
         </div>
+
+        {/* Learning Journey Timeline */}
+        {showTimeline && (
+          <div className="pt-4 border-t mt-2">
+            <LearningJourneyTimeline assessment={assessment} user={user} />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
