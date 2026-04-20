@@ -52,7 +52,7 @@ const NAV_CONFIG = {
   manager: [
   { label: 'My Leadership', path: '/my-leadership', icon: Home },
   { label: 'My Goals', path: '/my-goals', icon: Target },
-  { label: 'My Learning', path: '/MyLearning', icon: BookOpen }],
+  { label: 'My Development', path: '/my-development', icon: BookOpen }],
 
   buyer: [
   { label: 'Experience Overview', path: '/experience-overview', icon: Users },
