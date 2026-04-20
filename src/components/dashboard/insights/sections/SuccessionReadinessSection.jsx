@@ -8,6 +8,15 @@ import { base44 } from "@/api/base44Client";
 import LearningJourneyTimeline from "./LearningJourneyTimeline";
 import DevelopmentPlanView from "@/components/development/DevelopmentPlanView";
 
+const COMP_LABELS = {
+  "Situational Intelligence": "si_pct",
+  "Decision Making": "dm_pct",
+  "Communication": "comm_pct",
+  "Resource Management": "rm_pct",
+  "Stakeholder Management": "sm_pct",
+  "Performance Management": "pm_pct",
+};
+
 const CONTRIBUTING_FACTORS = (assessment) => [
   { label: "Assessment Score",   value: assessment?.overall_pct ?? 0 },
   { label: "Learning Progress",  value: 60 }, // placeholder — can be wired to real data
@@ -203,9 +212,6 @@ export default function SuccessionReadinessSection({ user, assessment }) {
           <Button variant="outline" size="sm" onClick={() => window.location.href = "/Performance"}>
             Speak to Manager
           </Button>
-          <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white" onClick={() => window.location.href = "/Performance"}>
-            Create Development Plan
-          </Button>
           <Button
             size="sm"
             variant={showTimeline ? "secondary" : "outline"}
@@ -218,9 +224,35 @@ export default function SuccessionReadinessSection({ user, assessment }) {
           </Button>
         </div>
 
-        {/* Learning Journey Timeline + Off-Platform Experiences */}
+        {/* Learning Journey Timeline + Off-Platform Experiences + Save */}
         {showTimeline && (
           <div className="pt-4 border-t mt-2 space-y-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-gray-800">Journey Planner</h3>
+              <Button
+                size="sm"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                onClick={async () => {
+                  try {
+                    const competencies = Object.keys(COMP_LABELS || {});
+                    await base44.entities.DevelopmentPlan.create({
+                      user_email: user.email,
+                      title: `${nextRole?.title || "Leadership Development"} Journey`,
+                      description: `Development plan targeting the ${nextRole?.title || "next level"} role.`,
+                      target_competencies: competencies.slice(0, 3),
+                      status: "active",
+                      experiences: [],
+                      learning_items: [],
+                    });
+                    window.location.href = "/MyDevelopment";
+                  } catch (err) {
+                    console.error("Error saving journey:", err);
+                  }
+                }}
+              >
+                Save Journey
+              </Button>
+            </div>
             <LearningJourneyTimeline assessment={assessment} user={user} />
             <div className="border-t pt-4">
               <DevelopmentPlanView user={user} assessment={assessment} />

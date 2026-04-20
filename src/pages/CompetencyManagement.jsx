@@ -164,7 +164,6 @@ function CompetencyCard({ competency, onEdit, onDelete }) {
                         {components.map((comp, i) => (
                           <div
                             key={i}
-                            style={{ width: `${comp.weight}%`, opacity: 0.6 + (i * 0.1) }}
                             className="h-full"
                             style={{ width: `${comp.weight}%`, backgroundColor: '#0202ff', opacity: 1 - i * 0.15 }}
                             title={`${comp.name}: ${comp.weight}%`}

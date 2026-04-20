@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,8 @@ function DeltaBadge({ delta }) {
 }
 
 export default function AssessmentTrendSection({ assessments }) {
+  const [highlightedComp, setHighlightedComp] = useState(null);
+
   if (!assessments || assessments.length < 2) return null;
 
   // Sort oldest → newest for chart
@@ -63,6 +65,16 @@ export default function AssessmentTrendSection({ assessments }) {
   }));
 
   const overallDelta = Math.round((last.overall_pct || 0) - (first.overall_pct || 0));
+
+  const getLineOpacity = (lineKey) => {
+    if (!highlightedComp) return 1;
+    return lineKey === highlightedComp || lineKey === "overall" ? 1 : 0.1;
+  };
+
+  const getLineStrokeWidth = (lineKey) => {
+    if (!highlightedComp) return lineKey === "overall" ? 2.5 : 1.5;
+    return lineKey === highlightedComp || lineKey === "overall" ? 2.5 : 1.5;
+  };
 
   return (
     <Card className="border-0 shadow-lg">
@@ -97,13 +109,13 @@ export default function AssessmentTrendSection({ assessments }) {
               <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
               <Tooltip formatter={(v) => `${v}%`} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Line type="monotone" dataKey="overall" stroke="#1e293b" strokeWidth={2.5} name="Overall" dot />
-              <Line type="monotone" dataKey="si"      stroke={COMP_COLORS.si_pct}   strokeWidth={1.5} name="SI"   dot={false} />
-              <Line type="monotone" dataKey="dm"      stroke={COMP_COLORS.dm_pct}   strokeWidth={1.5} name="DM"   dot={false} />
-              <Line type="monotone" dataKey="comm"    stroke={COMP_COLORS.comm_pct} strokeWidth={1.5} name="Comm" dot={false} />
-              <Line type="monotone" dataKey="rm"      stroke={COMP_COLORS.rm_pct}   strokeWidth={1.5} name="RM"   dot={false} />
-              <Line type="monotone" dataKey="sm"      stroke={COMP_COLORS.sm_pct}   strokeWidth={1.5} name="SM"   dot={false} />
-              <Line type="monotone" dataKey="pm"      stroke={COMP_COLORS.pm_pct}   strokeWidth={1.5} name="PM"   dot={false} />
+              <Line type="monotone" dataKey="overall" stroke="#1e293b" strokeWidth={getLineStrokeWidth("overall")} name="Overall" dot opacity={getLineOpacity("overall")} />
+              <Line type="monotone" dataKey="si"      stroke={COMP_COLORS.si_pct}   strokeWidth={getLineStrokeWidth("si")}       name="SI"   dot={false} opacity={getLineOpacity("si")} />
+              <Line type="monotone" dataKey="dm"      stroke={COMP_COLORS.dm_pct}   strokeWidth={getLineStrokeWidth("dm")}       name="DM"   dot={false} opacity={getLineOpacity("dm")} />
+              <Line type="monotone" dataKey="comm"    stroke={COMP_COLORS.comm_pct} strokeWidth={getLineStrokeWidth("comm")}     name="Comm" dot={false} opacity={getLineOpacity("comm")} />
+              <Line type="monotone" dataKey="rm"      stroke={COMP_COLORS.rm_pct}   strokeWidth={getLineStrokeWidth("rm")}       name="RM"   dot={false} opacity={getLineOpacity("rm")} />
+              <Line type="monotone" dataKey="sm"      stroke={COMP_COLORS.sm_pct}   strokeWidth={getLineStrokeWidth("sm")}       name="SM"   dot={false} opacity={getLineOpacity("sm")} />
+              <Line type="monotone" dataKey="pm"      stroke={COMP_COLORS.pm_pct}   strokeWidth={getLineStrokeWidth("pm")}       name="PM"   dot={false} opacity={getLineOpacity("pm")} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -111,10 +123,20 @@ export default function AssessmentTrendSection({ assessments }) {
         {/* Delta pills per competency */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {deltas.map(d => (
-            <div key={d.key} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 border">
+            <button
+              key={d.key}
+              onMouseEnter={() => setHighlightedComp(d.key)}
+              onMouseLeave={() => setHighlightedComp(null)}
+              onClick={() => setHighlightedComp(highlightedComp === d.key ? null : d.key)}
+              className={`flex items-center justify-between px-3 py-2 rounded-lg border transition-all cursor-pointer ${
+                highlightedComp === d.key
+                  ? 'bg-blue-50 border-blue-300 font-medium'
+                  : 'bg-gray-50 border-gray-200 hover:border-blue-200'
+              }`}
+            >
               <span className="text-xs text-gray-600 truncate mr-2">{d.label}</span>
               <DeltaBadge delta={d.delta} />
-            </div>
+            </button>
           ))}
         </div>
       </CardContent>

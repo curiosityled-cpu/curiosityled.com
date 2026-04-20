@@ -57,6 +57,7 @@ const COMP_SCORE_MAP = {
 function TopGapCoursesSection({ assessment, user, onAddToPlan }) {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expandedGap, setExpandedGap] = useState(null);
 
   // Identify top 3 competency gaps (lowest scores)
   const gaps = Object.entries(COMP_SCORE_MAP)
@@ -108,9 +109,13 @@ function TopGapCoursesSection({ assessment, user, onAddToPlan }) {
           const gapCourses = courses.filter(c => c._gapName === gap);
           if (!gapCourses.length) return null;
           const score = assessment[COMP_SCORE_MAP[gap]];
+          const isExpanded = expandedGap === gap;
           return (
             <div key={gap} className="rounded-xl border border-gray-100 overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50">
+              <button
+                onClick={() => setExpandedGap(isExpanded ? null : gap)}
+                className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+              >
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-gray-800">{gap}</span>
                   {score != null && (
@@ -119,34 +124,37 @@ function TopGapCoursesSection({ assessment, user, onAddToPlan }) {
                     </span>
                   )}
                 </div>
-              </div>
-              <div className="divide-y divide-gray-50">
-                {gapCourses.map(course => (
-                  <div key={course.id} className="px-4 py-3 flex items-start gap-3 bg-white">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 leading-snug">{course.title}</p>
-                      {course.author && <p className="text-xs text-gray-500 mt-0.5">{course.author}</p>}
-                      {course.duration_string && <p className="text-xs text-gray-400 mt-0.5">{course.duration_string}</p>}
-                      <a
-                        href={course.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-[#0077b5] font-medium hover:underline mt-1.5"
+                {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+              </button>
+              {isExpanded && (
+                <div className="divide-y divide-gray-50">
+                  {gapCourses.map(course => (
+                    <div key={course.id} className="px-4 py-3 flex items-start gap-3 bg-white">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 leading-snug">{course.title}</p>
+                        {course.author && <p className="text-xs text-gray-500 mt-0.5">{course.author}</p>}
+                        {course.duration_string && <p className="text-xs text-gray-400 mt-0.5">{course.duration_string}</p>}
+                        <a
+                          href={course.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-[#0077b5] font-medium hover:underline mt-1.5"
+                        >
+                          <ExternalLink className="w-3 h-3" /> View on LinkedIn Learning
+                        </a>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs h-8 shrink-0 text-[#0202ff] border-[#0202ff]/30 hover:bg-blue-50"
+                        onClick={() => onAddToPlan(course)}
                       >
-                        <ExternalLink className="w-3 h-3" /> View on LinkedIn Learning
-                      </a>
+                        + Add to Plan
+                      </Button>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-xs h-8 shrink-0 text-[#0202ff] border-[#0202ff]/30 hover:bg-blue-50"
-                      onClick={() => onAddToPlan(course)}
-                    >
-                      + Add to Plan
-                    </Button>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           );
         })}
