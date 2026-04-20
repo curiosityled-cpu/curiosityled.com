@@ -121,7 +121,7 @@ function CompetencyManagement() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
-          <Brain className="w-12 h-12 animate-pulse mx-auto mb-4 text-purple-600" />
+          <Brain className="w-12 h-12 animate-pulse mx-auto mb-4" style={{ color: '#0202ff' }} />
           <p className="text-gray-600">Loading competencies...</p>
         </div>
       </div>
@@ -135,11 +135,11 @@ function CompetencyManagement() {
           title="Competency Management"
           subtitle="Manage leadership competencies and their definitions"
           badges={[
-            { text: 'Platform Admin', className: "bg-white text-purple-600" },
+            { text: 'Platform Admin', className: "bg-white text-[#0202ff]" },
             { text: `${competencies.length} Total`, className: "bg-white text-blue-600" }
           ]}
           onRefresh={loadCompetencies}
-          headerColor="#9333EA"
+          headerColor="#0202ff"
         />
 
         {/* Filters & Actions */}
@@ -171,7 +171,7 @@ function CompetencyManagement() {
 
               <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
                 <DialogTrigger asChild>
-                  <Button className="bg-purple-600 hover:bg-purple-700">
+                  <Button style={{ backgroundColor: '#0202ff' }} className="hover:opacity-90">
                     <Plus className="w-4 h-4 mr-2" />
                     Create Competency
                   </Button>
@@ -214,7 +214,7 @@ function CompetencyManagement() {
                         rows={4}
                       />
                     </div>
-                    <Button onClick={handleCreate} className="w-full bg-purple-600 hover:bg-purple-700">
+                    <Button onClick={handleCreate} className="w-full hover:opacity-90" style={{ backgroundColor: '#0202ff' }}>
                       <CheckCircle className="w-4 h-4 mr-2" />
                       Create Competency
                     </Button>
@@ -254,7 +254,7 @@ function CompetencyManagement() {
                             </Badge>
                           )}
                           {competency.category && (
-                            <Badge className="bg-purple-100 text-purple-800">
+                            <Badge className="bg-blue-100 text-[#0202ff]">
                               {competency.category}
                             </Badge>
                           )}
@@ -317,7 +317,7 @@ function CompetencyManagement() {
                                   rows={4}
                                 />
                               </div>
-                              <Button onClick={handleUpdate} className="w-full bg-purple-600 hover:bg-purple-700">
+                              <Button onClick={handleUpdate} className="w-full hover:opacity-90" style={{ backgroundColor: '#0202ff' }}>
                                 <CheckCircle className="w-4 h-4 mr-2" />
                                 Update Competency
                               </Button>
