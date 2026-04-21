@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, X, Check } from "lucide-react";
+import { Loader2, X, Check, AlertCircle } from "lucide-react";
 
 const EXPERIENCE_TYPES = [
   { value: "leadership_coaching", label: "Leadership Coaching", emoji: "🎯" },
@@ -46,6 +46,7 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
     status: "planned",
   });
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   useEffect(() => {
     if (experience) {
@@ -80,17 +81,23 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
   };
 
   const handleSave = async () => {
-    if (!form.title || form.competencies.length === 0) return;
+    if (!form.title || form.competencies.length === 0 || !userEmail) return;
     setSaving(true);
-    const data = { ...form, user_email: userEmail };
-    if (editing) {
-      await base44.entities.DevelopmentExperience.update(experience.id, data);
-    } else {
-      await base44.entities.DevelopmentExperience.create(data);
+    setSaveError(null);
+    try {
+      const data = { ...form, user_email: userEmail };
+      if (editing) {
+        await base44.entities.DevelopmentExperience.update(experience.id, data);
+      } else {
+        await base44.entities.DevelopmentExperience.create(data);
+      }
+      onClose();
+      onSaved();
+    } catch (err) {
+      setSaveError(err?.message || "Failed to save. Please try again.");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    onClose();
-    onSaved();
   };
 
   const field = (label, key, type = "text", placeholder = "") => (
@@ -216,6 +223,12 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
             </div>
           </div>
 
+          {saveError && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              {saveError}
+            </div>
+          )}
           <div className="flex justify-end gap-2 pt-2 border-t">
             <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>
             <Button

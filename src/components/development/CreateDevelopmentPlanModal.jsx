@@ -151,14 +151,17 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
   const handleSave = async () => {
     if (!form.title || form.target_competencies.length === 0) return;
     setSaving(true);
-    const data = { ...form, user_email: userEmail };
-    if (editing) {
-      await base44.entities.DevelopmentPlan.update(plan.id, data);
-    } else {
-      await base44.entities.DevelopmentPlan.create(data);
+    try {
+      const data = { ...form, user_email: userEmail };
+      if (editing) {
+        await base44.entities.DevelopmentPlan.update(plan.id, data);
+      } else {
+        await base44.entities.DevelopmentPlan.create(data);
+      }
+      onSaved();
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    onSaved();
   };
 
   return (
