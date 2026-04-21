@@ -33,7 +33,9 @@ function DeltaBadge({ delta }) {
 }
 
 export default function AssessmentTrendSection({ assessments }) {
-  const [highlightedComp, setHighlightedComp] = useState(null);
+  const [pinnedComp, setPinnedComp] = useState(null);
+  const [hoveredComp, setHoveredComp] = useState(null);
+  const highlightedComp = pinnedComp || hoveredComp;
 
   if (!assessments || assessments.length < 2) return null;
 
@@ -125,12 +127,14 @@ export default function AssessmentTrendSection({ assessments }) {
           {deltas.map(d => (
             <button
               key={d.key}
-              onMouseEnter={() => setHighlightedComp(d.key)}
-              onMouseLeave={() => setHighlightedComp(null)}
-              onClick={() => setHighlightedComp(highlightedComp === d.key ? null : d.key)}
+              onMouseEnter={() => setHoveredComp(d.key)}
+              onMouseLeave={() => setHoveredComp(null)}
+              onClick={() => setPinnedComp(pinnedComp === d.key ? null : d.key)}
               className={`flex items-center justify-between px-3 py-2 rounded-lg border transition-all cursor-pointer ${
-                highlightedComp === d.key
-                  ? 'bg-blue-50 border-blue-300 font-medium'
+                pinnedComp === d.key
+                  ? 'bg-blue-100 border-blue-400 font-medium ring-2 ring-blue-300'
+                  : highlightedComp === d.key
+                  ? 'bg-blue-50 border-blue-300'
                   : 'bg-gray-50 border-gray-200 hover:border-blue-200'
               }`}
             >
