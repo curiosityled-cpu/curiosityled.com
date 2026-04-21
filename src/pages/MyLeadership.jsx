@@ -181,7 +181,7 @@ function DevelopmentCard({ assignments, devExperiences, devPlans }) {
   const activeItems = section === 'plans' ? activePlans : section === 'learning' ? activeLearning : activeExperiences;
   const completedItems = section === 'plans' ? completedPlans : section === 'learning' ? completedLearning : completedExperiences;
 
-  const sectionLabel = section === 'plans' ? 'development plans' : section === 'learning' ? 'learning' : 'experiences';
+  const sectionLabel = section === 'plans' ? 'journeys' : section === 'learning' ? 'learning' : 'experiences';
   const dotColor = section === 'plans' ? 'bg-purple-400' : section === 'experiences' ? 'bg-amber-400' : '';
 
   return (
@@ -204,7 +204,7 @@ function DevelopmentCard({ assignments, devExperiences, devPlans }) {
             onClick={() => setSection('plans')}
             className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-all flex items-center justify-center gap-1 ${section === 'plans' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
           >
-            <Layers className="w-3 h-3" /> Plans {activePlans.length > 0 && <span className="text-purple-600">({activePlans.length})</span>}
+            <Layers className="w-3 h-3" /> Journeys {activePlans.length > 0 && <span className="text-purple-600">({activePlans.length})</span>}
           </button>
           <button
             onClick={() => setSection('learning')}
