@@ -114,7 +114,7 @@ function ExperienceCard({ exp, onEdit, onDelete, onStatusChange }) {
   );
 }
 
-export default function DevelopmentPlanView({ user, assessment }) {
+export default function DevelopmentPlanView({ user, assessment, onExperienceSaved }) {
   const [experiences, setExperiences] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -144,7 +144,7 @@ export default function DevelopmentPlanView({ user, assessment }) {
 
   const handleEdit = (exp) => { setEditing(exp); setModalOpen(true); };
   const handleAdd = () => { setEditing(null); setModalOpen(true); };
-  const handleSaved = () => { setModalOpen(false); loadExperiences(); };
+  const handleSaved = () => { setModalOpen(false); loadExperiences(); if (onExperienceSaved) onExperienceSaved(); };
 
   const filtered = filterStatus === "all"
     ? experiences

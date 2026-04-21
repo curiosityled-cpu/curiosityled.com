@@ -89,6 +89,7 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
       await base44.entities.DevelopmentExperience.create(data);
     }
     setSaving(false);
+    onClose();
     onSaved();
   };
 

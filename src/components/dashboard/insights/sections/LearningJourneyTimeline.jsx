@@ -205,7 +205,7 @@ function MonthColumn({ month, courses, onDrop, onRemove, dragOverMonth, setDragO
   );
 }
 
-export default function LearningJourneyTimeline({ assessment, user }) {
+export default function LearningJourneyTimeline({ assessment, user, refreshKey }) {
   const [availableCourses, setAvailableCourses] = useState([]);
   const [userExperiences, setUserExperiences] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -239,7 +239,7 @@ export default function LearningJourneyTimeline({ assessment, user }) {
 
   useEffect(() => {
     loadData();
-  }, [assessment?.id, user?.email]);
+  }, [assessment?.id, user?.email, refreshKey]);
 
   const loadData = async () => {
     setLoading(true);

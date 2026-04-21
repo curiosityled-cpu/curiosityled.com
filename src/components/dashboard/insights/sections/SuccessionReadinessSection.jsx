@@ -38,6 +38,7 @@ export default function SuccessionReadinessSection({ user, assessment }) {
   const [steps, setSteps]             = useState([]);
   const [aiGenerated, setAiGenerated] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
+  const [experienceRefreshKey, setExperienceRefreshKey] = useState(0);
 
   useEffect(() => {
     if (user?.email && assessment) loadReadiness();
@@ -253,9 +254,9 @@ export default function SuccessionReadinessSection({ user, assessment }) {
                 Save Journey
               </Button>
             </div>
-            <LearningJourneyTimeline assessment={assessment} user={user} />
+            <LearningJourneyTimeline assessment={assessment} user={user} refreshKey={experienceRefreshKey} />
             <div className="border-t pt-4">
-              <DevelopmentPlanView user={user} assessment={assessment} />
+              <DevelopmentPlanView user={user} assessment={assessment} onExperienceSaved={() => setExperienceRefreshKey(k => k + 1)} />
             </div>
           </div>
         )}
