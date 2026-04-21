@@ -199,7 +199,7 @@ export default function MVPLayout({ children }) {
           <div className="flex items-center gap-1 px-2 py-2 rounded-lg">
               <div className="w-7 h-7 rounded-full bg-[#0202ff]/10 flex items-center justify-center flex-shrink-0">
                 <span className="text-xs font-bold text-[#0202ff]">
-                  {user?.full_name?.[0] || user?.email?.[0] || '?'}
+                  {(user?.display_name || user?.full_name)?.[0] || user?.email?.[0] || '?'}
                 </span>
               </div>
               <div className="flex-1 min-w-0 px-1">
@@ -246,7 +246,7 @@ export default function MVPLayout({ children }) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="top" align="end" className="w-56">
                   <div className="px-3 py-2">
-                    <p className="text-sm font-semibold">{user?.full_name}</p>
+                    <p className="text-sm font-semibold">{user?.display_name || user?.full_name}</p>
                     <p className="text-xs text-gray-500">{user?.email}</p>
                     <Badge variant="outline" className="text-xs mt-1">{getFriendlyRoleLabel(user?.app_role)}</Badge>
                   </div>
@@ -303,7 +303,7 @@ export default function MVPLayout({ children }) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="right" align="end" className="w-56">
                   <div className="px-3 py-2">
-                    <p className="text-sm font-semibold">{user?.full_name}</p>
+                    <p className="text-sm font-semibold">{user?.display_name || user?.full_name}</p>
                     <p className="text-xs text-gray-500">{user?.email}</p>
                   </div>
                   <DropdownMenuSeparator />

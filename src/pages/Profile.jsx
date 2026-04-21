@@ -30,7 +30,7 @@ import ExternalQualificationsSection from "@/components/profile/ExternalQualific
 import { Switch } from "@/components/ui/switch";
 
 export default function Profile() {
-  const { user, roleDisplayName, loading: authLoading, reloadUser, impersonation } = useAuth();
+  const { user, roleDisplayName, displayName, loading: authLoading, reloadUser, impersonation } = useAuth();
   const { updatePageContext } = usePageContext();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

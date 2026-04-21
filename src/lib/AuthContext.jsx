@@ -130,7 +130,8 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ 
-      user, 
+      user,
+      displayName: user?.display_name || user?.full_name || '',
       isAuthenticated, 
       isLoadingAuth,
       isLoadingPublicSettings,

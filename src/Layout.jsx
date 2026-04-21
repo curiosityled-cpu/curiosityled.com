@@ -55,7 +55,7 @@ export const usePageContext = () => {
 function LayoutContent({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, appRole, roleDisplayName, loading, isPlatformAdmin, isSuperAdmin, isPartnerBusinessAdmin, isOrgLeader, isManagerOfManagers, isProgramManager, hasProgramManagerAccess, hasPermission, hasAnyPermission, userPermissions } = useAuth();
+  const { user, appRole, roleDisplayName, displayName, loading, isPlatformAdmin, isSuperAdmin, isPartnerBusinessAdmin, isOrgLeader, isManagerOfManagers, isProgramManager, hasProgramManagerAccess, hasPermission, hasAnyPermission, userPermissions } = useAuth();
   const pageIntelligence = usePageIntelligence();
   const activityTracker = useActivityTracker();
   const [showAtreus, setShowAtreus] = useState(false);
@@ -737,7 +737,7 @@ function LayoutContent({ children }) {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-56 select-none">
                             <div className="px-2 py-1.5">
-                              <p className="text-sm font-medium">{user.full_name}</p>
+                              <p className="text-sm font-medium">{displayName}</p>
                               <p className="text-xs text-gray-500">{user.email}</p>
                               <Badge variant="outline" className="text-xs mt-1">
                                 {roleDisplayName}
@@ -851,7 +851,7 @@ function LayoutContent({ children }) {
                               </DrawerTrigger>
                               <DrawerContent>
                               <DrawerHeader>
-                              <DrawerTitle>{user.full_name}</DrawerTitle>
+                              <DrawerTitle>{displayName}</DrawerTitle>
                               <p className="text-xs text-gray-500">{user.email}</p>
                               <Badge variant="outline" className="text-xs mt-1 w-fit">
                                 {roleDisplayName}
@@ -1078,7 +1078,7 @@ function LayoutContent({ children }) {
                         <div className="border-t my-2"></div>
                         <div className="px-3 py-2">
                           <span className="text-sm text-gray-800 truncate block">
-                            {user.full_name}
+                            {displayName}
                           </span>
                           {(user?.app_role === 'Platform Admin' || user?.app_role === 'Super Administrator' || user?.app_role === 'Partner Business Administrator') ? (
                             <Link to={createPageUrl("RoleSelector")} onClick={() => setIsMobileMenuOpen(false)}>

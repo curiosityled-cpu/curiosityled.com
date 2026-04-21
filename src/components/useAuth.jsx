@@ -364,6 +364,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const appRole = user?.app_role || null;
+
+  // Computed display name: prefer display_name over full_name
+  const displayName = user?.display_name || user?.full_name || '';
   
   const roleDisplayName = customRole?.role_name || {
     'User Level 1': 'User',
@@ -463,6 +466,7 @@ export const AuthProvider = ({ children }) => {
       user, 
       loading, 
       appRole, 
+      displayName,
       roleDisplayName, 
       customRole,
       userPermissions,
