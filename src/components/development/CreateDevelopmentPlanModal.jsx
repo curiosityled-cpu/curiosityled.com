@@ -159,6 +159,9 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
         await base44.entities.DevelopmentPlan.create(data);
       }
       onSaved();
+      onClose();
+    } catch (err) {
+      console.error("Failed to save development plan:", err);
     } finally {
       setSaving(false);
     }
