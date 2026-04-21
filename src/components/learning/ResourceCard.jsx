@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ExternalLink, Plus, Sparkles, Award, Lock, CheckCircle2 } from "lucide-react";
+import { ExternalLink, Plus, Sparkles, Award, Lock, CheckCircle2, Layers } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/components/useAuth";
 
@@ -11,7 +11,8 @@ export default function ResourceCard({
     resource, 
     recommendation, 
     onAssignClick,
-    showAssignButton = false 
+    showAssignButton = false,
+    onAddToJourneyClick,
 }) {
     const { user } = useAuth();
     const [progress, setProgress] = useState(null);
@@ -233,6 +234,18 @@ export default function ResourceCard({
                             </>
                         )}
                     </Button>
+                    {onAddToJourneyClick && !isLocked && (
+                        <Button
+                            type="button"
+                            onClick={() => onAddToJourneyClick(resource)}
+                            variant="outline"
+                            size="sm"
+                            title="Add to Journey"
+                            className="text-purple-600 border-purple-200 hover:bg-purple-50"
+                        >
+                            <Layers className="w-4 h-4" />
+                        </Button>
+                    )}
                     {showAssignButton && (
                         <Button
                             onClick={() => onAssignClick(resource)}

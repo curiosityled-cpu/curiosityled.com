@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Clock, CheckCircle2, Library, Plus, Layers, GraduationCap, Pencil, Briefcase, ExternalLink, Star, Trash2 } from "lucide-react";
+import { BookOpen, Clock, CheckCircle2, Library, Plus, Layers, GraduationCap, Pencil, Briefcase, ExternalLink, Star, Trash2, ChevronDown } from "lucide-react";
+import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { motion } from "framer-motion";
@@ -248,7 +249,7 @@ export default function MyDevelopment() {
                                   <span className="text-xs text-gray-400">+{plan.target_competencies.length - 3} more</span>
                                 )}
                               </div>
-                              <div className="flex items-center gap-3 text-xs text-gray-500">
+                              <div className="flex items-center gap-3 text-xs text-gray-500 mb-2">
                                 {plan.experiences?.length > 0 && (
                                   <span className="flex items-center gap-1"><Briefcase className="w-3 h-3" /> {plan.experiences.length} experience{plan.experiences.length !== 1 ? "s" : ""}</span>
                                 )}
@@ -259,6 +260,33 @@ export default function MyDevelopment() {
                                   <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Due {new Date(plan.target_date).toLocaleDateString()}</span>
                                 )}
                               </div>
+                              {plan.learning_items?.length > 0 && (
+                                <div className="space-y-1 mt-1">
+                                  {plan.learning_items.map((item, li) => (
+                                    <div key={li} className="flex items-center gap-2 bg-gray-50 rounded-lg px-2 py-1.5">
+                                      <BookOpen className="w-3 h-3 text-blue-400 flex-shrink-0" />
+                                      <span className="flex-1 text-xs text-gray-700 truncate">{item.title}</span>
+                                      <select
+                                        value={item.status || "not_started"}
+                                        onClick={e => e.stopPropagation()}
+                                        onChange={async (e) => {
+                                          const updated = plan.learning_items.map((it, idx) =>
+                                            idx === li ? { ...it, status: e.target.value } : it
+                                          );
+                                          await base44.entities.DevelopmentPlan.update(plan.id, { learning_items: updated });
+                                          toast.success("Progress updated");
+                                          load();
+                                        }}
+                                        className="text-[10px] border border-gray-200 rounded-md px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#0202ff]/30 bg-white cursor-pointer"
+                                      >
+                                        <option value="not_started">Not Started</option>
+                                        <option value="in_progress">In Progress</option>
+                                        <option value="completed">Completed</option>
+                                      </select>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                             <button onClick={() => openEdit(plan)} className="text-gray-400 hover:text-[#0202ff] transition-colors flex-shrink-0 mt-0.5">
                               <Pencil className="w-4 h-4" />
@@ -335,9 +363,23 @@ export default function MyDevelopment() {
                               <p className="font-medium text-gray-900 leading-snug">{item.title}</p>
                               {item.description && <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{item.description}</p>}
                               <div className="flex flex-wrap items-center gap-2 mt-2">
-                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_BADGE[item.status] || "bg-gray-100 text-gray-700"}`}>
-                                  {item.status?.replace("_", " ")}
-                                </span>
+                                <select
+                                  value={item.status}
+                                  onChange={async (e) => {
+                                    const newStatus = e.target.value;
+                                    const updateData = { status: newStatus };
+                                    if (newStatus === "completed") updateData.completion_date = new Date().toISOString();
+                                    await base44.entities.AssignedLearning.update(item.id, updateData);
+                                    toast.success("Progress updated");
+                                    load();
+                                  }}
+                                  className={`text-xs px-2 py-0.5 rounded-full font-medium border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 ${STATUS_BADGE[item.status] || "bg-gray-100 text-gray-700"}`}
+                                >
+                                  <option value="assigned">Assigned</option>
+                                  <option value="started">Started</option>
+                                  <option value="in_progress">In Progress</option>
+                                  <option value="completed">Completed</option>
+                                </select>
                                 {item.due_date && (
                                   <span className="flex items-center gap-1 text-xs text-gray-400">
                                     <Clock className="w-3 h-3" /> Due {new Date(item.due_date).toLocaleDateString()}

@@ -6,8 +6,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import {
   Loader2, Plus, Trash2, Check, BookOpen, Briefcase,
-  ChevronDown, ChevronUp, Search, GripVertical, ExternalLink, X
+  ChevronDown, ChevronUp, Search, GripVertical, ExternalLink, X, AlertCircle
 } from "lucide-react";
+import { toast } from "sonner";
 
 const COMPETENCIES = [
   "Situational Intelligence", "Decision Making", "Communication",
@@ -46,6 +47,7 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
   }));
 
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
   const [expandedExp, setExpandedExp] = useState(null);
 
   // Course search state
@@ -78,6 +80,7 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
     setExpandedExp(null);
     setSearchQuery("");
     setShowSearch(false);
+    setSaveError(null);
   }, [plan, open]);
 
   const filteredCourses = allCourses.filter(c => {
@@ -151,22 +154,27 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
   const handleSave = async () => {
     if (!form.title || form.target_competencies.length === 0) return;
     setSaving(true);
+    setSaveError(null);
     try {
       let email = userEmail;
       if (!email) {
         const me = await base44.auth.me();
         email = me?.email;
       }
+      if (!email) throw new Error("Could not determine your user account. Please refresh and try again.");
       const data = { ...form, user_email: email };
       if (editing) {
         await base44.entities.DevelopmentPlan.update(plan.id, data);
       } else {
         await base44.entities.DevelopmentPlan.create(data);
       }
+      toast.success(editing ? "Journey saved!" : "Journey created!");
       onSaved();
       onClose();
     } catch (err) {
-      console.error("Failed to save journey:", err);
+      const msg = err?.message || "Failed to save. Please try again.";
+      setSaveError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
@@ -494,6 +502,12 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
             </DragDropContext>
           </div>
 
+          {saveError && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              {saveError}
+            </div>
+          )}
           <div className="flex justify-end gap-2 pt-2 border-t">
             <Button type="button" variant="outline" size="sm" onClick={onClose}>Cancel</Button>
             <Button

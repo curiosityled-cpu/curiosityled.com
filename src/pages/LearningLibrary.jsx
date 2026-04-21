@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import MultiSelectFilter from "../components/learning/MultiSelectFilter";
 import AssignLearningModal from "../components/learning/AssignLearningModal";
 import ResourceCard from "../components/learning/ResourceCard";
+import AddToJourneyModal from "../components/development/AddToJourneyModal";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { usePageContext } from "../Layout";
@@ -47,6 +48,10 @@ function LearningLibrary() {
   // Assignment Modal
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedResource, setSelectedResource] = useState(null);
+
+  // Add to Journey modal
+  const [showJourneyModal, setShowJourneyModal] = useState(false);
+  const [journeyResource, setJourneyResource] = useState(null);
 
   // Available filter options
   const [competencyOptions, setCompetencyOptions] = useState([]);
@@ -297,6 +302,11 @@ Return as a JSON array of recommendations.`;
   const handleAssignClick = (resource) => {
     setSelectedResource(resource);
     setShowAssignModal(true);
+  };
+
+  const handleAddToJourney = (resource) => {
+    setJourneyResource(resource);
+    setShowJourneyModal(true);
   };
 
   // Enhanced: Build comprehensive context for Atreus
@@ -565,6 +575,7 @@ Return as a JSON array of recommendations.`;
                   recommendation={getRecommendation(resource.id)}
                   onAssignClick={handleAssignClick}
                   showAssignButton={isAnyAdmin}
+                  onAddToJourneyClick={handleAddToJourney}
                 />
               </motion.div>
             ))}
@@ -580,6 +591,15 @@ Return as a JSON array of recommendations.`;
           onSuccess={() => { setShowAssignModal(false); setSelectedResource(null); }}
           resource={selectedResource}
           assignedBy={user.email}
+        />
+      )}
+
+      {/* Add to Journey Modal */}
+      {showJourneyModal && (
+        <AddToJourneyModal
+          open={showJourneyModal}
+          onClose={() => { setShowJourneyModal(false); setJourneyResource(null); }}
+          resource={journeyResource}
         />
       )}
     </div>
