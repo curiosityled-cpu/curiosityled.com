@@ -167,17 +167,22 @@ function GoalsCard({ goals }) {
   );
 }
 
-function DevelopmentCard({ assignments, devExperiences }) {
+function DevelopmentCard({ assignments, devExperiences, devPlans }) {
   const [tab, setTab] = useState('active');
-  const [section, setSection] = useState('plans'); // 'plans' | 'learning'
+  const [section, setSection] = useState('plans'); // 'plans' | 'learning' | 'experiences'
 
-  const activePlans = devExperiences.filter(e => e.status !== 'completed' && e.status !== 'cancelled');
-  const completedPlans = devExperiences.filter(e => e.status === 'completed');
+  const activePlans = devPlans.filter(p => p.status !== 'completed' && p.status !== 'cancelled');
+  const completedPlans = devPlans.filter(p => p.status === 'completed');
   const activeLearning = assignments.filter(a => a.status !== 'completed');
   const completedLearning = assignments.filter(a => a.status === 'completed');
+  const activeExperiences = devExperiences.filter(e => e.status !== 'completed' && e.status !== 'cancelled');
+  const completedExperiences = devExperiences.filter(e => e.status === 'completed');
 
-  const activeItems = section === 'plans' ? activePlans : activeLearning;
-  const completedItems = section === 'plans' ? completedPlans : completedLearning;
+  const activeItems = section === 'plans' ? activePlans : section === 'learning' ? activeLearning : activeExperiences;
+  const completedItems = section === 'plans' ? completedPlans : section === 'learning' ? completedLearning : completedExperiences;
+
+  const sectionLabel = section === 'plans' ? 'development plans' : section === 'learning' ? 'learning' : 'experiences';
+  const dotColor = section === 'plans' ? 'bg-purple-400' : section === 'experiences' ? 'bg-amber-400' : '';
 
   return (
     <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
@@ -207,6 +212,12 @@ function DevelopmentCard({ assignments, devExperiences }) {
           >
             <GraduationCap className="w-3 h-3" /> Learning {activeLearning.length > 0 && <span className="text-[#0202ff]">({activeLearning.length})</span>}
           </button>
+          <button
+            onClick={() => setSection('experiences')}
+            className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-all flex items-center justify-center gap-1 ${section === 'experiences' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            <Star className="w-3 h-3" /> Exp. {activeExperiences.length > 0 && <span className="text-amber-600">({activeExperiences.length})</span>}
+          </button>
         </div>
         {/* Active / Completed tabs */}
         <div className="flex gap-1 mt-1 bg-gray-50 border border-gray-100 rounded-lg p-1">
@@ -229,12 +240,12 @@ function DevelopmentCard({ assignments, devExperiences }) {
           activeItems.length === 0 ? (
             <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 border border-gray-100 rounded-xl p-4">
               <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-              No active {section === 'plans' ? 'development plans' : 'learning'} right now.
+              No active {sectionLabel} right now.
             </div>
           ) : (
             activeItems.slice(0, 4).map(item => (
               <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${section === 'plans' ? 'bg-purple-400' : item.priority === 'urgent' ? 'bg-red-500' : item.priority === 'high' ? 'bg-amber-500' : 'bg-blue-400'}`} />
+                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${section === 'learning' ? (item.priority === 'urgent' ? 'bg-red-500' : item.priority === 'high' ? 'bg-amber-500' : 'bg-blue-400') : dotColor}`} />
                 <p className="text-sm text-gray-800 truncate flex-1">{item.title}</p>
                 <Badge variant="outline" className="text-xs capitalize flex-shrink-0">{item.status?.replace('_', ' ')}</Badge>
               </div>
@@ -244,7 +255,7 @@ function DevelopmentCard({ assignments, devExperiences }) {
           completedItems.length === 0 ? (
             <div className="flex items-center gap-3 text-sm text-gray-500 bg-gray-50 border border-gray-100 rounded-xl p-4">
               <Clock className="w-4 h-4 flex-shrink-0" />
-              No completed {section === 'plans' ? 'plans' : 'learning'} yet.
+              No completed {sectionLabel} yet.
             </div>
           ) : (
             completedItems.slice(0, 4).map(item => (
@@ -398,6 +409,13 @@ export default function MyLeadership() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: devPlans = [], isLoading: loadingPlans } = useQuery({
+    queryKey: ['my-dev-plans', user?.email],
+    queryFn: async () => base44.entities.DevelopmentPlan.filter({ user_email: user.email }, '-created_date', 10),
+    enabled: !!user?.email,
+    staleTime: 5 * 60 * 1000,
+  });
+
   // Use full display name; fall back gracefully but never use email prefix
   const displayName = user?.full_name && user.full_name.trim() && !user.full_name.includes('@')
     ? user.full_name.split(' ')[0]
@@ -408,7 +426,7 @@ export default function MyLeadership() {
       title="My Leadership"
       subtitle={`Welcome back, ${displayName}. Here's your leadership snapshot.`}
     >
-      {loadingInsight || loadingGoals || loadingAssignments || loadingDev ? (
+      {loadingInsight || loadingGoals || loadingAssignments || loadingDev || loadingPlans ? (
         <div className="space-y-5">
           <div className="h-64 w-full rounded-2xl bg-gray-100 animate-pulse" />
           <div className="h-40 w-full rounded-2xl bg-gray-100 animate-pulse" />
@@ -418,7 +436,7 @@ export default function MyLeadership() {
         <>
           {insight ? <InsightCard insight={insight} user={user} /> : <NoInsightState onRefresh={refetchInsight} />}
           <GoalsCard goals={goals} />
-          <DevelopmentCard assignments={assignments} devExperiences={devExperiences} />
+          <DevelopmentCard assignments={assignments} devExperiences={devExperiences} devPlans={devPlans} />
         </>
       )}
     </MVPPageLayout>
