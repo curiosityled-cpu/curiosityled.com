@@ -82,14 +82,15 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
 
   const handleSave = async () => {
     if (!form.title || form.competencies.length === 0) return;
-    if (!userEmail) {
-      setSaveError("User email is missing. Please refresh and try again.");
-      return;
-    }
     setSaving(true);
     setSaveError(null);
     try {
-      const data = { ...form, user_email: userEmail };
+      let email = userEmail;
+      if (!email) {
+        const me = await base44.auth.me();
+        email = me?.email;
+      }
+      const data = { ...form, user_email: email };
       if (editing) {
         await base44.entities.DevelopmentExperience.update(experience.id, data);
       } else {

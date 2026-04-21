@@ -152,7 +152,12 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
     if (!form.title || form.target_competencies.length === 0) return;
     setSaving(true);
     try {
-      const data = { ...form, user_email: userEmail };
+      let email = userEmail;
+      if (!email) {
+        const me = await base44.auth.me();
+        email = me?.email;
+      }
+      const data = { ...form, user_email: email };
       if (editing) {
         await base44.entities.DevelopmentPlan.update(plan.id, data);
       } else {
