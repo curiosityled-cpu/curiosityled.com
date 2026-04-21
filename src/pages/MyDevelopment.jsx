@@ -105,10 +105,11 @@ export default function MyDevelopment() {
   const load = async () => {
     if (!user) return;
     try {
-      const [assigned, plans, exps] = await Promise.all([
+      const [assigned, plans, exps, progress] = await Promise.all([
         base44.entities.AssignedLearning.filter({ user_email: user.email }),
         base44.entities.DevelopmentPlan.filter({ user_email: user.email }),
         base44.entities.DevelopmentExperience.filter({ user_email: user.email }, "-created_date"),
+        base44.entities.LearnerProgress?.filter({ user_email: user.email }) || [],
       ]);
       setAssignedLearning(assigned);
       setDevPlans(plans);
@@ -395,6 +396,16 @@ export default function MyDevelopment() {
                                   </span>
                                 )}
                               </div>
+                              {item.status === "in_progress" && (
+                                <div className="mt-2 bg-blue-50 rounded-lg p-2">
+                                  <div className="flex justify-between text-xs mb-1">
+                                    <span className="text-blue-700 font-medium">In Progress</span>
+                                  </div>
+                                  <div className="h-1.5 bg-blue-200 rounded-full overflow-hidden">
+                                    <div className="h-full bg-blue-500 w-1/3"></div>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </CardContent>

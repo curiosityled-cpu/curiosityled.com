@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { User } from "@/entities/User";
 import { Assessment } from "@/entities/Assessment";
-import { Brain, AlertCircle, Loader2, ArrowRight, FileText, Download, BarChart3, ClipboardList, CheckCircle, TrendingUp, Users } from "lucide-react";
+import { Brain, AlertCircle, Loader2, ArrowRight, FileText, Download, BarChart3, ClipboardList, CheckCircle, TrendingUp, Users, Route } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -828,12 +828,33 @@ function AssessmentResults() {
                     Start your leadership development journey with personalized learning resources and coaching.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button 
+                      onClick={() => {
+                        // Navigate to JourneyBuilder with recommended resources
+                        const lowestCompetencies = Object.entries({
+                          decision_making: assessment.dm_pct,
+                          communication: assessment.comm_pct,
+                          resource_management: assessment.rm_pct,
+                          stakeholder_management: assessment.sm_pct,
+                          performance_management: assessment.pm_pct,
+                          situational_intelligence: assessment.si_pct
+                        })
+                          .sort((a, b) => a[1] - b[1])
+                          .slice(0, 2)
+                          .map(([name]) => name);
+
+                        // For now, just navigate - resources will be set based on competencies selected in journey builder
+                        window.location.href = createPageUrl("JourneyBuilder");
+                      }}
+                      style={{ backgroundColor: '#0043ef' }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0038cc'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0043ef'}
+                    >
+                      <Route className="w-4 h-4 mr-2" />
+                      Create Development Plan
+                    </Button>
                     <Link to={createPageUrl("LearningLibrary")}>
-                      <Button 
-                        style={{ backgroundColor: '#0043ef' }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0038cc'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0043ef'}
-                      >
+                      <Button variant="outline">
                         <FileText className="w-4 h-4 mr-2" />
                         Browse Learning Resources
                       </Button>
