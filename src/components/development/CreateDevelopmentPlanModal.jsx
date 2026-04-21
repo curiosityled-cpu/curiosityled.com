@@ -161,7 +161,7 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
       onSaved();
       onClose();
     } catch (err) {
-      console.error("Failed to save development plan:", err);
+      console.error("Failed to save journey:", err);
     } finally {
       setSaving(false);
     }
@@ -171,15 +171,15 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{editing ? "Edit Development Plan" : "Create Development Plan"}</DialogTitle>
-          <p className="text-sm text-gray-500 mt-0.5">Combine off-platform experiences and learning resources into one focused plan.</p>
+          <DialogTitle>{editing ? "Edit Journey" : "Create Journey"}</DialogTitle>
+          <p className="text-sm text-gray-500 mt-0.5">Combine off-platform experiences and learning resources into one focused journey.</p>
         </DialogHeader>
 
         <div className="space-y-5 pt-2">
           {/* Plan basics */}
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Plan Title *</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Journey Title *</label>
               <input
                 type="text"
                 value={form.title}
@@ -193,7 +193,7 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
               <textarea
                 value={form.description}
                 onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                placeholder="What do you want to achieve with this plan?"
+                placeholder="What do you want to achieve with this journey?"
                 rows={2}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 resize-none"
               />
@@ -499,7 +499,7 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
               className="bg-[#0202ff] hover:bg-[#0101dd] text-white"
             >
               {saving && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
-              {editing ? "Save Changes" : "Create Plan"}
+              {editing ? "Save Changes" : "Create Journey"}
             </Button>
           </div>
         </div>
