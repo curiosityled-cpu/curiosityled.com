@@ -416,8 +416,8 @@ export default function MyLeadership() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Prefer display_name, then full_name, fall back to 'there'
-  const rawName = user?.display_name || user?.full_name;
+  // Prefer display_name (may be nested in data), then full_name, fall back to 'there'
+  const rawName = user?.display_name || user?.data?.display_name || user?.full_name;
   const displayName = rawName && rawName.trim() && !rawName.includes('@')
     ? rawName.split(' ')[0]
     : 'there';
