@@ -3,9 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ExternalLink, Plus, Sparkles, Award, Lock, CheckCircle2, Layers } from "lucide-react";
+import { ExternalLink, Plus, Sparkles, Award, Lock, CheckCircle2, Layers, UserPlus } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/components/useAuth";
+import { toast } from "sonner";
 
 export default function ResourceCard({ 
     resource, 
@@ -13,7 +14,31 @@ export default function ResourceCard({
     onAssignClick,
     showAssignButton = false,
     onAddToJourneyClick,
+    showSelfAssign = false,
 }) {
+    const [selfAssigning, setSelfAssigning] = React.useState(false);
+
+    const handleSelfAssign = async () => {
+        setSelfAssigning(true);
+        try {
+            const me = await base44.auth.me();
+            if (!me?.email) throw new Error("Not authenticated");
+            await base44.entities.AssignedLearning.create({
+                user_email: me.email,
+                learning_resource_id: resource.id,
+                assigned_by: me.email,
+                title: resource.title,
+                description: resource.description || "",
+                status: "assigned",
+                client_id: me.client_id || null,
+            });
+            toast.success("Added to your learning progress!");
+        } catch (err) {
+            toast.error("Failed to assign: " + (err?.message || "Unknown error"));
+        } finally {
+            setSelfAssigning(false);
+        }
+    };
     const { user } = useAuth();
     const [progress, setProgress] = useState(null);
     const [isLocked, setIsLocked] = useState(false);
@@ -234,6 +259,19 @@ export default function ResourceCard({
                             </>
                         )}
                     </Button>
+                    {showSelfAssign && !isLocked && (
+                        <Button
+                            type="button"
+                            onClick={handleSelfAssign}
+                            disabled={selfAssigning}
+                            variant="outline"
+                            size="sm"
+                            title="Assign to myself"
+                            className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                        >
+                            <UserPlus className="w-4 h-4" />
+                        </Button>
+                    )}
                     {onAddToJourneyClick && !isLocked && (
                         <Button
                             type="button"

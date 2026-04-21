@@ -576,6 +576,7 @@ Return as a JSON array of recommendations.`;
                   onAssignClick={handleAssignClick}
                   showAssignButton={isAnyAdmin}
                   onAddToJourneyClick={handleAddToJourney}
+                  showSelfAssign={true}
                 />
               </motion.div>
             ))}

@@ -156,13 +156,16 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
     setSaving(true);
     setSaveError(null);
     try {
+      let me = null;
       let email = userEmail;
       if (!email) {
-        const me = await base44.auth.me();
+        me = await base44.auth.me();
         email = me?.email;
+      } else {
+        me = await base44.auth.me();
       }
       if (!email) throw new Error("Could not determine your user account. Please refresh and try again.");
-      const data = { ...form, user_email: email };
+      const data = { ...form, user_email: email, client_id: me?.client_id || null };
       if (editing) {
         await base44.entities.DevelopmentPlan.update(plan.id, data);
       } else {

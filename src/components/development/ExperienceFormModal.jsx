@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Loader2, X, Check, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 const EXPERIENCE_TYPES = [
   { value: "leadership_coaching", label: "Leadership Coaching", emoji: "🎯" },
@@ -85,17 +86,16 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
     setSaving(true);
     setSaveError(null);
     try {
-      let email = userEmail;
-      if (!email) {
-        const me = await base44.auth.me();
-        email = me?.email;
-      }
-      const data = { ...form, user_email: email };
+      const me = await base44.auth.me();
+      const email = userEmail || me?.email;
+      if (!email) throw new Error("Could not determine your user account. Please refresh and try again.");
+      const data = { ...form, user_email: email, client_id: me?.client_id || null };
       if (editing) {
         await base44.entities.DevelopmentExperience.update(experience.id, data);
       } else {
         await base44.entities.DevelopmentExperience.create(data);
       }
+      toast.success(editing ? "Experience saved!" : "Experience logged!");
       onSaved();
       onClose();
     } catch (err) {
