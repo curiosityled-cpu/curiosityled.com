@@ -1,0 +1,53 @@
+{
+  "name": "Tenant",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Organization or tenant name"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ACTIVE",
+        "SUSPENDED"
+      ],
+      "default": "ACTIVE",
+      "description": "Tenant status"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "name": "AgentAction",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user who requested the action"
+    },
+    "action_type": {
+      "type": "string",
+      "description": "Type of action executed (e.g., createReport, assignLearning)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "confirmed",
+        "executing",
+        "completed",
+        "failed"
+      ],
+      "default": "pending",
+      "description": "Current status of the action"
+    },
+    "parameters": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "JSON payload of parameters sent to the tool"
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "JSON result of the action execution"
+    },
+    "error_message": {
+      "type": "string",
+      "description": "Error message if action failed"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the action was executed"
+    }
+  },
+  "required": [
+    "user_email",
+    "action_type"
+  ],
+  "rls": {
+    "read": {
+      "user_email": "{{user.email}}"
+    },
+    "write": {
+      "user_email": "{{user.email}}"
+    }
+  }
+}

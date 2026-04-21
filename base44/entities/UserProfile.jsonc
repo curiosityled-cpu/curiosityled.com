@@ -1,0 +1,119 @@
+{
+  "name": "UserProfile",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant this profile belongs to"
+    },
+    "base44_user_id": {
+      "type": "string",
+      "description": "Base44 User ID after first login linking (nullable until linked)"
+    },
+    "email": {
+      "type": "string",
+      "description": "User email (unique per tenant)"
+    },
+    "first_name": {
+      "type": "string",
+      "description": "User first name"
+    },
+    "last_name": {
+      "type": "string",
+      "description": "User last name"
+    },
+    "department": {
+      "type": "string",
+      "description": "Department"
+    },
+    "manager_email": {
+      "type": "string",
+      "description": "Manager email"
+    },
+    "manager_base44_user_id": {
+      "type": "string",
+      "description": "Manager Base44 User ID (set after linking)"
+    },
+    "custom_role_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Array of custom role IDs"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PROVISIONED",
+        "INVITED",
+        "ACTIVE",
+        "SUSPENDED"
+      ],
+      "default": "PROVISIONED",
+      "description": "Profile status"
+    },
+    "source_system": {
+      "type": "string",
+      "enum": [
+        "WIX",
+        "MANUAL",
+        "IAM",
+        "SCIM"
+      ],
+      "description": "System that provisioned this user"
+    },
+    "source_user_ref": {
+      "type": "string",
+      "description": "External system user reference (e.g., Wix member ID)"
+    },
+    "last_synced_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last sync timestamp"
+    }
+  },
+  "required": [
+    "tenant_id",
+    "email",
+    "first_name",
+    "last_name"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "base44_user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          },
+          "tenant_id": "{{user.client_id}}"
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          },
+          "tenant_id": "{{user.client_id}}"
+        }
+      ]
+    }
+  }
+}

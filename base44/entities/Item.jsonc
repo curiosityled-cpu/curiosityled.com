@@ -1,0 +1,104 @@
+{
+  "name": "Item",
+  "type": "object",
+  "properties": {
+    "board_id": {
+      "type": "string",
+      "description": "ID of the Goal this item belongs to"
+    },
+    "group_id": {
+      "type": "string",
+      "description": "ID of the group within the goal"
+    },
+    "title": {
+      "type": "string",
+      "description": "Item/task title"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "default": "medium",
+      "description": "Priority level"
+    },
+    "color": {
+      "type": "string",
+      "default": "#0073EA",
+      "description": "Visual color for the item"
+    },
+    "assignees": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "user_email": {
+            "type": "string"
+          },
+          "user_name": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Users assigned to this item"
+    },
+    "depends_on": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs of items this depends on"
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Additional data like notes, status, progress, due_date"
+    },
+    "order_index": {
+      "type": "number",
+      "description": "Order within the group"
+    },
+    "comments_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of comments on this item"
+    }
+  },
+  "required": [
+    "board_id",
+    "title"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "assignees": {
+            "$elemMatch": {
+              "user_email": "{{user.email}}"
+            }
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "assignees": {
+            "$elemMatch": {
+              "user_email": "{{user.email}}"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

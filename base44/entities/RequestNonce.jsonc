@@ -1,0 +1,72 @@
+{
+  "name": "RequestNonce",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant ID"
+    },
+    "endpoint": {
+      "type": "string",
+      "description": "API endpoint path (e.g., '/provisioning/batches')"
+    },
+    "nonce": {
+      "type": "string",
+      "description": "Request nonce (UUID) - must be unique per (tenant, endpoint, nonce)"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Request timestamp"
+    },
+    "request_hash": {
+      "type": "string",
+      "description": "SHA256 hash of request body for integrity validation"
+    },
+    "api_key_prefix": {
+      "type": "string",
+      "description": "API key prefix for tracking (first 12 chars)"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Expiration timestamp (24h TTL from creation)"
+    }
+  },
+  "required": [
+    "tenant_id",
+    "endpoint",
+    "nonce",
+    "timestamp",
+    "request_hash",
+    "expires_at"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Platform Admin"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Platform Admin"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "AssessmentProcessor",
+  "description": "AI agent for processing external assessment results, extracting key information from text or documents, and summarizing them. Upon completion, the status of the ExternalAssessmentResult entity will be updated to 'ai_processed' or 'needs_manual_input'.",
+  "instructions": "Given an ExternalAssessmentResult ID, access the original ExternalAssessmentResult entity. If a document_uri is provided, use CreateFileSignedUrl to generate a temporary URL for the private file, then use InvokeLLM with the file to extract assessment type, designation/score, and generate a comprehensive summary. Update the ExternalAssessmentResult with the extracted data and set status to 'ai_processed'. If extraction fails or information is incomplete, set status to 'needs_manual_input'.",
+  "tool_configs": [
+    {
+      "entity_name": "ExternalAssessmentResult",
+      "allowed_operations": [
+        "read",
+        "update"
+      ]
+    },
+    {
+      "integration_name": "Core",
+      "allowed_functions": [
+        "CreateFileSignedUrl",
+        "InvokeLLM"
+      ]
+    }
+  ]
+}

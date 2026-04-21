@@ -1,0 +1,301 @@
+{
+  "name": "Cohort",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client this cohort belongs to"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the cohort or program"
+    },
+    "program_type": {
+      "type": "string",
+      "enum": [
+        "emerging_leaders",
+        "executive_development",
+        "new_manager_bootcamp",
+        "team_effectiveness",
+        "coaching_cohort",
+        "certification",
+        "custom"
+      ],
+      "description": "Type of leadership development program"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the program goals and content"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Program start date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Program end date"
+    },
+    "participant_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of participant user emails"
+    },
+    "manager_email": {
+      "type": "string",
+      "description": "Email of the program manager responsible for this cohort (legacy)"
+    },
+    "facilitator_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of Program Manager emails who facilitate this cohort"
+    },
+    "primary_facilitator_email": {
+      "type": "string",
+      "description": "Email of the primary facilitator/Program Manager"
+    },
+    "program_id": {
+      "type": "string",
+      "description": "ID of the parent Program this cohort belongs to"
+    },
+    "class_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of Class IDs that are part of this cohort"
+    },
+    "journey_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of Learning Journey IDs assigned to this cohort"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planning",
+        "enrollment_open",
+        "active",
+        "completed",
+        "cancelled"
+      ],
+      "default": "planning",
+      "description": "Current status of the cohort"
+    },
+    "max_participants": {
+      "type": "number",
+      "description": "Maximum number of participants allowed"
+    },
+    "target_competencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of competency names this program targets"
+    },
+    "learning_resource_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of LearningResource IDs assigned to this cohort"
+    },
+    "certificate_template_id": {
+      "type": "string",
+      "description": "ID of certificate template for cohort completion"
+    },
+    "completion_criteria": {
+      "type": "object",
+      "properties": {
+        "min_attendance_percentage": {
+          "type": "number"
+        },
+        "required_class_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "required_resource_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Criteria for cohort completion"
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "completion_rate": {
+          "type": "number"
+        },
+        "avg_attendance": {
+          "type": "number"
+        },
+        "avg_satisfaction": {
+          "type": "number"
+        },
+        "engagement_score": {
+          "type": "number"
+        }
+      },
+      "description": "Program-level metrics (completion rate, avg scores, engagement, etc.)"
+    },
+    "schedule": {
+      "type": "object",
+      "properties": {
+        "meeting_frequency": {
+          "type": "string",
+          "enum": [
+            "weekly",
+            "biweekly",
+            "monthly",
+            "custom"
+          ]
+        },
+        "meeting_day": {
+          "type": "string"
+        },
+        "meeting_time": {
+          "type": "string"
+        },
+        "timezone": {
+          "type": "string"
+        }
+      },
+      "description": "Regular meeting schedule for the cohort"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for categorization"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal notes about this cohort"
+    },
+    "points_value": {
+      "type": "number",
+      "description": "Number of gamification points awarded for completing this cohort (overrides default)"
+    },
+    "completion_badge_id": {
+      "type": "string",
+      "description": "ID of the BadgeTemplate awarded upon cohort completion"
+    }
+  },
+  "required": [
+    "name",
+    "start_date"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "participant_emails": {
+            "$in": [
+              "{{user.email}}"
+            ]
+          }
+        },
+        {
+          "manager_email": "{{user.email}}"
+        },
+        {
+          "facilitator_emails": {
+            "$in": [
+              "{{user.email}}"
+            ]
+          }
+        },
+        {
+          "primary_facilitator_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Analyst",
+                "Admin Level 1",
+                "Admin Level 2",
+                "Super Administrator"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "manager_email": "{{user.email}}"
+        },
+        {
+          "facilitator_emails": {
+            "$in": [
+              "{{user.email}}"
+            ]
+          }
+        },
+        {
+          "primary_facilitator_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

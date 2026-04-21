@@ -1,0 +1,357 @@
+{
+  "name": "ScheduledReport",
+  "type": "object",
+  "properties": {
+    "report_name": {
+      "type": "string",
+      "description": "User-defined name for the report"
+    },
+    "created_by_email": {
+      "type": "string",
+      "description": "Email of the user who created the report"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client this report belongs to"
+    },
+    "report_config": {
+      "type": "object",
+      "properties": {
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of metrics to include (e.g., 'avg_leadership_score', 'goal_completion_rate')"
+        },
+        "selected_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Specific data fields to include in the report (e.g., 'user.full_name', 'assessment.overall_pct'). If empty, all relevant fields are included."
+        },
+        "filters": {
+          "type": "object",
+          "properties": {
+            "timeframe": {
+              "type": "string",
+              "description": "Timeframe filter (e.g., '3months', '6months', 'custom')"
+            },
+            "customDateRange": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "to": {
+                  "type": "string",
+                  "format": "date"
+                }
+              }
+            },
+            "division": {
+              "type": "string"
+            },
+            "level": {
+              "type": "string"
+            },
+            "tenure": {
+              "type": "string"
+            },
+            "competency": {
+              "type": "string"
+            },
+            "riskLevel": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "description": "JSON object defining report parameters"
+    },
+    "schedule_interval": {
+      "type": "string",
+      "enum": [
+        "once",
+        "daily",
+        "every_n_days",
+        "weekly",
+        "monthly",
+        "first_weekday_of_month",
+        "specific_dates"
+      ],
+      "default": "once",
+      "description": "How often the report is generated"
+    },
+    "schedule_every_n_days": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 365,
+      "description": "Number of days between report generations (for every_n_days interval)"
+    },
+    "schedule_day_of_week": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 6,
+      "description": "0=Sunday, 6=Saturday for weekly reports"
+    },
+    "schedule_day_of_month": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 31,
+      "description": "Day of month for monthly reports"
+    },
+    "schedule_specific_dates": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "date"
+      },
+      "description": "Array of specific dates when the report should be generated"
+    },
+    "schedule_end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "End date for recurring reports - after this date, no more reports will be generated"
+    },
+    "last_generated_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of the last generation"
+    },
+    "next_scheduled_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of the next scheduled generation"
+    },
+    "output_format": {
+      "type": "string",
+      "enum": [
+        "pdf",
+        "csv"
+      ],
+      "default": "pdf",
+      "description": "Desired output format"
+    },
+    "recipients": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of email addresses to send the report to"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "paused",
+        "completed",
+        "failed"
+      ],
+      "default": "active",
+      "description": "Status of the scheduled report"
+    },
+    "last_file_uri": {
+      "type": "string",
+      "description": "URI of the last generated report file"
+    },
+    "error_message": {
+      "type": "string",
+      "description": "Details of any generation errors"
+    },
+    "generation_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the generation occurred"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "success",
+              "failed"
+            ],
+            "description": "Whether the generation succeeded or failed"
+          },
+          "file_uri": {
+            "type": "string",
+            "description": "URI of the generated file (if successful)"
+          },
+          "error_message": {
+            "type": "string",
+            "description": "Error details (if failed)"
+          },
+          "recipients_count": {
+            "type": "number",
+            "description": "Number of recipients the report was sent to"
+          }
+        }
+      },
+      "description": "History of the last 10 report generations",
+      "maxItems": 10
+    },
+    "total_generations": {
+      "type": "number",
+      "default": 0,
+      "description": "Total number of times this report has been generated"
+    },
+    "cloned_from_id": {
+      "type": "string",
+      "description": "ID of the original report if this was cloned"
+    },
+    "shared_with": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "user_email": {
+            "type": "string",
+            "description": "Email of the user this report is shared with"
+          },
+          "permission_level": {
+            "type": "string",
+            "enum": [
+              "view",
+              "edit"
+            ],
+            "description": "Permission level: view (can only view/download) or edit (can modify/pause/clone)"
+          },
+          "shared_by": {
+            "type": "string",
+            "description": "Email of the user who granted this access"
+          },
+          "shared_date": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When access was granted"
+          }
+        },
+        "required": [
+          "user_email",
+          "permission_level"
+        ]
+      },
+      "description": "Users who have access to this report and their permission levels"
+    },
+    "is_team_shared": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this report is shared with the entire team/client"
+    },
+    "team_permission_level": {
+      "type": "string",
+      "enum": [
+        "view",
+        "edit"
+      ],
+      "description": "Permission level for team-shared reports"
+    }
+  },
+  "required": [
+    "report_name",
+    "created_by_email",
+    "report_config",
+    "output_format",
+    "schedule_interval",
+    "recipients"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_email": "{{user.email}}"
+        },
+        {
+          "shared_with": {
+            "$elemMatch": {
+              "user_email": "{{user.email}}"
+            }
+          }
+        },
+        {
+          "is_team_shared": true,
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "User Level 2"
+          },
+          "created_by_email": {
+            "$in": "{{user.subordinate_emails}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Analyst",
+                "Admin Level 2",
+                "Super Administrator"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "created_by_email": "{{user.email}}"
+        },
+        {
+          "shared_with": {
+            "$elemMatch": {
+              "user_email": "{{user.email}}",
+              "permission_level": "edit"
+            }
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,178 @@
+{
+  "name": "CareerPath",
+  "type": "object",
+  "properties": {
+    "from_role_id": {
+      "type": "string",
+      "description": "ID of the starting role"
+    },
+    "to_role_id": {
+      "type": "string",
+      "description": "ID of the target role"
+    },
+    "path_type": {
+      "type": "string",
+      "enum": [
+        "vertical",
+        "lateral"
+      ],
+      "description": "Type of career movement - promotion or lateral move"
+    },
+    "title": {
+      "type": "string",
+      "description": "Name of this career path"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of what this career path entails"
+    },
+    "brief_description": {
+      "type": "string",
+      "description": "Short summary for quick viewing in cards (1-2 sentences)"
+    },
+    "core_competencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "description": "3-5 core competencies required for this career path transition"
+    },
+    "typical_duration_months": {
+      "type": "number",
+      "description": "Typical time to complete this transition in months"
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Prerequisites needed before pursuing this path"
+    },
+    "development_focus": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "description": "Key competencies to develop and how"
+    },
+    "learning_resources": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs of recommended learning resources"
+    },
+    "experiential_opportunities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Hands-on learning opportunities"
+    },
+    "mentorship_suggestions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Suggested mentorship or sponsorship opportunities"
+    },
+    "success_indicators": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "How to measure progress on this path"
+    },
+    "difficulty_level": {
+      "type": "string",
+      "enum": [
+        "easy",
+        "moderate",
+        "challenging",
+        "high_stretch"
+      ],
+      "default": "moderate",
+      "description": "Difficulty level of this transition"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client this career path belongs to (null for platform defaults)"
+    },
+    "is_platform_default": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is a platform-wide default career path"
+    }
+  },
+  "required": [
+    "from_role_id",
+    "to_role_id",
+    "path_type",
+    "title",
+    "brief_description",
+    "core_competencies",
+    "typical_duration_months"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": {
+          "$in": [
+            "Admin Level 2",
+            "Super Administrator",
+            "Platform Admin"
+          ]
+        }
+      },
+      "client_id": "{{user.client_id}}"
+    },
+    "read": {
+      "is_platform_default": true,
+      "$or": [
+        {
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Analyst",
+                "Admin Level 1",
+                "Admin Level 2",
+                "Super Administrator",
+                "Partner Business Administrator",
+                "Platform Admin"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": {
+          "$in": [
+            "Admin Level 2",
+            "Super Administrator",
+            "Platform Admin"
+          ]
+        }
+      },
+      "client_id": "{{user.client_id}}"
+    },
+    "delete": {
+      "user_condition": {
+        "role": {
+          "$in": [
+            "Admin Level 2",
+            "Super Administrator",
+            "Platform Admin"
+          ]
+        }
+      },
+      "client_id": "{{user.client_id}}"
+    }
+  }
+}

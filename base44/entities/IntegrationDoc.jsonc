@@ -1,0 +1,67 @@
+{
+  "name": "IntegrationDoc",
+  "type": "object",
+  "properties": {
+    "integration_name": {
+      "type": "string",
+      "description": "Name of the integration (e.g., 'WIX', 'SCIM', 'IAM')"
+    },
+    "version": {
+      "type": "string",
+      "description": "Contract version (e.g., 'v1.0', 'v2.1')"
+    },
+    "title": {
+      "type": "string",
+      "description": "Document title"
+    },
+    "content": {
+      "type": "string",
+      "description": "Full contract content in markdown format"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this version is currently active"
+    },
+    "updated_by": {
+      "type": "string",
+      "description": "Email of admin who last updated this contract"
+    }
+  },
+  "required": [
+    "integration_name",
+    "version",
+    "title",
+    "content"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Platform Admin"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

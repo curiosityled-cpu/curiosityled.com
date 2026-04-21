@@ -1,0 +1,168 @@
+{
+  "name": "ExternalAssessmentResult",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user who owns this result"
+    },
+    "assessment_type": {
+      "type": "string",
+      "description": "e.g., DiSC, MBTI, Situational Leadership (string for now, potential future entity)"
+    },
+    "designation_or_score": {
+      "type": "string",
+      "description": "e.g., ISFJ, D Profile, S3"
+    },
+    "date_completed": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the assessment was completed"
+    },
+    "document_uri": {
+      "type": "string",
+      "description": "URI to the uploaded private PDF report/image"
+    },
+    "ai_summary": {
+      "type": "string",
+      "description": "AI-generated summary of the result"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending_ai_processing",
+        "ai_processed",
+        "needs_manual_input",
+        "pending_human_review",
+        "verified"
+      ],
+      "default": "pending_ai_processing",
+      "description": "Processing status of the result"
+    },
+    "is_private": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, only user and specific admins can view"
+    },
+    "verified_by": {
+      "type": "string",
+      "description": "Email of admin who verified this assessment"
+    },
+    "verified_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when verification occurred"
+    },
+    "rejection_reason": {
+      "type": "string",
+      "description": "Reason for rejection if status is not verified"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Client ID for multi-tenant support"
+    }
+  },
+  "required": [
+    "user_email",
+    "assessment_type",
+    "client_id"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "User Level 2"
+          },
+          "user_email": {
+            "$in": "{{user.subordinate_emails}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          },
+          "user_email": {
+            "$in": "{{user.managed_user_emails}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Analyst"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "is_private": false,
+          "user_condition": {
+            "role": {
+              "$in": [
+                "User Level 2",
+                "Admin Level 1",
+                "Analyst"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

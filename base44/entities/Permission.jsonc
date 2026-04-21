@@ -1,0 +1,57 @@
+{
+  "name": "Permission",
+  "type": "object",
+  "properties": {
+    "permission_key": {
+      "type": "string",
+      "description": "Unique key for this permission (e.g., 'users.view', 'classes.manage')"
+    },
+    "name": {
+      "type": "string",
+      "description": "Display name of the permission"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of what this permission allows"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "users",
+        "analytics",
+        "content",
+        "settings",
+        "billing",
+        "roles",
+        "programs",
+        "assessments",
+        "learning",
+        "goals",
+        "classes",
+        "coaching",
+        "journeys",
+        "certificates",
+        "reports"
+      ],
+      "description": "Category this permission belongs to"
+    },
+    "is_system": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this is a system-defined permission (cannot be deleted)"
+    },
+    "applies_to_roles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of app_role values this permission is relevant for"
+    }
+  },
+  "required": [
+    "permission_key",
+    "name",
+    "category"
+  ],
+  "rls": {}
+}

@@ -1,0 +1,317 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "display_name": {
+      "type": "string",
+      "description": "Optional display name for the user"
+    },
+    "current_role": {
+      "type": "string",
+      "description": "User's current job title"
+    },
+    "department": {
+      "type": "string",
+      "description": "User's department"
+    },
+    "manager_email": {
+      "type": "string",
+      "description": "Email of the user's manager"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Employee start date"
+    },
+    "sector": {
+      "type": "string",
+      "description": "Industry sector"
+    },
+    "leadership_level": {
+      "type": "string",
+      "enum": [
+        "Level 1 (Leading Self)",
+        "Level 2 (Leading Others)",
+        "Level 3 (Leading Managers)",
+        "Level 4 (Leading Functions)",
+        "Level 5 (Leading Organizations)",
+        "HiPo Individual Contributor"
+      ],
+      "description": "User's leadership level"
+    },
+    "app_role": {
+      "type": "string",
+      "enum": [
+        "User Level 1",
+        "User Level 2",
+        "Analyst",
+        "Admin Level 1",
+        "Admin Level 2",
+        "Super Administrator",
+        "Partner Business Administrator",
+        "Platform Admin"
+      ],
+      "default": "User Level 1",
+      "description": "Platform role"
+    },
+    "custom_role_id": {
+      "type": "string",
+      "description": "ID of the CustomRole assigned to this user (addon permissions)"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client organization this user belongs to"
+    },
+    "partner_id": {
+      "type": "string",
+      "description": "ID of the partner organization (for Partner Business Administrators)"
+    },
+    "managed_program_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of Program IDs that this Admin Level 1 user manages"
+    },
+    "subordinate_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of direct report emails (for User Level 2)"
+    },
+    "partner_client_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of Client IDs managed by this Partner Business Administrator"
+    },
+    "onboarding_completed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the user has completed initial onboarding"
+    },
+    "last_login_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last login timestamp"
+    },
+    "is_uat_tester": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this user has UAT testing capabilities enabled"
+    },
+    "account_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "suspended",
+        "pending_activation",
+        "locked"
+      ],
+      "default": "pending_activation",
+      "description": "Current account status - defaults to pending until user activates their license"
+    },
+    "account_suspended_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the account was suspended"
+    },
+    "account_suspended_by": {
+      "type": "string",
+      "description": "Email of admin who suspended the account"
+    },
+    "account_suspended_reason": {
+      "type": "string",
+      "description": "Reason for account suspension"
+    },
+    "invitation_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the invitation was first sent"
+    },
+    "invitation_accepted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the user accepted the invitation and completed signup"
+    },
+    "invitation_resend_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of times invitation has been resent"
+    },
+    "last_invitation_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Most recent invitation send timestamp"
+    },
+    "license_activated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the user first logged in and activated their license"
+    },
+    "failed_login_attempts": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of consecutive failed login attempts"
+    },
+    "locked_until": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the account lock expires"
+    },
+    "locked_reason": {
+      "type": "string",
+      "description": "Reason for account lock"
+    },
+    "account_expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this account expires (for temporary accounts)"
+    },
+    "account_type": {
+      "type": "string",
+      "enum": [
+        "permanent",
+        "temporary",
+        "trial"
+      ],
+      "default": "permanent",
+      "description": "Account type"
+    },
+    "license_type": {
+      "type": "string",
+      "enum": [
+        "full",
+        "limited",
+        "view_only"
+      ],
+      "default": "full",
+      "description": "License type assigned to user"
+    },
+    "license_assigned_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the license was assigned"
+    },
+    "two_factor_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether 2FA is enabled for this user"
+    },
+    "two_factor_enabled_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When 2FA was enabled"
+    }
+  },
+  "required": [],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "User Level 2"
+          },
+          "email": {
+            "$in": "{{user.subordinate_emails}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Analyst",
+                "Admin Level 1",
+                "Admin Level 2",
+                "Super Administrator"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "$or": [
+            {
+              "partner_id": "{{user.partner_id}}"
+            },
+            {
+              "client_id": {
+                "$in": "{{user.partner_client_ids}}"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "$or": [
+            {
+              "partner_id": "{{user.partner_id}}"
+            },
+            {
+              "client_id": {
+                "$in": "{{user.partner_client_ids}}"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "$or": [
+            {
+              "partner_id": "{{user.partner_id}}"
+            },
+            {
+              "client_id": {
+                "$in": "{{user.partner_client_ids}}"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

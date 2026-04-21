@@ -1,0 +1,362 @@
+{
+  "name": "Role",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Job title - clear, market-aligned, searchable"
+    },
+    "level": {
+      "type": "string",
+      "enum": [
+        "leading_self",
+        "leading_others",
+        "leading_managers",
+        "leading_functions",
+        "leading_organizations"
+      ],
+      "description": "Leadership level of this role"
+    },
+    "department": {
+      "type": "string",
+      "enum": [
+        "operations",
+        "sales",
+        "product",
+        "technology",
+        "finance",
+        "hr",
+        "marketing",
+        "corporate"
+      ],
+      "description": "Department or function"
+    },
+    "job_summary": {
+      "type": "string",
+      "description": "2-4 sentence role summary highlighting business impact"
+    },
+    "business_value": {
+      "type": "string",
+      "description": "Core business outcomes this role is accountable for"
+    },
+    "essential_duties": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "6-12 prioritized essential duties written with action verbs"
+    },
+    "required_qualifications": {
+      "type": "object",
+      "properties": {
+        "education": {
+          "type": "string",
+          "description": "Required education level or certifications"
+        },
+        "experience_years": {
+          "type": "number",
+          "description": "Required years of experience"
+        },
+        "technical_skills": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Must-have technical skills"
+        },
+        "certifications": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Required certifications or licenses"
+        }
+      },
+      "description": "Non-negotiable qualifications"
+    },
+    "preferred_qualifications": {
+      "type": "object",
+      "properties": {
+        "education": {
+          "type": "string",
+          "description": "Preferred education level"
+        },
+        "experience_years": {
+          "type": "number",
+          "description": "Preferred years of experience"
+        },
+        "technical_skills": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Nice-to-have technical skills"
+        },
+        "certifications": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Preferred certifications"
+        }
+      },
+      "description": "Value-add qualifications that accelerate performance"
+    },
+    "technical_competencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "target_score": {
+            "type": "number"
+          },
+          "weight": {
+            "type": "number",
+            "default": 1
+          }
+        }
+      },
+      "description": "Role-specific technical proficiencies"
+    },
+    "behavioral_competencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "target_score": {
+            "type": "number"
+          },
+          "weight": {
+            "type": "number",
+            "default": 1
+          }
+        }
+      },
+      "description": "Leadership and behavioral competencies"
+    },
+    "reporting_structure": {
+      "type": "object",
+      "properties": {
+        "reports_to": {
+          "type": "string",
+          "description": "Direct manager role/title"
+        },
+        "direct_reports": {
+          "type": "number",
+          "description": "Number of direct reports"
+        },
+        "dotted_line_reports": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Dotted line reporting relationships"
+        },
+        "key_collaborations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Key teams and roles this position collaborates with"
+        }
+      },
+      "description": "Reporting relationships and organizational position"
+    },
+    "work_environment": {
+      "type": "object",
+      "properties": {
+        "location_type": {
+          "type": "string",
+          "enum": [
+            "remote",
+            "hybrid",
+            "on_site"
+          ],
+          "description": "Work location model"
+        },
+        "physical_office_location": {
+          "type": "string",
+          "description": "Physical office location if applicable"
+        },
+        "travel_percentage": {
+          "type": "number",
+          "description": "Percentage of time spent traveling"
+        },
+        "physical_requirements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Physical demands per ADA compliance"
+        },
+        "working_conditions": {
+          "type": "string",
+          "description": "Any special working conditions"
+        }
+      },
+      "description": "Work environment details"
+    },
+    "tools_and_systems": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Technology, tools, and systems used in this role"
+    },
+    "flsa_status": {
+      "type": "string",
+      "enum": [
+        "exempt",
+        "non_exempt"
+      ],
+      "description": "FLSA classification"
+    },
+    "compensation_range": {
+      "type": "object",
+      "properties": {
+        "min_salary": {
+          "type": "number"
+        },
+        "max_salary": {
+          "type": "number"
+        },
+        "currency": {
+          "type": "string",
+          "default": "USD"
+        },
+        "bonus_structure": {
+          "type": "string",
+          "description": "Bonus or commission structure"
+        },
+        "equity": {
+          "type": "string",
+          "description": "Equity compensation if applicable"
+        }
+      },
+      "description": "Compensation details"
+    },
+    "benefits_highlights": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Key benefits and perks"
+    },
+    "success_metrics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Key performance indicators and success metrics"
+    },
+    "eeo_statement": {
+      "type": "string",
+      "description": "Equal Employment Opportunity statement"
+    },
+    "legal_disclaimers": {
+      "type": "string",
+      "description": "At-will employment and other legal disclaimers"
+    },
+    "updated_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last update date"
+    },
+    "approved_by": {
+      "type": "string",
+      "description": "HR/Manager who approved this description"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this role is currently available"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client this role belongs to (null for platform defaults)"
+    },
+    "is_platform_default": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is a platform-wide default role"
+    }
+  },
+  "required": [
+    "title",
+    "level",
+    "department",
+    "job_summary",
+    "essential_duties"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": {
+          "$in": [
+            "Admin Level 2",
+            "Super Administrator",
+            "Platform Admin"
+          ]
+        }
+      },
+      "client_id": "{{user.client_id}}"
+    },
+    "read": {
+      "client_id": {
+        "$in": [
+          null,
+          "{{user.client_id}}"
+        ]
+      },
+      "$or": [
+        {
+          "is_platform_default": true
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Analyst",
+                "Admin Level 1",
+                "Admin Level 2",
+                "Super Administrator",
+                "Partner Business Administrator",
+                "Platform Admin"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": {
+          "$in": [
+            "Admin Level 2",
+            "Super Administrator",
+            "Platform Admin"
+          ]
+        }
+      },
+      "client_id": "{{user.client_id}}"
+    },
+    "delete": {
+      "user_condition": {
+        "role": {
+          "$in": [
+            "Admin Level 2",
+            "Super Administrator",
+            "Platform Admin"
+          ]
+        }
+      },
+      "client_id": "{{user.client_id}}"
+    }
+  }
+}

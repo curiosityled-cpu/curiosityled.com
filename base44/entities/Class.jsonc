@@ -1,0 +1,300 @@
+{
+  "name": "Class",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client this class belongs to"
+    },
+    "program_id": {
+      "type": "string",
+      "description": "ID of the Program this class is part of (optional)"
+    },
+    "cohort_id": {
+      "type": "string",
+      "description": "ID of the Cohort this class is associated with (optional)"
+    },
+    "facilitator_email": {
+      "type": "string",
+      "description": "Email of the Program Manager facilitating this class"
+    },
+    "title": {
+      "type": "string",
+      "description": "Class title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the class content and objectives"
+    },
+    "class_type": {
+      "type": "string",
+      "enum": [
+        "ilt",
+        "virtual_ilt",
+        "workshop",
+        "seminar",
+        "webinar",
+        "coaching_group"
+      ],
+      "default": "ilt",
+      "description": "Type of class delivery"
+    },
+    "scheduled_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the class is scheduled to start"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the class is scheduled to end"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "description": "Duration of the class in minutes"
+    },
+    "location": {
+      "type": "string",
+      "description": "Physical location or virtual meeting link"
+    },
+    "location_type": {
+      "type": "string",
+      "enum": [
+        "in_person",
+        "virtual",
+        "hybrid"
+      ],
+      "default": "in_person",
+      "description": "Whether the class is in-person, virtual, or hybrid"
+    },
+    "max_capacity": {
+      "type": "number",
+      "description": "Maximum number of participants allowed"
+    },
+    "enrolled_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of user emails enrolled in this class"
+    },
+    "waitlist_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of user emails on the waitlist"
+    },
+    "attendance_records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "present",
+              "absent",
+              "late",
+              "excused"
+            ]
+          },
+          "check_in_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Attendance records for enrolled participants"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "scheduled",
+        "open_enrollment",
+        "in_progress",
+        "completed",
+        "cancelled"
+      ],
+      "default": "draft",
+      "description": "Current status of the class"
+    },
+    "materials": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of LearningResource IDs used as class materials"
+    },
+    "pre_work_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of LearningResource IDs for pre-work assignments"
+    },
+    "post_work_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of LearningResource IDs for post-class follow-up"
+    },
+    "certificate_template_id": {
+      "type": "string",
+      "description": "ID of certificate template to issue upon completion"
+    },
+    "auto_issue_certificate": {
+      "type": "boolean",
+      "default": false,
+      "description": "Automatically issue certificates when attendance is marked"
+    },
+    "competency_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of competency IDs this class addresses"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for filtering and categorization"
+    },
+    "recurring_schedule": {
+      "type": "object",
+      "properties": {
+        "is_recurring": {
+          "type": "boolean",
+          "default": false
+        },
+        "frequency": {
+          "type": "string",
+          "enum": [
+            "daily",
+            "weekly",
+            "biweekly",
+            "monthly"
+          ]
+        },
+        "end_after_occurrences": {
+          "type": "number"
+        },
+        "end_by_date": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "description": "Recurring class schedule configuration"
+    },
+    "feedback_form_url": {
+      "type": "string",
+      "description": "URL to post-class feedback form"
+    },
+    "average_rating": {
+      "type": "number",
+      "description": "Average participant rating (1-5)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal notes about this class"
+    },
+    "points_value": {
+      "type": "number",
+      "description": "Number of gamification points awarded for attending this class (overrides default)"
+    }
+  },
+  "required": [
+    "client_id",
+    "facilitator_email",
+    "title",
+    "class_type"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "facilitator_email": "{{user.email}}"
+        },
+        {
+          "enrolled_emails": {
+            "$in": [
+              "{{user.email}}"
+            ]
+          }
+        },
+        {
+          "waitlist_emails": {
+            "$in": [
+              "{{user.email}}"
+            ]
+          }
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "facilitator_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

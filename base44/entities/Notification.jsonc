@@ -1,0 +1,98 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user who should receive this notification"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "reminder",
+        "nudge",
+        "milestone",
+        "assessment_due",
+        "learning_assigned",
+        "goal_deadline",
+        "1on1_scheduled",
+        "goal_assignment",
+        "assessment_status",
+        "certification_status",
+        "certification_expiring"
+      ],
+      "description": "Type of notification"
+    },
+    "title": {
+      "type": "string",
+      "description": "Notification title/subject"
+    },
+    "message": {
+      "type": "string",
+      "description": "Notification message body"
+    },
+    "scheduled_for": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this notification should be sent"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this notification was actually sent"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "sent",
+        "failed",
+        "cancelled"
+      ],
+      "default": "pending",
+      "description": "Current status of the notification"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false,
+      "description": "Indicates if the notification has been read by the user"
+    },
+    "related_entity_type": {
+      "type": "string",
+      "description": "Type of related entity (e.g., 'Goal', 'AssignedLearning', 'OnboardingPlan', 'Certification', 'ExternalAssessmentResult')"
+    },
+    "related_entity_id": {
+      "type": "string",
+      "description": "ID of the related entity"
+    },
+    "action_url": {
+      "type": "string",
+      "description": "Deep link URL to the related content in the app (optional, can be constructed client-side from related_entity)"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "urgent"
+      ],
+      "default": "medium",
+      "description": "Priority level of this notification"
+    }
+  },
+  "required": [
+    "user_email",
+    "type",
+    "title",
+    "message"
+  ],
+  "rls": {
+    "read": {
+      "user_email": "{{user.email}}"
+    },
+    "write": {
+      "user_email": "{{user.email}}"
+    }
+  }
+}

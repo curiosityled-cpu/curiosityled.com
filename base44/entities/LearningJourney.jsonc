@@ -1,0 +1,308 @@
+{
+  "name": "LearningJourney",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Name of the learning journey"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the journey"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "curriculum",
+        "learning_path"
+      ],
+      "description": "curriculum = learners complete in any order, learning_path = specific sequence required"
+    },
+    "author_email": {
+      "type": "string",
+      "description": "Email of the user who created this journey"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client this journey belongs to"
+    },
+    "partner_id": {
+      "type": "string",
+      "description": "ID of the partner this journey belongs to"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published",
+        "archived",
+        "template"
+      ],
+      "default": "draft",
+      "description": "Publication status of the journey"
+    },
+    "is_template": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this journey is a template for reuse"
+    },
+    "template_category": {
+      "type": "string",
+      "enum": [
+        "technical",
+        "leadership",
+        "sales",
+        "operations",
+        "compliance",
+        "onboarding",
+        "general",
+        "custom"
+      ],
+      "description": "Category of the template for organization"
+    },
+    "template_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for filtering and searching templates"
+    },
+    "use_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of times this template has been used"
+    },
+    "last_used_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this template was last used"
+    },
+    "content_structure": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "learning_resource_id": {
+            "type": "string",
+            "description": "ID of the learning resource"
+          },
+          "order": {
+            "type": "number",
+            "description": "Order in the sequence (for learning paths)"
+          },
+          "is_optional": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether this resource is optional"
+          },
+          "title": {
+            "type": "string",
+            "description": "Cached title of the resource"
+          },
+          "type": {
+            "type": "string",
+            "description": "Cached type of the resource"
+          },
+          "unlock_condition": {
+            "type": "string",
+            "enum": [
+              "immediate",
+              "time_based",
+              "score_based",
+              "sequential"
+            ],
+            "default": "immediate",
+            "description": "How this resource unlocks for learners"
+          },
+          "unlock_after_days": {
+            "type": "number",
+            "default": 0,
+            "description": "Days to wait before unlocking (for time_based)"
+          },
+          "required_score_percentage": {
+            "type": "number",
+            "default": 0,
+            "description": "Score required on previous item (for score_based)"
+          }
+        },
+        "required": [
+          "learning_resource_id"
+        ]
+      },
+      "description": "Ordered list of learning resources in this journey with gating options"
+    },
+    "estimated_duration_days": {
+      "type": "number",
+      "description": "Estimated number of days to complete"
+    },
+    "target_audiences": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Target audiences for this journey"
+    },
+    "assigned_to_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Emails of users directly assigned to this journey"
+    },
+    "assigned_to_cohort_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs of cohorts assigned to this journey"
+    },
+    "shared_admin_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Emails of other users who can manage this journey"
+    },
+    "last_modified_by": {
+      "type": "string",
+      "description": "Email of the last person to modify this journey"
+    },
+    "thumbnail_url": {
+      "type": "string",
+      "description": "URL to journey thumbnail/cover image"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for categorization and search"
+    },
+    "completion_criteria": {
+      "type": "object",
+      "properties": {
+        "completion_percentage_required": {
+          "type": "number",
+          "default": 100,
+          "description": "Percentage of content that must be completed"
+        },
+        "require_all_mandatory": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether all non-optional resources must be completed"
+        }
+      },
+      "description": "Criteria for journey completion"
+    },
+    "points_value": {
+      "type": "number",
+      "description": "Number of gamification points awarded for completing this learning journey (overrides default)"
+    },
+    "completion_badge_id": {
+      "type": "string",
+      "description": "ID of the BadgeTemplate awarded upon journey completion"
+    }
+  },
+  "required": [
+    "title",
+    "type",
+    "author_email"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "author_email": "{{user.email}}"
+        },
+        {
+          "assigned_to_emails": {
+            "$in": [
+              "{{user.email}}"
+            ]
+          }
+        },
+        {
+          "shared_admin_emails": {
+            "$in": [
+              "{{user.email}}"
+            ]
+          }
+        },
+        {
+          "is_template": true
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Analyst",
+                "Admin Level 1",
+                "Admin Level 2",
+                "Super Administrator"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "author_email": "{{user.email}}"
+        },
+        {
+          "shared_admin_emails": {
+            "$in": [
+              "{{user.email}}"
+            ]
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

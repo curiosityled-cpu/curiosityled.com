@@ -1,0 +1,86 @@
+{
+  "name": "BrandingTheme",
+  "type": "object",
+  "properties": {
+    "theme_name": {
+      "type": "string",
+      "description": "Name of the saved theme"
+    },
+    "configuration": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Full branding configuration object"
+    }
+  },
+  "required": [
+    "theme_name",
+    "configuration"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": {
+          "$in": [
+            "Platform Admin",
+            "Super Administrator"
+          ]
+        }
+      },
+      "data.client_id": {
+        "$in": [
+          null,
+          "{{user.client_id}}"
+        ]
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "data.client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": {
+          "$in": [
+            "Platform Admin",
+            "Super Administrator"
+          ]
+        }
+      },
+      "data.client_id": {
+        "$in": [
+          null,
+          "{{user.client_id}}"
+        ]
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": {
+          "$in": [
+            "Platform Admin",
+            "Super Administrator"
+          ]
+        }
+      },
+      "data.client_id": {
+        "$in": [
+          null,
+          "{{user.client_id}}"
+        ]
+      }
+    }
+  }
+}
