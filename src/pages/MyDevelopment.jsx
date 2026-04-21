@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import CertificateViewer from "@/components/learning/CertificateViewer";
 import CreateDevelopmentPlanModal from "@/components/development/CreateDevelopmentPlanModal";
+import DevelopmentPlanView from "@/components/development/DevelopmentPlanView";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 
 const PRIORITY_DOT = {
@@ -36,6 +37,7 @@ export default function MyDevelopment() {
   const [devPlans, setDevPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [section, setSection] = useState("plans");
+  const [experienceCount, setExperienceCount] = useState(0);
   const [activeTab, setActiveTab] = useState("active");
   const [showModal, setShowModal] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
@@ -43,12 +45,14 @@ export default function MyDevelopment() {
   const load = async () => {
     if (!user) return;
     try {
-      const [assigned, plans] = await Promise.all([
+      const [assigned, plans, exps] = await Promise.all([
         base44.entities.AssignedLearning.filter({ user_email: user.email }),
         base44.entities.DevelopmentPlan.filter({ user_email: user.email }),
+        base44.entities.DevelopmentExperience.filter({ user_email: user.email }),
       ]);
       setAssignedLearning(assigned);
       setDevPlans(plans);
+      setExperienceCount(exps.length);
     } catch (e) {
       console.error("Error loading development data:", e);
     } finally {
@@ -66,7 +70,7 @@ export default function MyDevelopment() {
   const stats = [
     { label: "Active Journeys", value: activePlans.length, color: "text-purple-600", bg: "bg-purple-50" },
     { label: "Active Learning", value: activeLearning.length, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Completed", value: completedPlans.length + completedLearning.length, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "Experiences", value: experienceCount, color: "text-indigo-600", bg: "bg-indigo-50" },
   ];
 
   const openCreate = () => { setEditingPlan(null); setShowModal(true); };
@@ -108,6 +112,12 @@ export default function MyDevelopment() {
             className={`flex-1 flex items-center justify-center gap-1.5 text-sm font-medium py-2 rounded-lg transition-all ${section === "learning" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
           >
             <GraduationCap className="w-3.5 h-3.5" /> Learning Progress
+          </button>
+          <button
+            onClick={() => setSection("experiences")}
+            className={`flex-1 flex items-center justify-center gap-1.5 text-sm font-medium py-2 rounded-lg transition-all ${section === "experiences" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
+          >
+            <Briefcase className="w-3.5 h-3.5" /> Experiences
           </button>
         </div>
       </motion.div>
@@ -232,6 +242,11 @@ export default function MyDevelopment() {
               </div>
             )}
           </>
+        )}
+
+        {/* ── OFF-PLATFORM EXPERIENCES ── */}
+        {section === "experiences" && user && (
+          <DevelopmentPlanView user={user} assessment={null} />
         )}
 
         {/* ── LEARNING PROGRESS ── */}
