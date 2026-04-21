@@ -22,7 +22,8 @@ import {
   ArrowLeft,
   Route,
   List,
-  Bookmark
+  Bookmark,
+  Check
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
@@ -76,11 +77,22 @@ function JourneyBuilder() {
   const [selectedCohorts, setSelectedCohorts] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [allCohorts, setAllCohorts] = useState([]);
+  const [recommendedResources, setRecommendedResources] = useState([]);
   const [csvFile, setCsvFile] = useState(null);
 
   useEffect(() => {
     if (!authLoading && user) {
       loadData();
+      // Check for assessment recommendations from URL params
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('recommendedResources')) {
+        try {
+          const recommended = JSON.parse(decodeURIComponent(params.get('recommendedResources')));
+          setRecommendedResources(recommended);
+        } catch (e) {
+          console.error('Error parsing recommended resources:', e);
+        }
+      }
     } else if (!authLoading && !user) {
       // If authLoading is false and user is null, it means no user is logged in.
       // Set loading to false so the "Please log in" message can be displayed.
@@ -591,14 +603,47 @@ function JourneyBuilder() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Builder - Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* AI Suggestions Panel */}
-            {journey.content_structure.length > 0 && (
-              <PlanSuggestionsPanel
-                plan={journey}
-                type="journey"
-                onApplySuggestion={handleApplyAlternativeStructure}
-              />
+            {/* Recommended Resources from Assessment */}
+            {recommendedResources.length > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-blue-900 mb-3">
+                  🎯 Recommended for You
+                </h3>
+                <p className="text-xs text-blue-700 mb-3">
+                  Based on your assessment results, these resources may help address your growth areas.
+                </p>
+                <div className="space-y-2">
+                  {recommendedResources.map((resource) => (
+                    <button
+                      key={resource.id}
+                      onClick={() => handleResourceSelect(resource)}
+                      className="w-full text-left p-3 rounded-lg bg-white border border-blue-100 hover:border-blue-300 hover:bg-blue-50 transition-all"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-gray-900">{resource.title}</p>
+                          <p className="text-[10px] text-gray-500 mt-0.5">{resource.provider}</p>
+                        </div>
+                        {journey.content_structure.some(item => item.learning_resource_id === resource.id) ? (
+                          <Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                        ) : (
+                          <Plus className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
+
+            {/* AI Suggestions Panel */}
+             {journey.content_structure.length > 0 && (
+               <PlanSuggestionsPanel
+                 plan={journey}
+                 type="journey"
+                 onApplySuggestion={handleApplyAlternativeStructure}
+               />
+             )}
 
             {/* AI Assistant */}
             {!editingJourneyId && (

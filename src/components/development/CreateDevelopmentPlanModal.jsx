@@ -9,6 +9,7 @@ import {
   ChevronDown, ChevronUp, Search, GripVertical, ExternalLink, X, AlertCircle
 } from "lucide-react";
 import { toast } from "sonner";
+import ExperienceSelector from "@/components/journey/ExperienceSelector";
 
 const COMPETENCIES = [
   "Situational Intelligence", "Decision Making", "Communication",
@@ -55,6 +56,9 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
   const [coursesLoading, setCoursesLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
+  
+  // Experience selector state
+  const [showExperienceSelector, setShowExperienceSelector] = useState(false);
 
   // Load courses when modal opens
   useEffect(() => {
@@ -107,6 +111,30 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
     const idx = form.experiences.length;
     setForm(f => ({ ...f, experiences: [...f.experiences, { ...BLANK_EXPERIENCE }] }));
     setExpandedExp(idx);
+  };
+  const addExistingExperience = (experience) => {
+    // Convert DevelopmentExperience to journey experience format
+    const journeyExp = {
+      title: experience.title,
+      type: experience.type,
+      description: experience.description,
+      provider_or_sponsor: experience.provider_or_sponsor,
+      start_date: experience.start_date || "",
+      end_date: experience.end_date || "",
+      expected_impact: experience.expected_impact || 5,
+      status: experience.status,
+      competencies: experience.competencies || [],
+      external_id: experience.id, // Link back to original
+    };
+    setForm(f => {
+      const alreadyAdded = f.experiences.some(e => e.external_id === experience.id);
+      if (alreadyAdded) {
+        toast.info("Experience already added to this journey");
+        return f;
+      }
+      return { ...f, experiences: [...f.experiences, journeyExp] };
+    });
+    setShowExperienceSelector(false);
   };
   const updateExp = (i, key, value) => setForm(f => {
     const exps = [...f.experiences];
@@ -266,9 +294,14 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
               <label className="text-xs font-medium text-gray-600 flex items-center gap-1.5">
                 <Briefcase className="w-3.5 h-3.5 text-purple-500" /> Development Experiences ({form.experiences.length})
               </label>
-              <Button variant="outline" size="sm" className="h-7 text-xs text-purple-600 border-purple-200 hover:bg-purple-50" onClick={addExperience}>
-                <Plus className="w-3 h-3 mr-1" /> Add
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="h-7 text-xs text-purple-600 border-purple-200 hover:bg-purple-50" onClick={() => setShowExperienceSelector(true)}>
+                  <Plus className="w-3 h-3 mr-1" /> From Logged
+                </Button>
+                <Button variant="outline" size="sm" className="h-7 text-xs text-purple-600 border-purple-200 hover:bg-purple-50" onClick={addExperience}>
+                  <Plus className="w-3 h-3 mr-1" /> New
+                </Button>
+              </div>
             </div>
             {form.experiences.length === 0 && (
               <p className="text-xs text-gray-400 italic py-2 text-center">No experiences added yet. Add coaching sessions, stretch projects, mentorships, etc.</p>
@@ -526,6 +559,14 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
           </div>
         </div>
       </DialogContent>
+      
+      {/* Experience Selector */}
+      <ExperienceSelector
+        open={showExperienceSelector}
+        onClose={() => setShowExperienceSelector(false)}
+        onSelect={addExistingExperience}
+        selectedExperienceIds={form.experiences.map(e => e.external_id).filter(Boolean)}
+      />
     </Dialog>
   );
 }

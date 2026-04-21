@@ -23,6 +23,8 @@ export default function ResourceCard({
         try {
             const me = await base44.auth.me();
             if (!me?.email) throw new Error("Not authenticated");
+            
+            // Create AssignedLearning record
             await base44.entities.AssignedLearning.create({
                 user_email: me.email,
                 learning_resource_id: resource.id,
@@ -32,7 +34,23 @@ export default function ResourceCard({
                 status: "assigned",
                 client_id: me.client_id || null,
             });
+            
+            // Create LearnerProgress record for tracking
+            await base44.entities.LearnerProgress.create({
+                user_email: me.email,
+                learning_resource_id: resource.id,
+                status: 'not_started',
+                progress_percentage: 0,
+                last_accessed_date: new Date().toISOString()
+            });
+            
             toast.success("Added to your learning progress!");
+            // Trigger refresh of parent component
+            if (window.dispatchEvent) {
+                window.dispatchEvent(new CustomEvent('learningAssigned', { detail: { resource_id: resource.id } }));
+            }
+            // Reload access check
+            await checkAccess();
         } catch (err) {
             toast.error("Failed to assign: " + (err?.message || "Unknown error"));
         } finally {

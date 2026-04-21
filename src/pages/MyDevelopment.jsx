@@ -121,6 +121,15 @@ export default function MyDevelopment() {
   };
 
   useEffect(() => { load(); }, [user]);
+  
+  // Listen for learning assignment events from Learning Library
+  useEffect(() => {
+    const handleLearningAssigned = () => {
+      load();
+    };
+    window.addEventListener('learningAssigned', handleLearningAssigned);
+    return () => window.removeEventListener('learningAssigned', handleLearningAssigned);
+  }, []);
 
   const activePlans = devPlans.filter(p => p.status === "active" || p.status === "paused");
   const completedPlans = devPlans.filter(p => p.status === "completed");
