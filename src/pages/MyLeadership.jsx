@@ -416,9 +416,10 @@ export default function MyLeadership() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Use full display name; fall back gracefully but never use email prefix
-  const displayName = user?.full_name && user.full_name.trim() && !user.full_name.includes('@')
-    ? user.full_name.split(' ')[0]
+  // Prefer display_name, then full_name, fall back to 'there'
+  const rawName = user?.display_name || user?.full_name;
+  const displayName = rawName && rawName.trim() && !rawName.includes('@')
+    ? rawName.split(' ')[0]
     : 'there';
 
   return (
