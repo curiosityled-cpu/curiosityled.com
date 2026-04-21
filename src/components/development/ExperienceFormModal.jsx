@@ -132,6 +132,7 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
             <div className="grid grid-cols-3 gap-2">
               {EXPERIENCE_TYPES.map((t) => (
                 <button
+                  type="button"
                   key={t.value}
                   onClick={() => setForm((f) => ({ ...f, type: t.value }))}
                   className={`flex flex-col items-center gap-1 p-2 rounded-lg border text-xs transition-all
@@ -164,6 +165,7 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
             <div className="flex flex-wrap gap-2">
               {COMPETENCIES.map((c) => (
                 <button
+                  type="button"
                   key={c}
                   onClick={() => toggleCompetency(c)}
                   className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs transition-all
@@ -234,8 +236,9 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
             </div>
           )}
           <div className="flex justify-end gap-2 pt-2 border-t">
-            <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>
+            <Button type="button" variant="outline" size="sm" onClick={onClose}>Cancel</Button>
             <Button
+              type="button"
               size="sm"
               disabled={!form.title || form.competencies.length === 0 || saving}
               onClick={handleSave}

@@ -490,8 +490,9 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
           </div>
 
           <div className="flex justify-end gap-2 pt-2 border-t">
-            <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>
+            <Button type="button" variant="outline" size="sm" onClick={onClose}>Cancel</Button>
             <Button
+              type="button"
               size="sm"
               disabled={!form.title || form.target_competencies.length === 0 || saving}
               onClick={handleSave}
