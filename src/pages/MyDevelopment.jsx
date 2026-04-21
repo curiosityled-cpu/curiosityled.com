@@ -2,14 +2,72 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Clock, CheckCircle2, Library, Plus, Layers, GraduationCap, Pencil, Briefcase, ExternalLink } from "lucide-react";
+import { BookOpen, Clock, CheckCircle2, Library, Plus, Layers, GraduationCap, Pencil, Briefcase, ExternalLink, Star, Trash2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import CertificateViewer from "@/components/learning/CertificateViewer";
 import CreateDevelopmentPlanModal from "@/components/development/CreateDevelopmentPlanModal";
+import ExperienceFormModal from "@/components/development/ExperienceFormModal";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
+
+const EXP_TYPE_LABELS = {
+  leadership_coaching: "Leadership Coaching",
+  stretch_project: "Stretch Project",
+  leadership_opportunity: "Leadership Opportunity",
+  mentorship: "Mentorship",
+  conference_event: "Conference / Event",
+  volunteer_leadership: "Volunteer Leadership",
+  cross_functional_project: "Cross-Functional Project",
+  speaking_opportunity: "Speaking Opportunity",
+  other: "Other",
+};
+
+function ExperienceCard({ exp, index, onEdit, onDelete }) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }}>
+      <Card className="shadow-sm border border-gray-100 rounded-2xl hover:shadow-md transition-shadow">
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <p className="font-medium text-gray-900 leading-snug">{exp.title}</p>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_BADGE[exp.status] || "bg-gray-100 text-gray-700"}`}>
+                  {exp.status}
+                </span>
+              </div>
+              {exp.type && (
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full inline-block mb-2">
+                  {EXP_TYPE_LABELS[exp.type] || exp.type}
+                </p>
+              )}
+              {exp.description && <p className="text-xs text-gray-500 line-clamp-2 mb-2">{exp.description}</p>}
+              <div className="flex flex-wrap gap-1 mb-2">
+                {exp.competencies?.slice(0, 3).map(c => (
+                  <span key={c} className="text-xs px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-100">{c}</span>
+                ))}
+              </div>
+              <div className="flex items-center gap-3 text-xs text-gray-400">
+                {exp.provider_or_sponsor && <span>{exp.provider_or_sponsor}</span>}
+                {exp.start_date && <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{new Date(exp.start_date).toLocaleDateString()}</span>}
+                {exp.expected_impact && <span className="text-emerald-600">+{exp.expected_impact}% projected</span>}
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5 flex-shrink-0">
+              <button onClick={onEdit} className="text-gray-400 hover:text-[#0202ff] transition-colors">
+                <Pencil className="w-4 h-4" />
+              </button>
+              <button onClick={onDelete} className="text-gray-400 hover:text-red-500 transition-colors">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
 
 const PRIORITY_DOT = {
   urgent: "bg-red-500",
@@ -39,16 +97,21 @@ export default function MyDevelopment() {
   const [activeTab, setActiveTab] = useState("active");
   const [showModal, setShowModal] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
+  const [experiences, setExperiences] = useState([]);
+  const [showExpModal, setShowExpModal] = useState(false);
+  const [editingExp, setEditingExp] = useState(null);
 
   const load = async () => {
     if (!user) return;
     try {
-      const [assigned, plans] = await Promise.all([
+      const [assigned, plans, exps] = await Promise.all([
         base44.entities.AssignedLearning.filter({ user_email: user.email }),
         base44.entities.DevelopmentPlan.filter({ user_email: user.email }),
+        base44.entities.DevelopmentExperience.filter({ user_email: user.email }, "-created_date"),
       ]);
       setAssignedLearning(assigned);
       setDevPlans(plans);
+      setExperiences(exps);
     } catch (e) {
       console.error("Error loading development data:", e);
     } finally {
@@ -63,10 +126,13 @@ export default function MyDevelopment() {
   const activeLearning = assignedLearning.filter(a => a.status !== "completed");
   const completedLearning = assignedLearning.filter(a => a.status === "completed");
 
+  const activeExperiences = experiences.filter(e => e.status !== "completed" && e.status !== "cancelled");
+  const completedExperiences = experiences.filter(e => e.status === "completed");
+
   const stats = [
     { label: "Active Journeys", value: activePlans.length, color: "text-purple-600", bg: "bg-purple-50" },
     { label: "Active Learning", value: activeLearning.length, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Completed", value: completedPlans.length + completedLearning.length, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "Experiences", value: experiences.length, color: "text-amber-600", bg: "bg-amber-50" },
   ];
 
   const openCreate = () => { setEditingPlan(null); setShowModal(true); };
@@ -109,6 +175,12 @@ export default function MyDevelopment() {
           >
             <GraduationCap className="w-3.5 h-3.5" /> Learning Progress
           </button>
+          <button
+            onClick={() => { setSection("experiences"); setActiveTab("active"); }}
+            className={`flex-1 flex items-center justify-center gap-1.5 text-sm font-medium py-2 rounded-lg transition-all ${section === "experiences" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
+          >
+            <Star className="w-3.5 h-3.5" /> Experiences
+          </button>
         </div>
       </motion.div>
 
@@ -120,13 +192,13 @@ export default function MyDevelopment() {
             onClick={() => setActiveTab("active")}
             className={`flex-1 text-sm font-medium py-1.5 rounded-lg transition-all ${activeTab === "active" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
           >
-            Active ({section === "plans" ? activePlans.length : activeLearning.length})
+            Active ({section === "plans" ? activePlans.length : section === "learning" ? activeLearning.length : activeExperiences.length})
           </button>
           <button
             onClick={() => setActiveTab("completed")}
             className={`flex-1 text-sm font-medium py-1.5 rounded-lg transition-all ${activeTab === "completed" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
           >
-            Completed ({section === "plans" ? completedPlans.length : completedLearning.length})
+            Completed ({section === "plans" ? completedPlans.length : section === "learning" ? completedLearning.length : completedExperiences.length})
           </button>
           {section === "learning" && (
             <button
@@ -323,7 +395,57 @@ export default function MyDevelopment() {
             )}
           </>
         )}
+
+        {/* ── EXTERNAL EXPERIENCES ── */}
+        {section === "experiences" && (
+          <>
+            {activeTab === "active" && (
+              <div className="space-y-3">
+                <Button size="sm" className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white" onClick={() => { setEditingExp(null); setShowExpModal(true); }}>
+                  <Plus className="w-4 h-4 mr-1.5" /> Log Experience
+                </Button>
+                {activeExperiences.length === 0 ? (
+                  <Card className="shadow-sm border border-gray-100 rounded-2xl">
+                    <CardContent className="p-8 text-center">
+                      <Star className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                      <p className="font-semibold text-gray-800">No active experiences</p>
+                      <p className="text-sm text-gray-500 mt-1">Log coaching, stretch projects, mentorship, and more.</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  activeExperiences.map((exp, i) => (
+                    <ExperienceCard key={exp.id} exp={exp} index={i} onEdit={() => { setEditingExp(exp); setShowExpModal(true); }} onDelete={async () => { await base44.entities.DevelopmentExperience.delete(exp.id); load(); }} />
+                  ))
+                )}
+              </div>
+            )}
+            {activeTab === "completed" && (
+              <div className="space-y-3">
+                {completedExperiences.length === 0 ? (
+                  <Card className="shadow-sm border border-gray-100 rounded-2xl">
+                    <CardContent className="p-8 text-center">
+                      <CheckCircle2 className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                      <p className="font-semibold text-gray-800">No completed experiences yet</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  completedExperiences.map((exp, i) => (
+                    <ExperienceCard key={exp.id} exp={exp} index={i} onEdit={() => { setEditingExp(exp); setShowExpModal(true); }} onDelete={async () => { await base44.entities.DevelopmentExperience.delete(exp.id); load(); }} />
+                  ))
+                )}
+              </div>
+            )}
+          </>
+        )}
       </motion.div>
+
+      <ExperienceFormModal
+        open={showExpModal}
+        onClose={() => { setShowExpModal(false); setEditingExp(null); }}
+        onSaved={() => { setShowExpModal(false); setEditingExp(null); load(); }}
+        experience={editingExp}
+        userEmail={user?.email}
+      />
 
       <CreateDevelopmentPlanModal
         open={showModal}
