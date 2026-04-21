@@ -68,14 +68,22 @@ export default function AssessmentTrendSection({ assessments }) {
 
   const overallDelta = Math.round((last.overall_pct || 0) - (first.overall_pct || 0));
 
+  // Map from pct key (si_pct) to chart dataKey (si)
+  const PCT_TO_CHART = {
+    si_pct: "si", dm_pct: "dm", comm_pct: "comm",
+    rm_pct: "rm", sm_pct: "sm", pm_pct: "pm",
+  };
+
+  const activeChartKey = highlightedComp ? PCT_TO_CHART[highlightedComp] : null;
+
   const getLineOpacity = (lineKey) => {
-    if (!highlightedComp) return 1;
-    return lineKey === highlightedComp || lineKey === "overall" ? 1 : 0.1;
+    if (!activeChartKey) return 1;
+    return lineKey === activeChartKey || lineKey === "overall" ? 1 : 0.1;
   };
 
   const getLineStrokeWidth = (lineKey) => {
-    if (!highlightedComp) return lineKey === "overall" ? 2.5 : 1.5;
-    return lineKey === highlightedComp || lineKey === "overall" ? 2.5 : 1.5;
+    if (!activeChartKey) return lineKey === "overall" ? 2.5 : 1.5;
+    return lineKey === activeChartKey ? 3 : lineKey === "overall" ? 2.5 : 1.5;
   };
 
   return (
