@@ -81,7 +81,11 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
   };
 
   const handleSave = async () => {
-    if (!form.title || form.competencies.length === 0 || !userEmail) return;
+    if (!form.title || form.competencies.length === 0) return;
+    if (!userEmail) {
+      setSaveError("User email is missing. Please refresh and try again.");
+      return;
+    }
     setSaving(true);
     setSaveError(null);
     try {
@@ -91,8 +95,8 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
       } else {
         await base44.entities.DevelopmentExperience.create(data);
       }
-      onClose();
       onSaved();
+      onClose();
     } catch (err) {
       setSaveError(err?.message || "Failed to save. Please try again.");
     } finally {
