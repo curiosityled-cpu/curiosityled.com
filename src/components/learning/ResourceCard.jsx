@@ -24,8 +24,6 @@ export default function ResourceCard({
             const me = await base44.auth.me();
             if (!me?.email) throw new Error("Not authenticated");
             
-            console.log("[ResourceCard] Self-assigning resource:", resource.id, "for user:", me.email);
-            
             // Create AssignedLearning record
             await base44.entities.AssignedLearning.create({
                 user_email: me.email,
@@ -46,7 +44,6 @@ export default function ResourceCard({
                 last_accessed_date: new Date().toISOString()
             });
             
-            console.log("[ResourceCard] Self-assignment successful");
             toast.success("Added to your learning progress!");
             // Trigger refresh of parent component
             if (window.dispatchEvent) {
@@ -55,7 +52,6 @@ export default function ResourceCard({
             // Reload access check
             await checkAccess();
         } catch (err) {
-            console.error("[ResourceCard] Self-assignment failed:", err);
             toast.error("Failed to assign: " + (err?.message || "Unknown error"));
         } finally {
             setSelfAssigning(false);

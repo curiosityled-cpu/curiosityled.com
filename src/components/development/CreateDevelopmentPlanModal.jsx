@@ -194,18 +194,15 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
       }
       if (!email) throw new Error("Could not determine your user account. Please refresh and try again.");
       const data = { ...form, user_email: email, client_id: me?.client_id || null };
-      console.log("[CreateDevelopmentPlanModal] Saving:", { editing, dataKeys: Object.keys(data) });
       if (editing) {
         await base44.entities.DevelopmentPlan.update(plan.id, data);
       } else {
         await base44.entities.DevelopmentPlan.create(data);
       }
-      console.log("[CreateDevelopmentPlanModal] Save successful");
       toast.success(editing ? "Journey saved!" : "Journey created!");
       onSaved();
       onClose();
     } catch (err) {
-      console.error("[CreateDevelopmentPlanModal] Save failed:", err);
       const msg = err?.message || "Failed to save. Please try again.";
       setSaveError(msg);
       toast.error(msg);

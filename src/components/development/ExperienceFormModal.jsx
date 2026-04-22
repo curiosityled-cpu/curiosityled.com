@@ -90,21 +90,16 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
       const email = userEmail || me?.email;
       if (!email) throw new Error("Could not determine your user account. Please refresh and try again.");
       const data = { ...form, user_email: email, client_id: me?.client_id || null };
-      console.log("[ExperienceFormModal] Saving:", { editing, data });
       if (editing) {
         await base44.entities.DevelopmentExperience.update(experience.id, data);
       } else {
         await base44.entities.DevelopmentExperience.create(data);
       }
-      console.log("[ExperienceFormModal] Save successful");
       toast.success(editing ? "Experience saved!" : "Experience logged!");
       onSaved();
       onClose();
     } catch (err) {
-      console.error("[ExperienceFormModal] Save failed:", err);
-      const msg = err?.message || "Failed to save. Please try again.";
-      setSaveError(msg);
-      toast.error(msg);
+      setSaveError(err?.message || "Failed to save. Please try again.");
     } finally {
       setSaving(false);
     }
