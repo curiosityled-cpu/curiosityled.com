@@ -1,0 +1,103 @@
+{
+  "name": "GamificationLevel",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client this level belongs to (null for platform defaults)"
+    },
+    "level_name": {
+      "type": "string",
+      "description": "Name of the level (e.g., 'Explorer', 'Contributor', 'Innovator')"
+    },
+    "level_order": {
+      "type": "number",
+      "description": "Order of this level in the progression (1, 2, 3...)"
+    },
+    "points_threshold": {
+      "type": "number",
+      "description": "Cumulative points required to reach this level"
+    },
+    "prerequisite_program_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of Program IDs that must be completed to reach this level"
+    },
+    "prerequisite_badge_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of Badge IDs that must be earned to reach this level"
+    },
+    "prerequisite_assessment_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of Assessment IDs that must be passed to reach this level"
+    },
+    "rewards": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Rewards for reaching this level (bonus points, unlocks, etc.)"
+    },
+    "icon_url": {
+      "type": "string",
+      "description": "URL to the level icon/badge"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of what this level represents"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this level is currently active"
+    },
+    "is_platform_default": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is a platform-wide default level"
+    }
+  },
+  "required": [
+    "level_name",
+    "level_order",
+    "points_threshold"
+  ],
+  "rls": {
+    "read": {},
+    "write": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

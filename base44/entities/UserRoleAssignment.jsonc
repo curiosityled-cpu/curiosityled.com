@@ -1,0 +1,74 @@
+{
+  "name": "UserRoleAssignment",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant ID"
+    },
+    "role_id": {
+      "type": "string",
+      "description": "ProvisioningRole ID"
+    },
+    "email": {
+      "type": "string",
+      "description": "User email (before linking)"
+    },
+    "base44_user_id": {
+      "type": "string",
+      "description": "Base44 User ID (after linking)"
+    },
+    "source_system": {
+      "type": "string",
+      "enum": [
+        "WIX",
+        "MANUAL",
+        "IAM",
+        "SCIM"
+      ],
+      "description": "System that created this assignment"
+    }
+  },
+  "required": [
+    "tenant_id",
+    "role_id",
+    "email"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "base44_user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          },
+          "tenant_id": "{{user.client_id}}"
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          },
+          "tenant_id": "{{user.client_id}}"
+        }
+      ]
+    }
+  }
+}

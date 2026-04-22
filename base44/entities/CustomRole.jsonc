@@ -1,0 +1,80 @@
+{
+  "name": "CustomRole",
+  "type": "object",
+  "properties": {
+    "role_name": {
+      "type": "string",
+      "description": "Name of the custom role (e.g., 'Content Manager', 'Analytics Viewer', 'Team Leader Add-on')"
+    },
+    "role_key": {
+      "type": "string",
+      "description": "URL-safe unique identifier for the role"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of what this role does"
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of permission keys this role has"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client this role belongs to (null for platform-wide roles)"
+    },
+    "is_system_role": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is a system-defined role (cannot be deleted)"
+    },
+    "is_addon": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is an addon role that adds permissions to the base app_role (vs replacing it)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this role is currently active"
+    },
+    "user_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of users assigned to this role"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Email of admin who created this role"
+    },
+    "color": {
+      "type": "string",
+      "description": "Color hex code for UI display"
+    }
+  },
+  "required": [
+    "role_name",
+    "role_key",
+    "permissions"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "Platform Admin"
+      }
+    },
+    "read": {},
+    "update": {
+      "user_condition": {
+        "role": "Platform Admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "Platform Admin"
+      }
+    }
+  }
+}

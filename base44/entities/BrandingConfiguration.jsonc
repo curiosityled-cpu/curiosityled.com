@@ -1,0 +1,136 @@
+{
+  "name": "BrandingConfiguration",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (for client-specific branding)"
+    },
+    "partner_id": {
+      "type": "string",
+      "description": "ID of the partner (for partner-specific branding)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this configuration is currently active"
+    },
+    "logo_url": {
+      "type": "string",
+      "description": "URL to the uploaded custom logo"
+    },
+    "favicon_url": {
+      "type": "string",
+      "description": "URL to the uploaded custom favicon"
+    },
+    "primary_color": {
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$",
+      "description": "Primary brand color (hex code)"
+    },
+    "secondary_color": {
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$",
+      "description": "Secondary brand color (hex code)"
+    },
+    "header_bg_color": {
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$",
+      "description": "Header background color (hex code)"
+    },
+    "text_color": {
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$",
+      "description": "Primary text color (hex code)"
+    },
+    "background_color": {
+      "type": "string",
+      "description": "Main background color or gradient (CSS value)"
+    },
+    "heading_font": {
+      "type": "string",
+      "description": "Font family for headings"
+    },
+    "body_font": {
+      "type": "string",
+      "description": "Font family for body text"
+    },
+    "font_url": {
+      "type": "string",
+      "description": "Google Fonts URL if using custom fonts"
+    },
+    "platform_name": {
+      "type": "string",
+      "description": "Custom platform name (e.g., 'Acme Leadership Academy')"
+    },
+    "tagline": {
+      "type": "string",
+      "description": "Custom tagline/subtitle"
+    },
+    "welcome_message": {
+      "type": "string",
+      "description": "Custom welcome message on dashboard (supports {{user.first_name}} etc.)"
+    },
+    "custom_domain": {
+      "type": "string",
+      "description": "Custom domain for the platform (e.g., 'leadership.acme.com')"
+    },
+    "terminology_overrides": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Key-value pairs for terminology customization"
+    }
+  },
+  "required": [],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "is_active": true
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "partner_id": {
+            "$in": "{{user.partner_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "partner_id": {
+            "$in": "{{user.partner_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

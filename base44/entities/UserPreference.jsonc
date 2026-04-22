@@ -1,0 +1,105 @@
+{
+  "name": "UserPreference",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user"
+    },
+    "atreus_preferences": {
+      "type": "object",
+      "description": "Preferences related to Atreus AI interaction",
+      "properties": {
+        "communication_style": {
+          "type": "string",
+          "enum": [
+            "concise",
+            "detailed",
+            "balanced"
+          ],
+          "default": "balanced",
+          "description": "Preferred response style from Atreus"
+        },
+        "preferred_action_types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Types of actions user frequently uses"
+        },
+        "common_tasks_history": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Recently executed tasks via Atreus"
+        },
+        "interaction_frequency": {
+          "type": "string",
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ],
+          "default": "medium",
+          "description": "How often user interacts with Atreus"
+        },
+        "feedback_history": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string"
+              },
+              "rating": {
+                "type": "number"
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          },
+          "description": "User feedback on Atreus responses"
+        }
+      }
+    },
+    "notification_preferences": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "User notification preferences"
+    },
+    "privacy_settings": {
+      "type": "object",
+      "properties": {
+        "allow_activity_tracking": {
+          "type": "boolean",
+          "default": true,
+          "description": "Allow Atreus to track activity for personalization"
+        },
+        "allow_proactive_suggestions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Allow Atreus to provide proactive insights"
+        },
+        "data_retention_days": {
+          "type": "number",
+          "default": 90,
+          "description": "How long to retain activity data (days)"
+        }
+      },
+      "description": "Privacy and data retention preferences"
+    }
+  },
+  "required": [
+    "user_email"
+  ],
+  "rls": {
+    "read": {
+      "user_email": "{{user.email}}"
+    },
+    "write": {
+      "user_email": "{{user.email}}"
+    }
+  }
+}

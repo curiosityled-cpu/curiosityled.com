@@ -1,0 +1,223 @@
+{
+  "name": "AssessmentSubmission",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user who took the assessment"
+    },
+    "custom_assessment_id": {
+      "type": "string",
+      "description": "ID of the CustomAssessment instance"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client this submission belongs to"
+    },
+    "leadership_level": {
+      "type": "string",
+      "enum": [
+        "Level 1 (Leading Self)",
+        "Level 2 (Leading Others)",
+        "Level 3 (Leading Managers)",
+        "Level 4 (Leading Functions)",
+        "Level 5 (Leading Organizations)",
+        "HiPo Individual Contributor"
+      ],
+      "description": "User's leadership level at time of assessment"
+    },
+    "sector": {
+      "type": "string",
+      "enum": [
+        "Healthcare",
+        "Government",
+        "Corporate/Private",
+        "Non-Profit",
+        "Other"
+      ],
+      "description": "User's sector at time of assessment"
+    },
+    "submission_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the assessment was completed"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "in_progress",
+        "submitted",
+        "scored",
+        "reviewed"
+      ],
+      "default": "submitted",
+      "description": "Submission status"
+    },
+    "user_responses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question_id": {
+            "type": "string",
+            "description": "AssessmentQuestion ID"
+          },
+          "competency_id": {
+            "type": "string",
+            "description": "Competency this question assesses"
+          },
+          "selected_option": {
+            "type": "string",
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "D"
+            ],
+            "description": "User's selected option"
+          },
+          "proficiency_value": {
+            "type": "integer",
+            "enum": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "description": "Proficiency level of selected option (A=1, B=2, C=3, D=4)"
+          },
+          "open_ended_response": {
+            "type": "string",
+            "description": "User's text response for open-ended questions"
+          },
+          "ai_evaluation": {
+            "type": "object",
+            "properties": {
+              "proficiency_level": {
+                "type": "integer"
+              },
+              "feedback": {
+                "type": "string"
+              },
+              "strengths": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "growth_areas": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "AI evaluation for open-ended responses"
+          }
+        }
+      },
+      "description": "Array of user responses"
+    },
+    "proficiency_scores": {
+      "type": "object",
+      "description": "Absolute proficiency scoring with benchmark comparison"
+    },
+    "leadership_style_profile": {
+      "type": "object",
+      "description": "Leadership style profiling based on response patterns"
+    },
+    "development_insights": {
+      "type": "array",
+      "description": "Personalized development insights combining proficiency and style"
+    },
+    "comparison_data": {
+      "type": "object",
+      "description": "Peer and organizational comparison metrics"
+    },
+    "ai_generated_report": {
+      "type": "object",
+      "description": "AI-generated comprehensive analysis"
+    }
+  },
+  "required": [
+    "user_email",
+    "custom_assessment_id",
+    "leadership_level",
+    "sector"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "User Level 2"
+          },
+          "user_email": {
+            "$in": "{{user.subordinate_emails}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Analyst",
+                "Admin Level 1",
+                "Admin Level 2",
+                "Super Administrator"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

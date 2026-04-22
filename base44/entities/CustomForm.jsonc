@@ -1,0 +1,345 @@
+{
+  "name": "CustomForm",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client this form belongs to"
+    },
+    "title": {
+      "type": "string",
+      "description": "Form title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Form description"
+    },
+    "form_type": {
+      "type": "string",
+      "enum": [
+        "request",
+        "enrollment",
+        "360_assessment",
+        "disc_assessment",
+        "mbti_assessment",
+        "poll",
+        "feedback_survey",
+        "satisfaction_survey",
+        "kirkpatrick_level_1",
+        "kirkpatrick_level_2",
+        "kirkpatrick_level_3",
+        "kirkpatrick_level_4",
+        "coaching_evaluation_1on1",
+        "coaching_evaluation_group",
+        "quiz",
+        "exam",
+        "custom"
+      ],
+      "description": "Type of form"
+    },
+    "form_category": {
+      "type": "string",
+      "enum": [
+        "assessment",
+        "survey",
+        "evaluation",
+        "operational"
+      ],
+      "description": "Form category for organization"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ],
+      "default": "draft",
+      "description": "Publication status"
+    },
+    "version": {
+      "type": "number",
+      "default": 1,
+      "description": "Form version number"
+    },
+    "is_template": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is a reusable template"
+    },
+    "template_id": {
+      "type": "string",
+      "description": "ID of the template this form was created from"
+    },
+    "config": {
+      "type": "object",
+      "description": "Form configuration including questions and logic"
+    },
+    "integration_config": {
+      "type": "object",
+      "description": "Integration with other entities (HR Admin+ feature)"
+    },
+    "public_access_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this form supports public submission links"
+    },
+    "public_access_config": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "custom_message": {
+          "type": "string"
+        },
+        "max_submissions": {
+          "type": "number"
+        }
+      },
+      "description": "Public access configuration"
+    },
+    "scheduling": {
+      "type": "object",
+      "properties": {
+        "start_date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "end_date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "auto_close_on_end": {
+          "type": "boolean",
+          "default": true
+        },
+        "auto_close_on_max_submissions": {
+          "type": "boolean",
+          "default": false
+        },
+        "timezone": {
+          "type": "string",
+          "default": "UTC"
+        }
+      },
+      "description": "Form scheduling configuration"
+    },
+    "reminders": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "frequency_days": {
+          "type": "number",
+          "default": 7
+        },
+        "last_reminder_sent": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "reminder_message": {
+          "type": "string"
+        }
+      },
+      "description": "Automatic reminder configuration"
+    },
+    "multi_step_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this form uses multi-step pagination"
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "section_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "description": "Multi-step form page configuration"
+    },
+    "assigned_to_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Users who have been assigned this form"
+    },
+    "program_id": {
+      "type": "string",
+      "description": "Program this form is associated with"
+    },
+    "cohort_id": {
+      "type": "string",
+      "description": "Cohort this form is associated with"
+    },
+    "learning_resource_id": {
+      "type": "string",
+      "description": "Learning resource this form is associated with"
+    },
+    "class_id": {
+      "type": "string",
+      "description": "Class this form is associated with"
+    },
+    "is_360_assessment": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is a 360-degree assessment"
+    },
+    "target_user_email": {
+      "type": "string",
+      "description": "Person being assessed (for 360 assessments)"
+    },
+    "respondent_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of respondents for 360 assessment"
+    },
+    "aggregation_status": {
+      "type": "string",
+      "enum": [
+        "collecting",
+        "ready",
+        "completed"
+      ],
+      "description": "Status of 360 response aggregation"
+    },
+    "submission_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Total number of submissions"
+    },
+    "completion_rate": {
+      "type": "number",
+      "description": "Percentage of assigned users who completed the form"
+    },
+    "average_score": {
+      "type": "number",
+      "description": "Average score for scored forms"
+    },
+    "average_completion_time_seconds": {
+      "type": "number",
+      "description": "Average time to complete in seconds"
+    }
+  },
+  "required": [
+    "title",
+    "form_type",
+    "form_category"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "assigned_to_emails": {
+            "$in": [
+              "{{user.email}}"
+            ]
+          }
+        },
+        {
+          "public_access_enabled": true,
+          "status": "published"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          },
+          "program_id": {
+            "$in": "{{user.managed_program_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Analyst",
+                "Admin Level 2",
+                "Super Administrator"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          },
+          "form_type": {
+            "$ne": "request"
+          },
+          "program_id": {
+            "$in": "{{user.managed_program_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

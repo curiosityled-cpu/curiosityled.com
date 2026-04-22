@@ -16,7 +16,15 @@ export default function ResourceCard({
     onAddToJourneyClick,
     showSelfAssign = false,
 }) {
+    const { user } = useAuth();
     const [selfAssigning, setSelfAssigning] = React.useState(false);
+    const [progress, setProgress] = useState(null);
+    const [isLocked, setIsLocked] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        checkAccess();
+    }, [resource, user]);
 
     const handleSelfAssign = async () => {
         setSelfAssigning(true);
@@ -24,7 +32,6 @@ export default function ResourceCard({
             const me = await base44.auth.me();
             if (!me?.email) throw new Error("Not authenticated");
             
-            // Create AssignedLearning record
             await base44.entities.AssignedLearning.create({
                 user_email: me.email,
                 learning_resource_id: resource.id,
@@ -35,7 +42,6 @@ export default function ResourceCard({
                 client_id: me.client_id || null,
             });
             
-            // Create LearnerProgress record for tracking
             await base44.entities.LearnerProgress.create({
                 user_email: me.email,
                 learning_resource_id: resource.id,
@@ -45,11 +51,9 @@ export default function ResourceCard({
             });
             
             toast.success("Added to your learning progress!");
-            // Trigger refresh of parent component
             if (window.dispatchEvent) {
                 window.dispatchEvent(new CustomEvent('learningAssigned', { detail: { resource_id: resource.id } }));
             }
-            // Reload access check
             await checkAccess();
         } catch (err) {
             toast.error("Failed to assign: " + (err?.message || "Unknown error"));
@@ -57,14 +61,6 @@ export default function ResourceCard({
             setSelfAssigning(false);
         }
     };
-    const { user } = useAuth();
-    const [progress, setProgress] = useState(null);
-    const [isLocked, setIsLocked] = useState(false);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        checkAccess();
-    }, [resource, user]);
 
     const checkAccess = async () => {
         if (!user) return;

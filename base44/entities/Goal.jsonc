@@ -1,0 +1,405 @@
+{
+  "name": "Goal",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Goal title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Goal description"
+    },
+    "goal_type": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "okr_objective",
+        "coaching_goal",
+        "action_item"
+      ],
+      "default": "standard",
+      "description": "Type of goal: standard goal, OKR objective, coaching goal, or action item"
+    },
+    "timeframe_start": {
+      "type": "string",
+      "format": "date",
+      "description": "Start date for the goal (especially important for OKRs)"
+    },
+    "timeframe_end": {
+      "type": "string",
+      "format": "date",
+      "description": "End date for the goal (especially important for OKRs)"
+    },
+    "linked_competency_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of Competency IDs linked to this goal"
+    },
+    "color": {
+      "type": "string",
+      "default": "#0073EA",
+      "description": "Goal accent color"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "private",
+        "shared"
+      ],
+      "default": "private",
+      "description": "Goal visibility setting"
+    },
+    "view_type": {
+      "type": "string",
+      "enum": [
+        "table",
+        "kanban",
+        "calendar"
+      ],
+      "default": "table",
+      "description": "Current view type"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "archived"
+      ],
+      "default": "active",
+      "description": "Goal status"
+    },
+    "progress": {
+      "type": "number",
+      "default": 0,
+      "description": "Progress percentage (0-100), especially for OKRs"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Client ID for multi-tenant support"
+    },
+    "department": {
+      "type": "string",
+      "description": "Department or business unit this goal belongs to"
+    },
+    "program_id": {
+      "type": "string",
+      "description": "Program ID if this is a program-related goal"
+    },
+    "coach_email": {
+      "type": "string",
+      "description": "Email of the coach who created/manages this goal (for coaching goals)"
+    },
+    "coaching_session_id": {
+      "type": "string",
+      "description": "ID of the CoachingSession this goal originated from"
+    },
+    "coaching_engagement_id": {
+      "type": "string",
+      "description": "ID of the CoachingEngagement this goal is part of"
+    },
+    "assigned_to_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of user emails this goal is assigned to (for managers assigning to direct reports)"
+    },
+    "members": {
+      "type": "array",
+      "description": "Team members with role-based access",
+      "items": {
+        "type": "object",
+        "properties": {
+          "user_email": {
+            "type": "string"
+          },
+          "user_name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "owner",
+              "editor",
+              "viewer"
+            ]
+          },
+          "added_date": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "columns": {
+      "type": "array",
+      "description": "Global goal column definitions (can be overridden per group)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "text",
+              "status",
+              "date",
+              "people",
+              "number",
+              "budget",
+              "priority",
+              "checkbox",
+              "dropdown"
+            ]
+          },
+          "width": {
+            "type": "number",
+            "default": 150
+          },
+          "options": {
+            "type": "object",
+            "description": "Column-specific options"
+          }
+        }
+      }
+    },
+    "groups": {
+      "type": "array",
+      "description": "Goal groups/sections",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "collapsed": {
+            "type": "boolean",
+            "default": false
+          },
+          "visible_columns": {
+            "type": "array",
+            "description": "Column IDs that are visible in this group",
+            "items": {
+              "type": "string"
+            }
+          },
+          "custom_columns": {
+            "type": "array",
+            "description": "Custom columns specific to this group",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "text",
+                    "status",
+                    "date",
+                    "people",
+                    "number",
+                    "budget",
+                    "priority",
+                    "checkbox",
+                    "dropdown"
+                  ]
+                },
+                "width": {
+                  "type": "number",
+                  "default": 150
+                },
+                "options": {
+                  "type": "object",
+                  "description": "Column-specific options"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "points_value": {
+      "type": "number",
+      "description": "Number of gamification points awarded for completing this goal (overrides default)"
+    }
+  },
+  "required": [
+    "title"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "visibility": "shared"
+        },
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "assigned_to_emails": {
+            "$in": [
+              "{{user.email}}"
+            ]
+          }
+        },
+        {
+          "members": {
+            "$elemMatch": {
+              "user_email": "{{user.email}}"
+            }
+          }
+        },
+        {
+          "coach_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Analyst",
+                "Admin Level 2",
+                "Super Administrator"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "User Level 2"
+          },
+          "created_by": {
+            "$in": "{{user.subordinate_emails}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          },
+          "program_id": {
+            "$in": "{{user.managed_program_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          },
+          "coaching_engagement_id": {
+            "$exists": true
+          },
+          "coach_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "assigned_to_emails": {
+            "$in": [
+              "{{user.email}}"
+            ]
+          }
+        },
+        {
+          "members": {
+            "$elemMatch": {
+              "user_email": "{{user.email}}",
+              "role": {
+                "$in": [
+                  "owner",
+                  "editor"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "coach_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "User Level 2"
+          },
+          "created_by": {
+            "$in": "{{user.subordinate_emails}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          },
+          "program_id": {
+            "$in": "{{user.managed_program_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          },
+          "coach_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

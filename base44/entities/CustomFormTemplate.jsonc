@@ -1,0 +1,132 @@
+{
+  "name": "CustomFormTemplate",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (null for platform defaults)"
+    },
+    "is_platform_default": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is a platform-wide default template"
+    },
+    "title": {
+      "type": "string",
+      "description": "Template title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Template description"
+    },
+    "form_type": {
+      "type": "string",
+      "enum": [
+        "request",
+        "enrollment",
+        "360_assessment",
+        "disc_assessment",
+        "mbti_assessment",
+        "poll",
+        "feedback_survey",
+        "satisfaction_survey",
+        "kirkpatrick_level_1",
+        "kirkpatrick_level_2",
+        "kirkpatrick_level_3",
+        "kirkpatrick_level_4",
+        "coaching_evaluation_1on1",
+        "coaching_evaluation_group",
+        "quiz",
+        "exam",
+        "custom"
+      ],
+      "description": "Type of form"
+    },
+    "form_category": {
+      "type": "string",
+      "enum": [
+        "assessment",
+        "survey",
+        "evaluation",
+        "operational"
+      ],
+      "description": "Form category"
+    },
+    "thumbnail_url": {
+      "type": "string",
+      "description": "Template preview image"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for filtering templates"
+    },
+    "config": {
+      "type": "object",
+      "description": "Default form configuration"
+    },
+    "use_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of times this template has been used"
+    },
+    "is_editable": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether tenants can edit this template"
+    }
+  },
+  "required": [
+    "title",
+    "form_type",
+    "form_category",
+    "config"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "is_platform_default": true
+        },
+        {
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

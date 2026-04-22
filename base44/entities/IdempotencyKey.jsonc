@@ -1,0 +1,83 @@
+{
+  "name": "IdempotencyKey",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant ID"
+    },
+    "endpoint": {
+      "type": "string",
+      "description": "API endpoint"
+    },
+    "key": {
+      "type": "string",
+      "description": "Idempotency key"
+    },
+    "request_hash": {
+      "type": "string",
+      "description": "Hash of request body"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "IN_PROGRESS",
+        "SUCCEEDED",
+        "FAILED"
+      ],
+      "default": "IN_PROGRESS",
+      "description": "Processing status"
+    },
+    "response_body": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Cached response"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Expiration timestamp"
+    }
+  },
+  "required": [
+    "tenant_id",
+    "endpoint",
+    "key",
+    "request_hash",
+    "expires_at"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          },
+          "tenant_id": "{{user.client_id}}"
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          },
+          "tenant_id": "{{user.client_id}}"
+        }
+      ]
+    }
+  }
+}

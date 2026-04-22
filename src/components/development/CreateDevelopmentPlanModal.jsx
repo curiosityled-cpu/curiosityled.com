@@ -212,6 +212,7 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
         <DialogHeader>
@@ -559,14 +560,14 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
           </div>
         </div>
       </DialogContent>
-      
-      {/* Experience Selector */}
-      <ExperienceSelector
-        open={showExperienceSelector}
-        onClose={() => setShowExperienceSelector(false)}
-        onSelect={addExistingExperience}
-        selectedExperienceIds={form.experiences.map(e => e.external_id).filter(Boolean)}
-      />
     </Dialog>
+
+    <ExperienceSelector
+      open={showExperienceSelector}
+      onClose={() => setShowExperienceSelector(false)}
+      onSelect={addExistingExperience}
+      selectedExperienceIds={form.experiences.map(e => e.external_id).filter(Boolean)}
+    />
+    </>
   );
 }

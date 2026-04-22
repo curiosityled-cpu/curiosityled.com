@@ -1,0 +1,174 @@
+{
+  "name": "Automation",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the automation"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of what this automation does"
+    },
+    "natural_language_input": {
+      "type": "string",
+      "description": "User's natural language description of desired automation"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "paused",
+        "draft",
+        "error"
+      ],
+      "default": "draft",
+      "description": "Current status of the automation"
+    },
+    "trigger_type": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "scheduled",
+        "entity_created",
+        "entity_updated",
+        "entity_deleted",
+        "assessment_completed",
+        "goal_completed",
+        "journey_started"
+      ],
+      "description": "What triggers this automation"
+    },
+    "trigger_config": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Configuration for the trigger (e.g., cron schedule, entity name, field conditions)"
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "action_type": {
+            "type": "string",
+            "enum": [
+              "update_entity",
+              "create_entity",
+              "send_notification",
+              "send_email",
+              "assign_learning",
+              "create_goal",
+              "schedule_1on1",
+              "invoke_function"
+            ]
+          },
+          "action_config": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "description": "Array of actions to perform when triggered"
+    },
+    "ai_generated_logic": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "AI-generated logic and suggestions"
+    },
+    "execution_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of times this automation has been executed"
+    },
+    "last_execution_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this automation last ran"
+    },
+    "last_execution_status": {
+      "type": "string",
+      "enum": [
+        "success",
+        "failed",
+        "partial"
+      ],
+      "description": "Status of last execution"
+    },
+    "last_execution_error": {
+      "type": "string",
+      "description": "Error message from last execution if failed"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Client ID for multi-tenant support"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for categorization"
+    }
+  },
+  "required": [
+    "name",
+    "trigger_type"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 1",
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        }
+      ]
+    }
+  }
+}

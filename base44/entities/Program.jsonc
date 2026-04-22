@@ -1,0 +1,354 @@
+{
+  "name": "Program",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client this program belongs to"
+    },
+    "name": {
+      "type": "string",
+      "description": "Program name (e.g., 'Executive Leadership Development')"
+    },
+    "description": {
+      "type": "string",
+      "description": "Program description and goals"
+    },
+    "program_type": {
+      "type": "string",
+      "enum": [
+        "executive_development",
+        "mid_level_leadership",
+        "new_manager",
+        "high_potential",
+        "succession_planning",
+        "team_effectiveness",
+        "coaching_program",
+        "certification",
+        "custom"
+      ],
+      "description": "Type of leadership program"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "paused",
+        "completed",
+        "archived"
+      ],
+      "default": "draft",
+      "description": "Current program status"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Program start date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Program end date"
+    },
+    "enrollment_start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When enrollment opens"
+    },
+    "enrollment_end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When enrollment closes"
+    },
+    "target_competencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of competency IDs this program focuses on"
+    },
+    "assessment_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of assessment IDs used in this program"
+    },
+    "learning_resource_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of learning resources assigned to this program"
+    },
+    "journey_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of learning journey IDs included in this program"
+    },
+    "class_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of Class IDs that are part of this program"
+    },
+    "max_participants": {
+      "type": "number",
+      "description": "Maximum number of participants allowed"
+    },
+    "participant_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of participants enrolled"
+    },
+    "participant_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of participant user emails"
+    },
+    "manager_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of Program Manager emails who manage this program"
+    },
+    "primary_manager_email": {
+      "type": "string",
+      "description": "Email of the primary Program Manager (for backwards compatibility)"
+    },
+    "program_manager_email": {
+      "type": "string",
+      "description": "Email of the L&D manager running this program (legacy field)"
+    },
+    "sponsor_email": {
+      "type": "string",
+      "description": "Email of the executive sponsor"
+    },
+    "sequence_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "resource",
+              "assessment",
+              "conversational_learning_module",
+              "class",
+              "coaching_session"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the resource, assessment, class, or module"
+          },
+          "order": {
+            "type": "number",
+            "description": "Order in the sequence"
+          },
+          "is_required": {
+            "type": "boolean",
+            "default": true
+          },
+          "unlock_after_days": {
+            "type": "number",
+            "description": "Days after enrollment to unlock this item"
+          }
+        }
+      },
+      "description": "Ordered sequence of learning items in this program"
+    },
+    "certificate_template_id": {
+      "type": "string",
+      "description": "ID of certificate template for program completion"
+    },
+    "completion_criteria": {
+      "type": "object",
+      "properties": {
+        "min_attendance_percentage": {
+          "type": "number",
+          "description": "Minimum class attendance required"
+        },
+        "required_assessments": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "required_resources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "min_coaching_sessions": {
+          "type": "number"
+        }
+      },
+      "description": "Criteria for program completion"
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "avg_completion_rate": {
+          "type": "number"
+        },
+        "avg_satisfaction_score": {
+          "type": "number"
+        },
+        "avg_assessment_improvement": {
+          "type": "number"
+        }
+      },
+      "description": "Aggregated program metrics"
+    },
+    "budget": {
+      "type": "number",
+      "description": "Program budget"
+    },
+    "cost_per_participant": {
+      "type": "number",
+      "description": "Cost per participant"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for categorization"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "private",
+        "invite_only",
+        "open_enrollment"
+      ],
+      "default": "invite_only",
+      "description": "Program visibility and enrollment type"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal notes about this program"
+    },
+    "points_value": {
+      "type": "number",
+      "description": "Number of gamification points awarded for completing this program (overrides default)"
+    },
+    "completion_badge_id": {
+      "type": "string",
+      "description": "ID of the BadgeTemplate awarded upon program completion"
+    }
+  },
+  "required": [
+    "client_id",
+    "name"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "manager_emails": {
+            "$in": [
+              "{{user.email}}"
+            ]
+          }
+        },
+        {
+          "primary_manager_email": "{{user.email}}"
+        },
+        {
+          "program_manager_email": "{{user.email}}"
+        },
+        {
+          "participant_emails": {
+            "$in": [
+              "{{user.email}}"
+            ]
+          }
+        },
+        {
+          "sponsor_email": "{{user.email}}"
+        },
+        {
+          "visibility": "open_enrollment",
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Analyst",
+                "Admin Level 2",
+                "Super Administrator"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "manager_emails": {
+            "$in": [
+              "{{user.email}}"
+            ]
+          }
+        },
+        {
+          "primary_manager_email": "{{user.email}}"
+        },
+        {
+          "program_manager_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

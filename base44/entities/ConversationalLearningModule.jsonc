@@ -1,0 +1,221 @@
+{
+  "name": "ConversationalLearningModule",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Module title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Module description and learning objectives"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ],
+      "default": "draft",
+      "description": "Publication status"
+    },
+    "competencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Competencies this module develops"
+    },
+    "leadership_level": {
+      "type": "string",
+      "enum": [
+        "Individual Contributor to First-Time Manager (entry-level leaders, frontline managers, new supervisors)",
+        "Mid-Level Manager (managers of managers, experienced team leads, functional leads)",
+        "Senior Manager / Business Unit Leader (leads larger teams, cross-functional groups, or business units)",
+        "Director / Senior Director (enterprise-level strategic oversight, multiple functions, major initiatives)",
+        "Executive / C-Suite (enterprise leadership, board-level strategy, organizational transformation)"
+      ],
+      "description": "Target leadership level"
+    },
+    "estimated_duration_minutes": {
+      "type": "number",
+      "description": "Estimated completion time in minutes"
+    },
+    "conversation_structure": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "step_id": {
+            "type": "string"
+          },
+          "step_type": {
+            "type": "string",
+            "enum": [
+              "intro",
+              "question",
+              "scenario",
+              "reflection",
+              "knowledge_check",
+              "summary"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "description": "Atreus message or prompt"
+          },
+          "learning_objective": {
+            "type": "string"
+          },
+          "coaching_notes": {
+            "type": "string",
+            "description": "Guidance for Atreus on how to respond"
+          },
+          "required_topics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Topics that must be covered before proceeding"
+          },
+          "success_criteria": {
+            "type": "string",
+            "description": "What constitutes completion of this step"
+          },
+          "knowledge_check": {
+            "type": "object",
+            "properties": {
+              "question": {
+                "type": "string"
+              },
+              "options": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "correct_answer_index": {
+                "type": "number"
+              },
+              "explanation": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "description": "Structured conversation flow with Atreus"
+    },
+    "prerequisite_resource_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Required learning resources"
+    },
+    "prerequisite_module_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Required modules"
+    },
+    "related_resource_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Supplementary resources"
+    },
+    "thumbnail_url": {
+      "type": "string",
+      "description": "Module thumbnail"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "points_value": {
+      "type": "number",
+      "description": "Number of gamification points awarded for completing this module (overrides default)"
+    }
+  },
+  "required": [
+    "title",
+    "competencies",
+    "leadership_level"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}",
+      "$or": [
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "read": {
+      "status": "published",
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Analyst",
+                "Admin Level 1",
+                "Admin Level 2",
+                "Super Administrator",
+                "Partner Business Administrator",
+                "Platform Admin"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "update": {
+      "created_by": "{{user.email}}",
+      "$or": [
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "delete": {
+      "created_by": "{{user.email}}",
+      "$or": [
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

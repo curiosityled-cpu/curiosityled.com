@@ -1,0 +1,178 @@
+{
+  "name": "JourneyEnrollment",
+  "type": "object",
+  "properties": {
+    "journey_id": {
+      "type": "string",
+      "description": "ID of the learning journey"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of the enrolled user"
+    },
+    "enrolled_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the user was enrolled"
+    },
+    "enrolled_by": {
+      "type": "string",
+      "description": "Email of the person who enrolled this user"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "in_progress",
+        "completed",
+        "dropped"
+      ],
+      "default": "not_started",
+      "description": "User's progress status in this journey"
+    },
+    "completion_percentage": {
+      "type": "number",
+      "default": 0,
+      "description": "Percentage of journey completed (0-100)"
+    },
+    "started_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the user started the journey"
+    },
+    "completed_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the user completed the journey"
+    },
+    "content_progress": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "learning_resource_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "not_started",
+              "in_progress",
+              "completed",
+              "skipped",
+              "locked"
+            ]
+          },
+          "completed_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "score": {
+            "type": "number",
+            "description": "Score achieved on this resource (if applicable)"
+          },
+          "unlocked_date": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When this resource was unlocked for the user"
+          }
+        }
+      },
+      "description": "Progress on individual resources with unlock tracking"
+    },
+    "notes": {
+      "type": "string",
+      "description": "User's notes on this journey"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Optional due date for completion"
+    }
+  },
+  "required": [
+    "journey_id",
+    "user_email"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "enrolled_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "User Level 2"
+          },
+          "user_email": {
+            "$in": "{{user.subordinate_emails}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Analyst",
+                "Admin Level 1",
+                "Admin Level 2",
+                "Super Administrator"
+              ]
+            }
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "enrolled_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "User Level 2"
+          },
+          "user_email": {
+            "$in": "{{user.subordinate_emails}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 1",
+                "Admin Level 2",
+                "Super Administrator"
+              ]
+            }
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

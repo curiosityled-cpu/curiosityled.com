@@ -1,0 +1,92 @@
+{
+  "name": "LoginHistory",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user who attempted login"
+    },
+    "login_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the login attempt occurred"
+    },
+    "ip_address": {
+      "type": "string",
+      "description": "IP address of the login attempt"
+    },
+    "device_type": {
+      "type": "string",
+      "description": "Device type (desktop, mobile, tablet)"
+    },
+    "browser": {
+      "type": "string",
+      "description": "Browser used for login"
+    },
+    "location": {
+      "type": "string",
+      "description": "Geographic location (city, country)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "success",
+        "failed",
+        "locked"
+      ],
+      "description": "Login attempt status"
+    },
+    "failure_reason": {
+      "type": "string",
+      "description": "Reason for failed login (wrong password, account locked, etc.)"
+    },
+    "session_id": {
+      "type": "string",
+      "description": "Unique session identifier for successful logins"
+    },
+    "session_ended_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the session ended (logout or expiry)"
+    }
+  },
+  "required": [
+    "user_email",
+    "login_timestamp",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Partner Business Administrator",
+                "Platform Admin"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Platform Admin"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

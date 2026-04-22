@@ -1,0 +1,153 @@
+{
+  "name": "LearnerProgress",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user"
+    },
+    "learning_resource_id": {
+      "type": "string",
+      "description": "ID of the LearningResource being tracked"
+    },
+    "conversational_learning_module_id": {
+      "type": "string",
+      "description": "ID of the ConversationalLearningModule being tracked (for Phase 2)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "in_progress",
+        "completed",
+        "abandoned"
+      ],
+      "default": "not_started",
+      "description": "Current status of learning progress"
+    },
+    "progress_percentage": {
+      "type": "number",
+      "default": 0,
+      "description": "Progress percentage (0-100)"
+    },
+    "last_accessed_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the user last accessed this resource"
+    },
+    "completed_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the user completed this resource"
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "content": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "User notes taken during learning"
+    },
+    "bookmarks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "context": {
+            "type": "string"
+          },
+          "resource_timestamp": {
+            "type": "number",
+            "description": "Timestamp in resource (for videos, etc.)"
+          },
+          "module_step_id": {
+            "type": "string",
+            "description": "Step ID for conversational modules"
+          }
+        }
+      },
+      "description": "User bookmarks within the learning content"
+    }
+  },
+  "required": [
+    "user_email"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "User Level 2"
+          },
+          "user_email": {
+            "$in": "{{user.subordinate_emails}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Analyst",
+                "Admin Level 1",
+                "Admin Level 2",
+                "Super Administrator"
+              ]
+            }
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

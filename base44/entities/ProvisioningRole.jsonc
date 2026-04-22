@@ -1,0 +1,64 @@
+{
+  "name": "ProvisioningRole",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant ID"
+    },
+    "name": {
+      "type": "string",
+      "description": "Role name/slug (e.g., 'hr_admin')"
+    },
+    "display_name": {
+      "type": "string",
+      "description": "Human-readable role name"
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Array of permission strings"
+    }
+  },
+  "required": [
+    "tenant_id",
+    "name"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          },
+          "tenant_id": "{{user.client_id}}"
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          },
+          "tenant_id": "{{user.client_id}}"
+        }
+      ]
+    }
+  }
+}

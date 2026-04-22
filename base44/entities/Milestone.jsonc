@@ -1,0 +1,61 @@
+{
+  "name": "Milestone",
+  "type": "object",
+  "properties": {
+    "goal_id": {
+      "type": "string",
+      "description": "ID of the Goal this milestone belongs to"
+    },
+    "group_id": {
+      "type": "string",
+      "description": "ID of the group within the goal"
+    },
+    "title": {
+      "type": "string",
+      "description": "Milestone title"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "default": "medium",
+      "description": "Priority level"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "working_on_it",
+        "done",
+        "stuck"
+      ],
+      "default": "not_started",
+      "description": "Current status"
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Additional data like description, owner, due_date, etc."
+    },
+    "order_index": {
+      "type": "number",
+      "description": "Order within the group"
+    }
+  },
+  "required": [
+    "goal_id",
+    "title"
+  ],
+  "rls": {
+    "read": {
+      "created_by": "{{user.email}}"
+    },
+    "write": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}

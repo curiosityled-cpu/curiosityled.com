@@ -1,0 +1,141 @@
+{
+  "name": "Competency",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the competency"
+    },
+    "field_key": {
+      "type": "string",
+      "description": "Short key for analytics mapping (e.g., 'si', 'dm', 'comm')"
+    },
+    "category": {
+      "type": "string",
+      "description": "Category of the competency (e.g., Tactical, Self Leadership, People Leadership, Situational Intelligence)"
+    },
+    "definition": {
+      "type": "string",
+      "description": "Definition of what this competency entails"
+    },
+    "key_components": {
+      "type": "array",
+      "description": "Key components with their corresponding percentage weightings",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the component"
+          },
+          "weight": {
+            "type": "number",
+            "description": "Percentage weighting of this component (should sum to 100% across all components)"
+          }
+        }
+      }
+    },
+    "proficiency_levels": {
+      "type": "object",
+      "description": "Proficiency level descriptions for each level (1-4: Awareness, Developing, Proficient, Mastery)",
+      "additionalProperties": true
+    },
+    "leadership_level_requirements": {
+      "type": "object",
+      "description": "Expected proficiency level (1-4 scale) for each leadership level",
+      "properties": {
+        "level_1": {
+          "type": "number",
+          "description": "Expected proficiency for Level 1 (Leading Self): 1=Awareness, 2=Developing, 3=Proficient, 4=Mastery"
+        },
+        "level_2": {
+          "type": "number",
+          "description": "Expected proficiency for Level 2 (Leading Others)"
+        },
+        "level_3": {
+          "type": "number",
+          "description": "Expected proficiency for Level 3 (Leading Managers)"
+        },
+        "level_4": {
+          "type": "number",
+          "description": "Expected proficiency for Level 4 (Leading Functions)"
+        },
+        "level_5": {
+          "type": "number",
+          "description": "Expected proficiency for Level 5 (Leading Organizations)"
+        }
+      }
+    },
+    "evidence_base": {
+      "type": "string",
+      "description": "Research evidence and citations supporting this competency"
+    },
+    "assessment_mapping": {
+      "type": "object",
+      "description": "Structured mapping to assessment scores and metrics",
+      "properties": {
+        "assessment_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "IDs of assessments that measure this competency"
+        },
+        "score_mapping": {
+          "type": "string",
+          "description": "How scores map to proficiency levels"
+        },
+        "calculation_method": {
+          "type": "string",
+          "description": "Method for calculating competency score from assessment data"
+        }
+      }
+    },
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client this competency belongs to (null for platform defaults)"
+    },
+    "is_platform_default": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is a platform-wide default competency"
+    }
+  },
+  "required": [
+    "name",
+    "category",
+    "definition"
+  ],
+  "rls": {
+    "read": {},
+    "write": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,314 @@
+{
+  "name": "CoachingSession",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client this session belongs to"
+    },
+    "coach_email": {
+      "type": "string",
+      "description": "Email of the Program Manager/coach conducting the session"
+    },
+    "coachee_email": {
+      "type": "string",
+      "description": "Email of the individual being coached (for 1:1 sessions)"
+    },
+    "team_member_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of team member emails (for team effectiveness interventions)"
+    },
+    "session_type": {
+      "type": "string",
+      "enum": [
+        "1on1_coaching",
+        "team_effectiveness",
+        "leadership_development",
+        "career_coaching",
+        "performance_coaching",
+        "onboarding_coaching"
+      ],
+      "description": "Type of coaching intervention"
+    },
+    "engagement_id": {
+      "type": "string",
+      "description": "ID of the parent CoachingEngagement this session belongs to"
+    },
+    "title": {
+      "type": "string",
+      "description": "Session title or topic"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of session objectives"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "confirmed",
+        "in_progress",
+        "completed",
+        "cancelled",
+        "no_show",
+        "rescheduled"
+      ],
+      "default": "scheduled",
+      "description": "Current status of the session"
+    },
+    "scheduled_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the session is scheduled"
+    },
+    "actual_start_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the session actually started"
+    },
+    "actual_end_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the session actually ended"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "default": 60,
+      "description": "Planned duration in minutes"
+    },
+    "location": {
+      "type": "string",
+      "description": "Meeting location or virtual link"
+    },
+    "location_type": {
+      "type": "string",
+      "enum": [
+        "in_person",
+        "virtual",
+        "phone"
+      ],
+      "default": "virtual",
+      "description": "How the session will be conducted"
+    },
+    "pre_session_notes": {
+      "type": "string",
+      "description": "Notes prepared before the session"
+    },
+    "session_notes": {
+      "type": "string",
+      "description": "Notes taken during/after the session"
+    },
+    "coachee_reflection": {
+      "type": "string",
+      "description": "Coachee's reflection or self-assessment"
+    },
+    "action_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "assigned_to": {
+            "type": "string",
+            "description": "Email of person responsible"
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "in_progress",
+              "completed",
+              "deferred"
+            ]
+          },
+          "completed_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Action items agreed upon during the session"
+    },
+    "related_goal_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of Goal IDs related to this coaching session"
+    },
+    "related_assessment_id": {
+      "type": "string",
+      "description": "ID of assessment results being discussed"
+    },
+    "related_journey_id": {
+      "type": "string",
+      "description": "ID of learning journey being supported"
+    },
+    "competencies_addressed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of competency IDs addressed in this session"
+    },
+    "focus_areas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Key focus areas for this session"
+    },
+    "progress_rating": {
+      "type": "number",
+      "description": "Coach's rating of coachee's progress (1-5)"
+    },
+    "engagement_rating": {
+      "type": "number",
+      "description": "Coach's rating of coachee's engagement (1-5)"
+    },
+    "coachee_satisfaction": {
+      "type": "number",
+      "description": "Coachee's satisfaction rating (1-5)"
+    },
+    "follow_up_scheduled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether a follow-up session has been scheduled"
+    },
+    "next_session_id": {
+      "type": "string",
+      "description": "ID of the next scheduled session"
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Files or resources shared during the session"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for categorization and filtering"
+    },
+    "is_confidential": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether session details are confidential (limited visibility)"
+    },
+    "points_value": {
+      "type": "number",
+      "description": "Number of gamification points awarded for completing this coaching session (overrides default)"
+    }
+  },
+  "required": [
+    "client_id",
+    "coach_email",
+    "session_type",
+    "scheduled_date"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "coach_email": "{{user.email}}"
+        },
+        {
+          "coachee_email": "{{user.email}}"
+        },
+        {
+          "team_member_emails": {
+            "$in": [
+              "{{user.email}}"
+            ]
+          }
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}",
+          "is_confidential": false
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          },
+          "is_confidential": false
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "coach_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}
