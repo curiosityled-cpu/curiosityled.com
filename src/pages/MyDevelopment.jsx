@@ -104,12 +104,14 @@ export default function MyDevelopment() {
 
   const load = async () => {
     if (!user) return;
+    // Support both flat and nested user objects
+    const email = user.email || user.data?.email;
+    if (!email) return;
     try {
-      const [assigned, plans, exps, progress] = await Promise.all([
-        base44.entities.AssignedLearning.filter({ user_email: user.email }),
-        base44.entities.DevelopmentPlan.filter({ user_email: user.email }),
-        base44.entities.DevelopmentExperience.filter({ user_email: user.email }, "-created_date"),
-        base44.entities.LearnerProgress?.filter({ user_email: user.email }) || [],
+      const [assigned, plans, exps] = await Promise.all([
+        base44.entities.AssignedLearning.filter({ user_email: email }),
+        base44.entities.DevelopmentPlan.filter({ user_email: email }),
+        base44.entities.DevelopmentExperience.filter({ user_email: email }, "-created_date"),
       ]);
       setAssignedLearning(assigned);
       setDevPlans(plans);

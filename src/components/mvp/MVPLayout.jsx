@@ -107,7 +107,7 @@ export default function MVPLayout({ children }) {
     navigate(createPageUrl('Notifications'));
   };
 
-  const mvpRole = getMVPRole(user?.app_role);
+  const mvpRole = getMVPRole(user?.app_role || user?.data?.app_role);
   const navItems = NAV_CONFIG[mvpRole] || [];
 
   const handleLogout = () => base44.auth.logout();

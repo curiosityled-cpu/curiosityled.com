@@ -36,6 +36,7 @@ export default function ResourceCard({
             const me = await base44.auth.me();
             if (!me?.email) throw new Error("Not authenticated");
             
+            const clientId = me.client_id || me?.data?.client_id || null;
             await base44.entities.AssignedLearning.create({
                 user_email: me.email,
                 learning_resource_id: resource.id,
@@ -43,7 +44,7 @@ export default function ResourceCard({
                 title: resource.title,
                 description: resource.description || "",
                 status: "assigned",
-                client_id: me.client_id || null,
+                client_id: clientId,
             });
             
             await base44.entities.LearnerProgress.create({
