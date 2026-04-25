@@ -213,7 +213,15 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
 
   return (
     <>
-    <Dialog open={open} onOpenChange={onClose}>
+    {showExperienceSelector && (
+      <ExperienceSelector
+        open={showExperienceSelector}
+        onClose={() => setShowExperienceSelector(false)}
+        onSelect={addExistingExperience}
+        selectedExperienceIds={form.experiences.map(e => e.external_id).filter(Boolean)}
+      />
+    )}
+    <Dialog open={open && !showExperienceSelector} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{editing ? "Edit Journey" : "Create Journey"}</DialogTitle>
@@ -275,6 +283,7 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
             <div className="flex flex-wrap gap-2">
               {COMPETENCIES.map(c => (
                 <button
+                  type="button"
                   key={c}
                   onClick={() => toggleCompetency(c)}
                   className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs transition-all
@@ -332,7 +341,7 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
                         <label className="block text-xs text-gray-500 mb-1">Type</label>
                         <div className="grid grid-cols-3 gap-1.5">
                           {EXPERIENCE_TYPES.map(t => (
-                            <button key={t.value} onClick={() => updateExp(i, "type", t.value)}
+                            <button type="button" key={t.value} onClick={() => updateExp(i, "type", t.value)}
                               className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-xs transition-all
                                 ${exp.type === t.value ? "border-purple-500 bg-purple-50 text-purple-700 font-semibold" : "border-gray-200 text-gray-600 hover:border-purple-200"}`}>
                               <span>{t.emoji}</span><span className="truncate">{t.label}</span>
@@ -562,12 +571,6 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
       </DialogContent>
     </Dialog>
 
-    <ExperienceSelector
-      open={showExperienceSelector}
-      onClose={() => setShowExperienceSelector(false)}
-      onSelect={addExistingExperience}
-      selectedExperienceIds={form.experiences.map(e => e.external_id).filter(Boolean)}
-    />
     </>
   );
 }

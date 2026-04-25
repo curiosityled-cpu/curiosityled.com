@@ -27,6 +27,10 @@ export default function ResourceCard({
     }, [resource, user]);
 
     const handleSelfAssign = async () => {
+        if (progress) {
+            toast.info("Already in your learning progress!");
+            return;
+        }
         setSelfAssigning(true);
         try {
             const me = await base44.auth.me();
