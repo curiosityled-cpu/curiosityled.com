@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -102,10 +102,8 @@ export default function MyDevelopment() {
   const [showExpModal, setShowExpModal] = useState(false);
   const [editingExp, setEditingExp] = useState(null);
 
-  const load = async () => {
-    if (!user) return;
-    // Support both flat and nested user objects
-    const email = user.email || user.data?.email;
+  const load = useCallback(async () => {
+    const email = user?.email || user?.data?.email;
     if (!email) return;
     try {
       const [assigned, plans, exps] = await Promise.all([
@@ -121,18 +119,15 @@ export default function MyDevelopment() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => { load(); }, [load]);
   
   // Listen for learning assignment events from Learning Library
   useEffect(() => {
-    const handleLearningAssigned = () => {
-      load();
-    };
-    window.addEventListener('learningAssigned', handleLearningAssigned);
-    return () => window.removeEventListener('learningAssigned', handleLearningAssigned);
-  }, []);
+    window.addEventListener('learningAssigned', load);
+    return () => window.removeEventListener('learningAssigned', load);
+  }, [load]);
 
   const activePlans = devPlans.filter(p => p.status === "active" || p.status === "paused");
   const completedPlans = devPlans.filter(p => p.status === "completed");
