@@ -104,13 +104,18 @@ export default function MyDevelopment() {
 
   const load = useCallback(async () => {
     const email = user?.email || user?.data?.email;
-    if (!email) return;
+    console.log("MyDevelopment load() called, user:", user?.email, "email:", email);
+    if (!email) {
+      setLoading(false);
+      return;
+    }
     try {
       const [assigned, plans, exps] = await Promise.all([
         base44.entities.AssignedLearning.filter({ user_email: email }),
         base44.entities.DevelopmentPlan.filter({ user_email: email }),
         base44.entities.DevelopmentExperience.filter({ user_email: email }, "-created_date"),
       ]);
+      console.log("MyDevelopment loaded:", { assigned: assigned.length, plans: plans.length, exps: exps.length });
       setAssignedLearning(assigned);
       setDevPlans(plans);
       setExperiences(exps);
@@ -503,14 +508,14 @@ export default function MyDevelopment() {
         onClose={() => { setShowExpModal(false); setEditingExp(null); }}
         onSaved={() => { setShowExpModal(false); setEditingExp(null); load(); }}
         experience={editingExp}
-        userEmail={user?.email}
+        userEmail={user?.email || user?.data?.email}
       />
 
       <CreateDevelopmentPlanModal
         open={showModal}
         onClose={() => { setShowModal(false); setEditingPlan(null); }}
         onSaved={() => { setShowModal(false); setEditingPlan(null); load(); }}
-        userEmail={user?.email}
+        userEmail={user?.email || user?.data?.email}
         plan={editingPlan}
       />
     </MVPPageLayout>

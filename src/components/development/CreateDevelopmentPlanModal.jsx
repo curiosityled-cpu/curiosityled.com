@@ -180,21 +180,22 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
   };
 
   const handleSave = async () => {
-    if (!form.title || form.target_competencies.length === 0) return;
+    console.log("handleSave called, form:", form.title, "userEmail:", userEmail);
+    if (!form.title || form.target_competencies.length === 0) {
+      console.log("Validation failed - title:", form.title, "competencies:", form.target_competencies.length);
+      return;
+    }
     setSaving(true);
     setSaveError(null);
     try {
-      let me = null;
       let email = userEmail;
       if (!email) {
-        me = await base44.auth.me();
+        const me = await base44.auth.me();
         email = me?.email;
-      } else {
-        me = await base44.auth.me();
       }
-      if (!email) throw new Error("Could not determine your user account. Please refresh and try again.");
-      const clientId = me?.client_id || me?.data?.client_id || null;
-      const data = { ...form, user_email: email, client_id: clientId };
+      if (!email) throw new Error("No user email available. Please refresh and try again.");
+      const data = { ...form, user_email: email };
+      console.log("Saving data:", JSON.stringify(data));
       if (editing) {
         await base44.entities.DevelopmentPlan.update(plan.id, data);
       } else {
@@ -202,8 +203,8 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
       }
       toast.success(editing ? "Journey saved!" : "Journey created!");
       onSaved();
-      onClose();
     } catch (err) {
+      console.error("CreateDevelopmentPlanModal save error:", err);
       const msg = err?.message || "Failed to save. Please try again.";
       setSaveError(msg);
       toast.error(msg);

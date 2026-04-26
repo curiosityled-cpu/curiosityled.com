@@ -100,6 +100,7 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
       onSaved();
       onClose();
     } catch (err) {
+      console.error("ExperienceFormModal save error:", err);
       setSaveError(err?.message || "Failed to save. Please try again.");
     } finally {
       setSaving(false);
