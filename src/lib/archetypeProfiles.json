@@ -1,0 +1,1074 @@
+{
+  "archetypes": {
+    "Adaptive Strategist": {
+      "tagline": "Excels at seeing the big picture and flexing plans in fast-changing environments",
+      "leadership_dna": {
+        "overview": "As an Adaptive Strategist, you are wired to see patterns, anticipate changes, and help others navigate complexity with confidence. Your brain naturally connects dots that others miss, making you invaluable when situations become unclear or when the path forward isn't obvious. You don't just adapt to change—you help shape it.",
+        "unique_value": "You bring strategic clarity to chaos. When others feel overwhelmed by competing priorities or uncertain futures, you help them see the bigger picture and understand how current decisions will impact long-term success. You're the leader people turn to when they need to make sense of complex situations."
+      },
+      "behavioral_patterns": {
+        "decision_making": {
+          "description": "You gather information from multiple sources before deciding, preferring to understand various perspectives and potential outcomes.",
+          "questions": [
+            "What are the implications if we go this route?",
+            "How might this evolve over the next 6-12 months?",
+            "What are we not considering?",
+            "How does this align with our long-term goals?"
+          ]
+        },
+        "communication_style": {
+          "description": "You naturally frame conversations in terms of possibilities and outcomes.",
+          "phrases": [
+            "Let's think about what this could become...",
+            "I see three potential scenarios here...",
+            "If we consider the broader context...",
+            "This connects to what we discussed about..."
+          ]
+        },
+        "daily_approach": [
+          { "context": "Morning Planning", "behavior": "You start by reviewing how daily activities connect to strategic objectives" },
+          { "context": "Team Meetings", "behavior": "You help others see beyond immediate tasks to understand purpose and direction" },
+          { "context": "Problem-Solving", "behavior": "You encourage exploring multiple solutions before settling on one approach" },
+          { "context": "Communication", "behavior": "You provide context that helps others understand the 'why' behind decisions" }
+        ]
+      },
+      "stress_analysis": {
+        "triggers": [
+          { "name": "Rigidity and Micromanagement", "description": "When you're forced to follow inflexible processes without the ability to adapt based on new information." },
+          { "name": "Information Overload Without Time to Process", "description": "Being pushed to make quick decisions without adequate time to consider implications." },
+          { "name": "Short-Term Pressure at Expense of Long-Term Success", "description": "When organizational demands focus only on immediate results without considering sustainable strategies." },
+          { "name": "Resistance to Strategic Thinking", "description": "Working with people who just want to be told what to do without understanding the broader context." }
+        ],
+        "stress_behaviors": {
+          "early": [
+            "You start asking more detailed questions and seeking additional information",
+            "You become more methodical in your approach, slowing down decision-making",
+            "You may withdraw slightly to process information privately"
+          ],
+          "moderate": [
+            "You begin creating overly complex solutions to simple problems",
+            "You might become impatient when others can't see connections you're making",
+            "You start questioning whether you have enough information to proceed"
+          ],
+          "high": [
+            "You may become paralyzed by analysis, unable to choose between multiple good options",
+            "You might withdraw from team interactions, feeling misunderstood",
+            "You could become critical of approaches that seem short-sighted or reactive"
+          ]
+        },
+        "recovery_strategies": [
+          "Create Processing Time: Block out 30 minutes daily for strategic thinking without interruption",
+          "Seek Diverse Perspectives: Schedule regular conversations with trusted colleagues to test your thinking",
+          "Document Your Thought Process: Write down your analysis to clarify your own thinking",
+          "Practice Quick Decision Frameworks: Develop criteria for when 'good enough' decisions are appropriate"
+        ]
+      },
+      "blind_spots": [
+        {
+          "name": "Analysis Paralysis",
+          "description": "Your strength in seeing multiple perspectives can become a weakness when quick action is needed.",
+          "how_it_shows_up": [
+            "Taking too long to choose between several good options",
+            "Continuing to gather information when a decision is overdue",
+            "Revising plans repeatedly as new information emerges",
+            "Missing opportunities while analyzing potential risks"
+          ],
+          "solutions": [
+            "Set decision deadlines for yourself and stick to them",
+            "Use the 'Good, Better, Best' framework: identify the minimum viable option, then improve from there",
+            "Ask yourself: 'What's the cost of waiting versus the cost of being wrong?'",
+            "Practice making reversible decisions quickly and irreversible decisions more slowly"
+          ]
+        },
+        {
+          "name": "Over-Complexity",
+          "description": "You see interconnections and nuances that others miss, which leads you to create comprehensive but hard-to-implement solutions.",
+          "how_it_shows_up": [
+            "Creating detailed plans that others find overwhelming",
+            "Explaining decisions with too much background context",
+            "Building processes with too many steps or contingencies",
+            "Struggling to give simple, direct answers to straightforward questions"
+          ],
+          "solutions": [
+            "Practice the 'Elevator Pitch' rule: explain any strategy in 30 seconds or less",
+            "Start with the simplest version that could work, then add complexity only if needed",
+            "Ask team members: 'What would make this easier to understand and implement?'",
+            "Use the 'So What?' test: for each piece of information, ask if it's essential for action"
+          ]
+        }
+      ],
+      "working_with_others": [
+        {
+          "archetype": "Resourceful Optimizers",
+          "challenge": "They want efficient, practical solutions; you want to explore possibilities",
+          "bridge_strategy": "Present options with clear efficiency implications for each",
+          "communication_tip": "Start with the practical impact, then explain the strategic rationale",
+          "collaboration_opportunity": "Let them design implementation while you focus on direction"
+        },
+        {
+          "archetype": "Influential Connectors",
+          "challenge": "They focus on people impact; you focus on strategic analysis",
+          "bridge_strategy": "Help translate strategic decisions into stakeholder communication",
+          "communication_tip": "Show how relationships provide strategic intelligence",
+          "collaboration_opportunity": "Combine their stakeholder insight with your strategic thinking"
+        }
+      ],
+      "development_focus": {
+        "primary": "Execution Translation",
+        "levels": [
+          { "level": "Level 1 (Months 1–3)", "description": "Practice explaining strategic decisions in three bullet points or less. Create simple one-page summaries of complex strategies." },
+          { "level": "Level 2 (Months 4–6)", "description": "Learn to identify the minimum viable first step for any strategic initiative. Build relationships with operations-focused colleagues." },
+          { "level": "Level 3 (Months 7–12)", "description": "Lead initiatives from conception through execution. Build capability in others to think both strategically and tactically." }
+        ],
+        "secondary": "Communication Simplification"
+      },
+      "long_term_vision": {
+        "year1": "Master the art of strategic simplicity - making complex strategies easy to understand and implement.",
+        "year2": "Develop reputation as a leader who bridges strategy and execution effectively.",
+        "year3": "Become a strategic leader others seek out for navigating complex organizational challenges.",
+        "success_metrics": [
+          "Team members can easily explain the strategic rationale for their work",
+          "Implementation timelines improve while maintaining strategic quality",
+          "You're invited to lead cross-functional strategic initiatives",
+          "Colleagues describe you as both visionary and practical"
+        ]
+      }
+    },
+    "Influential Connector": {
+      "tagline": "Builds strong networks and unites stakeholders to drive outcomes",
+      "leadership_dna": {
+        "overview": "As an Influential Connector, you possess a rare gift for bringing people together around shared purposes. You instinctively understand that sustainable success comes through relationships, trust, and collaborative action. Your superpower lies in seeing the human side of every business challenge and knowing how to unite diverse groups to achieve common goals.",
+        "unique_value": "You build bridges that others can't see or don't think to build. When others focus on tasks and processes, you focus on the relationships that make everything else possible. You're the leader who ensures that no one is left behind and that solutions work for everyone involved."
+      },
+      "behavioral_patterns": {
+        "decision_making": {
+          "description": "You naturally seek input from multiple stakeholders before deciding, wanting to understand how decisions will impact different groups.",
+          "questions": [
+            "Who else should be involved in this decision?",
+            "How will this affect different teams/departments?",
+            "What concerns might people have about this approach?",
+            "How can we make this work for everyone?"
+          ]
+        },
+        "communication_style": {
+          "description": "You're naturally inclusive and collaborative in your language.",
+          "phrases": [
+            "Let's bring Sarah into this conversation...",
+            "I want to understand your perspective on...",
+            "How can we address everyone's concerns?",
+            "What would need to be true for this to work for your team?"
+          ]
+        },
+        "daily_approach": [
+          { "context": "Morning Connection", "behavior": "You check in with key relationships to understand current concerns and priorities" },
+          { "context": "Team Meetings", "behavior": "You ensure everyone has a voice and feels heard" },
+          { "context": "Problem-Solving", "behavior": "You explore how solutions impact all stakeholders" },
+          { "context": "Follow-Up", "behavior": "You maintain ongoing communication to ensure alignment and address emerging issues" }
+        ]
+      },
+      "stress_analysis": {
+        "triggers": [
+          { "name": "Irreconcilable Interpersonal Conflict", "description": "When people you care about are in conflict and traditional mediation approaches aren't working." },
+          { "name": "Being Forced to Choose Sides", "description": "Political situations where you're pressured to support one group over another when both have valid concerns." },
+          { "name": "Isolation from Collaborative Decision-Making", "description": "Working environments where decisions are made without consultation." },
+          { "name": "Competing Stakeholder Demands", "description": "Managing situations where different groups have genuinely conflicting needs." }
+        ],
+        "stress_behaviors": {
+          "early": [
+            "You increase your outreach, trying to connect with more people to understand all perspectives",
+            "You spend more time in one-on-one conversations",
+            "You may delay decisions while trying to find solutions that work for everyone"
+          ],
+          "moderate": [
+            "You begin taking on emotional responsibility for others' conflicts",
+            "You might say 'yes' to too many requests for help",
+            "You start working longer hours to maintain all your relationships"
+          ],
+          "high": [
+            "You may become overwhelmed by the emotional burden of others' problems",
+            "You might withdraw from conflict situations, feeling unable to help",
+            "You could become resentful if your relationship-building efforts aren't valued"
+          ]
+        },
+        "recovery_strategies": [
+          "Set Relationship Boundaries: Create specific times for relationship maintenance vs. other work",
+          "Practice Saying No: Develop scripts for declining requests while maintaining relationships",
+          "Seek Support: Build a network of people who provide emotional support to you",
+          "Focus on Impact: Regularly remind yourself of the positive outcomes your relationship-building creates"
+        ]
+      },
+      "blind_spots": [
+        {
+          "name": "Consensus-Seeking Delays",
+          "description": "Your natural inclination to include everyone can slow down decision-making when speed is essential.",
+          "how_it_shows_up": [
+            "Continuing to seek input when a decision needs to be made",
+            "Revising decisions multiple times to accommodate different concerns",
+            "Missing deadlines while trying to get everyone on board",
+            "Creating decision fatigue in yourself and others"
+          ],
+          "solutions": [
+            "Set consultation deadlines: 'I'll gather input until Friday, then decide'",
+            "Use the 'Consult vs. Consensus' framework: identify when you need input vs. agreement",
+            "Practice the 'Good Enough' principle: aim for solutions most people can live with",
+            "Develop comfort with making decisions that some people might not love"
+          ]
+        },
+        {
+          "name": "Boundary Challenges",
+          "description": "Your strength in relationship building can lead to taking on too much responsibility for others' problems.",
+          "how_it_shows_up": [
+            "Working excessive hours to help everyone who asks",
+            "Feeling responsible for team conflicts you didn't create",
+            "Saying yes to commitments that overload your schedule",
+            "Taking on emotional burden for others' stress or unhappiness"
+          ],
+          "solutions": [
+            "Create 'office hours' for relationship conversations",
+            "Practice phrases like: 'I care about this issue, and I can't take it on right now'",
+            "Distinguish between being supportive and being responsible",
+            "Build your own support network for processing work stress"
+          ]
+        }
+      ],
+      "working_with_others": [
+        {
+          "archetype": "Adaptive Strategists",
+          "challenge": "They focus on strategic analysis; you focus on people impact",
+          "bridge_strategy": "Help translate strategic decisions into stakeholder communication",
+          "communication_tip": "Show how relationships provide strategic intelligence",
+          "collaboration_opportunity": "Combine their strategic thinking with your stakeholder insight"
+        },
+        {
+          "archetype": "Resourceful Optimizers",
+          "challenge": "They want efficient solutions; you want inclusive processes",
+          "bridge_strategy": "Show how relationship investment reduces long-term inefficiencies",
+          "communication_tip": "Emphasize how stakeholder buy-in accelerates implementation",
+          "collaboration_opportunity": "Use their efficiency focus to streamline your relationship processes"
+        }
+      ],
+      "development_focus": {
+        "primary": "Decisive Leadership",
+        "levels": [
+          { "level": "Level 1 (Months 1–3)", "description": "Learn to categorize decisions by stakeholder impact and urgency. Practice setting and communicating decision deadlines." },
+          { "level": "Level 2 (Months 4–6)", "description": "Develop scripts for addressing conflict directly while preserving relationships. Build skills in setting boundaries while remaining supportive." },
+          { "level": "Level 3 (Months 7–12)", "description": "Learn to prioritize relationships based on strategic importance. Build capability to influence without formal authority." }
+        ],
+        "secondary": "Conflict Resolution Mastery"
+      },
+      "long_term_vision": {
+        "year1": "Master the art of inclusive decision-making - gathering input efficiently while making timely decisions.",
+        "year2": "Develop reputation as a leader who builds bridges and resolves conflicts effectively.",
+        "year3": "Become the go-to leader for complex stakeholder challenges and organizational alignment.",
+        "success_metrics": [
+          "Decision-making speed improves while maintaining stakeholder buy-in",
+          "Conflicts are resolved faster with better outcomes for all parties",
+          "You're sought out for cross-functional leadership roles",
+          "Team members describe you as both collaborative and decisive"
+        ]
+      }
+    },
+    "Resourceful Optimizer": {
+      "tagline": "Makes the most of resources—keeps teams focused, efficient, and calm under pressure",
+      "leadership_dna": {
+        "overview": "As a Resourceful Optimizer, you have an exceptional ability to see inefficiencies others miss and create elegant solutions that maximize results while minimizing waste. Your brain naturally identifies the most efficient path forward, and you help others achieve more with less stress and confusion.",
+        "unique_value": "You bring clarity and efficiency to chaos. When others feel overwhelmed by competing demands and limited resources, you help them focus on what matters most and eliminate what doesn't. You're the leader who makes difficult situations manageable and helps teams feel confident they can deliver excellent results."
+      },
+      "behavioral_patterns": {
+        "decision_making": {
+          "description": "You prioritize based on impact and efficiency, constantly evaluating the return on investment of time, energy, and resources.",
+          "questions": [
+            "What's the most effective use of our resources here?",
+            "Which approach will give us the best results fastest?",
+            "What can we eliminate without impacting quality?",
+            "How can we streamline this process?"
+          ]
+        },
+        "communication_style": {
+          "description": "You focus on practical next steps and actionable solutions.",
+          "phrases": [
+            "Here's what we need to focus on first...",
+            "Let's eliminate these three steps that aren't adding value...",
+            "The most efficient approach would be...",
+            "If we prioritize X and Y, we can deliver by..."
+          ]
+        },
+        "daily_approach": [
+          { "context": "Morning Planning", "behavior": "You review priorities and eliminate non-essential activities" },
+          { "context": "Team Meetings", "behavior": "You help others focus on high-impact activities and remove obstacles" },
+          { "context": "Problem-Solving", "behavior": "You look for the simplest, most effective solution first" },
+          { "context": "Resource Management", "behavior": "You continuously optimize how time, money, and people are utilized" }
+        ]
+      },
+      "stress_analysis": {
+        "triggers": [
+          { "name": "Disorganized Systems", "description": "Working in environments where inefficiency is built into the system and you can't make improvements." },
+          { "name": "Waste of Resources", "description": "Seeing resources squandered on low-impact activities while important work goes undone." },
+          { "name": "Unrealistic Deadlines", "description": "Being asked to achieve results that require more time or resources than available." },
+          { "name": "Micromanagement", "description": "Working under leaders who won't let you optimize processes or who add unnecessary steps." }
+        ],
+        "stress_behaviors": {
+          "early": [
+            "You become more focused on documenting inefficiencies you observe",
+            "You start working longer hours to compensate for systemic problems",
+            "You may become impatient with slower-paced colleagues"
+          ],
+          "moderate": [
+            "You begin taking on too much work yourself rather than working through inefficient systems",
+            "You might become overly controlling about processes and procedures",
+            "You start expressing frustration with 'waste' more openly"
+          ],
+          "high": [
+            "You may become rigid about following optimized processes, even when flexibility is needed",
+            "You might withdraw from situations that feel chaotically inefficient",
+            "You could become critical of colleagues who don't share your efficiency focus"
+          ]
+        },
+        "recovery_strategies": [
+          "Focus on Your Circle of Control: Identify what you can optimize versus what you must accept",
+          "Celebrate Efficiency Wins: Document and share improvements you've made",
+          "Build Efficiency Allies: Find colleagues who appreciate and support optimization efforts",
+          "Practice Patience: Develop tolerance for others' different working styles and paces"
+        ]
+      },
+      "blind_spots": [
+        {
+          "name": "Efficiency Over Innovation",
+          "description": "Your focus on optimization can discourage experimentation or creative approaches that seem 'inefficient' in the short term.",
+          "how_it_shows_up": [
+            "Dismissing new ideas because they require initial inefficiency to test",
+            "Focusing on improving existing processes rather than questioning if they're necessary",
+            "Creating resistance to creative brainstorming",
+            "Missing opportunities for innovation while perfecting current approaches"
+          ],
+          "solutions": [
+            "Schedule specific time for 'inefficient' experimentation and learning",
+            "Partner with innovation-focused colleagues to balance efficiency with creativity",
+            "Ask: 'What if we didn't do this at all?' not just 'How can we do this better?'"
+          ]
+        },
+        {
+          "name": "People vs. Process",
+          "description": "Your strength in creating efficient systems can sometimes prioritize process optimization over individual needs.",
+          "how_it_shows_up": [
+            "Implementing changes without considering impact on team morale",
+            "Focusing on productivity metrics without considering work-life balance",
+            "Becoming impatient with team members who need more development time"
+          ],
+          "solutions": [
+            "Include team member input in efficiency improvement processes",
+            "Balance productivity goals with development and relationship objectives",
+            "Build learning and growth opportunities into efficient processes"
+          ]
+        }
+      ],
+      "working_with_others": [
+        {
+          "archetype": "Adaptive Strategists",
+          "challenge": "They want to explore possibilities; you want to implement efficiently",
+          "bridge_strategy": "Help them test strategic options through small, efficient experiments",
+          "communication_tip": "Show how efficiency enables more strategic experimentation",
+          "collaboration_opportunity": "Use your implementation skills to make their strategies actionable"
+        },
+        {
+          "archetype": "Performance Catalysts",
+          "challenge": "They focus on development; you focus on productivity",
+          "bridge_strategy": "Create efficient development processes and measurement systems",
+          "communication_tip": "Show how productivity improvements create time for coaching",
+          "collaboration_opportunity": "Design performance systems that optimize both efficiency and growth"
+        }
+      ],
+      "development_focus": {
+        "primary": "People-Centered Leadership",
+        "levels": [
+          { "level": "Level 1 (Months 1–3)", "description": "Learn each team member's professional goals and development needs. Practice explaining the 'why' behind efficiency improvements." },
+          { "level": "Level 2 (Months 4–6)", "description": "Design efficient processes that also create learning opportunities. Measure both efficiency and engagement outcomes." },
+          { "level": "Level 3 (Months 7–12)", "description": "Build culture where efficiency and development reinforce each other. Create team ownership of efficiency improvements." }
+        ],
+        "secondary": "Innovation Integration"
+      },
+      "long_term_vision": {
+        "year1": "Master people-centered optimization - creating efficient systems that also develop and engage team members.",
+        "year2": "Develop reputation as a leader who drives both productivity and innovation.",
+        "year3": "Become the go-to leader for transforming operational challenges into competitive advantages.",
+        "success_metrics": [
+          "Efficiency improvements are adopted enthusiastically by team members",
+          "Innovation projects are implemented efficiently and successfully",
+          "Team engagement scores improve alongside productivity metrics",
+          "You're sought out for operational leadership roles requiring both efficiency and development"
+        ]
+      }
+    },
+    "Performance Catalyst": {
+      "tagline": "Elevates team performance with clear standards, coaching, and accountability",
+      "leadership_dna": {
+        "overview": "As a Performance Catalyst, you possess the unique ability to see potential in others and unlock it through the perfect combination of challenge and support. You understand that high performance isn't just about pushing harder—it's about creating conditions where people can discover and develop their capabilities.",
+        "unique_value": "You accelerate human potential. When others see current performance, you see future possibility. You're the leader who helps people bridge the gap between where they are and where they could be, creating sustainable high performance through development rather than pressure."
+      },
+      "behavioral_patterns": {
+        "decision_making": {
+          "description": "You evaluate options based on their potential to develop people and improve performance over time.",
+          "questions": [
+            "How will this help team members grow?",
+            "What's the development opportunity here?",
+            "What would stretch people in the right way?",
+            "How can we turn this challenge into learning?"
+          ]
+        },
+        "communication_style": {
+          "description": "You naturally provide specific, actionable feedback balanced with encouragement and support.",
+          "phrases": [
+            "I noticed you handled that situation really well because...",
+            "What did you learn from that experience?",
+            "I believe you're capable of...",
+            "Let's think about how to approach this differently next time..."
+          ]
+        },
+        "daily_approach": [
+          { "context": "Morning Preparation", "behavior": "You think about individual team members' development needs and opportunities" },
+          { "context": "Team Interactions", "behavior": "You look for coaching moments and performance improvement opportunities" },
+          { "context": "Problem-Solving", "behavior": "You explore how challenges can become growth experiences" },
+          { "context": "Follow-Up", "behavior": "You check on progress and provide ongoing support for development goals" }
+        ]
+      },
+      "stress_analysis": {
+        "triggers": [
+          { "name": "Resistance to Feedback", "description": "When people you're trying to help don't want to improve or actively resist coaching efforts." },
+          { "name": "Cultures That Don't Value Growth", "description": "Working in environments where development is seen as 'nice to have' rather than essential." },
+          { "name": "Pressure Without Time for Development", "description": "Being forced to choose between short-term results and long-term capability building." },
+          { "name": "Limited Authority to Address Performance", "description": "Feeling responsible for team performance while lacking tools to address persistent issues." }
+        ],
+        "stress_behaviors": {
+          "early": [
+            "You increase coaching efforts with struggling team members",
+            "You spend more time trying to understand why someone isn't responding to development",
+            "You may start taking personal responsibility for others' lack of progress"
+          ],
+          "moderate": [
+            "You begin working excessive hours to provide individual attention to everyone",
+            "You might become frustrated when organizational systems don't support development",
+            "You start questioning your coaching effectiveness"
+          ],
+          "high": [
+            "You may become overly directive when coaching approaches aren't working",
+            "You might withdraw from team members who consistently resist development",
+            "You could become resentful when your development efforts aren't valued by leadership"
+          ]
+        },
+        "recovery_strategies": [
+          "Accept Different Readiness Levels: Recognize that not everyone is ready for development at the same time",
+          "Focus on Willing Participants: Invest your energy in people who want to grow",
+          "Set Development Boundaries: Limit time spent on individuals who consistently resist coaching",
+          "Measure Long-Term Impact: Track development success over months, not days"
+        ]
+      },
+      "blind_spots": [
+        {
+          "name": "High Expectations",
+          "description": "Your ability to see potential in others can lead to setting standards that feel overwhelming to team members who aren't yet ready.",
+          "how_it_shows_up": [
+            "Setting goals that stretch people beyond their current comfort zone",
+            "Providing feedback that feels critical rather than developmental",
+            "Moving too quickly from basic to advanced skill development",
+            "Assuming others share your level of commitment to continuous improvement"
+          ],
+          "solutions": [
+            "Practice 'meeting people where they are' before challenging them to grow",
+            "Break large development goals into smaller, achievable steps",
+            "Celebrate progress at each level, not just final achievements",
+            "Ask team members what level of challenge feels appropriate to them"
+          ]
+        },
+        {
+          "name": "Development Over Delivery",
+          "description": "Your natural focus on long-term development can sometimes conflict with immediate business needs and deadline pressures.",
+          "how_it_shows_up": [
+            "Choosing coaching approaches when faster directive approaches are needed",
+            "Investing development time when crisis management is required",
+            "Creating development conversations that delay urgent decision-making"
+          ],
+          "solutions": [
+            "Learn to recognize when immediate performance is needed vs. when development is appropriate",
+            "Use situational leadership: adjust your approach based on urgency and individual readiness",
+            "Balance coaching with directive leadership based on situational requirements"
+          ]
+        }
+      ],
+      "working_with_others": [
+        {
+          "archetype": "Resourceful Optimizers",
+          "challenge": "They focus on efficiency; you focus on development",
+          "bridge_strategy": "Show how development investments improve long-term efficiency",
+          "communication_tip": "Demonstrate ROI of coaching through productivity metrics",
+          "collaboration_opportunity": "Create efficient development processes and systems"
+        },
+        {
+          "archetype": "Steady Operators",
+          "challenge": "They prefer consistency; you push for growth and change",
+          "bridge_strategy": "Frame development as building more reliable, capable team members",
+          "communication_tip": "Emphasize how development reduces performance variability",
+          "collaboration_opportunity": "Use their process skills to systematize development approaches"
+        }
+      ],
+      "development_focus": {
+        "primary": "Strategic Balance",
+        "levels": [
+          { "level": "Level 1 (Months 1–3)", "description": "Learn to quickly assess when development vs. performance focus is needed. Develop frameworks for balancing long-term development with short-term results." },
+          { "level": "Level 2 (Months 4–6)", "description": "Create development systems that also deliver business results. Build capability to coach groups and teams, not just individuals." },
+          { "level": "Level 3 (Months 7–12)", "description": "Lead creation of high-performance cultures that prioritize both results and development." }
+        ],
+        "secondary": "Performance Differentiation"
+      },
+      "long_term_vision": {
+        "year1": "Master situational performance leadership - knowing when to coach, when to direct, and when to support.",
+        "year2": "Develop reputation as a leader who consistently develops high-performing teams.",
+        "year3": "Become the go-to leader for building organizational capability and performance culture.",
+        "success_metrics": [
+          "Team performance improves while individual engagement and satisfaction increase",
+          "Team members advance in their careers and credit your development support",
+          "You're sought out for leadership roles requiring team development",
+          "Other leaders seek your advice on coaching and development challenges"
+        ]
+      }
+    },
+    "Steady Operator": {
+      "tagline": "Ensures reliability and structure, keeping everything on track—especially in uncertain times",
+      "leadership_dna": {
+        "overview": "As a Steady Operator, you provide the essential foundation that allows everything else to function smoothly. Your superpower lies in creating stability, maintaining quality, and ensuring that important things get done consistently and well.",
+        "unique_value": "You bring reliability and excellence to uncertainty. When situations become chaotic or unpredictable, you help others stay focused on what matters most and maintain the quality standards that protect long-term success. You're the leader people trust to keep important things running smoothly."
+      },
+      "behavioral_patterns": {
+        "decision_making": {
+          "description": "You prefer proven approaches and carefully evaluate risks before changing established processes.",
+          "questions": [
+            "How do we maintain quality while adapting to this change?",
+            "What's worked well in similar situations before?",
+            "What are the potential risks if we change this approach?",
+            "How can we ensure consistency across different situations?"
+          ]
+        },
+        "communication_style": {
+          "description": "You provide clear, consistent messaging and set realistic expectations about what can be accomplished.",
+          "phrases": [
+            "Based on our experience, here's what we can realistically achieve...",
+            "Let's make sure we're maintaining our quality standards...",
+            "Here's what we need to keep consistent...",
+            "I want to ensure we're considering all the risks..."
+          ]
+        },
+        "daily_approach": [
+          { "context": "Morning Planning", "behavior": "You review quality standards and consistency requirements for the day" },
+          { "context": "Team Meetings", "behavior": "You help others focus on reliable execution and risk management" },
+          { "context": "Problem-Solving", "behavior": "You look for solutions that maintain stability while addressing challenges" },
+          { "context": "Quality Assurance", "behavior": "You regularly check that standards are being maintained" }
+        ]
+      },
+      "stress_analysis": {
+        "triggers": [
+          { "name": "Constant Change Without Rationale", "description": "When change happens for change's sake without clear benefits or adequate planning." },
+          { "name": "Pressure to Cut Corners", "description": "Being asked to reduce quality to meet deadlines or budget constraints." },
+          { "name": "Unclear Expectations", "description": "Working in environments where what's important changes constantly." },
+          { "name": "Insufficient Testing", "description": "Pressure to adopt new approaches without proper validation or risk assessment." }
+        ],
+        "stress_behaviors": {
+          "early": [
+            "You ask more detailed questions about changes and their implications",
+            "You spend additional time documenting potential risks and concerns",
+            "You may become more methodical in your approach to new initiatives"
+          ],
+          "moderate": [
+            "You begin working longer hours to maintain quality when systems are changing",
+            "You might become more vocal about risks and concerns",
+            "You start creating backup plans and contingencies for multiple scenarios"
+          ],
+          "high": [
+            "You may become rigid about processes and resistant to any modifications",
+            "You might withdraw from change discussions feeling your input isn't valued",
+            "You could become pessimistic about new initiatives and their chances of success"
+          ]
+        },
+        "recovery_strategies": [
+          "Focus on Your Value: Remember that stability and quality are essential, especially during change",
+          "Communicate Concerns Constructively: Frame concerns in terms of risk management rather than resistance",
+          "Find Stability Anchors: Identify aspects of work that remain consistent even during change",
+          "Build Change Partnerships: Partner with change-oriented colleagues to balance innovation with stability"
+        ]
+      },
+      "blind_spots": [
+        {
+          "name": "Change Resistance",
+          "description": "Your strength in maintaining stability can make you cautious about changes that might disrupt proven systems, even when those changes are necessary.",
+          "how_it_shows_up": [
+            "Questioning new initiatives more than embracing their potential",
+            "Focusing on risks and downsides rather than opportunities",
+            "Preferring incremental improvements over significant changes",
+            "Taking longer to adopt new tools, processes, or approaches"
+          ],
+          "solutions": [
+            "Practice asking 'What opportunities might this create?' alongside 'What risks does this present?'",
+            "Seek to understand the rationale for changes before evaluating them",
+            "Look for ways to test changes safely before full implementation",
+            "Partner with change-oriented colleagues to balance perspective"
+          ]
+        },
+        {
+          "name": "Perfectionism",
+          "description": "Your high standards for quality and consistency can sometimes slow down progress when 'good enough' would be sufficient.",
+          "how_it_shows_up": [
+            "Spending too much time perfecting work that meets standards already",
+            "Delaying decisions or deliverables to achieve ideal rather than acceptable quality",
+            "Difficulty delegating because others might not meet your quality standards"
+          ],
+          "solutions": [
+            "Develop 'good, better, best' frameworks for different situations",
+            "Practice identifying when 80% quality is sufficient vs. when 100% is required",
+            "Learn to trust others' judgment about appropriate quality levels for their work"
+          ]
+        }
+      ],
+      "working_with_others": [
+        {
+          "archetype": "Change Navigators",
+          "challenge": "They embrace change; you prefer stability",
+          "bridge_strategy": "Help them implement changes in ways that maintain quality and reduce risk",
+          "communication_tip": "Show how stability enables sustainable change rather than opposing it",
+          "collaboration_opportunity": "Combine their innovation with your implementation excellence"
+        },
+        {
+          "archetype": "Adaptive Strategists",
+          "challenge": "They think in possibilities; you focus on proven approaches",
+          "bridge_strategy": "Help translate their strategic insights into reliable implementation plans",
+          "communication_tip": "Ask how new strategies can build on existing strengths",
+          "collaboration_opportunity": "Use your operational knowledge to make their strategies more practical"
+        }
+      ],
+      "development_focus": {
+        "primary": "Adaptive Flexibility",
+        "levels": [
+          { "level": "Level 1 (Months 1–3)", "description": "Learn frameworks for evaluating changes based on benefits, risks, and implementation requirements." },
+          { "level": "Level 2 (Months 4–6)", "description": "Create processes for safely testing and adopting beneficial innovations." },
+          { "level": "Level 3 (Months 7–12)", "description": "Lead change initiatives that improve both innovation and stability." }
+        ],
+        "secondary": "Innovation Integration"
+      },
+      "long_term_vision": {
+        "year1": "Master adaptive stability - maintaining quality and consistency while embracing beneficial changes.",
+        "year2": "Develop reputation as a leader who drives positive change without sacrificing excellence.",
+        "year3": "Become the go-to leader for transforming operations while maintaining trust and quality.",
+        "success_metrics": [
+          "Quality standards are maintained even during periods of change",
+          "Change initiatives you lead have higher success rates due to careful implementation",
+          "Team members feel confident and stable even during organizational transitions",
+          "You're sought out for leadership roles requiring both innovation and operational excellence"
+        ]
+      }
+    },
+    "Change Navigator": {
+      "tagline": "Thrives in ambiguity, adapts quickly, and inspires others through transitions",
+      "leadership_dna": {
+        "overview": "As a Change Navigator, you possess the rare ability to see opportunity where others see uncertainty. Your superpower lies in helping people not just cope with change, but actually thrive during transitions. You understand that change is the only constant, and you've developed the skills to surf the waves of disruption rather than being overwhelmed by them.",
+        "unique_value": "You transform uncertainty into possibility. When others feel anxious about unknown futures, you help them see exciting opportunities for growth and improvement. You're the leader who makes change feel energizing rather than threatening."
+      },
+      "behavioral_patterns": {
+        "decision_making": {
+          "description": "You're comfortable making decisions with incomplete information and adjusting course as new information emerges.",
+          "questions": [
+            "What can we learn from this situation?",
+            "How might this open up new possibilities?",
+            "What's the opportunity hidden in this challenge?",
+            "How can we experiment with this quickly and safely?"
+          ]
+        },
+        "communication_style": {
+          "description": "You frame change as opportunity and help others see possibilities rather than problems.",
+          "phrases": [
+            "This could be exactly what we need to...",
+            "Let's see what we can discover here...",
+            "What if this challenge is actually showing us a better way?",
+            "I'm excited to see what emerges from this..."
+          ]
+        },
+        "daily_approach": [
+          { "context": "Morning Exploration", "behavior": "You look for new information, trends, or opportunities that might impact your work" },
+          { "context": "Team Meetings", "behavior": "You help others see possibilities in challenges and changes" },
+          { "context": "Problem-Solving", "behavior": "You explore creative solutions and encourage experimentation" },
+          { "context": "Future Focus", "behavior": "You regularly discuss how current changes might create new opportunities" }
+        ]
+      },
+      "stress_analysis": {
+        "triggers": [
+          { "name": "Rigid Systems", "description": "Working in bureaucratic environments where innovation is discouraged and flexibility is limited." },
+          { "name": "Punishing Risk-Taking", "description": "Cultures where any failure is criticized rather than viewed as learning." },
+          { "name": "Micromanagement", "description": "Working under leaders who want to control every detail of how work gets done." },
+          { "name": "Pressure for False Certainty", "description": "Being asked to promise specific outcomes when variables are still unknown." }
+        ],
+        "stress_behaviors": {
+          "early": [
+            "You become more vocal about the need for flexibility and adaptation",
+            "You start looking for ways to work around rigid systems",
+            "You may become impatient with slow-moving processes"
+          ],
+          "moderate": [
+            "You begin taking on too many change initiatives simultaneously",
+            "You might become frustrated with colleagues who resist necessary changes",
+            "You start pushing for change more aggressively than situations warrant"
+          ],
+          "high": [
+            "You may become overwhelmed by multiple simultaneous changes",
+            "You might minimize others' legitimate concerns about change impacts",
+            "You could become isolated if others perceive you as creating too much disruption"
+          ]
+        },
+        "recovery_strategies": [
+          "Prioritize Changes: Focus on the most important adaptations rather than trying to change everything",
+          "Build Change Allies: Partner with colleagues who share your comfort with adaptation",
+          "Practice Patience: Remember that others need more time to process and accept changes",
+          "Celebrate Stability: Acknowledge the value of consistent, reliable processes alongside innovation"
+        ]
+      },
+      "blind_spots": [
+        {
+          "name": "Change Fatigue Blindness",
+          "description": "Your enthusiasm for change and natural comfort with uncertainty can make you less sensitive to others' need for stability.",
+          "how_it_shows_up": [
+            "Introducing new initiatives before previous changes have been fully integrated",
+            "Underestimating the emotional impact of change on team members",
+            "Becoming impatient when others need more time to adapt",
+            "Focusing on future possibilities rather than current stability needs"
+          ],
+          "solutions": [
+            "Create 'change budgets' - limiting the number of simultaneous changes",
+            "Check in regularly with team members about their comfort level with current changes",
+            "Balance innovation initiatives with stability-building activities",
+            "Practice acknowledging the difficulty of change alongside its benefits"
+          ]
+        },
+        {
+          "name": "Implementation Gaps",
+          "description": "Your natural focus on initiating and embracing change might not include sufficient attention to the detailed work required for successful implementation.",
+          "how_it_shows_up": [
+            "Starting new initiatives without completing previous ones",
+            "Creating great ideas but lacking detailed implementation plans",
+            "Moving to new opportunities before ensuring current changes are successful"
+          ],
+          "solutions": [
+            "Partner with implementation-focused colleagues for all change initiatives",
+            "Create accountability systems for seeing changes through to completion",
+            "Measure success of changes over time, not just initial adoption"
+          ]
+        }
+      ],
+      "working_with_others": [
+        {
+          "archetype": "Steady Operators",
+          "challenge": "They prefer stability; you embrace change",
+          "bridge_strategy": "Show how changes can improve stability and reduce future risks",
+          "communication_tip": "Frame changes as investments in long-term reliability",
+          "collaboration_opportunity": "Use their process expertise to implement changes more reliably"
+        },
+        {
+          "archetype": "Influential Connectors",
+          "challenge": "They want everyone on board; you want to move quickly",
+          "bridge_strategy": "Use their relationship skills to build support for necessary changes",
+          "communication_tip": "Emphasize how changes will benefit different stakeholder groups",
+          "collaboration_opportunity": "Combine your change vision with their stakeholder management"
+        }
+      ],
+      "development_focus": {
+        "primary": "Change Sustainability",
+        "levels": [
+          { "level": "Level 1 (Months 1–3)", "description": "Learn to create detailed execution plans for change initiatives. Practice staying involved through implementation phases." },
+          { "level": "Level 2 (Months 4–6)", "description": "Learn to assess and manage different levels of change readiness. Build capability in addressing resistance with empathy." },
+          { "level": "Level 3 (Months 7–12)", "description": "Lead change initiatives that stick and create lasting improvement. Build skills in creating change-capable cultures." }
+        ],
+        "secondary": "Empathetic Change Communication"
+      },
+      "long_term_vision": {
+        "year1": "Master sustainable change - driving innovation while ensuring successful implementation and adoption.",
+        "year2": "Develop reputation as a leader who creates lasting positive change rather than just initiating it.",
+        "year3": "Become the go-to leader for transformational challenges requiring both innovation and execution excellence.",
+        "success_metrics": [
+          "Change initiatives you lead have higher long-term success rates",
+          "Team members feel supported and capable during change processes",
+          "Organizations actively seek you out for transformation leadership roles",
+          "You're known for driving change that sticks and creates real improvement"
+        ]
+      }
+    },
+    "Visionary Architect": {
+      "tagline": "Focuses on long-term goals, aligns teams to purpose, and charts new paths",
+      "leadership_dna": {
+        "overview": "As a Visionary Architect, you possess the extraordinary ability to see possibilities that others cannot yet imagine and create compelling blueprints for achieving them. Your superpower lies in connecting current actions to future impact and inspiring others to work toward shared aspirations that extend far beyond immediate concerns.",
+        "unique_value": "You create clarity about direction and meaning. When others feel lost in day-to-day activities, you help them see how their work contributes to something larger and more meaningful. You're the leader who helps people understand not just what they're doing, but why it matters."
+      },
+      "behavioral_patterns": {
+        "decision_making": {
+          "description": "You evaluate options based on long-term strategic impact and alignment with future vision.",
+          "questions": [
+            "How does this move us toward our ultimate goals?",
+            "What impact will this have five years from now?",
+            "Does this align with our fundamental purpose?",
+            "What example does this set for our future direction?"
+          ]
+        },
+        "communication_style": {
+          "description": "You connect daily activities to bigger purpose and help others understand the 'why' behind initiatives.",
+          "phrases": [
+            "Imagine what this could become if we...",
+            "The reason this matters is because...",
+            "Five years from now, we'll look back on this as the moment when...",
+            "This is part of our larger vision to..."
+          ]
+        },
+        "daily_approach": [
+          { "context": "Morning Visioning", "behavior": "You think about how today's activities connect to long-term objectives" },
+          { "context": "Team Meetings", "behavior": "You help others see the bigger picture and understand purpose" },
+          { "context": "Problem-Solving", "behavior": "You explore how solutions align with long-term vision and values" },
+          { "context": "Strategic Communication", "behavior": "You regularly share progress toward longer-term goals" }
+        ]
+      },
+      "stress_analysis": {
+        "triggers": [
+          { "name": "Short-Term Only Focus", "description": "Working in environments where quarterly pressures prevent investment in long-term success." },
+          { "name": "Bureaucratic Systems", "description": "Rigid processes that make it difficult to pursue new opportunities or approaches." },
+          { "name": "Cynicism About Forward-Thinking", "description": "Team members or colleagues who dismiss visionary thinking as impractical." },
+          { "name": "Meaningless Projects", "description": "Activities that don't connect to any larger purpose or positive impact." }
+        ],
+        "stress_behaviors": {
+          "early": [
+            "You spend more time explaining the long-term rationale for current activities",
+            "You become more passionate about articulating vision and purpose",
+            "You may start questioning whether current activities are aligned with ultimate goals"
+          ],
+          "moderate": [
+            "You begin feeling frustrated with detailed operational requirements that seem to distract from vision",
+            "You might become impatient when others can't see the future possibilities you're describing",
+            "You start pushing vision more forcefully without building support systematically"
+          ],
+          "high": [
+            "You may withdraw from activities that feel too tactical",
+            "You might become isolated if others perceive your vision as unrealistic",
+            "You could become discouraged about your ability to create the change you envision"
+          ]
+        },
+        "recovery_strategies": [
+          "Find Vision Partners: Connect with others who share your long-term thinking approach",
+          "Create Bridge Activities: Identify short-term wins that clearly advance long-term vision",
+          "Practice Patience: Remember that vision realization takes time and persistent effort",
+          "Celebrate Progress: Recognize incremental movement toward long-term goals"
+        ]
+      },
+      "blind_spots": [
+        {
+          "name": "Implementation Gaps",
+          "description": "Your natural focus on long-term vision can sometimes lack sufficient attention to the practical details required for successful execution.",
+          "how_it_shows_up": [
+            "Creating inspiring visions without detailed implementation plans",
+            "Assuming others will figure out execution while you focus on direction",
+            "Underestimating the time and resources required to achieve visionary goals",
+            "Moving to new vision elements before ensuring current initiatives are successful"
+          ],
+          "solutions": [
+            "Partner with implementation-focused colleagues for all vision initiatives",
+            "Create detailed project plans for vision elements, not just inspiring descriptions",
+            "Practice staying involved through execution phases",
+            "Set shorter-term milestones that clearly advance longer-term vision"
+          ]
+        },
+        {
+          "name": "Present Moment Neglect",
+          "description": "Your strength in future-focused thinking can sometimes miss important current realities, constraints, or immediate needs.",
+          "how_it_shows_up": [
+            "Setting goals that don't account for current resource limitations",
+            "Overlooking team members' immediate concerns while focusing on future possibilities",
+            "Creating timelines that don't reflect current operational constraints"
+          ],
+          "solutions": [
+            "Regularly assess current state alongside future vision",
+            "Include operational experts in vision planning and refinement",
+            "Create realistic timelines that account for current capabilities"
+          ]
+        }
+      ],
+      "working_with_others": [
+        {
+          "archetype": "Resourceful Optimizers",
+          "challenge": "They focus on current efficiency; you focus on future possibility",
+          "bridge_strategy": "Show how operational excellence enables vision achievement",
+          "communication_tip": "Frame vision elements in terms of efficiency and effectiveness improvements",
+          "collaboration_opportunity": "Use their implementation skills to make your vision actionable"
+        },
+        {
+          "archetype": "Steady Operators",
+          "challenge": "They prefer proven approaches; you want to create new paths",
+          "bridge_strategy": "Show how vision builds on current strengths and capabilities",
+          "communication_tip": "Emphasize how vision provides stability and direction for the future",
+          "collaboration_opportunity": "Use their process expertise to create reliable pathways to vision"
+        }
+      ],
+      "development_focus": {
+        "primary": "Execution Excellence",
+        "levels": [
+          { "level": "Level 1 (Months 1–3)", "description": "Learn to break down big visions into manageable implementation steps. Practice creating realistic timelines." },
+          { "level": "Level 2 (Months 4–6)", "description": "Learn to build support for vision systematically. Develop skills in addressing practical concerns about vision feasibility." },
+          { "level": "Level 3 (Months 7–12)", "description": "Lead vision initiatives from conception through successful execution. Build reputation as someone who creates realistic, achievable visions." }
+        ],
+        "secondary": "Operational Appreciation"
+      },
+      "long_term_vision": {
+        "year1": "Master practical visioning - creating inspiring futures with realistic pathways for achievement.",
+        "year2": "Develop reputation as a leader who creates meaningful direction that people can successfully execute.",
+        "year3": "Become the go-to leader for organizational transformation requiring both vision and implementation excellence.",
+        "success_metrics": [
+          "Vision initiatives are implemented successfully, not just launched with enthusiasm",
+          "Team members feel inspired by vision and confident in their ability to achieve it",
+          "Stakeholders describe your vision as both meaningful and achievable",
+          "You're sought out for strategic leadership roles requiring both direction-setting and execution"
+        ]
+      }
+    },
+    "Collaborative Problem-Solver": {
+      "tagline": "Excels at collaborative decision-making and bringing diverse perspectives to the table",
+      "leadership_dna": {
+        "overview": "As a Collaborative Problem-Solver, you understand that the best solutions emerge from collective intelligence and diverse perspectives. Your superpower lies in creating environments where different viewpoints are valued and integrated into innovative solutions that work for everyone.",
+        "unique_value": "You unlock the wisdom of groups. When others see complexity and conflict, you see opportunity for creative solutions that leverage everyone's unique strengths and insights. You're the leader who ensures that all voices are heard and that final solutions truly serve everyone's interests."
+      },
+      "behavioral_patterns": {
+        "decision_making": {
+          "description": "You prefer collaborative processes that include multiple perspectives before reaching decisions.",
+          "questions": [
+            "Who else should weigh in on this decision?",
+            "What perspectives are we missing?",
+            "How can we make this work for everyone involved?",
+            "What would each stakeholder need for this to be successful?"
+          ]
+        },
+        "communication_style": {
+          "description": "You facilitate discussion rather than dominate it, asking probing questions that help others think more deeply about issues.",
+          "phrases": [
+            "Let's hear from everyone before we decide...",
+            "What are you seeing that I might be missing?",
+            "How does this look from your perspective?",
+            "What would need to change for this to work for your team?"
+          ]
+        },
+        "daily_approach": [
+          { "context": "Morning Preparation", "behavior": "You think about which perspectives need to be included in today's discussions" },
+          { "context": "Team Meetings", "behavior": "You ensure everyone has a voice and feels heard" },
+          { "context": "Problem-Solving", "behavior": "You explore how solutions impact all stakeholders before deciding" },
+          { "context": "Follow-Up", "behavior": "You check to ensure decisions are working for everyone involved" }
+        ]
+      },
+      "stress_analysis": {
+        "triggers": [
+          { "name": "Forced Quick Decisions", "description": "Being forced to decide without gathering input from relevant stakeholders." },
+          { "name": "Top-Down Environments", "description": "Working in cultures where decisions are made without considering different perspectives." },
+          { "name": "Irresolvable Conflict", "description": "Situations where people are unwilling to engage in good-faith problem-solving." },
+          { "name": "Blame for Group Decisions", "description": "Taking responsibility for outcomes when decision-making was truly collaborative." }
+        ],
+        "stress_behaviors": {
+          "early": [
+            "You increase efforts to include more people in decision-making processes",
+            "You spend more time trying to understand all perspectives before moving forward",
+            "You may delay decisions while seeking broader consensus"
+          ],
+          "moderate": [
+            "You begin taking personal responsibility for group dynamics and outcomes",
+            "You might become frustrated when others don't engage in collaborative processes",
+            "You start working longer hours to facilitate more inclusive decision-making"
+          ],
+          "high": [
+            "You may become overwhelmed by complex stakeholder relationships",
+            "You might avoid making decisions when the group can't reach consensus",
+            "You could become resentful when collaborative efforts aren't valued or supported"
+          ]
+        },
+        "recovery_strategies": [
+          "Set Collaboration Boundaries: Determine when consultation is needed vs. when you can decide independently",
+          "Practice Individual Decision-Making: Build comfort with making decisions when collaboration isn't possible",
+          "Focus on Process Quality: Measure success by the quality of collaboration, not just outcomes",
+          "Build Decision Frameworks: Create criteria for when to collaborate vs. when to act quickly"
+        ]
+      },
+      "blind_spots": [
+        {
+          "name": "Decision Speed",
+          "description": "Your commitment to inclusion and collaboration can slow down decision-making when speed is essential.",
+          "how_it_shows_up": [
+            "Continuing to seek input when a decision deadline has passed",
+            "Revising decisions multiple times to accommodate different perspectives",
+            "Missing opportunities while building consensus",
+            "Creating decision fatigue in yourself and others"
+          ],
+          "solutions": [
+            "Set consultation deadlines and stick to them",
+            "Use the 'Consult vs. Consensus' framework: sometimes you need input, not agreement",
+            "Practice making decisions that most people can live with",
+            "Develop comfort with explaining decisions after they're made rather than before"
+          ]
+        },
+        {
+          "name": "Responsibility Diffusion",
+          "description": "Your preference for collaborative decision-making can create confusion about who is responsible for outcomes.",
+          "how_it_shows_up": [
+            "Unclear accountability for decision outcomes when multiple people were involved",
+            "Team members feeling less ownership because decisions were made by groups",
+            "Difficulty learning from failures when responsibility is diffused"
+          ],
+          "solutions": [
+            "Clearly identify who has final accountability even when using collaborative processes",
+            "Distinguish between input gathering and decision-making authority",
+            "Create clear roles for who implements and who modifies collaborative decisions"
+          ]
+        }
+      ],
+      "working_with_others": [
+        {
+          "archetype": "Adaptive Strategists",
+          "challenge": "They think strategically; you focus on group inclusion",
+          "bridge_strategy": "Use collaborative processes to test and refine strategic thinking",
+          "communication_tip": "Show how diverse perspectives improve strategic decision quality",
+          "collaboration_opportunity": "Combine strategic analysis with inclusive implementation"
+        },
+        {
+          "archetype": "Resourceful Optimizers",
+          "challenge": "They want efficient solutions; you want inclusive processes",
+          "bridge_strategy": "Show how collaborative input improves solution quality and reduces implementation time",
+          "communication_tip": "Demonstrate ROI of collaboration through better outcomes and faster buy-in",
+          "collaboration_opportunity": "Use their efficiency focus to streamline collaborative processes"
+        }
+      ],
+      "development_focus": {
+        "primary": "Decisive Leadership",
+        "levels": [
+          { "level": "Level 1 (Months 1–3)", "description": "Learn to categorize decisions by stakeholder impact, urgency, and complexity. Practice setting and communicating decision deadlines." },
+          { "level": "Level 2 (Months 4–6)", "description": "Develop advanced skills for guiding groups to decisions efficiently. Build capability for addressing disagreement directly." },
+          { "level": "Level 3 (Months 7–12)", "description": "Learn to balance collaborative and directive approaches based on situation. Build capability for making unpopular decisions when necessary." }
+        ],
+        "secondary": "Conflict Resolution Mastery"
+      },
+      "long_term_vision": {
+        "year1": "Master inclusive decision-making - gathering input efficiently while making timely decisions that work.",
+        "year2": "Develop reputation as a leader who creates buy-in and resolves conflicts effectively.",
+        "year3": "Become the go-to leader for complex stakeholder challenges requiring both collaboration and decisive action.",
+        "success_metrics": [
+          "Decision-making speed improves while maintaining stakeholder engagement",
+          "Conflicts are resolved faster with better outcomes for all parties",
+          "You're sought out for cross-functional leadership roles requiring consensus-building",
+          "Team members describe you as both collaborative and decisive"
+        ]
+      }
+    }
+  },
+  "_instructions": "To add a new archetype, copy the structure of any existing archetype and fill in the fields. The archetype key should exactly match the archetype_label stored in the Assessment/AssessmentInsights entity. Partial matches are handled in the UI with fuzzy matching.",
+  "_fuzzy_match_aliases": {
+    "Decisive Communicator": "Influential Connector",
+    "Strategic Thinker": "Adaptive Strategist",
+    "Coaching Leader": "Performance Catalyst",
+    "Process Leader": "Steady Operator",
+    "Transformational Leader": "Change Navigator",
+    "Connector": "Influential Connector",
+    "Optimizer": "Resourceful Optimizer",
+    "Catalyst": "Performance Catalyst"
+  }
+}
