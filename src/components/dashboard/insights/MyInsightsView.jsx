@@ -38,6 +38,7 @@ import {
 
 // Section components
 import CompetencyExpandableCard from "./sections/CompetencyExpandableCard";
+import FullProfileModal from "./FullProfileModal";
 import SuccessionReadinessSection from "./sections/SuccessionReadinessSection";
 import BusinessGoalsSection from "./sections/BusinessGoalsSection";
 import RecommendedGoalsSection from "./sections/RecommendedGoalsSection";
@@ -181,6 +182,7 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
   const [addToPlanResource, setAddToPlanResource] = useState(null);
   const [generatedNarrative, setGeneratedNarrative] = useState(null);
   const [narrativeLoading, setNarrativeLoading] = useState(false);
+  const [showFullProfile, setShowFullProfile] = useState(false);
 
   useEffect(() => {
     if (user?.email) loadData();
@@ -364,18 +366,28 @@ Do NOT use bullet points. Write in flowing prose. Be specific to their actual sc
                 )}
               </div>
               <div className="flex items-center gap-3">
-                {hasInsight && storedInsight.archetype && (
-                  <Badge className="bg-white/20 text-white border-white/30 border text-sm px-3 py-1">
-                    {storedInsight.archetype}
-                  </Badge>
-                )}
-                {latestAssessment?.overall_pct != null && (
-                  <div className="text-right shrink-0">
-                    <div className="text-3xl font-extrabold text-white leading-none">{latestAssessment.overall_pct}%</div>
-                    <div className="text-indigo-200 text-xs mt-0.5">Leadership Index</div>
-                  </div>
-                )}
-              </div>
+                 {hasInsight && storedInsight.archetype && (
+                   <Badge className="bg-white/20 text-white border-white/30 border text-sm px-3 py-1">
+                     {storedInsight.archetype}
+                   </Badge>
+                 )}
+                 {latestAssessment?.overall_pct != null && (
+                   <div className="text-right shrink-0">
+                     <div className="text-3xl font-extrabold text-white leading-none">{latestAssessment.overall_pct}%</div>
+                     <div className="text-indigo-200 text-xs mt-0.5">Leadership Index</div>
+                   </div>
+                 )}
+                 {latestAssessment && (
+                   <Button
+                     size="sm"
+                     variant="ghost"
+                     className="text-white border border-white/30 hover:bg-white/20 text-xs shrink-0"
+                     onClick={() => setShowFullProfile(true)}
+                   >
+                     <Eye className="w-3.5 h-3.5 mr-1" /> View Full Profile
+                   </Button>
+                 )}
+               </div>
             </div>
           </div>
 
@@ -576,6 +588,15 @@ Do NOT use bullet points. Write in flowing prose. Be specific to their actual sc
         onClose={() => setAddToPlanResource(null)}
         resource={addToPlanResource}
         userEmail={user?.email}
+      />
+
+      <FullProfileModal
+        open={showFullProfile}
+        onClose={() => setShowFullProfile(false)}
+        user={user}
+        assessment={latestAssessment}
+        insight={storedInsight}
+        narrative={generatedNarrative}
       />
 
       {/* ── 6. Succession Readiness Profile ─────────────────────── */}
