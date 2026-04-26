@@ -312,52 +312,75 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
               <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100">
 
                 {/* Left: Summary + Strengths/Dev Areas */}
-                <div className="px-6 py-6 space-y-5">
-                  {hasInsight && storedInsight.summary && (
-                    <p className="text-gray-600 leading-relaxed text-sm">
-                      {storedInsight.summary}
-                    </p>
-                  )}
+                {(() => {
+                  // Derive strengths/dev areas from assessment scores if no stored insight
+                  const COMP_NAMES = {
+                    si_pct: "Situational Intelligence", dm_pct: "Decision Making",
+                    comm_pct: "Communication", rm_pct: "Resource Management",
+                    sm_pct: "Stakeholder Management", pm_pct: "Performance Management",
+                  };
+                  const sorted = latestAssessment
+                    ? Object.entries(COMP_NAMES)
+                        .map(([k, name]) => ({ name, score: latestAssessment[k] ?? null }))
+                        .filter(c => c.score !== null)
+                        .sort((a, b) => b.score - a.score)
+                    : [];
+                  const strengths = hasInsight && storedInsight.top_strengths?.length
+                    ? storedInsight.top_strengths
+                    : sorted.slice(0, 3).map(c => `${c.name} (${c.score}%)`);
+                  const devAreas = hasInsight && storedInsight.development_areas?.length
+                    ? storedInsight.development_areas
+                    : sorted.slice(-3).reverse().map(c => `${c.name} (${c.score}%)`);
+                  const summary = hasInsight && storedInsight.summary
+                    ? storedInsight.summary
+                    : latestAssessment ? `Overall score: ${latestAssessment.overall_pct}% — ${latestAssessment.band_overall || 'results processed'}.` : null;
 
-                  <div className="grid sm:grid-cols-2 gap-5">
-                    {storedInsight?.top_strengths?.length > 0 && (
-                      <div>
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="p-1.5 bg-green-100 rounded-md">
-                            <Star className="w-3.5 h-3.5 text-green-600" />
+                  return (
+                    <div className="px-6 py-6 space-y-5">
+                      {summary && (
+                        <p className="text-gray-600 leading-relaxed text-sm">{summary}</p>
+                      )}
+                      <div className="grid sm:grid-cols-2 gap-5">
+                        {strengths.length > 0 && (
+                          <div>
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="p-1.5 bg-green-100 rounded-md">
+                                <Star className="w-3.5 h-3.5 text-green-600" />
+                              </div>
+                              <span className="text-sm font-semibold text-gray-800">Natural Strengths</span>
+                            </div>
+                            <ul className="space-y-2">
+                              {strengths.slice(0, 3).map((s, i) => (
+                                <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                                  <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
+                                  <span>{s}</span>
+                                </li>
+                              ))}
+                            </ul>
                           </div>
-                          <span className="text-sm font-semibold text-gray-800">Natural Strengths</span>
-                        </div>
-                        <ul className="space-y-2">
-                          {storedInsight.top_strengths.slice(0, 3).map((s, i) => (
-                            <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
-                              <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
-                              <span>{s}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {storedInsight?.development_areas?.length > 0 && (
-                      <div>
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="p-1.5 bg-blue-100 rounded-md">
-                            <Target className="w-3.5 h-3.5 text-blue-600" />
+                        )}
+                        {devAreas.length > 0 && (
+                          <div>
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="p-1.5 bg-blue-100 rounded-md">
+                                <Target className="w-3.5 h-3.5 text-blue-600" />
+                              </div>
+                              <span className="text-sm font-semibold text-gray-800">Development Focus</span>
+                            </div>
+                            <ul className="space-y-2">
+                              {devAreas.slice(0, 3).map((d, i) => (
+                                <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                                  <Lightbulb className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
+                                  <span>{d}</span>
+                                </li>
+                              ))}
+                            </ul>
                           </div>
-                          <span className="text-sm font-semibold text-gray-800">Development Focus</span>
-                        </div>
-                        <ul className="space-y-2">
-                          {storedInsight.development_areas.slice(0, 3).map((d, i) => (
-                            <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
-                              <Lightbulb className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
-                              <span>{d}</span>
-                            </li>
-                          ))}
-                        </ul>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Right: Radar chart + legend */}
                 {radarData && (
