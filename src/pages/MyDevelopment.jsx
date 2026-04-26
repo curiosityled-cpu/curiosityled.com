@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 import CertificateViewer from "@/components/learning/CertificateViewer";
 import CreateDevelopmentPlanModal from "@/components/development/CreateDevelopmentPlanModal";
 import ExperienceFormModal from "@/components/development/ExperienceFormModal";
+import DeleteJourneyDialog from "@/components/development/DeleteJourneyDialog";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 
 const EXP_TYPE_LABELS = {
@@ -101,6 +102,7 @@ export default function MyDevelopment() {
   const [experiences, setExperiences] = useState([]);
   const [showExpModal, setShowExpModal] = useState(false);
   const [editingExp, setEditingExp] = useState(null);
+  const [deletingPlan, setDeletingPlan] = useState(null);
 
   const load = useCallback(async () => {
     const email = user?.email || user?.data?.email;
@@ -300,9 +302,14 @@ export default function MyDevelopment() {
                                 </div>
                               )}
                             </div>
-                            <button onClick={() => openEdit(plan)} className="text-gray-400 hover:text-[#0202ff] transition-colors flex-shrink-0 mt-0.5">
-                              <Pencil className="w-4 h-4" />
-                            </button>
+                            <div className="flex flex-col gap-1.5 flex-shrink-0 mt-0.5">
+                              <button onClick={() => openEdit(plan)} className="text-gray-400 hover:text-[#0202ff] transition-colors">
+                                <Pencil className="w-4 h-4" />
+                              </button>
+                              <button onClick={() => setDeletingPlan(plan)} className="text-gray-400 hover:text-red-500 transition-colors">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -517,6 +524,14 @@ export default function MyDevelopment() {
         onSaved={() => { setShowModal(false); setEditingPlan(null); load(); }}
         userEmail={user?.email || user?.data?.email}
         plan={editingPlan}
+      />
+
+      <DeleteJourneyDialog
+        open={!!deletingPlan}
+        onClose={() => setDeletingPlan(null)}
+        onDeleted={() => { setDeletingPlan(null); load(); }}
+        plan={deletingPlan}
+        userEmail={user?.email || user?.data?.email}
       />
     </MVPPageLayout>
   );
