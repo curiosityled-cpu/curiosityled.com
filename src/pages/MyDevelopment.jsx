@@ -300,9 +300,14 @@ export default function MyDevelopment() {
                                 </div>
                               )}
                             </div>
-                            <button onClick={() => openEdit(plan)} className="text-gray-400 hover:text-[#0202ff] transition-colors flex-shrink-0 mt-0.5">
-                              <Pencil className="w-4 h-4" />
-                            </button>
+                            <div className="flex flex-col gap-1.5 flex-shrink-0">
+                              <button onClick={() => openEdit(plan)} className="text-gray-400 hover:text-[#0202ff] transition-colors">
+                                <Pencil className="w-4 h-4" />
+                              </button>
+                              <button onClick={async () => { await base44.entities.DevelopmentPlan.delete(plan.id); toast.success("Journey deleted"); load(); }} className="text-gray-400 hover:text-red-500 transition-colors">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
