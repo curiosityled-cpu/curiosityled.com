@@ -1,0 +1,273 @@
+{
+  "name": "LeadershipProfileReport",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user this report belongs to"
+    },
+    "assessment_id": {
+      "type": "string",
+      "description": "ID of the Assessment this report was generated from"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Client ID for multi-tenant support"
+    },
+    "archetype": {
+      "type": "string",
+      "description": "Leadership archetype label (e.g. Adaptive Strategist)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "generating",
+        "generated",
+        "failed"
+      ],
+      "default": "generating",
+      "description": "Generation status of the report"
+    },
+    "leadership_dna": {
+      "type": "object",
+      "description": "Overview / Leadership DNA section",
+      "properties": {
+        "headline": {
+          "type": "string"
+        },
+        "unique_value": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "behavioral_patterns": {
+      "type": "object",
+      "description": "Natural behavioral patterns section",
+      "properties": {
+        "decision_making": {
+          "type": "string"
+        },
+        "decision_questions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "communication_style": {
+          "type": "string"
+        },
+        "communication_phrases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "daily_approach": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "stress_analysis": {
+      "type": "object",
+      "description": "Stress triggers and recovery section",
+      "properties": {
+        "triggers": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "early_stage": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "moderate_stage": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "high_stage": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "recovery_strategies": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "blind_spots": {
+      "type": "object",
+      "description": "Blind spot analysis section",
+      "properties": {
+        "primary": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "why_it_happens": {
+              "type": "string"
+            },
+            "how_it_shows_up": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "solutions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "secondary": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "why_it_happens": {
+              "type": "string"
+            },
+            "how_it_shows_up": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "solutions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "daily_practices": {
+      "type": "object",
+      "description": "Morning/midday/evening daily practice routines",
+      "properties": {
+        "morning": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "midday": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evening": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "competency_insights": {
+      "type": "array",
+      "description": "Per-competency strengths and growth areas",
+      "items": {
+        "type": "object",
+        "properties": {
+          "competency": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number"
+          },
+          "strength_narrative": {
+            "type": "string"
+          },
+          "growth_area": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "development_plan": {
+      "type": "array",
+      "description": "Personalized development plan with actionable steps per competency",
+      "items": {
+        "type": "object",
+        "properties": {
+          "competency": {
+            "type": "string"
+          },
+          "actionable_steps": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "error_message": {
+      "type": "string",
+      "description": "Error detail if generation failed"
+    }
+  },
+  "required": [
+    "user_email",
+    "assessment_id"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Admin Level 2",
+                "Super Administrator",
+                "Platform Admin"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        }
+      ]
+    }
+  }
+}

@@ -597,6 +597,7 @@ Do NOT use bullet points. Write in flowing prose. Be specific to their actual sc
         assessment={latestAssessment}
         insight={storedInsight}
         narrative={generatedNarrative}
+        assessmentId={latestAssessment?.id}
       />
 
       {/* ── 6. Succession Readiness Profile ─────────────────────── */}
