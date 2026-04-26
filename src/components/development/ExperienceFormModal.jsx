@@ -98,7 +98,6 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
       }
       toast.success(editing ? "Experience saved!" : "Experience logged!");
       onSaved();
-      onClose();
     } catch (err) {
       console.error("ExperienceFormModal save error:", err);
       setSaveError(err?.message || "Failed to save. Please try again.");
