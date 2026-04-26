@@ -112,8 +112,8 @@ export default function MyDevelopment() {
     try {
       const [assigned, plans, exps] = await Promise.all([
         base44.entities.AssignedLearning.filter({ user_email: email }),
-        base44.entities.DevelopmentPlan.filter({ user_email: email }),
-        base44.entities.DevelopmentExperience.filter({ user_email: email }, "-created_date"),
+        base44.entities.DevelopmentPlan.list(),
+        base44.entities.DevelopmentExperience.list("-created_date"),
       ]);
       console.log("MyDevelopment loaded:", { assigned: assigned.length, plans: plans.length, exps: exps.length });
       setAssignedLearning(assigned);
