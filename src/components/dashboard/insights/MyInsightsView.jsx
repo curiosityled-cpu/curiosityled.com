@@ -179,6 +179,8 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
   const [assessments, setAssessments]     = useState([]);
   const [goals, setGoals]                 = useState([]);
   const [addToPlanResource, setAddToPlanResource] = useState(null);
+  const [generatedNarrative, setGeneratedNarrative] = useState(null);
+  const [narrativeLoading, setNarrativeLoading] = useState(false);
 
   useEffect(() => {
     if (user?.email) loadData();
@@ -212,10 +214,84 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
         const insightCount = (best?.top_strengths?.length || 0) + (best?.development_areas?.length || 0) + (best?.recommendations?.length || 0);
         onMetricsUpdate({ totalInsights: insightCount, actionItems: overdueGoals, completionRate: goalCompletionRate });
       }
+
+      // Generate narrative if no stored summary exists but assessment data is available
+      if (!best?.summary && assessments[0]) {
+        generateNarrative(assessments[0]);
+      }
     } catch (err) {
       console.error("[MyInsightsView] Error:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generateNarrative = async (assessment) => {
+    setNarrativeLoading(true);
+    try {
+      const scores = {
+        overall: assessment.overall_pct,
+        si: assessment.si_pct,
+        dm: assessment.dm_pct,
+        comm: assessment.comm_pct,
+        rm: assessment.rm_pct,
+        sm: assessment.sm_pct,
+        pm: assessment.pm_pct,
+        band: assessment.band_overall,
+        archetype: assessment.archetype_label,
+      };
+
+      // Determine archetype from scores if not already set
+      const sorted = [
+        { name: "Situational Intelligence", score: scores.si },
+        { name: "Decision Making", score: scores.dm },
+        { name: "Communication", score: scores.comm },
+        { name: "Resource Management", score: scores.rm },
+        { name: "Stakeholder Management", score: scores.sm },
+        { name: "Performance Management", score: scores.pm },
+      ].sort((a, b) => b.score - a.score);
+
+      const top2 = sorted.slice(0, 2).map(c => c.name).join(" and ");
+      const bottom2 = sorted.slice(-2).map(c => c.name).join(" and ");
+
+      const prompt = `You are an expert leadership development consultant interpreting a leadership competency assessment. Generate a 2–3 sentence personalized narrative summary for a leader based on their scores.
+
+Leader: ${user?.full_name || "the leader"}
+Role: ${user?.current_role || "leader"}
+Sector: ${user?.sector || "corporate"}
+Overall Leadership Index: ${scores.overall}% (${scores.band || "developing"})
+Archetype: ${scores.archetype || "not yet determined"}
+
+Competency Scores (out of 100%):
+- Situational Intelligence: ${scores.si}%
+- Decision Making: ${scores.dm}%
+- Communication: ${scores.comm}%
+- Resource Management: ${scores.rm}%
+- Stakeholder Management: ${scores.sm}%
+- Performance Management: ${scores.pm}%
+
+Top strengths: ${top2}
+Development areas: ${bottom2}
+
+Leadership Archetype Framework context:
+- Scores 80–100% = Mastery (exemplary leadership in that competency)
+- Scores 65–79% = Proficient (solid, reliable performance)
+- Scores 50–64% = Developing (emerging capability, needs targeted growth)
+- Scores below 50% = Awareness (foundational stage)
+
+Write a warm, professional, personalized 2–3 sentence narrative that:
+1. Acknowledges their overall standing and dominant leadership strengths
+2. Identifies their primary development opportunity with an encouraging, growth-oriented framing
+3. Connects their profile to practical leadership impact
+
+Do NOT use bullet points. Write in flowing prose. Be specific to their actual scores and competencies.`;
+
+      const result = await base44.integrations.Core.InvokeLLM({ prompt });
+      setGeneratedNarrative(result);
+    } catch (e) {
+      console.warn("[MyInsightsView] Narrative generation failed:", e.message);
+    } finally {
+      setNarrativeLoading(false);
     }
   };
 
@@ -333,10 +409,16 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
                     : sorted.slice(-3).reverse().map(c => `${c.name} (${c.score}%)`);
                   const summary = hasInsight && storedInsight.summary
                     ? storedInsight.summary
-                    : latestAssessment ? `Overall score: ${latestAssessment.overall_pct}% — ${latestAssessment.band_overall || 'results processed'}.` : null;
+                    : generatedNarrative || (latestAssessment ? `Overall score: ${latestAssessment.overall_pct}% — ${latestAssessment.band_overall || 'results processed'}.` : null);
 
                   return (
                     <div className="px-6 py-6 space-y-5">
+                      {narrativeLoading && !summary && (
+                        <div className="flex items-center gap-2 text-gray-400 text-sm py-1">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Generating your leadership narrative…</span>
+                        </div>
+                      )}
                       {summary && (
                         <p className="text-gray-600 leading-relaxed text-sm">{summary}</p>
                       )}
