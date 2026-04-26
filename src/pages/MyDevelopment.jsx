@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Clock, CheckCircle2, Library, Plus, Layers, GraduationCap, Pencil, Briefcase, ExternalLink, Star, Trash2, ChevronDown } from "lucide-react";
+import DeleteJourneyDialog from "@/components/development/DeleteJourneyDialog";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -101,6 +102,7 @@ export default function MyDevelopment() {
   const [experiences, setExperiences] = useState([]);
   const [showExpModal, setShowExpModal] = useState(false);
   const [editingExp, setEditingExp] = useState(null);
+  const [deletingPlan, setDeletingPlan] = useState(null);
 
   const load = useCallback(async () => {
     const email = user?.email || user?.data?.email;
@@ -300,9 +302,14 @@ export default function MyDevelopment() {
                                 </div>
                               )}
                             </div>
-                            <button onClick={() => openEdit(plan)} className="text-gray-400 hover:text-[#0202ff] transition-colors flex-shrink-0 mt-0.5">
-                              <Pencil className="w-4 h-4" />
-                            </button>
+                            <div className="flex flex-col gap-1.5 flex-shrink-0">
+                              <button onClick={() => openEdit(plan)} className="text-gray-400 hover:text-[#0202ff] transition-colors">
+                                <Pencil className="w-4 h-4" />
+                              </button>
+                              <button onClick={() => setDeletingPlan(plan)} className="text-gray-400 hover:text-red-500 transition-colors">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -509,6 +516,13 @@ export default function MyDevelopment() {
         onSaved={() => { setShowExpModal(false); setEditingExp(null); load(); }}
         experience={editingExp}
         userEmail={user?.email || user?.data?.email}
+      />
+
+      <DeleteJourneyDialog
+        open={!!deletingPlan}
+        onClose={() => setDeletingPlan(null)}
+        plan={deletingPlan}
+        onDeleted={() => { setDeletingPlan(null); load(); }}
       />
 
       <CreateDevelopmentPlanModal

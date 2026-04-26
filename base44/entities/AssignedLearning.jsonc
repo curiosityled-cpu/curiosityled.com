@@ -87,6 +87,9 @@
     "read": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "user_email": "{{user.email}}"
         },
         {
@@ -130,6 +133,9 @@
     },
     "write": {
       "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
         {
           "assigned_by": "{{user.email}}"
         },
