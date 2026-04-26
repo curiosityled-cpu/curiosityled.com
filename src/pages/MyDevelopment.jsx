@@ -112,8 +112,8 @@ export default function MyDevelopment() {
     try {
       const [assigned, plans, exps] = await Promise.all([
         base44.entities.AssignedLearning.filter({ user_email: email }),
-        base44.entities.DevelopmentPlan.list(),
-        base44.entities.DevelopmentExperience.list("-created_date"),
+        base44.entities.DevelopmentPlan.filter({ user_email: email }),
+        base44.entities.DevelopmentExperience.filter({ user_email: email }, "-created_date"),
       ]);
       console.log("MyDevelopment loaded:", { assigned: assigned.length, plans: plans.length, exps: exps.length });
       setAssignedLearning(assigned);
@@ -300,14 +300,9 @@ export default function MyDevelopment() {
                                 </div>
                               )}
                             </div>
-                            <div className="flex flex-col gap-1.5 flex-shrink-0">
-                              <button onClick={() => openEdit(plan)} className="text-gray-400 hover:text-[#0202ff] transition-colors">
-                                <Pencil className="w-4 h-4" />
-                              </button>
-                              <button onClick={async () => { await base44.entities.DevelopmentPlan.delete(plan.id); toast.success("Journey deleted"); load(); }} className="text-gray-400 hover:text-red-500 transition-colors">
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
+                            <button onClick={() => openEdit(plan)} className="text-gray-400 hover:text-[#0202ff] transition-colors flex-shrink-0 mt-0.5">
+                              <Pencil className="w-4 h-4" />
+                            </button>
                           </div>
                         </CardContent>
                       </Card>
