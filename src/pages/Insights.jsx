@@ -214,8 +214,12 @@ function Insights() {
         ...(canViewOrgInsights ? [{ id: VIEW_SCOPES.ORG, label: 'Leadership Intelligence Hub', icon: Building2 }] : [])
       ];
 
+  // If no tabs resolved (e.g. MVP users whose permissions haven't loaded yet),
+  // always fall back to personal insights so the page isn't blank.
+  const effectiveView = viewTabs.length === 0 ? VIEW_SCOPES.MY : currentView;
+
   const renderInsightsContent = () => {
-    switch (currentView) {
+    switch (effectiveView) {
       case VIEW_SCOPES.MY:
         return <MyInsightsView user={user} onMetricsUpdate={setMetrics} />;
       case VIEW_SCOPES.TEAM:
