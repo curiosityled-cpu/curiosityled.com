@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
     if (!assessment_id) return Response.json({ error: "assessment_id required" }, { status: 400 });
 
     // Check if a report already exists for this assessment
-    const existing = await base44.entities.LeadershipProfileReport.filter({
+    const existing = await base44.asServiceRole.entities.LeadershipProfileReport.filter({
       user_email: user.email,
       assessment_id,
       status: "generated"
@@ -135,7 +135,7 @@ Deno.serve(async (req) => {
     }
 
     // Fetch the assessment
-    const assessments = await base44.entities.Assessment.filter({ email: user.email });
+    const assessments = await base44.asServiceRole.entities.Assessment.filter({ email: user.email });
     const assessment = assessments.find(a => a.id === assessment_id);
     if (!assessment) return Response.json({ error: "Assessment not found" }, { status: 404 });
 
@@ -152,8 +152,8 @@ Deno.serve(async (req) => {
     const top3 = sortedComps.slice(0, 3).map(c => `${c.competency} (${c.score}%)`).join(", ");
     const bottom3 = sortedComps.slice(-3).map(c => `${c.competency} (${c.score}%)`).join(", ");
 
-    // Create placeholder record
-    const placeholder = await base44.entities.LeadershipProfileReport.create({
+    // Create placeholder record (service role to bypass RLS during creation)
+    const placeholder = await base44.asServiceRole.entities.LeadershipProfileReport.create({
       user_email: user.email,
       assessment_id,
       client_id: user.client_id,
@@ -280,8 +280,8 @@ Return ONLY valid JSON, no markdown.`;
       }))
     };
 
-    // Update the placeholder record with the full report
-    await base44.entities.LeadershipProfileReport.update(placeholder.id, report);
+    // Update the placeholder record with the full report (service role)
+    await base44.asServiceRole.entities.LeadershipProfileReport.update(placeholder.id, report);
 
     return Response.json({ report: { ...placeholder, ...report } });
   } catch (error) {
