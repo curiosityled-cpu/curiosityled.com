@@ -573,22 +573,25 @@ export default function FullProfileModal({ open, onClose, user, assessment, insi
   const [activeTab, setActiveTab] = useState("overview");
   const [showShare, setShowShare] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
-  const [report, setReport] = useState(preloadedReport || null);
+  const [report, setReport] = useState(null);
   const [reportLoading, setReportLoading] = useState(false);
   const [reportError, setReportError] = useState(null);
 
   const targetAssessmentId = assessmentId || assessment?.id;
 
-  // Use preloaded report immediately if available; otherwise fetch when opened
+  // Sync preloadedReport into state whenever it arrives (may arrive after mount)
   useEffect(() => {
     if (preloadedReport) {
       setReport(preloadedReport);
-      return;
     }
-    if (open && targetAssessmentId && !report) {
+  }, [preloadedReport]);
+
+  // Only fetch/generate if we have no preloaded report and the modal is open
+  useEffect(() => {
+    if (open && targetAssessmentId && !preloadedReport && !report) {
       loadOrGenerateReport();
     }
-  }, [open, targetAssessmentId, preloadedReport]);
+  }, [open, targetAssessmentId]);
 
   const loadOrGenerateReport = async () => {
     setReportLoading(true);
