@@ -215,13 +215,13 @@ Return ONLY valid JSON, no markdown.`;
           leadership_dna_description: { type: "string" },
           behavioral_patterns_decision: { type: "string" },
           behavioral_patterns_communication: { type: "string" },
-          behavioral_patterns_daily: { type: "array" },
-          stress_early: { type: "array" },
-          stress_moderate: { type: "array" },
-          stress_high: { type: "array" },
-          recovery_strategies: { type: "array" },
-          competency_insights: { type: "array" },
-          development_plan: { type: "array" }
+          behavioral_patterns_daily: { type: "array", items: { type: "object", properties: { label: { type: "string" }, description: { type: "string" } } } },
+          stress_early: { type: "array", items: { type: "string" } },
+          stress_moderate: { type: "array", items: { type: "string" } },
+          stress_high: { type: "array", items: { type: "string" } },
+          recovery_strategies: { type: "array", items: { type: "object", properties: { number: { type: "number" }, title: { type: "string" }, description: { type: "string" } } } },
+          competency_insights: { type: "array", items: { type: "object", properties: { competency: { type: "string" }, score: { type: "number" }, strength_narrative: { type: "string" }, growth_area: { type: "string" } } } },
+          development_plan: { type: "array", items: { type: "object", properties: { competency: { type: "string" }, actionable_steps: { type: "string" } } } }
         }
       }
     });
