@@ -82,7 +82,8 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
   };
 
   const handleSave = async () => {
-    if (!form.title || form.competencies.length === 0) return;
+    if (!form.title) { toast.error("Please enter a title."); return; }
+    if (form.competencies.length === 0) { toast.error("Please select at least one competency."); return; }
     setSaving(true);
     setSaveError(null);
     try {
@@ -242,7 +243,7 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
             <Button
               type="button"
               size="sm"
-              disabled={!form.title || form.competencies.length === 0 || saving}
+              disabled={saving}
               onClick={handleSave}
               className="bg-indigo-600 hover:bg-indigo-700 text-white"
             >

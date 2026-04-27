@@ -180,11 +180,9 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
   };
 
   const handleSave = async () => {
-    console.log("handleSave called, form:", form.title, "userEmail:", userEmail);
-    if (!form.title || form.target_competencies.length === 0) {
-      console.log("Validation failed - title:", form.title, "competencies:", form.target_competencies.length);
-      return;
-    }
+    if (!form.title) { toast.error("Please enter a journey title."); return; }
+    if (form.target_competencies.length === 0) { toast.error("Please select at least one target competency."); return; }
+
     setSaving(true);
     setSaveError(null);
     try {
@@ -561,7 +559,7 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
             <Button
               type="button"
               size="sm"
-              disabled={!form.title || form.target_competencies.length === 0 || saving}
+              disabled={saving}
               onClick={handleSave}
               className="bg-[#0202ff] hover:bg-[#0101dd] text-white"
             >
