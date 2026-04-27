@@ -53,71 +53,133 @@ const TABS = [
 
 // ── Share Email Dialog ────────────────────────────────────────────────────────
 
-function ShareEmailDialog({ open, onClose, user, assessment, report }) {
-  const [email, setEmail] = useState("");
+function ShareEmailDialog({ open, onClose, user, assessment, report, onGeneratePdf }) {
+  const [inputEmail, setInputEmail] = useState("");
+  const [emails, setEmails] = useState([]);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
+
+  const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+
+  const addEmail = () => {
+    const trimmed = inputEmail.trim();
+    if (!trimmed) return;
+    if (!isValidEmail(trimmed)) { setError("Please enter a valid email address."); return; }
+    if (emails.includes(trimmed)) { setError("This email is already added."); return; }
+    setEmails(prev => [...prev, trimmed]);
+    setInputEmail("");
+    setError("");
+  };
+
+  const removeEmail = (e) => setEmails(prev => prev.filter(x => x !== e));
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addEmail(); }
+  };
 
   const handleSend = async () => {
-    if (!email.trim()) return;
+    const finalEmails = [...emails];
+    const trimmed = inputEmail.trim();
+    if (trimmed && isValidEmail(trimmed) && !finalEmails.includes(trimmed)) {
+      finalEmails.push(trimmed);
+    }
+    if (!finalEmails.length) { setError("Add at least one email address."); return; }
+
     setSending(true);
+    setError("");
     try {
+      // Generate PDF as base64
+      let pdf_base64 = null;
+      if (onGeneratePdf) {
+        pdf_base64 = await onGeneratePdf();
+      }
+
       await base44.functions.invoke("shareLeadershipProfile", {
-        to_email: email.trim(),
+        to_emails: finalEmails,
         name: user?.full_name || "A leader",
+        sender_name: user?.full_name || "A leader",
         overall: assessment?.overall_pct ?? "—",
         band: assessment?.band_overall || getBand(assessment?.overall_pct ?? 0),
         archetype: report?.archetype || assessment?.archetype_label || "",
-        current_role: user?.current_role || "",
-        sector: user?.sector || "",
-        dna_description: report?.leadership_dna?.description || "",
-        comp_keys: COMP_KEYS,
-        assessment,
-        blind_spot_primary: report?.blind_spots?.primary || null,
+        pdf_base64,
       });
       setSent(true);
+      setEmails(finalEmails);
     } catch (e) {
       console.error("Share email failed:", e);
+      setError("Failed to send. Please try again.");
     } finally {
       setSending(false);
     }
   };
 
+  const handleClose = () => {
+    setInputEmail(""); setEmails([]); setSent(false); setError("");
+    onClose();
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-sm">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-md">
         <div className="p-4">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-1">
             <Mail className="w-5 h-5 text-[#0012ff]" />
-            <h2 className="font-semibold text-gray-900">Share Full Profile</h2>
+            <h2 className="font-semibold text-gray-900">Share Full Leadership Profile</h2>
           </div>
           {sent ? (
             <div className="py-6 text-center space-y-2">
               <CheckCircle className="w-10 h-10 text-green-500 mx-auto" />
               <p className="font-semibold text-gray-800">Profile sent!</p>
-              <p className="text-sm text-gray-500">Full report emailed to <strong>{email}</strong>.</p>
-              <Button className="mt-4" onClick={onClose}>Done</Button>
+              <p className="text-sm text-gray-500">
+                Full PDF report emailed to <strong>{emails.join(", ")}</strong>.
+              </p>
+              <Button className="mt-4" onClick={handleClose}>Done</Button>
             </div>
           ) : (
-            <div className="space-y-4">
-              <p className="text-sm text-gray-500">Enter an email address to share this full in-depth leadership profile.</p>
-              <input
-                type="email"
-                placeholder="colleague@company.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0012ff]/30"
-              />
-              <div className="flex gap-2 justify-end">
-                <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <div className="space-y-3">
+              <p className="text-sm text-gray-500">
+                The full profile PDF will be attached to the email. Add one or more recipients.
+              </p>
+
+              {/* Email chips */}
+              {emails.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {emails.map(e => (
+                    <span key={e} className="flex items-center gap-1 bg-blue-50 border border-blue-200 text-blue-800 text-xs rounded-full px-3 py-1">
+                      {e}
+                      <button onClick={() => removeEmail(e)} className="hover:text-red-500 ml-1">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  placeholder="colleague@company.com"
+                  value={inputEmail}
+                  onChange={e => { setInputEmail(e.target.value); setError(""); }}
+                  onKeyDown={handleKeyDown}
+                  className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0012ff]/30"
+                />
+                <Button variant="outline" size="sm" onClick={addEmail} type="button">Add</Button>
+              </div>
+              {error && <p className="text-xs text-red-500">{error}</p>}
+              <p className="text-xs text-gray-400">Press Enter or comma to add multiple recipients.</p>
+
+              <div className="flex gap-2 justify-end pt-1">
+                <Button variant="outline" onClick={handleClose}>Cancel</Button>
                 <Button
-                  disabled={!email.trim() || sending}
+                  disabled={(!emails.length && !inputEmail.trim()) || sending}
                   onClick={handleSend}
                   style={{ backgroundColor: '#0012ff' }}
                   className="text-white"
                 >
                   {sending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Send className="w-4 h-4 mr-1" />}
-                  Send
+                  {sending ? "Sending…" : "Send PDF"}
                 </Button>
               </div>
             </div>
@@ -545,9 +607,8 @@ export default function FullProfileModal({ open, onClose, user, assessment, insi
   const band = assessment.band_overall || getBand(overall);
   const name = user?.full_name || "Leader";
 
-  const handlePDF = async () => {
-    setPdfLoading(true);
-    try {
+  // Returns base64 string (for sharing) or triggers download (for saving)
+  const buildPDF = async (returnBase64 = false) => {
       const { default: jsPDF } = await import("jspdf");
       const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
       const W = 210; const margin = 16; const pageH = 297;
@@ -706,11 +767,30 @@ export default function FullProfileModal({ open, onClose, user, assessment, insi
         doc.text(`Generated ${new Date().toLocaleDateString()} · Curiosity Led Leadership Platform · Page ${i} of ${totalPages}`, margin, pageH - 8);
       }
 
-      doc.save(`${name.replace(/ /g, "_")}_Full_Leadership_Profile.pdf`);
+      if (returnBase64) {
+        return doc.output("datauristring").split(",")[1]; // base64 only
+      } else {
+        doc.save(`${name.replace(/ /g, "_")}_Full_Leadership_Profile.pdf`);
+      }
+  };
+
+  const handlePDF = async () => {
+    setPdfLoading(true);
+    try {
+      await buildPDF(false);
     } catch (e) {
       console.error("PDF generation error:", e);
     } finally {
       setPdfLoading(false);
+    }
+  };
+
+  const handleGeneratePdfForShare = async () => {
+    try {
+      return await buildPDF(true);
+    } catch (e) {
+      console.error("PDF for share failed:", e);
+      return null;
     }
   };
 
@@ -802,6 +882,7 @@ export default function FullProfileModal({ open, onClose, user, assessment, insi
         user={user}
         assessment={assessment}
         report={report}
+        onGeneratePdf={handleGeneratePdfForShare}
       />
     </>
   );
