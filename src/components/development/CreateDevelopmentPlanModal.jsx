@@ -204,8 +204,8 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
       toast.success(editing ? "Journey saved!" : "Journey created!");
       onSaved();
     } catch (err) {
-      console.error("CreateDevelopmentPlanModal save error:", err);
-      const msg = err?.message || "Failed to save. Please try again.";
+      console.error("CreateDevelopmentPlanModal save error:", err, JSON.stringify(err));
+      const msg = err?.response?.data?.message || err?.message || "Failed to save. Please try again.";
       setSaveError(msg);
       toast.error(msg);
     } finally {
