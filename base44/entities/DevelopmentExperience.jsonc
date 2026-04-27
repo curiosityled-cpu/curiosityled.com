@@ -87,54 +87,10 @@
   ],
   "rls": {
     "read": {
-      "$or": [
-        {
-          "user_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "User Level 2"
-              ]
-            }
-          },
-          "user_email": {
-            "$in": "{{user.subordinate_emails}}"
-          }
-        },
-        {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "Admin Level 2",
-                "Super Administrator",
-                "Platform Admin"
-              ]
-            }
-          },
-          "client_id": "{{user.client_id}}"
-        }
-      ]
+      "user_email": "{{user.email}}"
     },
     "write": {
-      "$or": [
-        {
-          "user_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "Admin Level 2",
-                "Super Administrator",
-                "Platform Admin"
-              ]
-            }
-          },
-          "client_id": "{{user.client_id}}"
-        }
-      ]
+      "user_email": "{{user.email}}"
     }
   }
 }

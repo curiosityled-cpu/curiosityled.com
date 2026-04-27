@@ -108,42 +108,10 @@
   ],
   "rls": {
     "read": {
-      "$or": [
-        {
-          "user_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "Admin Level 2",
-                "Super Administrator",
-                "Platform Admin"
-              ]
-            }
-          },
-          "client_id": "{{user.client_id}}"
-        }
-      ]
+      "user_email": "{{user.email}}"
     },
     "write": {
-      "$or": [
-        {
-          "user_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "Admin Level 2",
-                "Super Administrator",
-                "Platform Admin"
-              ]
-            }
-          },
-          "client_id": "{{user.client_id}}"
-        }
-      ]
+      "user_email": "{{user.email}}"
     }
   }
 }
