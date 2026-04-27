@@ -589,6 +589,19 @@ export default function FullProfileModal({ open, onClose, user, assessment, insi
     setReportLoading(true);
     setReportError(null);
     try {
+      // First: try to load the cached report directly from the database (fast)
+      const cached = await base44.entities.LeadershipProfileReport.filter({
+        assessment_id: targetAssessmentId,
+        status: "generated"
+      }).catch(() => []);
+
+      if (cached.length > 0) {
+        setReport(cached[0]);
+        setReportLoading(false);
+        return;
+      }
+
+      // No cached report — invoke the backend to generate it (slow, first time only)
       const response = await base44.functions.invoke("generateLeadershipProfile", {
         assessment_id: targetAssessmentId
       });
