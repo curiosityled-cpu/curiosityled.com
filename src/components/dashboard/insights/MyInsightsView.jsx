@@ -183,6 +183,7 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
   const [generatedNarrative, setGeneratedNarrative] = useState(null);
   const [narrativeLoading, setNarrativeLoading] = useState(false);
   const [showFullProfile, setShowFullProfile] = useState(false);
+  const [cachedReport, setCachedReport] = useState(null);
 
   useEffect(() => {
     if (user?.email) loadData();
@@ -217,16 +218,19 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
         onMetricsUpdate({ totalInsights: insightCount, actionItems: overdueGoals, completionRate: goalCompletionRate });
       }
 
-      // Load cached narrative from LeadershipProfileReport if available, else generate
-      if (!best?.summary && assessments[0]) {
-        const cached = await base44.entities.LeadershipProfileReport.filter({
+      // Load cached report — used for both the narrative and the Full Profile modal
+      if (assessments[0]) {
+        const cachedReports = await base44.entities.LeadershipProfileReport.filter({
           user_email: user.email,
           assessment_id: assessments[0].id,
           status: "generated"
         }).catch(() => []);
-        if (cached[0]?.leadership_dna?.description) {
-          setGeneratedNarrative(cached[0].leadership_dna.description);
-        } else {
+        if (cachedReports[0]) {
+          setCachedReport(cachedReports[0]);
+          if (!best?.summary && cachedReports[0].leadership_dna?.description) {
+            setGeneratedNarrative(cachedReports[0].leadership_dna.description);
+          }
+        } else if (!best?.summary) {
           generateNarrative(assessments[0]);
         }
       }
@@ -610,6 +614,7 @@ Do NOT use bullet points. Write in flowing prose. Be specific to their actual sc
         insight={storedInsight}
         narrative={generatedNarrative}
         assessmentId={latestAssessment?.id}
+        preloadedReport={cachedReport}
       />
 
       {/* ── 6. Succession Readiness Profile ─────────────────────── */}

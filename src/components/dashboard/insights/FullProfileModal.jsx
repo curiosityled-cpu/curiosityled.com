@@ -569,38 +569,31 @@ function DevelopmentPlanTab({ report }) {
 
 // ── Main Modal ────────────────────────────────────────────────────────────────
 
-export default function FullProfileModal({ open, onClose, user, assessment, insight, narrative, assessmentId }) {
+export default function FullProfileModal({ open, onClose, user, assessment, insight, narrative, assessmentId, preloadedReport }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [showShare, setShowShare] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
-  const [report, setReport] = useState(null);
+  const [report, setReport] = useState(preloadedReport || null);
   const [reportLoading, setReportLoading] = useState(false);
   const [reportError, setReportError] = useState(null);
 
   const targetAssessmentId = assessmentId || assessment?.id;
 
+  // Use preloaded report immediately if available; otherwise fetch when opened
   useEffect(() => {
+    if (preloadedReport) {
+      setReport(preloadedReport);
+      return;
+    }
     if (open && targetAssessmentId && !report) {
       loadOrGenerateReport();
     }
-  }, [open, targetAssessmentId]);
+  }, [open, targetAssessmentId, preloadedReport]);
 
   const loadOrGenerateReport = async () => {
     setReportLoading(true);
     setReportError(null);
     try {
-      // First: try to load the cached report directly from the database (fast)
-      const cached = await base44.entities.LeadershipProfileReport.filter({
-        assessment_id: targetAssessmentId,
-        status: "generated"
-      }).catch(() => []);
-
-      if (cached.length > 0) {
-        setReport(cached[0]);
-        setReportLoading(false);
-        return;
-      }
-
       // No cached report — invoke the backend to generate it (slow, first time only)
       const response = await base44.functions.invoke("generateLeadershipProfile", {
         assessment_id: targetAssessmentId
