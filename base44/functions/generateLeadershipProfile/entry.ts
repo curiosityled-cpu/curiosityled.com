@@ -139,7 +139,9 @@ Deno.serve(async (req) => {
     const assessment = assessments.find(a => a.id === assessment_id);
     if (!assessment) return Response.json({ error: "Assessment not found" }, { status: 404 });
 
-    const archetype = assessment.archetype_label || "Adaptive Strategist";
+    // Normalize archetype label — strip leading "The " prefix if present
+    const rawArchetype = assessment.archetype_label || "Adaptive Strategist";
+    const archetype = rawArchetype.replace(/^The\s+/i, "").trim();
     const archetypeData = ARCHETYPE_CONTENT[archetype] || ARCHETYPE_CONTENT["Adaptive Strategist"];
 
     const compData = COMP_KEYS.map(c => ({

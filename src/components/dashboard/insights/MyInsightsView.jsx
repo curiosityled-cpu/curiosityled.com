@@ -192,12 +192,11 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [insights, assessments, goalList, assignedLearning, journeyEnrollments] = await Promise.all([
+      const [insights, assessments, goalList, assignedLearning] = await Promise.all([
         base44.entities.AssessmentInsights.filter({ user_email: user.email, status: "generated" }, "-created_date", 1).catch(() => []),
         base44.entities.Assessment.filter({ email: user.email }, "-submission_ts", 10).catch(() => []),
         base44.entities.Goal.filter({ created_by: user.email }).catch(() => []),
         base44.entities.AssignedLearning.filter({ user_email: user.email }).catch(() => []),
-        base44.entities.JourneyEnrollment.filter({ user_email: user.email }).catch(() => []),
       ]);
 
       const best   = insights[0] || null;
@@ -207,10 +206,8 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
       setAssessments(assessments);
       setGoals(goalList);
 
-      const completedGoals  = goalList.filter(g => g.status === "completed").length;
+      const completedGoals     = goalList.filter(g => g.status === "completed").length;
       const goalCompletionRate = goalList.length > 0 ? Math.round((completedGoals / goalList.length) * 100) : 0;
-      const completedLearning  = assignedLearning.filter(l => l.status === "completed").length;
-      const learningRate       = assignedLearning.length > 0 ? Math.round((completedLearning / assignedLearning.length) * 100) : 0;
       const overdueGoals       = goalList.filter(g => g.status === "overdue").length;
 
       if (onMetricsUpdate) {
@@ -218,21 +215,24 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
         onMetricsUpdate({ totalInsights: insightCount, actionItems: overdueGoals, completionRate: goalCompletionRate });
       }
 
-      // Load cached report — used for both the narrative and the Full Profile modal
-      if (assessments[0]) {
-        const cachedReports = await base44.entities.LeadershipProfileReport.filter({
+      // Load cached report in parallel — don't wait for the above to finish first
+      if (latest) {
+        base44.entities.LeadershipProfileReport.filter({
           user_email: user.email,
-          assessment_id: assessments[0].id,
+          assessment_id: latest.id,
           status: "generated"
-        }).catch(() => []);
-        if (cachedReports[0]) {
-          setCachedReport(cachedReports[0]);
-          if (!best?.summary && cachedReports[0].leadership_dna?.description) {
-            setGeneratedNarrative(cachedReports[0].leadership_dna.description);
+        }).then(cachedReports => {
+          if (cachedReports[0]) {
+            setCachedReport(cachedReports[0]);
+            if (!best?.summary && cachedReports[0].leadership_dna?.description) {
+              setGeneratedNarrative(cachedReports[0].leadership_dna.description);
+            }
+          } else if (!best?.summary) {
+            generateNarrative(latest);
           }
-        } else if (!best?.summary) {
-          generateNarrative(assessments[0]);
-        }
+        }).catch(() => {
+          if (!best?.summary) generateNarrative(latest);
+        });
       }
     } catch (err) {
       console.error("[MyInsightsView] Error:", err);
