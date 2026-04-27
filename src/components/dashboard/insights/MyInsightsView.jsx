@@ -217,9 +217,18 @@ export default function MyInsightsView({ user, onMetricsUpdate }) {
         onMetricsUpdate({ totalInsights: insightCount, actionItems: overdueGoals, completionRate: goalCompletionRate });
       }
 
-      // Generate narrative if no stored summary exists but assessment data is available
+      // Load cached narrative from LeadershipProfileReport if available, else generate
       if (!best?.summary && assessments[0]) {
-        generateNarrative(assessments[0]);
+        const cached = await base44.entities.LeadershipProfileReport.filter({
+          user_email: user.email,
+          assessment_id: assessments[0].id,
+          status: "generated"
+        }).catch(() => []);
+        if (cached[0]?.leadership_dna?.description) {
+          setGeneratedNarrative(cached[0].leadership_dna.description);
+        } else {
+          generateNarrative(assessments[0]);
+        }
       }
     } catch (err) {
       console.error("[MyInsightsView] Error:", err);
@@ -377,16 +386,6 @@ Do NOT use bullet points. Write in flowing prose. Be specific to their actual sc
                      <div className="text-indigo-200 text-xs mt-0.5">Leadership Index</div>
                    </div>
                  )}
-                 {latestAssessment && (
-                   <Button
-                     size="sm"
-                     variant="ghost"
-                     className="text-white border border-white/30 hover:bg-white/20 text-xs shrink-0"
-                     onClick={() => setShowFullProfile(true)}
-                   >
-                     <Eye className="w-3.5 h-3.5 mr-1" /> View Full Profile
-                   </Button>
-                 )}
                </div>
             </div>
           </div>
@@ -511,6 +510,19 @@ Do NOT use bullet points. Write in flowing prose. Be specific to their actual sc
                         </div>
                       ))}
                     </div>
+                    {/* View Full Profile button */}
+                    {latestAssessment && (
+                      <div className="mt-4 pt-3 border-t border-gray-100">
+                        <Button
+                          size="sm"
+                          className="w-full text-white text-xs"
+                          style={{ backgroundColor: '#0012ff' }}
+                          onClick={() => setShowFullProfile(true)}
+                        >
+                          <Eye className="w-3.5 h-3.5 mr-1" /> View Full Profile
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
