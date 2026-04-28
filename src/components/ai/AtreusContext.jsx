@@ -20,7 +20,13 @@ export function AtreusProvider({ children }) {
   const [pendingMessage, setPendingMessage] = useState(null);
 
   const openWithContext = useCallback(({ context = {}, starterMessage = null } = {}) => {
-    setPendingContext(context);
+    console.log("Atreus openWithContext called", { context, starterMessage });
+    // Flatten the structure: merge context and add starter_message
+    const mergedContext = {
+      ...context,
+      starter_message: starterMessage
+    };
+    setPendingContext(mergedContext);
     setPendingMessage(starterMessage);
     setIsOpen(true);
   }, []);

@@ -105,34 +105,37 @@ export default function AtreusCoach({
   }, []);
 
   useEffect(() => {
-    if (!isMinimized && !isInitialized) {
-      setIsInitialized(true);
-      const initializeCoach = async () => {
-        try {
-          await loadOrCreateConversation();
-          await new Promise(resolve => setTimeout(resolve, 300));
-          await loadConversationsList();
-          // If opened with a starter_message (e.g. from AtreusInsightCard),
-          // poll until the conversation is confirmed ready rather than using a blind timeout
-          if (context?.starter_message) {
-            let waited = 0;
-            while (!conversationReadyRef.current && waited < 3000) {
-              await new Promise(resolve => setTimeout(resolve, 100));
-              waited += 100;
-            }
-            if (isMountedRef.current && conversationReadyRef.current) {
-              handleSendMessage(context.starter_message);
-            }
-          }
-        } catch (error) {
-          console.error('Error initializing coach:', error);
-          if (error?.message?.includes('Rate limit')) {
-            toast.error('Too many requests. Please wait a moment and try again.');
-          }
-        }
-      };
-      initializeCoach();
-    }
+   if (!isMinimized && !isInitialized) {
+     setIsInitialized(true);
+     const initializeCoach = async () => {
+       try {
+         console.log("AtreusCoach initializing with context:", { starter_message: context?.starter_message, context });
+         await loadOrCreateConversation();
+         await new Promise(resolve => setTimeout(resolve, 300));
+         await loadConversationsList();
+         // If opened with a starter_message (e.g. from AtreusInsightCard),
+         // poll until the conversation is confirmed ready rather than using a blind timeout
+         if (context?.starter_message) {
+           console.log("Detected starter_message, polling for conversation ready...", context.starter_message);
+           let waited = 0;
+           while (!conversationReadyRef.current && waited < 3000) {
+             await new Promise(resolve => setTimeout(resolve, 100));
+             waited += 100;
+           }
+           if (isMountedRef.current && conversationReadyRef.current) {
+             console.log("Atreus starter message appended", context.starter_message);
+             handleSendMessage(context.starter_message);
+           }
+         }
+       } catch (error) {
+         console.error('Error initializing coach:', error);
+         if (error?.message?.includes('Rate limit')) {
+           toast.error('Too many requests. Please wait a moment and try again.');
+         }
+       }
+     };
+     initializeCoach();
+   }
   }, [isMinimized, isInitialized]);
 
   useEffect(() => {
@@ -836,6 +839,7 @@ export default function AtreusCoach({
         timestamp: new Date().toISOString()
       };
 
+      console.log("Atreus response received", { text, response });
       if (!isMountedRef.current) return;
       const finalMessages = [...updatedMessages, assistantMessage];
       // Limit to last 100 messages for performance
