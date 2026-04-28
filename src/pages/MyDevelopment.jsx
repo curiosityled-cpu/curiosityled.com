@@ -215,14 +215,7 @@ export default function MyDevelopment() {
           >
             Completed ({section === "plans" ? completedPlans.length : section === "learning" ? completedLearning.length : completedExperiences.length})
           </button>
-          {section === "learning" && (
-            <button
-              onClick={() => setActiveTab("certificates")}
-              className={`flex-1 text-sm font-medium py-1.5 rounded-lg transition-all ${activeTab === "certificates" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
-            >
-              Certificates
-            </button>
-          )}
+
         </div>
 
         {/* ── DEVELOPMENT PLANS ── */}
@@ -457,13 +450,7 @@ export default function MyDevelopment() {
                 )}
               </div>
             )}
-            {activeTab === "certificates" && (
-              <Card className="shadow-sm border border-gray-100 rounded-2xl">
-                <CardContent className="p-4">
-                  <CertificateViewer />
-                </CardContent>
-              </Card>
-            )}
+
           </>
         )}
 
