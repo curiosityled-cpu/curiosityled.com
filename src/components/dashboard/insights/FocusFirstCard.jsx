@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { useAtreusChat } from '@/components/ai/AtreusContext';
 
 export default function FocusFirstCard({ scores }) {
-    const { openAtreusChat } = useAtreusChat();
+    const { openChat } = useAtreusChat();
 
     if (!scores) return null;
 
@@ -25,13 +25,11 @@ export default function FocusFirstCard({ scores }) {
     );
 
     const handleBuildPlan = () => {
-        openAtreusChat({
-            context: {
-                type: 'development_plan',
-                lowestCompetency: lowestCompetency.name,
-                score: lowestCompetency.score,
-                message: `Help me create a focused development plan to improve my ${lowestCompetency.name} skills from ${lowestCompetency.score}% to 75%+`
-            }
+        openChat({
+            type: 'development_plan',
+            lowestCompetency: lowestCompetency.name,
+            score: lowestCompetency.score,
+            message: `Help me create a focused development plan to improve my ${lowestCompetency.name} skills from ${lowestCompetency.score}% to 75%+`
         });
     };
 
