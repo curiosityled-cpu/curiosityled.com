@@ -45,6 +45,7 @@ import RecommendedGoalsSection from "./sections/RecommendedGoalsSection";
 import AssessmentTrendSection from "./sections/AssessmentTrendSection";
 import CompetencyLearningSection from "@/components/mvp/CompetencyLearningSection";
 import AddToPlanModal from "@/components/mvp/AddToPlanModal";
+import FocusFirstCard from "./FocusFirstCard";
 
 const COMP_SCORE_MAP = {
   "Situational Intelligence": "si_pct",
@@ -534,6 +535,13 @@ Do NOT use bullet points. Write in flowing prose. Be specific to their actual sc
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* ── 2. Focus First Card ──────────────────────────────────── */}
+      {latestAssessment && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <FocusFirstCard scores={latestAssessment} />
+        </motion.div>
+      )}
 
       {/* ── 3. Understanding Your Competencies (expandable) ─────── */}
       {competencies.length > 0 && (
