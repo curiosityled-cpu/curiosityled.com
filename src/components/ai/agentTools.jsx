@@ -1739,7 +1739,11 @@ export function getWorkflowChain(completedTool) {
 // Permission mappings to role permissions
 export const getToolsForUser = (userPermissions = [], userRole = null) => {
   const availableTools = {};
-  
+  // Normalize: permissions may arrive as an object (permission map) or array of strings
+  const permArray = Array.isArray(userPermissions)
+    ? userPermissions
+    : Object.keys(userPermissions || {}).filter(k => userPermissions[k]);
+
   Object.entries(AGENT_TOOLS).forEach(([toolName, toolDef]) => {
     // Platform Admin has all permissions
     if (userRole === 'Platform Admin') {
@@ -1754,7 +1758,7 @@ export const getToolsForUser = (userPermissions = [], userRole = null) => {
     }
 
     const hasPermission = toolDef.requiredPermissions.every(perm => 
-      userPermissions.includes(perm) || userPermissions.includes('*')
+      permArray.includes(perm) || permArray.includes('*')
     );
 
     if (hasPermission) {

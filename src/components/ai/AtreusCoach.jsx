@@ -620,7 +620,7 @@ export default function AtreusCoach({
     const viewportFocus = context?.viewport_focus || {};
     
     // Fetch cross-session context (cached)
-    const crossSessionData = await getCrossSessionContext(base44, user.email);
+    const crossSessionData = await getCrossSessionContext(base44, user?.email);
     
     // Fetch external qualifications for enhanced context
     let externalQuals = null;
@@ -1035,7 +1035,7 @@ export default function AtreusCoach({
     // Iterate backwards to find last user message (more efficient)
     for (let i = conversation.messages.length - 1; i >= 0; i--) {
       if (conversation.messages[i].role === 'user') {
-        const content = conversation.messages[i].content;
+        const content = conversation.messages[i].content || '';
         return content.substring(0, 40) + (content.length > 40 ? '...' : '');
       }
     }
