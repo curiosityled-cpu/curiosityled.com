@@ -817,7 +817,7 @@ export default function AtreusCoach({
         const systemPrompt = await buildSystemPrompt();
         const conversationHistory = updatedMessages
           .slice(-10)
-          .map(m => `${m.role}: ${m.content}`)
+          .map(m => `${m.role}: ${m.content || ''}`)
           .join('\n');
 
         response = await handleApiCall(() =>
@@ -918,7 +918,7 @@ export default function AtreusCoach({
         const speaker = message.role === 'user' ? user?.full_name : 'Atreus';
         let timestamp = 'Unknown time';
         try { if (message.timestamp) timestamp = format(new Date(message.timestamp), 'MMM d, h:mm a'); } catch {}
-        textContent += `[${timestamp}] ${speaker}:\n${message.content}\n\n`;
+        textContent += `[${timestamp}] ${speaker}:\n${message.content || ''}\n\n`;
       });
 
       const blob = new Blob([textContent], { type: 'text/plain' });

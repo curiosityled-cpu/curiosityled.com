@@ -340,7 +340,7 @@ export function getContextualSuggestions(context, appRole, userPermissions, allo
       if (pageInsights.succession_readiness === 'needs_development') suggestions.push({ text: 'Create 90-day development plan', icon: '📅' });
       break;
     case 'profile':
-      if (pageInsights.profile_completeness < 100) suggestions.push({ text: 'Help me complete my profile', icon: '👤' });
+      if ((pageInsights.profile_completeness ?? 100) < 100) suggestions.push({ text: 'Help me complete my profile', icon: '👤' });
       break;
     case 'settings':
       if (visibleData.active_tab === 'notifications' && !pageInsights.notification_preferences_set) suggestions.push({ text: 'Set up my notification preferences', icon: '🔔' });
