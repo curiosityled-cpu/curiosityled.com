@@ -7,6 +7,10 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const cache = new Map();
 
 export const getCrossSessionContext = async (base44, userEmail) => {
+  // Short-circuit if no email — return safe defaults
+  if (!userEmail) {
+    return { recent_conversations: [], recent_milestones: [], action_success_rate: 'N/A', total_actions: 0, preferences: null };
+  }
   const cacheKey = `cross_session_${userEmail}`;
   const cached = cache.get(cacheKey);
   

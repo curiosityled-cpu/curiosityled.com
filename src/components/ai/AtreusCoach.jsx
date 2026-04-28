@@ -625,6 +625,7 @@ export default function AtreusCoach({
     // Fetch external qualifications for enhanced context
     let externalQuals = null;
     try {
+      if (!user?.email) throw new Error('No user email');
       const [assessments, certs] = await Promise.all([
         base44.entities.ExternalAssessmentResult.filter({ user_email: user.email, status: 'verified' }, '-created_date', 5),
         base44.entities.Certification.filter({ user_email: user.email, status: 'verified' }, '-created_date', 10)
@@ -1010,7 +1011,7 @@ export default function AtreusCoach({
       if (response.data.status === 'success') {
         toast.success(response.data.message);
         // Invalidate cache after successful action
-        invalidateCrossSessionCache(user.email);
+        if (user?.email) invalidateCrossSessionCache(user.email);
       } else {
         toast.error(response.data.message);
       }
