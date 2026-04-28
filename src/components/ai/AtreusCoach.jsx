@@ -378,6 +378,8 @@ export default function AtreusCoach({
         toast.error('Too many requests. Please wait a moment before opening Atreus again.');
       }
       
+      // Still mark ready so starter_message polling doesn't hang
+      conversationReadyRef.current = true;
       const greeting = getContextualGreeting();
       setMessages([{
         role: "assistant",

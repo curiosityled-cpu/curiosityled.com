@@ -119,6 +119,8 @@ function MVPLayoutInner({ children }) {
     userRole: user?.app_role,
     mvpRole,
     userEmail: user?.email,
+    user_name: user?.display_name || user?.data?.display_name || user?.full_name || user?.email,
+    user_email: user?.email,
     path: location.pathname
   };
 
