@@ -6,7 +6,7 @@
 export function getContextualGreeting(context, appRole) {
   const userName = context?.user_name?.split(' ')[0] || 'there';
   const pageType = context?.pageType || 'unknown';
-  const userRole = context?.userRole || 'User';
+  const userRole = context?.userRole || appRole || 'User';
   const viewportFocus = context?.viewport_focus || {};
   const visibleData = context?.visible_data_summary || {};
   const pageInsights = context?.page_specific_insights || {};

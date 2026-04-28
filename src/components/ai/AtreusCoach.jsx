@@ -590,6 +590,7 @@ export default function AtreusCoach({
 
           if (!isMountedRef.current) return;
           conversationIdRef.current = newConversation.id;
+          conversationReadyRef.current = true;
           setConversationId(newConversation.id);
           setMessages([greetingMessage]);
           setConversations([newConversation]);
