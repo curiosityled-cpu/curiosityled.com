@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Sparkles, Loader2, CheckCircle, X, ChevronDown, ChevronUp } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 
 /**
  * Inline Atreus refinement panel for goal forms.
@@ -48,6 +49,7 @@ Be direct and constructive. Do not pad the response.`,
       setExpanded(true);
     } catch (err) {
       console.error('Atreus refinement error:', err);
+      toast.error('Could not refine goal. Please try again.');
     } finally {
       setLoading(false);
     }

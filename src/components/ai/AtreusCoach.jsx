@@ -57,6 +57,7 @@ export default function AtreusCoach({
   const [isTyping, setIsTyping] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [conversationId, setConversationId] = useState(null);
+  const conversationIdRef = React.useRef(null);
   const [conversations, setConversations] = useState([]);
   const [loadingConversation, setLoadingConversation] = useState(true);
   const [exportingText, setExportingText] = useState(false);
@@ -248,9 +249,10 @@ export default function AtreusCoach({
         // Continue the most recent active conversation
         const conversation = activeConversations[0];
         if (!isMountedRef.current) return;
+        conversationIdRef.current = conversation.id;
         setConversationId(conversation.id);
-        // Limit messages to last 100 for performance
-        const messages = conversation.messages || [];
+          // Limit messages to last 100 for performance
+          const messages = conversation.messages || [];
         
         // DYNAMIC GREETING: Regenerate greeting based on current context
         if (messages.length > 0 && messages[0].role === 'assistant') {
@@ -318,6 +320,7 @@ export default function AtreusCoach({
           })
         );
         if (!isMountedRef.current) return;
+        conversationIdRef.current = conversation.id;
         setConversationId(conversation.id);
         setMessages(updatedMessages.slice(-100));
         setLoadingConversation(false);
@@ -352,6 +355,7 @@ export default function AtreusCoach({
       );
 
       if (!isMountedRef.current) return;
+      conversationIdRef.current = newConversation.id;
       setConversationId(newConversation.id);
       setMessages([greetingMessage]);
     } catch (error) {
@@ -1210,14 +1214,17 @@ export default function AtreusCoach({
     const filesForRequest = [...attachedFiles];
     setAttachedFiles([]);
 
+    // Always read the latest conversationId from ref (avoids stale closure issues)
+    const activeConversationId = conversationIdRef.current || conversationId;
+
     try {
-      if (conversationId) {
+      if (activeConversationId) {
         // Debounce conversation updates - only save every 2 seconds
         if (window.atreusUpdateTimeout) clearTimeout(window.atreusUpdateTimeout);
         window.atreusUpdateTimeout = setTimeout(async () => {
           try {
             await handleApiCall(() =>
-              base44.entities.Conversation.update(conversationId, {
+              base44.entities.Conversation.update(activeConversationId, {
                 messages: updatedMessages,
                 last_activity: new Date().toISOString()
               })
@@ -1249,7 +1256,7 @@ export default function AtreusCoach({
         base44.functions.invoke('invokeAgent', {
           prompt: text,
           context: enrichedContext,
-          conversation_id: conversationId,
+          conversation_id: activeConversationId,
           file_attachments: filesForRequest.length > 0 ? filesForRequest : undefined
         }),
         'high' // High priority for user messages
@@ -1351,12 +1358,12 @@ export default function AtreusCoach({
         setWorkflowSuggestions(agentResponse.data.workflow_suggestions);
       }
 
-      if (conversationId) {
+      if (activeConversationId) {
         // Clear any pending updates
         if (window.atreusUpdateTimeout) clearTimeout(window.atreusUpdateTimeout);
 
         await handleApiCall(() =>
-          base44.entities.Conversation.update(conversationId, {
+          base44.entities.Conversation.update(activeConversationId, {
             messages: finalMessages,
             last_activity: new Date().toISOString()
           })
@@ -1383,12 +1390,12 @@ export default function AtreusCoach({
       setMessages(finalMessagesWithError.slice(-100));
 
       try {
-        if (conversationId) {
+        if (activeConversationId) {
           // Clear any pending updates
           if (window.atreusUpdateTimeout) clearTimeout(window.atreusUpdateTimeout);
 
           await handleApiCall(() =>
-            base44.entities.Conversation.update(conversationId, {
+            base44.entities.Conversation.update(activeConversationId, {
               messages: finalMessagesWithError,
               last_activity: new Date().toISOString()
             })
