@@ -13,10 +13,24 @@ import { toast } from "sonner";
 import { Loader2, Upload, X, AlertCircle, Info, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import FormAssistant from "@/components/ai/FormAssistant";
+import AtreusPreSubmitModal from "@/components/requests/AtreusPreSubmitModal";
+import { useAtreusChat } from "@/components/ai/AtreusContext";
+
+// Heuristic: returns true when the request looks vague or risky enough to warrant Atreus review
+function looksVague(formData) {
+  const titleShort = !formData.title || formData.title.trim().split(' ').length < 4;
+  const descWeak = !formData.description || formData.description.trim().length < 40;
+  const outcomeUnclear = !formData.success_criteria || formData.success_criteria.trim().length < 10;
+  const highPriority = formData.priority === 'high' || formData.priority === 'urgent';
+  return (titleShort || descWeak || outcomeUnclear) && highPriority ||
+         (titleShort && descWeak);
+}
 
 export default function RequestSubmissionForm({ onSuccess, onCancel }) {
-  const { user } = useAuth();
+  const { user, appRole } = useAuth();
+  const { openWithContext } = useAtreusChat();
   const [loading, setLoading] = useState(false);
+  const [showAtreusModal, setShowAtreusModal] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState(false);
   const [analyzingRisks, setAnalyzingRisks] = useState(false);
   const [riskAnalysis, setRiskAnalysis] = useState(null);
@@ -140,19 +154,7 @@ export default function RequestSubmissionForm({ onSuccess, onCancel }) {
     return budget > 5000 || effort > 40 || formData.risk_level === 'critical' || formData.risk_level === 'high';
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!formData.title || !formData.description) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
-    if (!user?.email) {
-      toast.error("User email is missing. Please try logging in again.");
-      return;
-    }
-
+  const doSubmit = async () => {
     setLoading(true);
     try {
       const requiresApproval = shouldRequireApproval();
@@ -197,6 +199,43 @@ export default function RequestSubmissionForm({ onSuccess, onCancel }) {
       setLoading(false);
     }
   };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.title || !formData.description) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    if (!user?.email) {
+      toast.error("User email is missing. Please try logging in again.");
+      return;
+    }
+
+    // Gate: show Atreus review modal if request looks vague
+    if (looksVague(formData)) {
+      setShowAtreusModal(true);
+      return;
+    }
+
+    await doSubmit();
+  };
+
+  const handleRefineWithAtreus = () => {
+    setShowAtreusModal(false);
+    openWithContext({
+      pageType: 'development-request-form',
+      starter_message: `I'm about to submit a development request and want to make sure it's clear and actionable. Can you help me clarify it?\n\nTitle: "${formData.title}"\nDescription: "${formData.description || '(none)'}"\nCategory: ${formData.request_type}\nPriority: ${formData.priority}\n\nPlease help me identify: the real problem I'm solving, the desired outcome, whether the urgency is right, and the recommended next step. Don't submit anything — just help me think this through.`,
+      request_title: formData.title,
+      request_description: formData.description,
+      request_category: formData.request_type,
+      request_priority: formData.priority,
+      user_role: appRole,
+    });
+  };
+
+
 
   const requiresApproval = shouldRequireApproval();
 
@@ -643,6 +682,12 @@ export default function RequestSubmissionForm({ onSuccess, onCancel }) {
           </div>
         </form>
       </CardContent>
+
+      <AtreusPreSubmitModal
+        open={showAtreusModal}
+        onRefine={handleRefineWithAtreus}
+        onSubmitAnyway={() => { setShowAtreusModal(false); doSubmit(); }}
+      />
     </Card>
   );
 }
