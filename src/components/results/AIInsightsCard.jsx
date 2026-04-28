@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,9 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function AIInsightsCard({ analysis, scores }) {
     const [expandedInsight, setExpandedInsight] = useState(null);
+
+    // Guard against missing scores
+    if (!scores) return null;
 
     // Determine top strength based on updated competency scores
     const getTopStrength = () => {
