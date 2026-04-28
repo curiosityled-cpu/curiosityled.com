@@ -17,11 +17,11 @@ import ScheduleCalendarEventModal from "./modals/ScheduleCalendarEventModal";
 import ActionConfirmationModal from "./ActionConfirmationModal";
 import SmartFormModal from "./modals/SmartFormModal";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { createPageUrl } from "@/utils";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { getCrossSessionContext } from "./CrossSessionCache";
-import { getToolsForUser, getFileUploadTools } from "./agentTools";
+import { getToolsForUser } from "./agentTools";
+import { getContextualGreeting, getContextualSuggestions } from "./atreusGreetings";
 import WorkflowProgressIndicator from "./WorkflowProgressIndicator";
 import ConversationPagination from "./ConversationPagination";
 import { queueRequest } from "./RequestQueue";
@@ -92,6 +92,7 @@ export default function AtreusCoach({
   const [attachedFiles, setAttachedFiles] = useState([]);
   const [uploadingFile, setUploadingFile] = useState(false);
   const fileInputRef = useRef(null);
+  const updateTimeoutRef = useRef(null);
 
   const handleApiCall = async (apiFunc, priority = 'normal') => queueRequest(apiFunc, priority);
 
@@ -99,6 +100,7 @@ export default function AtreusCoach({
   useEffect(() => {
     return () => {
       isMountedRef.current = false;
+      if (updateTimeoutRef.current) clearTimeout(updateTimeoutRef.current);
     };
   }, []);
 
@@ -160,7 +162,8 @@ export default function AtreusCoach({
   };
 
   useEffect(() => {
-    const newSuggestions = getContextualSuggestions();
+    const allowedTools = getToolsForUser(userPermissions || [], appRole);
+    const newSuggestions = getContextualSuggestions(context, appRole, userPermissions, allowedTools);
     setSuggestions(newSuggestions);
   }, [context?.pageType, context?.viewport_focus?.focused_section, context?.available_actions?.length, context?.visible_data_summary, context?.proactive_insights, appRole, messages.length, context?.visible_data_summary?.active_goals, context?.visible_data_summary?.at_risk_goals]);
 
@@ -265,7 +268,7 @@ export default function AtreusCoach({
         
         // DYNAMIC GREETING: Regenerate greeting based on current context
         if (messages.length > 0 && messages[0].role === 'assistant') {
-          const newGreeting = getContextualGreeting();
+          const newGreeting = getContextualGreeting(context, appRole);
           const updatedMessages = [...messages];
           updatedMessages[0] = {
             ...updatedMessages[0],
@@ -313,7 +316,7 @@ export default function AtreusCoach({
         // DYNAMIC GREETING: Regenerate greeting based on current context
         const updatedMessages = [...messages];
         if (updatedMessages.length > 0 && updatedMessages[0].role === 'assistant') {
-          const newGreeting = getContextualGreeting();
+          const newGreeting = getContextualGreeting(context, appRole);
           updatedMessages[0] = {
             ...updatedMessages[0],
             content: newGreeting,
@@ -342,7 +345,7 @@ export default function AtreusCoach({
 
       // Only create a new conversation if none exist
       const pageType = context?.pageType || 'dashboard';
-      const greeting = getContextualGreeting();
+      const greeting = getContextualGreeting(context, appRole);
       const greetingMessage = {
         role: "assistant",
         content: greeting,
@@ -380,7 +383,7 @@ export default function AtreusCoach({
       
       // Still mark ready so starter_message polling doesn't hang
       conversationReadyRef.current = true;
-      const greeting = getContextualGreeting();
+      const greeting = getContextualGreeting(context, appRole);
       setMessages([{
         role: "assistant",
         content: greeting,
@@ -422,7 +425,7 @@ export default function AtreusCoach({
       // Small delay between operations
       await new Promise(resolve => setTimeout(resolve, 200));
 
-      const greeting = getContextualGreeting();
+      const greeting = getContextualGreeting(context, appRole);
       const greetingMessage = {
         role: "assistant",
         content: greeting,
@@ -487,7 +490,7 @@ export default function AtreusCoach({
       const messages = conversation.messages || [];
       const updatedMessages = [...messages];
       if (updatedMessages.length > 0 && updatedMessages[0].role === 'assistant') {
-        const newGreeting = getContextualGreeting();
+        const newGreeting = getContextualGreeting(context, appRole);
         updatedMessages[0] = {
           ...updatedMessages[0],
           content: newGreeting,
@@ -543,6 +546,7 @@ export default function AtreusCoach({
           // Load the most recent remaining conversation
           const nextConv = updatedConversations[0];
           conversationIdRef.current = nextConv.id;
+          conversationReadyRef.current = true;
           setConversationId(nextConv.id);
           setMessages(nextConv.messages || []);
           
@@ -559,7 +563,7 @@ export default function AtreusCoach({
         } else {
           // If no conversations left, create a new one
           const pageType = context?.pageType || 'dashboard';
-          const greeting = getContextualGreeting();
+          const greeting = getContextualGreeting(context, appRole);
           const greetingMessage = {
             role: "assistant",
             content: greeting,
@@ -605,545 +609,7 @@ export default function AtreusCoach({
     }
   };
 
-  // Enhanced: Contextual greeting based on comprehensive context
-  const getContextualGreeting = () => {
-    const userName = context?.user_name?.split(' ')[0] || 'there';
-    const pageType = context?.pageType || 'unknown';
-    const userRole = context?.userRole || 'User';
-    const viewportFocus = context?.viewport_focus || {};
-    const visibleData = context?.visible_data_summary || {};
-    const pageInsights = context?.page_specific_insights || {};
-    const viewingFocus = context?.viewing_focus || '';
-    
-    // Role-specific titles
-    const roleTitle = {
-      'User Level 1': 'Leader',
-      'User Level 2': 'Manager',
-      'User Level 3': 'Executive',
-      'Admin Level 1': 'Program Admin',
-      'Admin Level 2': 'HR Admin',
-      'Super Administrator': 'Organization Admin',
-      'Partner Business Administrator': 'Partner Admin',
-      'Platform Admin': 'Platform Admin'
-    }[userRole] || 'Leader';
-
-    // Viewport-aware greetings
-    if (viewportFocus.focused_section) {
-      const sectionLabels = viewportFocus.section_labels || {};
-      const sectionLabel = sectionLabels[viewportFocus.focused_section] || viewportFocus.focused_section;
-      
-      switch (viewportFocus.focused_section) {
-        case 'section-metrics':
-        case 'section-top-metrics':
-        case 'section-overview-metrics':
-          return `Hi ${userName}! I see you're reviewing ${sectionLabel.toLowerCase()}. Let me help you interpret these insights.`;
-        
-        case 'section-assessment':
-          return `Welcome ${userName}! Looking at your assessment section. Ready to discuss your development areas?`;
-        
-        case 'section-team':
-        case 'section-team-summary':
-          return `Hi ${userName}! I see you're reviewing your team. Want to discuss development priorities or interventions?`;
-        
-        case 'section-competency-impact':
-        case 'section-competency-breakdown':
-          return `Hello ${userName}! Analyzing competencies with you. Which area would you like to focus on?`;
-        
-        case 'section-strategic-risks':
-          return `Hi ${userName}! I see you're reviewing strategic risks. Let's discuss mitigation strategies.`;
-        
-        case 'section-succession-pipeline':
-          return `Welcome ${userName}! Looking at succession planning. Want to identify high-potential leaders?`;
-        
-        case 'section-learning':
-          return `Hi ${userName}! I see you're in the learning section. Need recommendations or want to track progress?`;
-        
-        case 'section-goals':
-          return `Hello ${userName}! Reviewing your goals? Let's make sure you're on track.`;
-        
-        case 'section-programs':
-          return `Hi ${userName}! Looking at programs overview. Need help with deployment or analytics?`;
-      }
-    }
-
-    // Page-specific greetings with data awareness
-    switch (pageType) {
-      case 'dashboard':
-        if (userRole === 'User Level 1') {
-          const hasAssessment = visibleData.has_assessment;
-          if (!hasAssessment) {
-            return `Hi ${userName}! 👋 Ready to discover your leadership strengths? Let's start with an assessment.`;
-          }
-          return `Welcome back, ${userName}! I can help you generate reports, get personalized learning recommendations, or schedule coaching sessions.`;
-        } else if (userRole === 'User Level 2') {
-          const teamSize = visibleData.team_size || 0;
-          return `Hi ${userName}! Managing ${teamSize} team members. I can generate team reports, recommend learning paths, or help schedule team check-ins.`;
-        } else if (userRole === 'User Level 3') {
-          return `Welcome, ${userName}! I can generate organizational reports, provide strategic insights, and help schedule leadership reviews.`;
-        } else if (userRole === 'Admin Level 1') {
-          return `Hi ${userName}! I can generate program reports, recommend learning resources for cohorts, and help schedule coaching sessions.`;
-        } else if (userRole === 'Admin Level 2' || userRole === 'Super Administrator') {
-          return `Welcome, ${userName}! I can generate platform analytics, provide learning recommendations, and help coordinate team meetings.`;
-        }
-        return `Hi ${userName}! How can I help you today?`;
-
-      case 'learning-library':
-        const filters = context?.current_filters || {};
-        if (filters.competency && filters.competency.length > 0) {
-          return `Hi ${userName}! I see you're exploring ${filters.competency.join(', ')} resources. Want personalized recommendations?`;
-        }
-        if (filters.search) {
-          return `Hi ${userName}! Searching for "${filters.search}"? Let me help you find the best resources.`;
-        }
-        return `Hi ${userName}! Ready to explore learning resources? Tell me what you're looking to develop.`;
-
-      case 'goals-overview':
-        const atRiskCount = visibleData.at_risk_goals || 0;
-        const pendingCount = visibleData.pending_acceptance_goals || 0;
-        if (atRiskCount > 0) {
-          return `Hi ${userName}! I notice ${atRiskCount} goal${atRiskCount > 1 ? 's' : ''} need${atRiskCount === 1 ? 's' : ''} attention. Want to discuss action plans?`;
-        }
-        if (pendingCount > 0) {
-          return `Hi ${userName}! You have ${pendingCount} goal${pendingCount > 1 ? 's' : ''} awaiting your response. Need help reviewing them?`;
-        }
-        return `Hi ${userName}! Let's work on your goals. Ready to track progress or set new objectives?`;
-
-      case 'career-path-explorer':
-        const targetRole = visibleData.target_role;
-        const readinessScore = visibleData.readiness_score;
-        if (targetRole && readinessScore !== undefined) {
-          return `Hi ${userName}! I see you're exploring the ${targetRole} role (${readinessScore}% ready). Let's build your development path.`;
-        }
-        return `Hi ${userName}! Ready to explore your next career move? Let's assess your readiness and plan your path.`;
-
-      case 'onboarding-builder':
-        const planStatus = pageInsights.plan_ready_to_deploy ? 'ready to deploy' : 
-                          pageInsights.needs_assignee ? 'ready for assignment' :
-                          pageInsights.needs_generation ? 'ready to generate' : 'in progress';
-        return `Hi ${userName}! Your onboarding plan is ${planStatus}. How can I help you refine it?`;
-
-      case 'hr-assessment-dashboard':
-        const totalAssessments = visibleData.total_assessments || 0;
-        const completionRate = visibleData.completion_rate || 0;
-        return `Hi ${userName}! You have ${totalAssessments} assessments with ${completionRate}% completion. Ready to analyze results?`;
-
-      case 'enterprise_analytics':
-        const totalLeaders = visibleData.total_leaders || 0;
-        const avgScore = visibleData.avg_leadership_score || 0;
-        return `Hi ${userName}! Analyzing ${totalLeaders} leaders (Avg SI: ${avgScore}%). What strategic insights do you need?`;
-
-      case 'command-center':
-        if (userRole === 'User Level 2') {
-          return `Hi ${userName}! Ready to review team performance and deploy interventions?`;
-        } else if (userRole === 'Admin Level 1') {
-          return `Hi ${userName}! Let's review program performance and participant progress.`;
-        }
-        return `Hi ${userName}! Ready to dive into team analytics and insights?`;
-
-      case 'profile':
-        const profileCompletion = pageInsights.profile_completion_percentage || 0;
-        if (profileCompletion < 100) {
-          return `Hi ${userName}! Your profile is ${profileCompletion}% complete. Want to finish it for better recommendations?`;
-        }
-        return `Hi ${userName}! Your profile looks great. Ready to update your development preferences?`;
-
-      case 'assessment-taking':
-        return `Hi ${userName}! Taking your assessment? I'll be here when you finish to discuss your results.`;
-
-      case 'assessment-results':
-        const overallScore = visibleData.overall_score || 0;
-        return `Hi ${userName}! Congratulations on completing your assessment (${overallScore}%)! Let's explore your results together.`;
-
-      case 'user-management':
-        const totalUsers = visibleData.total_users || 0;
-        const selectedCount = visibleData.selected_count || 0;
-        if (selectedCount > 0) {
-          return `Hi ${userName}! You've selected ${selectedCount} user${selectedCount > 1 ? 's' : ''}. Ready for bulk actions?`;
-        }
-        return `Hi ${userName}! Managing ${totalUsers} users. How can I help with user administration?`;
-
-      case 'settings':
-        return `Hi ${userName}! Let's configure your preferences. What would you like to update?`;
-
-      case 'notifications':
-        const unreadCount = visibleData.unread_notifications || 0;
-        if (unreadCount > 0) {
-          return `Hi ${userName}! You have ${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}. Want me to summarize them?`;
-        }
-        return `Hi ${userName}! All caught up on notifications. Is there anything else I can help with?`;
-
-      case 'my-journeys-overview':
-        const activeJourneys = visibleData.active_journeys || 0;
-        return `Hi ${userName}! You're enrolled in ${activeJourneys} learning journey${activeJourneys !== 1 ? 's' : ''}. Ready to continue your path?`;
-
-      case 'journey-builder':
-        return `Hi ${userName}! Building a learning journey? I can help you structure content and select resources.`;
-
-      case 'onboarding-progress':
-        const progressPercentage = visibleData.progress_percentage || 0;
-        return `Hi ${userName}! You're ${progressPercentage}% through your onboarding. Let's keep the momentum going!`;
-
-      case 'billing':
-        return `Hi ${userName}! Need help with billing or subscription questions? I'm here to assist.`;
-
-      case 'business-manager':
-        return `Hi ${userName}! Ready to manage clients, partners, and organizational settings?`;
-
-      default:
-        // Generic greeting with role awareness
-        if (userRole === 'Platform Admin') {
-          return `Hi ${userName}! Platform admin at your service. What would you like to manage today?`;
-        } else if (userRole === 'Super Administrator') {
-          return `Hi ${userName}! Organization admin ready. How can I help manage your platform?`;
-        } else if (userRole === 'Partner Business Administrator') {
-          return `Hi ${userName}! Partner admin here. Ready to manage client organizations?`;
-        }
-        return `Hi ${userName}! I'm Atreus, your AI leadership coach. How can I help you today?`;
-    }
-  };
-
-
-
-  // Helper: Analyze context and suggest calendar events
-  const getProactiveCalendarSuggestions = () => {
-    const calendarSuggestions = [];
-    const visibleData = context?.visible_data_summary || {};
-    const pageType = context?.pageType || 'unknown';
-
-    // Suggest coaching sessions based on goals approaching deadline
-    if (visibleData.goals_approaching_deadline > 0) {
-      calendarSuggestions.push({
-        text: `Schedule goal review (${visibleData.goals_approaching_deadline} goals due soon)`,
-        icon: '📅',
-        suggestedEvent: {
-          title: "Goal Review Session",
-          description: "Review progress on goals approaching their deadline",
-          event_type: "goal_review",
-          duration_minutes: 30
-        }
-      });
-    }
-
-    // Suggest 1-on-1s based on team performance
-    if ((appRole === 'User Level 2' || appRole === 'Admin Level 1') && visibleData.team_members_needing_attention > 0) {
-      calendarSuggestions.push({
-        text: `Schedule team check-ins (${visibleData.team_members_needing_attention} need attention)`,
-        icon: '👥',
-        suggestedEvent: {
-          title: "Team Performance Check-in",
-          description: "Review development progress with team members",
-          event_type: "one_on_one",
-          duration_minutes: 30
-        }
-      });
-    }
-
-    // Suggest coaching session after assessment completion
-    if (pageType === 'assessment-results' || (visibleData.has_recent_assessment && !visibleData.has_scheduled_debrief)) {
-      calendarSuggestions.push({
-        text: 'Schedule assessment debrief session',
-        icon: '🎯',
-        suggestedEvent: {
-          title: "Assessment Results Debrief",
-          description: "Discuss assessment insights and create development plan",
-          event_type: "coaching_session",
-          duration_minutes: 60
-        }
-      });
-    }
-
-    // Suggest quarterly review
-    const currentMonth = new Date().getMonth();
-    if ([2, 5, 8, 11].includes(currentMonth) && !visibleData.has_scheduled_quarterly_review) {
-      calendarSuggestions.push({
-        text: 'Schedule quarterly development review',
-        icon: '📊',
-        suggestedEvent: {
-          title: "Quarterly Development Review",
-          description: "Review progress, update goals, and plan next quarter",
-          event_type: "review_meeting",
-          duration_minutes: 90
-        }
-      });
-    }
-
-    // Suggest team planning session for managers
-    if ((appRole === 'User Level 2' || appRole === 'Admin Level 1' || appRole === 'Admin Level 2') && pageType === 'command-center') {
-      calendarSuggestions.push({
-        text: 'Schedule team development planning',
-        icon: '🗓️',
-        suggestedEvent: {
-          title: "Team Development Planning Session",
-          description: "Strategic planning for team growth and development",
-          event_type: "team_checkin",
-          duration_minutes: 60
-        }
-      });
-    }
-
-    return calendarSuggestions;
-  };
-
-  // Enhanced: Dynamic contextual suggestions filtered by permissions
-  const getContextualSuggestions = () => {
-    const pageType = context?.pageType || 'unknown';
-    const filters = context?.current_filters || {};
-    const visibleData = context?.visible_data_summary || {};
-    const pageInsights = context?.page_specific_insights || {};
-    const availableActions = context?.available_actions || [];
-    const viewingFocus = context?.viewing_focus || '';
-    const viewportFocus = context?.viewport_focus || {};
-
-    // Get tools user has permission to use
-    const allowedTools = getToolsForUser(userPermissions || [], appRole);
-
-    let suggestions = [];
-
-    // Add proactive insights-based suggestions (highest priority)
-    const proactiveInsights = context?.proactive_insights || [];
-    if (proactiveInsights.length > 0) {
-      proactiveInsights.slice(0, 2).forEach(insight => {
-        suggestions.push({
-          text: insight.action_suggestion || insight.message,
-          icon: insight.type === 'goals_at_risk' ? '⚠️' :
-                insight.type === 'learning_overdue' ? '📚' :
-                insight.type === 'team_needs_attention' ? '👥' :
-                insight.type === 'upcoming_assessment' ? '📊' :
-                insight.type === 'learning_opportunity' ? '💡' : '✨',
-          priority: insight.priority
-        });
-      });
-    }
-
-    // Add proactive calendar suggestions
-    const calendarSuggestions = getProactiveCalendarSuggestions();
-    if (calendarSuggestions.length > 0 && suggestions.length < 4) {
-      suggestions.push(calendarSuggestions[0]);
-    }
-
-    // Add viewport-specific suggestions if available (highest priority)
-    if (viewportFocus.focused_section) {
-      const sectionLabel = viewportFocus.section_labels?.[viewportFocus.focused_section] || viewportFocus.focused_section;
-      
-      // Add suggestions based on which section user is viewing
-      switch (viewportFocus.focused_section) {
-        case 'section-metrics':
-        case 'section-top-metrics':
-        case 'section-overview-metrics':
-          suggestions.push({ text: `Explain these ${sectionLabel.toLowerCase()} metrics`, icon: '📊' });
-          suggestions.push({ text: 'What trends should I focus on?', icon: '📈' });
-          break;
-        
-        case 'section-assessment':
-          suggestions.push({ text: 'How can I improve my scores?', icon: '🎯' });
-          suggestions.push({ text: 'Compare my results to peers', icon: '👥' });
-          break;
-        
-        case 'section-team':
-        case 'section-team-summary':
-        case 'section-team-grid':
-          suggestions.push({ text: 'Identify team development priorities', icon: '👨‍👩‍👧‍👦' });
-          suggestions.push({ text: 'Who needs immediate attention?', icon: '🚨' });
-          break;
-        
-        case 'section-competency-impact':
-        case 'section-competency-breakdown':
-          suggestions.push({ text: 'Which competency should we prioritize?', icon: '🧠' });
-          suggestions.push({ text: 'Show me development resources', icon: '📚' });
-          break;
-        
-        case 'section-strategic-risks':
-          suggestions.push({ text: 'Help me create a risk mitigation plan', icon: '🛡️' });
-          suggestions.push({ text: 'What actions should I take first?', icon: '🔥' });
-          break;
-        
-        case 'section-succession-pipeline':
-          suggestions.push({ text: 'Identify high-potential leaders', icon: '🌱' });
-          suggestions.push({ text: 'Build succession development plans', icon: '🪜' });
-          break;
-        
-        case 'section-learning':
-          suggestions.push({ text: 'Recommend relevant learning', icon: '🎓' });
-          suggestions.push({ text: 'Track my learning progress', icon: '📈' });
-          break;
-        
-        case 'section-goals':
-          suggestions.push({ text: 'Help me set SMART goals', icon: '🏆' });
-          suggestions.push({ text: 'Review my goal progress', icon: '📅' });
-          break;
-      }
-    }
-
-    // Generate suggestions from available actions (medium priority)
-    if (availableActions.length > 0) {
-      const actionSuggestions = availableActions.map(action => {
-        // Map action types to user-friendly suggestions
-        switch (action.action) {
-          case 'assign_learning':
-            return { text: 'Assign learning to my team', icon: '🧑‍🏫' };
-          case 'clear_filters':
-            return { text: 'Clear all filters', icon: '🧹' };
-          case 'get_recommendations':
-            return { text: 'Get learning recommendations', icon: '💡' };
-          case 'create_user':
-            return { text: 'Add a new user', icon: '➕' };
-          case 'bulk_assign_roles':
-            return { text: `Assign roles to ${context.selected_items?.length || 0} users`, icon: '👥' };
-          case 'review_at_risk':
-            return { text: 'Review at-risk users', icon: '⚠️' };
-          case 'export_pdf':
-            return { text: 'Download assessment PDF', icon: '📥' };
-          case 'create_development_plan':
-            return { text: 'Create development plan', icon: '📈' };
-          case 'browse_learning':
-            return { text: 'Find learning resources', icon: '📚' };
-          case 'edit_profile':
-            return { text: 'Update my profile', icon: '✏️' };
-          case 'complete_profile':
-            return { text: `Complete profile (${pageInsights.missing_fields || 0} fields left)`, icon: '✅' };
-          case 'configure_ai_coach':
-            return { text: 'Customize AI coach settings', icon: '⚙️' };
-          case 'connect_teams':
-            return { text: 'Connect Microsoft Teams', icon: '🔗' };
-          case 'connect_slack':
-            return { text: 'Connect Slack', icon: '🔗' };
-          default:
-            return { text: action.description || 'Take action', icon: '⚡' };
-        }
-      });
-      suggestions.push(...actionSuggestions);
-    }
-
-    // Add page-specific intelligent suggestions (lowest priority)
-    switch (pageType) {
-      case 'learning-library':
-        if (filters.activeFiltersCount === 0 && pageInsights.user_assessment_available) {
-          suggestions.push({ text: 'Show me recommended resources', icon: '✨' });
-        }
-        if (visibleData.filtered_resources === 0 && filters.activeFiltersCount > 0) {
-          suggestions.push({ text: 'Adjust my search filters', icon: '🔍' });
-        }
-        break;
-
-      case 'user-management':
-        if (visibleData.at_risk_users > 0) {
-          suggestions.push({ text: `Create intervention plan for ${visibleData.at_risk_users} at-risk users`, icon: '🚨' });
-        }
-        if (context.selected_items?.length > 0) {
-          suggestions.push({ text: `Bulk actions for ${context.selected_items.length} selected users`, icon: '🛠️' });
-        }
-        break;
-
-      case 'assessment-results':
-        const lowestComp = visibleData.lowest_competency;
-        if (lowestComp && pageInsights.ready_for_export) {
-          suggestions.push({ text: `Find ${lowestComp.name} development resources`, icon: '📚' });
-        }
-        if (pageInsights.succession_readiness === 'needs_development') {
-          suggestions.push({ text: 'Create 90-day development plan', icon: '📅' });
-        }
-        break;
-
-      case 'profile':
-        if (pageInsights.profile_completeness < 100) {
-          suggestions.push({ text: 'Help me complete my profile', icon: '👤' });
-        }
-        break;
-
-      case 'settings':
-        const activeTab = visibleData.active_tab;
-        if (activeTab === 'notifications' && !pageInsights.notification_preferences_set) {
-          suggestions.push({ text: 'Set up my notification preferences', icon: '🔔' });
-        }
-        break;
-
-      case 'goals-overview':
-        if (visibleData.at_risk_goals > 0) {
-          suggestions.push({ text: `Review ${visibleData.at_risk_goals} at-risk goals`, icon: '⚠️' });
-        }
-        if (visibleData.active_goals === 0) {
-          suggestions.push({ text: 'Help me create my first goal', icon: '🎯' });
-        }
-        break;
-
-      case 'dashboard':
-        if (allowedTools.generateReport) {
-          suggestions.push({ text: 'Generate a performance report', icon: '📊' });
-        }
-        if (allowedTools.getUserAchievements) {
-          suggestions.push({ text: 'Show my gamification progress', icon: '🏆' });
-        }
-        suggestions.push(
-          { text: 'Recommend learning for my goals', icon: '📚' },
-          { text: 'What should I focus on this week?', icon: '💡' }
-        );
-        if (allowedTools.scheduleCalendarEvent) {
-          suggestions.push({ text: 'Schedule a coaching session', icon: '📅' });
-        }
-        break;
-
-      case 'achievements':
-        if (allowedTools.explainBadgeCriteria) {
-          suggestions.push({ text: 'How do I earn more badges?', icon: '🎖️' });
-        }
-        suggestions.push(
-          { text: 'Show me ways to level up faster', icon: '⚡' },
-          { text: "What's my leaderboard standing?", icon: '🏅' },
-          { text: 'Explain my recent point activities', icon: '📈' }
-        );
-        break;
-
-      case 'gamification-manager':
-        if (allowedTools.designBadgeStructure) {
-          suggestions.push({ text: 'Design badges for our new manager program', icon: '🎨' });
-        }
-        if (allowedTools.suggestPointAwards) {
-          suggestions.push({ text: 'Suggest point values for activities', icon: '💰' });
-        }
-        if (allowedTools.createCompetition) {
-          suggestions.push({ text: 'Create a quarterly learning competition', icon: '🏆' });
-        }
-        break;
-
-      case 'enterprise_analytics':
-        const metrics = context.metrics_snapshot || {};
-        const risks = context.risk_summary || {};
-        const divisions = context.division_insights || {};
-
-        if (metrics.insights?.at_risk_status === 'high') {
-          suggestions.push({ text: `Address ${metrics.at_risk} at-risk leaders`, icon: "⚠️" });
-        }
-        if (risks.critical_risks > 0) {
-          suggestions.push({ text: `Create action plan for top risk`, icon: "📋" });
-        }
-        if (metrics.insights?.goal_alignment_gap) {
-          suggestions.push({ text: `Align goals for ${metrics.leaders_needing_goal_alignment} leaders`, icon: "🎯" });
-        }
-        if (filters.isFiltered) {
-          suggestions.push({ text: "Explain these filtered results", icon: "🔍" });
-        }
-        suggestions.push({ text: "Export analytics report", icon: "📥" });
-        break;
-
-      default:
-        suggestions.push(
-          { text: 'What can you help me with?', icon: '❓' },
-          { text: 'Explain this page', icon: '📖' },
-          { text: 'Show me tips', icon: '💡' }
-        );
-    }
-
-    // Ensure we return unique suggestions, limited to 4
-    const uniqueSuggestions = [];
-    const seenTexts = new Set();
-    for (const s of suggestions) {
-        if (!seenTexts.has(s.text)) {
-            uniqueSuggestions.push(s);
-            seenTexts.add(s.text);
-        }
-    }
-    return uniqueSuggestions.slice(0, 4);
-  };
+  // Greeting and suggestions delegated to atreusGreetings.js helper
 
   // Enhanced: Comprehensive system prompt with cross-session context
   const buildSystemPrompt = async () => {
@@ -1240,8 +706,8 @@ export default function AtreusCoach({
     try {
       if (activeConversationId) {
         // Debounce conversation updates - only save every 2 seconds
-        if (window.atreusUpdateTimeout) clearTimeout(window.atreusUpdateTimeout);
-        window.atreusUpdateTimeout = setTimeout(async () => {
+        if (updateTimeoutRef.current) clearTimeout(updateTimeoutRef.current);
+        updateTimeoutRef.current = setTimeout(async () => {
           try {
             await handleApiCall(() =>
               base44.entities.Conversation.update(activeConversationId, {
@@ -1380,7 +846,7 @@ export default function AtreusCoach({
 
       if (activeConversationId) {
         // Clear any pending updates
-        if (window.atreusUpdateTimeout) clearTimeout(window.atreusUpdateTimeout);
+        if (updateTimeoutRef.current) clearTimeout(updateTimeoutRef.current);
 
         await handleApiCall(() =>
           base44.entities.Conversation.update(activeConversationId, {
@@ -1412,7 +878,7 @@ export default function AtreusCoach({
       try {
         if (activeConversationId) {
           // Clear any pending updates
-          if (window.atreusUpdateTimeout) clearTimeout(window.atreusUpdateTimeout);
+          if (updateTimeoutRef.current) clearTimeout(updateTimeoutRef.current);
 
           await handleApiCall(() =>
             base44.entities.Conversation.update(activeConversationId, {
@@ -1449,7 +915,8 @@ export default function AtreusCoach({
 
       messages.forEach((message) => {
         const speaker = message.role === 'user' ? user?.full_name : 'Atreus';
-        const timestamp = format(new Date(message.timestamp), 'MMM d, h:mm a');
+        let timestamp = 'Unknown time';
+        try { if (message.timestamp) timestamp = format(new Date(message.timestamp), 'MMM d, h:mm a'); } catch {}
         textContent += `[${timestamp}] ${speaker}:\n${message.content}\n\n`;
       });
 
