@@ -356,7 +356,7 @@ export default function MyDevelopment() {
                     <CardContent className="p-8 text-center">
                       <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto mb-3" />
                       <p className="font-semibold text-gray-800">All caught up!</p>
-                      <p className="text-sm text-gray-500 mt-1 mb-4">No active learning assignments right now.</p>
+                      <p className="text-sm text-gray-500 mt-1 mb-4">No active learning enrollments right now.</p>
                       <Link to="/LearningLibrary">
                         <Button variant="outline" size="sm" className="text-[#0202ff] border-[#0202ff]/30 hover:bg-blue-50">
                           <Library className="w-4 h-4 mr-1.5" /> Browse Learning Library
@@ -387,7 +387,7 @@ export default function MyDevelopment() {
                                   }}
                                   className={`text-xs px-2 py-0.5 rounded-full font-medium border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 ${STATUS_BADGE[item.status] || "bg-gray-100 text-gray-700"}`}
                                 >
-                                  <option value="assigned">Assigned</option>
+                                  <option value="assigned">Enrolled</option>
                                   <option value="started">Started</option>
                                   <option value="in_progress">In Progress</option>
                                   <option value="completed">Completed</option>
@@ -397,6 +397,16 @@ export default function MyDevelopment() {
                                     <Clock className="w-3 h-3" /> Due {new Date(item.due_date).toLocaleDateString()}
                                   </span>
                                 )}
+                                <button
+                                  onClick={async () => {
+                                    await base44.entities.AssignedLearning.delete(item.id);
+                                    toast.success("Unenrolled successfully");
+                                    load();
+                                  }}
+                                  className="text-xs text-red-400 hover:text-red-600 transition-colors ml-auto"
+                                >
+                                  Unenroll
+                                </button>
                               </div>
                               {item.status === "in_progress" && (
                                 <div className="mt-2 bg-blue-50 rounded-lg p-2">
