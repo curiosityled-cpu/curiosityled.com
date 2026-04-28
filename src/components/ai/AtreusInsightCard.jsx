@@ -7,14 +7,17 @@ import { useAtreusChat } from "@/components/ai/AtreusContext";
  * AtreusInsightCard — reusable contextual Atreus recommendation card.
  *
  * Props:
- *   title              string   — card headline
- *   insight            string   — short insight text
- *   recommended_action string   — one-line recommended action
- *   primary_cta_label  string   — label for the primary button (opens Atreus)
- *   secondary_cta_label string  — label for dismiss / secondary action
- *   context_payload    object   — context passed into Atreus when primary CTA clicked
- *   onDismiss          fn       — optional dismiss handler
- *   className          string   — optional wrapper class
+ *   title                    string   — card headline
+ *   insight                  string   — short insight text
+ *   recommended_action       string   — one-line recommended action
+ *   primary_cta_label        string   — label for the primary button (opens Atreus)
+ *   secondary_cta_label      string   — label for the secondary button
+ *   context_payload          object   — context passed into Atreus when primary CTA clicked
+ *   secondary_context_payload object  — if provided, secondary CTA opens Atreus with this context
+ *                                       instead of acting as a dismiss button
+ *   onDismiss                fn       — optional dismiss handler (shows X and dismiss button
+ *                                       when secondary_context_payload is NOT provided)
+ *   className                string   — optional wrapper class
  */
 export default function AtreusInsightCard({
   title,
@@ -23,6 +26,7 @@ export default function AtreusInsightCard({
   primary_cta_label = "Explore with Atreus",
   secondary_cta_label = "Dismiss",
   context_payload = {},
+  secondary_context_payload = null,
   onDismiss,
   className = "",
 }) {
@@ -34,6 +38,17 @@ export default function AtreusInsightCard({
   const handlePrimary = () => {
     openWithContext(context_payload);
   };
+
+  const handleSecondary = () => {
+    if (secondary_context_payload) {
+      openWithContext(secondary_context_payload);
+    } else if (onDismiss) {
+      onDismiss();
+    }
+  };
+
+  // Show the secondary button if we have a secondary context OR a dismiss handler
+  const showSecondaryBtn = secondary_context_payload != null || onDismiss != null;
 
   return (
     <div
@@ -54,7 +69,7 @@ export default function AtreusInsightCard({
               </p>
             )}
           </div>
-          {onDismiss && (
+          {onDismiss && !secondary_context_payload && (
             <button
               onClick={onDismiss}
               className="p-0.5 rounded-md text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
@@ -91,13 +106,24 @@ export default function AtreusInsightCard({
             {primary_cta_label}
             <ArrowRight className="w-3 h-3" />
           </Button>
-          {onDismiss && (
-            <button
-              onClick={onDismiss}
-              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              {secondary_cta_label}
-            </button>
+          {showSecondaryBtn && (
+            secondary_context_payload ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleSecondary}
+                className="h-7 text-xs px-3 gap-1 border-gray-300 text-gray-600 hover:text-gray-900"
+              >
+                {secondary_cta_label}
+              </Button>
+            ) : (
+              <button
+                onClick={handleSecondary}
+                className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                {secondary_cta_label}
+              </button>
+            )
           )}
         </div>
       </div>

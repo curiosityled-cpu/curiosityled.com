@@ -814,13 +814,24 @@ function AssessmentResults() {
                 secondary_cta_label="Show Me Why"
                 context_payload={{
                   pageType: 'assessment-results',
-                  starter_message: `I've reviewed my assessment and I'd like to build a focused development plan for ${lowestLabel}. My score there is ${lowestVal}%. Can you help me confirm the focus and structure a short plan? Don't create it yet — let's talk through it first.`,
+                  starter_message: `Based on my assessment results, help me build a practical development plan. My lowest competency is ${lowestLabel} at ${lowestVal}%. Please confirm the focus area with me before we start.`,
                   assessment_scores: scores,
                   lowest_competency: { name: lowestKey, label: lowestLabel, score: lowestVal },
                   strongest_competency: { name: highestKey, label: highestLabel, score: scores[highestKey] },
                   user_role: appRole,
                   current_leadership_level: user?.data?.leadership_level || null,
                   recommended_focus_area: lowestLabel,
+                  overall_score: assessment.overall_pct,
+                  archetype: assessment.archetype_label,
+                }}
+                secondary_context_payload={{
+                  pageType: 'assessment-results',
+                  starter_message: `Explain why ${lowestLabel} should be my development priority based on my assessment. My score there is ${lowestVal}% vs my overall score of ${assessment.overall_pct}%.`,
+                  assessment_scores: scores,
+                  lowest_competency: { name: lowestKey, label: lowestLabel, score: lowestVal },
+                  strongest_competency: { name: highestKey, label: highestLabel, score: scores[highestKey] },
+                  user_role: appRole,
+                  current_leadership_level: user?.data?.leadership_level || null,
                   overall_score: assessment.overall_pct,
                   archetype: assessment.archetype_label,
                 }}
