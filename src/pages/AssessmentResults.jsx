@@ -16,6 +16,7 @@ import { useAuth } from "@/components/useAuth";
 import TeamAssessmentsView from "@/components/dashboard/assessments/TeamAssessmentsView";
 import PageHeader from "@/components/common/PageHeader";
 
+import AtreusInsightCard from "@/components/ai/AtreusInsightCard";
 import ResultsDashboard from "../components/results/ResultsDashboard";
 import CompetencyRadarChart from "../components/results/CompetencyRadarChart";
 import SituationalIntelligenceCard from "../components/results/SituationalIntelligenceCard";
@@ -780,6 +781,53 @@ function AssessmentResults() {
 
             {/* Main Content - Full Width */}
             <div className="space-y-6">
+          {/* Atreus Focus Card — derived from assessment scores */}
+          {(() => {
+            const competencyLabels = {
+              situational_intelligence: 'Situational Intelligence',
+              decision_making: 'Decision Making',
+              communication: 'Communication',
+              resource_management: 'Resource Management',
+              stakeholder_management: 'Stakeholder Management',
+              performance_management: 'Performance Management',
+            };
+            const scores = {
+              situational_intelligence: assessment.si_pct,
+              decision_making: assessment.dm_pct,
+              communication: assessment.comm_pct,
+              resource_management: assessment.rm_pct,
+              stakeholder_management: assessment.sm_pct,
+              performance_management: assessment.pm_pct,
+            };
+            const entries = Object.entries(scores).filter(([, v]) => v != null);
+            if (!entries.length) return null;
+            const [lowestKey, lowestVal] = entries.reduce((a, b) => b[1] < a[1] ? b : a);
+            const [highestKey] = entries.reduce((a, b) => b[1] > a[1] ? b : a);
+            const lowestLabel = competencyLabels[lowestKey];
+            const highestLabel = competencyLabels[highestKey];
+            return (
+              <AtreusInsightCard
+                title="Here's what to focus on first"
+                insight={`Your lowest-scoring area is ${lowestLabel} (${lowestVal}%) — this is your biggest opportunity to grow as a leader right now.`}
+                recommended_action="Create a short, focused development plan targeting this competency to close the gap quickly."
+                primary_cta_label="Build My Plan"
+                secondary_cta_label="Show Me Why"
+                context_payload={{
+                  pageType: 'assessment-results',
+                  starter_message: `I've reviewed my assessment and I'd like to build a focused development plan for ${lowestLabel}. My score there is ${lowestVal}%. Can you help me confirm the focus and structure a short plan? Don't create it yet — let's talk through it first.`,
+                  assessment_scores: scores,
+                  lowest_competency: { name: lowestKey, label: lowestLabel, score: lowestVal },
+                  strongest_competency: { name: highestKey, label: highestLabel, score: scores[highestKey] },
+                  user_role: appRole,
+                  current_leadership_level: user?.data?.leadership_level || null,
+                  recommended_focus_area: lowestLabel,
+                  overall_score: assessment.overall_pct,
+                  archetype: assessment.archetype_label,
+                }}
+              />
+            );
+          })()}
+
           {/* Overview Dashboard */}
           <ResultsDashboard assessment={assessment} user={user} />
 
