@@ -1283,48 +1283,7 @@ export default function AtreusCoach({
                   </div>
                 </ScrollArea>
 
-                {/* Suggestions */}
-                {suggestions.length > 0 && !isTyping && (
-                  <div className="px-3 md:px-4 pb-2 border-t border-gray-100 flex-shrink-0">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-[10px] md:text-xs text-gray-500">Quick actions:</p>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setShowSuggestions(!showSuggestions)}
-                        className="h-5 w-5 md:h-6 md:w-6"
-                      >
-                        {showSuggestions ? (
-                          <ChevronDown className="w-2 h-2 md:w-3 md:h-3" />
-                        ) : (
-                          <ChevronUp className="w-2 h-2 md:w-3 md:h-3" />
-                        )}
-                      </Button>
-                    </div>
-                    <AnimatePresence>
-                      {showSuggestions && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <SuggestionChips
-                            suggestions={suggestions}
-                            onSelect={(suggestion) => {
-                              if (suggestion.suggestedEvent) {
-                                setSuggestedCalendarEvent(suggestion.suggestedEvent);
-                                setShowScheduleCalendarModal(true);
-                              } else {
-                                handleSendMessage(suggestion.text);
-                              }
-                            }}
-                          />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                )}
+
 
                 {/* Input */}
                 {(
