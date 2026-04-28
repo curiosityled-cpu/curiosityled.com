@@ -1198,30 +1198,7 @@ export default function AtreusCoach({
             </div>
           </div>
 
-          {/* Quick Action Bar */}
-          <div className="px-3 py-2 border-b flex-shrink-0 bg-white">
-            <div className="flex gap-1.5 flex-wrap">
-              {[
-                { label: 'Create Plan', icon: Map, prompt: `Create a focused development plan for me. Context: page=${context?.pageType || 'unknown'}, role=${appRole || 'User'}, name=${context?.user_name || user?.full_name || 'user'}. Goals: ${JSON.stringify(context?.visible_data_summary?.active_goals || context?.current_goals || null)}. Assessment: ${JSON.stringify(context?.page_specific_insights?.assessment_summary || context?.assessment_summary || null)}.` },
-                { label: 'Prep Conversation', icon: MessageSquare, prompt: `Help me prepare for an upcoming leadership conversation. Context: page=${context?.pageType || 'unknown'}, role=${appRole || 'User'}. Recent activity: ${JSON.stringify(context?.activity_summary || context?.recent_activity || null)}. Goals context: ${JSON.stringify(context?.visible_data_summary || null)}.` },
-                { label: 'Review Progress', icon: TrendingUp, prompt: `Review my current progress across goals and learning. Context: page=${context?.pageType || 'unknown'}, role=${appRole || 'User'}, name=${context?.user_name || user?.full_name || 'user'}. Learning progress: ${JSON.stringify(context?.learning_progress || null)}. Visible data: ${JSON.stringify(context?.visible_data_summary || null)}.` },
-                { label: 'Analyze Results', icon: BarChart2, prompt: `Analyze my latest assessment results and surface the most important insights. Context: page=${context?.pageType || 'unknown'}, role=${appRole || 'User'}. Assessment data: ${JSON.stringify(context?.page_specific_insights?.assessment_summary || context?.assessment_summary || null)}. Competency data: ${JSON.stringify(context?.visible_data_summary || null)}.` },
-              ].map(({ label, icon: Icon, prompt }) => (
-                <button
-                  key={label}
-                  onClick={() => !isTyping && handleSendMessage(prompt)}
-                  disabled={isTyping}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:bg-opacity-90"
-                  style={{ borderColor: 'rgba(2,2,255,0.25)', color: '#0202ff', backgroundColor: 'rgba(2,2,255,0.05)' }}
-                  onMouseEnter={e => !isTyping && (e.currentTarget.style.backgroundColor = 'rgba(2,2,255,0.12)')}
-                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'rgba(2,2,255,0.05)')}
-                >
-                  <Icon className="w-3 h-3" />
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
+
 
           {loadingConversation ? (
             <div className="flex-1 flex items-center justify-center">
@@ -1387,16 +1364,15 @@ export default function AtreusCoach({
                       <Button
                         onClick={() => handleSendMessage()}
                         disabled={!inputValue.trim() || isTyping}
-                        className="h-auto self-end"
+                        className="self-end px-3 py-2"
                         style={{ backgroundColor: '#0202ff' }}
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0101dd'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0202ff'}
-                        size="icon"
                       >
                         {isTyping ? (
-                          <Loader2 className="w-3 h-3 md:w-4 h-4 animate-spin" />
+                          <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
-                          <Send className="w-3 h-3 md:w-4 h-4" />
+                          <Send className="w-4 h-4 text-white" />
                         )}
                       </Button>
                     </div>
