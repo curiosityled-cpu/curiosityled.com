@@ -14,9 +14,14 @@ import { Sparkles, Send } from "lucide-react";
  * Shown when the request looks vague or high-priority.
  * Lets the user either refine with Atreus or submit anyway.
  */
-export default function AtreusPreSubmitModal({ open, onRefine, onSubmitAnyway }) {
+export default function AtreusPreSubmitModal({ open, onRefine, onSubmitAnyway, onClose }) {
+  // onClose just dismisses the modal without submitting (e.g. backdrop click / Escape)
+  const handleOpenChange = (isOpen) => {
+    if (!isOpen && onClose) onClose();
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onSubmitAnyway}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-2 mb-1">

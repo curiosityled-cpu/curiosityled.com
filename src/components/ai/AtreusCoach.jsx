@@ -107,6 +107,12 @@ export default function AtreusCoach({
           await loadOrCreateConversation();
           await new Promise(resolve => setTimeout(resolve, 300));
           await loadConversationsList();
+          // If opened with a starter_message (e.g. from AtreusInsightCard or pre-submit modal),
+          // auto-send it once initialization completes
+          if (context?.starter_message) {
+            await new Promise(resolve => setTimeout(resolve, 400));
+            handleSendMessage(context.starter_message);
+          }
         } catch (error) {
           console.error('Error initializing coach:', error);
           if (error?.message?.includes('Rate limit')) {

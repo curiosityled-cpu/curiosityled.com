@@ -43,7 +43,7 @@ const PageContextProvider = createContext();
 export const usePageContext = () => {
   const context = useContext(PageContextProvider);
   if (!context) {
-    console.warn("usePageContext must be used within a PageContextProvider");
+    // MVP pages intentionally run outside the legacy PageContextProvider — no-op silently
     return {
       updatePageContext: () => {},
       pageContext: {}
