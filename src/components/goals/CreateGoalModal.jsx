@@ -20,6 +20,7 @@ import { format } from "date-fns";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/components/useAuth";
 import FormAssistant from "@/components/ai/FormAssistant";
+import AtreusGoalRefiner from "@/components/goals/AtreusGoalRefiner";
 
 const colorOptions = [
   { name: 'Ocean Blue', value: '#0202ff' },
@@ -466,6 +467,17 @@ export default function CreateGoalModal({ isOpen, onClose, onSubmit }) {
               style={{ '--tw-ring-color': 'rgba(2, 2, 255, 0.2)' }}
             />
           </div>
+
+          {/* Atreus goal refiner — shown once title or description has content */}
+          {(formData.title.trim().length > 3 || formData.description.trim().length > 0) && (
+            <AtreusGoalRefiner
+              title={formData.title}
+              description={formData.description}
+              onAccept={({ title, description }) =>
+                setFormData(prev => ({ ...prev, title, description }))
+              }
+            />
+          )}
 
           <div className="space-y-3">
             <Label className="text-[#323338] font-medium">
