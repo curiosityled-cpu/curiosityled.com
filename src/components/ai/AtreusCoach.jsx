@@ -1179,10 +1179,7 @@ export default function AtreusCoach({
       cross_session: crossSessionData
     };
 
-    const systemPrompt = buildAtreusSystemPrompt({ userName, userRole, pageType, contextSummary, viewportFocus, crossSessionData, externalQuals });
-
-
-    return systemPrompt;
+    return buildAtreusSystemPrompt({ userName, userRole, pageType, contextSummary, viewportFocus, crossSessionData, externalQuals });
   };
 
   const handleSendMessage = async (messageText = null) => {
