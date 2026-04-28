@@ -800,7 +800,26 @@ function AssessmentResults() {
               performance_management: assessment.pm_pct,
             };
             const entries = Object.entries(scores).filter(([, v]) => v != null);
-            if (!entries.length) return null;
+            
+            console.log("AtreusInsightCard rendering", { activeView, assessment, scores, entries });
+            
+            // Fallback mode: no score entries available
+            if (!entries.length) {
+              return (
+                <AtreusInsightCard
+                  title="Let's make sense of your results"
+                  insight="I don't have enough score detail yet, but I can still help you identify your next development focus."
+                  recommended_action="Open Atreus to review what's available and decide what to focus on first."
+                  primary_cta_label="Review With Atreus"
+                  secondary_cta_label="Not Now"
+                  context_payload={{
+                    pageType: 'assessment-results',
+                    starter_message: 'Help me understand my assessment results and identify my development priorities.'
+                  }}
+                />
+              );
+            }
+            
             const [lowestKey, lowestVal] = entries.reduce((a, b) => b[1] < a[1] ? b : a);
             const [highestKey] = entries.reduce((a, b) => b[1] > a[1] ? b : a);
             const lowestLabel = competencyLabels[lowestKey];
