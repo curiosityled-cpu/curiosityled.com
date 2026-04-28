@@ -1387,16 +1387,15 @@ export default function AtreusCoach({
                       <Button
                         onClick={() => handleSendMessage()}
                         disabled={!inputValue.trim() || isTyping}
-                        className="h-auto self-end"
+                        className="self-end px-3 py-2 h-10"
                         style={{ backgroundColor: '#0202ff' }}
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0101dd'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0202ff'}
-                        size="icon"
                       >
                         {isTyping ? (
-                          <Loader2 className="w-3 h-3 md:w-4 h-4 animate-spin" />
+                          <Loader2 className="w-4 h-4 animate-spin text-white" />
                         ) : (
-                          <Send className="w-3 h-3 md:w-4 h-4" />
+                          <Send className="w-4 h-4 text-white" />
                         )}
                       </Button>
                     </div>
