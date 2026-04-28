@@ -24,6 +24,7 @@ export function AtreusProvider({ children }) {
 
   const close = useCallback(() => {
     setIsOpen(false);
+    setPendingContext(null);
   }, []);
 
   const clearPending = useCallback(() => {

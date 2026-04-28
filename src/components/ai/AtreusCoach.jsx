@@ -85,7 +85,9 @@ export default function AtreusCoach({
 
   const [isInitialized, setIsInitialized] = useState(false);
   const isMountedRef = useRef(true);
-  
+  // Tracks whether the active conversation is fully ready to accept messages
+  const conversationReadyRef = useRef(false);
+
   // File upload state
   const [attachedFiles, setAttachedFiles] = useState([]);
   const [uploadingFile, setUploadingFile] = useState(false);
@@ -108,11 +110,17 @@ export default function AtreusCoach({
           await loadOrCreateConversation();
           await new Promise(resolve => setTimeout(resolve, 300));
           await loadConversationsList();
-          // If opened with a starter_message (e.g. from AtreusInsightCard or pre-submit modal),
-          // auto-send it once initialization completes
+          // If opened with a starter_message (e.g. from AtreusInsightCard),
+          // poll until the conversation is confirmed ready rather than using a blind timeout
           if (context?.starter_message) {
-            await new Promise(resolve => setTimeout(resolve, 400));
-            handleSendMessage(context.starter_message);
+            let waited = 0;
+            while (!conversationReadyRef.current && waited < 3000) {
+              await new Promise(resolve => setTimeout(resolve, 100));
+              waited += 100;
+            }
+            if (isMountedRef.current && conversationReadyRef.current) {
+              handleSendMessage(context.starter_message);
+            }
           }
         } catch (error) {
           console.error('Error initializing coach:', error);
@@ -251,6 +259,7 @@ export default function AtreusCoach({
         if (!isMountedRef.current) return;
         conversationIdRef.current = conversation.id;
         setConversationId(conversation.id);
+        conversationReadyRef.current = true;
           // Limit messages to last 100 for performance
           const messages = conversation.messages || [];
         
@@ -322,6 +331,7 @@ export default function AtreusCoach({
         if (!isMountedRef.current) return;
         conversationIdRef.current = conversation.id;
         setConversationId(conversation.id);
+        conversationReadyRef.current = true;
         setMessages(updatedMessages.slice(-100));
         setLoadingConversation(false);
         return;
@@ -357,6 +367,7 @@ export default function AtreusCoach({
       if (!isMountedRef.current) return;
       conversationIdRef.current = newConversation.id;
       setConversationId(newConversation.id);
+      conversationReadyRef.current = true;
       setMessages([greetingMessage]);
     } catch (error) {
       console.error('Error loading conversation:', error);
@@ -397,6 +408,7 @@ export default function AtreusCoach({
 
   const startNewConversation = async () => {
     try {
+      conversationReadyRef.current = false;
       if (conversationId) {
         await handleApiCall(() =>
           base44.entities.Conversation.update(conversationId, {
@@ -433,6 +445,7 @@ export default function AtreusCoach({
       if (!isMountedRef.current) return;
       conversationIdRef.current = newConversation.id;
       setConversationId(newConversation.id);
+      conversationReadyRef.current = true;
       setMessages([greetingMessage]);
 
       // Delay before loading list
@@ -466,7 +479,8 @@ export default function AtreusCoach({
       if (!isMountedRef.current) return;
       conversationIdRef.current = conversation.id;
       setConversationId(conversation.id);
-      
+      conversationReadyRef.current = true;
+
       // DYNAMIC GREETING: Regenerate greeting based on current context
       const messages = conversation.messages || [];
       const updatedMessages = [...messages];
