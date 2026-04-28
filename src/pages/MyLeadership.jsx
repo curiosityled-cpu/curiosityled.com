@@ -45,9 +45,9 @@ function InsightCard({ insight, user }) {
       </CardHeader>
       <CardContent className="space-y-5 px-6 pb-6">
         {insight.archetype && (
-          <div className="bg-gradient-to-br from-[#0202ff]/5 to-blue-50 rounded-xl p-4 border border-[#0202ff]/10">
-            <p className="text-xs text-[#0202ff] font-semibold uppercase tracking-wider mb-1">Your Leadership Archetype</p>
-            <p className="text-xl font-bold text-gray-900">{insight.archetype}</p>
+          <div className="rounded-xl p-4" style={{ backgroundColor: '#0012ff' }}>
+            <p className="text-xs text-white/70 font-semibold uppercase tracking-wider mb-1">Your Leadership Archetype</p>
+            <p className="text-xl font-bold text-white">{insight.archetype}</p>
           </div>
         )}
         {insight.summary && (
