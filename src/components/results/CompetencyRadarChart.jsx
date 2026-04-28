@@ -5,6 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Target, Building2 } from 'lucide-react';
 
 export default function CompetencyRadarChart({ scores, userInfo = { role_level: "Mid-Level Manager", sector: "Healthcare" } }) {
+    // Guard against missing scores
+    if (!scores) return null;
+    
     // Target benchmarks for the role level (Mid-Level Manager targets)
     const targetBenchmarks = {
         dm_pct: 75,      // Decision-Making: Proficient level for mid-level
