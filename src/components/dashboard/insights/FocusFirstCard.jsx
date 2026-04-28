@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { useAtreusChat } from '@/components/ai/AtreusContext';
 
 export default function FocusFirstCard({ scores }) {
-    const { openChat } = useAtreusChat();
+    const { openWithContext } = useAtreusChat();
 
     if (!scores) return null;
 
@@ -25,7 +25,7 @@ export default function FocusFirstCard({ scores }) {
     );
 
     const handleBuildPlan = () => {
-        openChat({
+        openWithContext({
             type: 'development_plan',
             lowestCompetency: lowestCompetency.name,
             score: lowestCompetency.score,
