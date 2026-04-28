@@ -14,6 +14,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import AtreusCoach from "@/components/ai/AtreusCoach";
 import { AuthProvider as FullAuthProvider } from "@/components/useAuth";
+import { AtreusProvider, useAtreusChat } from "@/components/ai/AtreusContext";
 import { createPageUrl } from "@/utils";
 import {
   DropdownMenu,
@@ -71,13 +72,14 @@ const ROLE_COLORS = {
   executive: 'bg-emerald-50 border-emerald-100 text-emerald-700'
 };
 
-export default function MVPLayout({ children }) {
+function MVPLayoutInner({ children }) {
   const { user } = useAuth();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [showAtreus, setShowAtreus] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const { isOpen: showAtreus, pendingContext, close: closeAtreus, clearPending, openWithContext } = useAtreusChat();
+  const openAtreusDefault = () => openWithContext({});
   const [recentNotifications, setRecentNotifications] = useState([]);
   const navigate = useNavigate();
 
@@ -371,11 +373,10 @@ export default function MVPLayout({ children }) {
       {/* Floating Atreus Button */}
       {!showAtreus &&
       <button
-        onClick={() => setShowAtreus(true)}
+        onClick={() => { clearPending(); openAtreusDefault(); }}
         className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
         style={{ backgroundColor: '#0202ff' }}
         title="Ask Atreus - Your AI Coach">
-        
           <Brain className="w-6 h-6 text-white" />
         </button>
       }
@@ -384,14 +385,22 @@ export default function MVPLayout({ children }) {
       {showAtreus &&
       <FullAuthProvider>
           <AtreusCoach
-          context={atreusContext}
+          context={{ ...atreusContext, ...(pendingContext || {}) }}
           isMinimized={false}
-          onMinimize={() => setShowAtreus(false)}
-          onClose={() => setShowAtreus(false)} />
+          onMinimize={closeAtreus}
+          onClose={closeAtreus} />
         
         </FullAuthProvider>
       }
     </div>
     </SidebarContext.Provider>);
 
+}
+
+export default function MVPLayout({ children }) {
+  return (
+    <AtreusProvider>
+      <MVPLayoutInner>{children}</MVPLayoutInner>
+    </AtreusProvider>
+  );
 }

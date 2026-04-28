@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
+import AtreusInsightCard from "@/components/ai/AtreusInsightCard";
 
 function InsightCard({ insight, user }) {
   const [showShare, setShowShare] = useState(false);
@@ -321,6 +322,7 @@ function LoadingSkeleton() {
 export default function MyLeadership() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [insightCardDismissed, setInsightCardDismissed] = useState(false);
 
   // Always refetch on mount so fresh results appear after returning from assessment
   useEffect(() => {
@@ -436,6 +438,30 @@ export default function MyLeadership() {
       ) : (
         <>
           {insight ? <InsightCard insight={insight} user={user} /> : <NoInsightState onRefresh={refetchInsight} />}
+
+          {/* Atreus contextual nudge — only when insight is available and card not dismissed */}
+          {insight && !insightCardDismissed && insight.recommendations?.[0] && (
+            <AtreusInsightCard
+              title="Atreus Recommendation"
+              insight={insight.recommendations[0]}
+              recommended_action={insight.development_areas?.[0] ? `Focus on ${insight.development_areas[0]} this month.` : null}
+              primary_cta_label="Discuss with Atreus"
+              secondary_cta_label="Dismiss"
+              onDismiss={() => setInsightCardDismissed(true)}
+              context_payload={{
+                pageType: 'my-leadership',
+                assessment_summary: {
+                  archetype: insight.archetype,
+                  top_strengths: insight.top_strengths,
+                  development_areas: insight.development_areas,
+                  recommendations: insight.recommendations,
+                  risk_flags: insight.risk_flags,
+                },
+                starter_message: `Let's talk about this recommendation: "${insight.recommendations[0]}"`,
+              }}
+            />
+          )}
+
           <GoalsCard goals={goals} />
           <DevelopmentCard assignments={assignments} devExperiences={devExperiences} devPlans={devPlans} />
         </>
