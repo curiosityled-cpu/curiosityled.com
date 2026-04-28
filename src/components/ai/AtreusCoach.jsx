@@ -431,6 +431,7 @@ export default function AtreusCoach({
       );
 
       if (!isMountedRef.current) return;
+      conversationIdRef.current = newConversation.id;
       setConversationId(newConversation.id);
       setMessages([greetingMessage]);
 
@@ -463,6 +464,7 @@ export default function AtreusCoach({
       }
 
       if (!isMountedRef.current) return;
+      conversationIdRef.current = conversation.id;
       setConversationId(conversation.id);
       
       // DYNAMIC GREETING: Regenerate greeting based on current context
@@ -524,6 +526,7 @@ export default function AtreusCoach({
         if (updatedConversations.length > 0) {
           // Load the most recent remaining conversation
           const nextConv = updatedConversations[0];
+          conversationIdRef.current = nextConv.id;
           setConversationId(nextConv.id);
           setMessages(nextConv.messages || []);
           
@@ -566,6 +569,7 @@ export default function AtreusCoach({
           );
 
           if (!isMountedRef.current) return;
+          conversationIdRef.current = newConversation.id;
           setConversationId(newConversation.id);
           setMessages([greetingMessage]);
           setConversations([newConversation]);
@@ -1509,9 +1513,10 @@ export default function AtreusCoach({
       const updatedWithResult = [...messages, resultMessage];
       setMessages(updatedWithResult);
 
-      if (conversationId) {
+      const activeConvIdForConfirm = conversationIdRef.current || conversationId;
+      if (activeConvIdForConfirm) {
         await handleApiCall(() =>
-          base44.entities.Conversation.update(conversationId, {
+          base44.entities.Conversation.update(activeConvIdForConfirm, {
             messages: updatedWithResult,
             last_activity: new Date().toISOString()
           })
