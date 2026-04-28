@@ -9,6 +9,7 @@ const AtreusContext = createContext({
   openWithContext: () => {},
   isOpen: false,
   pendingContext: null,
+  pendingMessage: null,
   close: () => {},
   clearPending: () => {},
 });
@@ -16,9 +17,11 @@ const AtreusContext = createContext({
 export function AtreusProvider({ children }) {
   const [isOpen, setIsOpen] = useState(false);
   const [pendingContext, setPendingContext] = useState(null);
+  const [pendingMessage, setPendingMessage] = useState(null);
 
-  const openWithContext = useCallback((contextPayload = {}) => {
-    setPendingContext(contextPayload);
+  const openWithContext = useCallback(({ context = {}, starterMessage = null } = {}) => {
+    setPendingContext(context);
+    setPendingMessage(starterMessage);
     setIsOpen(true);
   }, []);
 
@@ -29,10 +32,11 @@ export function AtreusProvider({ children }) {
 
   const clearPending = useCallback(() => {
     setPendingContext(null);
+    setPendingMessage(null);
   }, []);
 
   return (
-    <AtreusContext.Provider value={{ openWithContext, isOpen, pendingContext, close, clearPending }}>
+    <AtreusContext.Provider value={{ openWithContext, isOpen, pendingContext, pendingMessage, close, clearPending }}>
       {children}
     </AtreusContext.Provider>
   );
