@@ -218,7 +218,7 @@ export function getProactiveCalendarSuggestions(context, appRole) {
   return calendarSuggestions;
 }
 
-export function getContextualSuggestions(context, appRole, userPermissions, allowedTools) {
+export function getContextualSuggestions(context, appRole, userPermissions, allowedTools = {}) {
   const pageType = context?.pageType || 'unknown';
   const filters = context?.current_filters || {};
   const visibleData = context?.visible_data_summary || {};
