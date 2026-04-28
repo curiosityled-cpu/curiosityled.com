@@ -8,6 +8,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function CompetencyExplanations({ scores }) {
     const [expandedCompetency, setExpandedCompetency] = useState(null);
 
+    // Guard against missing scores
+    if (!scores) return null;
+
     const competencies = [
         {
             name: "Decision-Making",
