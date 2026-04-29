@@ -224,14 +224,18 @@ export default function RequestSubmissionForm({ onSuccess, onCancel }) {
 
   const handleRefineWithAtreus = () => {
     setShowAtreusModal(false);
+    const starterMsg = `I'm about to submit a development request and want to make sure it's clear and actionable. Can you help me clarify it?\n\nTitle: "${formData.title}"\nDescription: "${formData.description || '(none)'}"\nCategory: ${formData.request_type}\nPriority: ${formData.priority}\n\nPlease help me identify: the real problem I'm solving, the desired outcome, whether the urgency is right, and the recommended next step. Don't submit anything — just help me think this through.`;
+    
     openWithContext({
-      pageType: 'development-request-form',
-      starter_message: `I'm about to submit a development request and want to make sure it's clear and actionable. Can you help me clarify it?\n\nTitle: "${formData.title}"\nDescription: "${formData.description || '(none)'}"\nCategory: ${formData.request_type}\nPriority: ${formData.priority}\n\nPlease help me identify: the real problem I'm solving, the desired outcome, whether the urgency is right, and the recommended next step. Don't submit anything — just help me think this through.`,
-      request_title: formData.title,
-      request_description: formData.description,
-      request_category: formData.request_type,
-      request_priority: formData.priority,
-      user_role: appRole,
+      context: {
+        pageType: 'development-request-form',
+        request_title: formData.title,
+        request_description: formData.description,
+        request_category: formData.request_type,
+        request_priority: formData.priority,
+        user_role: appRole,
+      },
+      starterMessage: starterMsg
     });
   };
 
