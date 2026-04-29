@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import AtreusInsightCard from "@/components/ai/AtreusInsightCard";
+import AtreusTeamInsightCard from "@/components/dashboard/insights/AtreusTeamInsightCard";
 
 function InsightCard({ insight, user }) {
   const [showShare, setShowShare] = useState(false);
@@ -320,7 +321,7 @@ function LoadingSkeleton() {
 }
 
 export default function MyLeadership() {
-  const { user } = useAuth();
+  const { user, appRole } = useAuth();
   const queryClient = useQueryClient();
   const [insightCardDismissed, setInsightCardDismissed] = useState(false);
 
@@ -418,6 +419,46 @@ export default function MyLeadership() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Fetch team data for team leaders / admins
+  const { data: teamMembers = [], isLoading: loadingTeamMembers } = useQuery({
+    queryKey: ['team-members', user?.email, appRole],
+    queryFn: async () => {
+      // Only fetch for roles that have teams
+      const allowedRoles = ['HR Administrator', 'Admin Level 2', 'Analyst', 'Team Leader', 'User Level 2'];
+      if (!allowedRoles.includes(appRole)) return [];
+      try {
+        return await base44.entities.User.filter({ manager_email: user?.email }, '-created_date', 50);
+      } catch (e) {
+        console.warn('Could not fetch team members:', e);
+        return [];
+      }
+    },
+    enabled: !!user?.email && !!appRole,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Build team data summary for Atreus card
+  const teamDataSummary = React.useMemo(() => {
+    if (teamMembers.length === 0) return null;
+
+    const atRiskCount = teamMembers.filter(m => m.status === 'at_risk' || m.risk_level === 'high').length;
+    const recentIssues = [];
+
+    if (atRiskCount > 2) {
+      recentIssues.push(`${atRiskCount} team members flagged as at-risk`);
+    }
+
+    return {
+      team_members_count: teamMembers.length,
+      at_risk_count: atRiskCount,
+      active_goals_count: goals.length,
+      at_risk_goals_count: goals.filter(g => g.status === 'at_risk').length,
+      dev_plans_count: devPlans.length,
+      avg_assessment_score: 72, // Placeholder
+      recent_issues: recentIssues.length > 0 ? recentIssues : null
+    };
+  }, [teamMembers, goals, devPlans]);
+
   // Prefer display_name (may be nested in data), then full_name, fall back to 'there'
   const rawName = user?.display_name || user?.data?.display_name || user?.full_name;
   const displayName = rawName && rawName.trim() && !rawName.includes('@')
@@ -429,7 +470,7 @@ export default function MyLeadership() {
       title="My Leadership"
       subtitle={`Welcome back, ${displayName}. Here's your leadership snapshot.`}
     >
-      {loadingInsight || loadingGoals || loadingAssignments || loadingDev || loadingPlans ? (
+      {loadingInsight || loadingGoals || loadingAssignments || loadingDev || loadingPlans || loadingTeamMembers ? (
         <div className="space-y-5">
           <div className="h-64 w-full rounded-2xl bg-gray-100 animate-pulse" />
           <div className="h-40 w-full rounded-2xl bg-gray-100 animate-pulse" />
@@ -438,6 +479,15 @@ export default function MyLeadership() {
       ) : (
         <>
           {insight ? <InsightCard insight={insight} user={user} /> : <NoInsightState onRefresh={refetchInsight} />}
+
+          {/* Atreus Team Intelligence — for team leaders, analysts, HR admins */}
+          {teamDataSummary && (
+            <AtreusTeamInsightCard
+              user={user}
+              appRole={appRole}
+              teamData={teamDataSummary}
+            />
+          )}
 
           {/* Atreus contextual nudge — only when insight is available and card not dismissed */}
           {insight && !insightCardDismissed && insight.recommendations?.[0] && (
