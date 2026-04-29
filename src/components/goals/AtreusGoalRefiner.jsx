@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Sparkles, Loader2, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sparkles, Loader2, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/useAuth';
 
@@ -19,17 +18,15 @@ import { useAuth } from '@/components/useAuth';
  *   onAccept     - callback({ title, description, milestones, successMeasure })
  */
 export default function AtreusGoalRefiner({ title, description, dueDate, competency, onAccept }) {
-  const { user, appRole } = useAuth();
+  const { appRole } = useAuth();
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState(null);
-  const [expanded, setExpanded] = useState(true);
   const [accepted, setAccepted] = useState(false);
 
   const handleRefine = async () => {
     setLoading(true);
     setSuggestion(null);
     setAccepted(false);
-    setExpanded(true);
 
     const prompt = `You are a goal quality coach helping a ${appRole || 'professional'} sharpen their development goal.
 
