@@ -1162,7 +1162,7 @@ export default function AtreusCoach({
               <div className="min-w-0 flex-1">
                 <h3 className="font-semibold text-white text-sm md:text-base truncate">Atreus</h3>
                 <p className="text-[10px] md:text-xs text-white opacity-90 truncate">
-                  {formatPageName(context?.pageType || 'dashboard')}
+                  Leadership Intelligence Partner
                 </p>
               </div>
             </div>

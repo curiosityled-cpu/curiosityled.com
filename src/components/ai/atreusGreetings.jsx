@@ -3,6 +3,21 @@
  * Extracted to keep AtreusCoach.jsx under the line limit.
  */
 
+// Varied conversational openers to avoid repetition
+const OPENERS = [
+  (name) => `Howdy, ${name}!`,
+  (name) => `Hey ${name}!`,
+  (name) => `Good to see you, ${name}.`,
+  (name) => `${name}!`,
+  (name) => `What's up, ${name}?`,
+];
+
+function opener(name) {
+  // Deterministic-ish based on current minute so it varies but doesn't flicker
+  const idx = Math.floor(Date.now() / 60000) % OPENERS.length;
+  return OPENERS[idx](name);
+}
+
 export function getContextualGreeting(context, appRole) {
   const userName = context?.user_name?.split(' ')[0] || 'there';
   const pageType = context?.pageType || 'unknown';
@@ -10,35 +25,33 @@ export function getContextualGreeting(context, appRole) {
   const viewportFocus = context?.viewport_focus || {};
   const visibleData = context?.visible_data_summary || {};
   const pageInsights = context?.page_specific_insights || {};
+  const o = opener(userName);
 
   // Viewport-aware greetings
   if (viewportFocus.focused_section) {
-    const sectionLabels = viewportFocus.section_labels || {};
-    const sectionLabel = sectionLabels[viewportFocus.focused_section] || viewportFocus.focused_section;
-
     switch (viewportFocus.focused_section) {
       case 'section-metrics':
       case 'section-top-metrics':
       case 'section-overview-metrics':
-        return `Hi ${userName}! I see you're reviewing ${sectionLabel.toLowerCase()}. Let me help you interpret these insights.`;
+        return `${o} You're looking at your metrics — want me to tell you what actually matters here?`;
       case 'section-assessment':
-        return `Welcome ${userName}! Looking at your assessment section. Ready to discuss your development areas?`;
+        return `${o} Assessment section open. What do you want to dig into?`;
       case 'section-team':
       case 'section-team-summary':
-        return `Hi ${userName}! I see you're reviewing your team. Want to discuss development priorities or interventions?`;
+        return `${o} Checking in on the team? Who are you thinking about?`;
       case 'section-competency-impact':
       case 'section-competency-breakdown':
-        return `Hello ${userName}! Analyzing competencies with you. Which area would you like to focus on?`;
+        return `${o} Competency breakdown — which one are you trying to move?`;
       case 'section-strategic-risks':
-        return `Hi ${userName}! I see you're reviewing strategic risks. Let's discuss mitigation strategies.`;
+        return `${o} Looking at risks. Which one's keeping you up at night?`;
       case 'section-succession-pipeline':
-        return `Welcome ${userName}! Looking at succession planning. Want to identify high-potential leaders?`;
+        return `${o} Succession pipeline — who's your next big bet?`;
       case 'section-learning':
-        return `Hi ${userName}! I see you're in the learning section. Need recommendations or want to track progress?`;
+        return `${o} What are you trying to get better at right now?`;
       case 'section-goals':
-        return `Hello ${userName}! Reviewing your goals? Let's make sure you're on track.`;
+        return `${o} Goals check. What's the one that matters most this week?`;
       case 'section-programs':
-        return `Hi ${userName}! Looking at programs overview. Need help with deployment or analytics?`;
+        return `${o} Programs view. What are you trying to figure out?`;
       default:
         break;
     }
@@ -49,123 +62,126 @@ export function getContextualGreeting(context, appRole) {
     case 'dashboard':
       if (userRole === 'User Level 1') {
         if (!visibleData.has_assessment) {
-          return `Hi ${userName}! 👋 Ready to discover your leadership strengths? Let's start with an assessment.`;
+          return `${o} What are you working on these days? Give me the quick version.`;
         }
-        return `Welcome back, ${userName}! I can help you generate reports, get personalized learning recommendations, or schedule coaching sessions.`;
+        return `${o} What's top of mind right now — goals, learning, or something else?`;
       } else if (userRole === 'User Level 2') {
-        return `Hi ${userName}! Managing ${visibleData.team_size || 0} team members. I can generate team reports, recommend learning paths, or help schedule team check-ins.`;
+        return `${o} How's the team doing? Anything you're watching closely?`;
       } else if (userRole === 'User Level 3') {
-        return `Welcome, ${userName}! I can generate organizational reports, provide strategic insights, and help schedule leadership reviews.`;
+        return `${o} What's the strategic thing you're wrestling with right now?`;
       } else if (userRole === 'Admin Level 1') {
-        return `Hi ${userName}! I can generate program reports, recommend learning resources for cohorts, and help schedule coaching sessions.`;
+        return `${o} What's going on with your programs? What do you need to figure out?`;
       } else if (userRole === 'Admin Level 2' || userRole === 'Super Administrator') {
-        return `Welcome, ${userName}! I can generate platform analytics, provide learning recommendations, and help coordinate team meetings.`;
+        return `${o} What's the org challenge you're working through today?`;
       }
-      return `Hi ${userName}! How can I help you today?`;
+      return `${o} What are you working on? Give me the quick version.`;
 
     case 'learning-library': {
       const filters = context?.current_filters || {};
       if (filters.competency && filters.competency.length > 0) {
-        return `Hi ${userName}! I see you're exploring ${filters.competency.join(', ')} resources. Want personalized recommendations?`;
+        return `${o} Looking at ${filters.competency.join(', ')} content — is this for you or someone on your team?`;
       }
       if (filters.search) {
-        return `Hi ${userName}! Searching for "${filters.search}"? Let me help you find the best resources.`;
+        return `${o} Searching for "${filters.search}" — what's the goal behind this?`;
       }
-      return `Hi ${userName}! Ready to explore learning resources? Tell me what you're looking to develop.`;
+      return `${o} What are you trying to get better at? I'll point you to what's actually worth your time.`;
     }
 
     case 'goals-overview': {
       const atRiskCount = visibleData.at_risk_goals || 0;
       const pendingCount = visibleData.pending_acceptance_goals || 0;
       if (atRiskCount > 0) {
-        return `Hi ${userName}! I notice ${atRiskCount} goal${atRiskCount > 1 ? 's' : ''} need${atRiskCount === 1 ? 's' : ''} attention. Want to discuss action plans?`;
+        return `${o} You've got ${atRiskCount} goal${atRiskCount > 1 ? 's' : ''} that need attention. Want to talk through what's getting in the way?`;
       }
       if (pendingCount > 0) {
-        return `Hi ${userName}! You have ${pendingCount} goal${pendingCount > 1 ? 's' : ''} awaiting your response. Need help reviewing them?`;
+        return `${o} ${pendingCount} goal${pendingCount > 1 ? 's' : ''} waiting on you. Want a quick rundown before you decide?`;
       }
-      return `Hi ${userName}! Let's work on your goals. Ready to track progress or set new objectives?`;
+      return `${o} Goals page. What are you trying to make progress on?`;
     }
 
     case 'career-path-explorer': {
       const targetRole = visibleData.target_role;
       const readinessScore = visibleData.readiness_score;
       if (targetRole && readinessScore !== undefined) {
-        return `Hi ${userName}! I see you're exploring the ${targetRole} role (${readinessScore}% ready). Let's build your development path.`;
+        return `${o} Eyeing the ${targetRole} role at ${readinessScore}% ready — what's your biggest gap right now?`;
       }
-      return `Hi ${userName}! Ready to explore your next career move? Let's assess your readiness and plan your path.`;
+      return `${o} Thinking about your next move? Tell me where you want to go and let's pressure-test it.`;
     }
 
     case 'onboarding-builder': {
-      const planStatus = pageInsights.plan_ready_to_deploy ? 'ready to deploy' :
-        pageInsights.needs_assignee ? 'ready for assignment' :
-        pageInsights.needs_generation ? 'ready to generate' : 'in progress';
-      return `Hi ${userName}! Your onboarding plan is ${planStatus}. How can I help you refine it?`;
+      const planStatus = pageInsights.plan_ready_to_deploy ? 'ready to ship' :
+        pageInsights.needs_assignee ? 'ready to assign' :
+        pageInsights.needs_generation ? 'needs generating' : 'in progress';
+      return `${o} Onboarding plan is ${planStatus}. What do you need from me?`;
     }
 
     case 'hr-assessment-dashboard':
-      return `Hi ${userName}! You have ${visibleData.total_assessments || 0} assessments with ${visibleData.completion_rate || 0}% completion. Ready to analyze results?`;
+      return `${o} ${visibleData.total_assessments || 0} assessments, ${visibleData.completion_rate || 0}% done. What are you trying to understand from this data?`;
 
     case 'enterprise_analytics':
-      return `Hi ${userName}! Analyzing ${visibleData.total_leaders || 0} leaders (Avg SI: ${visibleData.avg_leadership_score || 0}%). What strategic insights do you need?`;
+      return `${o} ${visibleData.total_leaders || 0} leaders in view. What pattern are you trying to spot?`;
 
     case 'command-center':
-      if (userRole === 'User Level 2') return `Hi ${userName}! Ready to review team performance and deploy interventions?`;
-      if (userRole === 'Admin Level 1') return `Hi ${userName}! Let's review program performance and participant progress.`;
-      return `Hi ${userName}! Ready to dive into team analytics and insights?`;
+      if (userRole === 'User Level 2') return `${o} Team dashboard. Who needs your attention right now?`;
+      if (userRole === 'Admin Level 1') return `${o} Program view. What are you trying to track down?`;
+      return `${o} Command center. What's the priority today?`;
 
     case 'profile': {
       const profileCompletion = pageInsights.profile_completion_percentage || 0;
       if (profileCompletion < 100) {
-        return `Hi ${userName}! Your profile is ${profileCompletion}% complete. Want to finish it for better recommendations?`;
+        return `${o} Profile's ${profileCompletion}% done — want me to tell you what's worth filling in first?`;
       }
-      return `Hi ${userName}! Your profile looks great. Ready to update your development preferences?`;
+      return `${o} Profile looking solid. Anything you want to update or think through?`;
     }
 
     case 'assessment-taking':
-      return `Hi ${userName}! Taking your assessment? I'll be here when you finish to discuss your results.`;
+      return `${o} In the middle of your assessment — I'll be here when you're done to make sense of the results.`;
 
     case 'assessment-results':
-      return `Hi ${userName}! Congratulations on completing your assessment (${visibleData.overall_score || 0}%)! Let's explore your results together.`;
+      return `${o} Results are in (${visibleData.overall_score || 0}%). What's your gut reaction — surprised, or did you see it coming?`;
 
     case 'user-management': {
       const selectedCount = visibleData.selected_count || 0;
       if (selectedCount > 0) {
-        return `Hi ${userName}! You've selected ${selectedCount} user${selectedCount > 1 ? 's' : ''}. Ready for bulk actions?`;
+        return `${o} ${selectedCount} user${selectedCount > 1 ? 's' : ''} selected. What are you trying to do with them?`;
       }
-      return `Hi ${userName}! Managing ${visibleData.total_users || 0} users. How can I help with user administration?`;
+      return `${o} User management. What are you trying to sort out?`;
     }
 
     case 'settings':
-      return `Hi ${userName}! Let's configure your preferences. What would you like to update?`;
+      return `${o} Settings — what are you trying to change?`;
 
     case 'notifications': {
       const unreadCount = visibleData.unread_notifications || 0;
       if (unreadCount > 0) {
-        return `Hi ${userName}! You have ${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}. Want me to summarize them?`;
+        return `${o} You've got ${unreadCount} unread. Want me to give you the highlights?`;
       }
-      return `Hi ${userName}! All caught up on notifications. Is there anything else I can help with?`;
+      return `${o} All clear on notifications. What's on your mind?`;
     }
 
     case 'my-journeys-overview':
-      return `Hi ${userName}! You're enrolled in ${visibleData.active_journeys || 0} learning journey${(visibleData.active_journeys || 0) !== 1 ? 's' : ''}. Ready to continue your path?`;
+      return `${o} ${visibleData.active_journeys || 0} active journey${(visibleData.active_journeys || 0) !== 1 ? 's' : ''}. Which one are you focused on?`;
 
     case 'journey-builder':
-      return `Hi ${userName}! Building a learning journey? I can help you structure content and select resources.`;
+      return `${o} Building a journey — who's it for and what are you trying to achieve?`;
 
     case 'onboarding-progress':
-      return `Hi ${userName}! You're ${visibleData.progress_percentage || 0}% through your onboarding. Let's keep the momentum going!`;
+      return `${o} ${visibleData.progress_percentage || 0}% through onboarding. What feels unclear or stuck?`;
 
     case 'billing':
-      return `Hi ${userName}! Need help with billing or subscription questions? I'm here to assist.`;
+      return `${o} What do you need to figure out on the billing side?`;
 
     case 'business-manager':
-      return `Hi ${userName}! Ready to manage clients, partners, and organizational settings?`;
+      return `${o} Business manager view. What are you working through?`;
+
+    case 'development-request-form':
+      return `${o} Let's sharpen this request so you actually get what you need. What are you trying to solve?`;
 
     default:
-      if (userRole === 'Platform Admin') return `Hi ${userName}! Platform admin at your service. What would you like to manage today?`;
-      if (userRole === 'Super Administrator') return `Hi ${userName}! Organization admin ready. How can I help manage your platform?`;
-      if (userRole === 'Partner Business Administrator') return `Hi ${userName}! Partner admin here. Ready to manage client organizations?`;
-      return `Hi ${userName}! I'm Atreus, your AI leadership coach. How can I help you today?`;
+      if (userRole === 'Platform Admin') return `${o} Platform admin mode. What do you need to manage?`;
+      if (userRole === 'Super Administrator') return `${o} What's the org challenge you're working on today?`;
+      if (userRole === 'Partner Business Administrator') return `${o} What do you need to sort out across your clients?`;
+      return `${o} What are you working on? Give me the quick version.`;
   }
 }
 
