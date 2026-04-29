@@ -1,184 +1,196 @@
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2, CheckCircle, X, ChevronDown, ChevronUp } from "lucide-react";
-import { base44 } from "@/api/base44Client";
-import { toast } from "sonner";
+import { Sparkles, Loader2, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/components/useAuth';
 
 /**
- * Inline Atreus refinement panel for goal forms.
- * Evaluates the goal for clarity, actionability, measurable outcome, and timeline.
- * Shows the improved version and lets the user accept or ignore it — never overwrites automatically.
+ * AtreusGoalRefiner
+ * Shown inside goal create/edit forms when title or description has content.
+ * Calls LLM inline (no need to open the full Atreus chat) and renders a suggestion
+ * panel the user can accept or ignore.
+ *
+ * Props:
+ *   title        - current goal title string
+ *   description  - current goal description string
+ *   dueDate      - optional ISO date string
+ *   competency   - optional competency label string
+ *   onAccept     - callback({ title, description, milestones, successMeasure })
  */
-export default function AtreusGoalRefiner({ title, description, onAccept }) {
+export default function AtreusGoalRefiner({ title, description, dueDate, competency, onAccept }) {
+  const { user, appRole } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null); // { what_is_vague, improved_title, improved_description, milestones }
+  const [suggestion, setSuggestion] = useState(null);
   const [expanded, setExpanded] = useState(true);
-
-  const canRefine = title?.trim().length > 3;
+  const [accepted, setAccepted] = useState(false);
 
   const handleRefine = async () => {
     setLoading(true);
-    setResult(null);
+    setSuggestion(null);
+    setAccepted(false);
+    setExpanded(true);
+
+    const prompt = `You are a goal quality coach helping a ${appRole || 'professional'} sharpen their development goal.
+
+Current goal draft:
+- Title: "${title || '(none)'}"
+- Description: "${description || '(none)'}"
+${dueDate ? `- Due date: ${dueDate}` : ''}
+${competency ? `- Related competency: ${competency}` : ''}
+
+Analyze this goal and return a JSON object with:
+1. "vague_parts": array of short strings describing what is vague or weak (max 3)
+2. "improved_title": a tighter, more specific, measurable version of the title (1 sentence)
+3. "improved_description": a clearer, actionable description (2-3 sentences max)
+4. "milestones": array of 2-3 concrete milestone strings
+5. "success_measure": a single sentence describing how success will be measured
+
+Keep language direct and professional. Do not add unnecessary preamble.`;
+
     try {
-      const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a leadership development coach helping a professional refine their goal.
-
-Evaluate the following goal for clarity, actionability, measurable outcome, and timeline.
-
-Goal Title: "${title}"
-Goal Description: "${description || '(none provided)'}"
-
-Return a JSON object with:
-- "what_is_vague": a short sentence (max 20 words) identifying the main weakness
-- "improved_title": a sharper, more specific version of the title
-- "improved_description": a rewritten description that is concrete, measurable, and time-bound
-- "milestones": an array of 3 short milestone strings the user could track
-
-Be direct and constructive. Do not pad the response.`,
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt,
         response_json_schema: {
-          type: "object",
+          type: 'object',
           properties: {
-            what_is_vague: { type: "string" },
-            improved_title: { type: "string" },
-            improved_description: { type: "string" },
-            milestones: { type: "array", items: { type: "string" } }
-          }
-        }
+            vague_parts: { type: 'array', items: { type: 'string' } },
+            improved_title: { type: 'string' },
+            improved_description: { type: 'string' },
+            milestones: { type: 'array', items: { type: 'string' } },
+            success_measure: { type: 'string' },
+          },
+        },
       });
-      setResult(response);
-      setExpanded(true);
+      setSuggestion(result);
     } catch (err) {
-      console.error('Atreus refinement error:', err);
-      toast.error('Could not refine goal. Please try again.');
+      console.error('AtreusGoalRefiner error:', err);
     } finally {
       setLoading(false);
     }
   };
 
   const handleAccept = () => {
-    if (!result) return;
+    if (!suggestion) return;
     onAccept({
-      title: result.improved_title,
-      description: result.improved_description
+      title: suggestion.improved_title,
+      description: suggestion.improved_description,
+      milestones: suggestion.milestones,
+      successMeasure: suggestion.success_measure,
     });
-    setResult(null);
+    setAccepted(true);
+    setSuggestion(null);
   };
 
-  const handleDismiss = () => setResult(null);
+  const handleDismiss = () => {
+    setSuggestion(null);
+    setAccepted(false);
+  };
 
-  // Trigger button only — shown when no result yet
-  if (!result) {
+  if (accepted) {
     return (
-      <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={handleRefine}
-          disabled={loading || !canRefine}
-          className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 text-xs px-2 py-1 h-auto"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
-              Atreus is reviewing…
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-3 h-3 mr-1.5" />
-              Ask Atreus to tighten this goal
-            </>
-          )}
-        </Button>
+      <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-xl px-4 py-2">
+        <Check className="w-4 h-4 flex-shrink-0" />
+        Atreus refinement applied to your goal.
       </div>
     );
   }
 
-  // Result panel
   return (
     <div className="rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-blue-50 overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-purple-100">
+      {/* Trigger row */}
+      <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-purple-600" />
-          <span className="text-sm font-semibold text-purple-900">Atreus Refinement</span>
+          <span className="text-sm font-medium text-purple-800">Ask Atreus to tighten this goal</span>
         </div>
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => setExpanded(v => !v)}
-            className="p-1 text-purple-400 hover:text-purple-600 transition-colors"
-          >
-            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
-          <button
-            type="button"
-            onClick={handleDismiss}
-            className="p-1 text-purple-400 hover:text-purple-600 transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+        <Button
+          type="button"
+          size="sm"
+          disabled={loading || (!title.trim() && !description.trim())}
+          onClick={handleRefine}
+          className="text-white text-xs h-8 px-3"
+          style={{ background: 'linear-gradient(to right, #A25DDC, #0202ff)' }}
+          onMouseEnter={(e) => e.currentTarget.style.background = 'linear-gradient(to right, #9147cc, #0101dd)'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'linear-gradient(to right, #A25DDC, #0202ff)'}
+        >
+          {loading ? (
+            <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Refining…</>
+          ) : (
+            'Refine'
+          )}
+        </Button>
       </div>
 
-      {expanded && (
-        <div className="px-4 py-3 space-y-3 text-sm">
+      {/* Suggestion panel */}
+      {suggestion && (
+        <div className="border-t border-purple-200 px-4 py-3 space-y-3">
           {/* What's vague */}
-          <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-            <p className="text-xs font-medium text-amber-700 mb-0.5">What's vague</p>
-            <p className="text-amber-900">{result.what_is_vague}</p>
-          </div>
-
-          {/* Improved version */}
-          <div className="space-y-1.5">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Improved version</p>
-            <div className="bg-white border border-purple-100 rounded-lg px-3 py-2 space-y-1">
-              <p className="font-semibold text-gray-900">{result.improved_title}</p>
-              {result.improved_description && (
-                <p className="text-gray-600 text-xs leading-relaxed">{result.improved_description}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Suggested milestones */}
-          {result.milestones?.length > 0 && (
-            <div className="space-y-1.5">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Suggested milestones</p>
-              <ul className="space-y-1">
-                {result.milestones.map((m, i) => (
-                  <li key={i} className="flex items-start gap-2 text-xs text-gray-700">
-                    <span className="mt-0.5 w-4 h-4 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold flex-shrink-0 text-[10px]">
-                      {i + 1}
-                    </span>
-                    {m}
+          {suggestion.vague_parts?.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-purple-700 mb-1">What's vague</p>
+              <ul className="space-y-0.5">
+                {suggestion.vague_parts.map((v, i) => (
+                  <li key={i} className="text-xs text-gray-600 flex items-start gap-1">
+                    <span className="text-purple-400 mt-0.5">•</span>{v}
                   </li>
                 ))}
               </ul>
             </div>
           )}
 
-          {/* Actions */}
+          {/* Improved wording */}
+          <div>
+            <p className="text-xs font-semibold text-purple-700 mb-1">Improved goal</p>
+            <p className="text-sm font-medium text-gray-800">{suggestion.improved_title}</p>
+            {suggestion.improved_description && (
+              <p className="text-xs text-gray-600 mt-1">{suggestion.improved_description}</p>
+            )}
+          </div>
+
+          {/* Milestones */}
+          {suggestion.milestones?.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-purple-700 mb-1">Suggested milestones</p>
+              <ul className="space-y-0.5">
+                {suggestion.milestones.map((m, i) => (
+                  <li key={i} className="text-xs text-gray-600 flex items-start gap-1">
+                    <span className="text-blue-400 mt-0.5">→</span>{m}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Success measure */}
+          {suggestion.success_measure && (
+            <div className="bg-white border border-purple-100 rounded-lg px-3 py-2">
+              <p className="text-xs font-semibold text-purple-700 mb-0.5">Success measure</p>
+              <p className="text-xs text-gray-700">{suggestion.success_measure}</p>
+            </div>
+          )}
+
+          {/* Accept / Ignore */}
           <div className="flex gap-2 pt-1">
             <Button
               type="button"
               size="sm"
               onClick={handleAccept}
-              className="text-white text-xs h-8"
-              style={{ backgroundColor: '#A25DDC' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#9147cc'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#A25DDC'}
+              className="text-white text-xs h-8 px-3 flex-1"
+              style={{ backgroundColor: '#0202ff' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0101dd'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0202ff'}
             >
-              <CheckCircle className="w-3 h-3 mr-1.5" />
-              Apply this version
+              <Check className="w-3 h-3 mr-1" /> Accept refined version
             </Button>
             <Button
               type="button"
               size="sm"
-              variant="ghost"
+              variant="outline"
               onClick={handleDismiss}
-              className="text-gray-500 text-xs h-8 hover:text-gray-700"
+              className="text-xs h-8 px-3"
             >
-              Keep mine
+              <X className="w-3 h-3 mr-1" /> Ignore
             </Button>
           </div>
         </div>

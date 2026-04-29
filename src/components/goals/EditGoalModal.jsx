@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Lock, Globe, Users, X, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/components/useAuth";
+import AtreusGoalRefiner from "@/components/goals/AtreusGoalRefiner";
 
 const colorOptions = [
   { name: 'Ocean Blue', value: '#0202ff' },
@@ -137,6 +138,17 @@ export default function EditGoalModal({ isOpen, onClose, onSubmit, goal }) {
               style={{ '--tw-ring-color': 'rgba(2, 2, 255, 0.2)' }}
             />
           </div>
+
+          {/* Atreus refinement — shown when title or description has content */}
+          {(formData.title.trim().length > 3 || formData.description.trim().length > 0) && (
+            <AtreusGoalRefiner
+              title={formData.title}
+              description={formData.description}
+              onAccept={({ title, description }) =>
+                setFormData(prev => ({ ...prev, title, description }))
+              }
+            />
+          )}
 
           <div className="space-y-2">
             <Label className="text-[#323338] font-medium">Goal Color</Label>
