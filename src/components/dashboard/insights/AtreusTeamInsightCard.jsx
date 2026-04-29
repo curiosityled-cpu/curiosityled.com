@@ -5,7 +5,6 @@ import { Sparkles, ChevronRight, AlertCircle, TrendingDown, Zap } from 'lucide-r
 import { motion } from "framer-motion";
 import { useAtreusChat } from '@/components/ai/AtreusContext';
 import { base44 } from '@/api/base44Client';
-import { toast } from 'sonner';
 
 /**
  * AtreusTeamInsightCard — Team/organizational intelligence for team leaders, analysts, and HR admins.
@@ -17,24 +16,10 @@ export default function AtreusTeamInsightCard({ user, appRole, teamData = {} }) 
   const [generating, setGenerating] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
-  // Generate team insight on mount
-  useEffect(() => {
-    if (teamData && Object.keys(teamData).length > 0) {
-      generateInsight();
-    }
-  }, [appRole, user?.email]);
-
-  // Only show for these roles
-  const allowedRoles = ['HR Administrator', 'Admin Level 2', 'Analyst', 'Team Leader', 'User Level 2'];
-  if (!allowedRoles.includes(appRole) || dismissed || !insight) return null;
-
   const generateInsight = async () => {
     setGenerating(true);
     try {
-      // Build role-specific prompt
       const prompt = buildTeamAnalysisPrompt(appRole, teamData, user);
-
-      // Call LLM to analyze team data
       const result = await base44.integrations.Core.InvokeLLM({
         prompt,
         response_json_schema: {
@@ -48,7 +33,6 @@ export default function AtreusTeamInsightCard({ user, appRole, teamData = {} }) 
           }
         }
       });
-
       if (result?.title && result?.insight) {
         setInsight(result);
       }
@@ -59,8 +43,7 @@ export default function AtreusTeamInsightCard({ user, appRole, teamData = {} }) 
     }
   };
 
-  const buildTeamAnalysisPrompt = (role, data, user) => {
-    const baseContext = `
+  const buildTeamAnalysisPrompt = (role, data, user) => `
 You are a leadership intelligence expert analyzing team data.
 User Role: ${role}
 Current User: ${user?.full_name || 'Unknown'}
@@ -82,30 +65,33 @@ Generate ONE specific, actionable insight. Rules:
 2. Focus on 1-2 high-impact issues only
 3. Categorize as: risk, performance_gap, or development_opportunity
 4. Recommended action must be specific and executable
-`;
 
-    if (role === 'Admin Level 2' || role === 'HR Administrator') {
-      return baseContext + `
+${role === 'Admin Level 2' || role === 'HR Administrator' ? `
 Context: You are advising the HR Administrator on organizational trends.
 Focus on systemic issues across teams: attrition risk, skill gaps, development velocity.
-Identify patterns that affect multiple teams or the org overall.`;
-    } else if (role === 'Analyst') {
-      return baseContext + `
+Identify patterns that affect multiple teams or the org overall.` : role === 'Analyst' ? `
 Context: You are advising a data analyst who focuses on patterns and anomalies.
 Look for correlations, statistical anomalies, or data-driven signals.
-Be precise about what the metrics indicate and what's unusual.`;
-    } else {
-      // Team Leader / User Level 2
-      return baseContext + `
+Be precise about what the metrics indicate and what's unusual.` : `
 Context: You are advising a team leader responsible for specific managers/teams.
 Focus on execution gaps and individual team member risks.
-Highlight who needs attention and why.`;
+Highlight who needs attention and why.`}
+`;
+
+  // Generate insight on mount
+  useEffect(() => {
+    if (teamData && Object.keys(teamData).length > 0 && !generating) {
+      generateInsight();
     }
-  };
+  }, [appRole, user?.email, teamData]);
+
+  // Role check — return early if not eligible
+  const allowedRoles = ['HR Administrator', 'Admin Level 2', 'Analyst', 'Team Leader', 'User Level 2'];
+  if (!allowedRoles.includes(appRole) || dismissed || !insight) {
+    return null;
+  }
 
   const handleReviewTeam = () => {
-    if (!insight) return;
-
     const contextPayload = {
       source: 'team_intelligence',
       role: appRole,
@@ -118,7 +104,6 @@ Highlight who needs attention and why.`;
       },
       metrics: insight.metrics_summary || {}
     };
-
     openWithContext({
       context: contextPayload,
       starterMessage: `Walk me through what's happening with my team and what I should do about "${insight.title}".`
