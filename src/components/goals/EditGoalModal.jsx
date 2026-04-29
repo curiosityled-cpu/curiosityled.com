@@ -41,9 +41,12 @@ export default function EditGoalModal({ isOpen, onClose, onSubmit, goal }) {
   const [teamMembers, setTeamMembers] = useState([]);
   const [loadingTeam, setLoadingTeam] = useState(false);
 
+  const [openCount, setOpenCount] = useState(0);
+
   useEffect(() => {
-    if (isOpen && isManagerOfManagers) {
-      loadTeamMembers();
+    if (isOpen) {
+      setOpenCount(c => c + 1);
+      if (isManagerOfManagers) loadTeamMembers();
     }
   }, [isOpen, isManagerOfManagers]);
 
@@ -147,7 +150,7 @@ export default function EditGoalModal({ isOpen, onClose, onSubmit, goal }) {
             <AtreusGoalRefiner
               title={formData.title}
               description={formData.description}
-              resetKey={goal?.id}
+              resetKey={openCount}
               onAccept={({ title, description }) =>
                 setFormData(prev => ({ ...prev, title, description }))
               }

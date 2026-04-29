@@ -51,9 +51,11 @@ export default function CreateGoalModal({ isOpen, onClose, onSubmit }) {
   const [aiSuggestions, setAiSuggestions] = useState(null);
   const [teamMembers, setTeamMembers] = useState([]);
   const [loadingTeam, setLoadingTeam] = useState(false);
+  const [openCount, setOpenCount] = useState(0);
 
   useEffect(() => {
     if (isOpen) {
+      setOpenCount(c => c + 1);
       // Reset form state every time the modal opens
       setFormData({
         title: '',
@@ -492,7 +494,7 @@ export default function CreateGoalModal({ isOpen, onClose, onSubmit }) {
             <AtreusGoalRefiner
               title={formData.title}
               description={formData.description}
-              resetKey={isOpen}
+              resetKey={openCount}
               onAccept={({ title, description }) =>
                 setFormData(prev => ({ ...prev, title, description }))
               }
