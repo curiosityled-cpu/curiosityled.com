@@ -12,21 +12,22 @@ import { useAuth } from "@/components/useAuth";
 import { toast } from "sonner";
 import { Loader2, Upload, X, AlertCircle, Info, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import FormAssistant from "@/components/ai/FormAssistant";
 import AtreusPreSubmitModal from "@/components/requests/AtreusPreSubmitModal";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 
 // Heuristic: returns true when the request looks vague or risky enough to warrant Atreus review
 function looksVague(formData) {
-  const titleShort = !formData.title || formData.title.trim().split(' ').length < 4;
+  const titleShort = !formData.title || formData.title.trim().split(' ').length < 8;
   const descWeak = !formData.description || formData.description.trim().length < 40;
   const outcomeUnclear = !formData.success_criteria || formData.success_criteria.trim().length < 10;
   const highPriority = formData.priority === 'high' || formData.priority === 'urgent';
-  return (titleShort || descWeak || outcomeUnclear) && highPriority ||
-         (titleShort && descWeak);
+  const broadCategory = formData.request_type === 'custom';
+  // Only trigger when at least two weak signals combine, per spec
+  const weakSignalCount = [titleShort, descWeak, outcomeUnclear, broadCategory].filter(Boolean).length;
+  return (weakSignalCount >= 2) || (highPriority && weakSignalCount >= 1);
 }
 
-export default function RequestSubmissionForm({ onSuccess, onCancel }) {
+export default function RequestSubmissionForm({ onSuccess, onSubmit, onCancel }) {
   const { user, appRole } = useAuth();
   const { openWithContext } = useAtreusChat();
   const [loading, setLoading] = useState(false);
@@ -192,6 +193,7 @@ export default function RequestSubmissionForm({ onSuccess, onCancel }) {
       }
       
       if (onSuccess) onSuccess();
+      if (onSubmit) onSubmit();
     } catch (error) {
       console.error('Error creating request:', error);
       toast.error(error.message || 'Failed to submit request');
@@ -243,29 +245,6 @@ export default function RequestSubmissionForm({ onSuccess, onCancel }) {
 
   const requiresApproval = shouldRequireApproval();
 
-  const requestFormSchema = {
-    type: "object",
-    properties: {
-      title: { type: "string" },
-      description: { type: "string" },
-      request_type: { type: "string", enum: ["learning_content", "program_creation", "assessment_development", "coaching_support", "reporting", "platform_support", "consultation", "training", "custom"] },
-      priority: { type: "string", enum: ["low", "medium", "high", "urgent"] },
-      impact_level: { type: "string", enum: ["individual", "team", "department", "organization", "enterprise"] },
-      business_justification: { type: "string" },
-      success_criteria: { type: "string" },
-      budget_amount: { type: "string" },
-      audience_size: { type: "string" },
-      estimated_effort_hours: { type: "string" }
-    }
-  };
-
-  const handleAIApply = (aiData) => {
-    setFormData(prev => ({
-      ...prev,
-      ...aiData
-    }));
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -275,16 +254,6 @@ export default function RequestSubmissionForm({ onSuccess, onCancel }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="mb-6">
-          <FormAssistant
-            formSchema={requestFormSchema}
-            onApply={handleAIApply}
-            formType="development_request"
-            placeholder="Describe your request in plain language, e.g., 'I need a leadership training program for 20 mid-level managers focusing on communication and decision-making skills'"
-            compact={true}
-          />
-        </div>
-
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
           <div>
