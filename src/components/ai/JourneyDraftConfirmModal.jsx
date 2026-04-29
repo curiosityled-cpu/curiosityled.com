@@ -22,51 +22,48 @@ export default function JourneyDraftConfirmModal({ draft, user, onConfirm, onCan
   const handleCreate = async () => {
     setCreating(true);
     try {
-      // 1. Build content_structure from matched learning resources
-      const contentStructure = (draft.learning_resources || []).map((res, idx) => ({
-        learning_resource_id: res.id,
+      const userEmail = user?.email || user?.data?.email;
+      const clientId = user?.client_id || user?.data?.client_id || null;
+
+      // Build learning_items from matched resources
+      const learningItems = (draft.learning_resources || []).map(res => ({
+        resource_id: res.id,
         title: res.title,
-        type: res.type,
-        order: idx + 1,
-        is_optional: false,
-        unlock_condition: 'immediate',
+        provider: res.provider || '',
+        url: res.url || '',
+        status: 'not_started',
       }));
 
-      // 2. Create the LearningJourney
-      const journey = await base44.entities.LearningJourney.create({
+      // Build experiences array
+      const experienceItems = (draft.experiences || []).map(exp => ({
+        title: exp.title,
+        type: exp.type || 'stretch_project',
+        description: exp.description,
+        status: 'planned',
+        expected_impact: exp.expected_impact || 5,
+      }));
+
+      // Calculate target date
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + (draft.estimated_duration_days || 30));
+      const targetDateStr = targetDate.toISOString().split('T')[0];
+
+      // Create the DevelopmentPlan
+      const plan = await base44.entities.DevelopmentPlan.create({
+        user_email: userEmail,
         title: draft.title,
         description: draft.description,
-        type: 'learning_path',
-        author_email: user.email,
-        client_id: user.client_id || user?.data?.client_id || null,
-        status: 'draft',
-        tags: ['ai-generated', draft.competency_focus].filter(Boolean),
-        estimated_duration_days: draft.estimated_duration_days || 30,
-        content_structure: contentStructure,
-        assigned_to_emails: [user.email],
+        target_competencies: [draft.competency_focus].filter(Boolean),
+        status: 'active',
+        target_date: targetDateStr,
+        experiences: experienceItems,
+        learning_items: learningItems,
+        client_id: clientId,
       });
 
-      // 3. Create DevelopmentExperience records
-      const today = new Date();
-      const monthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-
-      for (const exp of (draft.experiences || [])) {
-        await base44.entities.DevelopmentExperience.create({
-          user_email: user.email,
-          title: exp.title,
-          description: exp.description,
-          type: exp.type || 'stretch_project',
-          competencies: [draft.competency_focus].filter(Boolean),
-          status: 'planned',
-          planned_month: monthStr,
-          expected_impact: exp.expected_impact || 5,
-          client_id: user.client_id || user?.data?.client_id || null,
-        });
-      }
-
-      setCreatedJourneyId(journey.id);
-      onConfirm?.(journey.id);
-      toast.success('Journey draft created successfully!');
+      setCreatedJourneyId(plan.id);
+      onConfirm?.(plan.id);
+      toast.success('Journey created successfully!');
     } catch (error) {
       console.error('Error creating journey:', error);
       toast.error('Failed to create Journey. Please try again.');
@@ -101,7 +98,7 @@ export default function JourneyDraftConfirmModal({ draft, user, onConfirm, onCan
               <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
               <h3 className="font-semibold text-gray-900 text-lg mb-1">Journey Created!</h3>
               <p className="text-gray-600 text-sm mb-4">
-                Your draft journey <strong>"{draft.title}"</strong> has been saved. You can now edit and publish it from the Journey Builder.
+                Your journey <strong>"{draft.title}"</strong> has been saved and is now active in My Development.
               </p>
               <div className="flex gap-3 justify-center">
                 <Button
