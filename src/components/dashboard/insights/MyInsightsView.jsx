@@ -45,7 +45,7 @@ import RecommendedGoalsSection from "./sections/RecommendedGoalsSection";
 import AssessmentTrendSection from "./sections/AssessmentTrendSection";
 import CompetencyLearningSection from "@/components/mvp/CompetencyLearningSection";
 import AddToPlanModal from "@/components/mvp/AddToPlanModal";
-import AtreusInsightCard from "./AtreusInsightCard.jsx";
+import AtreusInsightCard from "./AtreusInsightCard";
 
 const COMP_SCORE_MAP = {
   "Situational Intelligence": "si_pct",
