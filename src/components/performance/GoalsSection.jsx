@@ -68,8 +68,7 @@ export default function GoalsSection({ user, refreshTrigger, onRefresh }) {
         g.id === goalId ? { ...g, ...updatedData } : g
       )
     );
-    setShowEditModal(false);
-    setEditingGoal(null);
+    // EditGoalModal.handleSubmit calls onClose() itself, so no need to duplicate here
     onRefresh?.();
   };
 

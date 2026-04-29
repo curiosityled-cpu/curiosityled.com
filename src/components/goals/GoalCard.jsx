@@ -67,117 +67,140 @@ export default function GoalCard({ goal, viewMode, index, onDelete, onEdit, onRe
 
   const getProgressColor = () => {
     if (progress >= 80) return 'bg-green-500';
-    if (progress >= 50) return '';
+    if (progress >= 50) return 'bg-blue-600';
     if (progress >= 25) return 'bg-yellow-500';
     return 'bg-red-500';
   };
 
+  // Shared modals — rendered regardless of viewMode so they work in both list and grid
+  const sharedModals = (
+    <>
+      <CascadeGoalModal
+        isOpen={showCascadeModal}
+        onClose={() => setShowCascadeModal(false)}
+        goal={goal}
+        onSuccess={handleCascadeSuccess}
+      />
+      <ConfirmDialog
+        isOpen={showConfirmDelete}
+        onClose={() => setShowConfirmDelete(false)}
+        onConfirm={confirmDelete}
+        title="Delete Goal"
+        description={`Are you sure you want to delete "${goal.title}"? This action cannot be undone.`}
+        confirmText="Delete"
+      />
+    </>
+  );
+
   if (viewMode === "list") {
     return (
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: index * 0.05 }}
-      >
-        <Card className="bg-white border border-gray-200 hover:shadow-md transition-all duration-200 group rounded-lg overflow-hidden">
-          <div className="flex items-center">
-            <div
-              className="w-1.5 h-16 flex-shrink-0"
-              style={{ backgroundColor: goalColor }}
-            />
-            <CardContent className="p-3 flex-1">
-              <div className="flex items-center justify-between">
-                <Link to={createPageUrl(`Goal?id=${goal.id}`)} className="flex items-center gap-3 flex-grow min-w-0">
-                  <div 
-                    className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: `${goalColor}20` }}
-                  >
-                    <Folder 
-                      className="w-4 h-4"
-                      style={{ color: goalColor }}
-                    />
-                  </div>
-                  <div className="flex-grow min-w-0">
-                    <h3 className="font-semibold text-gray-800 transition-colors text-sm truncate group-hover:text-[#0202ff]">
-                      {goal.title}
-                    </h3>
-                    <p className="text-gray-500 text-xs mt-0.5 truncate">
-                      {goal.description || 'No description'}
-                    </p>
-                  </div>
-                </Link>
-                <div className="flex items-center gap-3 flex-shrink-0 ml-3">
-                  {/* Progress indicator */}
-                  <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg">
-                    <Target className="w-3.5 h-3.5 text-gray-500" />
-                    <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-gray-700">{progress}%</span>
-                      <div className="w-16 h-1 bg-gray-200 rounded-full overflow-hidden mt-0.5">
-                        <div 
-                          className={`h-full ${getProgressColor()} transition-all`}
-                          style={{ width: `${progress}%` }}
-                        />
+      <>
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: index * 0.05 }}
+        >
+          <Card className="bg-white border border-gray-200 hover:shadow-md transition-all duration-200 group rounded-lg overflow-hidden">
+            <div className="flex items-center">
+              <div
+                className="w-1.5 h-16 flex-shrink-0"
+                style={{ backgroundColor: goalColor }}
+              />
+              <CardContent className="p-3 flex-1">
+                <div className="flex items-center justify-between">
+                  <Link to={createPageUrl(`Goal?id=${goal.id}`)} className="flex items-center gap-3 flex-grow min-w-0">
+                    <div 
+                      className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: `${goalColor}20` }}
+                    >
+                      <Folder 
+                        className="w-4 h-4"
+                        style={{ color: goalColor }}
+                      />
+                    </div>
+                    <div className="flex-grow min-w-0">
+                      <h3 className="font-semibold text-gray-800 transition-colors text-sm truncate group-hover:text-[#0202ff]">
+                        {goal.title}
+                      </h3>
+                      <p className="text-gray-500 text-xs mt-0.5 truncate">
+                        {goal.description || 'No description'}
+                      </p>
+                    </div>
+                  </Link>
+                  <div className="flex items-center gap-3 flex-shrink-0 ml-3">
+                    {/* Progress indicator */}
+                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg">
+                      <Target className="w-3.5 h-3.5 text-gray-500" />
+                      <div className="flex flex-col">
+                        <span className="text-xs font-semibold text-gray-700">{progress}%</span>
+                        <div className="w-16 h-1 bg-gray-200 rounded-full overflow-hidden mt-0.5">
+                          <div 
+                            className={`h-full ${getProgressColor()} transition-all`}
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <Badge 
-                    variant="outline" 
-                    className={`border-none text-xs px-2 py-0.5 rounded-full ${
-                      goal.visibility === 'private' 
-                        ? 'bg-rose-100 text-rose-700' 
-                        : 'bg-emerald-100 text-emerald-700'
-                    }`}
-                  >
-                    {goal.visibility === 'private' ? (
-                      <Lock className="w-2.5 h-2.5 mr-1" />
-                    ) : (
-                      <Globe className="w-2.5 h-2.5 mr-1" />
-                    )}
-                    {goal.visibility}
-                  </Badge>
-                  <div className="text-right hidden sm:block">
-                    <p className="text-xs text-gray-400">
-                      {formatDistanceToNow(new Date(goal.updated_date), { addSuffix: true })}
-                    </p>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-500 hover:bg-gray-100 rounded-md" onClick={(e) => {e.preventDefault(); e.stopPropagation();}}>
-                        <MoreHorizontal className="w-3.5 h-3.5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={handleEdit}>
-                        <Edit3 className="w-3.5 h-3.5 mr-2" />
-                        Edit Goal
-                      </DropdownMenuItem>
-                      {isManagerOfManagers && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={handleAssign}>
-                            <UserPlus className="w-3.5 h-3.5 mr-2" />
-                            Assign to Team
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={handleCascade} disabled={isProcessing}>
-                            <GitBranch className="w-3.5 h-3.5 mr-2" />
-                            Cascade to Team
-                          </DropdownMenuItem>
-                        </>
+                    
+                    <Badge 
+                      variant="outline" 
+                      className={`border-none text-xs px-2 py-0.5 rounded-full ${
+                        goal.visibility === 'private' 
+                          ? 'bg-rose-100 text-rose-700' 
+                          : 'bg-emerald-100 text-emerald-700'
+                      }`}
+                    >
+                      {goal.visibility === 'private' ? (
+                        <Lock className="w-2.5 h-2.5 mr-1" />
+                      ) : (
+                        <Globe className="w-2.5 h-2.5 mr-1" />
                       )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleDelete} className="text-red-600 focus:text-red-600 focus:bg-red-50">
-                        <Trash2 className="w-3.5 h-3.5 mr-2" />
-                        Delete Goal
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                      {goal.visibility}
+                    </Badge>
+                    <div className="text-right hidden sm:block">
+                      <p className="text-xs text-gray-400">
+                        {formatDistanceToNow(new Date(goal.updated_date), { addSuffix: true })}
+                      </p>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-500 hover:bg-gray-100 rounded-md" onClick={(e) => {e.preventDefault(); e.stopPropagation();}}>
+                          <MoreHorizontal className="w-3.5 h-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={handleEdit}>
+                          <Edit3 className="w-3.5 h-3.5 mr-2" />
+                          Edit Goal
+                        </DropdownMenuItem>
+                        {isManagerOfManagers && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={handleAssign}>
+                              <UserPlus className="w-3.5 h-3.5 mr-2" />
+                              Assign to Team
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleCascade} disabled={isProcessing}>
+                              <GitBranch className="w-3.5 h-3.5 mr-2" />
+                              Cascade to Team
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleDelete} className="text-red-600 focus:text-red-600 focus:bg-red-50">
+                          <Trash2 className="w-3.5 h-3.5 mr-2" />
+                          Delete Goal
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </div>
-        </Card>
-      </motion.div>
+              </CardContent>
+            </div>
+          </Card>
+        </motion.div>
+        {sharedModals}
+      </>
     );
   }
 
@@ -245,7 +268,6 @@ export default function GoalCard({ goal, viewMode, index, onDelete, onEdit, onRe
             <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
               <motion.div 
                 className={`h-full ${getProgressColor()}`}
-                style={progress >= 50 && progress < 80 ? { backgroundColor: '#0202ff' } : {}}
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
@@ -296,21 +318,7 @@ export default function GoalCard({ goal, viewMode, index, onDelete, onEdit, onRe
       </Card>
       </motion.div>
 
-      <CascadeGoalModal
-        isOpen={showCascadeModal}
-        onClose={() => setShowCascadeModal(false)}
-        goal={goal}
-        onSuccess={handleCascadeSuccess}
-      />
-
-      <ConfirmDialog
-        isOpen={showConfirmDelete}
-        onClose={() => setShowConfirmDelete(false)}
-        onConfirm={confirmDelete}
-        title="Delete Goal"
-        description={`Are you sure you want to delete "${goal.title}"? This action cannot be undone.`}
-        confirmText="Delete"
-      />
+      {sharedModals}
     </>
   );
 }
