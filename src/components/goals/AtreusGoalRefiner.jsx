@@ -26,7 +26,6 @@ export default function AtreusGoalRefiner({ title = '', description = '', dueDat
   const mountedRef = useRef(true);
 
   useEffect(() => {
-    mountedRef.current = true;
     return () => { mountedRef.current = false; };
   }, []);
 

@@ -219,20 +219,6 @@ export default function CreateGoalModal({ isOpen, onClose, onSubmit }) {
 
     try {
       await onSubmit(goalData);
-      setFormData({ 
-        title: '', 
-        description: '', 
-        goal_type: 'standard',
-        timeframe_start: '',
-        timeframe_end: '',
-        color: '#0202ff', 
-        visibility: 'private',
-        linked_competency_ids: [],
-        assigned_to_emails: []
-      });
-      setAiSuggestions(null);
-      setShowSmartGoal(false);
-      setSmartGoalText('');
     } finally {
       setIsSubmitting(false);
     }
