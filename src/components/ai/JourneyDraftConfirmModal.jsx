@@ -76,9 +76,8 @@ export default function JourneyDraftConfirmModal({ draft, user, onConfirm, onCan
   };
 
   const handleNavigate = () => {
-    if (createdJourneyId) {
-      navigate(`/JourneyBuilder?journeyId=${createdJourneyId}`);
-    }
+    navigate('/my-development?tab=journeys');
+    onCancel?.();
   };
 
   return (
@@ -113,7 +112,7 @@ export default function JourneyDraftConfirmModal({ draft, user, onConfirm, onCan
                   onMouseLeave={e => e.currentTarget.style.backgroundColor = '#0202ff'}
                 >
                   <ExternalLink className="w-4 h-4" />
-                  Open in Journey Builder
+                  View My Journeys
                 </Button>
                 <Button variant="outline" onClick={onCancel}>
                   Close

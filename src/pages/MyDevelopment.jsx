@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import CertificateViewer from "@/components/learning/CertificateViewer";
 import CreateDevelopmentPlanModal from "@/components/development/CreateDevelopmentPlanModal";
 import ExperienceFormModal from "@/components/development/ExperienceFormModal";
@@ -92,10 +92,12 @@ const STATUS_BADGE = {
 
 export default function MyDevelopment() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [assignedLearning, setAssignedLearning] = useState([]);
   const [devPlans, setDevPlans] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [section, setSection] = useState("plans");
+  const initialSection = searchParams.get("tab") === "journeys" ? "plans" : "plans";
+  const [section, setSection] = useState(initialSection);
   const [activeTab, setActiveTab] = useState("active");
   const [showModal, setShowModal] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
