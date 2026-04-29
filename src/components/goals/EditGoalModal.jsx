@@ -64,9 +64,12 @@ export default function EditGoalModal({ isOpen, onClose, onSubmit, goal }) {
     }
   }, [isOpen, goal]);
 
-  // Load team members only when the modal first opens, not on every isOpen toggle
+  // Load team members only when the modal first opens.
+  // Uses a separate ref so it doesn't race with the wasOpenRef mutation in the form-seed effect.
+  const wasOpenForTeamRef = useRef(false);
   useEffect(() => {
-    const justOpened = isOpen && !wasOpenRef.current;
+    const justOpened = isOpen && !wasOpenForTeamRef.current;
+    wasOpenForTeamRef.current = isOpen;
     if (justOpened && isManagerOfManagers) {
       loadTeamMembers();
     }

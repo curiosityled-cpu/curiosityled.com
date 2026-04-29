@@ -30,6 +30,8 @@ export default function AtreusGoalRefiner({ title = '', description = '', dueDat
   const isFirstMount = useRef(true);
 
   useEffect(() => {
+    // Reset on every mount (component is conditionally rendered based on title length)
+    mountedRef.current = true;
     return () => { mountedRef.current = false; };
   }, []);
 
