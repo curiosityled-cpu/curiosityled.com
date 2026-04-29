@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Lock, Globe, Target, TrendingUp, Calendar as CalendarIcon, Sparkles, Loader2, Lightbulb, Users, X } from "lucide-react";
+import { toast } from "sonner";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
@@ -114,10 +115,7 @@ export default function CreateGoalModal({ isOpen, onClose, onSubmit }) {
       setShowSmartGoal(false);
     } catch (error) {
       console.error('Smart Goal error:', error);
-      // Show error via toast instead of alert
-      import('sonner').then(({ toast }) => {
-        toast.error('Failed to process Smart Goal. Please try again.');
-      });
+      toast.error('Failed to process Smart Goal. Please try again.');
     } finally {
       setIsProcessing(false);
     }
@@ -128,9 +126,7 @@ export default function CreateGoalModal({ isOpen, onClose, onSubmit }) {
     if (!formData.title.trim()) return;
 
     if (formData.goal_type === 'okr_objective' && (!formData.timeframe_start || !formData.timeframe_end)) {
-      import('sonner').then(({ toast }) => {
-        toast.error('OKR Objectives require a timeframe. Please set start and end dates.');
-      });
+      toast.error('OKR Objectives require a timeframe. Please set start and end dates.');
       return;
     }
 
@@ -197,22 +193,25 @@ export default function CreateGoalModal({ isOpen, onClose, onSubmit }) {
       ]
     };
 
-    await onSubmit(goalData);
-    setFormData({ 
-      title: '', 
-      description: '', 
-      goal_type: 'standard',
-      timeframe_start: '',
-      timeframe_end: '',
-      color: '#0202ff', 
-      visibility: 'private',
-      linked_competency_ids: [],
-      assigned_to_emails: []
-    });
-    setAiSuggestions(null);
-    setShowSmartGoal(false);
-    setSmartGoalText('');
-    setIsSubmitting(false);
+    try {
+      await onSubmit(goalData);
+      setFormData({ 
+        title: '', 
+        description: '', 
+        goal_type: 'standard',
+        timeframe_start: '',
+        timeframe_end: '',
+        color: '#0202ff', 
+        visibility: 'private',
+        linked_competency_ids: [],
+        assigned_to_emails: []
+      });
+      setAiSuggestions(null);
+      setShowSmartGoal(false);
+      setSmartGoalText('');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isOKR = formData.goal_type === 'okr_objective';

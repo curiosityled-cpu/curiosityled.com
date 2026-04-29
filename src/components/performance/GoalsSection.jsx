@@ -62,8 +62,6 @@ export default function GoalsSection({ user, refreshTrigger, onRefresh }) {
     onRefresh?.();
   };
 
-
-
   const handleOpenEditModal = (goal) => {
     setEditingGoal(goal);
     setShowEditModal(true);
