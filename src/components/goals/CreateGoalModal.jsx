@@ -69,6 +69,8 @@ export default function CreateGoalModal({ isOpen, onClose, onSubmit }) {
       setAiSuggestions(null);
       setShowSmartGoal(false);
       setSmartGoalText('');
+      setIsProcessing(false);
+      setIsSubmitting(false);
       if (isManagerOfManagers) {
         loadTeamMembers();
       }
