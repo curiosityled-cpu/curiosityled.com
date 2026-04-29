@@ -5,6 +5,7 @@ import { Sparkles, ChevronRight, AlertCircle, TrendingDown, Zap } from 'lucide-r
 import { motion } from "framer-motion";
 import { useAtreusChat } from '@/components/ai/AtreusContext';
 import { base44 } from '@/api/base44Client';
+import { useMemo } from 'react';
 
 /**
  * AtreusTeamInsightCard — Team/organizational intelligence for team leaders, analysts, and HR admins.
@@ -78,12 +79,15 @@ Focus on execution gaps and individual team member risks.
 Highlight who needs attention and why.`}
 `;
 
+  // Stable reference for teamData to avoid infinite dependency updates
+  const teamDataKey = useMemo(() => JSON.stringify(teamData), [teamData]);
+
   // Generate insight on mount
   useEffect(() => {
     if (teamData && Object.keys(teamData).length > 0 && !generating) {
       generateInsight();
     }
-  }, [appRole, user?.email, teamData]);
+  }, [appRole, user?.email, teamDataKey, generating]);
 
   // Role check — return early if not eligible
   const allowedRoles = ['HR Administrator', 'Admin Level 2', 'Analyst', 'Team Leader', 'User Level 2'];
