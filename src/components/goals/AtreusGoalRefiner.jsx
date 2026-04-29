@@ -24,15 +24,16 @@ export default function AtreusGoalRefiner({ title = '', description = '', dueDat
   const [suggestion, setSuggestion] = useState(null);
   const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState(false);
+  // mountedRef: prevents setState calls after unmount during in-flight LLM requests
   const mountedRef = useRef(true);
+  // isFirstMount: skips the resetKey effect on initial mount (state already at defaults)
+  const isFirstMount = useRef(true);
 
   useEffect(() => {
     return () => { mountedRef.current = false; };
   }, []);
 
   // Reset internal state whenever the parent signals a fresh session (e.g. modal reopened).
-  // Skip the very first mount (resetKey === 0) since state is already at defaults.
-  const isFirstMount = useRef(true);
   useEffect(() => {
     if (isFirstMount.current) {
       isFirstMount.current = false;
