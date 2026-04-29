@@ -90,9 +90,12 @@ export default function EditGoalModal({ isOpen, onClose, onSubmit, goal }) {
     if (!formData.title.trim() || !goal) return;
 
     setIsSubmitting(true);
-    await onSubmit(goal.id, formData);
-    onClose();
-    setIsSubmitting(false);
+    try {
+      await onSubmit(goal.id, formData);
+      onClose();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!goal) return null;

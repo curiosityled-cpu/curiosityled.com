@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
 import { Plus, Search, Grid3X3, LayoutList, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -62,6 +61,8 @@ export default function GoalsSection({ user, refreshTrigger, onRefresh }) {
     setShowCreateModal(false);
     onRefresh?.();
   };
+
+
 
   const handleOpenEditModal = (goal) => {
     setEditingGoal(goal);

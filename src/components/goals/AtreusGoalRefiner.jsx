@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Loader2, Check, X } from 'lucide-react';
+import { Sparkles, Loader2, Check, X, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/useAuth';
@@ -22,11 +22,13 @@ export default function AtreusGoalRefiner({ title = '', description = '', dueDat
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState(null);
   const [accepted, setAccepted] = useState(false);
+  const [error, setError] = useState(false);
 
   const handleRefine = async () => {
     setLoading(true);
     setSuggestion(null);
     setAccepted(false);
+    setError(false);
 
     const prompt = `You are a goal quality coach helping a ${appRole || 'professional'} sharpen their development goal.
 
@@ -62,6 +64,7 @@ Keep language direct and professional. Do not add unnecessary preamble.`;
       setSuggestion(result);
     } catch (err) {
       console.error('AtreusGoalRefiner error:', err);
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -118,6 +121,14 @@ Keep language direct and professional. Do not add unnecessary preamble.`;
           )}
         </Button>
       </div>
+
+      {/* Error state */}
+      {error && (
+        <div className="border-t border-purple-200 px-4 py-2 flex items-center gap-2 text-xs text-red-600">
+          <AlertCircle className="w-3 h-3 flex-shrink-0" />
+          Could not get suggestions. Please try again.
+        </div>
+      )}
 
       {/* Suggestion panel */}
       {suggestion && (

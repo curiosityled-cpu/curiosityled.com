@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Map, BookOpen, Star, Clock, CheckCircle, ExternalLink, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 
 /**
  * JourneyDraftConfirmModal
