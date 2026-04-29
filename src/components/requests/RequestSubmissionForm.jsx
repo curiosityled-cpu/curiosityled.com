@@ -690,7 +690,7 @@ export default function RequestSubmissionForm({ onSuccess, onCancel }) {
       <AtreusPreSubmitModal
         open={showAtreusModal}
         onRefine={handleRefineWithAtreus}
-        onSubmitAnyway={() => { setShowAtreusModal(false); doSubmit(); }}
+        onSubmitAnyway={async () => { setShowAtreusModal(false); await doSubmit(); }}
         onClose={() => setShowAtreusModal(false)}
       />
     </Card>
