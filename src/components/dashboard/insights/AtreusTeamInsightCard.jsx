@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, ChevronRight, AlertCircle, TrendingDown, Zap } from 'lucide-react';
 import { motion } from "framer-motion";
 import { useAtreusChat } from '@/components/ai/AtreusContext';
 import { base44 } from '@/api/base44Client';
-import { useMemo } from 'react';
 
 /**
  * AtreusTeamInsightCard — Team/organizational intelligence for team leaders, analysts, and HR admins.
