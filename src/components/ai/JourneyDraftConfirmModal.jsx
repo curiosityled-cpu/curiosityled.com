@@ -73,8 +73,8 @@ export default function JourneyDraftConfirmModal({ draft, user, onConfirm, onCan
   };
 
   const handleNavigate = () => {
-    navigate('/my-development?tab=journeys');
     onCancel?.();
+    navigate('/my-development?tab=journeys');
   };
 
   return (

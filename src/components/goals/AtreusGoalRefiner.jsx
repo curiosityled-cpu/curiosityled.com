@@ -17,7 +17,7 @@ import { useAuth } from '@/components/useAuth';
  *   competency   - optional competency label string
  *   onAccept     - callback({ title, description, milestones, successMeasure })
  */
-export default function AtreusGoalRefiner({ title, description, dueDate, competency, onAccept }) {
+export default function AtreusGoalRefiner({ title = '', description = '', dueDate, competency, onAccept }) {
   const { appRole } = useAuth();
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState(null);
@@ -68,7 +68,7 @@ Keep language direct and professional. Do not add unnecessary preamble.`;
   };
 
   const handleAccept = () => {
-    if (!suggestion) return;
+    if (!suggestion || !onAccept) return;
     onAccept({
       title: suggestion.improved_title,
       description: suggestion.improved_description,

@@ -210,6 +210,8 @@ export default function CreateGoalModal({ isOpen, onClose, onSubmit }) {
       assigned_to_emails: []
     });
     setAiSuggestions(null);
+    setShowSmartGoal(false);
+    setSmartGoalText('');
     setIsSubmitting(false);
   };
 
@@ -334,7 +336,7 @@ export default function CreateGoalModal({ isOpen, onClose, onSubmit }) {
               <div className="flex-1">
                 <h4 className="font-semibold text-sm text-[#323338] mb-1">AI Insights</h4>
                 <p className="text-sm text-gray-700 mb-3">{aiSuggestions.rationale}</p>
-                {aiSuggestions.suggestions.length > 0 && (
+                {aiSuggestions.suggestions?.length > 0 && (
                   <div className="mb-3">
                     <p className="text-xs font-medium text-gray-600 mb-1">Suggestions:</p>
                     <ul className="text-xs text-gray-600 space-y-1">
@@ -347,7 +349,7 @@ export default function CreateGoalModal({ isOpen, onClose, onSubmit }) {
                     </ul>
                   </div>
                 )}
-                {aiSuggestions.competency_suggestions.length > 0 && (
+                {aiSuggestions.competency_suggestions?.length > 0 && (
                   <div>
                     <p className="text-xs font-medium text-gray-600 mb-1">Related Competencies:</p>
                     <div className="flex flex-wrap gap-1">

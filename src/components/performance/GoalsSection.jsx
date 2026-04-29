@@ -32,9 +32,14 @@ export default function GoalsSection({ user, refreshTrigger, onRefresh }) {
 
   const loadGoals = async () => {
     setIsLoading(true);
-    const data = await base44.entities.Goal.list("-updated_date");
-    setGoals(data);
-    setIsLoading(false);
+    try {
+      const data = await base44.entities.Goal.list("-updated_date");
+      setGoals(data);
+    } catch (error) {
+      console.error('Error loading goals:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const filterGoals = () => {
