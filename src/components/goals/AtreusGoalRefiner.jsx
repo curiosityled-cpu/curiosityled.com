@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, Loader2, Check, X, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
@@ -17,12 +17,20 @@ import { useAuth } from '@/components/useAuth';
  *   competency   - optional competency label string
  *   onAccept     - callback({ title, description, milestones, successMeasure })
  */
-export default function AtreusGoalRefiner({ title = '', description = '', dueDate, competency, onAccept }) {
+export default function AtreusGoalRefiner({ title = '', description = '', dueDate, competency, onAccept, resetKey }) {
   const { appRole } = useAuth();
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState(null);
   const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState(false);
+
+  // Reset internal state whenever the parent signals a fresh session (e.g. modal reopened)
+  useEffect(() => {
+    setLoading(false);
+    setSuggestion(null);
+    setAccepted(false);
+    setError(false);
+  }, [resetKey]);
 
   const handleRefine = async () => {
     setLoading(true);

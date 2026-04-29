@@ -147,6 +147,7 @@ export default function EditGoalModal({ isOpen, onClose, onSubmit, goal }) {
             <AtreusGoalRefiner
               title={formData.title}
               description={formData.description}
+              resetKey={goal?.id}
               onAccept={({ title, description }) =>
                 setFormData(prev => ({ ...prev, title, description }))
               }

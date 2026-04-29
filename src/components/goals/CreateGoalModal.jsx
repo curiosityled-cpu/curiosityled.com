@@ -53,8 +53,25 @@ export default function CreateGoalModal({ isOpen, onClose, onSubmit }) {
   const [loadingTeam, setLoadingTeam] = useState(false);
 
   useEffect(() => {
-    if (isOpen && isManagerOfManagers) {
-      loadTeamMembers();
+    if (isOpen) {
+      // Reset form state every time the modal opens
+      setFormData({
+        title: '',
+        description: '',
+        goal_type: 'standard',
+        timeframe_start: '',
+        timeframe_end: '',
+        color: '#0202ff',
+        visibility: 'private',
+        linked_competency_ids: [],
+        assigned_to_emails: []
+      });
+      setAiSuggestions(null);
+      setShowSmartGoal(false);
+      setSmartGoalText('');
+      if (isManagerOfManagers) {
+        loadTeamMembers();
+      }
     }
   }, [isOpen, isManagerOfManagers]);
 
@@ -473,6 +490,7 @@ export default function CreateGoalModal({ isOpen, onClose, onSubmit }) {
             <AtreusGoalRefiner
               title={formData.title}
               description={formData.description}
+              resetKey={isOpen}
               onAccept={({ title, description }) =>
                 setFormData(prev => ({ ...prev, title, description }))
               }
