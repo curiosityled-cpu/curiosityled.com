@@ -46,7 +46,13 @@ export default function EditGoalModal({ isOpen, onClose, onSubmit, goal }) {
   useEffect(() => {
     if (isOpen) {
       setOpenCount(c => c + 1);
-      if (isManagerOfManagers) loadTeamMembers();
+      setIsSubmitting(false);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && isManagerOfManagers) {
+      loadTeamMembers();
     }
   }, [isOpen, isManagerOfManagers]);
 
