@@ -57,15 +57,17 @@ export default function EditGoalModal({ isOpen, onClose, onSubmit, goal }) {
       setFormData({
         title: goal.title || '',
         description: goal.description || '',
-        color: goal.color || '#0073EA',
+        color: goal.color || '#0202ff',
         visibility: goal.visibility || 'private',
         assigned_to_emails: goal.assigned_to_emails || []
       });
     }
   }, [isOpen, goal]);
 
+  // Load team members only when the modal first opens, not on every isOpen toggle
   useEffect(() => {
-    if (isOpen && isManagerOfManagers) {
+    const justOpened = isOpen && !wasOpenRef.current;
+    if (justOpened && isManagerOfManagers) {
       loadTeamMembers();
     }
   }, [isOpen, isManagerOfManagers]);

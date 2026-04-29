@@ -105,6 +105,8 @@ Keep language direct and professional. Do not add unnecessary preamble.`;
 
   const handleDismiss = () => {
     setSuggestion(null);
+    // accepted is already false here (it's only true after handleAccept which clears suggestion)
+    // but reset it defensively in case of any unexpected state
     setAccepted(false);
   };
 
