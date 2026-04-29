@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,15 @@ export default function GoalsSection({ user, refreshTrigger, onRefresh }) {
   }, [user, refreshTrigger]);
 
   useEffect(() => {
-    filterGoals();
+    if (!searchQuery) {
+      setFilteredGoals(goals);
+      return;
+    }
+    const q = searchQuery.toLowerCase();
+    setFilteredGoals(goals.filter(goal =>
+      goal.title.toLowerCase().includes(q) ||
+      goal.description?.toLowerCase().includes(q)
+    ));
   }, [searchQuery, goals]);
 
   const loadGoals = async () => {
@@ -39,20 +47,6 @@ export default function GoalsSection({ user, refreshTrigger, onRefresh }) {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const filterGoals = () => {
-    if (!searchQuery) {
-      setFilteredGoals(goals);
-      return;
-    }
-
-    const lowercasedQuery = searchQuery.toLowerCase();
-    const filtered = goals.filter(goal =>
-      goal.title.toLowerCase().includes(lowercasedQuery) ||
-      goal.description?.toLowerCase().includes(lowercasedQuery)
-    );
-    setFilteredGoals(filtered);
   };
 
   const handleCreateGoal = async (goalData) => {
