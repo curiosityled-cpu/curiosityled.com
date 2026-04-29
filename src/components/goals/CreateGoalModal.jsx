@@ -19,7 +19,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/components/useAuth";
-import FormAssistant from "@/components/ai/FormAssistant";
 import AtreusGoalRefiner from "@/components/goals/AtreusGoalRefiner";
 
 const colorOptions = [
@@ -252,18 +251,6 @@ export default function CreateGoalModal({ isOpen, onClose, onSubmit }) {
             Create a Goal
           </DialogTitle>
         </DialogHeader>
-
-        {!showSmartGoal && !aiSuggestions && (
-          <>
-            <FormAssistant
-              formSchema={goalFormSchema}
-              onApply={handleAIFormApply}
-              formType="goal"
-              placeholder="Describe your goal, e.g., 'Improve team communication by implementing weekly standups and getting 90% attendance over the next quarter'"
-              compact={true}
-            />
-          </>
-        )}
 
         {!showSmartGoal && !aiSuggestions && (
           <div className="mb-4">
