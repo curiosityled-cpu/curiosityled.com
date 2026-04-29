@@ -43,21 +43,13 @@ export default function EditGoalModal({ isOpen, onClose, onSubmit, goal }) {
 
   const [openCount, setOpenCount] = useState(0);
 
+  // Seed form + bump openCount (for AtreusGoalRefiner reset) only when modal opens.
+  // Depending on [isOpen, goal] ensures we always get the latest goal data on open
+  // without wiping in-progress edits if the parent re-renders mid-session.
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && goal) {
       setOpenCount(c => c + 1);
       setIsSubmitting(false);
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (isOpen && isManagerOfManagers) {
-      loadTeamMembers();
-    }
-  }, [isOpen, isManagerOfManagers]);
-
-  useEffect(() => {
-    if (goal) {
       setFormData({
         title: goal.title || '',
         description: goal.description || '',
@@ -66,7 +58,13 @@ export default function EditGoalModal({ isOpen, onClose, onSubmit, goal }) {
         assigned_to_emails: goal.assigned_to_emails || []
       });
     }
-  }, [goal]);
+  }, [isOpen, goal]);
+
+  useEffect(() => {
+    if (isOpen && isManagerOfManagers) {
+      loadTeamMembers();
+    }
+  }, [isOpen, isManagerOfManagers]);
 
   const loadTeamMembers = async () => {
     setLoadingTeam(true);

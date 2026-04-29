@@ -16,6 +16,7 @@ import { useAuth } from '@/components/useAuth';
  *   dueDate      - optional ISO date string
  *   competency   - optional competency label string
  *   onAccept     - callback({ title, description, milestones, successMeasure })
+ *   resetKey     - increment this (e.g. openCount) to flush suggestion state on modal reopen
  */
 export default function AtreusGoalRefiner({ title = '', description = '', dueDate, competency, onAccept, resetKey }) {
   const { appRole } = useAuth();
@@ -29,8 +30,14 @@ export default function AtreusGoalRefiner({ title = '', description = '', dueDat
     return () => { mountedRef.current = false; };
   }, []);
 
-  // Reset internal state whenever the parent signals a fresh session (e.g. modal reopened)
+  // Reset internal state whenever the parent signals a fresh session (e.g. modal reopened).
+  // Skip the very first mount (resetKey === 0) since state is already at defaults.
+  const isFirstMount = useRef(true);
   useEffect(() => {
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
     setLoading(false);
     setSuggestion(null);
     setAccepted(false);
