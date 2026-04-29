@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, Loader2, Check, X, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
@@ -23,6 +23,12 @@ export default function AtreusGoalRefiner({ title = '', description = '', dueDat
   const [suggestion, setSuggestion] = useState(null);
   const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState(false);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   // Reset internal state whenever the parent signals a fresh session (e.g. modal reopened)
   useEffect(() => {
@@ -69,12 +75,12 @@ Keep language direct and professional. Do not add unnecessary preamble.`;
           },
         },
       });
-      setSuggestion(result);
+      if (mountedRef.current) setSuggestion(result);
     } catch (err) {
       console.error('AtreusGoalRefiner error:', err);
-      setError(true);
+      if (mountedRef.current) setError(true);
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
   };
 

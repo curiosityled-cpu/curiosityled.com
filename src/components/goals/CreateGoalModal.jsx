@@ -53,10 +53,10 @@ export default function CreateGoalModal({ isOpen, onClose, onSubmit }) {
   const [loadingTeam, setLoadingTeam] = useState(false);
   const [openCount, setOpenCount] = useState(0);
 
+  // Increment openCount and reset form only when the modal transitions to open
   useEffect(() => {
     if (isOpen) {
       setOpenCount(c => c + 1);
-      // Reset form state every time the modal opens
       setFormData({
         title: '',
         description: '',
@@ -73,9 +73,13 @@ export default function CreateGoalModal({ isOpen, onClose, onSubmit }) {
       setSmartGoalText('');
       setIsProcessing(false);
       setIsSubmitting(false);
-      if (isManagerOfManagers) {
-        loadTeamMembers();
-      }
+    }
+  }, [isOpen]);
+
+  // Separately load team members when relevant — does NOT affect openCount
+  useEffect(() => {
+    if (isOpen && isManagerOfManagers) {
+      loadTeamMembers();
     }
   }, [isOpen, isManagerOfManagers]);
 
