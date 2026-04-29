@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -42,12 +42,16 @@ export default function EditGoalModal({ isOpen, onClose, onSubmit, goal }) {
   const [loadingTeam, setLoadingTeam] = useState(false);
 
   const [openCount, setOpenCount] = useState(0);
+  // Track previous isOpen to detect only the false→true transition.
+  // This prevents re-seeding form data (and resetting AtreusGoalRefiner) on
+  // every parent re-render that produces a new goal object reference.
+  const wasOpenRef = useRef(false);
 
-  // Seed form + bump openCount (for AtreusGoalRefiner reset) only when modal opens.
-  // Depending on [isOpen, goal] ensures we always get the latest goal data on open
-  // without wiping in-progress edits if the parent re-renders mid-session.
   useEffect(() => {
-    if (isOpen && goal) {
+    const justOpened = isOpen && !wasOpenRef.current;
+    wasOpenRef.current = isOpen;
+
+    if (justOpened && goal) {
       setOpenCount(c => c + 1);
       setIsSubmitting(false);
       setFormData({
