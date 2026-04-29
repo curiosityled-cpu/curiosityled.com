@@ -3,9 +3,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Folder, Users, Lock, Globe, MoreHorizontal, Calendar, Trash2, Edit3, Target, GitBranch, UserPlus } from "lucide-react";
+import { Folder, Lock, Globe, MoreHorizontal, Calendar, Trash2, Edit3, Target, GitBranch, UserPlus } from "lucide-react";
 import { motion } from "framer-motion";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,16 +15,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/useAuth";
-import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import CascadeGoalModal from "./CascadeGoalModal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export default function GoalCard({ goal, viewMode, index, onDelete, onEdit, onRefresh }) {
   const { isManagerOfManagers } = useAuth();
-  const [isProcessing, setIsProcessing] = useState(false);
   const [showCascadeModal, setShowCascadeModal] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  // Derived: cascade button is disabled while the cascade modal is open
+  const isProcessing = showCascadeModal;
   
   const handleDelete = (e) => {
     e.preventDefault(); 
@@ -54,11 +54,10 @@ export default function GoalCard({ goal, viewMode, index, onDelete, onEdit, onRe
     onRefresh?.();
   };
 
-  const handleAssign = async (e) => {
+  const handleAssign = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    // Open edit modal which now has assignment functionality
+    // Open edit modal which has assignment functionality
     onEdit(goal);
   };
 
