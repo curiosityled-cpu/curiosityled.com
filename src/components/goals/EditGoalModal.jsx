@@ -42,10 +42,10 @@ export default function EditGoalModal({ isOpen, onClose, onSubmit, goal }) {
   const [loadingTeam, setLoadingTeam] = useState(false);
 
   const [openCount, setOpenCount] = useState(0);
-  // Track previous isOpen to detect only the false→true transition.
-  // This prevents re-seeding form data (and resetting AtreusGoalRefiner) on
-  // every parent re-render that produces a new goal object reference.
+  // Separate refs to independently track the false→true transition for each effect.
+  // wasOpenRef: guards form-seed effect. wasOpenForTeamRef: guards team-load effect.
   const wasOpenRef = useRef(false);
+  const wasOpenForTeamRef = useRef(false);
 
   useEffect(() => {
     const justOpened = isOpen && !wasOpenRef.current;
@@ -65,8 +65,6 @@ export default function EditGoalModal({ isOpen, onClose, onSubmit, goal }) {
   }, [isOpen, goal]);
 
   // Load team members only when the modal first opens.
-  // Uses a separate ref so it doesn't race with the wasOpenRef mutation in the form-seed effect.
-  const wasOpenForTeamRef = useRef(false);
   useEffect(() => {
     const justOpened = isOpen && !wasOpenForTeamRef.current;
     wasOpenForTeamRef.current = isOpen;
@@ -216,7 +214,7 @@ export default function EditGoalModal({ isOpen, onClose, onSubmit, goal }) {
             </Select>
           </div>
 
-          {isManagerOfManagers && teamMembers.length > 0 && (
+          {isManagerOfManagers && (loadingTeam || teamMembers.length > 0) && (
             <div className="space-y-3">
               <Label className="text-[#323338] font-medium">
                 <Users className="w-4 h-4 inline mr-2" />

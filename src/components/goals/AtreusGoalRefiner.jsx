@@ -26,12 +26,14 @@ export default function AtreusGoalRefiner({ title = '', description = '', dueDat
   const [error, setError] = useState(false);
   // mountedRef: prevents setState calls after unmount during in-flight LLM requests
   const mountedRef = useRef(true);
-  // isFirstMount: skips the resetKey effect on initial mount (state already at defaults)
+  // isFirstMount: skips the resetKey effect on the very first mount (state already at defaults).
+  // Also reset on every mount so conditional re-mounting doesn't misfire the resetKey effect.
   const isFirstMount = useRef(true);
 
   useEffect(() => {
-    // Reset on every mount (component is conditionally rendered based on title length)
+    // Reset both flags on every mount since this component conditionally renders
     mountedRef.current = true;
+    isFirstMount.current = true;
     return () => { mountedRef.current = false; };
   }, []);
 
