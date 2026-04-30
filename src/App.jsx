@@ -23,6 +23,7 @@ import Settings from './pages/Settings';
 import Notifications from './pages/Notifications';
 import PrivacySettings from './pages/PrivacySettings';
 import AdminDataRestore from './pages/AdminDataRestore';
+import PendingRole from './pages/PendingRole';
 import SeedLinkedInCourses from './pages/SeedLinkedInCourses';
 import OrgBusinessGoals from './pages/OrgBusinessGoals';
 import Insights from './pages/Insights';
@@ -78,7 +79,7 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route path="/" element={
         !mvpRole ? (
-          <LayoutWrapper currentPageName="Dashboard"><Pages.Dashboard /></LayoutWrapper>
+          <MVPLayout><PendingRole /></MVPLayout>
         ) : mvpRole === 'buyer' ? (
           <MVPLayout><ExperienceOverview /></MVPLayout>
         ) : mvpRole === 'executive' ? (
