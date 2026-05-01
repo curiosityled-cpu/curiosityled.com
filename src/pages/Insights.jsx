@@ -215,9 +215,9 @@ function Insights() {
         ...(canViewOrgInsights ? [{ id: VIEW_SCOPES.ORG, label: 'Leadership Intelligence Hub', icon: Building2 }] : [])
       ];
 
-  // If no tabs resolved (e.g. MVP users whose permissions haven't loaded yet),
-  // always fall back to personal insights so the page isn't blank.
-  const effectiveView = viewTabs.length === 0 ? VIEW_SCOPES.MY : currentView;
+  // If forcedOrgView (?tab=org), always show ORG regardless of permission load timing.
+  // Otherwise fall back to personal insights if no tabs resolved yet.
+  const effectiveView = forcedOrgView ? VIEW_SCOPES.ORG : (viewTabs.length === 0 ? VIEW_SCOPES.MY : currentView);
 
   const renderInsightsContent = () => {
     switch (effectiveView) {
