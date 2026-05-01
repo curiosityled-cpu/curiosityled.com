@@ -47,41 +47,82 @@ function LoadingSkeleton() {
 export default function LeadershipIntelligenceHub() {
   const { user } = useAuth();
 
+  // client_id may be top-level or nested under data (depending on role/auth path)
+  const clientId = user?.client_id || user?.data?.client_id;
+
   const { data: managers = [], isLoading: loadingManagers } = useQuery({
-    queryKey: ['exec-managers', user?.client_id],
+    queryKey: ['exec-managers', clientId],
     queryFn: async () => base44.entities.User.filter({
-      client_id: user.client_id,
+      client_id: clientId,
       app_role: { $in: ['User Level 1', 'User Level 2'] }
     }),
-    enabled: !!user?.client_id,
+    enabled: !!clientId,
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: insightsList = [], isLoading: loadingInsights } = useQuery({
-    queryKey: ['exec-insights', user?.client_id],
+    queryKey: ['exec-insights', clientId],
     queryFn: async () => base44.entities.AssessmentInsights.filter({
-      client_id: user.client_id,
+      client_id: clientId,
       status: 'generated'
     }),
-    enabled: !!user?.client_id,
+    enabled: !!clientId,
     staleTime: 5 * 60 * 1000,
   });
 
   const isLoading = loadingManagers || loadingInsights;
 
+  // Also pull ALL org users (any role) so analytics show even without managers
+  const { data: allOrgUsers = [] } = useQuery({
+    queryKey: ['exec-all-users', clientId],
+    queryFn: async () => base44.entities.User.filter({ client_id: clientId }),
+    enabled: !!clientId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Also pull ALL assessments for the org to compute stats when insights are missing
+  const { data: allAssessments = [] } = useQuery({
+    queryKey: ['exec-assessments', clientId],
+    queryFn: async () => base44.entities.Assessment.filter({ client_id: clientId }),
+    enabled: !!clientId,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const stats = React.useMemo(() => {
-    if (!managers.length) return null;
+    // Use managers if available, fall back to all users with relevant roles
+    const population = managers.length > 0
+      ? managers
+      : allOrgUsers.filter(u => ['User Level 1', 'User Level 2'].includes(u.app_role));
+
+    if (!population.length) return null;
     const insightMap = insightsList.reduce((acc, i) => { acc[i.user_email] = i; return acc; }, {});
+    // Also build a map from assessments for scoring fallback
+    const assessmentMap = allAssessments.reduce((acc, a) => {
+      if (!acc[a.email] || new Date(a.submission_ts) > new Date(acc[a.email].submission_ts)) {
+        acc[a.email] = a;
+      }
+      return acc;
+    }, {});
+
     let atRisk = 0, developing = 0, onTrack = 0, noData = 0;
-    managers.forEach(m => {
+    population.forEach(m => {
       const insight = insightMap[m.email];
-      if (!insight) { noData++; return; }
-      const flags = insight.risk_flags?.length || 0;
-      if (flags === 0) onTrack++;
-      else if (flags === 1) developing++;
-      else atRisk++;
+      if (insight) {
+        const flags = insight.risk_flags?.length || 0;
+        if (flags === 0) onTrack++;
+        else if (flags === 1) developing++;
+        else atRisk++;
+      } else {
+        // Fall back to assessment score
+        const assessment = assessmentMap[m.email];
+        if (!assessment) { noData++; return; }
+        const score = assessment.overall_pct || 0;
+        if (score >= 70) onTrack++;
+        else if (score >= 50) developing++;
+        else atRisk++;
+      }
     });
-    const total = managers.length;
+    const total = population.length;
     const pct = (n) => total > 0 ? Math.round((n / total) * 100) : 0;
     return { atRisk, developing, onTrack, noData, total, pctAtRisk: pct(atRisk), pctDeveloping: pct(developing), pctOnTrack: pct(onTrack) };
   }, [managers, insightsList]);
@@ -97,8 +138,8 @@ export default function LeadershipIntelligenceHub() {
     <MVPPageLayout
       title="Leadership Intelligence"
       subtitle={stats
-        ? `Real-time view across ${stats.total} manager${stats.total !== 1 ? 's' : ''}.`
-        : 'Organizational leadership health at a glance.'}
+        ? `Org-wide view across ${stats.total} leader${stats.total !== 1 ? 's' : ''} in your organisation.`
+        : clientId ? 'Organizational leadership health at a glance.' : 'No organisation linked to your account yet.'}
     >
 
       {isLoading ? <LoadingSkeleton /> : !stats || stats.total === 0 ? (
