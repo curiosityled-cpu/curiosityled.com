@@ -21,8 +21,6 @@ import { motion } from "framer-motion";
 export default function OrgPerformance() {
   const [user, setUser] = useState(null);
   const [allGoals, setAllGoals] = useState([]);
-  const [allKpis, setAllKpis] = useState([]);
-  const [allOkrs, setAllOkrs] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [timeRange, setTimeRange] = useState("30");
@@ -43,16 +41,12 @@ export default function OrgPerformance() {
       return;
     }
 
-    const [goalsData, kpisData, okrsData, usersData] = await Promise.all([
+    const [goalsData, usersData] = await Promise.all([
       base44.entities.Goal.list("-updated_date"),
-      base44.entities.KPI.list("-updated_date"),
-      base44.entities.OKR.list("-updated_date"),
       base44.entities.User.list()
     ]);
 
     setAllGoals(goalsData);
-    setAllKpis(kpisData);
-    setAllOkrs(okrsData);
     setAllUsers(usersData);
     setIsLoading(false);
   };
@@ -78,80 +72,35 @@ export default function OrgPerformance() {
 
   // Calculate org-wide metrics
   const totalGoals = allGoals.length;
-  const totalKpis = allKpis.length;
-  const totalOkrs = allOkrs.length;
+  const completedGoals = allGoals.filter(g => g.status === 'completed' || g.status === 'archived').length;
   const activeUsers = allUsers.filter(u => u.role === 'user').length;
 
-  const avgKpiProgress = allKpis.length > 0
-    ? allKpis.reduce((sum, kpi) => {
-        const progress = kpi.target_value > 0 
-          ? Math.min(100, (kpi.current_value / kpi.target_value) * 100)
-          : 0;
-        return sum + progress;
-      }, 0) / allKpis.length
-    : 0;
-
-  const avgOkrProgress = allOkrs.length > 0
-    ? allOkrs.reduce((sum, okr) => {
-        const keyResults = okr.key_results || [];
-        const okrProgress = keyResults.length > 0
-          ? keyResults.reduce((krSum, kr) => {
-              const krProgress = kr.target_value > 0 
-                ? Math.min(100, (kr.current_value / kr.target_value) * 100)
-                : 0;
-              return krSum + krProgress;
-            }, 0) / keyResults.length
-          : 0;
-        return sum + okrProgress;
-      }, 0) / allOkrs.length
-    : 0;
+  const goalCompletionRate = totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0;
+  const activeGoals = allGoals.filter(g => g.status === 'active').length;
 
   // Group by user
   const userPerformance = allUsers
     .filter(u => u.role === 'user')
-    .map(user => {
-      const userGoals = allGoals.filter(g => g.user_email === user.email);
-      const userKpis = allKpis.filter(k => k.user_email === user.email);
-      const userOkrs = allOkrs.filter(o => o.user_email === user.email);
-
-      const kpiProgress = userKpis.length > 0
-        ? userKpis.reduce((sum, kpi) => {
-            const progress = kpi.target_value > 0 
-              ? Math.min(100, (kpi.current_value / kpi.target_value) * 100)
-              : 0;
-            return sum + progress;
-          }, 0) / userKpis.length
-        : 0;
-
-      return {
-        ...user,
-        goalsCount: userGoals.length,
-        kpisCount: userKpis.length,
-        okrsCount: userOkrs.length,
-        avgProgress: kpiProgress
-      };
+    .map(u => {
+      const userGoals = allGoals.filter(g => g.created_by === u.email);
+      const completed = userGoals.filter(g => g.status === 'completed' || g.status === 'archived').length;
+      const completionRate = userGoals.length > 0 ? Math.round((completed / userGoals.length) * 100) : 0;
+      return { ...u, goalsCount: userGoals.length, completedGoals: completed, completionRate };
     })
-    .sort((a, b) => b.avgProgress - a.avgProgress);
+    .sort((a, b) => b.completionRate - a.completionRate);
 
-  // Status distribution
-  const kpiStatusDistribution = allKpis.reduce((acc, kpi) => {
-    acc[kpi.status] = (acc[kpi.status] || 0) + 1;
-    return acc;
-  }, {});
-
-  const okrStatusDistribution = allOkrs.reduce((acc, okr) => {
-    acc[okr.status] = (acc[okr.status] || 0) + 1;
+  const goalStatusDistribution = allGoals.reduce((acc, g) => {
+    acc[g.status] = (acc[g.status] || 0) + 1;
     return acc;
   }, {});
 
   const handleExportData = () => {
-    const csvData = userPerformance.map(user => ({
-      Name: user.full_name,
-      Email: user.email,
-      Goals: user.goalsCount,
-      KPIs: user.kpisCount,
-      OKRs: user.okrsCount,
-      'Avg Progress': `${Math.round(user.avgProgress)}%`
+    const csvData = userPerformance.map(u => ({
+      Name: u.full_name,
+      Email: u.email,
+      Goals: u.goalsCount,
+      Completed: u.completedGoals,
+      'Completion Rate': `${u.completionRate}%`
     }));
 
     const csv = [
@@ -241,11 +190,11 @@ export default function OrgPerformance() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600">Avg KPI Progress</span>
+                  <span className="text-sm text-gray-600">Active Goals</span>
                   <TrendingUp className="w-5 h-5 text-orange-600" />
                 </div>
-                <div className="text-3xl font-bold text-gray-900">{Math.round(avgKpiProgress)}%</div>
-                <Progress value={avgKpiProgress} className="mt-2 h-1" />
+                <div className="text-3xl font-bold text-gray-900">{activeGoals}</div>
+                <p className="text-xs text-gray-500 mt-1">In progress</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -254,11 +203,11 @@ export default function OrgPerformance() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600">Avg OKR Progress</span>
+                  <span className="text-sm text-gray-600">Goal Completion</span>
                   <Award className="w-5 h-5 text-purple-600" />
                 </div>
-                <div className="text-3xl font-bold text-gray-900">{Math.round(avgOkrProgress)}%</div>
-                <Progress value={avgOkrProgress} className="mt-2 h-1" />
+                <div className="text-3xl font-bold text-gray-900">{goalCompletionRate}%</div>
+                <Progress value={goalCompletionRate} className="mt-2 h-1" />
               </CardContent>
             </Card>
           </motion.div>
@@ -268,8 +217,7 @@ export default function OrgPerformance() {
         <Tabs defaultValue="users" className="w-full">
           <TabsList>
             <TabsTrigger value="users">User Performance</TabsTrigger>
-            <TabsTrigger value="kpis">KPI Insights</TabsTrigger>
-            <TabsTrigger value="okrs">OKR Insights</TabsTrigger>
+            <TabsTrigger value="goals">Goal Insights</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users" className="mt-6">
@@ -279,9 +227,9 @@ export default function OrgPerformance() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {userPerformance.map((user, index) => (
+                  {userPerformance.map((u, index) => (
                     <motion.div
-                      key={user.email}
+                      key={u.email}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
@@ -289,169 +237,96 @@ export default function OrgPerformance() {
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
-                          {user.full_name?.charAt(0) || 'U'}
+                          {u.full_name?.charAt(0) || 'U'}
                         </div>
                         <div>
-                          <h4 className="font-medium text-gray-900">{user.full_name}</h4>
-                          <p className="text-sm text-gray-500">{user.email}</p>
+                          <h4 className="font-medium text-gray-900">{u.full_name}</h4>
+                          <p className="text-sm text-gray-500">{u.email}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-6">
                         <div className="text-center">
                           <p className="text-sm text-gray-600">Goals</p>
-                          <p className="font-semibold">{user.goalsCount}</p>
+                          <p className="font-semibold">{u.goalsCount}</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">KPIs</p>
-                          <p className="font-semibold">{user.kpisCount}</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">OKRs</p>
-                          <p className="font-semibold">{user.okrsCount}</p>
+                          <p className="text-sm text-gray-600">Completed</p>
+                          <p className="font-semibold">{u.completedGoals}</p>
                         </div>
                         <div className="w-32">
-                          <Progress value={user.avgProgress} className="h-2" />
+                          <Progress value={u.completionRate} className="h-2" />
                           <p className="text-xs text-gray-500 mt-1 text-center">
-                            {Math.round(user.avgProgress)}% avg
+                            {u.completionRate}% done
                           </p>
                         </div>
                       </div>
                     </motion.div>
                   ))}
+                  {userPerformance.length === 0 && (
+                    <p className="text-center text-gray-500 py-8">No user performance data available.</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="kpis" className="mt-6">
+          <TabsContent value="goals" className="mt-6">
             <div className="grid lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>KPI Status Distribution</CardTitle>
+                  <CardTitle>Goal Status Distribution</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {Object.entries(kpiStatusDistribution).map(([status, count]) => {
-                      const percentage = totalKpis > 0 ? Math.round((count / totalKpis) * 100) : 0;
+                    {Object.entries(goalStatusDistribution).map(([status, count]) => {
+                      const percentage = totalGoals > 0 ? Math.round((count / totalGoals) * 100) : 0;
                       const colors = {
-                        on_track: 'bg-green-500',
-                        at_risk: 'bg-yellow-500',
-                        behind: 'bg-red-500',
-                        achieved: 'bg-blue-500'
+                        active: 'bg-blue-500',
+                        completed: 'bg-green-500',
+                        archived: 'bg-gray-400',
+                        draft: 'bg-yellow-500'
                       };
-
                       return (
                         <div key={status}>
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium capitalize">{status.replace('_', ' ')}</span>
+                            <span className="text-sm font-medium capitalize">{status}</span>
                             <span className="text-sm text-gray-600">{count} ({percentage}%)</span>
                           </div>
                           <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                            <div 
-                              className={`h-full ${colors[status]} transition-all duration-500`}
+                            <div
+                              className={`h-full ${colors[status] || 'bg-gray-500'} transition-all duration-500`}
                               style={{ width: `${percentage}%` }}
                             />
                           </div>
                         </div>
                       );
                     })}
+                    {Object.keys(goalStatusDistribution).length === 0 && (
+                      <p className="text-center text-gray-500 py-4">No goals data available.</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Top Performing KPIs</CardTitle>
+                  <CardTitle>Recent Goals</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {allKpis
-                      .sort((a, b) => {
-                        const aProgress = a.target_value > 0 ? (a.current_value / a.target_value) * 100 : 0;
-                        const bProgress = b.target_value > 0 ? (b.current_value / b.target_value) * 100 : 0;
-                        return bProgress - aProgress;
-                      })
-                      .slice(0, 5)
-                      .map((kpi, index) => {
-                        const progress = kpi.target_value > 0 
-                          ? Math.min(100, Math.round((kpi.current_value / kpi.target_value) * 100))
-                          : 0;
-
-                        return (
-                          <div key={kpi.id} className="flex items-center gap-3">
-                            <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-semibold">
-                              {index + 1}
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-900">{kpi.name}</p>
-                              <Progress value={progress} className="h-1 mt-1" />
-                            </div>
-                            <span className="text-sm font-semibold text-gray-700">{progress}%</span>
-                          </div>
-                        );
-                      })}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="okrs" className="mt-6">
-            <div className="grid lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>OKR Status Distribution</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {Object.entries(okrStatusDistribution).map(([status, count]) => {
-                      const percentage = totalOkrs > 0 ? Math.round((count / totalOkrs) * 100) : 0;
-                      const colors = {
-                        on_track: 'bg-green-500',
-                        at_risk: 'bg-yellow-500',
-                        behind: 'bg-red-500',
-                        achieved: 'bg-blue-500'
-                      };
-
-                      return (
-                        <div key={status}>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium capitalize">{status.replace('_', ' ')}</span>
-                            <span className="text-sm text-gray-600">{count} ({percentage}%)</span>
-                          </div>
-                          <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                            <div 
-                              className={`h-full ${colors[status]} transition-all duration-500`}
-                              style={{ width: `${percentage}%` }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent OKRs</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {allOkrs.slice(0, 5).map((okr) => (
-                      <div key={okr.id} className="p-3 border rounded-lg">
-                        <h4 className="font-medium text-gray-900 text-sm">{okr.objective}</h4>
-                        <p className="text-xs text-gray-600 mt-1">{okr.description}</p>
+                    {allGoals.slice(0, 5).map((goal) => (
+                      <div key={goal.id} className="p-3 border rounded-lg">
+                        <h4 className="font-medium text-gray-900 text-sm">{goal.title}</h4>
+                        {goal.description && <p className="text-xs text-gray-600 mt-1 line-clamp-2">{goal.description}</p>}
                         <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="outline" className="text-xs">
-                            {okr.key_results?.length || 0} Key Results
-                          </Badge>
-                          <Badge className="text-xs">
-                            {okr.status}
-                          </Badge>
+                          <Badge variant="outline" className="text-xs capitalize">{goal.status}</Badge>
+                          {goal.priority && <Badge className="text-xs capitalize">{goal.priority}</Badge>}
                         </div>
                       </div>
                     ))}
+                    {allGoals.length === 0 && (
+                      <p className="text-center text-gray-500 py-4">No goals found.</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
