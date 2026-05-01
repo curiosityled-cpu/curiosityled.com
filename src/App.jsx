@@ -5,7 +5,7 @@ import { queryClientInstance } from '@/lib/query-client'
 import VisualEditAgent from '@/lib/VisualEditAgent'
 import NavigationTracker from '@/lib/NavigationTracker'
 import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -81,9 +81,9 @@ const AuthenticatedApp = () => {
         !mvpRole ? (
           <MVPLayout><PendingRole /></MVPLayout>
         ) : mvpRole === 'buyer' ? (
-          <MVPLayout><ExperienceOverview /></MVPLayout>
+          <Navigate to="/Insights?tab=org" replace />
         ) : mvpRole === 'executive' ? (
-          <MVPLayout><LeadershipIntelligenceHub /></MVPLayout>
+          <Navigate to="/Insights?tab=org" replace />
         ) : (
           <MVPLayout><MyLeadership /></MVPLayout>
         )
