@@ -125,7 +125,7 @@ export default function LeadershipIntelligenceHub() {
     const total = population.length;
     const pct = (n) => total > 0 ? Math.round((n / total) * 100) : 0;
     return { atRisk, developing, onTrack, noData, total, pctAtRisk: pct(atRisk), pctDeveloping: pct(developing), pctOnTrack: pct(onTrack) };
-  }, [managers, insightsList]);
+  }, [managers, insightsList, allOrgUsers, allAssessments]);
 
   const chartData = stats ? [
     { name: 'At Risk', value: stats.atRisk },
