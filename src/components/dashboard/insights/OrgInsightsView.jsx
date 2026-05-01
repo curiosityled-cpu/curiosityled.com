@@ -69,7 +69,8 @@ const PRIORITY_COLORS = {
 };
 
 export default function OrgInsightsView({ user, onMetricsUpdate }) {
-  const { isPlatformAdmin } = useAuth();
+  const { isPlatformAdmin, isSuperAdmin } = useAuth();
+  const clientId = user?.client_id || user?.data?.client_id;
   const navigate = useNavigate();
   
   const [loading, setLoading] = useState(true);
@@ -113,13 +114,18 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
   const loadAllData = async () => {
     setLoading(true);
     try {
+      // Scope queries by client_id for Analysts/non-platform-admins
+      const assessmentQuery = clientId ? { client_id: clientId } : {};
+      const insightQuery = clientId ? { client_id: clientId, status: 'generated' } : { status: 'generated' };
+      const userQuery = clientId ? { client_id: clientId } : {};
+
       const [assessments, goals, assignedLearning, journeyEnrollments, allUsers, assessmentInsights] = await Promise.all([
-        base44.entities.Assessment.list(),
-        base44.entities.Goal.list(),
-        base44.entities.AssignedLearning.list(),
+        clientId ? base44.entities.Assessment.filter(assessmentQuery) : base44.entities.Assessment.list(),
+        clientId ? base44.entities.Goal.filter({ client_id: clientId }) : base44.entities.Goal.list(),
+        clientId ? base44.entities.AssignedLearning.filter({ client_id: clientId }) : base44.entities.AssignedLearning.list(),
         base44.entities.JourneyEnrollment.list(),
-        base44.entities.User.list(),
-        base44.entities.AssessmentInsights.filter({ status: 'generated' }).catch(() => [])
+        clientId ? base44.entities.User.filter(userQuery) : base44.entities.User.list(),
+        base44.entities.AssessmentInsights.filter(insightQuery).catch(() => [])
       ]);
 
       setRawData({
