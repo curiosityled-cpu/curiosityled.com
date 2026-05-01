@@ -47,46 +47,54 @@ function LoadingSkeleton() {
 export default function LeadershipIntelligenceHub() {
   const { user } = useAuth();
 
-  // client_id may be top-level or nested under data (depending on role/auth path)
+  // client_id may be top-level, nested under data, or in user.data (depending on role/auth path)
   const clientId = user?.client_id || user?.data?.client_id;
 
-  const { data: managers = [], isLoading: loadingManagers } = useQuery({
-    queryKey: ['exec-managers', clientId],
-    queryFn: async () => base44.entities.User.filter({
-      client_id: clientId,
-      app_role: { $in: ['User Level 1', 'User Level 2'] }
-    }),
-    enabled: !!clientId,
+  // isPlatformAdmin: can see all data without a client_id scope
+  const isPlatformAdmin = user?.app_role === 'Platform Admin' || user?.data?.app_role === 'Platform Admin'
+    || user?.role === 'admin';
+
+  const { data: allOrgUsers = [], isLoading: loadingUsers } = useQuery({
+    queryKey: ['exec-all-users', clientId, isPlatformAdmin],
+    queryFn: async () => {
+      if (clientId) return base44.entities.User.filter({ client_id: clientId });
+      if (isPlatformAdmin) return base44.entities.User.list('-created_date', 200);
+      return [];
+    },
+    enabled: !!clientId || isPlatformAdmin,
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: insightsList = [], isLoading: loadingInsights } = useQuery({
-    queryKey: ['exec-insights', clientId],
-    queryFn: async () => base44.entities.AssessmentInsights.filter({
-      client_id: clientId,
-      status: 'generated'
-    }),
-    enabled: !!clientId,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const isLoading = loadingManagers || loadingInsights;
-
-  // Also pull ALL org users (any role) so analytics show even without managers
-  const { data: allOrgUsers = [] } = useQuery({
-    queryKey: ['exec-all-users', clientId],
-    queryFn: async () => base44.entities.User.filter({ client_id: clientId }),
-    enabled: !!clientId,
+    queryKey: ['exec-insights', clientId, isPlatformAdmin],
+    queryFn: async () => {
+      if (clientId) return base44.entities.AssessmentInsights.filter({ client_id: clientId, status: 'generated' });
+      if (isPlatformAdmin) return base44.entities.AssessmentInsights.filter({ status: 'generated' }, '-created_date', 200);
+      return [];
+    },
+    enabled: !!clientId || isPlatformAdmin,
     staleTime: 5 * 60 * 1000,
   });
 
   // Also pull ALL assessments for the org to compute stats when insights are missing
-  const { data: allAssessments = [] } = useQuery({
-    queryKey: ['exec-assessments', clientId],
-    queryFn: async () => base44.entities.Assessment.filter({ client_id: clientId }),
-    enabled: !!clientId,
+  const { data: allAssessments = [], isLoading: loadingAssessments } = useQuery({
+    queryKey: ['exec-assessments', clientId, isPlatformAdmin],
+    queryFn: async () => {
+      if (clientId) return base44.entities.Assessment.filter({ client_id: clientId });
+      if (isPlatformAdmin) return base44.entities.Assessment.list('-created_date', 200);
+      return [];
+    },
+    enabled: !!clientId || isPlatformAdmin,
     staleTime: 5 * 60 * 1000,
   });
+
+  const isLoading = loadingUsers || loadingInsights || loadingAssessments;
+
+  // Managers = org users with User Level 1 or 2 roles
+  const managers = React.useMemo(
+    () => allOrgUsers.filter(u => ['User Level 1', 'User Level 2'].includes(u.app_role || u.data?.app_role)),
+    [allOrgUsers]
+  );
 
   const stats = React.useMemo(() => {
     // Use managers if available, fall back to all users with relevant roles
