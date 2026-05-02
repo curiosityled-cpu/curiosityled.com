@@ -82,6 +82,8 @@ const AuthenticatedApp = () => {
           <MVPLayout><PendingRole /></MVPLayout>
         ) : mvpRole === 'buyer' ? (
           <Navigate to="/Insights?tab=org" replace />
+        ) : mvpRole === 'analyst' ? (
+          <Navigate to="/Insights?tab=org" replace />
         ) : mvpRole === 'executive' ? (
           <Navigate to="/Insights?tab=org" replace />
         ) : (

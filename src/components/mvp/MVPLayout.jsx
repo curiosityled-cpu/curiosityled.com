@@ -30,7 +30,7 @@ export const getMVPRole = (appRole) => {
   if (!appRole) return null;
   if (appRole === 'User Level 1' || appRole === 'User Level 2') return 'manager';
   if (appRole === 'Admin Level 1' || appRole === 'Admin Level 2' || appRole === 'Super Administrator' || appRole === 'Platform Admin' || appRole === 'Partner Business Administrator' || appRole === 'admin') return 'buyer';
-  if (appRole === 'Analyst') return 'buyer';
+  if (appRole === 'Analyst') return 'analyst';
   return null;
 };
 
@@ -60,15 +60,20 @@ const NAV_CONFIG = {
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: BarChart3 },
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }],
 
+  analyst: [
+  { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: BarChart3 },
+  { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }],
+
   executive: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: BarChart2 }]
 
 };
 
-const ROLE_LABELS = { manager: 'Manager', buyer: 'HR / L&D', executive: 'Executive' };
+const ROLE_LABELS = { manager: 'Manager', buyer: 'HR / L&D', analyst: 'Analyst', executive: 'Executive' };
 const ROLE_COLORS = {
   manager: 'bg-blue-50 border-blue-100 text-blue-700',
   buyer: 'bg-purple-50 border-purple-100 text-purple-700',
+  analyst: 'bg-indigo-50 border-indigo-100 text-indigo-700',
   executive: 'bg-emerald-50 border-emerald-100 text-emerald-700'
 };
 

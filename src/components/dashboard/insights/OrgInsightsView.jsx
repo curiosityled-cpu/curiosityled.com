@@ -63,14 +63,14 @@ import {
 
 // Map AI-generated dashboard names to actual MVP routes
 const DASHBOARD_ROUTES = {
-  'EnterpriseAnalytics': '/Insights?tab=enterprise',
-  'Performance': '/my-goals',
+  'EnterpriseAnalytics': '/AssessmentAnalyticsDashboard',
+  'Performance': '/AssessmentAnalyticsDashboard',
   'LearningAnalyticsDashboard': '/LearningAnalyticsDashboard',
   'JourneyAnalytics': '/ExperienceAnalytics',
   'AssessmentAnalytics': '/AssessmentAnalyticsDashboard',
   'AssessmentAnalyticsDashboard': '/AssessmentAnalyticsDashboard',
   'Assessments': '/AssessmentAnalyticsDashboard',
-  'Development': '/my-development',
+  'Development': '/LearningAnalyticsDashboard',
   'CommandCenter': '/experience-overview',
 };
 
