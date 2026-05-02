@@ -47,78 +47,73 @@ function LoadingSkeleton() {
 export default function LeadershipIntelligenceHub() {
   const { user } = useAuth();
 
-  // client_id may be top-level, nested under data, or in user.data (depending on role/auth path)
-  const clientId = user?.client_id || user?.data?.client_id;
+  // client_id stored in data for most roles
+  const clientId = user?.data?.client_id || user?.client_id;
 
-  // isPlatformAdmin: can see all data without a client_id scope
-  const isPlatformAdmin = user?.app_role === 'Platform Admin' || user?.data?.app_role === 'Platform Admin'
-    || user?.role === 'admin';
+  // Only true Platform Admin (not just base role="admin") can list all users globally
+  const isPlatformAdmin = user?.data?.app_role === 'Platform Admin' || user?.app_role === 'Platform Admin';
 
   const { data: allOrgUsers = [], isLoading: loadingUsers } = useQuery({
-    queryKey: ['exec-all-users', clientId, isPlatformAdmin],
-    queryFn: async () => {
-      if (clientId) return base44.entities.User.filter({ client_id: clientId });
-      if (isPlatformAdmin) return base44.entities.User.list('-created_date', 200);
-      return [];
-    },
-    enabled: !!clientId || isPlatformAdmin,
+    queryKey: ['exec-all-users', clientId],
+    // RLS governs what gets returned — just list() and let the server scope it
+    queryFn: () => base44.entities.User.list('-created_date', 500).catch(() => []),
+    enabled: !!user,
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: insightsList = [], isLoading: loadingInsights } = useQuery({
-    queryKey: ['exec-insights', clientId, isPlatformAdmin],
-    queryFn: async () => {
-      if (clientId) return base44.entities.AssessmentInsights.filter({ client_id: clientId, status: 'generated' });
-      if (isPlatformAdmin) return base44.entities.AssessmentInsights.filter({ status: 'generated' }, '-created_date', 200);
-      return [];
-    },
-    enabled: !!clientId || isPlatformAdmin,
+    queryKey: ['exec-insights', clientId],
+    queryFn: () => base44.entities.AssessmentInsights.list('-created_date', 500).catch(() => []),
+    enabled: !!user,
     staleTime: 5 * 60 * 1000,
   });
 
-  // Also pull ALL assessments for the org to compute stats when insights are missing
+  // Pull assessments — RLS scopes to org for Analyst role
   const { data: allAssessments = [], isLoading: loadingAssessments } = useQuery({
-    queryKey: ['exec-assessments', clientId, isPlatformAdmin],
-    queryFn: async () => {
-      return base44.entities.Assessment.list('-created_date', 500).catch(() => []);
-    },
-    enabled: !!clientId || isPlatformAdmin,
+    queryKey: ['exec-assessments', clientId],
+    queryFn: () => base44.entities.Assessment.list('-created_date', 500).catch(() => []),
+    enabled: !!user,
     staleTime: 5 * 60 * 1000,
   });
 
   const isLoading = loadingUsers || loadingInsights || loadingAssessments;
 
   const stats = React.useMemo(() => {
-    // All org users who have assessment data — exclude platform/admin-only accounts
+    // Only users in the same org, excluding platform-only admins
     const adminOnlyRoles = ['Platform Admin', 'Partner Business Administrator'];
     const population = allOrgUsers.filter(u => {
-      const role = u.app_role || u.data?.app_role;
-      return !adminOnlyRoles.includes(role);
+      const role = u.data?.app_role || u.app_role;
+      const userClientId = u.data?.client_id || u.client_id;
+      return !adminOnlyRoles.includes(role) && userClientId === clientId;
     });
 
     if (!population.length) return null;
     const insightMap = insightsList.reduce((acc, i) => { acc[i.user_email] = i; return acc; }, {});
-    // Also build a map from assessments for scoring fallback
+    // Build assessment map keyed by email — pick latest by submission_ts
     const assessmentMap = allAssessments.reduce((acc, a) => {
-      if (!acc[a.email] || new Date(a.submission_ts) > new Date(acc[a.email].submission_ts)) {
-        acc[a.email] = a;
+      const email = a.email || a.data?.email;
+      const ts = a.submission_ts || a.data?.submission_ts;
+      if (!email) return acc;
+      if (!acc[email] || new Date(ts) > new Date(acc[email]._ts)) {
+        acc[email] = { ...a, _ts: ts };
       }
       return acc;
     }, {});
 
     let atRisk = 0, developing = 0, onTrack = 0, noData = 0;
     population.forEach(m => {
-      const insight = insightMap[m.email];
+      const email = m.email;
+      const insight = insightMap[email];
       if (insight) {
         const flags = insight.risk_flags?.length || 0;
         if (flags === 0) onTrack++;
         else if (flags === 1) developing++;
         else atRisk++;
       } else {
-        // Fall back to assessment score
-        const assessment = assessmentMap[m.email];
+        // Fall back to raw assessment score
+        const assessment = assessmentMap[email];
         if (!assessment) { noData++; return; }
-        const score = assessment.overall_pct || 0;
+        const score = assessment.overall_pct || assessment.data?.overall_pct || 0;
         if (score >= 70) onTrack++;
         else if (score >= 50) developing++;
         else atRisk++;
