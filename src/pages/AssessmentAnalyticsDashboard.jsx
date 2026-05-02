@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import PageHeader from "@/components/common/PageHeader";
+import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import { withAuthProtection } from "@/components/hoc/withAuthProtection";
 import MyAssessmentsView from "@/components/dashboard/assessments/MyAssessmentsView";
 import TeamAssessmentsView from "@/components/dashboard/assessments/TeamAssessmentsView";
@@ -341,7 +341,7 @@ function AssessmentAnalyticsDashboard() {
   const renderViewToggle = () => {
     if (viewTabs.length <= 1) return null;
     return (
-      <div className="inline-flex bg-white border border-gray-200 rounded-lg shadow-sm mb-6 p-1">
+      <div className="inline-flex bg-white border border-gray-200 rounded-lg shadow-sm p-1">
         {viewTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeView === tab.id;
@@ -349,13 +349,13 @@ function AssessmentAnalyticsDashboard() {
             <button
               key={tab.id}
               onClick={() => setActiveView(tab.id)}
-              className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium transition-colors rounded-md ${
-                isActive 
-                  ? 'text-gray-900 bg-gray-100' 
-                  : 'text-gray-500 hover:text-gray-700'
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors rounded-md ${
+                isActive
+                  ? 'bg-[#0202ff] text-white shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-gray-700' : 'text-gray-400'}`} />
+              <Icon className="w-4 h-4" />
               {tab.label}
             </button>
           );
@@ -366,10 +366,10 @@ function AssessmentAnalyticsDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4" style={{ color: '#0202ff' }} />
-          <p className="text-gray-600">Loading assessment analytics...</p>
+          <Loader2 className="w-10 h-10 animate-spin mx-auto mb-3" style={{ color: '#0202ff' }} />
+          <p className="text-sm text-gray-500">Loading assessment analytics...</p>
         </div>
       </div>
     );
@@ -377,17 +377,16 @@ function AssessmentAnalyticsDashboard() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen p-4">
-        <Card className="max-w-md w-full">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <Card className="max-w-sm w-full shadow-sm">
           <CardContent className="p-8 text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertTriangle className="w-8 h-8 text-red-600" />
+            <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-6 h-6 text-red-500" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Analytics</h3>
-            <p className="text-sm text-gray-600 mb-4">{error}</p>
-            <Button onClick={handleRefresh} className="bg-purple-600 hover:bg-purple-700">
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Retry
+            <h3 className="text-base font-semibold text-gray-900 mb-2">Error Loading Analytics</h3>
+            <p className="text-sm text-gray-500 mb-4">{error}</p>
+            <Button onClick={handleRefresh} size="sm" style={{ backgroundColor: '#0202ff' }} className="text-white hover:opacity-90">
+              <RefreshCw className="w-4 h-4 mr-2" /> Retry
             </Button>
           </CardContent>
         </Card>
@@ -395,85 +394,54 @@ function AssessmentAnalyticsDashboard() {
     );
   }
 
-  // My Assessments View
-  if (activeView === 'my') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 pb-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <PageHeader
-            title="My Assessments"
-            subtitle="Your personal assessment performance and insights"
-            badges={[
-              { text: roleDisplayName || appRole, className: "bg-white text-purple-600" },
-              { text: `${myAnalytics?.totalAssessments || 0} Assessments`, className: "bg-white text-blue-600" },
-              { text: `${myAnalytics?.avgScore || 0}% Avg Score`, className: "bg-white text-green-600" }
-            ]}
-            onRefresh={handleRefresh}
-            onExportCSV={handleExportCSV}
-            onExportPDF={handleExportPDF}
-            loadingRefresh={loading}
-            loadingExportCSV={exportingCSV}
-            loadingExportPDF={exportingPDF}
-          />
-          {renderViewToggle()}
-          <MyAssessmentsView />
-        </div>
-      </div>
-    );
-  }
+  const titles = { my: 'My Assessments', team: 'Team Assessments', analytics: 'Assessment Analytics' };
+  const subtitles = { my: 'Your personal assessment performance and insights', team: "Track your team's assessment progress and results", analytics: 'Organisation-wide assessment performance and engagement metrics' };
+  const activeAnalytics = getActiveAnalytics();
 
-  // Team Assessments View
-  if (activeView === 'team') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 pb-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <PageHeader
-            title="Team Assessments"
-            subtitle="Track your team's assessment progress and results"
-            badges={[
-              { text: roleDisplayName || appRole, className: "bg-white text-purple-600" },
-              { text: `${teamAnalytics?.totalAssessments || 0} Assessments`, className: "bg-white text-blue-600" },
-              { text: `${teamAnalytics?.avgScore || 0}% Avg Score`, className: "bg-white text-green-600" }
-            ]}
-            onRefresh={handleRefresh}
-            onExportCSV={handleExportCSV}
-            onExportPDF={handleExportPDF}
-            loadingRefresh={loading}
-            loadingExportCSV={exportingCSV}
-            loadingExportPDF={exportingPDF}
-          />
-          {renderViewToggle()}
-          <TeamAssessmentsView />
-        </div>
-      </div>
-    );
-  }
-
-  // Full Analytics View (for admins)
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <PageHeader
-          title="Assessment Analytics"
-          subtitle="Assessment performance and engagement metrics"
-          badges={[
-            { text: roleDisplayName || appRole, className: "bg-white text-purple-600" },
-            { text: `${orgAnalytics?.totalAssessments || 0} Assessments`, className: "bg-white text-blue-600" },
-            { text: `${orgAnalytics?.avgScore || 0}% Avg Score`, className: "bg-white text-green-600" }
-          ]}
-          onRefresh={handleRefresh}
-          onExportCSV={handleExportCSV}
-          onExportPDF={handleExportPDF}
-          loadingRefresh={loading}
-          loadingExportCSV={exportingCSV}
-          loadingExportPDF={exportingPDF}
-        />
-
-        {renderViewToggle()}
-
-        <OrgAssessmentsView />
+    <MVPPageLayout
+      title={titles[activeView]}
+      subtitle={subtitles[activeView]}
+      action={
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={exportingCSV}>
+            {exportingCSV ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+            Export CSV
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={exportingPDF}>
+            {exportingPDF ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+            Export PDF
+          </Button>
+          <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={loading}>
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
+      }
+    >
+      {/* Summary stat pills */}
+      <div className="flex flex-wrap gap-3">
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 shadow-sm">
+          <BarChart3 className="w-4 h-4 text-[#0202ff]" />
+          {activeAnalytics?.totalAssessments || 0} Assessments
+        </div>
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 shadow-sm">
+          <Award className="w-4 h-4 text-green-600" />
+          {activeAnalytics?.avgScore || 0}% Avg Score
+        </div>
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 shadow-sm">
+          <CheckCircle className="w-4 h-4 text-blue-600" />
+          {activeAnalytics?.completionRate || 0}% Completion
+        </div>
       </div>
-    </div>
+
+      {/* View toggle */}
+      {renderViewToggle()}
+
+      {/* Content */}
+      {activeView === 'my' && <MyAssessmentsView />}
+      {activeView === 'team' && <TeamAssessmentsView />}
+      {activeView === 'analytics' && <OrgAssessmentsView />}
+    </MVPPageLayout>
   );
 }
 
