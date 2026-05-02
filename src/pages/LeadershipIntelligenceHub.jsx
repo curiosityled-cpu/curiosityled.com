@@ -82,7 +82,7 @@ export default function LeadershipIntelligenceHub() {
 
   const stats = React.useMemo(() => {
     // Only users in the same org, excluding platform-only admins
-    const adminOnlyRoles = ['Platform Admin', 'Partner Business Administrator'];
+    const adminOnlyRoles = ['Platform Admin', 'Partner Business Administrator', 'Analyst'];
     const population = allOrgUsers.filter(u => {
       const role = u.data?.app_role || u.app_role;
       const userClientId = u.data?.client_id || u.client_id;
