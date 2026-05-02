@@ -78,7 +78,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
   const [generatingBriefing, setGeneratingBriefing] = useState(false);
   
   const [filters, setFilters] = useState({
-    timeframe: '6months',
+    timeframe: 'all',
     division: 'all',
     level: 'all',
     tenure: 'all',
@@ -115,18 +115,20 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
     setLoading(true);
     try {
       // Scope queries by client_id for Analysts/non-platform-admins
-      const assessmentQuery = clientId ? { client_id: clientId } : {};
       const insightQuery = clientId ? { client_id: clientId, status: 'generated' } : { status: 'generated' };
       const userQuery = clientId ? { client_id: clientId } : {};
 
       const [assessments, goals, assignedLearning, journeyEnrollments, allUsers, assessmentInsights] = await Promise.all([
-        clientId ? base44.entities.Assessment.filter(assessmentQuery) : base44.entities.Assessment.list(),
-        clientId ? base44.entities.Goal.filter({ client_id: clientId }) : base44.entities.Goal.list(),
-        clientId ? base44.entities.AssignedLearning.filter({ client_id: clientId }) : base44.entities.AssignedLearning.list(),
-        base44.entities.JourneyEnrollment.list(),
+        // Assessments: try client_id first, fall back to listing all (RLS will scope)
+        base44.entities.Assessment.list('-created_date', 500),
+        clientId ? base44.entities.Goal.filter({ client_id: clientId }, '-created_date', 500) : base44.entities.Goal.list('-created_date', 500),
+        clientId ? base44.entities.AssignedLearning.filter({ client_id: clientId }, '-created_date', 500) : base44.entities.AssignedLearning.list('-created_date', 500),
+        base44.entities.JourneyEnrollment.list('-created_date', 500),
         clientId ? base44.entities.User.filter(userQuery) : base44.entities.User.list(),
         base44.entities.AssessmentInsights.filter(insightQuery).catch(() => [])
       ]);
+
+      console.log('[OrgInsightsView] Loaded:', { assessments: assessments?.length, goals: goals?.length, assignedLearning: assignedLearning?.length, journeyEnrollments: journeyEnrollments?.length, allUsers: allUsers?.length, clientId });
 
       setRawData({
         assessments: assessments || [],
