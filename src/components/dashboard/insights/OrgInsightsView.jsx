@@ -119,17 +119,17 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
       const userQuery = clientId ? { client_id: clientId } : {};
 
       const [assessments, goals, assignedLearning, journeyEnrollments, allUsers, assessmentInsights] = await Promise.all([
-        // All fetches rely on RLS to scope results — no explicit client_id filtering needed
-        // since records may have client_id: null even when they belong to a client's users
+        // Assessments: RLS will scope to what user can see
         base44.entities.Assessment.list('-created_date', 500).catch(() => []),
-        base44.entities.Goal.list('-created_date', 500).catch(() => []),
-        base44.entities.AssignedLearning.list('-created_date', 500).catch(() => []),
+        clientId ? base44.entities.Goal.filter({ client_id: clientId }, '-created_date', 500).catch(() => []) : base44.entities.Goal.list('-created_date', 500).catch(() => []),
+        clientId ? base44.entities.AssignedLearning.filter({ client_id: clientId }, '-created_date', 500).catch(() => []) : base44.entities.AssignedLearning.list('-created_date', 500).catch(() => []),
         base44.entities.JourneyEnrollment.list('-created_date', 500).catch(() => []),
-        base44.entities.User.list().catch(() => []),
+        // User list may be restricted by RLS for non-admins — gracefully degrade
+        (clientId ? base44.entities.User.filter(userQuery) : base44.entities.User.list()).catch(() => []),
         base44.entities.AssessmentInsights.filter(insightQuery).catch(() => [])
       ]);
 
-      console.log('[OrgInsightsView] Loaded:', { assessments: assessments?.length, goals: goals?.length, assignedLearning: assignedLearning?.length, journeyEnrollments: journeyEnrollments?.length, allUsers: allUsers?.length });
+      console.log('[OrgInsightsView] Loaded:', { assessments: assessments?.length, goals: goals?.length, assignedLearning: assignedLearning?.length, journeyEnrollments: journeyEnrollments?.length, allUsers: allUsers?.length, clientId });
 
       setRawData({
         assessments: assessments || [],
