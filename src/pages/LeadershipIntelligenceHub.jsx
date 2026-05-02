@@ -80,9 +80,7 @@ export default function LeadershipIntelligenceHub() {
   const { data: allAssessments = [], isLoading: loadingAssessments } = useQuery({
     queryKey: ['exec-assessments', clientId, isPlatformAdmin],
     queryFn: async () => {
-      if (clientId) return base44.entities.Assessment.filter({ client_id: clientId });
-      if (isPlatformAdmin) return base44.entities.Assessment.list('-created_date', 200);
-      return [];
+      return base44.entities.Assessment.list('-created_date', 500).catch(() => []);
     },
     enabled: !!clientId || isPlatformAdmin,
     staleTime: 5 * 60 * 1000,
@@ -90,17 +88,13 @@ export default function LeadershipIntelligenceHub() {
 
   const isLoading = loadingUsers || loadingInsights || loadingAssessments;
 
-  // Managers = org users with User Level 1 or 2 roles
-  const managers = React.useMemo(
-    () => allOrgUsers.filter(u => ['User Level 1', 'User Level 2'].includes(u.app_role || u.data?.app_role)),
-    [allOrgUsers]
-  );
-
   const stats = React.useMemo(() => {
-    // Use managers if available, fall back to all users with relevant roles
-    const population = managers.length > 0
-      ? managers
-      : allOrgUsers.filter(u => ['User Level 1', 'User Level 2'].includes(u.app_role));
+    // All org users who have assessment data — exclude platform/admin-only accounts
+    const adminOnlyRoles = ['Platform Admin', 'Partner Business Administrator'];
+    const population = allOrgUsers.filter(u => {
+      const role = u.app_role || u.data?.app_role;
+      return !adminOnlyRoles.includes(role);
+    });
 
     if (!population.length) return null;
     const insightMap = insightsList.reduce((acc, i) => { acc[i.user_email] = i; return acc; }, {});
@@ -133,7 +127,7 @@ export default function LeadershipIntelligenceHub() {
     const total = population.length;
     const pct = (n) => total > 0 ? Math.round((n / total) * 100) : 0;
     return { atRisk, developing, onTrack, noData, total, pctAtRisk: pct(atRisk), pctDeveloping: pct(developing), pctOnTrack: pct(onTrack) };
-  }, [managers, insightsList, allOrgUsers, allAssessments]);
+  }, [insightsList, allOrgUsers, allAssessments]);
 
   const chartData = stats ? [
     { name: 'At Risk', value: stats.atRisk },
