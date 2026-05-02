@@ -119,13 +119,11 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
       const userQuery = clientId ? { client_id: clientId } : {};
 
       const [assessments, goals, assignedLearning, journeyEnrollments, allUsers, assessmentInsights] = await Promise.all([
-        // Assessments: RLS will scope to what user can see
         base44.entities.Assessment.list('-created_date', 500).catch(() => []),
-        clientId ? base44.entities.Goal.filter({ client_id: clientId }, '-created_date', 500).catch(() => []) : base44.entities.Goal.list('-created_date', 500).catch(() => []),
-        clientId ? base44.entities.AssignedLearning.filter({ client_id: clientId }, '-created_date', 500).catch(() => []) : base44.entities.AssignedLearning.list('-created_date', 500).catch(() => []),
+        base44.entities.Goal.list('-created_date', 500).catch(() => []),
+        base44.entities.AssignedLearning.list('-created_date', 500).catch(() => []),
         base44.entities.JourneyEnrollment.list('-created_date', 500).catch(() => []),
-        // User list may be restricted by RLS for non-admins — gracefully degrade
-        (clientId ? base44.entities.User.filter(userQuery) : base44.entities.User.list()).catch(() => []),
+        base44.entities.User.list().catch(() => []),
         base44.entities.AssessmentInsights.filter(insightQuery).catch(() => [])
       ]);
 
@@ -734,11 +732,17 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                 <p className="text-gray-700 leading-relaxed whitespace-pre-line">{executiveBriefing}</p>
               </div>
             ) : (
-              <div className="flex items-start gap-3 py-4 px-2">
-                <Sparkles className="w-5 h-5 text-purple-400 mt-0.5 shrink-0" />
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  Executive briefings update as leadership activity and assessments are completed.
-                </p>
+              <div className="flex flex-col items-center gap-4 py-6">
+                <div className="flex items-start gap-3">
+                  <Sparkles className="w-5 h-5 text-purple-400 mt-0.5 shrink-0" />
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    Generate an AI-powered executive briefing synthesizing your organizational leadership data into strategic insights.
+                  </p>
+                </div>
+                <Button onClick={generateExecutiveBriefing} disabled={generatingBriefing} className="bg-purple-600 hover:bg-purple-700">
+                  {generatingBriefing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                  Generate Executive Briefing
+                </Button>
               </div>
             )}
           </CardContent>
