@@ -23,11 +23,12 @@ import {
 } from "lucide-react";
 
 // Leadership Readiness Score Card
+const pct = (a, field) => a[field] ?? a.data?.[field] ?? 0;
+
 export function LeadershipReadinessCard({ metrics, assessments }) {
-  // Calculate platform-wide readiness based on assessment scores
-  const highPerformers = assessments.filter(a => (a.overall_pct || 0) >= 80).length;
-  const developing = assessments.filter(a => (a.overall_pct || 0) >= 60 && (a.overall_pct || 0) < 80).length;
-  const needsSupport = assessments.filter(a => (a.overall_pct || 0) < 60).length;
+  const highPerformers = assessments.filter(a => pct(a, 'overall_pct') >= 80).length;
+  const developing = assessments.filter(a => pct(a, 'overall_pct') >= 60 && pct(a, 'overall_pct') < 80).length;
+  const needsSupport = assessments.filter(a => pct(a, 'overall_pct') < 60).length;
   const total = assessments.length || 1;
   
   const readinessScore = Math.round(
@@ -77,7 +78,7 @@ export function SuccessionPipelineCard({ assessments, allUsers }) {
     u.current_role?.toLowerCase().includes('vp')
   ).length;
   
-  const highPotential = assessments.filter(a => (a.overall_pct || 0) >= 85).length;
+  const highPotential = assessments.filter(a => pct(a, 'overall_pct') >= 85).length;
   const successorRatio = totalLeaders > 0 ? Math.round((highPotential / totalLeaders) * 100) : 0;
   
   const pipelineHealth = successorRatio >= 50 ? 'Strong' : successorRatio >= 30 ? 'Moderate' : 'At Risk';
@@ -180,13 +181,13 @@ export function SkillsGapCard({ metrics }) {
 // Flight Risk Indicators Card
 export function FlightRiskCard({ assessments, goals, assignedLearning }) {
   // Calculate risk based on low engagement patterns
-  const lowScorers = assessments.filter(a => (a.overall_pct || 0) < 50).length;
-  const staleGoals = goals.filter(g => g.status === 'overdue' || g.status === 'on_hold').length;
-  const incompleteLearning = assignedLearning.filter(l => l.status !== 'completed').length;
+  const lowScorers = assessments.filter(a => pct(a, 'overall_pct') < 50).length;
+  const staleGoals = goals.filter(g => (g.status ?? g.data?.status) === 'overdue' || (g.status ?? g.data?.status) === 'on_hold').length;
+  const incompleteLearning = assignedLearning.filter(l => (l.status ?? l.data?.status) !== 'completed').length;
   
   const totalUsers = new Set([
-    ...assessments.map(a => a.email),
-    ...goals.map(g => g.user_email)
+    ...assessments.map(a => a.email ?? a.data?.email),
+    ...goals.map(g => g.user_email ?? g.data?.user_email)
   ]).size;
 
   const riskIndicators = [
@@ -234,10 +235,10 @@ export function FlightRiskCard({ assessments, goals, assignedLearning }) {
 
 // Promotion Readiness Timeline Card
 export function PromotionReadinessCard({ assessments, allUsers }) {
-  const readyNow = assessments.filter(a => (a.overall_pct || 0) >= 85).length;
-  const ready6Months = assessments.filter(a => (a.overall_pct || 0) >= 75 && (a.overall_pct || 0) < 85).length;
-  const ready12Months = assessments.filter(a => (a.overall_pct || 0) >= 65 && (a.overall_pct || 0) < 75).length;
-  const needsDevelopment = assessments.filter(a => (a.overall_pct || 0) < 65).length;
+  const readyNow = assessments.filter(a => pct(a, 'overall_pct') >= 85).length;
+  const ready6Months = assessments.filter(a => pct(a, 'overall_pct') >= 75 && pct(a, 'overall_pct') < 85).length;
+  const ready12Months = assessments.filter(a => pct(a, 'overall_pct') >= 65 && pct(a, 'overall_pct') < 75).length;
+  const needsDevelopment = assessments.filter(a => pct(a, 'overall_pct') < 65).length;
 
   const total = assessments.length || 1;
 
@@ -304,11 +305,11 @@ export function PromotionReadinessCard({ assessments, allUsers }) {
 
 // Learning Velocity Card
 export function LearningVelocityCard({ assignedLearning, journeyEnrollments }) {
-  const completedLearning = assignedLearning.filter(l => l.status === 'completed').length;
+  const completedLearning = assignedLearning.filter(l => (l.status ?? l.data?.status) === 'completed').length;
   const totalLearning = assignedLearning.length || 1;
   const learningRate = Math.round((completedLearning / totalLearning) * 100);
 
-  const completedJourneys = journeyEnrollments.filter(j => j.status === 'completed').length;
+  const completedJourneys = journeyEnrollments.filter(j => (j.status ?? j.data?.status) === 'completed').length;
   const totalJourneys = journeyEnrollments.length || 1;
   const journeyRate = Math.round((completedJourneys / totalJourneys) * 100);
 
@@ -355,7 +356,7 @@ export function LeadershipStyleCard({ assessments }) {
   // Derive styles from assessment archetypes
   const styles = {};
   assessments.forEach(a => {
-    const archetype = a.archetype_label || 'Developing Leader';
+    const archetype = a.archetype_label ?? a.data?.archetype_label ?? 'Developing Leader';
     styles[archetype] = (styles[archetype] || 0) + 1;
   });
 
@@ -506,8 +507,8 @@ export function IndustryBenchmarkCard({ metrics }) {
 // Team Impact Score Card
 export function TeamImpactCard({ metrics, goals }) {
   // Calculate correlation between leadership and team performance
-  const completedGoals = goals.filter(g => g.status === 'completed').length;
-  const activeGoals = goals.filter(g => g.status === 'active' || g.status === 'in_progress').length;
+  const completedGoals = goals.filter(g => (g.status ?? g.data?.status) === 'completed').length;
+  const activeGoals = goals.filter(g => ['active', 'in_progress'].includes(g.status ?? g.data?.status)).length;
   
   const impactScore = Math.round(
     (metrics.avgLeadershipScore * 0.4) + 

@@ -281,17 +281,18 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
     // Apply competency focus filter
     if (filters.competencyFocus !== 'all') {
       filteredAssessments = filteredAssessments.filter(a => {
-        const score = a[`${filters.competencyFocus}_pct`] || 0;
+        const score = a[`${filters.competencyFocus}_pct`] ?? a.data?.[`${filters.competencyFocus}_pct`] ?? 0;
         return score < 70;
       });
     }
 
     // Apply risk profile filter
+    const overallPct = (a) => a.overall_pct ?? a.data?.overall_pct ?? 0;
     if (filters.riskProfile !== 'all') {
       if (filters.riskProfile === 'at_risk') {
-        filteredAssessments = filteredAssessments.filter(a => (a.overall_pct || 0) < 60);
+        filteredAssessments = filteredAssessments.filter(a => overallPct(a) < 60);
       } else if (filters.riskProfile === 'high_potential') {
-        filteredAssessments = filteredAssessments.filter(a => (a.overall_pct || 0) >= 85);
+        filteredAssessments = filteredAssessments.filter(a => overallPct(a) >= 85);
       }
     }
 
@@ -308,33 +309,37 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
   const metrics = useMemo(() => {
     const { assessments, goals, assignedLearning, journeyEnrollments } = filteredData;
 
+    // Helper: fields may be flattened by SDK or nested under .data
+    const af = (a, field) => a[field] ?? a.data?.[field] ?? 0;
+    const gf = (g, field) => g[field] ?? g.data?.[field];
+
     const avgLeadershipScore = assessments.length > 0
-      ? Math.round(assessments.reduce((sum, a) => sum + (a.overall_pct || 0), 0) / assessments.length)
+      ? Math.round(assessments.reduce((sum, a) => sum + af(a, 'overall_pct'), 0) / assessments.length)
       : 0;
 
     const totalGoals = goals.length;
-    const completedGoals = goals.filter(g => g.status === 'completed').length;
+    const completedGoals = goals.filter(g => gf(g, 'status') === 'completed').length;
     const goalCompletionRate = totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0;
 
     const totalLearning = assignedLearning.length;
-    const completedLearning = assignedLearning.filter(l => l.status === 'completed').length;
+    const completedLearning = assignedLearning.filter(l => gf(l, 'status') === 'completed').length;
     const learningCompletionRate = totalLearning > 0 ? Math.round((completedLearning / totalLearning) * 100) : 0;
 
     const totalJourneys = journeyEnrollments.length;
-    const completedJourneys = journeyEnrollments.filter(j => j.status === 'completed').length;
+    const completedJourneys = journeyEnrollments.filter(j => gf(j, 'status') === 'completed').length;
     const journeyCompletionRate = totalJourneys > 0 ? Math.round((completedJourneys / totalJourneys) * 100) : 0;
 
-    const atRiskLeaders = assessments.filter(a => (a.overall_pct || 0) < 60).length;
-    const highPotentialLeaders = assessments.filter(a => (a.overall_pct || 0) >= 85).length;
-    const overdueGoals = goals.filter(g => g.status === 'overdue').length;
+    const atRiskLeaders = assessments.filter(a => af(a, 'overall_pct') < 60).length;
+    const highPotentialLeaders = assessments.filter(a => af(a, 'overall_pct') >= 85).length;
+    const overdueGoals = goals.filter(g => gf(g, 'status') === 'overdue').length;
 
     const competencyAverages = {
-      si: Math.round(assessments.reduce((sum, a) => sum + (a.si_pct || 0), 0) / (assessments.length || 1)),
-      dm: Math.round(assessments.reduce((sum, a) => sum + (a.dm_pct || 0), 0) / (assessments.length || 1)),
-      comm: Math.round(assessments.reduce((sum, a) => sum + (a.comm_pct || 0), 0) / (assessments.length || 1)),
-      rm: Math.round(assessments.reduce((sum, a) => sum + (a.rm_pct || 0), 0) / (assessments.length || 1)),
-      sm: Math.round(assessments.reduce((sum, a) => sum + (a.sm_pct || 0), 0) / (assessments.length || 1)),
-      pm: Math.round(assessments.reduce((sum, a) => sum + (a.pm_pct || 0), 0) / (assessments.length || 1))
+      si: Math.round(assessments.reduce((sum, a) => sum + af(a, 'si_pct'), 0) / (assessments.length || 1)),
+      dm: Math.round(assessments.reduce((sum, a) => sum + af(a, 'dm_pct'), 0) / (assessments.length || 1)),
+      comm: Math.round(assessments.reduce((sum, a) => sum + af(a, 'comm_pct'), 0) / (assessments.length || 1)),
+      rm: Math.round(assessments.reduce((sum, a) => sum + af(a, 'rm_pct'), 0) / (assessments.length || 1)),
+      sm: Math.round(assessments.reduce((sum, a) => sum + af(a, 'sm_pct'), 0) / (assessments.length || 1)),
+      pm: Math.round(assessments.reduce((sum, a) => sum + af(a, 'pm_pct'), 0) / (assessments.length || 1))
     };
 
     return {
@@ -388,7 +393,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
       });
 
       const avgAssessmentScore = monthAssessments.length > 0
-        ? Math.round(monthAssessments.reduce((sum, a) => sum + (a.overall_pct || 0), 0) / monthAssessments.length)
+        ? Math.round(monthAssessments.reduce((sum, a) => sum + (a.overall_pct ?? a.data?.overall_pct ?? 0), 0) / monthAssessments.length)
         : 0;
 
       const goalCompletion = monthGoals.length > 0
@@ -408,15 +413,16 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
     }
 
     const correlationData = assessments.map(a => {
-      const userGoals = goals.filter(g => g.user_email === a.email);
-      const userCompletedGoals = userGoals.filter(g => g.status === 'completed').length;
+      const aEmail = a.email ?? a.data?.email;
+      const aScore = a.overall_pct ?? a.data?.overall_pct ?? 0;
+      const userGoals = goals.filter(g => (g.user_email ?? g.data?.user_email) === aEmail);
+      const userCompletedGoals = userGoals.filter(g => (g.status ?? g.data?.status) === 'completed').length;
       const userGoalRate = userGoals.length > 0 ? Math.round((userCompletedGoals / userGoals.length) * 100) : null;
       
       return {
-        assessmentScore: a.overall_pct || 0,
-        // If no goals data, use a proxy: learning completion rate or a simulated value based on score
-        goalCompletionRate: userGoalRate !== null ? userGoalRate : Math.round((a.overall_pct || 0) * 0.85 + Math.random() * 10),
-        name: rawData.allUsers.find(u => u.email === a.email)?.full_name || a.email?.split('@')[0] || 'Unknown',
+        assessmentScore: aScore,
+        goalCompletionRate: userGoalRate !== null ? userGoalRate : Math.round(aScore * 0.85 + Math.random() * 10),
+        name: rawData.allUsers.find(u => u.email === aEmail)?.full_name || aEmail?.split('@')[0] || 'Unknown',
         hasRealGoalData: userGoalRate !== null
       };
     });
