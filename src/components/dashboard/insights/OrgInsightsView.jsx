@@ -61,6 +61,21 @@ import {
   DevelopmentFocusCard
 } from "@/components/intelligence/PlatformInsightsCards.jsx";
 
+// Map AI-generated dashboard names to actual MVP routes
+const DASHBOARD_ROUTES = {
+  'EnterpriseAnalytics': '/Insights?tab=enterprise',
+  'Performance': '/my-goals',
+  'LearningAnalyticsDashboard': '/LearningAnalyticsDashboard',
+  'JourneyAnalytics': '/ExperienceAnalytics',
+  'AssessmentAnalytics': '/AssessmentAnalyticsDashboard',
+  'AssessmentAnalyticsDashboard': '/AssessmentAnalyticsDashboard',
+  'Assessments': '/AssessmentAnalyticsDashboard',
+  'Development': '/my-development',
+  'CommandCenter': '/experience-overview',
+};
+
+const resolveRoute = (target) => DASHBOARD_ROUTES[target] || '/Insights?tab=org';
+
 const PRIORITY_COLORS = {
   'High Risk': 'bg-red-100 text-red-800 border-red-200',
   'Strategic Priority': 'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -662,7 +677,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
       {/* Executive Summary KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer" onClick={() => navigate(createPageUrl('EnterpriseAnalytics'))}>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer" onClick={() => navigate('/Insights?tab=enterprise')}>
             <CardContent className="p-6">
               <Brain className="w-8 h-8 text-purple-600 mb-4" />
               <div className="text-3xl font-bold text-gray-900">{metrics.avgLeadershipScore}%</div>
@@ -675,7 +690,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer" onClick={() => navigate(createPageUrl('Performance'))}>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer" onClick={() => navigate('/my-goals')}>
             <CardContent className="p-6">
               <Target className="w-8 h-8 text-blue-600 mb-4" />
               <div className="text-3xl font-bold text-gray-900">{metrics.goalCompletionRate}%</div>
@@ -688,7 +703,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer" onClick={() => navigate(createPageUrl('LearningAnalyticsDashboard'))}>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer" onClick={() => navigate('/LearningAnalyticsDashboard')}>
             <CardContent className="p-6">
               <BookOpen className="w-8 h-8 text-green-600 mb-4" />
               <div className="text-3xl font-bold text-gray-900">{metrics.learningCompletionRate}%</div>
@@ -701,7 +716,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer" onClick={() => navigate(createPageUrl('JourneyAnalytics'))}>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer" onClick={() => navigate('/ExperienceAnalytics')}>
             <CardContent className="p-6">
               <Activity className="w-8 h-8 text-orange-600 mb-4" />
               <div className="text-3xl font-bold text-gray-900">{metrics.journeyCompletionRate}%</div>
@@ -788,7 +803,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                     <Button 
                       size="sm" 
                       variant="outline"
-                      onClick={() => navigate(createPageUrl(insight.targetDashboard || 'EnterpriseAnalytics'))}
+                      onClick={() => navigate(resolveRoute(insight.targetDashboard || 'EnterpriseAnalytics'))}
                     >
                       <LinkIcon className="w-3 h-3 mr-2" />
                       {insight.action}
@@ -836,7 +851,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                         <Badge className="bg-red-600 text-white">{risk.severity}</Badge>
                       </div>
                       <p className="text-sm text-red-800 mb-3">{risk.description}</p>
-                      <Button size="sm" className="bg-red-600 hover:bg-red-700" onClick={() => navigate(createPageUrl(risk.targetDashboard || 'EnterpriseAnalytics'))}>
+                      <Button size="sm" className="bg-red-600 hover:bg-red-700" onClick={() => navigate(resolveRoute(risk.targetDashboard || 'EnterpriseAnalytics'))}>
                         {risk.action}
                       </Button>
                     </div>
@@ -878,7 +893,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                         <Badge className="bg-green-600 text-white">{opportunity.potential}</Badge>
                       </div>
                       <p className="text-sm text-green-800 mb-3">{opportunity.description}</p>
-                      <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => navigate(createPageUrl(opportunity.targetDashboard || 'EnterpriseAnalytics'))}>
+                      <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => navigate(resolveRoute(opportunity.targetDashboard || 'EnterpriseAnalytics'))}>
                         {opportunity.action}
                       </Button>
                     </div>
@@ -1208,7 +1223,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
               <Button
                 variant="outline"
                 className="h-auto py-4 justify-between hover:bg-purple-50"
-                onClick={() => navigate(createPageUrl('EnterpriseAnalytics'))}
+                onClick={() => navigate('/Insights?tab=enterprise')}
               >
                 <div className="flex items-center gap-3">
                   <Shield className="w-5 h-5 text-purple-600" />
@@ -1223,7 +1238,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
               <Button
                 variant="outline"
                 className="h-auto py-4 justify-between hover:bg-blue-50"
-                onClick={() => navigate(createPageUrl('AssessmentAnalyticsDashboard'))}
+                onClick={() => navigate('/AssessmentAnalyticsDashboard')}
               >
                 <div className="flex items-center gap-3">
                   <Brain className="w-5 h-5 text-blue-600" />
@@ -1238,7 +1253,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
               <Button
                 variant="outline"
                 className="h-auto py-4 justify-between hover:bg-green-50"
-                onClick={() => navigate(createPageUrl('LearningAnalyticsDashboard'))}
+                onClick={() => navigate('/LearningAnalyticsDashboard')}
               >
                 <div className="flex items-center gap-3">
                   <BookOpen className="w-5 h-5 text-green-600" />
@@ -1253,7 +1268,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
               <Button
                 variant="outline"
                 className="h-auto py-4 justify-between hover:bg-orange-50"
-                onClick={() => navigate(createPageUrl('JourneyAnalytics'))}
+                onClick={() => navigate('/ExperienceAnalytics')}
               >
                 <div className="flex items-center gap-3">
                   <Activity className="w-5 h-5 text-orange-600" />
@@ -1268,7 +1283,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
               <Button
                 variant="outline"
                 className="h-auto py-4 justify-between hover:bg-indigo-50"
-                onClick={() => navigate(createPageUrl('Performance'))}
+                onClick={() => navigate('/my-goals')}
               >
                 <div className="flex items-center gap-3">
                   <Target className="w-5 h-5 text-indigo-600" />
@@ -1283,12 +1298,12 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
               <Button
                 variant="outline"
                 className="h-auto py-4 justify-between hover:bg-pink-50"
-                onClick={() => navigate(createPageUrl('CommandCenter'))}
+                onClick={() => navigate('/experience-overview')}
               >
                 <div className="flex items-center gap-3">
                   <Users className="w-5 h-5 text-pink-600" />
                   <div className="text-left">
-                    <div className="font-semibold">Command Center</div>
+                    <div className="font-semibold">Experience Overview</div>
                     <div className="text-xs text-gray-500">Team management</div>
                   </div>
                 </div>
