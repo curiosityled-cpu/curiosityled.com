@@ -55,8 +55,10 @@ export default function LeadershipIntelligenceHub() {
 
   const { data: allOrgUsers = [], isLoading: loadingUsers } = useQuery({
     queryKey: ['exec-all-users', clientId],
-    // RLS governs what gets returned — just list() and let the server scope it
-    queryFn: () => base44.entities.User.list('-created_date', 500).catch(() => []),
+    // Filter by client_id so non-Platform-Admin roles (e.g. Analyst) can access
+    queryFn: () => clientId
+      ? base44.entities.User.filter({ 'data.client_id': clientId }, '-created_date', 500).catch(() => [])
+      : base44.entities.User.list('-created_date', 500).catch(() => []),
     enabled: !!user,
     staleTime: 5 * 60 * 1000,
   });

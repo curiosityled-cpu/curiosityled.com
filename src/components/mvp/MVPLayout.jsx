@@ -30,7 +30,7 @@ export const getMVPRole = (appRole) => {
   if (!appRole) return null;
   if (appRole === 'User Level 1' || appRole === 'User Level 2') return 'manager';
   if (appRole === 'Admin Level 1' || appRole === 'Admin Level 2' || appRole === 'Super Administrator' || appRole === 'Platform Admin' || appRole === 'Partner Business Administrator' || appRole === 'admin') return 'buyer';
-  if (appRole === 'Analyst') return 'executive';
+  if (appRole === 'Analyst') return 'buyer';
   return null;
 };
 
@@ -106,7 +106,7 @@ function MVPLayoutInner({ children }) {
       setRecentNotifications((prev) => prev.map((n) => n.id === id ? { ...n, is_read: true } : n));
       base44.entities.Notification.update(id, { is_read: true }).catch(() => {});
     }
-    navigate(createPageUrl('Notifications'));
+    navigate('/Notifications');
   };
 
   const mvpRole = getMVPRole(user?.app_role || user?.data?.app_role);
@@ -255,13 +255,13 @@ function MVPLayoutInner({ children }) {
                     <Badge variant="outline" className="text-xs mt-1">{getFriendlyRoleLabel(user?.app_role)}</Badge>
                   </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate(createPageUrl('Profile'))} className="cursor-pointer">
+                  <DropdownMenuItem onClick={() => navigate('/Profile')} className="cursor-pointer">
                     <User className="w-4 h-4 mr-2" /> My Profile
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate(createPageUrl('Settings'))} className="cursor-pointer">
+                  <DropdownMenuItem onClick={() => navigate('/Settings')} className="cursor-pointer">
                     <Settings className="w-4 h-4 mr-2" /> Settings
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate(createPageUrl('PrivacySettings'))} className="cursor-pointer">
+                  <DropdownMenuItem onClick={() => navigate('/PrivacySettings')} className="cursor-pointer">
                     <Shield className="w-4 h-4 mr-2" /> Privacy & Security
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -311,13 +311,13 @@ function MVPLayoutInner({ children }) {
                     <p className="text-xs text-gray-500">{user?.email}</p>
                   </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate(createPageUrl('Profile'))} className="cursor-pointer">
+                  <DropdownMenuItem onClick={() => navigate('/Profile')} className="cursor-pointer">
                     <User className="w-4 h-4 mr-2" /> My Profile
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate(createPageUrl('Settings'))} className="cursor-pointer">
+                  <DropdownMenuItem onClick={() => navigate('/Settings')} className="cursor-pointer">
                     <Settings className="w-4 h-4 mr-2" /> Settings
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate(createPageUrl('PrivacySettings'))} className="cursor-pointer">
+                  <DropdownMenuItem onClick={() => navigate('/PrivacySettings')} className="cursor-pointer">
                     <Shield className="w-4 h-4 mr-2" /> Privacy & Security
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
