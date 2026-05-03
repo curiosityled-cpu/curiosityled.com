@@ -819,9 +819,9 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                     {displayRisks.map((risk, idx) => (
                       <AccordionItem key={idx} value={`risk-${idx}`} className="border border-red-200 rounded-lg bg-red-50 px-1">
                         <AccordionTrigger className="px-3 py-3 hover:no-underline">
-                          <div className="flex items-center gap-3 text-left">
+                          <div className="flex items-center gap-3 text-left min-w-0 flex-1 mr-2">
                             <Badge className="bg-red-600 text-white shrink-0">{risk.severity}</Badge>
-                            <span className="font-semibold text-sm text-red-900">{risk.title}</span>
+                            <span className="font-semibold text-sm text-red-900 truncate">{risk.title}</span>
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="px-3 pb-4">
@@ -866,9 +866,9 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                     {displayOpps.map((opportunity, idx) => (
                       <AccordionItem key={idx} value={`opp-${idx}`} className="border border-green-200 rounded-lg bg-green-50 px-1">
                         <AccordionTrigger className="px-3 py-3 hover:no-underline">
-                          <div className="flex items-center gap-3 text-left">
+                          <div className="flex items-center gap-3 text-left min-w-0 flex-1 mr-2">
                             <Badge className="bg-green-600 text-white shrink-0">{opportunity.potential}</Badge>
-                            <span className="font-semibold text-sm text-green-900">{opportunity.title}</span>
+                            <span className="font-semibold text-sm text-green-900 truncate">{opportunity.title}</span>
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="px-3 pb-4">
