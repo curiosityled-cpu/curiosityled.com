@@ -53,6 +53,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import LeaderInsightProfilesCard from "./LeaderInsightProfilesCard";
 import {
   LeadershipReadinessCard,
   SuccessionPipelineCard,
@@ -988,146 +989,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
 
       {/* Pre-Generated Leader Insights (from AssessmentInsights entity) */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
-        <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-purple-600" />
-              Leader Insight Profiles
-            </CardTitle>
-            <p className="text-sm text-gray-600 mt-1">
-              Pre-generated AI insights from completed assessments — updated automatically after each submission
-            </p>
-          </CardHeader>
-          <CardContent>
-            {(() => {
-              // Prefer AssessmentInsights records; fall back to raw Assessment records
-              const hasInsights = rawData.assessmentInsights.length > 0;
-              const hasAssessments = rawData.assessments.length > 0;
-
-              if (!hasInsights && !hasAssessments) {
-                return (
-                  <div className="text-center py-8 text-gray-500">
-                    <Sparkles className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-                    <p className="font-medium">No assessment data yet</p>
-                    <p className="text-sm mt-1">Leader insights appear here once your team completes their leadership assessment.</p>
-                  </div>
-                );
-              }
-
-              if (hasInsights) {
-                return (
-                  <div className="space-y-4">
-                    {rawData.assessmentInsights.slice(0, 10).map((insight, idx) => {
-                      const u = rawData.allUsers.find(u => u.email === insight.user_email);
-                      return (
-                        <div key={insight.id || idx} className="p-4 border rounded-lg bg-white hover:shadow-md transition-shadow">
-                          <div className="flex items-start justify-between mb-2">
-                            <div>
-                              <p className="font-semibold text-gray-900">{u?.full_name || insight.user_email}</p>
-                              <p className="text-xs text-gray-500">{u?.current_role || ''}{u?.department ? ` · ${u.department}` : ''}</p>
-                            </div>
-                            <Badge className="bg-purple-100 text-purple-800 shrink-0">{insight.archetype || 'Processing...'}</Badge>
-                          </div>
-                          {insight.summary && <p className="text-sm text-gray-700 mb-3 leading-relaxed">{insight.summary}</p>}
-                          <div className="grid md:grid-cols-3 gap-3">
-                            {insight.top_strengths?.length > 0 && (
-                              <div>
-                                <p className="text-xs font-semibold text-green-700 mb-1 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Top Strengths</p>
-                                <ul className="space-y-0.5">{insight.top_strengths.slice(0, 3).map((s, i) => <li key={i} className="text-xs text-gray-600">· {s}</li>)}</ul>
-                              </div>
-                            )}
-                            {insight.development_areas?.length > 0 && (
-                              <div>
-                                <p className="text-xs font-semibold text-orange-700 mb-1 flex items-center gap-1"><Target className="w-3 h-3" /> Development Areas</p>
-                                <ul className="space-y-0.5">{insight.development_areas.slice(0, 3).map((d, i) => <li key={i} className="text-xs text-gray-600">· {d}</li>)}</ul>
-                              </div>
-                            )}
-                            {insight.risk_flags?.length > 0 && (
-                              <div>
-                                <p className="text-xs font-semibold text-red-700 mb-1 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Risk Flags</p>
-                                <ul className="space-y-0.5">{insight.risk_flags.map((r, i) => <li key={i} className="text-xs text-gray-600">· {r.replace(/_/g, ' ')}</li>)}</ul>
-                              </div>
-                            )}
-                          </div>
-                          {insight.recommendations?.length > 0 && (
-                            <div className="mt-3 pt-3 border-t">
-                              <p className="text-xs font-semibold text-blue-700 mb-1 flex items-center gap-1"><Zap className="w-3 h-3" /> Recommendations</p>
-                              <ul className="space-y-0.5">{insight.recommendations.slice(0, 2).map((rec, i) => <li key={i} className="text-xs text-gray-600">· {rec}</li>)}</ul>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                    {rawData.assessmentInsights.length > 10 && (
-                      <p className="text-sm text-center text-gray-500">Showing 10 of {rawData.assessmentInsights.length} leader insights</p>
-                    )}
-                  </div>
-                );
-              }
-
-              // Fallback: render from raw Assessment records
-              // Deduplicate by email — show latest assessment per person
-              const latestByEmail = Object.values(
-                rawData.assessments.reduce((acc, a) => {
-                  const email = a.email;
-                  if (!acc[email] || new Date(a.submission_ts || a.created_date) > new Date(acc[email].submission_ts || acc[email].created_date)) {
-                    acc[email] = a;
-                  }
-                  return acc;
-                }, {})
-              );
-
-              return (
-                <div className="space-y-4">
-                  <p className="text-xs text-gray-500 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
-                    Showing summary profiles from raw assessment data. Detailed AI insights generate automatically after each submission.
-                  </p>
-                  {latestByEmail.slice(0, 10).map((a, idx) => {
-                    const u = rawData.allUsers.find(u => u.email === a.email);
-                    const score = a.overall_pct || 0;
-                    const band = a.band_overall || (score >= 80 ? 'Proficient' : score >= 60 ? 'Developing' : 'Awareness');
-                    const bandColor = band === 'Mastery' || band === 'Proficient' ? 'bg-green-100 text-green-800' : band === 'Developing' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800';
-                    return (
-                      <div key={a.id || idx} className="p-4 border rounded-lg bg-white hover:shadow-md transition-shadow">
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <p className="font-semibold text-gray-900">{u?.full_name || a.email}</p>
-                            <p className="text-xs text-gray-500">{u?.current_role || ''}{u?.department ? ` · ${u.department}` : ''}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge className={bandColor}>{band}</Badge>
-                            <span className="text-lg font-bold text-gray-800">{score}%</span>
-                          </div>
-                        </div>
-                        {a.archetype_label && (
-                          <p className="text-xs text-purple-700 font-medium mb-3">Archetype: {a.archetype_label}</p>
-                        )}
-                        <div className="grid grid-cols-3 gap-2 text-xs">
-                          {[
-                            { label: 'Situational Intel', val: a.si_pct },
-                            { label: 'Decision Making', val: a.dm_pct },
-                            { label: 'Communication', val: a.comm_pct },
-                            { label: 'Resource Mgmt', val: a.rm_pct },
-                            { label: 'Stakeholder Mgmt', val: a.sm_pct },
-                            { label: 'Performance Mgmt', val: a.pm_pct },
-                          ].map(({ label, val }) => val != null && (
-                            <div key={label} className="bg-gray-50 rounded p-2">
-                              <div className="text-gray-500">{label}</div>
-                              <div className={`font-bold ${(val || 0) >= 70 ? 'text-green-700' : (val || 0) >= 55 ? 'text-yellow-700' : 'text-red-700'}`}>{val}%</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {latestByEmail.length > 10 && (
-                    <p className="text-sm text-center text-gray-500">Showing 10 of {latestByEmail.length} leaders</p>
-                  )}
-                </div>
-              );
-            })()}
-          </CardContent>
-        </Card>
+        <LeaderInsightProfilesCard rawData={rawData} />
       </motion.div>
 
       {/* Strategic Platform Insights Section */}
