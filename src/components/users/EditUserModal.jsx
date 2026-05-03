@@ -42,19 +42,14 @@ export default function EditUserModal({ open, onOpenChange, editingUser, setEdit
               <Select value={editingUser.app_role} onValueChange={(value) => setEditingUser({ ...editingUser, app_role: value })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="User Level 1">User (User Level 1)</SelectItem>
-                  <SelectItem value="User Level 2">Team Leader (User Level 2)</SelectItem>
+                  <SelectItem value="User Level 1">User</SelectItem>
+                  <SelectItem value="User Level 2">Team Leader</SelectItem>
                   <SelectItem value="Analyst">Analyst (Read-Only Analytics)</SelectItem>
                   <SelectItem value="Executive">Executive</SelectItem>
-                  <SelectItem value="Admin Level 1">Program Admin (Admin Level 1)</SelectItem>
-                  <SelectItem value="Admin Level 2">HR Admin (Admin Level 2)</SelectItem>
+                  <SelectItem value="Admin Level 1">Program Administrator</SelectItem>
+                  <SelectItem value="Admin Level 2">HR Administrator</SelectItem>
                   <SelectItem value="Partner Business Administrator">Partner Business Administrator</SelectItem>
-                  {isPlatformAdmin && (
-                    <>
-                      <SelectItem value="Super Administrator">Super Administrator</SelectItem>
-                      <SelectItem value="Platform Admin">Platform Admin</SelectItem>
-                    </>
-                  )}
+                  <SelectItem value="Super Administrator">Super Administrator</SelectItem>
                 </SelectContent>
               </Select>
             </div>
