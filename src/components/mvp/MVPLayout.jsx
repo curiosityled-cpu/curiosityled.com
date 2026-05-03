@@ -67,7 +67,8 @@ const NAV_CONFIG = {
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }],
 
   executive: [
-  { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: BarChart2 }]
+  { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: BarChart3 },
+  { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }]
 
 };
 

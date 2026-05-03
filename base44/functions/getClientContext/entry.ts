@@ -64,35 +64,19 @@ Deno.serve(async (req) => {
     // Fetch all users in this client
     let clientUsers = [];
     try {
-      const allUsers = await base44.entities.User.list();
-      clientUsers = allUsers.filter(u => u.client_id === user.client_id);
+      clientUsers = await base44.asServiceRole.entities.User.filter({ client_id: user.client_id });
     } catch (error) {
       console.error('Error fetching users:', error);
     }
 
-    const clientUserEmails = clientUsers.map(u => u.email);
     console.log('Found', clientUsers.length, 'users in client');
 
-    // Fetch stats for this client
-    const [allAssessments, allGoals, allLearning] = await Promise.all([
-      base44.entities.Assessment.list().catch(err => {
-        console.error('Error fetching assessments:', err);
-        return [];
-      }),
-      base44.entities.Goal.list().catch(err => {
-        console.error('Error fetching goals:', err);
-        return [];
-      }),
-      base44.entities.AssignedLearning.list().catch(err => {
-        console.error('Error fetching assigned learning:', err);
-        return [];
-      })
+    // Fetch stats for this client using service role scoped by client_id
+    const [clientAssessments, clientGoals, clientLearning] = await Promise.all([
+      base44.asServiceRole.entities.Assessment.filter({ client_id: user.client_id }).catch(() => []),
+      base44.asServiceRole.entities.Goal.filter({ client_id: user.client_id }).catch(() => []),
+      base44.asServiceRole.entities.AssignedLearning.filter({ client_id: user.client_id }).catch(() => [])
     ]);
-
-    // Filter by client users
-    const clientAssessments = allAssessments.filter(a => clientUserEmails.includes(a.email));
-    const clientGoals = allGoals.filter(g => clientUserEmails.includes(g.user_email));
-    const clientLearning = allLearning.filter(l => clientUserEmails.includes(l.user_email));
 
     const stats = {
       total_users: clientUsers.length,
