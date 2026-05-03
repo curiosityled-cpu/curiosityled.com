@@ -768,13 +768,13 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                   <span className="text-sm">Analysing cross-functional patterns…</span>
                 </div>
               ) : aiInsights.length > 0 ? (
-                <Accordion type="single" collapsible className="space-y-2 w-full">
+                <Accordion type="single" collapsible className="space-y-2">
                   {aiInsights.map((insight, idx) => (
-                    <AccordionItem key={idx} value={`insight-${idx}`} className={`border rounded-lg px-1 overflow-hidden ${PRIORITY_COLORS[insight.priority] || 'bg-gray-100'}`}>
+                    <AccordionItem key={idx} value={`insight-${idx}`} className={`border rounded-lg px-1 ${PRIORITY_COLORS[insight.priority] || 'bg-gray-100'}`}>
                       <AccordionTrigger className="px-3 py-3 hover:no-underline">
-                        <div className="flex items-center gap-3 text-left min-w-0 flex-1 mr-2">
+                        <div className="flex items-center gap-3 text-left">
                           <Badge className={PRIORITY_COLORS[insight.priority]}>{insight.priority}</Badge>
-                          <span className="font-semibold text-sm truncate">{insight.title}</span>
+                          <span className="font-semibold text-sm">{insight.title}</span>
                         </div>
                       </AccordionTrigger>
                       <AccordionContent className="px-3 pb-4">
@@ -815,13 +815,13 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                   return derived.slice(0, 3);
                 })();
                 return displayRisks.length > 0 ? (
-                  <Accordion type="single" collapsible className="space-y-2 w-full">
+                  <Accordion type="single" collapsible className="space-y-2">
                     {displayRisks.map((risk, idx) => (
-                      <AccordionItem key={idx} value={`risk-${idx}`} className="border border-red-200 rounded-lg bg-red-50 px-1 overflow-hidden">
+                      <AccordionItem key={idx} value={`risk-${idx}`} className="border border-red-200 rounded-lg bg-red-50 px-1">
                         <AccordionTrigger className="px-3 py-3 hover:no-underline">
-                          <div className="flex items-center gap-3 text-left min-w-0 flex-1 mr-2">
+                          <div className="flex items-center gap-3 text-left">
                             <Badge className="bg-red-600 text-white shrink-0">{risk.severity}</Badge>
-                            <span className="font-semibold text-sm text-red-900 truncate">{risk.title}</span>
+                            <span className="font-semibold text-sm text-red-900">{risk.title}</span>
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="px-3 pb-4">
@@ -862,13 +862,13 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                   return derived.slice(0, 3);
                 })();
                 return displayOpps.length > 0 ? (
-                  <Accordion type="single" collapsible className="space-y-2 w-full">
+                  <Accordion type="single" collapsible className="space-y-2">
                     {displayOpps.map((opportunity, idx) => (
-                      <AccordionItem key={idx} value={`opp-${idx}`} className="border border-green-200 rounded-lg bg-green-50 px-1 overflow-hidden">
+                      <AccordionItem key={idx} value={`opp-${idx}`} className="border border-green-200 rounded-lg bg-green-50 px-1">
                         <AccordionTrigger className="px-3 py-3 hover:no-underline">
-                          <div className="flex items-center gap-3 text-left min-w-0 flex-1 mr-2">
+                          <div className="flex items-center gap-3 text-left">
                             <Badge className="bg-green-600 text-white shrink-0">{opportunity.potential}</Badge>
-                            <span className="font-semibold text-sm text-green-900 truncate">{opportunity.title}</span>
+                            <span className="font-semibold text-sm text-green-900">{opportunity.title}</span>
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="px-3 pb-4">
