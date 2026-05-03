@@ -820,7 +820,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                         </AccordionTrigger>
                         <AccordionContent className="px-3 pb-4">
                           <p className="text-sm text-red-800 mb-3">{risk.description}</p>
-                          <Button size="sm" className="bg-red-600 hover:bg-red-700" onClick={() => navigate(resolveRoute(risk.targetDashboard || 'EnterpriseAnalytics'))}>
+                          <Button size="sm" className="bg-red-600 hover:bg-red-700 whitespace-normal h-auto text-left" onClick={() => navigate(resolveRoute(risk.targetDashboard || 'EnterpriseAnalytics'))}>
                             {risk.action}
                           </Button>
                         </AccordionContent>
@@ -866,7 +866,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                         </AccordionTrigger>
                         <AccordionContent className="px-3 pb-4">
                           <p className="text-sm text-green-800 mb-3">{opportunity.description}</p>
-                          <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => navigate(resolveRoute(opportunity.targetDashboard || 'EnterpriseAnalytics'))}>
+                          <Button size="sm" className="bg-green-600 hover:bg-green-700 whitespace-normal h-auto text-left" onClick={() => navigate(resolveRoute(opportunity.targetDashboard || 'EnterpriseAnalytics'))}>
                             {opportunity.action}
                           </Button>
                         </AccordionContent>
