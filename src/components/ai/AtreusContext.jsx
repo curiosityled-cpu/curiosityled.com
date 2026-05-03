@@ -10,6 +10,7 @@ const AtreusContext = createContext({
   isOpen: false,
   pendingContext: null,
   pendingMessage: null,
+  draftMessage: null,
   close: () => {},
   clearPending: () => {},
 });
@@ -18,31 +19,34 @@ export function AtreusProvider({ children }) {
   const [isOpen, setIsOpen] = useState(false);
   const [pendingContext, setPendingContext] = useState(null);
   const [pendingMessage, setPendingMessage] = useState(null);
+  const [draftMessage, setDraftMessage] = useState(null);
 
-  const openWithContext = useCallback(({ context = {}, starterMessage = null } = {}) => {
-    console.log("Atreus openWithContext called", { context, starterMessage });
-    // Flatten the structure: merge context and add starter_message
+  const openWithContext = useCallback(({ context = {}, starterMessage = null, draftMessage: draft = null } = {}) => {
+    console.log("Atreus openWithContext called", { context, starterMessage, draft });
     const mergedContext = {
       ...context,
       starter_message: starterMessage
     };
     setPendingContext(mergedContext);
     setPendingMessage(starterMessage);
+    setDraftMessage(draft);
     setIsOpen(true);
   }, []);
 
   const close = useCallback(() => {
     setIsOpen(false);
     setPendingContext(null);
+    setDraftMessage(null);
   }, []);
 
   const clearPending = useCallback(() => {
     setPendingContext(null);
     setPendingMessage(null);
+    setDraftMessage(null);
   }, []);
 
   return (
-    <AtreusContext.Provider value={{ openWithContext, isOpen, pendingContext, pendingMessage, close, clearPending }}>
+    <AtreusContext.Provider value={{ openWithContext, isOpen, pendingContext, pendingMessage, draftMessage, close, clearPending }}>
       {children}
     </AtreusContext.Provider>
   );

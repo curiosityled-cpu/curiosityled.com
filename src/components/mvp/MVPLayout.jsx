@@ -86,7 +86,7 @@ function MVPLayoutInner({ children }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const { isOpen: showAtreus, pendingContext, close: closeAtreus, clearPending, openWithContext } = useAtreusChat();
+  const { isOpen: showAtreus, pendingContext, draftMessage, close: closeAtreus, clearPending, openWithContext } = useAtreusChat();
   const openAtreusDefault = () => openWithContext({});
   const [recentNotifications, setRecentNotifications] = useState([]);
   const navigate = useNavigate();
@@ -399,7 +399,8 @@ function MVPLayoutInner({ children }) {
           context={{ ...atreusContext, ...(pendingContext || {}) }}
           isMinimized={false}
           onMinimize={closeAtreus}
-          onClose={closeAtreus} />
+          onClose={closeAtreus}
+          draftMessage={draftMessage} />
         
         </FullAuthProvider>
       }

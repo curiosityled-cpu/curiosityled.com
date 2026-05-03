@@ -48,7 +48,8 @@ export default function AtreusCoach({
   strategicMode = false,
   riskData = null,
   learningModuleMode = false,
-  moduleData = null
+  moduleData = null,
+  draftMessage = null,
 }) {
   const { user, appRole, userPermissions } = useAuth();
   const { updatePageContext } = usePageContext() || { updatePageContext: () => {} };
@@ -109,12 +110,16 @@ export default function AtreusCoach({
      setIsInitialized(true);
      const initializeCoach = async () => {
        try {
-         console.log("AtreusCoach initializing with context:", { starter_message: context?.starter_message, context });
+         console.log("AtreusCoach initializing with context:", { starter_message: context?.starter_message, draftMessage, context });
          await loadOrCreateConversation();
          await new Promise(resolve => setTimeout(resolve, 300));
          await loadConversationsList();
-         // If opened with a starter_message (e.g. from AtreusInsightCard),
-         // poll until the conversation is confirmed ready rather than using a blind timeout
+         // If opened with a draftMessage, pre-fill the input box (do NOT auto-submit)
+         if (draftMessage && isMountedRef.current) {
+           setInputValue(draftMessage);
+           return;
+         }
+         // If opened with a starter_message, auto-submit it
          if (context?.starter_message) {
            console.log("Detected starter_message, polling for conversation ready...", context.starter_message);
            let waited = 0;

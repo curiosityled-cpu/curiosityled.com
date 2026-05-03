@@ -59,7 +59,7 @@ function LayoutContent({ children }) {
   const { user, appRole, roleDisplayName, displayName, loading, isPlatformAdmin, isSuperAdmin, isPartnerBusinessAdmin, isOrgLeader, isManagerOfManagers, isProgramManager, hasProgramManagerAccess, hasPermission, hasAnyPermission, userPermissions } = useAuth();
   const pageIntelligence = usePageIntelligence();
   const activityTracker = useActivityTracker();
-  const { pendingContext, clearPending } = useAtreusChat();
+  const { pendingContext, draftMessage, clearPending } = useAtreusChat();
   const [showAtreus, setShowAtreus] = useState(false);
   
   // Check if on sub-page (not dashboard/home or primary tab roots)
@@ -1330,6 +1330,7 @@ function LayoutContent({ children }) {
                   isMinimized={false}
                   onMinimize={toggleAtreus}
                   onClose={toggleAtreus}
+                  draftMessage={draftMessage}
                 />
               )}
             </AnimatePresence>

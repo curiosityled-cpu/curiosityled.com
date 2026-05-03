@@ -98,7 +98,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
   const { openWithContext } = useAtreusChat();
 
   const promptAtreus = (prompt) => {
-    openWithContext({ starterMessage: prompt });
+    openWithContext({ draftMessage: prompt });
   };
   
   const [loading, setLoading] = useState(true);
