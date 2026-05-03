@@ -20,6 +20,7 @@ Deno.serve(async (req) => {
             'User Level 1',
             'User Level 2', 
             'Analyst',
+            'Executive',
             'Admin Level 1',
             'Admin Level 2',
             'Super Administrator',

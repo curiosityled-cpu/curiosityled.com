@@ -62,6 +62,32 @@ const ADDON_ROLE_TEMPLATES = [
     color: '#10B981' // green
   },
   {
+    role_name: 'Executive Add-on',
+    role_key: 'executive_addon',
+    description: 'Grants a standard user access to executive-level organizational analytics and insights, on top of their personal user experience',
+    permissions: [
+      'analytics.view_client',
+      'analytics.view_org',
+      'analytics.export',
+      'analytics.assessments.view',
+      'analytics.journeys.view',
+      'analytics.development.view',
+      'analytics.performance.view',
+      'analytics.insights.view',
+      'users.view',
+      'content.view',
+      'programs.view',
+      'assessments.view',
+      'learning.view',
+      'goals.view',
+      'leadership_index.view_analytics'
+    ],
+    is_system_role: true,
+    is_addon: true,
+    is_active: true,
+    color: '#0D9488' // teal
+  },
+  {
     role_name: 'HR Admin Add-on',
     role_key: 'hr_admin_addon',
     description: 'Grants access to user management, role assignment, and content administration',
