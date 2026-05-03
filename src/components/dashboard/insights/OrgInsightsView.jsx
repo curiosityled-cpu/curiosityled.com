@@ -866,16 +866,16 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                     {displayOpps.map((opportunity, idx) => (
                       <AccordionItem key={idx} value={`opp-${idx}`} className="border border-green-200 rounded-lg bg-green-50 px-1">
                         <AccordionTrigger className="px-3 py-3 hover:no-underline">
-                          <div className="flex items-center gap-3 text-left">
+                          <div className="flex items-center gap-3 text-left w-full min-w-0">
                             <Badge className="bg-green-600 text-white shrink-0">{opportunity.potential}</Badge>
-                            <span className="font-semibold text-sm text-green-900">{opportunity.title}</span>
+                            <span className="font-semibold text-sm text-green-900 break-words min-w-0">{opportunity.title}</span>
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="px-3 pb-4">
                           <p className="text-sm text-green-800 mb-3">{opportunity.description}</p>
-                          <Button size="sm" className="bg-green-600 hover:bg-green-700 whitespace-normal h-auto text-left" onClick={() => promptAtreus(`I have a strategic opportunity: "${opportunity.title}". ${opportunity.description} Please help me create a plan to capitalise on this.`)}>
+                          <Button size="sm" className="bg-green-600 hover:bg-green-700 whitespace-normal h-auto text-left w-full justify-start" onClick={() => promptAtreus(`I have a strategic opportunity: "${opportunity.title}". ${opportunity.description} Please help me create a plan to capitalise on this.`)}>
                             <Brain className="w-3 h-3 mr-2 shrink-0" />
-                            {opportunity.action}
+                            <span className="break-words">{opportunity.action}</span>
                           </Button>
                         </AccordionContent>
                       </AccordionItem>
