@@ -48,6 +48,12 @@ import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
 import { useNavigate } from "react-router-dom";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
   LeadershipReadinessCard,
   SuccessionPipelineCard,
   SkillsGapCard,
@@ -796,25 +802,29 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
           </CardHeader>
           <CardContent>
             {aiInsights.length > 0 ? (
-              <div className="space-y-4">
+              <Accordion type="single" collapsible className="space-y-2">
                 {aiInsights.map((insight, idx) => (
-                  <div key={idx} className={`p-4 border rounded-lg ${PRIORITY_COLORS[insight.priority] || 'bg-gray-100 text-gray-800'}`}>
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-semibold">{insight.title}</h4>
-                      <Badge className={PRIORITY_COLORS[insight.priority]}>{insight.priority}</Badge>
-                    </div>
-                    <p className="text-sm text-gray-700 mb-3">{insight.description}</p>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => navigate(resolveRoute(insight.targetDashboard || 'EnterpriseAnalytics'))}
-                    >
-                      <LinkIcon className="w-3 h-3 mr-2" />
-                      {insight.action}
-                    </Button>
-                  </div>
+                  <AccordionItem key={idx} value={`insight-${idx}`} className={`border rounded-lg px-1 ${PRIORITY_COLORS[insight.priority] || 'bg-gray-100'}`}>
+                    <AccordionTrigger className="px-3 py-3 hover:no-underline">
+                      <div className="flex items-center gap-3 text-left">
+                        <Badge className={PRIORITY_COLORS[insight.priority]}>{insight.priority}</Badge>
+                        <span className="font-semibold text-sm">{insight.title}</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-3 pb-4">
+                      <p className="text-sm text-gray-700 mb-3">{insight.description}</p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => navigate(resolveRoute(insight.targetDashboard || 'EnterpriseAnalytics'))}
+                      >
+                        <LinkIcon className="w-3 h-3 mr-2" />
+                        {insight.action}
+                      </Button>
+                    </AccordionContent>
+                  </AccordionItem>
                 ))}
-              </div>
+              </Accordion>
             ) : (
               <div className="text-center py-12 text-gray-500">
                 Click "Generate Insights" to receive AI-powered cross-functional analysis
@@ -837,34 +847,37 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
             </CardHeader>
             <CardContent>
               {(() => {
-              const displayRisks = strategicRisks.length > 0 ? strategicRisks : (() => {
-                // Auto-derive risks from assessment data
-                const derived = [];
-                if (metrics.atRiskLeaders > 0) derived.push({ title: 'Leaders Below Performance Threshold', description: `${metrics.atRiskLeaders} leader${metrics.atRiskLeaders !== 1 ? 's are' : ' is'} scoring below 60% — indicating potential capability gaps that may impact team performance.`, severity: 'High', action: 'View Assessment Data', targetDashboard: 'AssessmentAnalyticsDashboard' });
-                if (metrics.competencyAverages.dm < 65) derived.push({ title: 'Decision-Making Gap Detected', description: `Org-wide decision-making average is ${metrics.competencyAverages.dm}%, below the 65% target threshold. This may slow execution and strategic agility.`, severity: 'Medium', action: 'Explore Competencies', targetDashboard: 'EnterpriseAnalytics' });
-                if (metrics.competencyAverages.rm < 65) derived.push({ title: 'Resource Management Deficit', description: `Resource management scores average ${metrics.competencyAverages.rm}% across the organisation — a gap that often correlates with project overruns and budget inefficiency.`, severity: 'Medium', action: 'View Analytics', targetDashboard: 'EnterpriseAnalytics' });
-                if (metrics.totalAssessments === 0) derived.push({ title: 'No Assessment Data Available', description: 'No leadership assessments have been completed yet. Baseline data is needed to identify risks and measure progress.', severity: 'High', action: 'Start Assessments', targetDashboard: 'Assessments' });
-                return derived.slice(0, 3);
-              })();
-              return displayRisks.length > 0 ? (
-                <div className="space-y-3">
-                  {displayRisks.map((risk, idx) => (
-                    <div key={idx} className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                      <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-semibold text-red-900">{risk.title}</h4>
-                        <Badge className="bg-red-600 text-white">{risk.severity}</Badge>
-                      </div>
-                      <p className="text-sm text-red-800 mb-3">{risk.description}</p>
-                      <Button size="sm" className="bg-red-600 hover:bg-red-700" onClick={() => navigate(resolveRoute(risk.targetDashboard || 'EnterpriseAnalytics'))}>
-                        {risk.action}
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">No risk signals detected — strong performance across the board.</div>
-              );
-            })()}
+                const displayRisks = strategicRisks.length > 0 ? strategicRisks : (() => {
+                  const derived = [];
+                  if (metrics.atRiskLeaders > 0) derived.push({ title: 'Leaders Below Performance Threshold', description: `${metrics.atRiskLeaders} leader${metrics.atRiskLeaders !== 1 ? 's are' : ' is'} scoring below 60% — indicating potential capability gaps that may impact team performance.`, severity: 'High', action: 'View Assessment Data', targetDashboard: 'AssessmentAnalyticsDashboard' });
+                  if (metrics.competencyAverages.dm < 65) derived.push({ title: 'Decision-Making Gap Detected', description: `Org-wide decision-making average is ${metrics.competencyAverages.dm}%, below the 65% target threshold. This may slow execution and strategic agility.`, severity: 'Medium', action: 'Explore Competencies', targetDashboard: 'EnterpriseAnalytics' });
+                  if (metrics.competencyAverages.rm < 65) derived.push({ title: 'Resource Management Deficit', description: `Resource management scores average ${metrics.competencyAverages.rm}% across the organisation — a gap that often correlates with project overruns and budget inefficiency.`, severity: 'Medium', action: 'View Analytics', targetDashboard: 'EnterpriseAnalytics' });
+                  if (metrics.totalAssessments === 0) derived.push({ title: 'No Assessment Data Available', description: 'No leadership assessments have been completed yet. Baseline data is needed to identify risks and measure progress.', severity: 'High', action: 'Start Assessments', targetDashboard: 'Assessments' });
+                  return derived.slice(0, 3);
+                })();
+                return displayRisks.length > 0 ? (
+                  <Accordion type="single" collapsible className="space-y-2">
+                    {displayRisks.map((risk, idx) => (
+                      <AccordionItem key={idx} value={`risk-${idx}`} className="border border-red-200 rounded-lg bg-red-50 px-1">
+                        <AccordionTrigger className="px-3 py-3 hover:no-underline">
+                          <div className="flex items-center gap-3 text-left">
+                            <Badge className="bg-red-600 text-white shrink-0">{risk.severity}</Badge>
+                            <span className="font-semibold text-sm text-red-900">{risk.title}</span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-3 pb-4">
+                          <p className="text-sm text-red-800 mb-3">{risk.description}</p>
+                          <Button size="sm" className="bg-red-600 hover:bg-red-700" onClick={() => navigate(resolveRoute(risk.targetDashboard || 'EnterpriseAnalytics'))}>
+                            {risk.action}
+                          </Button>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">No risk signals detected — strong performance across the board.</div>
+                );
+              })()}
             </CardContent>
           </Card>
         </motion.div>
@@ -880,33 +893,37 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
             </CardHeader>
             <CardContent>
               {(() => {
-              const displayOpps = strategicOpportunities.length > 0 ? strategicOpportunities : (() => {
-                const derived = [];
-                if (metrics.highPotentialLeaders > 0) derived.push({ title: 'High-Potential Leaders Ready for Advancement', description: `${metrics.highPotentialLeaders} leader${metrics.highPotentialLeaders !== 1 ? 's are' : ' is'} scoring 85%+ and may be ready for expanded responsibilities or succession planning.`, potential: 'High', action: 'View Profiles', targetDashboard: 'AssessmentAnalyticsDashboard' });
-                if (metrics.competencyAverages.comm >= 70) derived.push({ title: 'Communication Strength to Leverage', description: `Communication scores average ${metrics.competencyAverages.comm}% — above the 70% threshold. This is a platform strength that can drive change management and stakeholder alignment.`, potential: 'Medium', action: 'Explore Insights', targetDashboard: 'EnterpriseAnalytics' });
-                if (metrics.competencyAverages.si >= 70) derived.push({ title: 'Strong Situational Intelligence Baseline', description: `Situational Intelligence averages ${metrics.competencyAverages.si}% across leaders — a strong foundation for strategic decision-making and adaptive leadership.`, potential: 'Medium', action: 'View Analytics', targetDashboard: 'EnterpriseAnalytics' });
-                if (metrics.totalAssessments > 0 && metrics.atRiskLeaders === 0) derived.push({ title: 'No At-Risk Leaders Detected', description: 'All assessed leaders are performing above the risk threshold — an excellent foundation for accelerating development programs and stretch assignments.', potential: 'High', action: 'Plan Development', targetDashboard: 'Development' });
-                return derived.slice(0, 3);
-              })();
-              return displayOpps.length > 0 ? (
-                <div className="space-y-3">
-                  {displayOpps.map((opportunity, idx) => (
-                    <div key={idx} className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                      <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-semibold text-green-900">{opportunity.title}</h4>
-                        <Badge className="bg-green-600 text-white">{opportunity.potential}</Badge>
-                      </div>
-                      <p className="text-sm text-green-800 mb-3">{opportunity.description}</p>
-                      <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => navigate(resolveRoute(opportunity.targetDashboard || 'EnterpriseAnalytics'))}>
-                        {opportunity.action}
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">No specific opportunities identified yet.</div>
-              );
-            })()}
+                const displayOpps = strategicOpportunities.length > 0 ? strategicOpportunities : (() => {
+                  const derived = [];
+                  if (metrics.highPotentialLeaders > 0) derived.push({ title: 'High-Potential Leaders Ready for Advancement', description: `${metrics.highPotentialLeaders} leader${metrics.highPotentialLeaders !== 1 ? 's are' : ' is'} scoring 85%+ and may be ready for expanded responsibilities or succession planning.`, potential: 'High', action: 'View Profiles', targetDashboard: 'AssessmentAnalyticsDashboard' });
+                  if (metrics.competencyAverages.comm >= 70) derived.push({ title: 'Communication Strength to Leverage', description: `Communication scores average ${metrics.competencyAverages.comm}% — above the 70% threshold. This is a platform strength that can drive change management and stakeholder alignment.`, potential: 'Medium', action: 'Explore Insights', targetDashboard: 'EnterpriseAnalytics' });
+                  if (metrics.competencyAverages.si >= 70) derived.push({ title: 'Strong Situational Intelligence Baseline', description: `Situational Intelligence averages ${metrics.competencyAverages.si}% across leaders — a strong foundation for strategic decision-making and adaptive leadership.`, potential: 'Medium', action: 'View Analytics', targetDashboard: 'EnterpriseAnalytics' });
+                  if (metrics.totalAssessments > 0 && metrics.atRiskLeaders === 0) derived.push({ title: 'No At-Risk Leaders Detected', description: 'All assessed leaders are performing above the risk threshold — an excellent foundation for accelerating development programs and stretch assignments.', potential: 'High', action: 'Plan Development', targetDashboard: 'Development' });
+                  return derived.slice(0, 3);
+                })();
+                return displayOpps.length > 0 ? (
+                  <Accordion type="single" collapsible className="space-y-2">
+                    {displayOpps.map((opportunity, idx) => (
+                      <AccordionItem key={idx} value={`opp-${idx}`} className="border border-green-200 rounded-lg bg-green-50 px-1">
+                        <AccordionTrigger className="px-3 py-3 hover:no-underline">
+                          <div className="flex items-center gap-3 text-left">
+                            <Badge className="bg-green-600 text-white shrink-0">{opportunity.potential}</Badge>
+                            <span className="font-semibold text-sm text-green-900">{opportunity.title}</span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-3 pb-4">
+                          <p className="text-sm text-green-800 mb-3">{opportunity.description}</p>
+                          <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => navigate(resolveRoute(opportunity.targetDashboard || 'EnterpriseAnalytics'))}>
+                            {opportunity.action}
+                          </Button>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">No specific opportunities identified yet.</div>
+                );
+              })()}
             </CardContent>
           </Card>
         </motion.div>
