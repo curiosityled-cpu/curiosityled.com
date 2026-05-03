@@ -133,14 +133,18 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
       const insightQuery = clientId ? { client_id: clientId, status: 'generated' } : { status: 'generated' };
       const userQuery = clientId ? { client_id: clientId } : {};
 
-      const [assessments, goals, assignedLearning, journeyEnrollments, allUsers, assessmentInsights] = await Promise.all([
+      const [assessments, goals, assignedLearning, journeyEnrollments, allUsersRaw, assessmentInsights] = await Promise.all([
         base44.entities.Assessment.list('-created_date', 500).catch(() => []),
         base44.entities.Goal.list('-created_date', 500).catch(() => []),
         base44.entities.AssignedLearning.list('-created_date', 500).catch(() => []),
         base44.entities.JourneyEnrollment.list('-created_date', 500).catch(() => []),
-        base44.entities.User.list().catch(() => []),
+        (clientId
+          ? base44.entities.User.filter({ client_id: clientId })
+          : base44.entities.User.list()
+        ).catch(() => []),
         base44.entities.AssessmentInsights.filter(insightQuery).catch(() => [])
       ]);
+      const allUsers = Array.isArray(allUsersRaw) ? allUsersRaw : [];
 
       console.log('[OrgInsightsView] Loaded:', { assessments: assessments?.length, goals: goals?.length, assignedLearning: assignedLearning?.length, journeyEnrollments: journeyEnrollments?.length, allUsers: allUsers?.length, clientId });
 

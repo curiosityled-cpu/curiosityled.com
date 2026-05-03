@@ -410,6 +410,20 @@ export const BASE_ROLE_PERMISSIONS = {
     'experiences.deploy',
     'experiences.view_analytics'
   ],
+  'Executive': [
+    'analytics.view_client',
+    'analytics.view_org',
+    'analytics.export',
+    'users.view',
+    'content.view',
+    'programs.view',
+    'assessments.view',
+    'learning.view',
+    'goals.view',
+    'analytics.assessments.view', 'analytics.journeys.view',
+    'analytics.development.view', 'analytics.performance.view', 'analytics.insights.view',
+    'leadership_index.view_analytics'
+  ],
   'Analyst': [
     'analytics.view_client',
     'analytics.view_org',

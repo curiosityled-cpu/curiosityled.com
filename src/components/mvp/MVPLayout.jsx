@@ -31,6 +31,7 @@ export const getMVPRole = (appRole) => {
   if (appRole === 'User Level 1' || appRole === 'User Level 2') return 'manager';
   if (appRole === 'Admin Level 1' || appRole === 'Admin Level 2' || appRole === 'Super Administrator' || appRole === 'Platform Admin' || appRole === 'Partner Business Administrator' || appRole === 'admin') return 'buyer';
   if (appRole === 'Analyst') return 'analyst';
+  if (appRole === 'Executive') return 'executive';
   return null;
 };
 
@@ -40,6 +41,7 @@ export const getFriendlyRoleLabel = (appRole) => {
     'User Level 1': 'User',
     'User Level 2': 'Team Leader',
     'Analyst': 'Analyst',
+    'Executive': 'Executive',
     'Admin Level 1': 'Program Admin',
     'Admin Level 2': 'HR Admin',
     'Super Administrator': 'Super Administrator',

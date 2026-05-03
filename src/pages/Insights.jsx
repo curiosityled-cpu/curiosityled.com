@@ -53,7 +53,7 @@ function Insights() {
   // Platform Admins / Analysts / HR Admins should see org-wide intelligence by default
   const getInitialView = () => {
     if (tabParam === 'org') return VIEW_SCOPES.ORG;
-    const ORG_DEFAULT_ROLES = ['Platform Admin', 'Super Administrator', 'Partner Business Administrator', 'Analyst', 'Admin Level 2', 'Admin Level 1'];
+    const ORG_DEFAULT_ROLES = ['Platform Admin', 'Super Administrator', 'Partner Business Administrator', 'Analyst', 'Executive', 'Admin Level 2', 'Admin Level 1'];
     if (ORG_DEFAULT_ROLES.includes(appRole)) return VIEW_SCOPES.ORG;
     return VIEW_SCOPES.MY;
   };
@@ -73,7 +73,7 @@ function Insights() {
   const canViewPersonal = hasPermission('personal.insights.view');
   const canViewTeamInsights = hasPermission('team.insights.view');
   // Org analytics: explicit permission OR role-level access for Analyst / HR Admin / Super Admin / Platform Admin
-  const ORG_ANALYTICS_ROLES = ['Platform Admin', 'Super Administrator', 'Partner Business Administrator', 'Analyst', 'Admin Level 2', 'Admin Level 1'];
+  const ORG_ANALYTICS_ROLES = ['Platform Admin', 'Super Administrator', 'Partner Business Administrator', 'Analyst', 'Executive', 'Admin Level 2', 'Admin Level 1'];
   const canViewOrgInsights = hasPermission('analytics.insights.view') || ORG_ANALYTICS_ROLES.includes(appRole);
 
   // Program admin insights require program management permissions
@@ -301,7 +301,8 @@ export default withAuthProtection(Insights, [
   'Platform Admin', 
   'Super Administrator', 
   'Partner Business Administrator', 
-  'Analyst', 
+  'Analyst',
+  'Executive',
   'Admin Level 1', 
   'Admin Level 2', 
   'User Level 1', 
