@@ -135,10 +135,11 @@ function MVPLayoutInner({ children }) {
   const NavItem = ({ item, showLabel = true }) => {
     const Icon = item.icon;
     const itemPath = item.path.split('?')[0].split('#')[0];
-    const isActive = location.pathname === itemPath || location.pathname === item.path.split('?')[0].split('#')[0];
+    const isActive = location.pathname === itemPath;
+    const [navPathname, navSearch] = item.path.split('?');
     return (
       <Link
-        to={item.path}
+        to={{ pathname: navPathname, search: navSearch ? `?${navSearch}` : '' }}
         onClick={() => setMobileOpen(false)}
         title={!showLabel ? item.label : undefined}
         className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
