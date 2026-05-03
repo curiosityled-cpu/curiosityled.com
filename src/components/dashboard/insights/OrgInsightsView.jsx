@@ -779,8 +779,8 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                       </AccordionTrigger>
                       <AccordionContent className="px-3 pb-4">
                         <p className="text-sm text-gray-700 mb-3">{insight.description}</p>
-                        <Button size="sm" variant="outline" onClick={() => navigate(resolveRoute(insight.targetDashboard || 'EnterpriseAnalytics'))}>
-                          <LinkIcon className="w-3 h-3 mr-2" />
+                        <Button size="sm" variant="outline" onClick={() => promptAtreus(`I have a cross-functional insight: "${insight.title}". ${insight.description} Please help me act on this.`)}>
+                          <Brain className="w-3 h-3 mr-2" />
                           {insight.action}
                         </Button>
                       </AccordionContent>
