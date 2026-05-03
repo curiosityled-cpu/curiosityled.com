@@ -47,6 +47,7 @@ import { format, subDays, isAfter, isBefore, startOfDay, addDays } from "date-fn
 import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
 import { useNavigate } from "react-router-dom";
+import { useAtreusChat } from "@/components/ai/AtreusContext";
 import {
   Accordion,
   AccordionContent,
@@ -94,6 +95,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
   const { isPlatformAdmin, isSuperAdmin } = useAuth();
   const clientId = user?.client_id || user?.data?.client_id;
   const navigate = useNavigate();
+  const { openWithContext } = useAtreusChat();
   
   const [loading, setLoading] = useState(true);
   const [generatingInsights, setGeneratingInsights] = useState(false);
@@ -820,8 +822,9 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                         </AccordionTrigger>
                         <AccordionContent className="px-3 pb-4">
                           <p className="text-sm text-red-800 mb-3">{risk.description}</p>
-                          <Button size="sm" className="bg-red-600 hover:bg-red-700 whitespace-normal h-auto text-left" onClick={() => navigate(resolveRoute(risk.targetDashboard || 'EnterpriseAnalytics'))}>
-                            {risk.action}
+                          <Button size="sm" className="bg-red-600 hover:bg-red-700 whitespace-normal h-auto text-left flex items-center gap-1" onClick={() => openWithContext({ starterMessage: `Help me address this strategic risk: "${risk.title}". ${risk.description} What actions should I take?` })}>
+                            <Brain className="w-3 h-3 shrink-0" />
+                            Ask Atreus for Help
                           </Button>
                         </AccordionContent>
                       </AccordionItem>
@@ -866,8 +869,9 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                         </AccordionTrigger>
                         <AccordionContent className="px-3 pb-4">
                           <p className="text-sm text-green-800 mb-3">{opportunity.description}</p>
-                          <Button size="sm" className="bg-green-600 hover:bg-green-700 whitespace-normal h-auto text-left" onClick={() => navigate(resolveRoute(opportunity.targetDashboard || 'EnterpriseAnalytics'))}>
-                            {opportunity.action}
+                          <Button size="sm" className="bg-green-600 hover:bg-green-700 whitespace-normal h-auto text-left flex items-center gap-1" onClick={() => openWithContext({ starterMessage: `Help me capitalise on this strategic opportunity: "${opportunity.title}". ${opportunity.description} What actions should I prioritise?` })}>
+                            <Brain className="w-3 h-3 shrink-0" />
+                            Ask Atreus for Help
                           </Button>
                         </AccordionContent>
                       </AccordionItem>
