@@ -45,6 +45,7 @@ export default function EditUserModal({ open, onOpenChange, editingUser, setEdit
                   <SelectItem value="User Level 1">User (User Level 1)</SelectItem>
                   <SelectItem value="User Level 2">Team Leader (User Level 2)</SelectItem>
                   <SelectItem value="Analyst">Analyst (Read-Only Analytics)</SelectItem>
+                  <SelectItem value="Executive">Executive</SelectItem>
                   <SelectItem value="Admin Level 1">Program Admin (Admin Level 1)</SelectItem>
                   <SelectItem value="Admin Level 2">HR Admin (Admin Level 2)</SelectItem>
                   <SelectItem value="Partner Business Administrator">Partner Business Administrator</SelectItem>

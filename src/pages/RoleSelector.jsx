@@ -42,6 +42,13 @@ function RoleSelector() {
       color: 'bg-emerald-500'
     },
     {
+      id: 'Executive',
+      title: 'Executive',
+      description: 'Executive-level organizational insights and analytics',
+      icon: Crown,
+      color: 'bg-teal-500'
+    },
+    {
       id: 'Admin Level 1',
       title: 'Program Administrator',
       description: 'Manage leadership development programs',
