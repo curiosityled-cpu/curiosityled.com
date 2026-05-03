@@ -21,6 +21,7 @@ import {
   Maximize2,
   X,
 } from "lucide-react";
+import { isAfter, isBefore, startOfDay, subDays } from "date-fns";
 
 const PAGE_SIZE = 10;
 
@@ -183,6 +184,8 @@ export default function LeaderInsightProfilesCard({ rawData }) {
   const [search, setSearch] = useState('');
   const [archetypeFilter, setArchetypeFilter] = useState('all');
   const [riskFilter, setRiskFilter] = useState('all');
+  const [departmentFilter, setDepartmentFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all');
   const [showModal, setShowModal] = useState(false);
 
   const hasInsights = rawData.assessmentInsights.length > 0;
@@ -205,9 +208,26 @@ export default function LeaderInsightProfilesCard({ rawData }) {
     return [...new Set(rawData.assessmentInsights.map(i => i.archetype).filter(Boolean))];
   }, [rawData.assessmentInsights, hasInsights]);
 
+  // Available departments from allUsers
+  const departments = useMemo(() => {
+    return [...new Set(rawData.allUsers.map(u => u.department).filter(Boolean))].sort();
+  }, [rawData.allUsers]);
+
+  const getDateCutoff = () => {
+    const now = new Date();
+    switch (dateFilter) {
+      case '30days': return subDays(now, 30);
+      case '90days': return subDays(now, 90);
+      case '6months': return subDays(now, 180);
+      case '12months': return subDays(now, 365);
+      default: return null;
+    }
+  };
+
   // Apply filters
   const filteredProfiles = useMemo(() => {
     if (!hasInsights && !hasAssessments) return [];
+    const cutoff = getDateCutoff();
 
     if (hasInsights) {
       return rawData.assessmentInsights.filter(item => {
@@ -218,7 +238,9 @@ export default function LeaderInsightProfilesCard({ rawData }) {
         const matchRisk = riskFilter === 'all'
           || (riskFilter === 'has_risks' && item.risk_flags?.length > 0)
           || (riskFilter === 'no_risks' && (!item.risk_flags || item.risk_flags.length === 0));
-        return matchSearch && matchArchetype && matchRisk;
+        const matchDept = departmentFilter === 'all' || u?.department === departmentFilter;
+        const matchDate = !cutoff || isAfter(new Date(item.created_date || item.last_attempted_at || 0), cutoff);
+        return matchSearch && matchArchetype && matchRisk && matchDept && matchDate;
       });
     }
 
@@ -230,11 +252,75 @@ export default function LeaderInsightProfilesCard({ rawData }) {
       const matchRisk = riskFilter === 'all'
         || (riskFilter === 'has_risks' && score < 60)
         || (riskFilter === 'no_risks' && score >= 60);
-      return matchSearch && matchRisk;
+      const matchDept = departmentFilter === 'all' || u?.department === departmentFilter;
+      const matchDate = !cutoff || isAfter(new Date(item.submission_ts || item.created_date || 0), cutoff);
+      return matchSearch && matchRisk && matchDept && matchDate;
     });
-  }, [rawData, hasInsights, hasAssessments, search, archetypeFilter, riskFilter, latestByEmail]);
+  }, [rawData, hasInsights, hasAssessments, search, archetypeFilter, riskFilter, departmentFilter, dateFilter, latestByEmail]);
 
   const mode = hasInsights ? 'insights' : 'raw';
+
+  const FiltersRow = () => (
+    <div className="flex flex-wrap gap-2 mt-3">
+      <div className="relative flex-1 min-w-[160px]">
+        <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
+        <Input
+          placeholder="Search by name or email..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="pl-8 h-9 text-sm"
+        />
+      </div>
+      {departments.length > 0 && (
+        <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+          <SelectTrigger className="w-40 h-9 text-sm">
+            <SelectValue placeholder="All Departments" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Departments</SelectItem>
+            {departments.map(d => (
+              <SelectItem key={d} value={d}>{d}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+      <Select value={dateFilter} onValueChange={setDateFilter}>
+        <SelectTrigger className="w-36 h-9 text-sm">
+          <SelectValue placeholder="All Time" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Time</SelectItem>
+          <SelectItem value="30days">Last 30 Days</SelectItem>
+          <SelectItem value="90days">Last 90 Days</SelectItem>
+          <SelectItem value="6months">Last 6 Months</SelectItem>
+          <SelectItem value="12months">Last 12 Months</SelectItem>
+        </SelectContent>
+      </Select>
+      {hasInsights && archetypes.length > 0 && (
+        <Select value={archetypeFilter} onValueChange={setArchetypeFilter}>
+          <SelectTrigger className="w-44 h-9 text-sm">
+            <SelectValue placeholder="All Archetypes" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Archetypes</SelectItem>
+            {archetypes.map(a => (
+              <SelectItem key={a} value={a}>{a}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+      <Select value={riskFilter} onValueChange={setRiskFilter}>
+        <SelectTrigger className="w-36 h-9 text-sm">
+          <SelectValue placeholder="All Profiles" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Profiles</SelectItem>
+          <SelectItem value="has_risks">Has Risk Flags</SelectItem>
+          <SelectItem value="no_risks">No Risk Flags</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
   const visibleProfiles = filteredProfiles.slice(0, PAGE_SIZE);
   const totalCount = filteredProfiles.length;
 
@@ -280,40 +366,7 @@ export default function LeaderInsightProfilesCard({ rawData }) {
           </div>
 
           {/* Filters */}
-          <div className="flex flex-wrap gap-2 mt-3">
-            <div className="relative flex-1 min-w-[160px]">
-              <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
-              <Input
-                placeholder="Search by name or email..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="pl-8 h-9 text-sm"
-              />
-            </div>
-            {hasInsights && archetypes.length > 0 && (
-              <Select value={archetypeFilter} onValueChange={setArchetypeFilter}>
-                <SelectTrigger className="w-44 h-9 text-sm">
-                  <SelectValue placeholder="All Archetypes" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Archetypes</SelectItem>
-                  {archetypes.map(a => (
-                    <SelectItem key={a} value={a}>{a}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            <Select value={riskFilter} onValueChange={setRiskFilter}>
-              <SelectTrigger className="w-36 h-9 text-sm">
-                <SelectValue placeholder="All Profiles" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Profiles</SelectItem>
-                <SelectItem value="has_risks">Has Risk Flags</SelectItem>
-                <SelectItem value="no_risks">No Risk Flags</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <FiltersRow />
         </CardHeader>
 
         <CardContent>
@@ -353,40 +406,7 @@ export default function LeaderInsightProfilesCard({ rawData }) {
             </div>
 
             {/* Same filters in modal */}
-            <div className="flex flex-wrap gap-2 mt-3">
-              <div className="relative flex-1 min-w-[160px]">
-                <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
-                <Input
-                  placeholder="Search by name or email..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  className="pl-8 h-9 text-sm"
-                />
-              </div>
-              {hasInsights && archetypes.length > 0 && (
-                <Select value={archetypeFilter} onValueChange={setArchetypeFilter}>
-                  <SelectTrigger className="w-44 h-9 text-sm">
-                    <SelectValue placeholder="All Archetypes" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Archetypes</SelectItem>
-                    {archetypes.map(a => (
-                      <SelectItem key={a} value={a}>{a}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-              <Select value={riskFilter} onValueChange={setRiskFilter}>
-                <SelectTrigger className="w-36 h-9 text-sm">
-                  <SelectValue placeholder="All Profiles" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Profiles</SelectItem>
-                  <SelectItem value="has_risks">Has Risk Flags</SelectItem>
-                  <SelectItem value="no_risks">No Risk Flags</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <FiltersRow />
           </DialogHeader>
 
           <div className="overflow-y-auto flex-1 pr-1 mt-2">
