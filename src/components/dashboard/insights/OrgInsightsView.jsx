@@ -126,6 +126,8 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
   const [executiveBriefing, setExecutiveBriefing] = useState('');
   const [strategicRisks, setStrategicRisks] = useState([]);
   const [strategicOpportunities, setStrategicOpportunities] = useState([]);
+  const [lastGeneratedFingerprint, setLastGeneratedFingerprint] = useState(null);
+  const [generatingAll, setGeneratingAll] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -167,6 +169,12 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
       setLoading(false);
     }
   };
+
+  // Build a fingerprint from key metrics to detect meaningful data changes
+  const metricsFingerprint = useMemo(() => {
+    const { assessments, goals, assignedLearning } = rawData;
+    return `${assessments.length}-${goals.length}-${assignedLearning.length}`;
+  }, [rawData]);
 
   const handleTimeRangeChange = (value) => {
     if (value === 'custom') {
@@ -384,6 +392,86 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
     };
   }, [filteredData, aiInsights, strategicOpportunities, strategicRisks, onMetricsUpdate]);
 
+  const generateAll = async () => {
+    setGeneratingAll(true);
+    setGeneratingBriefing(true);
+    setGeneratingInsights(true);
+    try {
+      const [briefingResult, insightsResult] = await Promise.all([
+        base44.integrations.Core.InvokeLLM({
+          prompt: `You are an executive leadership consultant. Based on this organizational data, write a 2-3 paragraph executive briefing highlighting the most critical insights, opportunities, and strategic imperatives:
+      
+      Leadership Metrics:
+      - Average Leadership Score: ${metrics.avgLeadershipScore}%
+      - Total Assessments: ${metrics.totalAssessments}
+      - At-Risk Leaders: ${metrics.atRiskLeaders}
+      - High-Potential Leaders: ${metrics.highPotentialLeaders}
+      
+      Goal Performance:
+      - Total Goals: ${metrics.totalGoals}
+      - Completion Rate: ${metrics.goalCompletionRate}%
+      - Overdue: ${metrics.overdueGoals}
+      
+      Learning Engagement:
+      - Assignments: ${metrics.totalLearning}
+      - Completion Rate: ${metrics.learningCompletionRate}%
+      
+      Journey Progress:
+      - Enrollments: ${metrics.totalJourneys}
+      - Completion Rate: ${metrics.journeyCompletionRate}%
+      
+      Write in a professional, strategic tone. Focus on actionable insights and business impact.`
+        }),
+        base44.integrations.Core.InvokeLLM({
+          prompt: `Analyze this comprehensive organizational leadership data and identify 5 cross-functional insights that show correlations between different metrics:
+
+      Data Overview:
+      - Leadership Assessment Avg: ${metrics.avgLeadershipScore}%
+      - Goal Completion Rate: ${metrics.goalCompletionRate}%
+      - Learning Completion: ${metrics.learningCompletionRate}%
+      - Journey Completion: ${metrics.journeyCompletionRate}%
+      - At-Risk Leaders: ${metrics.atRiskLeaders}
+      - High Potential: ${metrics.highPotentialLeaders}
+      - Overdue Goals: ${metrics.overdueGoals}
+      
+      Competency Scores:
+      - SI: ${metrics.competencyAverages.si}%
+      - Decision Making: ${metrics.competencyAverages.dm}%
+      - Communication: ${metrics.competencyAverages.comm}%
+      
+      Provide insights that connect these metrics. Format as JSON with: insights (array of {title, description, priority, targetDashboard, action}), risks (array of {title, description, severity, action, targetDashboard}), opportunities (array of {title, description, potential, action, targetDashboard}).`,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              insights: { type: "array", items: { type: "object", properties: { title: { type: "string" }, description: { type: "string" }, priority: { type: "string" }, targetDashboard: { type: "string" }, action: { type: "string" } } } },
+              risks: { type: "array", items: { type: "object", properties: { title: { type: "string" }, description: { type: "string" }, severity: { type: "string" }, action: { type: "string" }, targetDashboard: { type: "string" } } } },
+              opportunities: { type: "array", items: { type: "object", properties: { title: { type: "string" }, description: { type: "string" }, potential: { type: "string" }, action: { type: "string" }, targetDashboard: { type: "string" } } } }
+            }
+          }
+        })
+      ]);
+
+      setExecutiveBriefing(briefingResult || '');
+      setAiInsights(insightsResult?.insights || []);
+      setStrategicRisks(insightsResult?.risks?.slice(0, 3) || []);
+      setStrategicOpportunities(insightsResult?.opportunities?.slice(0, 3) || []);
+      setLastGeneratedFingerprint(metricsFingerprint);
+    } catch (error) {
+      console.error('Error generating insights:', error);
+    } finally {
+      setGeneratingAll(false);
+      setGeneratingBriefing(false);
+      setGeneratingInsights(false);
+    }
+  };
+
+  // Auto-generate when data changes
+  useEffect(() => {
+    if (metricsFingerprint === '0-0-0') return;
+    if (metricsFingerprint === lastGeneratedFingerprint) return;
+    generateAll();
+  }, [metricsFingerprint]);
+
   // Notify parent of metrics changes without triggering setState-in-render
   useEffect(() => {
     if (onMetricsUpdate) {
@@ -456,126 +544,14 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
     return { trendData, correlationData };
   }, [filteredData, rawData.allUsers]);
 
-  const generateExecutiveBriefing = async () => {
-    setGeneratingBriefing(true);
-    try {
-      const prompt = `You are an executive leadership consultant. Based on this organizational data, write a 2-3 paragraph executive briefing highlighting the most critical insights, opportunities, and strategic imperatives:
-      
-      Leadership Metrics:
-      - Average Leadership Score: ${metrics.avgLeadershipScore}%
-      - Total Assessments: ${metrics.totalAssessments}
-      - At-Risk Leaders: ${metrics.atRiskLeaders}
-      - High-Potential Leaders: ${metrics.highPotentialLeaders}
-      
-      Goal Performance:
-      - Total Goals: ${metrics.totalGoals}
-      - Completion Rate: ${metrics.goalCompletionRate}%
-      - Overdue: ${metrics.overdueGoals}
-      
-      Learning Engagement:
-      - Assignments: ${metrics.totalLearning}
-      - Completion Rate: ${metrics.learningCompletionRate}%
-      
-      Journey Progress:
-      - Enrollments: ${metrics.totalJourneys}
-      - Completion Rate: ${metrics.journeyCompletionRate}%
-      
-      Filters: ${JSON.stringify(filters)}
-      
-      Write in a professional, strategic tone. Focus on actionable insights and business impact.`;
-      
-      const result = await base44.integrations.Core.InvokeLLM({ prompt });
-      setExecutiveBriefing(result || 'Unable to generate briefing at this time.');
-      toast.success('Executive briefing generated');
-    } catch (error) {
-      console.error('Error generating briefing:', error);
-      toast.error('Failed to generate briefing');
-    } finally {
-      setGeneratingBriefing(false);
-    }
+  const generateExecutiveBriefing = () => {
+    setLastGeneratedFingerprint(null); // force regeneration
+    generateAll();
   };
 
-  const generateCrossAnalytics = async () => {
-    setGeneratingInsights(true);
-    try {
-      const prompt = `Analyze this comprehensive organizational leadership data and identify 5 cross-functional insights that show correlations between different metrics:
-
-      Data Overview:
-      - Leadership Assessment Avg: ${metrics.avgLeadershipScore}%
-      - Goal Completion Rate: ${metrics.goalCompletionRate}%
-      - Learning Completion: ${metrics.learningCompletionRate}%
-      - Journey Completion: ${metrics.journeyCompletionRate}%
-      - At-Risk Leaders: ${metrics.atRiskLeaders}
-      - High Potential: ${metrics.highPotentialLeaders}
-      - Overdue Goals: ${metrics.overdueGoals}
-      
-      Competency Scores:
-      - SI: ${metrics.competencyAverages.si}%
-      - Decision Making: ${metrics.competencyAverages.dm}%
-      - Communication: ${metrics.competencyAverages.comm}%
-      
-      Provide insights that connect these metrics (e.g., "Leaders with high Communication scores show 25% better goal completion"). 
-      
-      Format as JSON with: title, description, priority ('High Risk', 'Strategic Priority', 'Positive Impact', or 'Opportunity'), targetDashboard (which analytics page to link to: 'EnterpriseAnalytics', 'Performance', 'LearningAnalyticsDashboard', 'JourneyAnalytics', or 'AssessmentAnalytics'), action (button label).`;
-      
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            insights: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  title: { type: "string" },
-                  description: { type: "string" },
-                  priority: { type: "string" },
-                  targetDashboard: { type: "string" },
-                  action: { type: "string" }
-                }
-              }
-            },
-            risks: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  title: { type: "string" },
-                  description: { type: "string" },
-                  severity: { type: "string" },
-                  action: { type: "string" },
-                  targetDashboard: { type: "string" }
-                }
-              }
-            },
-            opportunities: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  title: { type: "string" },
-                  description: { type: "string" },
-                  potential: { type: "string" },
-                  action: { type: "string" },
-                  targetDashboard: { type: "string" }
-                }
-              }
-            }
-          }
-        }
-      });
-
-      setAiInsights(result?.insights || []);
-      setStrategicRisks(result?.risks?.slice(0, 3) || []);
-      setStrategicOpportunities(result?.opportunities?.slice(0, 3) || []);
-      toast.success('AI insights generated successfully');
-    } catch (error) {
-      console.error('Error generating insights:', error);
-      toast.error('Failed to generate insights');
-    } finally {
-      setGeneratingInsights(false);
-    }
+  const generateCrossAnalytics = () => {
+    setLastGeneratedFingerprint(null); // force regeneration
+    generateAll();
   };
 
   const aiPrompts = [
@@ -740,7 +716,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
         </motion.div>
       </div>
 
-      {/* Executive AI Briefing */}
+      {/* Executive AI Briefing (includes Cross-Functional Insights) */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
         <Card className="border-0 shadow-lg bg-gradient-to-r from-purple-50 to-blue-50">
           <CardHeader>
@@ -752,85 +728,61 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                 </CardTitle>
                 <p className="text-sm text-gray-600 mt-1">Strategic synthesis of your organizational leadership data</p>
               </div>
-              {executiveBriefing && (
-                <Button variant="outline" size="sm" onClick={generateExecutiveBriefing} disabled={generatingBriefing}>
-                  {generatingBriefing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+              {(executiveBriefing || aiInsights.length > 0) && (
+                <Button variant="outline" size="sm" onClick={generateExecutiveBriefing} disabled={generatingAll}>
+                  {generatingAll ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RefreshCw className="w-4 h-4 mr-2" />}
                   Refresh
                 </Button>
               )}
             </div>
           </CardHeader>
-          <CardContent>
-            {executiveBriefing ? (
+          <CardContent className="space-y-6">
+            {/* Briefing narrative */}
+            {generatingBriefing && !executiveBriefing ? (
+              <div className="flex items-center gap-3 py-4 text-purple-600">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span className="text-sm">Generating executive briefing…</span>
+              </div>
+            ) : executiveBriefing ? (
               <div className="prose prose-sm max-w-none">
                 <p className="text-gray-700 leading-relaxed whitespace-pre-line">{executiveBriefing}</p>
               </div>
-            ) : (
-              <div className="flex flex-col items-center gap-4 py-6">
-                <div className="flex items-start gap-3">
-                  <Sparkles className="w-5 h-5 text-purple-400 mt-0.5 shrink-0" />
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    Generate an AI-powered executive briefing synthesizing your organizational leadership data into strategic insights.
-                  </p>
-                </div>
-                <Button onClick={generateExecutiveBriefing} disabled={generatingBriefing} className="bg-purple-600 hover:bg-purple-700">
-                  {generatingBriefing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                  Generate Executive Briefing
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
+            ) : null}
 
-      {/* Cross-Functional AI Insights */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
-        <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Brain className="w-5 h-5 text-blue-600" />
-                  Cross-Functional Intelligence Insights
-                </CardTitle>
-                <p className="text-sm text-gray-600 mt-1">AI-identified correlations across leadership, learning, and performance data</p>
+            {/* Cross-Functional Intelligence Insights — embedded section */}
+            <div className="border-t border-purple-200 pt-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Brain className="w-5 h-5 text-blue-600" />
+                <h3 className="font-semibold text-gray-800">Cross-Functional Intelligence Insights</h3>
+                <span className="text-xs text-gray-500 ml-1">AI-identified correlations across leadership, learning, and performance data</span>
               </div>
-              <Button onClick={generateCrossAnalytics} disabled={generatingInsights} className="bg-blue-600 hover:bg-blue-700">
-                {generatingInsights ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Zap className="w-4 h-4 mr-2" />}
-                {aiInsights.length > 0 ? 'Refresh' : 'Generate'} Insights
-              </Button>
+              {generatingInsights && aiInsights.length === 0 ? (
+                <div className="flex items-center gap-3 py-4 text-blue-600">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span className="text-sm">Analysing cross-functional patterns…</span>
+                </div>
+              ) : aiInsights.length > 0 ? (
+                <Accordion type="single" collapsible className="space-y-2">
+                  {aiInsights.map((insight, idx) => (
+                    <AccordionItem key={idx} value={`insight-${idx}`} className={`border rounded-lg px-1 ${PRIORITY_COLORS[insight.priority] || 'bg-gray-100'}`}>
+                      <AccordionTrigger className="px-3 py-3 hover:no-underline">
+                        <div className="flex items-center gap-3 text-left">
+                          <Badge className={PRIORITY_COLORS[insight.priority]}>{insight.priority}</Badge>
+                          <span className="font-semibold text-sm">{insight.title}</span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-3 pb-4">
+                        <p className="text-sm text-gray-700 mb-3">{insight.description}</p>
+                        <Button size="sm" variant="outline" onClick={() => navigate(resolveRoute(insight.targetDashboard || 'EnterpriseAnalytics'))}>
+                          <LinkIcon className="w-3 h-3 mr-2" />
+                          {insight.action}
+                        </Button>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              ) : null}
             </div>
-          </CardHeader>
-          <CardContent>
-            {aiInsights.length > 0 ? (
-              <Accordion type="single" collapsible className="space-y-2">
-                {aiInsights.map((insight, idx) => (
-                  <AccordionItem key={idx} value={`insight-${idx}`} className={`border rounded-lg px-1 ${PRIORITY_COLORS[insight.priority] || 'bg-gray-100'}`}>
-                    <AccordionTrigger className="px-3 py-3 hover:no-underline">
-                      <div className="flex items-center gap-3 text-left">
-                        <Badge className={PRIORITY_COLORS[insight.priority]}>{insight.priority}</Badge>
-                        <span className="font-semibold text-sm">{insight.title}</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-3 pb-4">
-                      <p className="text-sm text-gray-700 mb-3">{insight.description}</p>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => navigate(resolveRoute(insight.targetDashboard || 'EnterpriseAnalytics'))}
-                      >
-                        <LinkIcon className="w-3 h-3 mr-2" />
-                        {insight.action}
-                      </Button>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                Click "Generate Insights" to receive AI-powered cross-functional analysis
-              </div>
-            )}
           </CardContent>
         </Card>
       </motion.div>
