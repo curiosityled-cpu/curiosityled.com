@@ -818,10 +818,10 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                   <Accordion type="single" collapsible className="space-y-2">
                     {displayRisks.map((risk, idx) => (
                       <AccordionItem key={idx} value={`risk-${idx}`} className="border border-red-200 rounded-lg bg-red-50 px-1">
-                        <AccordionTrigger className="px-3 py-3 hover:no-underline">
-                          <div className="flex items-start gap-3 text-left w-full min-w-0">
+                        <AccordionTrigger className="px-3 py-3 hover:no-underline [&>svg]:shrink-0 [&>svg]:ml-2">
+                          <div className="flex items-start gap-3 text-left flex-1 min-w-0 overflow-hidden">
                             <Badge className="bg-red-600 text-white shrink-0 mt-0.5">{risk.severity}</Badge>
-                            <span className="font-semibold text-sm text-red-900 break-words min-w-0">{risk.title}</span>
+                            <span className="font-semibold text-sm text-red-900 break-words overflow-wrap-anywhere">{risk.title}</span>
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="px-3 pb-4">
@@ -865,10 +865,10 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                   <Accordion type="single" collapsible className="space-y-2">
                     {displayOpps.map((opportunity, idx) => (
                       <AccordionItem key={idx} value={`opp-${idx}`} className="border border-green-200 rounded-lg bg-green-50 px-1">
-                        <AccordionTrigger className="px-3 py-3 hover:no-underline">
-                          <div className="flex items-start gap-3 text-left w-full min-w-0">
+                        <AccordionTrigger className="px-3 py-3 hover:no-underline [&>svg]:shrink-0 [&>svg]:ml-2">
+                          <div className="flex items-start gap-3 text-left flex-1 min-w-0 overflow-hidden">
                             <Badge className="bg-green-600 text-white shrink-0 mt-0.5">{opportunity.potential}</Badge>
-                            <span className="font-semibold text-sm text-green-900 break-words min-w-0">{opportunity.title}</span>
+                            <span className="font-semibold text-sm text-green-900 break-words overflow-wrap-anywhere">{opportunity.title}</span>
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="px-3 pb-4">
