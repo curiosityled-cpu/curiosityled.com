@@ -57,19 +57,11 @@ import {
 import LeaderInsightProfilesCard from "./LeaderInsightProfilesCard";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import {
-  LeadershipReadinessCard,
   SuccessionPipelineCard,
-  SkillsGapCard,
-  FlightRiskCard,
-  PromotionReadinessCard,
-  LearningVelocityCard,
-  LeadershipStyleCard,
-  DecisionMakingCard,
-  IndustryBenchmarkCard,
   TeamImpactCard,
-  DevelopmentFocusCard
 } from "@/components/intelligence/PlatformInsightsCards.jsx";
-import ManagerEffectivenessCard from "@/components/intelligence/ManagerEffectivenessCard";
+import OrgHealthCard from "@/components/intelligence/OrgHealthCard";
+import TalentPipelineCard from "@/components/intelligence/TalentPipelineCard";
 
 // Map AI-generated dashboard names to actual MVP routes
 const DASHBOARD_ROUTES = {
@@ -571,13 +563,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
     generateAll();
   };
 
-  const aiPrompts = [
-    { icon: Target, text: "What are the primary drivers of low goal completion in my organization?", color: "text-orange-600" },
-    { icon: Brain, text: "How can we accelerate leadership development for high-potential leaders?", color: "text-purple-600" },
-    { icon: TrendingUp, text: "What's the ROI impact of our learning initiatives on performance?", color: "text-green-600" },
-    { icon: Users, text: "Which departments need the most immediate leadership intervention?", color: "text-blue-600" },
-    { icon: Sparkles, text: "What patterns exist between assessment scores and goal achievement?", color: "text-pink-600" }
-  ];
+
 
   if (loading) {
     return (
@@ -678,80 +664,26 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
               </Card>
               </motion.div>
 
-      {/* Strategic Platform Insights — moved above KPIs */}
+      {/* Consolidated Strategic Cards */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Shield className="w-6 h-6 text-indigo-600" />
-          Strategic Platform Insights
-        </h2>
-        <p className="text-gray-600 mb-6">Platform-wide trends and patterns to inform strategic decisions</p>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <ManagerEffectivenessCard metrics={metrics} assessments={filteredData.assessments} />
-          <LeadershipReadinessCard metrics={metrics} assessments={filteredData.assessments} />
-          <SkillsGapCard metrics={metrics} />
+        <div className="grid md:grid-cols-2 gap-6">
+          <OrgHealthCard
+            metrics={metrics}
+            assessments={filteredData.assessments}
+            goals={filteredData.goals}
+            assignedLearning={filteredData.assignedLearning}
+            strategicRisks={strategicRisks}
+            strategicOpportunities={strategicOpportunities}
+            onPromptAtreus={promptAtreus}
+          />
+          <TalentPipelineCard
+            metrics={metrics}
+            assessments={filteredData.assessments}
+            assignedLearning={filteredData.assignedLearning}
+            journeyEnrollments={filteredData.journeyEnrollments}
+          />
         </div>
       </motion.div>
-
-      {/* Executive Summary KPIs — DM/SI/ME focused */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer border-t-4 border-t-indigo-500" onClick={() => navigate('/Insights?tab=enterprise')}>
-            <CardContent className="p-6">
-              <Brain className="w-8 h-8 text-indigo-600 mb-4" />
-              <div className="text-3xl font-bold text-gray-900">{metrics.competencyAverages.dm}%</div>
-              <div className="text-sm text-gray-600 mt-1">Decision Making Score</div>
-              <div className="text-xs text-gray-400 mt-0.5">Industry target: 77%</div>
-              <div className="text-xs text-indigo-600 mt-2 flex items-center gap-1">
-                View Details <ArrowRight className="w-3 h-3" />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer border-t-4 border-t-purple-500" onClick={() => navigate('/Insights?tab=enterprise')}>
-            <CardContent className="p-6">
-              <Zap className="w-8 h-8 text-purple-600 mb-4" />
-              <div className="text-3xl font-bold text-gray-900">{metrics.competencyAverages.si}%</div>
-              <div className="text-sm text-gray-600 mt-1">Situational Intelligence</div>
-              <div className="text-xs text-gray-400 mt-0.5">Industry target: 75%</div>
-              <div className="text-xs text-purple-600 mt-2 flex items-center gap-1">
-                View Details <ArrowRight className="w-3 h-3" />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer border-t-4 border-t-teal-500" onClick={() => navigate('/Insights?tab=org')}>
-            <CardContent className="p-6">
-              <Users className="w-8 h-8 text-teal-600 mb-4" />
-              <div className="text-3xl font-bold text-gray-900">
-                {Math.round(metrics.competencyAverages.dm * 0.35 + metrics.competencyAverages.si * 0.30 + metrics.competencyAverages.comm * 0.20 + metrics.competencyAverages.pm * 0.15)}%
-              </div>
-              <div className="text-sm text-gray-600 mt-1">Manager Effectiveness Index</div>
-              <div className="text-xs text-gray-400 mt-0.5">DM + SI + Comm + PM composite</div>
-              <div className="text-xs text-teal-600 mt-2 flex items-center gap-1">
-                View Details <ArrowRight className="w-3 h-3" />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer border-t-4 border-t-orange-500" onClick={() => navigate('/Insights?tab=org')}>
-            <CardContent className="p-6">
-              <Target className="w-8 h-8 text-orange-600 mb-4" />
-              <div className="text-3xl font-bold text-gray-900">{metrics.avgLeadershipScore}%</div>
-              <div className="text-sm text-gray-600 mt-1">Overall Leadership Score</div>
-              <div className="text-xs text-gray-400 mt-0.5">{metrics.totalAssessments} assessments</div>
-              <div className="text-xs text-orange-600 mt-2 flex items-center gap-1">
-                View Details <ArrowRight className="w-3 h-3" />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
 
       {/* Executive AI Briefing (includes Cross-Functional Insights) */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
@@ -987,88 +919,12 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         <LeaderInsightProfilesCard rawData={rawData} />
       </motion.div>
 
-      {/* Predictive Insights Section */}
+      {/* Team Impact + Succession — compact row */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
-        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <TrendingUp className="w-6 h-6 text-blue-600" />
-          Predictive Insights
-        </h2>
-        <p className="text-gray-600 mb-6">Forward-looking indicators and risk signals</p>
-        
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <FlightRiskCard 
-            assessments={filteredData.assessments} 
-            goals={filteredData.goals} 
-            assignedLearning={filteredData.assignedLearning} 
-          />
-          <PromotionReadinessCard assessments={filteredData.assessments} allUsers={rawData.allUsers} />
-          <LearningVelocityCard 
-            assignedLearning={filteredData.assignedLearning} 
-            journeyEnrollments={filteredData.journeyEnrollments} 
-          />
-        </div>
-      </motion.div>
-
-      {/* Behavioral & Performance Insights Section */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.62 }}>
-        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Brain className="w-6 h-6 text-purple-600" />
-          Behavioral & Performance Insights
-        </h2>
-        <p className="text-gray-600 mb-6">Leadership patterns and decision quality metrics</p>
-        
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <LeadershipStyleCard assessments={filteredData.assessments} />
-          <DecisionMakingCard metrics={metrics} />
-          <TeamImpactCard metrics={metrics} goals={filteredData.goals} />
-        </div>
-      </motion.div>
-
-      {/* Benchmarks & Development Section */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.64 }}>
-        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <BarChart3 className="w-6 h-6 text-teal-600" />
-          Benchmarks & Development Priorities
-        </h2>
-        <p className="text-gray-600 mb-6">Industry comparisons and focus areas</p>
-        
         <div className="grid md:grid-cols-2 gap-6">
-          <IndustryBenchmarkCard metrics={metrics} />
-          <DevelopmentFocusCard metrics={metrics} />
+          <TeamImpactCard metrics={metrics} goals={filteredData.goals} />
+          <SuccessionPipelineCard assessments={filteredData.assessments} allUsers={rawData.allUsers} />
         </div>
-      </motion.div>
-
-      {/* AI Decision Support Prompts */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.66 }}>
-        <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-indigo-600" />
-              AI Decision Support
-            </CardTitle>
-            <p className="text-sm text-gray-600">Quick prompts for strategic questions about your organization</p>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 gap-3">
-              {aiPrompts.map((prompt, idx) => {
-                const PromptIcon = prompt.icon;
-                return (
-                  <Button
-                    key={idx}
-                    variant="outline"
-                    className="h-auto py-4 px-4 justify-start text-left hover:bg-indigo-50 hover:border-indigo-300 whitespace-normal"
-                    onClick={() => {
-                      toast.info('AI Coach feature coming soon!');
-                    }}
-                  >
-                    <PromptIcon className={`w-5 h-5 mr-3 flex-shrink-0 ${prompt.color}`} />
-                    <span className="text-sm break-words">{prompt.text}</span>
-                  </Button>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
       </motion.div>
 
       {/* Quick Access Dashboard Links */}

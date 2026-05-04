@@ -390,6 +390,16 @@ export function getContextualSuggestions(context, appRole, userPermissions, allo
       suggestions.push({ text: "Export analytics report", icon: "📥" });
       break;
     }
+    case 'ai-leadership-intelligence-hub':
+    case 'org-insights': {
+      suggestions.push(
+        { text: "What are the primary drivers of low goal completion in my organization?", icon: "🎯" },
+        { text: "How can we accelerate development for high-potential leaders?", icon: "🚀" },
+        { text: "Which departments need the most immediate leadership intervention?", icon: "🚨" },
+        { text: "What's the ROI impact of our learning initiatives on performance?", icon: "📈" }
+      );
+      break;
+    }
     default:
       suggestions.push({ text: 'What can you help me with?', icon: '❓' }, { text: 'Explain this page', icon: '📖' }, { text: 'Show me tips', icon: '💡' });
   }

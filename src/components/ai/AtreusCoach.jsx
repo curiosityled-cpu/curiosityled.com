@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Minimize2, Send, Brain, Loader2, Sparkles, History, Download, FileText, ChevronDown, ChevronUp, Trash2, Plus, AlertCircle, Paperclip, XCircle, Map, MessageSquare, BarChart2, TrendingUp } from "lucide-react";
+import { X, Minimize2, Send, Brain, Loader2, Sparkles, History, Download, FileText, ChevronDown, ChevronUp, Trash2, Plus, AlertCircle, Paperclip, XCircle, Map, MessageSquare, BarChart2, TrendingUp, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -1203,15 +1203,25 @@ export default function AtreusCoach({
             </div>
           </div>
 
-          {/* Quick Action Bar */}
+          {/* Quick Action Bar — context-aware per page */}
           <div className="px-3 py-2 border-b flex-shrink-0 bg-white">
             <div className="flex gap-1.5 flex-wrap">
-              {[
-                { label: 'Create Plan', icon: Map, prompt: `Create a focused development plan for me. Context: page=${context?.pageType || 'unknown'}, role=${appRole || 'User'}, name=${context?.user_name || user?.full_name || 'user'}. Goals: ${JSON.stringify(context?.visible_data_summary?.active_goals || context?.current_goals || null)}. Assessment: ${JSON.stringify(context?.page_specific_insights?.assessment_summary || context?.assessment_summary || null)}.` },
-                { label: 'Prep Conversation', icon: MessageSquare, prompt: `Help me prepare for an upcoming leadership conversation. Context: page=${context?.pageType || 'unknown'}, role=${appRole || 'User'}. Recent activity: ${JSON.stringify(context?.activity_summary || context?.recent_activity || null)}. Goals context: ${JSON.stringify(context?.visible_data_summary || null)}.` },
-                { label: 'Review Progress', icon: TrendingUp, prompt: `Review my current progress across goals and learning. Context: page=${context?.pageType || 'unknown'}, role=${appRole || 'User'}, name=${context?.user_name || user?.full_name || 'user'}. Learning progress: ${JSON.stringify(context?.learning_progress || null)}. Visible data: ${JSON.stringify(context?.visible_data_summary || null)}.` },
-                { label: 'Analyze Results', icon: BarChart2, prompt: `Analyze my latest assessment results and surface the most important insights. Context: page=${context?.pageType || 'unknown'}, role=${appRole || 'User'}. Assessment data: ${JSON.stringify(context?.page_specific_insights?.assessment_summary || context?.assessment_summary || null)}. Competency data: ${JSON.stringify(context?.visible_data_summary || null)}.` },
-              ].map(({ label, icon: Icon, prompt }) => (
+              {((() => {
+                const pageType = context?.pageType || 'unknown';
+                const isHub = pageType === 'ai-leadership-intelligence-hub' || pageType === 'org-insights';
+                if (isHub) return [
+                  { label: 'Goal Completion Drivers', icon: Target, prompt: `What are the primary drivers of low goal completion in my organization? Analyze the data and provide strategic recommendations.` },
+                  { label: 'Accelerate HiPo Growth', icon: TrendingUp, prompt: `How can we accelerate leadership development for high-potential leaders in our organization? What interventions will move the needle fastest?` },
+                  { label: 'Intervention Priority', icon: MessageSquare, prompt: `Which departments or leadership levels need the most immediate leadership intervention, and what actions should I take first?` },
+                  { label: 'Learning ROI', icon: BarChart2, prompt: `What's the ROI impact of our current learning initiatives on leadership performance and goal achievement?` },
+                ];
+                return [
+                  { label: 'Create Plan', icon: Map, prompt: `Create a focused development plan for me. Context: page=${pageType}, role=${appRole || 'User'}, name=${context?.user_name || user?.full_name || 'user'}. Goals: ${JSON.stringify(context?.visible_data_summary?.active_goals || context?.current_goals || null)}. Assessment: ${JSON.stringify(context?.page_specific_insights?.assessment_summary || context?.assessment_summary || null)}.` },
+                  { label: 'Prep Conversation', icon: MessageSquare, prompt: `Help me prepare for an upcoming leadership conversation. Context: page=${pageType}, role=${appRole || 'User'}. Recent activity: ${JSON.stringify(context?.activity_summary || context?.recent_activity || null)}. Goals context: ${JSON.stringify(context?.visible_data_summary || null)}.` },
+                  { label: 'Review Progress', icon: TrendingUp, prompt: `Review my current progress across goals and learning. Context: page=${pageType}, role=${appRole || 'User'}, name=${context?.user_name || user?.full_name || 'user'}. Learning progress: ${JSON.stringify(context?.learning_progress || null)}. Visible data: ${JSON.stringify(context?.visible_data_summary || null)}.` },
+                  { label: 'Analyze Results', icon: BarChart2, prompt: `Analyze my latest assessment results and surface the most important insights. Context: page=${pageType}, role=${appRole || 'User'}. Assessment data: ${JSON.stringify(context?.page_specific_insights?.assessment_summary || context?.assessment_summary || null)}. Competency data: ${JSON.stringify(context?.visible_data_summary || null)}.` },
+                ];
+              })()).map(({ label, icon: Icon, prompt }) => (
                 <button
                   key={label}
                   onClick={() => !isTyping && handleSendMessage(prompt)}
