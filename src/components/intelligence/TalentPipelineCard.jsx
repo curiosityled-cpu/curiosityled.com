@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Layers, Clock, Zap, Brain, CheckCircle, TrendingUp, AlertTriangle, GitBranch } from "lucide-react";
+import { Layers, Brain, CheckCircle, GitBranch } from "lucide-react";
 
 /**
  * Talent Pipeline & Development Card
@@ -22,15 +22,6 @@ export default function TalentPipelineCard({ metrics, assessments, assignedLearn
   const ready6m = assessments.filter(a => { const s = a.overall_pct ?? a.data?.overall_pct ?? 0; return s >= 75 && s < 85; }).length;
   const ready12m = assessments.filter(a => { const s = a.overall_pct ?? a.data?.overall_pct ?? 0; return s >= 65 && s < 75; }).length;
   const needsDev = assessments.filter(a => (a.overall_pct ?? a.data?.overall_pct ?? 0) < 65).length;
-
-  // Learning Velocity
-  const completedLearning = assignedLearning.filter(l => (l.status ?? l.data?.status) === 'completed').length;
-  const learningRate = assignedLearning.length > 0 ? Math.round((completedLearning / assignedLearning.length) * 100) : 0;
-  const completedJourneys = journeyEnrollments.filter(j => (j.status ?? j.data?.status) === 'completed').length;
-  const journeyRate = journeyEnrollments.length > 0 ? Math.round((completedJourneys / journeyEnrollments.length) * 100) : 0;
-  const avgVelocity = Math.round((learningRate + journeyRate) / 2);
-  const velocityLabel = avgVelocity >= 70 ? 'High' : avgVelocity >= 50 ? 'Moderate' : 'Low';
-  const velocityColor = avgVelocity >= 70 ? 'bg-green-100 text-green-700' : avgVelocity >= 50 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700';
 
   // Leadership Style Distribution (top 3 archetypes)
   const styles = {};
@@ -144,30 +135,6 @@ export default function TalentPipelineCard({ metrics, assessments, assignedLearn
                 <span className="text-[10px] text-gray-400 w-7 text-right">{pct}%</span>
               </div>
             ))}
-          </div>
-        </div>
-
-        {/* Learning Velocity */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-yellow-600" />
-              <span className="text-xs font-semibold text-yellow-900">Learning Velocity</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-yellow-700">{avgVelocity}%</span>
-              <Badge className={velocityColor}>{velocityLabel}</Badge>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2 text-center text-xs">
-            <div className="bg-blue-50 rounded-lg py-1.5">
-              <div className="font-bold text-blue-700">{learningRate}%</div>
-              <div className="text-blue-500 text-[10px]">Learning Completion</div>
-            </div>
-            <div className="bg-purple-50 rounded-lg py-1.5">
-              <div className="font-bold text-purple-700">{journeyRate}%</div>
-              <div className="text-purple-500 text-[10px]">Journey Completion</div>
-            </div>
           </div>
         </div>
 

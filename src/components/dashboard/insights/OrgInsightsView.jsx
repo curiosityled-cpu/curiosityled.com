@@ -54,6 +54,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+// Note: Accordion still used by Executive Briefing / Cross-Functional Insights section
 import LeaderInsightProfilesCard from "./LeaderInsightProfilesCard";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import OrgHealthCard from "@/components/intelligence/OrgHealthCard";
@@ -660,26 +661,24 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
               </Card>
               </motion.div>
 
-      {/* Consolidated Strategic Cards */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-        <div className="grid md:grid-cols-2 gap-6">
-          <OrgHealthCard
-            metrics={metrics}
-            assessments={filteredData.assessments}
-            goals={filteredData.goals}
-            assignedLearning={filteredData.assignedLearning}
-            strategicRisks={strategicRisks}
-            strategicOpportunities={strategicOpportunities}
-            onPromptAtreus={promptAtreus}
-          />
-          <TalentPipelineCard
-            metrics={metrics}
-            assessments={filteredData.assessments}
-            assignedLearning={filteredData.assignedLearning}
-            journeyEnrollments={filteredData.journeyEnrollments}
-            allUsers={rawData.allUsers}
-          />
-        </div>
+      {/* Consolidated Strategic Cards — stacked */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="space-y-6">
+        <OrgHealthCard
+          metrics={metrics}
+          assessments={filteredData.assessments}
+          goals={filteredData.goals}
+          assignedLearning={filteredData.assignedLearning}
+          strategicRisks={strategicRisks}
+          strategicOpportunities={strategicOpportunities}
+          onPromptAtreus={promptAtreus}
+        />
+        <TalentPipelineCard
+          metrics={metrics}
+          assessments={filteredData.assessments}
+          assignedLearning={filteredData.assignedLearning}
+          journeyEnrollments={filteredData.journeyEnrollments}
+          allUsers={rawData.allUsers}
+        />
       </motion.div>
 
       {/* Executive AI Briefing (includes Cross-Functional Insights) */}
@@ -752,103 +751,6 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
           </CardContent>
         </Card>
       </motion.div>
-
-      {/* Strategic Risk & Opportunity Spotlight */}
-      <div className="grid md:grid-cols-2 gap-8">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-          <Card className="border-0 shadow-lg border-l-4 border-l-red-500">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2 text-red-700">
-                <AlertTriangle className="w-5 h-5" />
-                Top Strategic Risks
-              </CardTitle>
-              <p className="text-sm text-gray-600">Critical issues requiring immediate attention</p>
-            </CardHeader>
-            <CardContent>
-              {(() => {
-                const displayRisks = strategicRisks.length > 0 ? strategicRisks : (() => {
-                  const derived = [];
-                  if (metrics.atRiskLeaders > 0) derived.push({ title: 'Leaders Below Performance Threshold', description: `${metrics.atRiskLeaders} leader${metrics.atRiskLeaders !== 1 ? 's are' : ' is'} scoring below 60% — indicating potential capability gaps that may impact team performance.`, severity: 'High', action: 'View Assessment Data', targetDashboard: 'AssessmentAnalyticsDashboard' });
-                  if (metrics.competencyAverages.dm < 65) derived.push({ title: 'Decision-Making Gap Detected', description: `Org-wide decision-making average is ${metrics.competencyAverages.dm}%, below the 65% target threshold. This may slow execution and strategic agility.`, severity: 'Medium', action: 'Explore Competencies', targetDashboard: 'EnterpriseAnalytics' });
-                  if (metrics.competencyAverages.rm < 65) derived.push({ title: 'Resource Management Deficit', description: `Resource management scores average ${metrics.competencyAverages.rm}% across the organisation — a gap that often correlates with project overruns and budget inefficiency.`, severity: 'Medium', action: 'View Analytics', targetDashboard: 'EnterpriseAnalytics' });
-                  if (metrics.totalAssessments === 0) derived.push({ title: 'No Assessment Data Available', description: 'No leadership assessments have been completed yet. Baseline data is needed to identify risks and measure progress.', severity: 'High', action: 'Start Assessments', targetDashboard: 'Assessments' });
-                  return derived.slice(0, 3);
-                })();
-                return displayRisks.length > 0 ? (
-                  <Accordion type="single" collapsible className="space-y-2">
-                    {displayRisks.map((risk, idx) => (
-                      <AccordionItem key={idx} value={`risk-${idx}`} className="border border-red-200 rounded-lg bg-red-50 px-1">
-                        <AccordionTrigger className="px-3 py-3 hover:no-underline [&>svg]:shrink-0 [&>svg]:ml-2 [&>svg]:self-start [&>svg]:mt-0.5">
-                          <div className="flex items-start gap-3 text-left flex-1 min-w-0">
-                            <Badge className="bg-red-600 text-white shrink-0 mt-0.5">{risk.severity}</Badge>
-                            <span className="font-semibold text-sm text-red-900">{risk.title}</span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="px-3 pb-4">
-                          <p className="text-sm text-red-800 mb-3">{risk.description}</p>
-                          <Button size="sm" className="bg-red-600 hover:bg-red-700 whitespace-normal h-auto text-left" onClick={() => promptAtreus(`I have a strategic risk: "${risk.title}". ${risk.description} Please help me develop an action plan to address this.`)}>
-                            <Brain className="w-3 h-3 mr-2 shrink-0" />
-                            {risk.action}
-                          </Button>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">No risk signals detected — strong performance across the board.</div>
-                );
-              })()}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
-          <Card className="border-0 shadow-lg border-l-4 border-l-green-500">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2 text-green-700">
-                <TrendingUp className="w-5 h-5" />
-                Top Strategic Opportunities
-              </CardTitle>
-              <p className="text-sm text-gray-600">High-impact growth potential areas</p>
-            </CardHeader>
-            <CardContent>
-              {(() => {
-                const displayOpps = strategicOpportunities.length > 0 ? strategicOpportunities : (() => {
-                  const derived = [];
-                  if (metrics.highPotentialLeaders > 0) derived.push({ title: 'High-Potential Leaders Ready for Advancement', description: `${metrics.highPotentialLeaders} leader${metrics.highPotentialLeaders !== 1 ? 's are' : ' is'} scoring 85%+ and may be ready for expanded responsibilities or succession planning.`, potential: 'High', action: 'View Profiles', targetDashboard: 'AssessmentAnalyticsDashboard' });
-                  if (metrics.competencyAverages.comm >= 70) derived.push({ title: 'Communication Strength to Leverage', description: `Communication scores average ${metrics.competencyAverages.comm}% — above the 70% threshold. This is a platform strength that can drive change management and stakeholder alignment.`, potential: 'Medium', action: 'Explore Insights', targetDashboard: 'EnterpriseAnalytics' });
-                  if (metrics.competencyAverages.si >= 70) derived.push({ title: 'Strong Situational Intelligence Baseline', description: `Situational Intelligence averages ${metrics.competencyAverages.si}% across leaders — a strong foundation for strategic decision-making and adaptive leadership.`, potential: 'Medium', action: 'View Analytics', targetDashboard: 'EnterpriseAnalytics' });
-                  if (metrics.totalAssessments > 0 && metrics.atRiskLeaders === 0) derived.push({ title: 'No At-Risk Leaders Detected', description: 'All assessed leaders are performing above the risk threshold — an excellent foundation for accelerating development programs and stretch assignments.', potential: 'High', action: 'Plan Development', targetDashboard: 'Development' });
-                  return derived.slice(0, 3);
-                })();
-                return displayOpps.length > 0 ? (
-                  <Accordion type="single" collapsible className="space-y-2">
-                    {displayOpps.map((opportunity, idx) => (
-                      <AccordionItem key={idx} value={`opp-${idx}`} className="border border-green-200 rounded-lg bg-green-50 px-1">
-                        <AccordionTrigger className="px-3 py-3 hover:no-underline [&>svg]:shrink-0 [&>svg]:ml-2 [&>svg]:self-start [&>svg]:mt-0.5">
-                          <div className="flex items-start gap-3 text-left flex-1 min-w-0">
-                            <Badge className="bg-green-600 text-white shrink-0 mt-0.5">{opportunity.potential}</Badge>
-                            <span className="font-semibold text-sm text-green-900">{opportunity.title}</span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="px-3 pb-4">
-                          <p className="text-sm text-green-800 mb-3">{opportunity.description}</p>
-                          <Button size="sm" className="bg-green-600 hover:bg-green-700 whitespace-normal h-auto text-left" onClick={() => promptAtreus(`I have a strategic opportunity: "${opportunity.title}". ${opportunity.description} Please help me create a plan to capitalise on this.`)}>
-                            <Brain className="w-3 h-3 mr-2 shrink-0" />
-                            {opportunity.action}
-                          </Button>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">No specific opportunities identified yet.</div>
-                );
-              })()}
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
 
       {/* Integrated Trend Analysis */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
