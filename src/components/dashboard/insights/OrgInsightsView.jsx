@@ -394,44 +394,63 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
     setGeneratingBriefing(true);
     setGeneratingInsights(true);
     try {
-      const meIndex = Math.round(metrics.competencyAverages.dm * 0.35 + metrics.competencyAverages.si * 0.30 + metrics.competencyAverages.comm * 0.20 + metrics.competencyAverages.pm * 0.15);
+      const [briefingResult, insightsResult] = await Promise.all([
+        base44.integrations.Core.InvokeLLM({
+          prompt: `You are a strategic HR advisor specializing in leadership development, with deep expertise in Decision Making (DM) and Situational Intelligence (SI) as primary drivers of Manager Effectiveness (ME). 
 
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a strategic HR advisor for a CHRO/CPO audience. Analyze this organizational leadership data and produce a structured, scannable executive brief focused on Manager Effectiveness (ME), driven by Decision Making (DM) and Situational Intelligence (SI).
+Curiosity Led's mission is to improve DM and SI to drive Manager Effectiveness across all leadership levels. Write a 2-3 paragraph executive briefing for a CHRO/CPO audience, analyzing this organizational data specifically through the lens of DM, SI, and Manager Effectiveness.
 
-DATA:
-- DM: ${metrics.competencyAverages.dm}% (target 77%) | SI: ${metrics.competencyAverages.si}% (target 75%)
-- Comm: ${metrics.competencyAverages.comm}% (target 78%) | RM: ${metrics.competencyAverages.rm}% (target 78%)
-- SM: ${metrics.competencyAverages.sm}% (target 79%) | PM: ${metrics.competencyAverages.pm}% (target 76%)
-- Manager Effectiveness Index: ${meIndex}%
-- Overall Leadership Score: ${metrics.avgLeadershipScore}% | Assessments: ${metrics.totalAssessments}
-- At-Risk Leaders (<60%): ${metrics.atRiskLeaders} | High-Potential (>85%): ${metrics.highPotentialLeaders}
-- Goal Completion: ${metrics.goalCompletionRate}% | Learning Completion: ${metrics.learningCompletionRate}% | Journey Completion: ${metrics.journeyCompletionRate}%
+Core Competency Scores (0-100%):
+- Decision Making: ${metrics.competencyAverages.dm}% (Industry target: 77%)
+- Situational Intelligence: ${metrics.competencyAverages.si}% (Industry target: 75%)
+- Communication: ${metrics.competencyAverages.comm}% (Industry target: 78%)
+- Resource Management: ${metrics.competencyAverages.rm}% (Industry target: 78%)
+- Stakeholder Management: ${metrics.competencyAverages.sm}% (Industry target: 79%)
+- Performance Management: ${metrics.competencyAverages.pm}% (Industry target: 76%)
 
-Return JSON with:
-- headline: one sharp sentence (15 words max) summarising the overall ME health
-- status: "on_track" | "attention_needed" | "critical"
-- summary: 2 concise sentences on where ME stands and the primary gap
-- action_items: array of 5-6 items (mix of risks, opportunities, and cross-functional insights — each with: label, description (1 sentence), type ("risk"|"opportunity"|"insight"), urgency ("High"|"Medium"|"Low"), action (verb phrase, 3-5 words), targetDashboard)
-- risks: array of up to 3 {title, description, severity, action, targetDashboard}
-- opportunities: array of up to 3 {title, description, potential, action, targetDashboard}`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            headline: { type: "string" },
-            status: { type: "string" },
-            summary: { type: "string" },
-            action_items: { type: "array", items: { type: "object", properties: { label: { type: "string" }, description: { type: "string" }, type: { type: "string" }, urgency: { type: "string" }, action: { type: "string" }, targetDashboard: { type: "string" } } } },
-            risks: { type: "array", items: { type: "object", properties: { title: { type: "string" }, description: { type: "string" }, severity: { type: "string" }, action: { type: "string" }, targetDashboard: { type: "string" } } } },
-            opportunities: { type: "array", items: { type: "object", properties: { title: { type: "string" }, description: { type: "string" }, potential: { type: "string" }, action: { type: "string" }, targetDashboard: { type: "string" } } } }
+Manager Effectiveness Index (DM 35% + SI 30% + Comm 20% + PM 15%): ${Math.round(metrics.competencyAverages.dm * 0.35 + metrics.competencyAverages.si * 0.30 + metrics.competencyAverages.comm * 0.20 + metrics.competencyAverages.pm * 0.15)}%
+Overall Leadership Score: ${metrics.avgLeadershipScore}% | Total Assessments: ${metrics.totalAssessments}
+At-Risk Leaders (below 60%): ${metrics.atRiskLeaders} | High-Potential (above 85%): ${metrics.highPotentialLeaders}
+
+Goal Completion: ${metrics.goalCompletionRate}% | Learning Completion: ${metrics.learningCompletionRate}% | Journey Completion: ${metrics.journeyCompletionRate}%
+
+Focus your briefing on: (1) How DM and SI scores indicate current Manager Effectiveness health, (2) The most critical gap between current scores and industry benchmarks, (3) Strategic imperatives to elevate ME across leadership levels. Write in a professional, executive tone.`
+        }),
+        base44.integrations.Core.InvokeLLM({
+          prompt: `You are a strategic HR advisor for Curiosity Led, a platform focused on improving Decision Making (DM) and Situational Intelligence (SI) to drive Manager Effectiveness (ME) across all leadership levels.
+
+Analyze this organizational leadership data and identify 5 cross-functional insights that reveal correlations between DM, SI, and Manager Effectiveness outcomes. Prioritize insights that help a CHRO/CPO take targeted action to improve ME.
+
+Core Competency Scores (0-100%, industry targets in brackets):
+- Decision Making: ${metrics.competencyAverages.dm}% [target: 77%]
+- Situational Intelligence: ${metrics.competencyAverages.si}% [target: 75%]
+- Communication: ${metrics.competencyAverages.comm}% [target: 78%]
+- Resource Management: ${metrics.competencyAverages.rm}% [target: 78%]
+- Stakeholder Management: ${metrics.competencyAverages.sm}% [target: 79%]
+- Performance Management: ${metrics.competencyAverages.pm}% [target: 76%]
+
+Manager Effectiveness Index: ${Math.round(metrics.competencyAverages.dm * 0.35 + metrics.competencyAverages.si * 0.30 + metrics.competencyAverages.comm * 0.20 + metrics.competencyAverages.pm * 0.15)}%
+Overall Score: ${metrics.avgLeadershipScore}% | At-Risk: ${metrics.atRiskLeaders} | High-Potential: ${metrics.highPotentialLeaders}
+Goal Completion: ${metrics.goalCompletionRate}% | Learning Completion: ${metrics.learningCompletionRate}%
+
+Focus insights on: DM/SI gaps vs. benchmarks, how these impact ME, which leadership levels need most attention, and what interventions will move the needle fastest.
+
+Format as JSON: insights (array of {title, description, priority, targetDashboard, action}), risks (array of {title, description, severity, action, targetDashboard}), opportunities (array of {title, description, potential, action, targetDashboard}).`,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              insights: { type: "array", items: { type: "object", properties: { title: { type: "string" }, description: { type: "string" }, priority: { type: "string" }, targetDashboard: { type: "string" }, action: { type: "string" } } } },
+              risks: { type: "array", items: { type: "object", properties: { title: { type: "string" }, description: { type: "string" }, severity: { type: "string" }, action: { type: "string" }, targetDashboard: { type: "string" } } } },
+              opportunities: { type: "array", items: { type: "object", properties: { title: { type: "string" }, description: { type: "string" }, potential: { type: "string" }, action: { type: "string" }, targetDashboard: { type: "string" } } } }
+            }
           }
-        }
-      });
+        })
+      ]);
 
-      setExecutiveBriefing(result || {});
-      setAiInsights(result?.action_items || []);
-      setStrategicRisks(result?.risks?.slice(0, 3) || []);
-      setStrategicOpportunities(result?.opportunities?.slice(0, 3) || []);
+      setExecutiveBriefing(briefingResult || '');
+      setAiInsights(insightsResult?.insights || []);
+      setStrategicRisks(insightsResult?.risks?.slice(0, 3) || []);
+      setStrategicOpportunities(insightsResult?.opportunities?.slice(0, 3) || []);
       setLastGeneratedFingerprint(metricsFingerprint);
     } catch (error) {
       console.error('Error generating insights:', error);
@@ -662,15 +681,18 @@ Return JSON with:
         />
       </motion.div>
 
-      {/* Executive AI Briefing */}
+      {/* Executive AI Briefing (includes Cross-Functional Insights) */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
         <Card className="border-0 shadow-lg bg-gradient-to-r from-purple-50 to-blue-50">
-          <CardHeader className="pb-3">
+          <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-purple-600" />
-                Executive AI Briefing
-              </CardTitle>
+              <div>
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <Sparkles className="w-6 h-6 text-purple-600" />
+                  Executive AI Briefing
+                </CardTitle>
+                <p className="text-sm text-gray-600 mt-1">Strategic synthesis of your organizational leadership data</p>
+              </div>
               {(executiveBriefing || aiInsights.length > 0) && (
                 <Button variant="outline" size="sm" onClick={generateExecutiveBriefing} disabled={generatingAll}>
                   {generatingAll ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RefreshCw className="w-4 h-4 mr-2" />}
@@ -679,69 +701,53 @@ Return JSON with:
               )}
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {generatingAll && !executiveBriefing?.headline ? (
-              <div className="flex items-center gap-3 py-6 text-purple-600">
+          <CardContent className="space-y-6">
+            {/* Briefing narrative */}
+            {generatingBriefing && !executiveBriefing ? (
+              <div className="flex items-center gap-3 py-4 text-purple-600">
                 <Loader2 className="w-5 h-5 animate-spin" />
                 <span className="text-sm">Generating executive briefing…</span>
               </div>
-            ) : executiveBriefing?.headline ? (
-              <>
-                {/* Headline + status */}
-                <div className={`flex items-start gap-3 p-4 rounded-xl border ${
-                  executiveBriefing.status === 'critical' ? 'bg-red-50 border-red-200' :
-                  executiveBriefing.status === 'attention_needed' ? 'bg-yellow-50 border-yellow-200' :
-                  'bg-green-50 border-green-200'
-                }`}>
-                  <div className={`mt-0.5 w-2.5 h-2.5 rounded-full shrink-0 ${
-                    executiveBriefing.status === 'critical' ? 'bg-red-500' :
-                    executiveBriefing.status === 'attention_needed' ? 'bg-yellow-500' :
-                    'bg-green-500'
-                  }`} />
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm leading-snug">{executiveBriefing.headline}</p>
-                    {executiveBriefing.summary && (
-                      <p className="text-xs text-gray-600 mt-1 leading-relaxed">{executiveBriefing.summary}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Action Items */}
-                {aiInsights.length > 0 && (
-                  <div>
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Recommended Actions</p>
-                    <div className="space-y-2">
-                      {aiInsights.map((item, idx) => {
-                        const typeConfig = {
-                          risk:        { dot: 'bg-red-500',    badge: 'bg-red-100 text-red-700',    icon: AlertTriangle },
-                          opportunity: { dot: 'bg-green-500',  badge: 'bg-green-100 text-green-700', icon: TrendingUp },
-                          insight:     { dot: 'bg-blue-500',   badge: 'bg-blue-100 text-blue-700',   icon: Brain },
-                        }[item.type] || { dot: 'bg-gray-400', badge: 'bg-gray-100 text-gray-700', icon: Sparkles };
-                        const urgencyColor = item.urgency === 'High' ? 'text-red-600' : item.urgency === 'Medium' ? 'text-yellow-600' : 'text-gray-500';
-                        const TypeIcon = typeConfig.icon;
-                        return (
-                          <button
-                            key={idx}
-                            className="w-full text-left flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-colors group"
-                            onClick={() => promptAtreus(`Action item: "${item.label}". ${item.description} Help me ${item.action?.toLowerCase() || 'act on this'}.`)}
-                          >
-                            <TypeIcon className={`w-4 h-4 mt-0.5 shrink-0 ${typeConfig.dot.replace('bg-', 'text-')}`} />
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-xs font-semibold text-gray-800">{item.label}</span>
-                                <span className={`text-[10px] font-medium ${urgencyColor}`}>{item.urgency}</span>
-                              </div>
-                              <p className="text-[11px] text-gray-500 leading-snug mt-0.5 line-clamp-2">{item.description}</p>
-                            </div>
-                            <span className="text-[10px] text-purple-500 group-hover:text-purple-700 shrink-0 mt-0.5 whitespace-nowrap">{item.action} →</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </>
+            ) : executiveBriefing ? (
+              <div className="prose prose-sm max-w-none">
+                <p className="text-gray-700 leading-relaxed whitespace-pre-line">{executiveBriefing}</p>
+              </div>
             ) : null}
+
+            {/* Cross-Functional Intelligence Insights — embedded section */}
+            <div className="border-t border-purple-200 pt-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Brain className="w-5 h-5 text-blue-600" />
+                <h3 className="font-semibold text-gray-800">Cross-Functional Intelligence Insights</h3>
+                <span className="text-xs text-gray-500 ml-1">AI-identified correlations across leadership, learning, and performance data</span>
+              </div>
+              {generatingInsights && aiInsights.length === 0 ? (
+                <div className="flex items-center gap-3 py-4 text-blue-600">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span className="text-sm">Analysing cross-functional patterns…</span>
+                </div>
+              ) : aiInsights.length > 0 ? (
+                <Accordion type="single" collapsible className="space-y-2">
+                  {aiInsights.map((insight, idx) => (
+                    <AccordionItem key={idx} value={`insight-${idx}`} className={`border rounded-lg px-1 ${PRIORITY_COLORS[insight.priority] || 'bg-gray-100'}`}>
+                      <AccordionTrigger className="px-3 py-3 hover:no-underline [&>svg]:shrink-0 [&>svg]:ml-2 [&>svg]:self-start [&>svg]:mt-0.5">
+                        <div className="flex items-start gap-3 text-left flex-1 min-w-0">
+                          <Badge className={`${PRIORITY_COLORS[insight.priority]} shrink-0 mt-0.5`}>{insight.priority}</Badge>
+                          <span className="font-semibold text-sm">{insight.title}</span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-3 pb-4">
+                        <p className="text-sm text-gray-700 mb-3">{insight.description}</p>
+                        <Button size="sm" variant="outline" onClick={() => promptAtreus(`I have a cross-functional insight: "${insight.title}". ${insight.description} Please help me act on this.`)}>
+                          <Brain className="w-3 h-3 mr-2" />
+                          {insight.action}
+                        </Button>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              ) : null}
+            </div>
           </CardContent>
         </Card>
       </motion.div>
