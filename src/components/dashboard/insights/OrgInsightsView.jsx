@@ -771,10 +771,10 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                 <Accordion type="single" collapsible className="space-y-2">
                   {aiInsights.map((insight, idx) => (
                     <AccordionItem key={idx} value={`insight-${idx}`} className={`border rounded-lg px-1 ${PRIORITY_COLORS[insight.priority] || 'bg-gray-100'}`}>
-                      <AccordionTrigger className="px-3 py-3 hover:no-underline overflow-hidden [&>svg]:shrink-0 [&>svg]:ml-2 [&>svg]:self-start [&>svg]:mt-1">
-                        <div className="flex items-start gap-3 text-left min-w-0 pr-1">
+                      <AccordionTrigger className="px-3 py-3 hover:no-underline [&>svg]:shrink-0 [&>svg]:ml-2 [&>svg]:self-start [&>svg]:mt-0.5">
+                        <div className="flex items-start gap-3 text-left flex-1 min-w-0">
                           <Badge className={`${PRIORITY_COLORS[insight.priority]} shrink-0 mt-0.5`}>{insight.priority}</Badge>
-                          <span className="font-semibold text-sm whitespace-normal break-words">{insight.title}</span>
+                          <span className="font-semibold text-sm">{insight.title}</span>
                         </div>
                       </AccordionTrigger>
                       <AccordionContent className="px-3 pb-4">
@@ -818,10 +818,10 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                   <Accordion type="single" collapsible className="space-y-2">
                     {displayRisks.map((risk, idx) => (
                       <AccordionItem key={idx} value={`risk-${idx}`} className="border border-red-200 rounded-lg bg-red-50 px-1">
-                        <AccordionTrigger className="px-3 py-3 hover:no-underline overflow-hidden [&>svg]:shrink-0 [&>svg]:ml-2 [&>svg]:self-start [&>svg]:mt-1">
-                          <div className="flex items-start gap-3 text-left min-w-0 pr-1">
+                        <AccordionTrigger className="px-3 py-3 hover:no-underline [&>svg]:shrink-0 [&>svg]:ml-2 [&>svg]:self-start [&>svg]:mt-0.5">
+                          <div className="flex items-start gap-3 text-left flex-1 min-w-0">
                             <Badge className="bg-red-600 text-white shrink-0 mt-0.5">{risk.severity}</Badge>
-                            <span className="font-semibold text-sm text-red-900 whitespace-normal break-words">{risk.title}</span>
+                            <span className="font-semibold text-sm text-red-900">{risk.title}</span>
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="px-3 pb-4">
@@ -865,10 +865,10 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                   <Accordion type="single" collapsible className="space-y-2">
                     {displayOpps.map((opportunity, idx) => (
                       <AccordionItem key={idx} value={`opp-${idx}`} className="border border-green-200 rounded-lg bg-green-50 px-1">
-                        <AccordionTrigger className="px-3 py-3 hover:no-underline overflow-hidden [&>svg]:shrink-0 [&>svg]:ml-2 [&>svg]:self-start [&>svg]:mt-1">
-                          <div className="flex items-start gap-3 text-left min-w-0 pr-1">
+                        <AccordionTrigger className="px-3 py-3 hover:no-underline [&>svg]:shrink-0 [&>svg]:ml-2 [&>svg]:self-start [&>svg]:mt-0.5">
+                          <div className="flex items-start gap-3 text-left flex-1 min-w-0">
                             <Badge className="bg-green-600 text-white shrink-0 mt-0.5">{opportunity.potential}</Badge>
-                            <span className="font-semibold text-sm text-green-900 whitespace-normal break-words">{opportunity.title}</span>
+                            <span className="font-semibold text-sm text-green-900">{opportunity.title}</span>
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="px-3 pb-4">
