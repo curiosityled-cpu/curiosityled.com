@@ -25,7 +25,8 @@ import {
   Activity,
   Link as LinkIcon,
   MessageSquare,
-  RefreshCw
+  RefreshCw,
+  UserCheck
 } from "lucide-react";
 import {
   LineChart,
@@ -68,6 +69,7 @@ import {
   TeamImpactCard,
   DevelopmentFocusCard
 } from "@/components/intelligence/PlatformInsightsCards.jsx";
+import ManagerEffectivenessCard from "@/components/intelligence/ManagerEffectivenessCard";
 
 // Map AI-generated dashboard names to actual MVP routes
 const DASHBOARD_ROUTES = {
@@ -405,47 +407,46 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
     try {
       const [briefingResult, insightsResult] = await Promise.all([
         base44.integrations.Core.InvokeLLM({
-          prompt: `You are an executive leadership consultant. Based on this organizational data, write a 2-3 paragraph executive briefing highlighting the most critical insights, opportunities, and strategic imperatives:
-      
-      Leadership Metrics:
-      - Average Leadership Score: ${metrics.avgLeadershipScore}%
-      - Total Assessments: ${metrics.totalAssessments}
-      - At-Risk Leaders: ${metrics.atRiskLeaders}
-      - High-Potential Leaders: ${metrics.highPotentialLeaders}
-      
-      Goal Performance:
-      - Total Goals: ${metrics.totalGoals}
-      - Completion Rate: ${metrics.goalCompletionRate}%
-      - Overdue: ${metrics.overdueGoals}
-      
-      Learning Engagement:
-      - Assignments: ${metrics.totalLearning}
-      - Completion Rate: ${metrics.learningCompletionRate}%
-      
-      Journey Progress:
-      - Enrollments: ${metrics.totalJourneys}
-      - Completion Rate: ${metrics.journeyCompletionRate}%
-      
-      Write in a professional, strategic tone. Focus on actionable insights and business impact.`
+          prompt: `You are a strategic HR advisor specializing in leadership development, with deep expertise in Decision Making (DM) and Situational Intelligence (SI) as primary drivers of Manager Effectiveness (ME). 
+
+Curiosity Led's mission is to improve DM and SI to drive Manager Effectiveness across all leadership levels. Write a 2-3 paragraph executive briefing for a CHRO/CPO audience, analyzing this organizational data specifically through the lens of DM, SI, and Manager Effectiveness.
+
+Core Competency Scores (0-100%):
+- Decision Making: ${metrics.competencyAverages.dm}% (Industry target: 77%)
+- Situational Intelligence: ${metrics.competencyAverages.si}% (Industry target: 75%)
+- Communication: ${metrics.competencyAverages.comm}% (Industry target: 78%)
+- Resource Management: ${metrics.competencyAverages.rm}% (Industry target: 78%)
+- Stakeholder Management: ${metrics.competencyAverages.sm}% (Industry target: 79%)
+- Performance Management: ${metrics.competencyAverages.pm}% (Industry target: 76%)
+
+Manager Effectiveness Index (DM 35% + SI 30% + Comm 20% + PM 15%): ${Math.round(metrics.competencyAverages.dm * 0.35 + metrics.competencyAverages.si * 0.30 + metrics.competencyAverages.comm * 0.20 + metrics.competencyAverages.pm * 0.15)}%
+Overall Leadership Score: ${metrics.avgLeadershipScore}% | Total Assessments: ${metrics.totalAssessments}
+At-Risk Leaders (below 60%): ${metrics.atRiskLeaders} | High-Potential (above 85%): ${metrics.highPotentialLeaders}
+
+Goal Completion: ${metrics.goalCompletionRate}% | Learning Completion: ${metrics.learningCompletionRate}% | Journey Completion: ${metrics.journeyCompletionRate}%
+
+Focus your briefing on: (1) How DM and SI scores indicate current Manager Effectiveness health, (2) The most critical gap between current scores and industry benchmarks, (3) Strategic imperatives to elevate ME across leadership levels. Write in a professional, executive tone.`
         }),
         base44.integrations.Core.InvokeLLM({
-          prompt: `Analyze this comprehensive organizational leadership data and identify 5 cross-functional insights that show correlations between different metrics:
+          prompt: `You are a strategic HR advisor for Curiosity Led, a platform focused on improving Decision Making (DM) and Situational Intelligence (SI) to drive Manager Effectiveness (ME) across all leadership levels.
 
-      Data Overview:
-      - Leadership Assessment Avg: ${metrics.avgLeadershipScore}%
-      - Goal Completion Rate: ${metrics.goalCompletionRate}%
-      - Learning Completion: ${metrics.learningCompletionRate}%
-      - Journey Completion: ${metrics.journeyCompletionRate}%
-      - At-Risk Leaders: ${metrics.atRiskLeaders}
-      - High Potential: ${metrics.highPotentialLeaders}
-      - Overdue Goals: ${metrics.overdueGoals}
-      
-      Competency Scores:
-      - SI: ${metrics.competencyAverages.si}%
-      - Decision Making: ${metrics.competencyAverages.dm}%
-      - Communication: ${metrics.competencyAverages.comm}%
-      
-      Provide insights that connect these metrics. Format as JSON with: insights (array of {title, description, priority, targetDashboard, action}), risks (array of {title, description, severity, action, targetDashboard}), opportunities (array of {title, description, potential, action, targetDashboard}).`,
+Analyze this organizational leadership data and identify 5 cross-functional insights that reveal correlations between DM, SI, and Manager Effectiveness outcomes. Prioritize insights that help a CHRO/CPO take targeted action to improve ME.
+
+Core Competency Scores (0-100%, industry targets in brackets):
+- Decision Making: ${metrics.competencyAverages.dm}% [target: 77%]
+- Situational Intelligence: ${metrics.competencyAverages.si}% [target: 75%]
+- Communication: ${metrics.competencyAverages.comm}% [target: 78%]
+- Resource Management: ${metrics.competencyAverages.rm}% [target: 78%]
+- Stakeholder Management: ${metrics.competencyAverages.sm}% [target: 79%]
+- Performance Management: ${metrics.competencyAverages.pm}% [target: 76%]
+
+Manager Effectiveness Index: ${Math.round(metrics.competencyAverages.dm * 0.35 + metrics.competencyAverages.si * 0.30 + metrics.competencyAverages.comm * 0.20 + metrics.competencyAverages.pm * 0.15)}%
+Overall Score: ${metrics.avgLeadershipScore}% | At-Risk: ${metrics.atRiskLeaders} | High-Potential: ${metrics.highPotentialLeaders}
+Goal Completion: ${metrics.goalCompletionRate}% | Learning Completion: ${metrics.learningCompletionRate}%
+
+Focus insights on: DM/SI gaps vs. benchmarks, how these impact ME, which leadership levels need most attention, and what interventions will move the needle fastest.
+
+Format as JSON: insights (array of {title, description, priority, targetDashboard, action}), risks (array of {title, description, severity, action, targetDashboard}), opportunities (array of {title, description, potential, action, targetDashboard}).`,
           response_json_schema: {
             type: "object",
             properties: {
@@ -516,6 +517,14 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
         ? Math.round(monthAssessments.reduce((sum, a) => sum + (a.overall_pct ?? a.data?.overall_pct ?? 0), 0) / monthAssessments.length)
         : 0;
 
+      const dmScore = monthAssessments.length > 0
+        ? Math.round(monthAssessments.reduce((sum, a) => sum + (a.dm_pct ?? a.data?.dm_pct ?? 0), 0) / monthAssessments.length)
+        : 0;
+
+      const siScore = monthAssessments.length > 0
+        ? Math.round(monthAssessments.reduce((sum, a) => sum + (a.si_pct ?? a.data?.si_pct ?? 0), 0) / monthAssessments.length)
+        : 0;
+
       const goalCompletion = monthGoals.length > 0
         ? Math.round((monthGoals.filter(g => g.status === 'completed').length / monthGoals.length) * 100)
         : 0;
@@ -527,6 +536,8 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
       trendData.push({
         month: format(monthStart, 'MMM'),
         assessmentScore: avgAssessmentScore,
+        dmScore,
+        siScore,
         goalCompletion,
         learningCompletion
       });
@@ -675,21 +686,22 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
         </h2>
         <p className="text-gray-600 mb-6">Platform-wide trends and patterns to inform strategic decisions</p>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <ManagerEffectivenessCard metrics={metrics} assessments={filteredData.assessments} />
           <LeadershipReadinessCard metrics={metrics} assessments={filteredData.assessments} />
-          <SuccessionPipelineCard assessments={filteredData.assessments} allUsers={rawData.allUsers} />
           <SkillsGapCard metrics={metrics} />
         </div>
       </motion.div>
 
-      {/* Executive Summary KPIs */}
+      {/* Executive Summary KPIs — DM/SI/ME focused */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer" onClick={() => navigate('/Insights?tab=enterprise')}>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer border-t-4 border-t-indigo-500" onClick={() => navigate('/Insights?tab=enterprise')}>
             <CardContent className="p-6">
-              <Brain className="w-8 h-8 text-purple-600 mb-4" />
-              <div className="text-3xl font-bold text-gray-900">{metrics.avgLeadershipScore}%</div>
-              <div className="text-sm text-gray-600 mt-1">Avg Leadership Capability</div>
-              <div className="text-xs text-purple-600 mt-2 flex items-center gap-1">
+              <Brain className="w-8 h-8 text-indigo-600 mb-4" />
+              <div className="text-3xl font-bold text-gray-900">{metrics.competencyAverages.dm}%</div>
+              <div className="text-sm text-gray-600 mt-1">Decision Making Score</div>
+              <div className="text-xs text-gray-400 mt-0.5">Industry target: 77%</div>
+              <div className="text-xs text-indigo-600 mt-2 flex items-center gap-1">
                 View Details <ArrowRight className="w-3 h-3" />
               </div>
             </CardContent>
@@ -697,12 +709,13 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer" onClick={() => navigate('/Insights?tab=org')}>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer border-t-4 border-t-purple-500" onClick={() => navigate('/Insights?tab=enterprise')}>
             <CardContent className="p-6">
-              <Target className="w-8 h-8 text-blue-600 mb-4" />
-              <div className="text-3xl font-bold text-gray-900">{metrics.goalCompletionRate}%</div>
-              <div className="text-sm text-gray-600 mt-1">Goal Achievement Rate</div>
-              <div className="text-xs text-blue-600 mt-2 flex items-center gap-1">
+              <Zap className="w-8 h-8 text-purple-600 mb-4" />
+              <div className="text-3xl font-bold text-gray-900">{metrics.competencyAverages.si}%</div>
+              <div className="text-sm text-gray-600 mt-1">Situational Intelligence</div>
+              <div className="text-xs text-gray-400 mt-0.5">Industry target: 75%</div>
+              <div className="text-xs text-purple-600 mt-2 flex items-center gap-1">
                 View Details <ArrowRight className="w-3 h-3" />
               </div>
             </CardContent>
@@ -710,12 +723,15 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer" onClick={() => navigate('/Insights?tab=org')}>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer border-t-4 border-t-teal-500" onClick={() => navigate('/Insights?tab=org')}>
             <CardContent className="p-6">
-              <BookOpen className="w-8 h-8 text-green-600 mb-4" />
-              <div className="text-3xl font-bold text-gray-900">{metrics.learningCompletionRate}%</div>
-              <div className="text-sm text-gray-600 mt-1">Learning Engagement</div>
-              <div className="text-xs text-green-600 mt-2 flex items-center gap-1">
+              <Users className="w-8 h-8 text-teal-600 mb-4" />
+              <div className="text-3xl font-bold text-gray-900">
+                {Math.round(metrics.competencyAverages.dm * 0.35 + metrics.competencyAverages.si * 0.30 + metrics.competencyAverages.comm * 0.20 + metrics.competencyAverages.pm * 0.15)}%
+              </div>
+              <div className="text-sm text-gray-600 mt-1">Manager Effectiveness Index</div>
+              <div className="text-xs text-gray-400 mt-0.5">DM + SI + Comm + PM composite</div>
+              <div className="text-xs text-teal-600 mt-2 flex items-center gap-1">
                 View Details <ArrowRight className="w-3 h-3" />
               </div>
             </CardContent>
@@ -723,11 +739,12 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer" onClick={() => navigate('/Insights?tab=org')}>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer border-t-4 border-t-orange-500" onClick={() => navigate('/Insights?tab=org')}>
             <CardContent className="p-6">
-              <Activity className="w-8 h-8 text-orange-600 mb-4" />
-              <div className="text-3xl font-bold text-gray-900">{metrics.journeyCompletionRate}%</div>
-              <div className="text-sm text-gray-600 mt-1">Journey Completion</div>
+              <Target className="w-8 h-8 text-orange-600 mb-4" />
+              <div className="text-3xl font-bold text-gray-900">{metrics.avgLeadershipScore}%</div>
+              <div className="text-sm text-gray-600 mt-1">Overall Leadership Score</div>
+              <div className="text-xs text-gray-400 mt-0.5">{metrics.totalAssessments} assessments</div>
               <div className="text-xs text-orange-600 mt-2 flex items-center gap-1">
                 View Details <ArrowRight className="w-3 h-3" />
               </div>
@@ -908,8 +925,8 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
         <Card className="border-0 shadow-lg">
           <CardHeader>
-            <CardTitle className="text-lg">Multi-Domain Performance Trends</CardTitle>
-            <p className="text-sm text-gray-600">Unified view of leadership, goal, and learning metrics over time</p>
+            <CardTitle className="text-lg">DM / SI / Manager Effectiveness Trends</CardTitle>
+            <p className="text-sm text-gray-600">Track the primary drivers of Manager Effectiveness over time alongside overall leadership performance</p>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={350}>
@@ -919,11 +936,15 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
                 <YAxis domain={[0, 100]} />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="assessmentScore" stroke="#8b5cf6" strokeWidth={2} name="Leadership Score %" />
-                <Line type="monotone" dataKey="goalCompletion" stroke="#3b82f6" strokeWidth={2} name="Goal Completion %" />
-                <Line type="monotone" dataKey="learningCompletion" stroke="#10b981" strokeWidth={2} name="Learning Completion %" />
+                <Line type="monotone" dataKey="dmScore" stroke="#0d9488" strokeWidth={3} name="Decision Making %" dot={{ r: 4 }} />
+                <Line type="monotone" dataKey="siScore" stroke="#7c3aed" strokeWidth={3} name="Situational Intelligence %" dot={{ r: 4 }} />
+                <Line type="monotone" dataKey="assessmentScore" stroke="#94a3b8" strokeWidth={1.5} strokeDasharray="4 4" name="Overall Leadership %" />
+                <Line type="monotone" dataKey="goalCompletion" stroke="#3b82f6" strokeWidth={1.5} strokeDasharray="4 4" name="Goal Completion %" />
               </LineChart>
             </ResponsiveContainer>
+            <div className="mt-3 p-3 bg-indigo-50 border border-indigo-200 rounded-lg text-sm text-indigo-800">
+              <strong>Focus:</strong> The solid lines (DM &amp; SI) are the primary indicators of Manager Effectiveness on this platform. Tracking their trajectory reveals whether leadership interventions are improving decision quality over time.
+            </div>
           </CardContent>
         </Card>
       </motion.div>

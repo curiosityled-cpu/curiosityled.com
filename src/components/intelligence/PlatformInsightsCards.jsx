@@ -442,12 +442,15 @@ export function DecisionMakingCard({ metrics }) {
 }
 
 // Industry Benchmark Card
+// Benchmarks sourced from IndustryBenchmarks.pdf (Corporate/Private sector, Mid-Level target scores)
 export function IndustryBenchmarkCard({ metrics }) {
-  // Simulated industry benchmarks (would be real data in production)
   const benchmarks = {
-    leadership: { org: metrics.avgLeadershipScore, industry: 68, label: 'Leadership Score' },
-    goals: { org: metrics.goalCompletionRate, industry: 62, label: 'Goal Completion' },
-    learning: { org: metrics.learningCompletionRate, industry: 55, label: 'Learning Engagement' }
+    dm:   { org: metrics.competencyAverages.dm,   industry: 77, label: 'Decision Making',        source: 'Corporate Mid-Level Target' },
+    si:   { org: metrics.competencyAverages.si,   industry: 75, label: 'Situational Intelligence', source: 'Corporate Mid-Level Target' },
+    comm: { org: metrics.competencyAverages.comm, industry: 78, label: 'Communication',           source: 'Corporate Mid-Level Target' },
+    sm:   { org: metrics.competencyAverages.sm,   industry: 79, label: 'Stakeholder Mgmt',        source: 'Corporate Mid-Level Target' },
+    rm:   { org: metrics.competencyAverages.rm,   industry: 78, label: 'Resource Management',     source: 'Corporate Mid-Level Target' },
+    pm:   { org: metrics.competencyAverages.pm,   industry: 76, label: 'Performance Mgmt',        source: 'Corporate Mid-Level Target' },
   };
 
   return (
@@ -460,7 +463,7 @@ export function IndustryBenchmarkCard({ metrics }) {
         <p className="text-xs text-gray-500">Your platform vs. industry standards</p>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {Object.entries(benchmarks).map(([key, data]) => {
             const diff = data.org - data.industry;
             const isAbove = diff >= 0;
@@ -480,14 +483,14 @@ export function IndustryBenchmarkCard({ metrics }) {
                   </div>
                 </div>
                 <div className="flex gap-2 items-center">
-                  <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden relative">
+                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden relative">
                     <div 
                       className="absolute h-full bg-blue-500"
-                      style={{ width: `${data.org}%` }}
+                      style={{ width: `${Math.min(data.org, 100)}%` }}
                     />
                     <div 
                       className="absolute h-full w-0.5 bg-gray-800"
-                      style={{ left: `${data.industry}%` }}
+                      style={{ left: `${Math.min(data.industry, 100)}%` }}
                     />
                   </div>
                   <span className="text-xs text-gray-500 w-10">{data.org}%</span>
@@ -497,7 +500,7 @@ export function IndustryBenchmarkCard({ metrics }) {
           })}
         </div>
         <div className="mt-3 text-xs text-gray-500 flex items-center gap-1">
-          <div className="w-3 h-0.5 bg-gray-800" /> Industry Average
+          <div className="w-3 h-0.5 bg-gray-800" /> Corporate Mid-Level Industry Target (Research-validated)
         </div>
       </CardContent>
     </Card>
