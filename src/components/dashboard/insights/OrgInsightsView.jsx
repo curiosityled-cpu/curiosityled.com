@@ -667,6 +667,20 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
               </Card>
               </motion.div>
 
+      {/* Strategic Platform Insights — moved above KPIs */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <Shield className="w-6 h-6 text-indigo-600" />
+          Strategic Platform Insights
+        </h2>
+        <p className="text-gray-600 mb-6">Platform-wide trends and patterns to inform strategic decisions</p>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <LeadershipReadinessCard metrics={metrics} assessments={filteredData.assessments} />
+          <SuccessionPipelineCard assessments={filteredData.assessments} allUsers={rawData.allUsers} />
+          <SkillsGapCard metrics={metrics} />
+        </div>
+      </motion.div>
+
       {/* Executive Summary KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
@@ -683,7 +697,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer" onClick={() => navigate('/my-goals')}>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer" onClick={() => navigate('/Insights?tab=org')}>
             <CardContent className="p-6">
               <Target className="w-8 h-8 text-blue-600 mb-4" />
               <div className="text-3xl font-bold text-gray-900">{metrics.goalCompletionRate}%</div>
@@ -696,7 +710,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer" onClick={() => navigate('/LearningAnalyticsDashboard')}>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer" onClick={() => navigate('/Insights?tab=org')}>
             <CardContent className="p-6">
               <BookOpen className="w-8 h-8 text-green-600 mb-4" />
               <div className="text-3xl font-bold text-gray-900">{metrics.learningCompletionRate}%</div>
@@ -709,7 +723,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer" onClick={() => navigate('/ExperienceAnalytics')}>
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer" onClick={() => navigate('/Insights?tab=org')}>
             <CardContent className="p-6">
               <Activity className="w-8 h-8 text-orange-600 mb-4" />
               <div className="text-3xl font-bold text-gray-900">{metrics.journeyCompletionRate}%</div>
@@ -950,21 +964,6 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
       {/* Pre-Generated Leader Insights (from AssessmentInsights entity) */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
         <LeaderInsightProfilesCard rawData={rawData} />
-      </motion.div>
-
-      {/* Strategic Platform Insights Section */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.58 }}>
-        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Shield className="w-6 h-6 text-indigo-600" />
-          Strategic Platform Insights
-        </h2>
-        <p className="text-gray-600 mb-6">Platform-wide trends and patterns to inform strategic decisions</p>
-        
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <LeadershipReadinessCard metrics={metrics} assessments={filteredData.assessments} />
-          <SuccessionPipelineCard assessments={filteredData.assessments} allUsers={rawData.allUsers} />
-          <SkillsGapCard metrics={metrics} />
-        </div>
       </motion.div>
 
       {/* Predictive Insights Section */}
