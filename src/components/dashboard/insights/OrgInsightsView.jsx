@@ -56,10 +56,6 @@ import {
 } from "@/components/ui/accordion";
 import LeaderInsightProfilesCard from "./LeaderInsightProfilesCard";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
-import {
-  SuccessionPipelineCard,
-  TeamImpactCard,
-} from "@/components/intelligence/PlatformInsightsCards.jsx";
 import OrgHealthCard from "@/components/intelligence/OrgHealthCard";
 import TalentPipelineCard from "@/components/intelligence/TalentPipelineCard";
 
@@ -681,6 +677,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
             assessments={filteredData.assessments}
             assignedLearning={filteredData.assignedLearning}
             journeyEnrollments={filteredData.journeyEnrollments}
+            allUsers={rawData.allUsers}
           />
         </div>
       </motion.div>
@@ -917,14 +914,6 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
       {/* Pre-Generated Leader Insights (from AssessmentInsights entity) */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
         <LeaderInsightProfilesCard rawData={rawData} />
-      </motion.div>
-
-      {/* Team Impact + Succession — compact row */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
-        <div className="grid md:grid-cols-2 gap-6">
-          <TeamImpactCard metrics={metrics} goals={filteredData.goals} />
-          <SuccessionPipelineCard assessments={filteredData.assessments} allUsers={rawData.allUsers} />
-        </div>
       </motion.div>
 
       {/* Quick Access Dashboard Links */}

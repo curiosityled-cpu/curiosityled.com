@@ -2,14 +2,14 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Layers, Clock, Zap, Brain, CheckCircle, TrendingUp, AlertTriangle } from "lucide-react";
+import { Layers, Clock, Zap, Brain, CheckCircle, TrendingUp, AlertTriangle, GitBranch } from "lucide-react";
 
 /**
  * Talent Pipeline & Development Card
  * Consolidates: Leadership Readiness Score, Promotion Readiness Timeline,
  * Learning Velocity, Leadership Style Distribution
  */
-export default function TalentPipelineCard({ metrics, assessments, assignedLearning, journeyEnrollments }) {
+export default function TalentPipelineCard({ metrics, assessments, assignedLearning, journeyEnrollments, allUsers = [] }) {
   // Leadership Readiness
   const highPerformers = assessments.filter(a => (a.overall_pct ?? a.data?.overall_pct ?? 0) >= 80).length;
   const developing = assessments.filter(a => { const s = a.overall_pct ?? a.data?.overall_pct ?? 0; return s >= 60 && s < 80; }).length;
@@ -43,6 +43,19 @@ export default function TalentPipelineCard({ metrics, assessments, assignedLearn
 
   const readinessColor = readinessScore >= 70 ? 'text-green-600' : readinessScore >= 50 ? 'text-yellow-600' : 'text-red-600';
 
+  // Succession Pipeline
+  const totalPeople = allUsers.length || assessments.length || 1;
+  const successionTiers = [
+    { label: 'Ready Now (≥85%)', count: readyNow, color: 'bg-green-500', pct: Math.round((readyNow / totalPeople) * 100) },
+    { label: 'Near-Term (75–84%)', count: ready6m, color: 'bg-blue-400', pct: Math.round((ready6m / totalPeople) * 100) },
+    { label: 'Developing (65–74%)', count: ready12m, color: 'bg-yellow-400', pct: Math.round((ready12m / totalPeople) * 100) },
+    { label: 'Early Stage (<65%)', count: needsDev, color: 'bg-gray-300', pct: Math.round((needsDev / totalPeople) * 100) },
+  ];
+  const benchStrength = totalPeople > 0 ? Math.round(((readyNow + ready6m * 0.5) / totalPeople) * 100) : 0;
+  const pipelineHealth = benchStrength >= 25 ? { label: 'Strong', color: 'bg-green-100 text-green-700' } :
+                         benchStrength >= 12 ? { label: 'Moderate', color: 'bg-yellow-100 text-yellow-700' } :
+                                               { label: 'Needs Attention', color: 'bg-red-100 text-red-700' };
+
   return (
     <Card className="border-0 shadow-lg">
       <CardHeader className="pb-3">
@@ -50,7 +63,7 @@ export default function TalentPipelineCard({ metrics, assessments, assignedLearn
           <Layers className="w-5 h-5 text-purple-600" />
           Talent Pipeline &amp; Development
         </CardTitle>
-        <p className="text-xs text-gray-500">Readiness, promotion timeline, learning velocity, and leadership styles</p>
+        <p className="text-xs text-gray-500">Readiness, succession pipeline, learning velocity, and leadership styles</p>
       </CardHeader>
       <CardContent className="space-y-5">
 
@@ -104,29 +117,31 @@ export default function TalentPipelineCard({ metrics, assessments, assignedLearn
           </div>
         </div>
 
-        {/* Promotion Readiness Timeline */}
-        <div>
-          <div className="flex items-center gap-1.5 mb-2">
-            <Clock className="w-3.5 h-3.5 text-blue-600" />
-            <span className="text-xs font-semibold text-gray-700">Promotion Readiness Timeline</span>
+        {/* Succession Pipeline Health */}
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <GitBranch className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-xs font-semibold text-blue-900">Succession Pipeline</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-base font-bold text-blue-700">{benchStrength}% bench</span>
+              <Badge className={pipelineHealth.color}>{pipelineHealth.label}</Badge>
+            </div>
           </div>
           <div className="space-y-1.5">
-            {[
-              { label: 'Ready Now', count: readyNow, color: 'bg-green-500' },
-              { label: '6 Months', count: ready6m, color: 'bg-blue-400' },
-              { label: '12 Months', count: ready12m, color: 'bg-yellow-400' },
-              { label: '12+ Months', count: needsDev, color: 'bg-gray-300' },
-            ].map(({ label, count, color }) => (
+            {successionTiers.map(({ label, count, color, pct }) => (
               <div key={label} className="flex items-center gap-2">
-                <span className="text-xs text-gray-600 w-20 flex-shrink-0">{label}</span>
-                <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden">
+                <span className="text-[10px] text-gray-600 w-32 flex-shrink-0">{label}</span>
+                <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
                   <div
-                    className={`h-full ${color} flex items-center justify-end pr-2 transition-all`}
-                    style={{ width: `${total > 0 ? (count / total) * 100 : 0}%`, minWidth: count > 0 ? '28px' : 0 }}
+                    className={`h-full ${color} flex items-center justify-end pr-1.5 transition-all`}
+                    style={{ width: `${pct}%`, minWidth: count > 0 ? '24px' : 0 }}
                   >
-                    {count > 0 && <span className="text-[10px] text-white font-medium">{count}</span>}
+                    {count > 0 && <span className="text-[9px] text-white font-medium">{count}</span>}
                   </div>
                 </div>
+                <span className="text-[10px] text-gray-400 w-7 text-right">{pct}%</span>
               </div>
             ))}
           </div>
