@@ -26,6 +26,7 @@ import AdminDataRestore from './pages/AdminDataRestore';
 import PendingRole from './pages/PendingRole';
 import SeedLinkedInCourses from './pages/SeedLinkedInCourses';
 import OrgBusinessGoals from './pages/OrgBusinessGoals';
+import LeadershipDashboard from './pages/LeadershipDashboard';
 import Insights from './pages/Insights';
 import ReportBuilder from './pages/ReportBuilder';
 import { AuthProvider as FullAuthProvider } from '@/components/useAuth';
@@ -112,6 +113,7 @@ const AuthenticatedApp = () => {
       <Route path="/AdminDataRestore" element={<AdminDataRestore />} />
       <Route path="/SeedLinkedInCourses" element={<SeedLinkedInCourses />} />
       <Route path="/OrgBusinessGoals" element={mvpRole ? <MVPPage><OrgBusinessGoals /></MVPPage> : <LayoutWrapper currentPageName="OrgBusinessGoals"><OrgBusinessGoals /></LayoutWrapper>} />
+      <Route path="/LeadershipDashboard" element={mvpRole ? <MVPPage><LeadershipDashboard /></MVPPage> : <LayoutWrapper currentPageName="LeadershipDashboard"><LeadershipDashboard /></LayoutWrapper>} />
 
       {/* All other legacy pages — MVP users still get MVPLayout shell */}
       {Object.entries(Pages).map(([path, Page]) => (
