@@ -253,67 +253,66 @@ export default function OrgHealthCard({ metrics, assessments, goals, assignedLea
                 <details className="mt-2">
                   <summary className="text-xs text-purple-600 cursor-pointer hover:text-purple-800 font-medium">Read full briefing…</summary>
                   <p className="text-sm text-gray-700 leading-relaxed mt-2 whitespace-pre-line">{executiveBriefing.split('\n\n').slice(1).join('\n\n')}</p>
-
-                  {/* Recommended Actions — risks + opportunities shown inline */}
-                  {(allRisks.length > 0 || allOpps.length > 0) && (
-                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {allRisks.length > 0 && (
-                        <div>
-                          <div className="flex items-center gap-1.5 mb-2">
-                            <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
-                            <span className="text-xs font-semibold text-gray-700">Recommended Actions — Risks</span>
-                          </div>
-                          <div className="space-y-2">
-                            {allRisks.map((risk, idx) => (
-                              <button
-                                key={idx}
-                                className="w-full text-left p-2.5 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
-                                onClick={() => onPromptAtreus?.(`I have a strategic risk: "${risk.title}". ${risk.description || ''} Help me develop an action plan to address this.`)}
-                              >
-                                <div className="flex items-center gap-1.5 mb-0.5">
-                                  <Badge className="bg-red-600 text-white text-[10px] px-1.5 py-0">{risk.severity}</Badge>
-                                  <span className="text-xs font-semibold text-red-800 leading-tight">{risk.title}</span>
-                                </div>
-                                {risk.description && <p className="text-[10px] text-red-700 leading-tight line-clamp-2">{risk.description}</p>}
-                                <p className="text-[10px] text-red-400 mt-0.5">Ask Atreus →</p>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      {allOpps.length > 0 && (
-                        <div>
-                          <div className="flex items-center gap-1.5 mb-2">
-                            <TrendingUp className="w-3.5 h-3.5 text-green-600" />
-                            <span className="text-xs font-semibold text-gray-700">Recommended Actions — Opportunities</span>
-                          </div>
-                          <div className="space-y-2">
-                            {allOpps.map((opp, idx) => (
-                              <button
-                                key={idx}
-                                className="w-full text-left p-2.5 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors"
-                                onClick={() => onPromptAtreus?.(`I have a strategic opportunity: "${opp.title}". ${opp.description || ''} Help me create a plan to capitalise on this.`)}
-                              >
-                                <div className="flex items-center gap-1.5 mb-0.5">
-                                  <Badge className="bg-green-600 text-white text-[10px] px-1.5 py-0">{opp.potential}</Badge>
-                                  <span className="text-xs font-semibold text-green-800 leading-tight">{opp.title}</span>
-                                </div>
-                                {opp.description && <p className="text-[10px] text-green-700 leading-tight line-clamp-2">{opp.description}</p>}
-                                <p className="text-[10px] text-green-400 mt-0.5">Ask Atreus →</p>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </details>
               )}
             </div>
           ) : null}
         </div>
 
+        {/* Row 2: Risks + Opportunities side by side */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Top Risks */}
+          {allRisks.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-2">
+                <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
+                <span className="text-xs font-semibold text-gray-700">Top Strategic Risks</span>
+              </div>
+              <div className="space-y-2">
+                {allRisks.map((risk, idx) => (
+                  <button
+                    key={idx}
+                    className="w-full text-left p-2.5 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
+                    onClick={() => onPromptAtreus?.(`I have a strategic risk: "${risk.title}". ${risk.description || ''} Help me develop an action plan to address this.`)}
+                  >
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <Badge className="bg-red-600 text-white text-[10px] px-1.5 py-0">{risk.severity}</Badge>
+                      <span className="text-xs font-semibold text-red-800 leading-tight">{risk.title}</span>
+                    </div>
+                    {risk.description && <p className="text-[10px] text-red-700 leading-tight line-clamp-2">{risk.description}</p>}
+                    <p className="text-[10px] text-red-400 mt-0.5">Ask Atreus →</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
+          {/* Top Opportunities */}
+          {allOpps.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-2">
+                <TrendingUp className="w-3.5 h-3.5 text-green-600" />
+                <span className="text-xs font-semibold text-gray-700">Top Strategic Opportunities</span>
+              </div>
+              <div className="space-y-2">
+                {allOpps.map((opp, idx) => (
+                  <button
+                    key={idx}
+                    className="w-full text-left p-2.5 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors"
+                    onClick={() => onPromptAtreus?.(`I have a strategic opportunity: "${opp.title}". ${opp.description || ''} Help me create a plan to capitalise on this.`)}
+                  >
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <Badge className="bg-green-600 text-white text-[10px] px-1.5 py-0">{opp.potential}</Badge>
+                      <span className="text-xs font-semibold text-green-800 leading-tight">{opp.title}</span>
+                    </div>
+                    {opp.description && <p className="text-[10px] text-green-700 leading-tight line-clamp-2">{opp.description}</p>}
+                    <p className="text-[10px] text-green-400 mt-0.5">Ask Atreus →</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
       </CardContent>
     </Card>
