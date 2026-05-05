@@ -48,13 +48,7 @@ import { format, subDays, isAfter, isBefore, startOfDay, addDays } from "date-fn
 import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
 import { useNavigate } from "react-router-dom";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-// Note: Accordion still used by Executive Briefing / Cross-Functional Insights section
+
 import LeaderInsightProfilesCard from "./LeaderInsightProfilesCard";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import OrgHealthCard from "@/components/intelligence/OrgHealthCard";
@@ -681,17 +675,17 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         />
       </motion.div>
 
-      {/* Executive AI Briefing (includes Cross-Functional Insights) */}
+      {/* Executive AI Briefing — unified, scannable */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-        <Card className="border-0 shadow-lg bg-gradient-to-r from-purple-50 to-blue-50">
-          <CardHeader>
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-blue-50">
+          <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-xl flex items-center gap-2">
                   <Sparkles className="w-6 h-6 text-purple-600" />
                   Executive AI Briefing
                 </CardTitle>
-                <p className="text-sm text-gray-600 mt-1">Strategic synthesis of your organizational leadership data</p>
+                <p className="text-sm text-gray-500 mt-0.5">AI-synthesized leadership intelligence with recommended actions</p>
               </div>
               {(executiveBriefing || aiInsights.length > 0) && (
                 <Button variant="outline" size="sm" onClick={generateExecutiveBriefing} disabled={generatingAll}>
@@ -701,53 +695,94 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
               )}
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Briefing narrative */}
+          <CardContent className="space-y-5">
+
+            {/* Snapshot KPIs — always visible */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                { label: "ME Index", value: `${Math.round(metrics.competencyAverages.dm * 0.35 + metrics.competencyAverages.si * 0.30 + metrics.competencyAverages.comm * 0.20 + metrics.competencyAverages.pm * 0.15)}%`, sub: "Manager Effectiveness", color: "text-purple-700", bg: "bg-purple-50 border-purple-200" },
+                { label: "At Risk", value: metrics.atRiskLeaders, sub: "leaders below 60%", color: metrics.atRiskLeaders > 0 ? "text-red-700" : "text-green-700", bg: metrics.atRiskLeaders > 0 ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200" },
+                { label: "High Potential", value: metrics.highPotentialLeaders, sub: "leaders above 85%", color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
+                { label: "Goal Rate", value: `${metrics.goalCompletionRate}%`, sub: "completion", color: metrics.goalCompletionRate >= 70 ? "text-green-700" : "text-yellow-700", bg: metrics.goalCompletionRate >= 70 ? "bg-green-50 border-green-200" : "bg-yellow-50 border-yellow-200" },
+              ].map(({ label, value, sub, color, bg }) => (
+                <div key={label} className={`rounded-xl border p-3 ${bg}`}>
+                  <div className="text-[10px] text-gray-500 uppercase tracking-wide font-medium mb-0.5">{label}</div>
+                  <div className={`text-2xl font-bold ${color}`}>{value}</div>
+                  <div className="text-[10px] text-gray-500">{sub}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Narrative summary — condensed context */}
             {generatingBriefing && !executiveBriefing ? (
-              <div className="flex items-center gap-3 py-4 text-purple-600">
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span className="text-sm">Generating executive briefing…</span>
+              <div className="flex items-center gap-3 py-3 text-purple-600">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span className="text-sm">Generating briefing…</span>
               </div>
             ) : executiveBriefing ? (
-              <div className="prose prose-sm max-w-none">
-                <p className="text-gray-700 leading-relaxed whitespace-pre-line">{executiveBriefing}</p>
+              <div className="bg-white/70 border border-purple-100 rounded-xl p-4">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Brain className="w-4 h-4 text-purple-500" />
+                  <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Strategic Context</span>
+                </div>
+                <p className="text-sm text-gray-700 leading-relaxed line-clamp-4">{executiveBriefing.split('\n\n')[0]}</p>
+                {executiveBriefing.split('\n\n').length > 1 && (
+                  <details className="mt-2">
+                    <summary className="text-xs text-purple-600 cursor-pointer hover:text-purple-800 font-medium">Read full briefing…</summary>
+                    <p className="text-sm text-gray-700 leading-relaxed mt-2 whitespace-pre-line">{executiveBriefing.split('\n\n').slice(1).join('\n\n')}</p>
+                  </details>
+                )}
               </div>
             ) : null}
 
-            {/* Cross-Functional Intelligence Insights — embedded section */}
-            <div className="border-t border-purple-200 pt-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Brain className="w-5 h-5 text-blue-600" />
-                <h3 className="font-semibold text-gray-800">Cross-Functional Intelligence Insights</h3>
-                <span className="text-xs text-gray-500 ml-1">AI-identified correlations across leadership, learning, and performance data</span>
+            {/* Action Items — cross-functional insights as scannable action cards */}
+            {(generatingInsights && aiInsights.length === 0) ? (
+              <div className="flex items-center gap-3 py-3 text-blue-600">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span className="text-sm">Analysing cross-functional patterns…</span>
               </div>
-              {generatingInsights && aiInsights.length === 0 ? (
-                <div className="flex items-center gap-3 py-4 text-blue-600">
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span className="text-sm">Analysing cross-functional patterns…</span>
+            ) : aiInsights.length > 0 ? (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Target className="w-4 h-4 text-indigo-600" />
+                  <span className="text-sm font-semibold text-gray-800">Recommended Actions</span>
+                  <span className="text-xs text-gray-400 ml-1">— AI-identified priorities across leadership, learning & performance</span>
                 </div>
-              ) : aiInsights.length > 0 ? (
-                <Accordion type="single" collapsible className="space-y-2">
-                  {aiInsights.map((insight, idx) => (
-                    <AccordionItem key={idx} value={`insight-${idx}`} className={`border rounded-lg px-1 ${PRIORITY_COLORS[insight.priority] || 'bg-gray-100'}`}>
-                      <AccordionTrigger className="px-3 py-3 hover:no-underline [&>svg]:shrink-0 [&>svg]:ml-2 [&>svg]:self-start [&>svg]:mt-0.5">
-                        <div className="flex items-start gap-3 text-left flex-1 min-w-0">
-                          <Badge className={`${PRIORITY_COLORS[insight.priority]} shrink-0 mt-0.5`}>{insight.priority}</Badge>
-                          <span className="font-semibold text-sm">{insight.title}</span>
+                <div className="space-y-2">
+                  {aiInsights.map((insight, idx) => {
+                    const priorityStyle = {
+                      'High Risk':          { bar: 'bg-red-500',    badge: 'bg-red-100 text-red-800',    icon: <AlertTriangle className="w-3.5 h-3.5 text-red-500 shrink-0 mt-0.5" /> },
+                      'Strategic Priority': { bar: 'bg-yellow-500', badge: 'bg-yellow-100 text-yellow-800', icon: <Zap className="w-3.5 h-3.5 text-yellow-600 shrink-0 mt-0.5" /> },
+                      'Positive Impact':    { bar: 'bg-green-500',  badge: 'bg-green-100 text-green-800',  icon: <TrendingUp className="w-3.5 h-3.5 text-green-600 shrink-0 mt-0.5" /> },
+                      'Opportunity':        { bar: 'bg-blue-500',   badge: 'bg-blue-100 text-blue-800',    icon: <Sparkles className="w-3.5 h-3.5 text-blue-600 shrink-0 mt-0.5" /> },
+                    }[insight.priority] || { bar: 'bg-gray-400', badge: 'bg-gray-100 text-gray-700', icon: <Brain className="w-3.5 h-3.5 text-gray-500 shrink-0 mt-0.5" /> };
+
+                    return (
+                      <div key={idx} className="flex gap-3 bg-white border border-gray-200 rounded-xl p-3 hover:border-indigo-300 hover:shadow-sm transition-all">
+                        {/* Priority bar */}
+                        <div className={`w-1 rounded-full shrink-0 ${priorityStyle.bar}`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start gap-2 mb-1">
+                            {priorityStyle.icon}
+                            <span className="text-sm font-semibold text-gray-800 leading-snug">{insight.title}</span>
+                            <Badge className={`ml-auto shrink-0 text-[10px] px-1.5 py-0 ${priorityStyle.badge}`}>{insight.priority}</Badge>
+                          </div>
+                          <p className="text-xs text-gray-600 leading-snug mb-2">{insight.description}</p>
+                          <button
+                            className="text-[11px] font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors"
+                            onClick={() => promptAtreus(`I have this insight: "${insight.title}". ${insight.description} Please help me act on this.`)}
+                          >
+                            <Brain className="w-3 h-3" />
+                            {insight.action || 'Ask Atreus for guidance'} →
+                          </button>
                         </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="px-3 pb-4">
-                        <p className="text-sm text-gray-700 mb-3">{insight.description}</p>
-                        <Button size="sm" variant="outline" onClick={() => promptAtreus(`I have a cross-functional insight: "${insight.title}". ${insight.description} Please help me act on this.`)}>
-                          <Brain className="w-3 h-3 mr-2" />
-                          {insight.action}
-                        </Button>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              ) : null}
-            </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
           </CardContent>
         </Card>
       </motion.div>
