@@ -735,53 +735,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
               </div>
             ) : null}
 
-            {/* Action Items — cross-functional insights as scannable action cards */}
-            {(generatingInsights && aiInsights.length === 0) ? (
-              <div className="flex items-center gap-3 py-3 text-blue-600">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="text-sm">Analysing cross-functional patterns…</span>
-              </div>
-            ) : aiInsights.length > 0 ? (
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Target className="w-4 h-4 text-indigo-600" />
-                  <span className="text-sm font-semibold text-gray-800">Recommended Actions</span>
-                  <span className="text-xs text-gray-400 ml-1">— AI-identified priorities across leadership, learning & performance</span>
-                </div>
-                <div className="space-y-2">
-                  {aiInsights.map((insight, idx) => {
-                    const priorityStyle = {
-                      'High Risk':          { bar: 'bg-red-500',    badge: 'bg-red-100 text-red-800',    icon: <AlertTriangle className="w-3.5 h-3.5 text-red-500 shrink-0 mt-0.5" /> },
-                      'Strategic Priority': { bar: 'bg-yellow-500', badge: 'bg-yellow-100 text-yellow-800', icon: <Zap className="w-3.5 h-3.5 text-yellow-600 shrink-0 mt-0.5" /> },
-                      'Positive Impact':    { bar: 'bg-green-500',  badge: 'bg-green-100 text-green-800',  icon: <TrendingUp className="w-3.5 h-3.5 text-green-600 shrink-0 mt-0.5" /> },
-                      'Opportunity':        { bar: 'bg-blue-500',   badge: 'bg-blue-100 text-blue-800',    icon: <Sparkles className="w-3.5 h-3.5 text-blue-600 shrink-0 mt-0.5" /> },
-                    }[insight.priority] || { bar: 'bg-gray-400', badge: 'bg-gray-100 text-gray-700', icon: <Brain className="w-3.5 h-3.5 text-gray-500 shrink-0 mt-0.5" /> };
 
-                    return (
-                      <div key={idx} className="flex gap-3 bg-white border border-gray-200 rounded-xl p-3 hover:border-indigo-300 hover:shadow-sm transition-all">
-                        {/* Priority bar */}
-                        <div className={`w-1 rounded-full shrink-0 ${priorityStyle.bar}`} />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start gap-2 mb-1">
-                            {priorityStyle.icon}
-                            <span className="text-sm font-semibold text-gray-800 leading-snug">{insight.title}</span>
-                            <Badge className={`ml-auto shrink-0 text-[10px] px-1.5 py-0 ${priorityStyle.badge}`}>{insight.priority}</Badge>
-                          </div>
-                          <p className="text-xs text-gray-600 leading-snug mb-2">{insight.description}</p>
-                          <button
-                            className="text-[11px] font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors"
-                            onClick={() => promptAtreus(`I have this insight: "${insight.title}". ${insight.description} Please help me act on this.`)}
-                          >
-                            <Brain className="w-3 h-3" />
-                            {insight.action || 'Ask Atreus for guidance'} →
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : null}
 
           </CardContent>
         </Card>
