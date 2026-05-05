@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, AlertTriangle, BarChart3, Zap, GitBranch, Shield, Brain } from "lucide-react";
+import { TrendingUp, AlertTriangle, BarChart3, Zap, GitBranch, Shield, Brain, Sparkles, RefreshCw, Target, Loader2 } from "lucide-react";
 import {
   RadarChart,
   Radar,
@@ -16,7 +16,7 @@ import {
  * Leadership Index Score (radar), skill gaps, flight risk, learning velocity,
  * top risk & opportunity
  */
-export default function OrgHealthCard({ metrics, assessments, goals, assignedLearning, strategicRisks, strategicOpportunities, onPromptAtreus }) {
+export default function OrgHealthCard({ metrics, assessments, goals, assignedLearning, strategicRisks, strategicOpportunities, onPromptAtreus, executiveBriefing, generatingBriefing, generatingAll, onRefreshBriefing }) {
   const { competencyAverages } = metrics;
 
   // Leadership Index Score (Manager Effectiveness)
@@ -198,6 +198,65 @@ export default function OrgHealthCard({ metrics, assessments, goals, assignedLea
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Executive AI Briefing — embedded under radar */}
+        <div className="bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-100 rounded-xl p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-purple-600" />
+              <span className="text-sm font-semibold text-gray-800">Executive AI Briefing</span>
+              <span className="text-xs text-gray-400">— strategic synthesis of your leadership data</span>
+            </div>
+            {(executiveBriefing || generatingBriefing) && onRefreshBriefing && (
+              <button
+                onClick={onRefreshBriefing}
+                disabled={generatingAll}
+                className="text-xs text-purple-600 hover:text-purple-800 flex items-center gap-1 disabled:opacity-50 transition-colors"
+              >
+                {generatingAll ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                Refresh
+              </button>
+            )}
+          </div>
+
+          {/* Snapshot KPIs */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {[
+              { label: "ME Index", value: `${Math.round(metrics.competencyAverages.dm * 0.35 + metrics.competencyAverages.si * 0.30 + metrics.competencyAverages.comm * 0.20 + metrics.competencyAverages.pm * 0.15)}%`, sub: "Manager Effectiveness", color: "text-purple-700", bg: "bg-purple-50 border-purple-200" },
+              { label: "At Risk", value: metrics.atRiskLeaders, sub: "leaders below 60%", color: metrics.atRiskLeaders > 0 ? "text-red-700" : "text-green-700", bg: metrics.atRiskLeaders > 0 ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200" },
+              { label: "High Potential", value: metrics.highPotentialLeaders, sub: "leaders above 85%", color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
+              { label: "Goal Rate", value: `${metrics.goalCompletionRate}%`, sub: "completion", color: metrics.goalCompletionRate >= 70 ? "text-green-700" : "text-yellow-700", bg: metrics.goalCompletionRate >= 70 ? "bg-green-50 border-green-200" : "bg-yellow-50 border-yellow-200" },
+            ].map(({ label, value, sub, color, bg }) => (
+              <div key={label} className={`rounded-xl border p-3 bg-white ${bg}`}>
+                <div className="text-[10px] text-gray-500 uppercase tracking-wide font-medium mb-0.5">{label}</div>
+                <div className={`text-2xl font-bold ${color}`}>{value}</div>
+                <div className="text-[10px] text-gray-500">{sub}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Narrative */}
+          {generatingBriefing && !executiveBriefing ? (
+            <div className="flex items-center gap-3 py-2 text-purple-600">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-sm">Generating briefing…</span>
+            </div>
+          ) : executiveBriefing ? (
+            <div className="bg-white/70 border border-purple-100 rounded-xl p-4">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Brain className="w-4 h-4 text-purple-500" />
+                <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Strategic Context</span>
+              </div>
+              <p className="text-sm text-gray-700 leading-relaxed line-clamp-4">{executiveBriefing.split('\n\n')[0]}</p>
+              {executiveBriefing.split('\n\n').length > 1 && (
+                <details className="mt-2">
+                  <summary className="text-xs text-purple-600 cursor-pointer hover:text-purple-800 font-medium">Read full briefing…</summary>
+                  <p className="text-sm text-gray-700 leading-relaxed mt-2 whitespace-pre-line">{executiveBriefing.split('\n\n').slice(1).join('\n\n')}</p>
+                </details>
+              )}
+            </div>
+          ) : null}
         </div>
 
         {/* Row 2: Risks + Opportunities side by side */}
