@@ -1,7 +1,8 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, AlertTriangle, BarChart3, Zap, GitBranch, Shield, Brain } from "lucide-react";
+import { TrendingUp, AlertTriangle, BarChart3, Zap, GitBranch, Shield, Brain, Sparkles, Loader2, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   RadarChart,
   Radar,
@@ -16,7 +17,7 @@ import {
  * Leadership Index Score (radar), skill gaps, flight risk, learning velocity,
  * top risk & opportunity
  */
-export default function OrgHealthCard({ metrics, assessments, goals, assignedLearning, strategicRisks, strategicOpportunities, onPromptAtreus }) {
+export default function OrgHealthCard({ metrics, assessments, goals, assignedLearning, strategicRisks, strategicOpportunities, onPromptAtreus, executiveBriefing, generatingBriefing, generatingAll, onRefreshBriefing }) {
   const { competencyAverages } = metrics;
 
   // Leadership Index Score (Manager Effectiveness)
@@ -199,6 +200,39 @@ export default function OrgHealthCard({ metrics, assessments, goals, assignedLea
             </div>
           </div>
         </div>
+
+        {/* Executive AI Briefing — positioned under radar */}
+        {(generatingBriefing || executiveBriefing) && (
+          <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-purple-600" />
+                <span className="text-xs font-semibold text-purple-800 uppercase tracking-wide">Executive AI Briefing</span>
+              </div>
+              {onRefreshBriefing && (
+                <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-purple-600 hover:text-purple-800" onClick={onRefreshBriefing} disabled={generatingAll}>
+                  {generatingAll ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                </Button>
+              )}
+            </div>
+            {generatingBriefing && !executiveBriefing ? (
+              <div className="flex items-center gap-2 text-purple-600">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span className="text-xs">Generating briefing…</span>
+              </div>
+            ) : executiveBriefing ? (
+              <div>
+                <p className="text-xs text-gray-700 leading-relaxed line-clamp-4">{executiveBriefing.split('\n\n')[0]}</p>
+                {executiveBriefing.split('\n\n').length > 1 && (
+                  <details className="mt-1.5">
+                    <summary className="text-[11px] text-purple-600 cursor-pointer hover:text-purple-800 font-medium">Read full briefing…</summary>
+                    <p className="text-xs text-gray-700 leading-relaxed mt-2 whitespace-pre-line">{executiveBriefing.split('\n\n').slice(1).join('\n\n')}</p>
+                  </details>
+                )}
+              </div>
+            ) : null}
+          </div>
+        )}
 
         {/* Row 2: Risks + Opportunities side by side */}
         <div className="grid grid-cols-2 gap-4">
