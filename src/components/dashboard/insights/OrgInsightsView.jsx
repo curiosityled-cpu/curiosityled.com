@@ -37,7 +37,7 @@ import {
   ResponsiveContainer,
   ZAxis
 } from "recharts";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { format, subDays, isAfter, isBefore, startOfDay, addDays } from "date-fns";
 import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
@@ -45,6 +45,8 @@ import { useNavigate } from "react-router-dom";
 
 import LeaderInsightProfilesCard from "./LeaderInsightProfilesCard";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
+import TalentCareLifecycleBar from "@/components/intelligence/TalentCareLifecycleBar";
+import TalentCareStagePanel from "@/components/intelligence/TalentCareStagePanel";
 import OrgHealthCard from "@/components/intelligence/OrgHealthCard";
 import TalentPipelineCard from "@/components/intelligence/TalentPipelineCard";
 import WorkforceStabilityCard from "@/components/intelligence/WorkforceStabilityCard";
@@ -78,6 +80,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
   const clientId = user?.client_id || user?.data?.client_id;
   const navigate = useNavigate();
   const { openWithContext } = useAtreusChat();
+  const [activeLifecycleStage, setActiveLifecycleStage] = useState(null);
 
   const promptAtreus = (prompt) => {
     openWithContext({ draftMessage: prompt });
@@ -566,6 +569,33 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
 
   return (
     <div className="space-y-8">
+      {/* Talent Care Lifecycle Bar */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <TalentCareLifecycleBar
+          activeStage={activeLifecycleStage}
+          onStageChange={setActiveLifecycleStage}
+        />
+      </motion.div>
+
+      {/* Stage Panel — shown when a stage is selected */}
+      <AnimatePresence mode="wait">
+        {activeLifecycleStage && (
+          <motion.div
+            key={activeLifecycleStage}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+          >
+            <TalentCareStagePanel
+              stageId={activeLifecycleStage}
+              metrics={metrics}
+              onPromptAtreus={promptAtreus}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Unified Filters */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <Card className="border-0 shadow-lg">
