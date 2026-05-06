@@ -569,33 +569,6 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
 
   return (
     <div className="space-y-8">
-      {/* Talent Care Lifecycle Bar */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-        <TalentCareLifecycleBar
-          activeStage={activeLifecycleStage}
-          onStageChange={setActiveLifecycleStage}
-        />
-      </motion.div>
-
-      {/* Stage Panel — shown when a stage is selected */}
-      <AnimatePresence mode="wait">
-        {activeLifecycleStage && (
-          <motion.div
-            key={activeLifecycleStage}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-          >
-            <TalentCareStagePanel
-              stageId={activeLifecycleStage}
-              metrics={metrics}
-              onPromptAtreus={promptAtreus}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Unified Filters */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <Card className="border-0 shadow-lg">
@@ -709,6 +682,33 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
           workforceMetrics={rawData.workforceMetrics}
         />
       </motion.div>
+
+      {/* Talent Care Lifecycle Bar */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <TalentCareLifecycleBar
+          activeStage={activeLifecycleStage}
+          onStageChange={setActiveLifecycleStage}
+        />
+      </motion.div>
+
+      {/* Stage Panel — shown when a stage is selected */}
+      <AnimatePresence mode="wait">
+        {activeLifecycleStage && (
+          <motion.div
+            key={activeLifecycleStage}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+          >
+            <TalentCareStagePanel
+              stageId={activeLifecycleStage}
+              metrics={metrics}
+              onPromptAtreus={promptAtreus}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Executive KPI Sections — Workforce Stability, Succession & Engagement */}
       <div className="space-y-6">
