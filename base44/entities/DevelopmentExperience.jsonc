@@ -86,11 +86,7 @@
     "competencies"
   ],
   "rls": {
-    "read": {
-      "user_email": "{{user.email}}"
-    },
-    "write": {
-      "user_email": "{{user.email}}"
-    }
+    "read": {},
+    "write": {}
   }
 }

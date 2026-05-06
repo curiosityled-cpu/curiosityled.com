@@ -50,7 +50,7 @@ import TalentCareStagePanel from "@/components/intelligence/TalentCareStagePanel
 import OrgHealthCard from "@/components/intelligence/OrgHealthCard";
 import TalentPipelineCard from "@/components/intelligence/TalentPipelineCard";
 import WorkforceStabilityCard from "@/components/intelligence/WorkforceStabilityCard";
-import SuccessionStabilityCard from "@/components/intelligence/SuccessionStabilityCard";
+
 import EngagementCultureCard from "@/components/intelligence/EngagementCultureCard";
 
 // Map AI-generated dashboard names to actual MVP routes
@@ -706,16 +706,14 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
           assignedLearning={filteredData.assignedLearning}
           journeyEnrollments={filteredData.journeyEnrollments}
           allUsers={rawData.allUsers}
+          workforceMetrics={rawData.workforceMetrics}
         />
       </motion.div>
 
       {/* Executive KPI Sections — Workforce Stability, Succession & Engagement */}
       <div className="space-y-6">
         <WorkforceStabilityCard workforceMetrics={rawData.workforceMetrics} />
-        <SuccessionStabilityCard
-          workforceMetrics={rawData.workforceMetrics}
-          assessmentMetrics={metrics}
-        />
+
         <EngagementCultureCard
           workforceMetrics={rawData.workforceMetrics}
           leadershipScore={metrics.avgLeadershipScore}
