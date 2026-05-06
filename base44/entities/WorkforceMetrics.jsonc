@@ -1,0 +1,157 @@
+{
+  "name": "WorkforceMetrics",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client this data belongs to"
+    },
+    "period": {
+      "type": "string",
+      "description": "Reporting period (e.g. '2025-Q1', '2025-04')"
+    },
+    "period_type": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "quarterly",
+        "annual"
+      ],
+      "default": "quarterly",
+      "description": "Frequency of this data snapshot"
+    },
+    "effective_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date this snapshot reflects"
+    },
+    "total_headcount": {
+      "type": "number",
+      "description": "Total active employees"
+    },
+    "turnover_rate_overall": {
+      "type": "number",
+      "description": "Overall turnover rate as a percentage (trailing 12 months)"
+    },
+    "turnover_rate_regrettable": {
+      "type": "number",
+      "description": "Regrettable (high-performer / critical role) turnover rate %"
+    },
+    "turnover_rate_first_year": {
+      "type": "number",
+      "description": "First-year turnover rate % (employees leaving within 12 months)"
+    },
+    "critical_role_vacancy_rate": {
+      "type": "number",
+      "description": "Percentage of critical/key roles currently unfilled"
+    },
+    "succession_coverage_rate": {
+      "type": "number",
+      "description": "Percentage of critical roles with at least one identified successor"
+    },
+    "ready_now_successors": {
+      "type": "number",
+      "description": "Number of successors rated 'ready now'"
+    },
+    "high_potential_retention_rate": {
+      "type": "number",
+      "description": "Retention rate % for identified high-potential employees"
+    },
+    "internal_fill_rate_leadership": {
+      "type": "number",
+      "description": "Percentage of leadership roles filled internally"
+    },
+    "engagement_index": {
+      "type": "number",
+      "description": "Employee engagement index score (0-100)"
+    },
+    "enps_score": {
+      "type": "number",
+      "description": "Employee Net Promoter Score (-100 to +100)"
+    },
+    "absenteeism_rate": {
+      "type": "number",
+      "description": "Absenteeism rate as a percentage"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "csv_upload",
+        "api_webhook",
+        "sftp_feed",
+        "manual"
+      ],
+      "default": "manual",
+      "description": "How this data was ingested"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Optional notes or context for this snapshot"
+    }
+  },
+  "required": [
+    "client_id",
+    "period",
+    "effective_date"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Super Administrator",
+                "Admin Level 2",
+                "Analyst"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Platform Admin",
+                "Executive"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Super Administrator",
+                "Admin Level 2"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Platform Admin"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

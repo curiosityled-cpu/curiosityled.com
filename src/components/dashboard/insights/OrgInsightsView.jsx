@@ -47,6 +47,9 @@ import LeaderInsightProfilesCard from "./LeaderInsightProfilesCard";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import OrgHealthCard from "@/components/intelligence/OrgHealthCard";
 import TalentPipelineCard from "@/components/intelligence/TalentPipelineCard";
+import WorkforceStabilityCard from "@/components/intelligence/WorkforceStabilityCard";
+import SuccessionStabilityCard from "@/components/intelligence/SuccessionStabilityCard";
+import EngagementCultureCard from "@/components/intelligence/EngagementCultureCard";
 
 // Map AI-generated dashboard names to actual MVP routes
 const DASHBOARD_ROUTES = {
@@ -104,7 +107,8 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
     assignedLearning: [],
     journeyEnrollments: [],
     allUsers: [],
-    assessmentInsights: []
+    assessmentInsights: [],
+    workforceMetrics: []
   });
   
   const [aiInsights, setAiInsights] = useState([]);
@@ -127,7 +131,9 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
       const insightQuery = clientId ? { client_id: clientId, status: 'generated' } : { status: 'generated' };
       const userQuery = clientId ? { client_id: clientId } : {};
 
-      const [assessments, goals, assignedLearning, journeyEnrollments, allUsersRaw, assessmentInsights] = await Promise.all([
+      const workforceQuery = clientId ? { client_id: clientId } : {};
+
+      const [assessments, goals, assignedLearning, journeyEnrollments, allUsersRaw, assessmentInsights, workforceMetrics] = await Promise.all([
         base44.entities.Assessment.list('-created_date', 500).catch(() => []),
         base44.entities.Goal.list('-created_date', 500).catch(() => []),
         base44.entities.AssignedLearning.list('-created_date', 500).catch(() => []),
@@ -136,11 +142,10 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
           ? base44.entities.User.filter({ client_id: clientId })
           : base44.entities.User.list()
         ).catch(() => []),
-        base44.entities.AssessmentInsights.filter(insightQuery).catch(() => [])
+        base44.entities.AssessmentInsights.filter(insightQuery).catch(() => []),
+        base44.entities.WorkforceMetrics.filter(workforceQuery, '-effective_date', 12).catch(() => [])
       ]);
       const allUsers = Array.isArray(allUsersRaw) ? allUsersRaw : [];
-
-      console.log('[OrgInsightsView] Loaded:', { assessments: assessments?.length, goals: goals?.length, assignedLearning: assignedLearning?.length, journeyEnrollments: journeyEnrollments?.length, allUsers: allUsers?.length, clientId });
 
       setRawData({
         assessments: assessments || [],
@@ -148,7 +153,8 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
         assignedLearning: assignedLearning || [],
         journeyEnrollments: journeyEnrollments || [],
         allUsers: allUsers || [],
-        assessmentInsights: assessmentInsights || []
+        assessmentInsights: assessmentInsights || [],
+        workforceMetrics: workforceMetrics || []
       });
     } finally {
       setLoading(false);
@@ -672,6 +678,19 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
           allUsers={rawData.allUsers}
         />
       </motion.div>
+
+      {/* Executive KPI Sections — Workforce Stability, Succession & Engagement */}
+      <div className="space-y-6">
+        <WorkforceStabilityCard workforceMetrics={rawData.workforceMetrics} />
+        <SuccessionStabilityCard
+          workforceMetrics={rawData.workforceMetrics}
+          assessmentMetrics={metrics}
+        />
+        <EngagementCultureCard
+          workforceMetrics={rawData.workforceMetrics}
+          leadershipScore={metrics.avgLeadershipScore}
+        />
+      </div>
 
       {/* Integrated Trend Analysis */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
