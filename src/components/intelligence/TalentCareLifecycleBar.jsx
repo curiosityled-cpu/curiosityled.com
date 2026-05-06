@@ -81,7 +81,7 @@ export default function TalentCareLifecycleBar({ activeStage, onStageChange }) {
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
         <div>
-          <h3 className="font-semibold text-gray-900 text-sm">Associate-Centered Talent Care Model</h3>
+          <h3 className="font-semibold text-gray-900 text-sm">Leadership Lifecycle</h3>
           <p className="text-xs text-gray-500 mt-0.5">Select a lifecycle stage to filter the intelligence view</p>
         </div>
         {activeStage && (
