@@ -226,7 +226,7 @@ export default function TalentCareStagePanel({ stageId, metrics, onPromptAtreus 
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-medium text-white/70 uppercase tracking-wider">Talent Care Model · Lifecycle Stage</span>
+              <span className="text-xs font-medium text-white/70 uppercase tracking-wider">Lifecycle Stage</span>
             </div>
             <h3 className="text-xl font-bold text-white">{stage.label}</h3>
             <p className="text-sm text-white/85 mt-1 leading-relaxed">{content.executiveSummary}</p>
