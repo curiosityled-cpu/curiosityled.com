@@ -50,7 +50,6 @@ function RequestsPanel({ user, isHRAdmin, isAnyAdmin, isPlatformAdmin }) {
   const [programAdmins, setProgramAdmins] = useState([]);
   const [showPublicLinkGenerator, setShowPublicLinkGenerator] = useState(false);
   const [refreshStats, setRefreshStats] = useState(0);
-  const [activeSubtab, setActiveSubtab] = useState('requests');
   const [showAIRecommender, setShowAIRecommender] = useState(false);
   const [adminSearchTerm, setAdminSearchTerm] = useState("");
   const [filters, setFilters] = useState({
@@ -245,70 +244,15 @@ function RequestsPanel({ user, isHRAdmin, isAnyAdmin, isPlatformAdmin }) {
         <Button variant={viewMode === 'assignee' ? 'default' : 'outline'} onClick={() => setViewMode('assignee')} size="sm"><Users className="w-4 h-4" /></Button>
       </div>
 
-      {isHRAdmin ? (
-        <Tabs value={activeSubtab} onValueChange={setActiveSubtab}>
-          <TabsList>
-            <TabsTrigger value="requests" className="gap-2"><List className="w-4 h-4" />Requests ({requests.length})</TabsTrigger>
-            <TabsTrigger value="admins" className="gap-2"><Users className="w-4 h-4" />My Program Admins ({programAdmins.length})</TabsTrigger>
-          </TabsList>
-          <TabsContent value="requests">
-            <RequestStatistics clientId={user?.client_id} refreshTrigger={refreshStats} />
-            <AdvancedFilters filters={filters} onFilterChange={(k, v) => setFilters({...filters, [k]: v})} searchTerm={searchTerm} onSearchChange={setSearchTerm} programAdmins={programAdmins} onReset={() => { setFilters({ status:'all', priority:'all', request_type:'all', assigned_to:'all', approval_status:'all', has_risks:'all' }); setSearchTerm(''); }} />
-            {(isHRAdmin || isAnyAdmin) && programAdmins.length > 0 && <div className="mt-6"><ProgramAdminPerformance requests={requests} programAdmins={programAdmins} /></div>}
-            {viewMode === 'assignee' ? (
-              <div className="mt-6"><AssigneeKanban requests={processedRequests} programAdmins={programAdmins} onRequestClick={setSelectedRequestId} onAssigneeChange={async (reqId, email) => { await base44.entities.DevelopmentRequest.update(reqId, { assigned_to_email: email, status: email ? 'assigned' : 'new' }); loadRequests(); toast.success('Reassigned'); }} /></div>
-            ) : viewMode === 'kanban' ? (
-              <div className="mt-6"><RequestKanbanBoard requests={processedRequests} onRequestClick={setSelectedRequestId} onUpdate={loadRequests} /></div>
-            ) : <RequestsTable />}
-          </TabsContent>
-          <TabsContent value="admins">
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card><CardContent className="p-4 text-center"><Users className="w-6 h-6 text-blue-600 mx-auto mb-2" /><p className="text-2xl font-bold">{programAdmins.length}</p><p className="text-xs text-gray-600">Program Admins</p></CardContent></Card>
-                <Card><CardContent className="p-4 text-center"><ClipboardList className="w-6 h-6 text-purple-600 mx-auto mb-2" /><p className="text-2xl font-bold">{programAdmins.reduce((s, a) => s + (a.workload?.active_requests || 0), 0)}</p><p className="text-xs text-gray-600">Active Requests</p></CardContent></Card>
-                <Card><CardContent className="p-4 text-center"><Clock className="w-6 h-6 text-green-600 mx-auto mb-2" /><p className="text-2xl font-bold">{programAdmins.reduce((s, a) => s + (a.workload?.upcoming_classes || 0), 0)}</p><p className="text-xs text-gray-600">Upcoming Classes</p></CardContent></Card>
-                <Card><CardContent className="p-4 text-center"><AlertCircle className="w-6 h-6 text-red-600 mx-auto mb-2" /><p className="text-2xl font-bold">{programAdmins.reduce((s, a) => s + (a.workload?.overdue_requests || 0), 0)}</p><p className="text-xs text-gray-600">Overdue</p></CardContent></Card>
-              </div>
-              {unassignedRequests.length > 0 && (
-                <Card className="border-2 border-purple-200 bg-purple-50">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-3">
-                        <Sparkles className="w-5 h-5 text-purple-600 mt-0.5" />
-                        <div><p className="font-medium text-purple-900">{unassignedRequests.length} Unassigned Request{unassignedRequests.length !== 1 ? 's' : ''}</p><p className="text-sm text-purple-700 mt-1">Get AI-powered assignment recommendations based on expertise and workload</p></div>
-                      </div>
-                      <Button onClick={() => setShowAIRecommender(true)} className="bg-purple-600 hover:bg-purple-700"><Sparkles className="w-4 h-4 mr-2" />Get AI Recommendations</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Program Admins ({filteredAdmins.length})</CardTitle>
-                    <div className="relative w-64"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><Input placeholder="Search admins..." value={adminSearchTerm} onChange={e => setAdminSearchTerm(e.target.value)} className="pl-10" /></div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-2 gap-4">{filteredAdmins.map(admin => <ProgramAdminCard key={admin.id} admin={admin} />)}</div>
-                  {filteredAdmins.length === 0 && <div className="text-center py-12"><Users className="w-12 h-12 text-gray-300 mx-auto mb-3" /><p className="text-gray-600">{adminSearchTerm ? 'No admins match your search' : 'No Program Admins assigned yet'}</p></div>}
-                </CardContent>
-              </Card>
-              {unassignedRequests.length > 0 && <RequestAssignmentPanel requests={unassignedRequests} programAdmins={programAdmins} onAssign={loadRequests} />}
-            </div>
-          </TabsContent>
-        </Tabs>
-      ) : (
-        <>
-          <RequestStatistics clientId={user?.client_id} refreshTrigger={refreshStats} />
-          <AdvancedFilters filters={filters} onFilterChange={(k, v) => setFilters({...filters, [k]: v})} searchTerm={searchTerm} onSearchChange={setSearchTerm} programAdmins={programAdmins} onReset={() => { setFilters({ status:'all', priority:'all', request_type:'all', assigned_to:'all', approval_status:'all', has_risks:'all' }); setSearchTerm(''); }} />
-          {viewMode === 'assignee' ? (
-            <div className="mt-6"><AssigneeKanban requests={processedRequests} programAdmins={programAdmins} onRequestClick={setSelectedRequestId} onAssigneeChange={async (reqId, email) => { await base44.entities.DevelopmentRequest.update(reqId, { assigned_to_email: email, status: email ? 'assigned' : 'new' }); loadRequests(); }} /></div>
-          ) : viewMode === 'kanban' ? (
-            <div className="mt-6"><RequestKanbanBoard requests={processedRequests} onRequestClick={setSelectedRequestId} onUpdate={loadRequests} /></div>
-          ) : <RequestsTable />}
-        </>
-      )}
+      <>
+        <RequestStatistics clientId={user?.client_id} refreshTrigger={refreshStats} />
+        <AdvancedFilters filters={filters} onFilterChange={(k, v) => setFilters({...filters, [k]: v})} searchTerm={searchTerm} onSearchChange={setSearchTerm} programAdmins={programAdmins} onReset={() => { setFilters({ status:'all', priority:'all', request_type:'all', assigned_to:'all', approval_status:'all', has_risks:'all' }); setSearchTerm(''); }} />
+        {viewMode === 'assignee' ? (
+          <div className="mt-6"><AssigneeKanban requests={processedRequests} programAdmins={programAdmins} onRequestClick={setSelectedRequestId} onAssigneeChange={async (reqId, email) => { await base44.entities.DevelopmentRequest.update(reqId, { assigned_to_email: email, status: email ? 'assigned' : 'new' }); loadRequests(); }} /></div>
+        ) : viewMode === 'kanban' ? (
+          <div className="mt-6"><RequestKanbanBoard requests={processedRequests} onRequestClick={setSelectedRequestId} onUpdate={loadRequests} /></div>
+        ) : <RequestsTable />}
+      </>
 
       {showAIRecommender && <AIAssignmentRecommender requests={unassignedRequests} programAdmins={programAdmins} onClose={() => setShowAIRecommender(false)} onAssign={loadRequests} />}
 
