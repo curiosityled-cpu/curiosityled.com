@@ -216,7 +216,6 @@ export default function ExperienceAnalyticsTab({ user }) {
       <div>
         {/* Risk stat cards */}
         <div className="grid grid-cols-3 gap-3 mb-4">
-...
           {riskStatCards.map(({ key, label, value, icon: Icon, iconBg, iconColor, list, activeBg }) => (
             <Card key={key} onClick={() => setExpandedCategory(prev => prev === key ? null : key)}
               className={`border-0 shadow-sm text-center rounded-2xl cursor-pointer hover:shadow-md transition-all ${expandedCategory === key ? activeBg : ''}`}>
