@@ -212,99 +212,6 @@ export default function ExperienceAnalyticsTab({ user }) {
   return (
     <div className="space-y-5">
 
-      {/* ── All Users Section ── */}
-      <div>
-        {/* Risk stat cards */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          {riskStatCards.map(({ key, label, value, icon: Icon, iconBg, iconColor, list, activeBg }) => (
-            <Card key={key} onClick={() => setExpandedCategory(prev => prev === key ? null : key)}
-              className={`border-0 shadow-sm text-center rounded-2xl cursor-pointer hover:shadow-md transition-all ${expandedCategory === key ? activeBg : ''}`}>
-              <CardContent className="py-5">
-                <div className={`flex items-center justify-center w-9 h-9 ${iconBg} rounded-full mx-auto mb-2`}>
-                  <Icon className={`w-4 h-4 ${iconColor}`} />
-                </div>
-                <p className="text-2xl font-bold text-gray-900">{value}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{label}</p>
-                {value > 0 && <p className="text-[10px] text-[#0202ff] mt-1 font-medium">{expandedCategory === key ? 'Hide ▲' : 'View ▼'}</p>}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Expanded category */}
-        {expandedCategory && (
-          <Card className="border border-gray-100 shadow-sm rounded-2xl overflow-hidden mb-4">
-            <CardHeader className="pb-2 pt-4 px-5 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-semibold text-gray-900">
-                {riskStatCards.find(s => s.key === expandedCategory)?.label} Users
-                <span className="ml-1.5 text-gray-400 font-normal">({riskStatCards.find(s => s.key === expandedCategory)?.list.length})</span>
-              </CardTitle>
-              <button onClick={() => setExpandedCategory(null)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
-            </CardHeader>
-            <CardContent className="p-0">
-              {riskStatCards.find(s => s.key === expandedCategory)?.list.map(m => {
-                const risk = getRiskLevel(allInsights[m.email]);
-                return (
-                  <div key={m.id} className="flex items-center gap-4 px-5 py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50">
-                    <div className="w-8 h-8 rounded-full bg-[#0202ff]/10 flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs font-bold text-[#0202ff]">{m.full_name?.[0] || m.email?.[0]}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{m.full_name || m.email}</p>
-                      <p className="text-xs text-gray-400">{allInsights[m.email]?.archetype || 'Assessment pending'}</p>
-                    </div>
-                    <span className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${risk.bg} ${risk.color}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${risk.dot}`} />{risk.label}
-                    </span>
-                    <button onClick={() => navigate(`/manager-detail/${m.id}`, { state: { manager: m, insight: allInsights[m.email] } })} className="text-gray-300 hover:text-[#0202ff]">
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                );
-              })}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* All Users list */}
-        <Card className="border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
-          <CardHeader className="pb-3 pt-4 px-5">
-            <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
-              <Users className="w-4 h-4 text-[#0202ff]" /> All Users
-              <span className="text-sm font-normal text-gray-400">({allUsers.length})</span>
-            </CardTitle>
-            <div className="relative mt-2">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <Input placeholder="Search users..." value={userSearch} onChange={e => setUserSearch(e.target.value)} className="pl-9 h-9 text-sm bg-gray-50 border-gray-200" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            {filteredUsers.length === 0 ? (
-              <div className="text-center py-8 text-gray-400"><Users className="w-8 h-8 mx-auto mb-2 opacity-30" /><p className="text-sm">No users found</p></div>
-            ) : filteredUsers.map(m => {
-              const risk = getRiskLevel(allInsights[m.email]);
-              return (
-                <div key={m.id} className="flex items-center gap-4 px-5 py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50">
-                  <div className="w-8 h-8 rounded-full bg-[#0202ff]/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xs font-bold text-[#0202ff]">{m.full_name?.[0] || m.email?.[0]}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{m.full_name || m.email}</p>
-                    <p className="text-xs text-gray-400 truncate">{allInsights[m.email]?.archetype || 'Assessment pending'}</p>
-                  </div>
-                  <span className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${risk.bg} ${risk.color}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${risk.dot}`} />{risk.label}
-                  </span>
-                  <button onClick={() => navigate(`/manager-detail/${m.id}`, { state: { manager: m, insight: allInsights[m.email] } })} className="text-gray-300 hover:text-[#0202ff]">
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
-      </div>
-
       {/* ── KPI Cards ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard icon={Layers} label="Journey Completion Rate" value={`${journeyCompletion.rate}%`} sub={`${journeyCompletion.completed} of ${journeyCompletion.total} journeys`} color="text-[#0202ff]" />
@@ -425,6 +332,99 @@ export default function ExperienceAnalyticsTab({ user }) {
           )}
         </CardContent>
       </Card>
+
+      {/* ── All Users Section ── */}
+      <div>
+        {/* Risk stat cards */}
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          {riskStatCards.map(({ key, label, value, icon: Icon, iconBg, iconColor, list, activeBg }) => (
+            <Card key={key} onClick={() => setExpandedCategory(prev => prev === key ? null : key)}
+              className={`border-0 shadow-sm text-center rounded-2xl cursor-pointer hover:shadow-md transition-all ${expandedCategory === key ? activeBg : ''}`}>
+              <CardContent className="py-5">
+                <div className={`flex items-center justify-center w-9 h-9 ${iconBg} rounded-full mx-auto mb-2`}>
+                  <Icon className={`w-4 h-4 ${iconColor}`} />
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{value}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{label}</p>
+                {value > 0 && <p className="text-[10px] text-[#0202ff] mt-1 font-medium">{expandedCategory === key ? 'Hide ▲' : 'View ▼'}</p>}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Expanded category */}
+        {expandedCategory && (
+          <Card className="border border-gray-100 shadow-sm rounded-2xl overflow-hidden mb-4">
+            <CardHeader className="pb-2 pt-4 px-5 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-semibold text-gray-900">
+                {riskStatCards.find(s => s.key === expandedCategory)?.label} Users
+                <span className="ml-1.5 text-gray-400 font-normal">({riskStatCards.find(s => s.key === expandedCategory)?.list.length})</span>
+              </CardTitle>
+              <button onClick={() => setExpandedCategory(null)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+            </CardHeader>
+            <CardContent className="p-0">
+              {riskStatCards.find(s => s.key === expandedCategory)?.list.map(m => {
+                const risk = getRiskLevel(allInsights[m.email]);
+                return (
+                  <div key={m.id} className="flex items-center gap-4 px-5 py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50">
+                    <div className="w-8 h-8 rounded-full bg-[#0202ff]/10 flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs font-bold text-[#0202ff]">{m.full_name?.[0] || m.email?.[0]}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{m.full_name || m.email}</p>
+                      <p className="text-xs text-gray-400">{allInsights[m.email]?.archetype || 'Assessment pending'}</p>
+                    </div>
+                    <span className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${risk.bg} ${risk.color}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${risk.dot}`} />{risk.label}
+                    </span>
+                    <button onClick={() => navigate(`/manager-detail/${m.id}`, { state: { manager: m, insight: allInsights[m.email] } })} className="text-gray-300 hover:text-[#0202ff]">
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* All Users list */}
+        <Card className="border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
+          <CardHeader className="pb-3 pt-4 px-5">
+            <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
+              <Users className="w-4 h-4 text-[#0202ff]" /> All Users
+              <span className="text-sm font-normal text-gray-400">({allUsers.length})</span>
+            </CardTitle>
+            <div className="relative mt-2">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Input placeholder="Search users..." value={userSearch} onChange={e => setUserSearch(e.target.value)} className="pl-9 h-9 text-sm bg-gray-50 border-gray-200" />
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {filteredUsers.length === 0 ? (
+              <div className="text-center py-8 text-gray-400"><Users className="w-8 h-8 mx-auto mb-2 opacity-30" /><p className="text-sm">No users found</p></div>
+            ) : filteredUsers.map(m => {
+              const risk = getRiskLevel(allInsights[m.email]);
+              return (
+                <div key={m.id} className="flex items-center gap-4 px-5 py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50">
+                  <div className="w-8 h-8 rounded-full bg-[#0202ff]/10 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-bold text-[#0202ff]">{m.full_name?.[0] || m.email?.[0]}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{m.full_name || m.email}</p>
+                    <p className="text-xs text-gray-400 truncate">{allInsights[m.email]?.archetype || 'Assessment pending'}</p>
+                  </div>
+                  <span className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${risk.bg} ${risk.color}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${risk.dot}`} />{risk.label}
+                  </span>
+                  <button onClick={() => navigate(`/manager-detail/${m.id}`, { state: { manager: m, insight: allInsights[m.email] } })} className="text-gray-300 hover:text-[#0202ff]">
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* ── Experience Type Distribution ── */}
       {expTypeData.length > 0 && (
