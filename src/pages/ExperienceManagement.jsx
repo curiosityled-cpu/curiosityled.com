@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import AdminJourneysTab from "@/components/experience-mgmt/AdminJourneysTab";
-import AdminLearningTab from "@/components/experience-mgmt/AdminLearningTab";
+import AdminLearningManagementTab from "@/components/experience-mgmt/AdminLearningManagementTab";
 import AdminExperiencesTab from "@/components/experience-mgmt/AdminExperiencesTab";
 import ExperienceAnalyticsTab from "@/components/experience-mgmt/ExperienceAnalyticsTab";
 
@@ -41,7 +41,7 @@ const PRIORITY_COLORS = {
 const TABS = [
   { id: 'analytics', label: 'Overview & Analytics', icon: BarChart2 },
   { id: 'journeys', label: 'Journeys', icon: Map },
-  { id: 'programs', label: 'Learning Programs', icon: GraduationCap },
+  { id: 'programs', label: 'Learning', icon: GraduationCap },
   { id: 'experiences', label: 'Experiences', icon: Star },
   { id: 'requests', label: 'Requests', icon: Inbox },
 ];
@@ -168,10 +168,10 @@ export default function ExperienceManagement() {
         </motion.div>
       )}
 
-      {/* ── LEARNING PROGRAMS ── */}
+      {/* ── LEARNING ── */}
       {section === 'programs' && (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <AdminLearningTab user={user} />
+          <AdminLearningManagementTab user={user} />
         </motion.div>
       )}
 

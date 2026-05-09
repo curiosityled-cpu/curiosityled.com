@@ -19,7 +19,10 @@
         "video",
         "whitepaper",
         "podcast",
-        "assessment_tool"
+        "assessment_tool",
+        "document",
+        "quiz",
+        "external_link"
       ],
       "description": "Type of learning resource"
     },
@@ -34,6 +37,14 @@
     "url": {
       "type": "string",
       "description": "URL to the resource"
+    },
+    "document_url": {
+      "type": "string",
+      "description": "URL to an uploaded document file"
+    },
+    "embed_code": {
+      "type": "string",
+      "description": "HTML embed code for external content (e.g. videos, interactive tools)"
     },
     "competencies": {
       "type": "array",
@@ -67,7 +78,7 @@
       "items": {
         "type": "string"
       },
-      "description": "Tags for content categorization (e.g., audience level)"
+      "description": "Tags for content categorization"
     },
     "thumbnail_url": {
       "type": "string",
@@ -103,7 +114,11 @@
         "Purchase",
         "Program"
       ],
-      "description": "How the resource is accessed (e.g., free content, requires a subscription, etc.)"
+      "description": "How the resource is accessed"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Client that owns this resource (null for platform defaults)"
     },
     "prerequisite_resource_ids": {
       "type": "array",
@@ -121,17 +136,12 @@
     },
     "points_value": {
       "type": "number",
-      "description": "Number of gamification points awarded for completing this resource (overrides default)"
+      "description": "Gamification points awarded for completing this resource (overrides default)"
     }
   },
   "required": [
     "title",
-    "type",
-    "url",
-    "competencies",
-    "leadership_level",
-    "year",
-    "access"
+    "type"
   ],
   "rls": {
     "create": {},
