@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,8 @@ import {
 import { toast } from "sonner";
 import {
   BookOpen, Plus, Search, Pencil, Trash2, Users, CheckCircle2,
-  Clock, ExternalLink, FileText, Video, Loader2, X, Upload
+  Clock, ExternalLink, FileText, Video, Loader2, X, Upload,
+  LayoutGrid, List, BarChart2, TrendingUp, Award, AlertCircle
 } from "lucide-react";
 
 const TYPE_ICONS = {
@@ -261,8 +262,9 @@ export default function AdminLearningManagementTab({ user }) {
   const [typeFilter, setTypeFilter] = useState("all");
   const [showForm, setShowForm] = useState(false);
   const [editingResource, setEditingResource] = useState(null);
-  const [assignDialog, setAssignDialog] = useState(null); // resource to assign
+  const [assignDialog, setAssignDialog] = useState(null);
   const [assignEmail, setAssignEmail] = useState("");
+  const [viewMode, setViewMode] = useState("list"); // "list" | "grid"
 
   const loadData = async () => {
     setLoading(true);
@@ -285,6 +287,16 @@ export default function AdminLearningManagementTab({ user }) {
   };
 
   useEffect(() => { loadData(); loadUsers(); }, []);
+
+  const analytics = useMemo(() => {
+    const totalResources = resources.length;
+    const activeResources = resources.filter(r => r.is_active).length;
+    const totalEnrollments = assignments.length;
+    const completedEnrollments = assignments.filter(a => a.status === "completed").length;
+    const completionRate = totalEnrollments > 0 ? Math.round((completedEnrollments / totalEnrollments) * 100) : 0;
+    const overdueEnrollments = assignments.filter(a => a.status === "overdue").length;
+    return { totalResources, activeResources, totalEnrollments, completedEnrollments, completionRate, overdueEnrollments };
+  }, [resources, assignments]);
 
   const filteredResources = resources.filter(r => {
     const matchSearch = !search || r.title?.toLowerCase().includes(search.toLowerCase()) || r.provider?.toLowerCase().includes(search.toLowerCase());
@@ -340,6 +352,59 @@ export default function AdminLearningManagementTab({ user }) {
 
   return (
     <div className="space-y-4">
+
+      {/* ── ANALYTICS CARDS ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Card className="border border-gray-100 shadow-sm rounded-xl">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <BookOpen className="w-4.5 h-4.5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Total Resources</p>
+              <p className="text-xl font-bold text-gray-900">{analytics.totalResources}</p>
+              <p className="text-[10px] text-gray-400">{analytics.activeResources} active</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border border-gray-100 shadow-sm rounded-xl">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
+              <Users className="w-4.5 h-4.5 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Enrollments</p>
+              <p className="text-xl font-bold text-gray-900">{analytics.totalEnrollments}</p>
+              <p className="text-[10px] text-gray-400">{analytics.completedEnrollments} completed</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border border-gray-100 shadow-sm rounded-xl">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+              <TrendingUp className="w-4.5 h-4.5 text-green-600" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Completion Rate</p>
+              <p className="text-xl font-bold text-gray-900">{analytics.completionRate}%</p>
+              <p className="text-[10px] text-gray-400">of all enrollments</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border border-gray-100 shadow-sm rounded-xl">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="w-4.5 h-4.5 text-red-500" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Overdue</p>
+              <p className="text-xl font-bold text-gray-900">{analytics.overdueEnrollments}</p>
+              <p className="text-[10px] text-gray-400">need attention</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="bg-gray-100 rounded-xl p-1">
           <TabsTrigger value="library" className="rounded-lg text-xs">Library Content</TabsTrigger>
@@ -364,56 +429,129 @@ export default function AdminLearningManagementTab({ user }) {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={() => { setEditingResource(null); setShowForm(true); }} className="bg-[#0202ff] hover:bg-[#0101dd] text-white h-9 text-xs">
-              <Plus className="w-4 h-4 mr-1" /> Add Resource
-            </Button>
+            <div className="flex items-center gap-2">
+              {/* View Mode Toggle */}
+              <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
+                <button
+                  onClick={() => setViewMode("list")}
+                  className={`p-1.5 rounded-md transition-all ${viewMode === "list" ? "bg-white shadow-sm text-gray-900" : "text-gray-400 hover:text-gray-600"}`}
+                  title="List view"
+                >
+                  <List className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={`p-1.5 rounded-md transition-all ${viewMode === "grid" ? "bg-white shadow-sm text-gray-900" : "text-gray-400 hover:text-gray-600"}`}
+                  title="Grid view"
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+              </div>
+              <Button onClick={() => { setEditingResource(null); setShowForm(true); }} className="bg-[#0202ff] hover:bg-[#0101dd] text-white h-9 text-xs">
+                <Plus className="w-4 h-4 mr-1" /> Add Resource
+              </Button>
+            </div>
           </div>
 
           <div className="text-xs text-gray-500">{filteredResources.length} resource{filteredResources.length !== 1 ? "s" : ""}</div>
 
-          <div className="grid grid-cols-1 gap-3">
-            {filteredResources.map(r => {
-              const Icon = TYPE_ICONS[r.type] || BookOpen;
-              return (
-                <Card key={r.id} className={`border border-gray-100 shadow-sm rounded-xl transition-opacity ${!r.is_active ? "opacity-60" : ""}`}>
-                  <CardContent className="p-4 flex items-center gap-4">
-                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-                      <Icon className="w-5 h-5 text-gray-500" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-semibold text-gray-900 truncate">{r.title}</p>
+          {/* LIST VIEW */}
+          {viewMode === "list" && (
+            <div className="grid grid-cols-1 gap-3">
+              {filteredResources.map(r => {
+                const Icon = TYPE_ICONS[r.type] || BookOpen;
+                return (
+                  <Card key={r.id} className={`border border-gray-100 shadow-sm rounded-xl transition-opacity ${!r.is_active ? "opacity-60" : ""}`}>
+                    <CardContent className="p-4 flex items-center gap-4">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                        <Icon className="w-5 h-5 text-gray-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-semibold text-gray-900 truncate">{r.title}</p>
+                          <Badge className={`text-[10px] ${TYPE_COLORS[r.type] || "bg-gray-100 text-gray-600"}`}>{r.type?.replace(/_/g," ")}</Badge>
+                          {r.difficulty_level && <Badge className={`text-[10px] ${DIFFICULTY_COLORS[r.difficulty_level]}`}>{r.difficulty_level}</Badge>}
+                          {!r.is_active && <Badge className="text-[10px] bg-gray-100 text-gray-500">Inactive</Badge>}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-0.5">{[r.provider, r.author, r.duration_string].filter(Boolean).join(" · ")}</p>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-[#0202ff]" title={r.is_active ? "Deactivate" : "Activate"} onClick={() => handleToggleActive(r)}>
+                          {r.is_active ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Clock className="w-4 h-4" />}
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-[#0202ff]" onClick={() => setAssignDialog(r)} title="Enroll users">
+                          <Users className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-[#0202ff]" onClick={() => { setEditingResource(r); setShowForm(true); }}>
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-red-500" onClick={() => handleDelete(r.id)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+              {filteredResources.length === 0 && (
+                <div className="text-center py-16 text-gray-400">
+                  <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                  <p className="text-sm">No resources found</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* GRID VIEW */}
+          {viewMode === "grid" && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredResources.map(r => {
+                const Icon = TYPE_ICONS[r.type] || BookOpen;
+                return (
+                  <Card key={r.id} className={`border border-gray-100 shadow-sm rounded-xl transition-opacity flex flex-col ${!r.is_active ? "opacity-60" : ""}`}>
+                    <CardContent className="p-4 flex flex-col gap-3 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                          <Icon className="w-5 h-5 text-gray-500" />
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-[#0202ff]" title={r.is_active ? "Deactivate" : "Activate"} onClick={() => handleToggleActive(r)}>
+                            {r.is_active ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> : <Clock className="w-3.5 h-3.5" />}
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-[#0202ff]" onClick={() => setAssignDialog(r)}>
+                            <Users className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-[#0202ff]" onClick={() => { setEditingResource(r); setShowForm(true); }}>
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-red-500" onClick={() => handleDelete(r.id)}>
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-gray-900 line-clamp-2 mb-1">{r.title}</p>
+                        {r.description && <p className="text-xs text-gray-500 line-clamp-2 mb-2">{r.description}</p>}
+                        <p className="text-xs text-gray-400">{[r.provider, r.author].filter(Boolean).join(" · ")}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-wrap mt-auto pt-2 border-t border-gray-50">
                         <Badge className={`text-[10px] ${TYPE_COLORS[r.type] || "bg-gray-100 text-gray-600"}`}>{r.type?.replace(/_/g," ")}</Badge>
                         {r.difficulty_level && <Badge className={`text-[10px] ${DIFFICULTY_COLORS[r.difficulty_level]}`}>{r.difficulty_level}</Badge>}
+                        {r.duration_string && <span className="text-[10px] text-gray-400 flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" />{r.duration_string}</span>}
                         {!r.is_active && <Badge className="text-[10px] bg-gray-100 text-gray-500">Inactive</Badge>}
                       </div>
-                      <p className="text-xs text-gray-500 mt-0.5">{[r.provider, r.author, r.duration_string].filter(Boolean).join(" · ")}</p>
-                    </div>
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-[#0202ff]" title={r.is_active ? "Deactivate" : "Activate"} onClick={() => handleToggleActive(r)}>
-                        {r.is_active ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Clock className="w-4 h-4" />}
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-[#0202ff]" onClick={() => setAssignDialog(r)} title="Enroll users">
-                        <Users className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-[#0202ff]" onClick={() => { setEditingResource(r); setShowForm(true); }}>
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-red-500" onClick={() => handleDelete(r.id)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-            {filteredResources.length === 0 && (
-              <div className="text-center py-16 text-gray-400">
-                <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                <p className="text-sm">No resources found</p>
-              </div>
-            )}
-          </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+              {filteredResources.length === 0 && (
+                <div className="col-span-full text-center py-16 text-gray-400">
+                  <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                  <p className="text-sm">No resources found</p>
+                </div>
+              )}
+            </div>
+          )}
         </TabsContent>
 
         {/* ── ENROLLMENTS ── */}
