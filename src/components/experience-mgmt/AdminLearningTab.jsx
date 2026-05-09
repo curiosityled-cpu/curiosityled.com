@@ -95,7 +95,9 @@ export default function AdminLearningTab({ user }) {
         base44.entities.AssignedLearning.list('-created_date'),
         base44.entities.User.filter({ client_id: user.client_id })
       ]);
-      setAssignments(allAssignments);
+      const adminRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin', 'Partner Business Administrator'];
+      const adminEmails = new Set(allUsers.filter(u => adminRoles.includes(u.app_role)).map(u => u.email));
+      setAssignments(allAssignments.filter(a => adminEmails.has(a.assigned_by)));
       setUsers(allUsers);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }

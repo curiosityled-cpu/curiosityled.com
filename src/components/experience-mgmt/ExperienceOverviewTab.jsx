@@ -215,7 +215,7 @@ export default function ExperienceOverviewTab({ user }) {
 
   const { data: managers = [], isLoading: loadingManagers } = useQuery({
     queryKey: ['exp-mgmt-managers', user?.client_id],
-    queryFn: () => base44.entities.User.filter({ client_id: user.client_id, app_role: { $in: ['User Level 1', 'User Level 2'] } }),
+    queryFn: () => base44.entities.User.filter({ client_id: user.client_id }),
     enabled: !!user?.client_id,
     staleTime: 5 * 60 * 1000,
   });
