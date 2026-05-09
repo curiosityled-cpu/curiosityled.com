@@ -143,7 +143,7 @@ export default function ExperienceManagement() {
   }
 
   return (
-    <MVPPageLayout title="Experience Management" subtitle="Create, deploy, and manage learning experiences across your organization">
+    <MVPPageLayout title="Development Manager" subtitle="Create, deploy, and manage development experiences across your organization">
 
       {/* Section Toggle */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>

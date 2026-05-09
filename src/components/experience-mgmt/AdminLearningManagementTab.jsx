@@ -407,7 +407,7 @@ export default function AdminLearningManagementTab({ user }) {
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="bg-gray-100 rounded-xl p-1">
-          <TabsTrigger value="library" className="rounded-lg text-xs">Library Content</TabsTrigger>
+          <TabsTrigger value="library" className="rounded-lg text-xs">Content Library</TabsTrigger>
           <TabsTrigger value="enrollments" className="rounded-lg text-xs">Enrollments</TabsTrigger>
         </TabsList>
 
@@ -474,6 +474,7 @@ export default function AdminLearningManagementTab({ user }) {
                           {!r.is_active && <Badge className="text-[10px] bg-gray-100 text-gray-500">Inactive</Badge>}
                         </div>
                         <p className="text-xs text-gray-500 mt-0.5">{[r.provider, r.author, r.duration_string].filter(Boolean).join(" · ")}</p>
+                        {r.description && <p className="text-xs text-gray-400 mt-1 line-clamp-1">{r.description}</p>}
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-[#0202ff]" title={r.is_active ? "Deactivate" : "Activate"} onClick={() => handleToggleActive(r)}>
