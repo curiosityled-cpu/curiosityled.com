@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
-  Loader2, LayoutDashboard, Map, GraduationCap, Star, Inbox,
+  Loader2, LayoutDashboard, Map, GraduationCap, Star, Inbox, BarChart2,
   Search, Plus, Clock, CheckCircle2, XCircle, Eye
 } from "lucide-react";
 import { useAuth } from "@/components/useAuth";
@@ -18,6 +18,7 @@ import ExperienceOverviewTab from "@/components/experience-mgmt/ExperienceOvervi
 import AdminJourneysTab from "@/components/experience-mgmt/AdminJourneysTab";
 import AdminLearningTab from "@/components/experience-mgmt/AdminLearningTab";
 import AdminExperiencesTab from "@/components/experience-mgmt/AdminExperiencesTab";
+import ExperienceAnalyticsTab from "@/components/experience-mgmt/ExperienceAnalyticsTab";
 
 // Lazy load request components
 const RequestDetailPanel = lazy(() => import("@/components/requests/RequestDetailPanel"));
@@ -43,6 +44,7 @@ const TABS = [
   { id: 'journeys', label: 'Journeys', icon: Map },
   { id: 'programs', label: 'Learning Programs', icon: GraduationCap },
   { id: 'experiences', label: 'Experiences', icon: Star },
+  { id: 'analytics', label: 'Analytics', icon: BarChart2 },
   { id: 'requests', label: 'Requests', icon: Inbox },
 ];
 
@@ -186,6 +188,13 @@ export default function ExperienceManagement() {
       {section === 'experiences' && (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <AdminExperiencesTab user={user} />
+        </motion.div>
+      )}
+
+      {/* ── ANALYTICS ── */}
+      {section === 'analytics' && (
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <ExperienceAnalyticsTab user={user} />
         </motion.div>
       )}
 
