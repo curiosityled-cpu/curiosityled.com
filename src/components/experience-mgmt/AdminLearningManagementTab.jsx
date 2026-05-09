@@ -474,7 +474,7 @@ export default function AdminLearningManagementTab({ user }) {
                           {!r.is_active && <Badge className="text-[10px] bg-gray-100 text-gray-500">Inactive</Badge>}
                         </div>
                         <p className="text-xs text-gray-500 mt-0.5">{[r.provider, r.author, r.duration_string].filter(Boolean).join(" · ")}</p>
-                        {r.description && <p className="text-xs text-gray-400 mt-1 line-clamp-1">{r.description}</p>}
+                        <p className="text-xs text-gray-400 mt-1 line-clamp-1">{r.description || <span className="italic">No description</span>}</p>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-[#0202ff]" title={r.is_active ? "Deactivate" : "Activate"} onClick={() => handleToggleActive(r)}>
@@ -532,7 +532,7 @@ export default function AdminLearningManagementTab({ user }) {
                       </div>
                       <div className="flex-1">
                         <p className="text-sm font-semibold text-gray-900 line-clamp-2 mb-1">{r.title}</p>
-                        {r.description && <p className="text-xs text-gray-500 line-clamp-2 mb-2">{r.description}</p>}
+                        <p className="text-xs text-gray-500 line-clamp-2 mb-2">{r.description || <span className="italic text-gray-400">No description</span>}</p>
                         <p className="text-xs text-gray-400">{[r.provider, r.author].filter(Boolean).join(" · ")}</p>
                       </div>
                       <div className="flex items-center gap-1.5 flex-wrap mt-auto pt-2 border-t border-gray-50">
