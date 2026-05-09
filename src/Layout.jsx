@@ -389,7 +389,7 @@ function LayoutContent({ children }) {
           return 'Dashboard';
         case 'experiences':
           if (hasPermission('experiences.manage_org')) {
-            return 'ExperienceManagement';
+            return 'DevelopmentManager';
           } else if (hasPermission('experiences.view_analytics') || hasPermission('analytics.view_org')) {
             return 'ExperienceAnalytics';
           } else if (hasPermission('experiences.view_personal') || hasPermission('personal.journeys.view')) {
@@ -423,7 +423,7 @@ function LayoutContent({ children }) {
         return path === '/' || path === '/dashboard';
 
       case 'experiences':
-        return path === '/myexperiences' || path === '/teamexperiences' || path === '/experiencemanagement' || 
+        return path === '/myexperiences' || path === '/teamexperiences' || path === '/experiencemanagement' || path === '/developmentmanager' || 
                path === '/myjourneys' || path === '/journeybuilder' || path === '/experienceanalytics' || path === '/journeydetails' ||
                path === '/onboardingplanbuilder' || path === '/careerpathcreator' || path === '/formbuilder' || path === '/formbuilderdashboard' ||
                path.startsWith('/myexperiences') || path.startsWith('/teamexperiences') || path.startsWith('/experiencemanagement') ||

@@ -91,6 +91,9 @@ const AuthenticatedApp = () => {
         )
       } />
 
+      {/* Redirect old ExperienceManagement URL to new DevelopmentManager */}
+      <Route path="/ExperienceManagement" element={<Navigate to="/DevelopmentManager" replace />} />
+
       {/* Legacy Dashboard — always accessible with full layout */}
       <Route path="/Dashboard" element={<LayoutWrapper currentPageName="Dashboard"><Pages.Dashboard /></LayoutWrapper>} />
 

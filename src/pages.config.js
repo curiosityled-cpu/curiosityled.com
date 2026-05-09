@@ -77,6 +77,7 @@ import EmailTemplates from './pages/EmailTemplates';
 import EnableUATTesting from './pages/EnableUATTesting';
 import ExperienceAnalytics from './pages/ExperienceAnalytics';
 import ExperienceManagement from './pages/ExperienceManagement';
+import DevelopmentManager from './pages/ExperienceManagement';
 import FirstLoginPasswordReset from './pages/FirstLoginPasswordReset';
 import FormBuilder from './pages/FormBuilder';
 import FormBuilderDashboard from './pages/FormBuilderDashboard';
@@ -174,6 +175,7 @@ export const PAGES = {
     "EnableUATTesting": EnableUATTesting,
     "ExperienceAnalytics": ExperienceAnalytics,
     "ExperienceManagement": ExperienceManagement,
+    "DevelopmentManager": DevelopmentManager,
     "FirstLoginPasswordReset": FirstLoginPasswordReset,
     "FormBuilder": FormBuilder,
     "FormBuilderDashboard": FormBuilderDashboard,
