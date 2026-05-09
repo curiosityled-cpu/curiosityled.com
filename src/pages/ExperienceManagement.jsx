@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
-  Loader2, LayoutDashboard, Map, GraduationCap, Star, Inbox, BarChart2,
+  Loader2, Map, GraduationCap, Star, Inbox, BarChart2,
   Search, Plus, Clock, CheckCircle2, XCircle, Eye
 } from "lucide-react";
 import { useAuth } from "@/components/useAuth";
@@ -14,7 +14,6 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
-import ExperienceOverviewTab from "@/components/experience-mgmt/ExperienceOverviewTab";
 import AdminJourneysTab from "@/components/experience-mgmt/AdminJourneysTab";
 import AdminLearningTab from "@/components/experience-mgmt/AdminLearningTab";
 import AdminExperiencesTab from "@/components/experience-mgmt/AdminExperiencesTab";
@@ -40,17 +39,16 @@ const PRIORITY_COLORS = {
 };
 
 const TABS = [
-  { id: 'overview', label: 'Experience Overview', icon: LayoutDashboard },
+  { id: 'analytics', label: 'Overview & Analytics', icon: BarChart2 },
   { id: 'journeys', label: 'Journeys', icon: Map },
   { id: 'programs', label: 'Learning Programs', icon: GraduationCap },
   { id: 'experiences', label: 'Experiences', icon: Star },
-  { id: 'analytics', label: 'Analytics', icon: BarChart2 },
   { id: 'requests', label: 'Requests', icon: Inbox },
 ];
 
 export default function ExperienceManagement() {
   const { user, hasPermission, loading: authLoading } = useAuth();
-  const [section, setSection] = useState("overview");
+  const [section, setSection] = useState("analytics");
 
   // ── Requests state ──
   const [requests, setRequests] = useState([]);
@@ -162,13 +160,6 @@ export default function ExperienceManagement() {
           })}
         </div>
       </motion.div>
-
-      {/* ── EXPERIENCE OVERVIEW ── */}
-      {section === 'overview' && (
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <ExperienceOverviewTab user={user} />
-        </motion.div>
-      )}
 
       {/* ── JOURNEYS ── */}
       {section === 'journeys' && (

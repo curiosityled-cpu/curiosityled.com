@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
 import {
-  TrendingUp, CheckCircle2, Clock, BookOpen, Layers, Star, Users
+  TrendingUp, CheckCircle2, Clock, BookOpen, Layers, Star, Users,
+  AlertTriangle, Search, ChevronRight, X
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { useNavigate } from "react-router-dom";
 import { format, subMonths, startOfMonth } from "date-fns";
 
 const BLUE = "#0202ff";
@@ -31,27 +34,42 @@ function StatCard({ icon: Icon, label, value, sub, color = "text-[#0202ff]" }) {
   );
 }
 
+const getRiskLevel = (insight) => {
+  if (!insight) return { label: 'No Data', color: 'text-gray-500', bg: 'bg-gray-50 border-gray-200', dot: 'bg-gray-400' };
+  const flags = insight.risk_flags?.length || 0;
+  if (flags === 0) return { label: 'On Track', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', dot: 'bg-emerald-500' };
+  if (flags === 1) return { label: 'Developing', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', dot: 'bg-amber-500' };
+  return { label: 'At Risk', color: 'text-red-700', bg: 'bg-red-50 border-red-200', dot: 'bg-red-500' };
+};
+
 export default function ExperienceAnalyticsTab({ user }) {
+  const navigate = useNavigate();
   const [plans, setPlans] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [experiences, setExperiences] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
+  const [allInsights, setAllInsights] = useState({});
   const [loading, setLoading] = useState(true);
+  const [userSearch, setUserSearch] = useState('');
+  const [expandedCategory, setExpandedCategory] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [allPlans, allAssignments, allExps, allUsers] = await Promise.all([
+      const [allPlans, allAssignments, allExps, users, insights] = await Promise.all([
         base44.entities.DevelopmentPlan.list("-created_date"),
         base44.entities.AssignedLearning.list("-created_date"),
         base44.entities.DevelopmentExperience.list("-created_date"),
         base44.entities.User.filter({ client_id: user.client_id }),
+        base44.entities.AssessmentInsights.filter({ client_id: user.client_id, status: 'generated' }),
       ]);
-      // Filter to admin-created content only
       const adminRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin', 'Partner Business Administrator'];
-      const adminEmails = new Set(allUsers.filter(u => adminRoles.includes(u.app_role)).map(u => u.email));
+      const adminEmails = new Set(users.filter(u => adminRoles.includes(u.app_role)).map(u => u.email));
       setPlans(allPlans.filter(p => adminEmails.has(p.created_by)));
       setAssignments(allAssignments.filter(a => adminEmails.has(a.assigned_by)));
       setExperiences(allExps.filter(e => adminEmails.has(e.created_by)));
+      setAllUsers(users);
+      setAllInsights(insights.reduce((acc, i) => { acc[i.user_email] = i; return acc; }, {}));
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   }, [user.client_id]);
@@ -156,6 +174,29 @@ export default function ExperienceAnalyticsTab({ user }) {
     return emails.size;
   }, [plans, assignments, experiences]);
 
+  // Users categorized by risk
+  const categorized = useMemo(() => {
+    const atRisk = [], developing = [], onTrack = [];
+    allUsers.forEach(m => {
+      const flags = allInsights[m.email]?.risk_flags?.length;
+      if (flags == null) return;
+      if (flags === 0) onTrack.push(m);
+      else if (flags === 1) developing.push(m);
+      else atRisk.push(m);
+    });
+    return { atRisk, developing, onTrack };
+  }, [allUsers, allInsights]);
+
+  const filteredUsers = useMemo(() =>
+    allUsers.filter(m => !userSearch || m.full_name?.toLowerCase().includes(userSearch.toLowerCase()) || m.email?.toLowerCase().includes(userSearch.toLowerCase())),
+    [allUsers, userSearch]);
+
+  const riskStatCards = [
+    { key: 'atRisk', label: 'At Risk', value: categorized.atRisk.length, icon: AlertTriangle, iconBg: 'bg-red-50', iconColor: 'text-red-500', list: categorized.atRisk, activeBg: 'ring-2 ring-red-200' },
+    { key: 'developing', label: 'Developing', value: categorized.developing.length, icon: TrendingUp, iconBg: 'bg-amber-50', iconColor: 'text-amber-500', list: categorized.developing, activeBg: 'ring-2 ring-amber-200' },
+    { key: 'onTrack', label: 'On Track', value: categorized.onTrack.length, icon: CheckCircle2, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-500', list: categorized.onTrack, activeBg: 'ring-2 ring-emerald-200' },
+  ];
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -170,6 +211,99 @@ export default function ExperienceAnalyticsTab({ user }) {
 
   return (
     <div className="space-y-5">
+
+      {/* ── All Users Section ── */}
+      <div>
+        {/* Risk stat cards */}
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          {riskStatCards.map(({ key, label, value, icon: Icon, iconBg, iconColor, list, activeBg }) => (
+            <Card key={key} onClick={() => setExpandedCategory(prev => prev === key ? null : key)}
+              className={`border-0 shadow-sm text-center rounded-2xl cursor-pointer hover:shadow-md transition-all ${expandedCategory === key ? activeBg : ''}`}>
+              <CardContent className="py-5">
+                <div className={`flex items-center justify-center w-9 h-9 ${iconBg} rounded-full mx-auto mb-2`}>
+                  <Icon className={`w-4 h-4 ${iconColor}`} />
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{value}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{label}</p>
+                {value > 0 && <p className="text-[10px] text-[#0202ff] mt-1 font-medium">{expandedCategory === key ? 'Hide ▲' : 'View ▼'}</p>}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Expanded category */}
+        {expandedCategory && (
+          <Card className="border border-gray-100 shadow-sm rounded-2xl overflow-hidden mb-4">
+            <CardHeader className="pb-2 pt-4 px-5 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-semibold text-gray-900">
+                {riskStatCards.find(s => s.key === expandedCategory)?.label} Users
+                <span className="ml-1.5 text-gray-400 font-normal">({riskStatCards.find(s => s.key === expandedCategory)?.list.length})</span>
+              </CardTitle>
+              <button onClick={() => setExpandedCategory(null)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+            </CardHeader>
+            <CardContent className="p-0">
+              {riskStatCards.find(s => s.key === expandedCategory)?.list.map(m => {
+                const risk = getRiskLevel(allInsights[m.email]);
+                return (
+                  <div key={m.id} className="flex items-center gap-4 px-5 py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50">
+                    <div className="w-8 h-8 rounded-full bg-[#0202ff]/10 flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs font-bold text-[#0202ff]">{m.full_name?.[0] || m.email?.[0]}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{m.full_name || m.email}</p>
+                      <p className="text-xs text-gray-400">{allInsights[m.email]?.archetype || 'Assessment pending'}</p>
+                    </div>
+                    <span className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${risk.bg} ${risk.color}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${risk.dot}`} />{risk.label}
+                    </span>
+                    <button onClick={() => navigate(`/manager-detail/${m.id}`, { state: { manager: m, insight: allInsights[m.email] } })} className="text-gray-300 hover:text-[#0202ff]">
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* All Users list */}
+        <Card className="border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
+          <CardHeader className="pb-3 pt-4 px-5">
+            <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
+              <Users className="w-4 h-4 text-[#0202ff]" /> All Users
+              <span className="text-sm font-normal text-gray-400">({allUsers.length})</span>
+            </CardTitle>
+            <div className="relative mt-2">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Input placeholder="Search users..." value={userSearch} onChange={e => setUserSearch(e.target.value)} className="pl-9 h-9 text-sm bg-gray-50 border-gray-200" />
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {filteredUsers.length === 0 ? (
+              <div className="text-center py-8 text-gray-400"><Users className="w-8 h-8 mx-auto mb-2 opacity-30" /><p className="text-sm">No users found</p></div>
+            ) : filteredUsers.map(m => {
+              const risk = getRiskLevel(allInsights[m.email]);
+              return (
+                <div key={m.id} className="flex items-center gap-4 px-5 py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50">
+                  <div className="w-8 h-8 rounded-full bg-[#0202ff]/10 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-bold text-[#0202ff]">{m.full_name?.[0] || m.email?.[0]}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{m.full_name || m.email}</p>
+                    <p className="text-xs text-gray-400 truncate">{allInsights[m.email]?.archetype || 'Assessment pending'}</p>
+                  </div>
+                  <span className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${risk.bg} ${risk.color}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${risk.dot}`} />{risk.label}
+                  </span>
+                  <button onClick={() => navigate(`/manager-detail/${m.id}`, { state: { manager: m, insight: allInsights[m.email] } })} className="text-gray-300 hover:text-[#0202ff]">
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* ── KPI Cards ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
