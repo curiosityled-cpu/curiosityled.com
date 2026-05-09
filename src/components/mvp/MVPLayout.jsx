@@ -60,14 +60,17 @@ const NAV_CONFIG = {
   buyer: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: BarChart3 },
   { label: 'Development Manager', path: '/DevelopmentManager', icon: Users },
+  { label: 'Performance Manager', path: '/PerformanceManager', icon: Target },
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }],
 
   analyst: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: BarChart3 },
+  { label: 'Performance Manager', path: '/PerformanceManager', icon: Target },
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }],
 
   executive: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: BarChart3 },
+  { label: 'Performance Manager', path: '/PerformanceManager', icon: Target },
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }]
 
 };
