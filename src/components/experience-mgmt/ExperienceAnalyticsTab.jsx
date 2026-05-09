@@ -56,12 +56,13 @@ export default function ExperienceAnalyticsTab({ user }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [allPlans, allAssignments, allExps, users, insights] = await Promise.all([
+      const [allPlans, allAssignments, allExps, users, insights, assessments] = await Promise.all([
         base44.entities.DevelopmentPlan.list("-created_date"),
         base44.entities.AssignedLearning.list("-created_date"),
         base44.entities.DevelopmentExperience.list("-created_date"),
         base44.entities.User.filter({ client_id: user.client_id }),
         base44.entities.AssessmentInsights.filter({ client_id: user.client_id, status: 'generated' }),
+        base44.entities.Assessment.filter({ client_id: user.client_id }, '-submission_ts'),
       ]);
       const adminRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin', 'Partner Business Administrator'];
       const adminEmails = new Set(users.filter(u => adminRoles.includes(u.app_role)).map(u => u.email));
@@ -69,7 +70,22 @@ export default function ExperienceAnalyticsTab({ user }) {
       setAssignments(allAssignments.filter(a => adminEmails.has(a.assigned_by)));
       setExperiences(allExps.filter(e => adminEmails.has(e.created_by)));
       setAllUsers(users);
-      setAllInsights(insights.reduce((acc, i) => { acc[i.user_email] = i; return acc; }, {}));
+
+      // Build insights map: prefer AssessmentInsights archetype, fall back to Assessment archetype_label
+      const assessmentByEmail = assessments.reduce((acc, a) => {
+        if (!acc[a.email]) acc[a.email] = a;
+        return acc;
+      }, {});
+      const insightsMap = insights.reduce((acc, i) => { acc[i.user_email] = i; return acc; }, {});
+      // Merge: for users with an assessment but no insight, inject a partial insight with archetype
+      Object.entries(assessmentByEmail).forEach(([email, a]) => {
+        if (!insightsMap[email] && a.archetype_label) {
+          insightsMap[email] = { archetype: a.archetype_label, risk_flags: [] };
+        } else if (insightsMap[email] && !insightsMap[email].archetype && a.archetype_label) {
+          insightsMap[email] = { ...insightsMap[email], archetype: a.archetype_label };
+        }
+      });
+      setAllInsights(insightsMap);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   }, [user.client_id]);
