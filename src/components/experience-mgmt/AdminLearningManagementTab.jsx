@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,67 @@ const EMPTY_RESOURCE = {
   duration_string: "", access: "Free", is_active: true, is_premium: false,
   year: new Date().getFullYear(), tags: [], competencies: [], points_value: ""
 };
+
+// All platform competency names
+const PLATFORM_COMPETENCIES = [
+  "Adaptability", "Agile People Operations", "Business Acumen", "Cognitive Flexibility",
+  "Collaboration", "Communication", "Data Literacy & Evidence-Based Management",
+  "Decision-Making", "Delegation", "Developing Others", "Digital and AI Literacy",
+  "Emotional Intelligence", "Ethical Decision-Making & AI Governance",
+  "Facilitation & Virtual Collaboration", "Influence Without Authority",
+  "Leadership Agility", "Learning Agility", "Managing Difficult Conversations",
+  "Managerial Curiosity", "Organizational Impact", "Partnering with Senior Leaders",
+  "Performance Management", "Personal Integrity & Ethics", "Psychological Safety Creation",
+  "Situational Intelligence", "Stakeholder Management", "Strategic Thinking",
+  "Talent Intelligence & Development", "Team Leadership", "Time and Resource Management",
+  "Transition from IC to Leader"
+];
+
+function CompetencyMultiSelect({ value = [], onChange }) {
+  const [search, setSearch] = useState("");
+  const filtered = PLATFORM_COMPETENCIES.filter(c =>
+    c.toLowerCase().includes(search.toLowerCase()) && !value.includes(c)
+  );
+  const toggle = (comp) => {
+    if (value.includes(comp)) {
+      onChange(value.filter(c => c !== comp));
+    } else {
+      onChange([...value, comp]);
+    }
+  };
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-1 min-h-[28px]">
+        {value.map(c => (
+          <span key={c} className="inline-flex items-center gap-1 text-[10px] bg-purple-100 text-purple-700 rounded-full px-2 py-0.5 font-medium">
+            {c}
+            <button type="button" onClick={() => toggle(c)} className="hover:text-purple-900">×</button>
+          </span>
+        ))}
+        {value.length === 0 && <span className="text-xs text-gray-400 italic">No competencies selected</span>}
+      </div>
+      <Input
+        placeholder="Search competencies..."
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        className="h-8 text-xs"
+      />
+      <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-lg divide-y divide-gray-50">
+        {filtered.map(c => (
+          <button
+            key={c}
+            type="button"
+            onClick={() => toggle(c)}
+            className="w-full text-left px-3 py-1.5 text-xs hover:bg-purple-50 hover:text-purple-700 transition-colors"
+          >
+            {c}
+          </button>
+        ))}
+        {filtered.length === 0 && <p className="px-3 py-2 text-xs text-gray-400 italic">No matches</p>}
+      </div>
+    </div>
+  );
+}
 
 function ResourceFormDialog({ open, onClose, resource, onSaved }) {
   const [form, setForm] = useState(EMPTY_RESOURCE);
@@ -196,6 +257,22 @@ function ResourceFormDialog({ open, onClose, resource, onSaved }) {
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">Year</label>
               <Input type="number" value={form.year} onChange={e => set("year", e.target.value)} placeholder={new Date().getFullYear()} />
+            </div>
+            <div className="col-span-2">
+              <label className="text-sm font-medium text-gray-700 mb-1 block">
+                Competencies <span className="text-xs font-normal text-gray-400">(from platform model)</span>
+              </label>
+              <CompetencyMultiSelect value={form.competencies || []} onChange={v => set("competencies", v)} />
+            </div>
+            <div className="col-span-2">
+              <label className="text-sm font-medium text-gray-700 mb-1 block">
+                Skills / Tags <span className="text-xs font-normal text-gray-400">(comma-separated raw skills)</span>
+              </label>
+              <Input
+                value={(form.tags || []).join(", ")}
+                onChange={e => set("tags", e.target.value.split(",").map(s => s.trim()).filter(Boolean))}
+                placeholder="e.g. Python, Leadership, Excel"
+              />
             </div>
             <div className="col-span-2 flex items-center gap-2">
               <input type="checkbox" id="is_active" checked={form.is_active} onChange={e => set("is_active", e.target.checked)} className="rounded" />
@@ -475,12 +552,17 @@ export default function AdminLearningManagementTab({ user }) {
                         </div>
                         <p className="text-xs text-gray-500 mt-0.5">{[r.provider, r.author, r.duration_string].filter(Boolean).join(" · ")}</p>
                         <p className="text-xs text-gray-400 mt-1 line-clamp-1">{r.description || <span className="italic">No description</span>}</p>
-                        {r.competencies?.length > 0 && (
+                        {(r.competencies?.length > 0 || r.tags?.length > 0) && (
                           <div className="flex flex-wrap gap-1 mt-1.5">
-                            {r.competencies.slice(0, 4).map(s => (
-                              <span key={s} className="text-[10px] bg-blue-50 text-blue-600 rounded px-1.5 py-0.5">{s}</span>
+                            {r.competencies?.slice(0, 3).map(c => (
+                              <span key={c} className="text-[10px] bg-purple-100 text-purple-700 rounded-full px-1.5 py-0.5 font-medium">{c}</span>
                             ))}
-                            {r.competencies.length > 4 && <span className="text-[10px] text-gray-400">+{r.competencies.length - 4} more</span>}
+                            {r.tags?.filter(t => !r.competencies?.includes(t)).slice(0, 2).map(t => (
+                              <span key={t} className="text-[10px] bg-blue-50 text-blue-500 rounded px-1.5 py-0.5">{t}</span>
+                            ))}
+                            {((r.competencies?.length || 0) + (r.tags?.length || 0)) > 5 && (
+                              <span className="text-[10px] text-gray-400">+{(r.competencies?.length || 0) + (r.tags?.length || 0) - 5} more</span>
+                            )}
                           </div>
                         )}
                       </div>
@@ -542,12 +624,17 @@ export default function AdminLearningManagementTab({ user }) {
                         <p className="text-sm font-semibold text-gray-900 line-clamp-2 mb-1">{r.title}</p>
                         <p className="text-xs text-gray-500 line-clamp-2 mb-1">{r.description || <span className="italic text-gray-400">No description</span>}</p>
                         <p className="text-xs text-gray-400 mb-2">{[r.provider, r.author].filter(Boolean).join(" · ")}</p>
-                        {r.competencies?.length > 0 && (
+                        {(r.competencies?.length > 0 || r.tags?.length > 0) && (
                           <div className="flex flex-wrap gap-1">
-                            {r.competencies.slice(0, 3).map(s => (
-                              <span key={s} className="text-[10px] bg-blue-50 text-blue-600 rounded px-1.5 py-0.5">{s}</span>
+                            {r.competencies?.slice(0, 2).map(c => (
+                              <span key={c} className="text-[10px] bg-purple-100 text-purple-700 rounded-full px-1.5 py-0.5 font-medium">{c}</span>
                             ))}
-                            {r.competencies.length > 3 && <span className="text-[10px] text-gray-400">+{r.competencies.length - 3} more</span>}
+                            {r.tags?.filter(t => !r.competencies?.includes(t)).slice(0, 1).map(t => (
+                              <span key={t} className="text-[10px] bg-blue-50 text-blue-500 rounded px-1.5 py-0.5">{t}</span>
+                            ))}
+                            {((r.competencies?.length || 0) + (r.tags?.length || 0)) > 3 && (
+                              <span className="text-[10px] text-gray-400">+{(r.competencies?.length || 0) + (r.tags?.length || 0) - 3} more</span>
+                            )}
                           </div>
                         )}
                       </div>

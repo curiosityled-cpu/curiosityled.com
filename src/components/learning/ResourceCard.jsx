@@ -206,15 +206,20 @@ export default function ResourceCard({
                 <div className="space-y-3 mb-4">
                     <div className="flex flex-wrap gap-1">
                         {resource.competencies?.slice(0, 3).map((comp, idx) => (
-                            <Badge key={idx} variant="outline" className="text-xs">
+                            <Badge key={idx} className="text-xs bg-purple-100 text-purple-700 border-purple-200">
                                 {comp}
                             </Badge>
                         ))}
                         {resource.competencies?.length > 3 && (
-                            <Badge variant="outline" className="text-xs">
+                            <Badge className="text-xs bg-purple-50 text-purple-500 border-purple-100">
                                 +{resource.competencies.length - 3} more
                             </Badge>
                         )}
+                        {resource.tags?.filter(t => !resource.competencies?.includes(t)).slice(0, 2).map((tag, idx) => (
+                            <Badge key={`tag-${idx}`} variant="outline" className="text-xs text-blue-600 border-blue-200 bg-blue-50">
+                                {tag}
+                            </Badge>
+                        ))}
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-gray-600">
