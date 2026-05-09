@@ -347,7 +347,7 @@ export default function AdminLearningManagementTab({ user }) {
     setLoading(true);
     try {
       const [res, assigns] = await Promise.all([
-        base44.entities.LearningResource.list('-created_date', 200),
+        base44.entities.LearningResource.list('-created_date', 500),
         base44.entities.AssignedLearning.filter({ client_id: user.client_id }, '-created_date', 200)
       ]);
       setResources(res);
