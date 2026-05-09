@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Layers, Briefcase, BookOpen, Clock, CheckCircle2, Search, Plus, Pencil, Trash2, Users } from "lucide-react";
+import { Layers, Briefcase, BookOpen, Clock, Search, Plus, Pencil, Trash2, UserPlus } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -18,6 +18,59 @@ const STATUS_BADGE = {
   draft: "bg-gray-100 text-gray-600",
 };
 
+function AssignJourneyDialog({ open, onClose, plan, users, onAssigned }) {
+  const [selectedEmail, setSelectedEmail] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const handleAssign = async () => {
+    if (!selectedEmail) return;
+    setSaving(true);
+    await base44.entities.DevelopmentPlan.create({
+      title: plan.title,
+      description: plan.description,
+      target_competencies: plan.target_competencies || [],
+      experiences: plan.experiences || [],
+      learning_items: plan.learning_items || [],
+      target_date: plan.target_date || '',
+      status: 'active',
+      user_email: selectedEmail,
+    });
+    toast.success(`Journey assigned to ${selectedEmail}`);
+    setSelectedEmail('');
+    setSaving(false);
+    onAssigned();
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader><DialogTitle>Assign Journey to Participant</DialogTitle></DialogHeader>
+        <p className="text-xs text-gray-500 -mt-1">Assigns a copy of <strong>{plan?.title}</strong> to the selected user.</p>
+        <div className="space-y-3 pt-1">
+          <div>
+            <label className="text-xs font-medium text-gray-700 mb-1 block">Select Participant</label>
+            <select
+              value={selectedEmail}
+              onChange={e => setSelectedEmail(e.target.value)}
+              className="w-full h-9 text-sm border border-gray-200 rounded-lg px-3 bg-white focus:outline-none focus:ring-1 focus:ring-[#0202ff]/30"
+            >
+              <option value="">Select user...</option>
+              {users.map(u => <option key={u.id} value={u.email}>{u.full_name || u.email}</option>)}
+            </select>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <Button onClick={handleAssign} disabled={saving || !selectedEmail} className="bg-[#0202ff] hover:bg-[#0101dd] text-white flex-1">
+              {saving ? 'Assigning...' : 'Assign'}
+            </Button>
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function AdminJourneysTab({ user }) {
   const [plans, setPlans] = useState([]);
   const [users, setUsers] = useState([]);
@@ -27,6 +80,7 @@ export default function AdminJourneysTab({ user }) {
   const [showModal, setShowModal] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
   const [deletingPlan, setDeletingPlan] = useState(null);
+  const [assigningPlan, setAssigningPlan] = useState(null);
   const [selectedUserEmail, setSelectedUserEmail] = useState('all');
 
   const load = useCallback(async () => {
@@ -147,10 +201,13 @@ export default function AdminJourneysTab({ user }) {
                       </div>
                     </div>
                     <div className="flex flex-col gap-1.5 flex-shrink-0">
-                      <button onClick={() => { setEditingPlan(plan); setShowModal(true); }} className="text-gray-400 hover:text-[#0202ff] transition-colors">
+                      <button onClick={() => { setEditingPlan(plan); setShowModal(true); }} className="text-gray-400 hover:text-[#0202ff] transition-colors" title="Edit">
                         <Pencil className="w-4 h-4" />
                       </button>
-                      <button onClick={() => setDeletingPlan(plan)} className="text-gray-400 hover:text-red-500 transition-colors">
+                      <button onClick={() => setAssigningPlan(plan)} className="text-gray-400 hover:text-emerald-600 transition-colors" title="Assign to participant">
+                        <UserPlus className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => setDeletingPlan(plan)} className="text-gray-400 hover:text-red-500 transition-colors" title="Delete / Unenroll">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -175,6 +232,14 @@ export default function AdminJourneysTab({ user }) {
         onClose={() => setDeletingPlan(null)}
         plan={deletingPlan}
         onDeleted={() => { setDeletingPlan(null); load(); }}
+      />
+
+      <AssignJourneyDialog
+        open={!!assigningPlan}
+        onClose={() => setAssigningPlan(null)}
+        plan={assigningPlan}
+        users={users}
+        onAssigned={load}
       />
     </div>
   );

@@ -18,7 +18,7 @@ const STATUS_BADGE = {
 
 const PRIORITY_DOT = { urgent: "bg-red-500", high: "bg-amber-500", medium: "bg-blue-400", low: "bg-gray-300" };
 
-function AssignLearningDialog({ open, onClose, users, onAssigned }) {
+function AssignLearningDialog({ open, onClose, users, onAssigned, adminEmail }) {
   const [userEmail, setUserEmail] = useState('');
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState('medium');
@@ -30,7 +30,7 @@ function AssignLearningDialog({ open, onClose, users, onAssigned }) {
     await base44.entities.AssignedLearning.create({
       user_email: userEmail,
       learning_resource_id: 'manual',
-      assigned_by: 'admin',
+      assigned_by: adminEmail,
       title,
       priority,
       status: 'assigned',
@@ -211,7 +211,7 @@ export default function AdminLearningTab({ user }) {
         ))}
       </div>
 
-      <AssignLearningDialog open={showAssignDialog} onClose={() => setShowAssignDialog(false)} users={users} onAssigned={load} />
+      <AssignLearningDialog open={showAssignDialog} onClose={() => setShowAssignDialog(false)} users={users} onAssigned={load} adminEmail={user?.email} />
     </div>
   );
 }
