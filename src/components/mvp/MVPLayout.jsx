@@ -72,7 +72,7 @@ const NAV_CONFIG = {
 
 };
 
-const ROLE_LABELS = { manager: 'Manager', buyer: 'HR / L&D', analyst: 'Analyst', executive: 'Enterprise' };
+const ROLE_LABELS = { manager: 'Manager', buyer: 'Administrator', analyst: 'Analyst', executive: 'Enterprise' };
 const ROLE_COLORS = {
   manager: 'bg-blue-50 border-blue-100 text-blue-700',
   buyer: 'bg-purple-50 border-purple-100 text-purple-700',
