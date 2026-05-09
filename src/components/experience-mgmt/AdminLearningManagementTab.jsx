@@ -555,10 +555,14 @@ export default function AdminLearningManagementTab({ user }) {
                         {(r.competencies?.length > 0 || r.tags?.length > 0) && (
                           <div className="flex flex-wrap gap-1 mt-1.5">
                             {r.competencies?.slice(0, 3).map(c => (
-                              <span key={c} className="text-[10px] bg-purple-100 text-purple-700 rounded-full px-1.5 py-0.5 font-medium">{c}</span>
+                              <span key={c} className="inline-flex items-center gap-1 text-[10px] bg-purple-100 text-purple-700 rounded-full px-1.5 py-0.5 font-medium">
+                                <span className="opacity-60 font-normal">Competency</span>{c}
+                              </span>
                             ))}
                             {r.tags?.filter(t => !r.competencies?.includes(t)).slice(0, 2).map(t => (
-                              <span key={t} className="text-[10px] bg-blue-50 text-blue-500 rounded px-1.5 py-0.5">{t}</span>
+                              <span key={t} className="inline-flex items-center gap-1 text-[10px] bg-blue-50 text-blue-500 rounded px-1.5 py-0.5">
+                                <span className="opacity-60">Skill</span>{t}
+                              </span>
                             ))}
                             {((r.competencies?.length || 0) + (r.tags?.length || 0)) > 5 && (
                               <span className="text-[10px] text-gray-400">+{(r.competencies?.length || 0) + (r.tags?.length || 0) - 5} more</span>
@@ -627,10 +631,14 @@ export default function AdminLearningManagementTab({ user }) {
                         {(r.competencies?.length > 0 || r.tags?.length > 0) && (
                           <div className="flex flex-wrap gap-1">
                             {r.competencies?.slice(0, 2).map(c => (
-                              <span key={c} className="text-[10px] bg-purple-100 text-purple-700 rounded-full px-1.5 py-0.5 font-medium">{c}</span>
+                              <span key={c} className="inline-flex items-center gap-1 text-[10px] bg-purple-100 text-purple-700 rounded-full px-1.5 py-0.5 font-medium">
+                                <span className="opacity-60 font-normal">Competency</span>{c}
+                              </span>
                             ))}
                             {r.tags?.filter(t => !r.competencies?.includes(t)).slice(0, 1).map(t => (
-                              <span key={t} className="text-[10px] bg-blue-50 text-blue-500 rounded px-1.5 py-0.5">{t}</span>
+                              <span key={t} className="inline-flex items-center gap-1 text-[10px] bg-blue-50 text-blue-500 rounded px-1.5 py-0.5">
+                                <span className="opacity-60">Skill</span>{t}
+                              </span>
                             ))}
                             {((r.competencies?.length || 0) + (r.tags?.length || 0)) > 3 && (
                               <span className="text-[10px] text-gray-400">+{(r.competencies?.length || 0) + (r.tags?.length || 0) - 3} more</span>
