@@ -8,7 +8,7 @@ import { base44 } from "@/api/base44Client";
 import {
   Brain, Target, Home, BarChart2, Users, LogOut, Menu, X,
   ChevronRight, ChevronLeft, BarChart3, Map, Bell, User,
-  Settings, Shield, BookOpen } from
+  Settings, Shield, BookOpen, UserCog } from
 "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -61,7 +61,8 @@ const NAV_CONFIG = {
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: BarChart3 },
   { label: 'Development Manager', path: '/DevelopmentManager', icon: Users },
   { label: 'Performance Manager', path: '/PerformanceManager', icon: Target },
-  { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }],
+  { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 },
+  { label: 'User Management', path: '/UserManagement', icon: UserCog }],
 
   analyst: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: BarChart3 },
