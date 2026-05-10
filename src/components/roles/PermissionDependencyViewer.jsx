@@ -37,8 +37,8 @@ export default function PermissionDependencyViewer({ selectedPermissions = [], a
   const categories = ['users', 'analytics', 'content', 'programs', 'assessments', 'learning', 'goals', 'settings', 'billing', 'roles'];
 
   return (
-    <div className="space-y-4">
-      {/* Selection Summary */}
+    <div className="grid md:grid-cols-2 gap-4">
+      {/* Permission Coverage */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <div className="flex items-center gap-2 mb-3">
           <Shield className="w-4 h-4 text-[#0202ff]" />
@@ -66,48 +66,41 @@ export default function PermissionDependencyViewer({ selectedPermissions = [], a
         {selectedPermissions.length === 0 && (
           <p className="text-xs text-gray-400 text-center mt-4">Select permissions to see coverage</p>
         )}
-      </div>
-
-      {/* Dependency warnings */}
-      {dependencies.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="w-4 h-4 text-amber-600" />
-            <p className="text-sm font-semibold text-amber-800">Missing Dependencies</p>
-          </div>
-          <div className="space-y-3">
+        {dependencies.length > 0 && (
+          <div className="mt-4 pt-3 border-t border-gray-100">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+              <p className="text-xs font-semibold text-amber-700">Missing Dependencies</p>
+            </div>
             {dependencies.map((dep, i) => {
               const perm = allPermissions.find(p => p.permission_key === dep.permission);
               return (
-                <div key={i} className="text-xs">
-                  <p className="font-medium text-amber-800 mb-1">{perm?.name || dep.permission}</p>
-                  <p className="text-amber-600 mb-1">{dep.description}</p>
-                  <div className="flex flex-wrap gap-1">
+                <div key={i} className="text-xs mb-2">
+                  <p className="font-medium text-amber-700">{perm?.name || dep.permission}</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
                     {dep.missing.map(mk => {
                       const mp = allPermissions.find(p => p.permission_key === mk);
-                      return <span key={mk} className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full">{mp?.name || mk}</span>;
+                      return <span key={mk} className="px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded">{mp?.name || mk}</span>;
                     })}
                   </div>
                 </div>
               );
             })}
           </div>
-        </div>
-      )}
+        )}
+        {selectedPermissions.length > 0 && dependencies.length === 0 && (
+          <div className="mt-3 flex items-center gap-2 text-xs text-green-600">
+            <CheckCircle className="w-3.5 h-3.5" />
+            All dependencies satisfied
+          </div>
+        )}
+      </div>
 
-      {/* All good */}
-      {selectedPermissions.length > 0 && dependencies.length === 0 && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
-          <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-          <p className="text-xs text-green-700 font-medium">All permission dependencies are satisfied</p>
-        </div>
-      )}
-
-      {/* Role hierarchy info */}
+      {/* Role Hierarchy */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <div className="flex items-center gap-2 mb-3">
           <Info className="w-4 h-4 text-gray-400" />
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Role Hierarchy</p>
+          <p className="text-sm font-semibold text-gray-900">Role Hierarchy</p>
         </div>
         <div className="space-y-1.5 text-xs text-gray-500">
           {[
@@ -118,12 +111,15 @@ export default function PermissionDependencyViewer({ selectedPermissions = [], a
             { role: 'Team Leader (L2)', desc: 'Inherits User' },
             { role: 'User (L1)', desc: 'Base access' },
           ].map(({ role, desc }) => (
-            <div key={role} className="flex items-center justify-between py-1 border-b border-gray-50 last:border-0">
+            <div key={role} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
               <span className="font-medium text-gray-700">{role}</span>
               <span className="text-gray-400">{desc}</span>
             </div>
           ))}
         </div>
+        <p className="text-xs text-gray-400 mt-3 pt-3 border-t border-gray-50">
+          Higher roles automatically inherit all permissions from lower roles.
+        </p>
       </div>
     </div>
   );

@@ -606,18 +606,19 @@ function UserManagement() {
               <BulkRoleActions selectedRoles={selectedRoles} onSuccess={loadData} onClearSelection={() => setSelectedRoles([])} />
             )}
 
-            <div className="grid lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-3">
-                {filteredRoles.length > 0 && (
-                  <div className="flex items-center gap-2 mb-2">
-                    <Checkbox
-                      checked={selectedRoles.length > 0 && selectedRoles.length === filteredRoles.filter(r => !r.is_system_role).length}
-                      onCheckedChange={handleSelectAllRoles}
-                    />
-                    <span className="text-xs text-gray-500">Select all custom roles</span>
-                  </div>
-                )}
+            {/* Role list — full width */}
+            <div className="space-y-3">
+              {filteredRoles.length > 0 && (
+                <div className="flex items-center gap-2 mb-2">
+                  <Checkbox
+                    checked={selectedRoles.length > 0 && selectedRoles.length === filteredRoles.filter(r => !r.is_system_role).length}
+                    onCheckedChange={handleSelectAllRoles}
+                  />
+                  <span className="text-xs text-gray-500">Select all custom roles</span>
+                </div>
+              )}
 
+              <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
                 {filteredRoles.map(role => (
                   <div key={role.id} className={`bg-white rounded-xl border p-5 hover:shadow-sm transition-all ${selectedRoles.some(r => r.id === role.id) ? 'border-[#0202ff] ring-1 ring-[#0202ff]/20' : 'border-gray-200'}`}>
                     <div className="flex items-start justify-between">
@@ -648,20 +649,19 @@ function UserManagement() {
                     {role.is_system_role && <span className="ml-12 mt-2 inline-block text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded">System Role</span>}
                   </div>
                 ))}
-
-                {filteredRoles.length === 0 && (
-                  <div className="bg-white rounded-xl border border-gray-200 py-16 text-center">
-                    <Shield className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-                    <p className="text-gray-500 text-sm">No roles found</p>
-                    {!roleSearchQuery && <button onClick={handleCreateRole} className="mt-2 text-xs text-[#0202ff] hover:underline">Create your first role</button>}
-                  </div>
-                )}
               </div>
 
-              <div className="lg:col-span-1">
-                <PermissionDependencyViewer selectedPermissions={selectedPermissions} allPermissions={permissions} />
-              </div>
+              {filteredRoles.length === 0 && (
+                <div className="bg-white rounded-xl border border-gray-200 py-16 text-center">
+                  <Shield className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                  <p className="text-gray-500 text-sm">No roles found</p>
+                  {!roleSearchQuery && <button onClick={handleCreateRole} className="mt-2 text-xs text-[#0202ff] hover:underline">Create your first role</button>}
+                </div>
+              )}
             </div>
+
+            {/* Permission Coverage + Role Hierarchy — side by side below roles */}
+            <PermissionDependencyViewer selectedPermissions={selectedPermissions} allPermissions={permissions} />
           </div>
         )}
       </div>
