@@ -291,7 +291,7 @@ export default function OneOnOnesTab({ user }) {
   useEffect(() => {
     const loadUsers = async () => {
       try {
-        const res = await base44.functions.invoke("getClientUsers", { client_id: user.client_id });
+        const res = await base44.functions.invoke("listAllUsers", {});
         if (res.data?.users) setUsers(res.data.users.filter(u => u.email !== user.email));
       } catch (e) { console.error(e); }
     };
@@ -299,7 +299,6 @@ export default function OneOnOnesTab({ user }) {
   }, [user]);
 
   const teamMembers = users.filter(u =>
-    u.data?.manager_email === user.email ||
     u.manager_email === user.email ||
     (user.subordinate_emails || []).includes(u.email)
   );
