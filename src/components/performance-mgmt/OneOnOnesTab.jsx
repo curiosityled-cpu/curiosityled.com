@@ -288,8 +288,6 @@ export default function OneOnOnesTab({ user }) {
   const [activeTab, setActiveTab] = useState("sessions");
   const [users, setUsers] = useState([]);
 
-  const isManager = isManagerRole(user?.app_role || user?.role);
-
   useEffect(() => {
     const loadUsers = async () => {
       try {
@@ -300,9 +298,13 @@ export default function OneOnOnesTab({ user }) {
     loadUsers();
   }, [user]);
 
-  const teamMembers = isManager
-    ? users.filter(u => u.manager_email === user.email || (user.subordinate_emails || []).includes(u.email))
-    : [];
+  const teamMembers = users.filter(u =>
+    u.data?.manager_email === user.email ||
+    u.manager_email === user.email ||
+    (user.subordinate_emails || []).includes(u.email)
+  );
+
+  const isManager = isManagerRole(user?.app_role || user?.role) || teamMembers.length > 0;
 
   return (
     <div className="space-y-5">

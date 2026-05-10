@@ -47,9 +47,9 @@ export default function WeeklyCheckInForm({ user, isManager, teamMembers = [] })
     feedback_to_give: "", concerns: ""
   });
 
-  // When isManager is determined (after async users load), load the appropriate check-in
+  // When isManager status is known, load the appropriate check-in
   useEffect(() => {
-    if (!isManager) {
+    if (isManager === false) {
       loadCheckIn(user.email);
     }
   }, [isManager]);
