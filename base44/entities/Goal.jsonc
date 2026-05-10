@@ -108,6 +108,10 @@
       },
       "description": "Array of user emails this goal is assigned to (for managers assigning to direct reports)"
     },
+    "cascaded_from_goal_id": {
+      "type": "string",
+      "description": "ID of the parent goal this was cascaded from. Used to build parent-child goal trees and auto-rollup progress."
+    },
     "members": {
       "type": "array",
       "description": "Team members with role-based access",
