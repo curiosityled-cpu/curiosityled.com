@@ -37,7 +37,7 @@ function EnergyPicker({ value, onChange }) {
 export default function WeeklyCheckInForm({ user, isManager, teamMembers = [] }) {
   const weekOf = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
 
-  const [selectedEmployee, setSelectedEmployee] = useState(isManager ? "" : user.email);
+  const [selectedEmployee, setSelectedEmployee] = useState("");
   const [existing, setExisting] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -47,9 +47,12 @@ export default function WeeklyCheckInForm({ user, isManager, teamMembers = [] })
     feedback_to_give: "", concerns: ""
   });
 
+  // When isManager is determined (after async users load), load the appropriate check-in
   useEffect(() => {
-    if (!isManager) loadCheckIn(user.email);
-  }, []);
+    if (!isManager) {
+      loadCheckIn(user.email);
+    }
+  }, [isManager]);
 
   useEffect(() => {
     if (isManager && selectedEmployee) loadCheckIn(selectedEmployee);
