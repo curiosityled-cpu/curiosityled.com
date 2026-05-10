@@ -1874,6 +1874,7 @@ function UserManagement() {
         partners={partners}
         addonRoles={addonRoles}
         isPlatformAdmin={isPlatformAdmin}
+        allUsers={users}
       />
 
       <Dialog open={showAssignRoleModal} onOpenChange={setShowAssignRoleModal}>

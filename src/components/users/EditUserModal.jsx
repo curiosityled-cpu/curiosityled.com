@@ -6,8 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export default function EditUserModal({ open, onOpenChange, editingUser, setEditingUser, onSave, clients, partners, addonRoles, isPlatformAdmin }) {
+export default function EditUserModal({ open, onOpenChange, editingUser, setEditingUser, onSave, clients, partners, addonRoles, isPlatformAdmin, allUsers = [] }) {
   if (!editingUser) return null;
+
+  // Users eligible to be a manager: same client, different person
+  const potentialManagers = allUsers.filter(u => u.email !== editingUser.email && u.client_id === editingUser.client_id);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -92,8 +95,25 @@ export default function EditUserModal({ open, onOpenChange, editingUser, setEdit
             </div>
 
             <div>
-              <Label>Manager Email</Label>
-              <Input type="email" value={editingUser.manager_email || ''} onChange={(e) => setEditingUser({ ...editingUser, manager_email: e.target.value })} />
+              <Label>Manager</Label>
+              {potentialManagers.length > 0 ? (
+                <Select
+                  value={editingUser.manager_email || 'none'}
+                  onValueChange={(value) => setEditingUser({ ...editingUser, manager_email: value === 'none' ? '' : value })}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select manager..." /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Manager</SelectItem>
+                    {potentialManagers.map(u => (
+                      <SelectItem key={u.email} value={u.email}>
+                        {u.display_name || u.full_name || u.email} ({u.app_role})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input type="email" value={editingUser.manager_email || ''} onChange={(e) => setEditingUser({ ...editingUser, manager_email: e.target.value })} placeholder="manager@company.com" />
+              )}
             </div>
 
             <div>
