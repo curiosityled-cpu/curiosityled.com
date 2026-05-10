@@ -264,7 +264,7 @@ function MVPLayoutInner({ children }) {
                   <div className="px-3 py-2">
                     <p className="text-sm font-semibold">{user?.display_name || user?.data?.display_name || user?.full_name}</p>
                     <p className="text-xs text-gray-500">{user?.email}</p>
-                    <Badge variant="outline" className="text-xs mt-1">{getFriendlyRoleLabel(user?.app_role)}</Badge>
+                    <Badge variant="outline" className="text-xs mt-1">{user?.data?.current_role || user?.current_role || getFriendlyRoleLabel(user?.app_role)}</Badge>
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate('/Profile')} className="cursor-pointer">

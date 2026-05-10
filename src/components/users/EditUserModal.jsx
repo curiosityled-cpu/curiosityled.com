@@ -106,7 +106,7 @@ export default function EditUserModal({ open, onOpenChange, editingUser, setEdit
                     <SelectItem value="none">No Manager</SelectItem>
                     {potentialManagers.map(u => (
                       <SelectItem key={u.email} value={u.email}>
-                        {u.display_name || u.full_name || u.email} ({u.app_role})
+                        {u.display_name || u.full_name || u.email}{u.current_role ? ` — ${u.current_role}` : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>
