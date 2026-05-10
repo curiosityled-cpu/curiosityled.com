@@ -10,7 +10,7 @@ export default function MVPPageLayout({ title, subtitle, action, children }) {
 
   return (
     <div className="min-h-screen bg-gray-50 transition-all duration-200">
-      <div className={`w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 transition-all duration-200 ${collapsed ? 'max-w-6xl' : 'max-w-4xl'}`}>
+      <div className="w-full px-4 sm:px-6 py-6 sm:py-8 space-y-6 transition-all duration-200">
         {/* Page header */}
         {(title || action) && (
           <div className="flex items-start justify-between gap-4">
