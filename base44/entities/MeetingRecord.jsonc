@@ -1,0 +1,77 @@
+{
+  "name": "MeetingRecord",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Client ID"
+    },
+    "manager_email": {
+      "type": "string",
+      "description": "Manager email"
+    },
+    "employee_email": {
+      "type": "string",
+      "description": "Employee email"
+    },
+    "meeting_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the meeting"
+    },
+    "coaching_session_id": {
+      "type": "string",
+      "description": "Linked CoachingSession ID if applicable"
+    },
+    "discussion_points": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Key topics discussed"
+    },
+    "decisions": {
+      "type": "string",
+      "description": "Decisions made in this meeting"
+    },
+    "commitments": {
+      "type": "array",
+      "description": "Action items and commitments",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string",
+            "enum": [
+              "manager",
+              "employee"
+            ]
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "complete"
+            ],
+            "default": "open"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "manager_email",
+    "employee_email",
+    "meeting_date"
+  ]
+}

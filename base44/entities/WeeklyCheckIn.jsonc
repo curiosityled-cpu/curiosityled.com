@@ -1,0 +1,61 @@
+{
+  "name": "WeeklyCheckIn",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Client ID"
+    },
+    "employee_email": {
+      "type": "string",
+      "description": "Email of the employee submitting"
+    },
+    "manager_email": {
+      "type": "string",
+      "description": "Email of the manager"
+    },
+    "week_of": {
+      "type": "string",
+      "format": "date",
+      "description": "Start of the week this check-in covers"
+    },
+    "accomplishments": {
+      "type": "string",
+      "description": "What did you accomplish this week?"
+    },
+    "blockers": {
+      "type": "string",
+      "description": "What is blocking you?"
+    },
+    "help_needed": {
+      "type": "string",
+      "description": "What help do you need?"
+    },
+    "energy_level": {
+      "type": "number",
+      "description": "Energy/morale score 1-5"
+    },
+    "next_priority": {
+      "type": "string",
+      "description": "Top priority for next week"
+    },
+    "feedback_to_give": {
+      "type": "string",
+      "description": "Manager: feedback for employee"
+    },
+    "concerns": {
+      "type": "string",
+      "description": "Manager: any concerns to flag"
+    },
+    "manager_reviewed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether manager has reviewed this check-in"
+    }
+  },
+  "required": [
+    "employee_email",
+    "manager_email",
+    "week_of"
+  ]
+}

@@ -5,13 +5,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Search, Users, Calendar, CheckCircle2, Clock, Video, MessageSquare } from "lucide-react";
+import { Loader2, Plus, Search, Users, Calendar, CheckCircle2, Clock, Video, MessageSquare, ClipboardList, Zap, BarChart2 } from "lucide-react";
 import { format, isPast } from "date-fns";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+
+import WeeklyCheckInForm from "./oneonone/WeeklyCheckInForm";
+import MeetingRecordModal from "./oneonone/MeetingRecordModal";
+import ActionTracker from "./oneonone/ActionTracker";
+import OneOnOneInsights from "./oneonone/OneOnOneInsights";
 
 const STATUS_STYLES = {
   scheduled: "bg-blue-50 text-blue-700 border-blue-200",
@@ -20,26 +25,19 @@ const STATUS_STYLES = {
   no_show: "bg-red-50 text-red-700 border-red-200",
 };
 
+const MANAGER_ROLES = ["User Level 2", "Admin Level 1", "Admin Level 2", "Super Administrator", "Platform Admin"];
+function isManagerRole(role) { return MANAGER_ROLES.includes(role); }
+
 function ScheduleModal({ isOpen, onClose, onSubmit, users }) {
-  const [form, setForm] = useState({
-    participant_email: "",
-    session_date: "",
-    duration_minutes: 30,
-    agenda: "",
-    meeting_link: "",
-  });
+  const [form, setForm] = useState({ participant_email: "", session_date: "", duration_minutes: 30, agenda: "", meeting_link: "" });
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.participant_email || !form.session_date) return;
     setSubmitting(true);
-    try {
-      await onSubmit(form);
-      setForm({ participant_email: "", session_date: "", duration_minutes: 30, agenda: "", meeting_link: "" });
-    } finally {
-      setSubmitting(false);
-    }
+    try { await onSubmit(form); setForm({ participant_email: "", session_date: "", duration_minutes: 30, agenda: "", meeting_link: "" }); }
+    finally { setSubmitting(false); }
   };
 
   return (
@@ -51,11 +49,7 @@ function ScheduleModal({ isOpen, onClose, onSubmit, users }) {
             <Label>Participant *</Label>
             <Select value={form.participant_email} onValueChange={v => setForm(p => ({ ...p, participant_email: v }))}>
               <SelectTrigger><SelectValue placeholder="Select participant..." /></SelectTrigger>
-              <SelectContent>
-                {users.map(u => (
-                  <SelectItem key={u.email} value={u.email}>{u.full_name || u.email}</SelectItem>
-                ))}
-              </SelectContent>
+              <SelectContent>{users.map(u => <SelectItem key={u.email} value={u.email}>{u.full_name || u.email}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
@@ -66,9 +60,7 @@ function ScheduleModal({ isOpen, onClose, onSubmit, users }) {
             <Label>Duration (minutes)</Label>
             <Select value={String(form.duration_minutes)} onValueChange={v => setForm(p => ({ ...p, duration_minutes: Number(v) }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {[15, 30, 45, 60, 90].map(d => <SelectItem key={d} value={String(d)}>{d} min</SelectItem>)}
-              </SelectContent>
+              <SelectContent>{[15, 30, 45, 60, 90].map(d => <SelectItem key={d} value={String(d)}>{d} min</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
@@ -91,30 +83,24 @@ function ScheduleModal({ isOpen, onClose, onSubmit, users }) {
   );
 }
 
-export default function OneOnOnesTab({ user }) {
+function SessionsView({ user, users, isManager }) {
   const [sessions, setSessions] = useState([]);
-  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [showSchedule, setShowSchedule] = useState(false);
+  const [meetingSession, setMeetingSession] = useState(null);
 
-  useEffect(() => { loadData(); }, [user]);
+  useEffect(() => { loadSessions(); }, [user]);
 
-  const loadData = async () => {
+  const loadSessions = async () => {
     setLoading(true);
     try {
-      const [sessionsData, usersRes] = await Promise.all([
-        base44.entities.CoachingSession.filter({ client_id: user.client_id }, "-session_date"),
-        base44.functions.invoke("getClientUsers", { client_id: user.client_id }),
-      ]);
-      setSessions(sessionsData);
-      if (usersRes.data?.users) setUsers(usersRes.data.users);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
+      const filter = isManager ? { client_id: user.client_id } : { coachee_email: user.email };
+      const data = await base44.entities.CoachingSession.filter(filter, "-session_date");
+      setSessions(data);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
   };
 
   const handleSchedule = async (form) => {
@@ -133,9 +119,7 @@ export default function OneOnOnesTab({ user }) {
       setSessions(prev => [newSession, ...prev]);
       setShowSchedule(false);
       toast.success("1-on-1 scheduled");
-    } catch {
-      toast.error("Failed to schedule session");
-    }
+    } catch { toast.error("Failed to schedule session"); }
   };
 
   const markComplete = async (session) => {
@@ -143,9 +127,7 @@ export default function OneOnOnesTab({ user }) {
       await base44.entities.CoachingSession.update(session.id, { status: "completed" });
       setSessions(prev => prev.map(s => s.id === session.id ? { ...s, status: "completed" } : s));
       toast.success("Session marked as completed");
-    } catch {
-      toast.error("Failed to update session");
-    }
+    } catch { toast.error("Failed to update session"); }
   };
 
   const filtered = sessions.filter(s => {
@@ -155,14 +137,12 @@ export default function OneOnOnesTab({ user }) {
     return matchSearch && matchStatus;
   });
 
-  // Stats
   const upcoming = sessions.filter(s => s.status === "scheduled" && !isPast(new Date(s.session_date))).length;
   const completedCount = sessions.filter(s => s.status === "completed").length;
   const completionRate = sessions.length > 0 ? Math.round((completedCount / sessions.length) * 100) : 0;
 
   return (
     <div className="space-y-5">
-      {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
           { label: "Upcoming", value: upcoming, icon: Calendar, color: "#0202ff" },
@@ -183,11 +163,12 @@ export default function OneOnOnesTab({ user }) {
         ))}
       </div>
 
-      {/* Controls */}
       <div className="flex flex-col md:flex-row gap-3">
-        <Button onClick={() => setShowSchedule(true)} className="bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5">
-          <Plus className="w-4 h-4" /> Schedule 1-on-1
-        </Button>
+        {isManager && (
+          <Button onClick={() => setShowSchedule(true)} className="bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5">
+            <Plus className="w-4 h-4" /> Schedule 1-on-1
+          </Button>
+        )}
         <div className="relative flex-1 max-w-sm">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <Input placeholder="Search sessions..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
@@ -204,16 +185,17 @@ export default function OneOnOnesTab({ user }) {
         </Select>
       </div>
 
-      {/* Sessions list */}
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-[#0202ff]" /></div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
           <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500">No 1-on-1 sessions found</p>
-          <Button onClick={() => setShowSchedule(true)} className="mt-4 bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5">
-            <Plus className="w-4 h-4" /> Schedule First 1-on-1
-          </Button>
+          {isManager && (
+            <Button onClick={() => setShowSchedule(true)} className="mt-4 bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5">
+              <Plus className="w-4 h-4" /> Schedule First 1-on-1
+            </Button>
+          )}
         </div>
       ) : (
         <div className="space-y-2">
@@ -245,14 +227,12 @@ export default function OneOnOnesTab({ user }) {
                           )}
                           {session.duration_minutes && (
                             <span className="flex items-center gap-1 text-xs text-gray-400">
-                              <Clock className="w-3 h-3" />
-                              {session.duration_minutes} min
+                              <Clock className="w-3 h-3" />{session.duration_minutes} min
                             </span>
                           )}
                           {session.agenda && (
                             <span className="flex items-center gap-1 text-xs text-gray-400 truncate max-w-xs">
-                              <MessageSquare className="w-3 h-3 flex-shrink-0" />
-                              {session.agenda}
+                              <MessageSquare className="w-3 h-3 flex-shrink-0" />{session.agenda}
                             </span>
                           )}
                         </div>
@@ -263,7 +243,12 @@ export default function OneOnOnesTab({ user }) {
                             <Video className="w-3 h-3" /> Join
                           </Button>
                         )}
-                        {session.status === "scheduled" && isPastSession && (
+                        {session.status === "completed" && isManager && (
+                          <Button size="sm" variant="outline" className="h-8 gap-1 text-xs" onClick={() => setMeetingSession(session)}>
+                            <ClipboardList className="w-3 h-3" /> Record
+                          </Button>
+                        )}
+                        {session.status === "scheduled" && isPastSession && isManager && (
                           <Button size="sm" className="h-8 gap-1 text-xs bg-green-600 hover:bg-green-700 text-white" onClick={() => markComplete(session)}>
                             <CheckCircle2 className="w-3 h-3" /> Complete
                           </Button>
@@ -279,6 +264,87 @@ export default function OneOnOnesTab({ user }) {
       )}
 
       <ScheduleModal isOpen={showSchedule} onClose={() => setShowSchedule(false)} onSubmit={handleSchedule} users={users} />
+      {meetingSession && (
+        <MeetingRecordModal
+          isOpen={!!meetingSession}
+          onClose={() => setMeetingSession(null)}
+          session={meetingSession}
+          user={user}
+          onSaved={() => setMeetingSession(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+const SUB_TABS = [
+  { id: "sessions", label: "Sessions", icon: Calendar },
+  { id: "checkin", label: "Check-In", icon: Zap },
+  { id: "actions", label: "Actions", icon: ClipboardList },
+  { id: "insights", label: "Insights", icon: BarChart2 },
+];
+
+export default function OneOnOnesTab({ user }) {
+  const [activeTab, setActiveTab] = useState("sessions");
+  const [users, setUsers] = useState([]);
+
+  const isManager = isManagerRole(user?.app_role || user?.role);
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const res = await base44.functions.invoke("getClientUsers", { client_id: user.client_id });
+        if (res.data?.users) setUsers(res.data.users.filter(u => u.email !== user.email));
+      } catch (e) { console.error(e); }
+    };
+    loadUsers();
+  }, [user]);
+
+  const teamMembers = isManager
+    ? users.filter(u => u.manager_email === user.email || (user.subordinate_emails || []).includes(u.email))
+    : [];
+
+  return (
+    <div className="space-y-5">
+      {/* Sub-tab navigation */}
+      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
+        {SUB_TABS.map(tab => {
+          const Icon = tab.icon;
+          const active = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+              style={{
+                backgroundColor: active ? "white" : "transparent",
+                color: active ? "#0202ff" : "#6b7280",
+                boxShadow: active ? "0 1px 3px rgba(0,0,0,0.1)" : "none"
+              }}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Tab content */}
+      {activeTab === "sessions" && (
+        <SessionsView user={user} users={users} isManager={isManager} />
+      )}
+      {activeTab === "checkin" && (
+        <WeeklyCheckInForm user={user} isManager={isManager} teamMembers={teamMembers} />
+      )}
+      {activeTab === "actions" && isManager && (
+        <ActionTracker user={user} teamMembers={teamMembers} />
+      )}
+      {activeTab === "actions" && !isManager && (
+        <div className="text-center py-12 text-gray-400 text-sm">Action tracking is available to managers.</div>
+      )}
+      {activeTab === "insights" && (
+        <OneOnOneInsights user={user} teamMembers={teamMembers} isEmployee={!isManager} />
+      )}
     </div>
   );
 }
