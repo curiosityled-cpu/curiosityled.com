@@ -2,19 +2,17 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/components/useAuth";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
-import { BarChart2, Target, Users, ClipboardList } from "lucide-react";
+import { BarChart2, Target, Users } from "lucide-react";
 import { motion } from "framer-motion";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import PerformanceOverviewTab from "@/components/performance-mgmt/PerformanceOverviewTab";
 import GoalsAndOKRsTab from "@/components/performance-mgmt/GoalsAndOKRsTab";
 import OneOnOnesTab from "@/components/performance-mgmt/OneOnOnesTab";
-import ReviewCyclesTab from "@/components/performance-mgmt/ReviewCyclesTab";
 
 const TABS = [
   { id: "overview", label: "Overview & Analytics", icon: BarChart2 },
-  { id: "goals", label: "Goals & OKRs", icon: Target }, // unified tab
+  { id: "goals", label: "Goals & OKRs", icon: Target },
   { id: "1on1s", label: "1-on-1s & Check-ins", icon: Users },
-  { id: "reviews", label: "Performance Reviews", icon: ClipboardList },
 ];
 
 export default function PerformanceManager() {
@@ -85,7 +83,7 @@ export default function PerformanceManager() {
         {section === "overview" && <PerformanceOverviewTab user={fullUser} />}
         {section === "goals" && <GoalsAndOKRsTab user={fullUser} />}
         {section === "1on1s" && <OneOnOnesTab user={fullUser} />}
-        {section === "reviews" && <ReviewCyclesTab user={fullUser} />}
+
       </motion.div>
     </MVPPageLayout>
   );
