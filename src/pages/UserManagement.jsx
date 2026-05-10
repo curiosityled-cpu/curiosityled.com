@@ -142,6 +142,17 @@ function UserManagement() {
       ]);
       setPermissions(perms || []);
       setRoles(customRoles || []);
+
+      // Auto-seed roles if none exist yet
+      if ((customRoles || []).length === 0 && (isPlatformAdmin || isSuperAdmin)) {
+        try {
+          await base44.functions.invoke('seedCustomRoleTemplates');
+          const freshRoles = await base44.entities.CustomRole.list('-created_date');
+          setRoles(freshRoles || []);
+        } catch (seedErr) {
+          console.warn('Could not auto-seed roles:', seedErr.message);
+        }
+      }
     } catch (error) {
       toast.error('Failed to load data');
     } finally {
