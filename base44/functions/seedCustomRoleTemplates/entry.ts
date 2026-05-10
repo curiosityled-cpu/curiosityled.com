@@ -5,7 +5,8 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.app_role !== 'Platform Admin' && user.app_role !== 'Super Administrator') {
+    const userRole = user.app_role || user.role;
+    if (userRole !== 'Platform Admin' && userRole !== 'Super Administrator' && userRole !== 'admin') {
       return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 

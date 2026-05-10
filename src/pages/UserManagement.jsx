@@ -144,7 +144,7 @@ function UserManagement() {
       setRoles(customRoles || []);
 
       // Auto-seed roles if none exist yet
-      if ((customRoles || []).length === 0 && (isPlatformAdmin || isSuperAdmin)) {
+      if ((customRoles || []).length === 0) {
         try {
           await base44.functions.invoke('seedCustomRoleTemplates');
           const freshRoles = await base44.entities.CustomRole.list('-created_date');
