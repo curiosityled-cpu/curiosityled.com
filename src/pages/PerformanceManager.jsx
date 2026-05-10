@@ -12,7 +12,7 @@ import OneOnOnesTab from "@/components/performance-mgmt/OneOnOnesTab";
 const TABS = [
   { id: "overview", label: "Overview & Analytics", icon: BarChart2 },
   { id: "goals", label: "Goals & OKRs", icon: Target },
-  { id: "1on1s", label: "1-on-1s & Check-ins", icon: Users },
+  { id: "1on1s", label: "1-on-1s", icon: Users },
 ];
 
 export default function PerformanceManager() {
