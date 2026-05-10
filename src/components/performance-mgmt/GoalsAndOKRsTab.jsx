@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Loader2, Plus, Search, GitBranch, Users, Target, Calendar,
-  MoreHorizontal, Trash2, Edit3, TrendingUp, ChevronDown, ChevronRight
+  MoreHorizontal, Trash2, Edit3, TrendingUp, ChevronDown, ChevronRight, UserPlus
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -331,6 +331,7 @@ function OKRsView({ user }) {
   const [showCreate, setShowCreate] = useState(false);
   const [editingGoal, setEditingGoal] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [bulkAssigning, setBulkAssigning] = useState(false);
 
   useEffect(() => { loadOKRs(); }, [user, selectedQuarter, selectedYear]);
 
@@ -368,6 +369,18 @@ function OKRsView({ user }) {
     toast.success("Objective deleted");
   };
 
+  const handleBulkAssign = async () => {
+    setBulkAssigning(true);
+    try {
+      await base44.functions.invoke("bulkAssignGoals", { client_id: user.client_id, goal_type: "okr_objective" });
+      toast.success("OKR objectives bulk assigned to team members");
+    } catch {
+      toast.error("Failed to bulk assign OKRs");
+    } finally {
+      setBulkAssigning(false);
+    }
+  };
+
   const avgProgress = objectives.length > 0
     ? Math.round(objectives.reduce((s, g) => s + (g.progress || 0), 0) / objectives.length)
     : 0;
@@ -393,9 +406,15 @@ function OKRsView({ user }) {
             ))}
           </div>
         </div>
-        <Button onClick={() => setShowCreate(true)} className="bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5">
-          <Plus className="w-4 h-4" /> New Objective
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleBulkAssign} disabled={bulkAssigning} className="gap-1.5">
+            {bulkAssigning ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
+            Bulk Assign
+          </Button>
+          <Button onClick={() => setShowCreate(true)} className="bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5">
+            <Plus className="w-4 h-4" /> New Objective
+          </Button>
+        </div>
       </div>
 
       {objectives.length > 0 && (
@@ -430,7 +449,7 @@ function OKRsView({ user }) {
         </div>
       )}
 
-      <CreateGoalModal isOpen={showCreate} onClose={() => setShowCreate(false)} onSubmit={handleCreate} />
+      <CreateGoalModal isOpen={showCreate} onClose={() => setShowCreate(false)} onSubmit={handleCreate} defaultGoalType="okr_objective" />
       {editingGoal && (
         <EditGoalModal isOpen={!!editingGoal} onClose={() => setEditingGoal(null)} onSubmit={handleUpdate} goal={editingGoal} />
       )}

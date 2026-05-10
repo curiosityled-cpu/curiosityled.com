@@ -30,12 +30,12 @@ const colorOptions = [
   { name: 'Teal', value: '#00D9FF' }
 ];
 
-export default function CreateGoalModal({ isOpen, onClose, onSubmit }) {
+export default function CreateGoalModal({ isOpen, onClose, onSubmit, defaultGoalType = 'standard' }) {
   const { isManagerOfManagers } = useAuth();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    goal_type: 'standard',
+    goal_type: defaultGoalType,
     timeframe_start: '',
     timeframe_end: '',
     color: '#0202ff',
@@ -59,7 +59,7 @@ export default function CreateGoalModal({ isOpen, onClose, onSubmit }) {
       setFormData({
         title: '',
         description: '',
-        goal_type: 'standard',
+        goal_type: defaultGoalType,
         timeframe_start: '',
         timeframe_end: '',
         color: '#0202ff',
