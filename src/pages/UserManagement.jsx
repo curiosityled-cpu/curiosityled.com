@@ -245,7 +245,7 @@ function UserManagement() {
 
   const statistics = useMemo(() => {
     const active = users.filter(u => (u.account_status || 'active') === 'active').length;
-    const pending = users.filter(u => u.account_status === 'pending_activation' || !u.invitation_accepted_at).length;
+    const pending = users.filter(u => u.account_status === 'pending_activation').length;
     const suspended = users.filter(u => u.account_status === 'suspended').length;
     const locked = users.filter(u => u.account_status === 'locked').length;
     return { total: users.length, active, pending, suspended, locked };
