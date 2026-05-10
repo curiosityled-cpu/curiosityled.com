@@ -12,7 +12,7 @@ import ReviewCyclesTab from "@/components/performance-mgmt/ReviewCyclesTab";
 
 const TABS = [
   { id: "overview", label: "Overview & Analytics", icon: BarChart2 },
-  { id: "goals", label: "Goals & OKRs", icon: Target },
+  { id: "goals", label: "Goals & OKRs", icon: Target }, // unified tab
   { id: "1on1s", label: "1-on-1s & Check-ins", icon: Users },
   { id: "reviews", label: "Performance Reviews", icon: ClipboardList },
 ];
