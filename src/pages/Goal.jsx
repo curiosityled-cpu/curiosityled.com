@@ -754,7 +754,7 @@ export default function GoalPage() {
   return (
     <div className="bg-[#F5F6F8] min-h-screen">
       <div className="max-w-full">
-        <div className="sticky top-16 z-10 bg-[#F5F6F8]">
+        <div className="sticky top-0 z-10 bg-[#F5F6F8]">
           <GoalHeader 
             goal={goal}
             milestones={milestones}
