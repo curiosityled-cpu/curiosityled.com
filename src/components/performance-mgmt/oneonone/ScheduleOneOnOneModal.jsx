@@ -8,8 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Sparkles, Calendar, Clock, Link2, Repeat, ChevronRight, ChevronLeft, ExternalLink } from "lucide-react";
-import { toast } from "sonner";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 const CADENCE_OPTIONS = [
   { value: "none", label: "One-time" },
@@ -196,126 +196,60 @@ function LogisticsPage({ form, setForm, users, onNext, onClose }) {
   );
 }
 
-// Page 2: Check-In (optional prework)
-const ENERGY_LABELS = { 1: "Exhausted", 2: "Low", 3: "Okay", 4: "Good", 5: "Energised" };
-const ENERGY_COLORS = { 1: "#ef4444", 2: "#f97316", 3: "#eab308", 4: "#22c55e", 5: "#0202ff" };
-
-function CheckInPage({ checkIn, setCheckIn, onBack, onSubmit, submitting, participantName }) {
+// Page 2: Check-In prework toggle (manager side)
+function CheckInPage({ includeCheckIn, setIncludeCheckIn, onBack, onSubmit, submitting, participantName }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="flex items-center gap-2 mb-1">
         <div className="w-6 h-6 rounded-full bg-gray-200 text-gray-400 text-xs flex items-center justify-center font-bold">1</div>
         <span className="text-sm text-gray-400">Logistics</span>
         <div className="flex-1 h-px bg-gray-200" />
         <div className="w-6 h-6 rounded-full bg-[#0202ff] text-white text-xs flex items-center justify-center font-bold">2</div>
-        <span className="text-sm font-semibold text-gray-700">Check-In (Optional Prework)</span>
+        <span className="text-sm font-semibold text-gray-700">Check-In Prework</span>
       </div>
 
-      <p className="text-xs text-gray-500 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
-        This check-in will be attached to the 1-on-1 as prework. <strong>{participantName}</strong> can also submit their own check-in independently.
-      </p>
-
-      {/* What's on your mind / accomplishments */}
-      <div className="space-y-1.5">
-        <Label className="text-sm font-medium text-gray-700">What's on your mind this week? What did you accomplish?</Label>
-        <Textarea
-          rows={3}
-          placeholder="Key wins, progress, what went well..."
-          value={checkIn.accomplishments}
-          onChange={e => setCheckIn(p => ({ ...p, accomplishments: e.target.value }))}
-          className="text-sm resize-none"
-        />
-      </div>
-
-      {/* Top priority */}
-      <div className="space-y-1.5">
-        <Label className="text-sm font-medium text-gray-700">Top priority for next week</Label>
-        <Textarea
-          rows={2}
-          placeholder="Most important focus area..."
-          value={checkIn.next_priority}
-          onChange={e => setCheckIn(p => ({ ...p, next_priority: e.target.value }))}
-          className="text-sm resize-none"
-        />
-      </div>
-
-      {/* Energy */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium text-gray-700">Energy / Morale (1–5)</Label>
-          {checkIn.energy_level && (
-            <span className="text-xs font-medium" style={{ color: ENERGY_COLORS[checkIn.energy_level] }}>
-              {ENERGY_LABELS[checkIn.energy_level]}
-            </span>
-          )}
+      <div className="rounded-xl border border-gray-200 p-5 space-y-4">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="font-medium text-gray-900 text-sm">Add Check-In as Prework</p>
+            <p className="text-xs text-gray-500 mt-1">
+              {participantName} will receive a notification to complete a check-in before the 1-on-1. Their submission will be visible to you in the Check-In tab.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIncludeCheckIn(!includeCheckIn)}
+            className="flex-shrink-0 w-11 h-6 rounded-full transition-colors relative"
+            style={{ backgroundColor: includeCheckIn ? "#0202ff" : "#d1d5db" }}
+          >
+            <span
+              className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+              style={{ transform: includeCheckIn ? "translateX(20px)" : "translateX(0)" }}
+            />
+          </button>
         </div>
-        <div className="flex gap-2">
-          {[1, 2, 3, 4, 5].map(n => (
-            <button
-              key={n}
-              type="button"
-              onClick={() => setCheckIn(p => ({ ...p, energy_level: n }))}
-              className="flex-1 py-2 rounded-lg border-2 text-sm font-semibold transition-all"
-              style={{
-                borderColor: checkIn.energy_level === n ? ENERGY_COLORS[n] : "#e5e7eb",
-                backgroundColor: checkIn.energy_level === n ? `${ENERGY_COLORS[n]}15` : "white",
-                color: checkIn.energy_level === n ? ENERGY_COLORS[n] : "#6b7280",
-              }}
-            >
-              {n}
-            </button>
-          ))}
-        </div>
-      </div>
 
-      {/* Help needed */}
-      <div className="space-y-1.5">
-        <Label className="text-sm font-medium text-gray-700">What help or resources do you need?</Label>
-        <Textarea
-          rows={2}
-          placeholder="Unblocking, decisions, resources..."
-          value={checkIn.help_needed}
-          onChange={e => setCheckIn(p => ({ ...p, help_needed: e.target.value }))}
-          className="text-sm resize-none"
-        />
+        {includeCheckIn && (
+          <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 space-y-1.5">
+            <p className="text-xs font-semibold text-blue-700">What happens next:</p>
+            <ul className="text-xs text-blue-700 space-y-1">
+              <li>• <strong>{participantName}</strong> will be notified to submit their weekly check-in</li>
+              <li>• The check-in will be linked to this 1-on-1 session</li>
+              <li>• You can review it in the Check-In tab before the meeting</li>
+              <li>• You can also add private notes after reviewing their submission</li>
+            </ul>
+          </div>
+        )}
       </div>
-
-      {/* Feedback */}
-      <div className="space-y-1.5">
-        <Label className="text-sm font-medium text-gray-700">Any feedback, concerns, or recognition to share?</Label>
-        <Textarea
-          rows={2}
-          placeholder="About your work, the team, or our collaboration..."
-          value={checkIn.feedback_to_give}
-          onChange={e => setCheckIn(p => ({ ...p, feedback_to_give: e.target.value }))}
-          className="text-sm resize-none"
-        />
-      </div>
-
-      {/* Reviewed together checkbox */}
-      <label className="flex items-center gap-2 cursor-pointer select-none">
-        <input
-          type="checkbox"
-          checked={checkIn.reviewed_together}
-          onChange={e => setCheckIn(p => ({ ...p, reviewed_together: e.target.checked }))}
-          className="w-4 h-4 accent-[#0202ff]"
-        />
-        <span className="text-sm text-gray-600">We reviewed this check-in together ☐</span>
-      </label>
 
       <div className="flex justify-between gap-2 pt-2 border-t border-gray-100">
         <Button variant="outline" onClick={onBack} className="gap-1">
           <ChevronLeft className="w-4 h-4" /> Back
         </Button>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => onSubmit(false)} disabled={submitting}>
-            Skip Check-In & Schedule
-          </Button>
-          <Button onClick={() => onSubmit(true)} disabled={submitting} className="bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1">
-            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-            Submit & Schedule
-          </Button>
-        </div>
+        <Button onClick={onSubmit} disabled={submitting} className="bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1">
+          {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+          Schedule 1-on-1
+        </Button>
       </div>
     </div>
   );
@@ -331,32 +265,22 @@ const EMPTY_LOGISTICS = {
   meeting_link: "",
 };
 
-const EMPTY_CHECKIN = {
-  accomplishments: "",
-  next_priority: "",
-  energy_level: 3,
-  help_needed: "",
-  feedback_to_give: "",
-  reviewed_together: false,
-};
-
 export default function ScheduleOneOnOneModal({ isOpen, onClose, onCreated, users, user }) {
   const [page, setPage] = useState(1);
   const [form, setForm] = useState({ ...EMPTY_LOGISTICS });
-  const [checkIn, setCheckIn] = useState({ ...EMPTY_CHECKIN });
+  const [includeCheckIn, setIncludeCheckIn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const handleClose = () => {
     setPage(1);
     setForm({ ...EMPTY_LOGISTICS });
-    setCheckIn({ ...EMPTY_CHECKIN });
+    setIncludeCheckIn(false);
     onClose();
   };
 
-  const handleSubmit = async (includeCheckIn) => {
+  const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      // Build session_date from date + start_time
       const sessionDate = new Date(form.date + "T" + form.start_time).toISOString();
       const durationMs = form.end_time && form.start_time
         ? (new Date("1970-01-01T" + form.end_time) - new Date("1970-01-01T" + form.start_time)) / 60000
@@ -375,21 +299,26 @@ export default function ScheduleOneOnOneModal({ isOpen, onClose, onCreated, user
         status: "scheduled",
         session_type: "1on1_coaching",
         location_type: "virtual",
+        check_in_requested: includeCheckIn,
       });
 
+      // If check-in prework requested, send a notification to the direct report
       if (includeCheckIn) {
-        const weekOf = form.date.substring(0, 10);
-        await base44.entities.WeeklyCheckIn.create({
-          client_id: user.client_id,
-          employee_email: user.email,
-          manager_email: form.participant_email,
-          week_of: weekOf,
-          coaching_session_id: newSession.id,
-          ...checkIn,
-        });
+        try {
+          await base44.entities.Notification.create({
+            user_email: form.participant_email,
+            title: "Check-In Requested Before Your 1-on-1",
+            message: `${user.full_name || user.email} has requested a check-in before your upcoming 1-on-1 on ${format(new Date(form.date), "MMMM d")}. Please submit your check-in in the Performance tab.`,
+            type: "1on1_scheduled",
+            is_read: false,
+            scheduled_for: new Date().toISOString(),
+          });
+        } catch (e) {
+          console.warn("Could not send notification:", e);
+        }
       }
 
-      toast.success("1-on-1 scheduled" + (includeCheckIn ? " with check-in" : ""));
+      toast.success("1-on-1 scheduled" + (includeCheckIn ? " — check-in request sent" : ""));
       onCreated?.(newSession);
       handleClose();
     } catch (e) {
@@ -423,8 +352,8 @@ export default function ScheduleOneOnOneModal({ isOpen, onClose, onCreated, user
         )}
         {page === 2 && (
           <CheckInPage
-            checkIn={checkIn}
-            setCheckIn={setCheckIn}
+            includeCheckIn={includeCheckIn}
+            setIncludeCheckIn={setIncludeCheckIn}
             onBack={() => setPage(1)}
             onSubmit={handleSubmit}
             submitting={submitting}

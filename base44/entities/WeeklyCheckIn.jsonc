@@ -23,34 +23,46 @@
       "type": "string",
       "description": "What did you accomplish this week?"
     },
-    "blockers": {
+    "next_priority": {
       "type": "string",
-      "description": "What is blocking you?"
-    },
-    "help_needed": {
-      "type": "string",
-      "description": "What help do you need?"
+      "description": "Top priority for next week"
     },
     "energy_level": {
       "type": "number",
       "description": "Energy/morale score 1-5"
     },
-    "next_priority": {
+    "help_needed": {
       "type": "string",
-      "description": "Top priority for next week"
+      "description": "What help or resources are needed?"
     },
     "feedback_to_give": {
       "type": "string",
-      "description": "Manager: feedback for employee"
+      "description": "Feedback, concerns, or recognition"
     },
-    "concerns": {
+    "document_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Uploaded document URLs attached to this check-in"
+    },
+    "coaching_session_id": {
       "type": "string",
-      "description": "Manager: any concerns to flag"
+      "description": "Linked CoachingSession ID if submitted as 1-on-1 prework"
+    },
+    "manager_notes": {
+      "type": "string",
+      "description": "Manager's private notes / feedback (only visible to manager)"
     },
     "manager_reviewed": {
       "type": "boolean",
       "default": false,
       "description": "Whether manager has reviewed this check-in"
+    },
+    "reviewed_together": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether employee and manager reviewed together"
     }
   },
   "required": [
