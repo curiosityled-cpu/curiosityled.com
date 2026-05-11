@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, LayoutGrid } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { base44 } from "@/api/base44Client";
 
@@ -72,6 +72,20 @@ export default function KanbanView({ milestones = [], goal, onEditTask, onDelete
 
   return (
     <div className="space-y-4">
+      {/* Toolbar */}
+      <div className="bg-white rounded-xl border border-[#E1E5F3] p-4">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-gray-500">Drag and drop to manage your tasks</p>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Group by:</span>
+            <Button variant="outline" size="sm" className="h-8 gap-2">
+              <LayoutGrid className="w-3 h-3" />
+              Status
+            </Button>
+          </div>
+        </div>
+      </div>
+
       {/* Kanban Columns */}
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
