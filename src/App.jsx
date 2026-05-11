@@ -119,6 +119,8 @@ const AuthenticatedApp = () => {
       <Route path="/OrgBusinessGoals" element={mvpRole ? <MVPPage><OrgBusinessGoals /></MVPPage> : <LayoutWrapper currentPageName="OrgBusinessGoals"><OrgBusinessGoals /></LayoutWrapper>} />
       <Route path="/PerformanceManager" element={mvpRole ? <MVPPage><PerformanceManager /></MVPPage> : <LayoutWrapper currentPageName="PerformanceManager"><PerformanceManager /></LayoutWrapper>} />
       <Route path="/my-performance" element={<MVPPage><MyPerformance /></MVPPage>} />
+      {/* Redirect /Performance to My Performance goals tab */}
+      <Route path="/Performance" element={<Navigate to="/my-performance?tab=goals" replace />} />
 
       {/* All other legacy pages — MVP users still get MVPLayout shell */}
       {Object.entries(Pages).map(([path, Page]) => (

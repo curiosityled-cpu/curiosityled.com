@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
+import { useSearchParams } from "react-router-dom";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import { Target, Users, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -19,7 +20,8 @@ function getTabs(appRole) {
 
 export default function MyPerformance() {
   const { user, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState("goals");
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "goals");
   const [fullUser, setFullUser] = useState(null);
 
   useEffect(() => {

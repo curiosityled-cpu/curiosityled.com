@@ -122,7 +122,7 @@ export default function GoalHeader({
             <div className="flex items-center gap-3">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Link to={createPageUrl("Performance")}>
+                  <Link to="/my-performance?tab=goals">
                     <Button variant="ghost" size="icon" className="hover:bg-[#E1E5F3] rounded-lg h-9 w-9">
                       <ArrowLeft className="w-4 h-4" />
                     </Button>
