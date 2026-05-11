@@ -50,32 +50,40 @@ export default function KanbanView({ milestones = [], goal, onEditTask, onDelete
     
     if (sourceStatus === destStatus) {
       sourceMilestones.splice(destination.index, 0, movedMilestone);
-      setMilestonesByStatus(prev => ({ ...prev, [sourceStatus]: sourceMilestones }));
+      setMilestonesByStatus(prev => ({
+        ...prev,
+        [sourceStatus]: sourceMilestones
+      }));
     } else {
-      // Optimistic update
-      const updatedMilestone = { ...movedMilestone, data: { ...movedMilestone.data, status: destStatus } };
-      destMilestones.splice(destination.index, 0, updatedMilestone);
+      destMilestones.splice(destination.index, 0, movedMilestone);
       setMilestonesByStatus(prev => ({
         ...prev,
         [sourceStatus]: sourceMilestones,
         [destStatus]: destMilestones
       }));
-
-      // Persist to database
-      await base44.entities.Milestone.update(draggableId, {
-        data: { ...(movedMilestone.data || {}), status: destStatus }
-      });
-
-      if (onRefresh) onRefresh();
+      
+      const milestone = milestones.find(m => m.id === draggableId);
+      if (milestone && onRefresh) {
+        // Just refresh the parent - the drag state is already updated optimistically
+        onRefresh();
+      }
     }
   };
 
   return (
-    <div className="space-y-4">
-      {/* Toolbar */}
+    <div className="space-y-6">
+      {/* Header */}
       <div className="bg-white rounded-xl border border-[#E1E5F3] p-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-500">Drag and drop to manage your tasks</p>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+              <LayoutGrid className="w-5 h-5 text-purple-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-[#323338]">Kanban Board</h2>
+              <p className="text-sm text-gray-500">Drag and drop to manage your tasks</p>
+            </div>
+          </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">Group by:</span>
             <Button variant="outline" size="sm" className="h-8 gap-2">
@@ -85,6 +93,8 @@ export default function KanbanView({ milestones = [], goal, onEditTask, onDelete
           </div>
         </div>
       </div>
+
+
 
       {/* Kanban Columns */}
       <DragDropContext onDragEnd={handleDragEnd}>
@@ -101,16 +111,6 @@ export default function KanbanView({ milestones = [], goal, onEditTask, onDelete
                       : 'border-gray-200 bg-white'
                   }`}
                 >
-                  {/* Column Header */}
-                  <div className="p-3 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold text-[#323338]">{column.title}</h3>
-                      <Badge className={`${column.badgeColor} border-0 rounded-full px-2 py-0.5 text-xs font-semibold`}>
-                        {milestonesByStatus[column.id]?.length || 0}
-                      </Badge>
-                    </div>
-                  </div>
-
                   {/* Column Header */}
                   <div className="p-3 border-b border-gray-200">
                     <div className="flex items-center justify-between">
