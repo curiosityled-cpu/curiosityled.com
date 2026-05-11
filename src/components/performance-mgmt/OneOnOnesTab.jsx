@@ -9,14 +9,12 @@ import { Loader2, Plus, Search, Users, Calendar, CheckCircle2, Clock, Video, Mes
 import { format, isPast } from "date-fns";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 
-import WeeklyCheckInForm from "./oneonone/WeeklyCheckInForm";
 import MeetingRecordModal from "./oneonone/MeetingRecordModal";
 import ActionTracker from "./oneonone/ActionTracker";
 import OneOnOneInsights from "./oneonone/OneOnOneInsights";
+import ScheduleOneOnOneModal from "./oneonone/ScheduleOneOnOneModal";
+import CheckInTab from "./oneonone/CheckInTab";
 
 const STATUS_STYLES = {
   scheduled: "bg-blue-50 text-blue-700 border-blue-200",
@@ -28,60 +26,7 @@ const STATUS_STYLES = {
 const MANAGER_ROLES = ["User Level 2", "Admin Level 1", "Admin Level 2", "Super Administrator", "Platform Admin"];
 function isManagerRole(role) { return MANAGER_ROLES.includes(role); }
 
-function ScheduleModal({ isOpen, onClose, onSubmit, users }) {
-  const [form, setForm] = useState({ participant_email: "", session_date: "", duration_minutes: 30, agenda: "", meeting_link: "" });
-  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.participant_email || !form.session_date) return;
-    setSubmitting(true);
-    try { await onSubmit(form); setForm({ participant_email: "", session_date: "", duration_minutes: 30, agenda: "", meeting_link: "" }); }
-    finally { setSubmitting(false); }
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle>Schedule 1-on-1</DialogTitle></DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label>Participant *</Label>
-            <Select value={form.participant_email} onValueChange={v => setForm(p => ({ ...p, participant_email: v }))}>
-              <SelectTrigger><SelectValue placeholder="Select participant..." /></SelectTrigger>
-              <SelectContent>{users.map(u => <SelectItem key={u.email} value={u.email}>{u.full_name || u.email}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Date & Time *</Label>
-            <Input type="datetime-local" value={form.session_date} onChange={e => setForm(p => ({ ...p, session_date: e.target.value }))} required />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Duration (minutes)</Label>
-            <Select value={String(form.duration_minutes)} onValueChange={v => setForm(p => ({ ...p, duration_minutes: Number(v) }))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{[15, 30, 45, 60, 90].map(d => <SelectItem key={d} value={String(d)}>{d} min</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Agenda</Label>
-            <Textarea placeholder="Topics to discuss..." rows={3} value={form.agenda} onChange={e => setForm(p => ({ ...p, agenda: e.target.value }))} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Meeting Link (optional)</Label>
-            <Input placeholder="https://zoom.us/..." value={form.meeting_link} onChange={e => setForm(p => ({ ...p, meeting_link: e.target.value }))} />
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" disabled={submitting || !form.participant_email || !form.session_date} className="bg-[#0202ff] hover:bg-[#0101dd] text-white">
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Schedule"}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 function SessionsView({ user, users, isManager }) {
   const [sessions, setSessions] = useState([]);
@@ -97,29 +42,10 @@ function SessionsView({ user, users, isManager }) {
     setLoading(true);
     try {
       const filter = isManager ? { client_id: user.client_id } : { coachee_email: user.email };
-      const data = await base44.entities.CoachingSession.filter(filter, "-session_date");
+      const data = await base44.entities.CoachingSession.filter(filter, "-scheduled_date");
       setSessions(data);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
-  };
-
-  const handleSchedule = async (form) => {
-    try {
-      const newSession = await base44.entities.CoachingSession.create({
-        client_id: user.client_id,
-        coach_email: user.email,
-        coachee_email: form.participant_email,
-        session_date: new Date(form.session_date).toISOString(),
-        duration_minutes: form.duration_minutes,
-        agenda: form.agenda,
-        meeting_link: form.meeting_link,
-        status: "scheduled",
-        session_type: "1on1",
-      });
-      setSessions(prev => [newSession, ...prev]);
-      setShowSchedule(false);
-      toast.success("1-on-1 scheduled");
-    } catch { toast.error("Failed to schedule session"); }
   };
 
   const markComplete = async (session) => {
@@ -137,7 +63,7 @@ function SessionsView({ user, users, isManager }) {
     return matchSearch && matchStatus;
   });
 
-  const upcoming = sessions.filter(s => s.status === "scheduled" && !isPast(new Date(s.session_date))).length;
+  const upcoming = sessions.filter(s => s.status === "scheduled" && (s.scheduled_date || s.session_date) && !isPast(new Date(s.scheduled_date || s.session_date))).length;
   const completedCount = sessions.filter(s => s.status === "completed").length;
   const completionRate = sessions.length > 0 ? Math.round((completedCount / sessions.length) * 100) : 0;
 
@@ -202,7 +128,8 @@ function SessionsView({ user, users, isManager }) {
           {filtered.map((session, i) => {
             const participantEmail = session.coachee_email || session.participant_email || "—";
             const participant = users.find(u => u.email === participantEmail);
-            const isPastSession = session.session_date && isPast(new Date(session.session_date));
+            const sessionDateStr = session.scheduled_date || session.session_date;
+            const isPastSession = sessionDateStr && isPast(new Date(sessionDateStr));
             return (
               <motion.div key={session.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
                 <Card className="border border-gray-100 shadow-sm rounded-xl hover:shadow-md transition-all">
@@ -219,10 +146,10 @@ function SessionsView({ user, users, isManager }) {
                           </Badge>
                         </div>
                         <div className="flex items-center gap-3 mt-1 flex-wrap">
-                          {session.session_date && (
+                          {sessionDateStr && (
                             <span className="flex items-center gap-1 text-xs text-gray-500">
                               <Calendar className="w-3 h-3" />
-                              {format(new Date(session.session_date), "MMM d, yyyy · h:mm a")}
+                              {format(new Date(sessionDateStr), "MMM d, yyyy · h:mm a")}
                             </span>
                           )}
                           {session.duration_minutes && (
@@ -230,9 +157,9 @@ function SessionsView({ user, users, isManager }) {
                               <Clock className="w-3 h-3" />{session.duration_minutes} min
                             </span>
                           )}
-                          {session.agenda && (
+                          {(session.pre_session_notes || session.agenda) && (
                             <span className="flex items-center gap-1 text-xs text-gray-400 truncate max-w-xs">
-                              <MessageSquare className="w-3 h-3 flex-shrink-0" />{session.agenda}
+                              <MessageSquare className="w-3 h-3 flex-shrink-0" />{session.pre_session_notes || session.agenda}
                             </span>
                           )}
                         </div>
@@ -263,7 +190,7 @@ function SessionsView({ user, users, isManager }) {
         </div>
       )}
 
-      <ScheduleModal isOpen={showSchedule} onClose={() => setShowSchedule(false)} onSubmit={handleSchedule} users={users} />
+      <ScheduleOneOnOneModal isOpen={showSchedule} onClose={() => setShowSchedule(false)} onCreated={s => { setSessions(prev => [s, ...prev]); setShowSchedule(false); }} users={users} user={user} />
       {meetingSession && (
         <MeetingRecordModal
           isOpen={!!meetingSession}
@@ -335,7 +262,7 @@ export default function OneOnOnesTab({ user }) {
         <SessionsView user={user} users={users} isManager={isManager} />
       )}
       {activeTab === "checkin" && (
-        <WeeklyCheckInForm user={user} isManager={isManager} teamMembers={teamMembers} />
+        <CheckInTab user={user} isManager={isManager} teamMembers={teamMembers} />
       )}
       {activeTab === "actions" && isManager && (
         <ActionTracker user={user} teamMembers={teamMembers} />
