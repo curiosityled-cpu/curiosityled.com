@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, LayoutGrid } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { base44 } from "@/api/base44Client";
 
@@ -50,52 +50,28 @@ export default function KanbanView({ milestones = [], goal, onEditTask, onDelete
     
     if (sourceStatus === destStatus) {
       sourceMilestones.splice(destination.index, 0, movedMilestone);
-      setMilestonesByStatus(prev => ({
-        ...prev,
-        [sourceStatus]: sourceMilestones
-      }));
+      setMilestonesByStatus(prev => ({ ...prev, [sourceStatus]: sourceMilestones }));
     } else {
-      destMilestones.splice(destination.index, 0, movedMilestone);
+      // Optimistic update
+      const updatedMilestone = { ...movedMilestone, data: { ...movedMilestone.data, status: destStatus } };
+      destMilestones.splice(destination.index, 0, updatedMilestone);
       setMilestonesByStatus(prev => ({
         ...prev,
         [sourceStatus]: sourceMilestones,
         [destStatus]: destMilestones
       }));
-      
-      const milestone = milestones.find(m => m.id === draggableId);
-      if (milestone && onRefresh) {
-        // Just refresh the parent - the drag state is already updated optimistically
-        onRefresh();
-      }
+
+      // Persist to database
+      await base44.entities.Milestone.update(draggableId, {
+        data: { ...(movedMilestone.data || {}), status: destStatus }
+      });
+
+      if (onRefresh) onRefresh();
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white rounded-xl border border-[#E1E5F3] p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <LayoutGrid className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-[#323338]">Kanban Board</h2>
-              <p className="text-sm text-gray-500">Drag and drop to manage your tasks</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Group by:</span>
-            <Button variant="outline" size="sm" className="h-8 gap-2">
-              <LayoutGrid className="w-3 h-3" />
-              Status
-            </Button>
-          </div>
-        </div>
-      </div>
-
-
-
+    <div className="space-y-4">
       {/* Kanban Columns */}
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
