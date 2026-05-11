@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Loader2, Plus, Search, GitBranch, Users, Target, Calendar,
-  MoreHorizontal, Trash2, Edit3, TrendingUp, ChevronDown, ChevronRight, UserPlus
+  MoreHorizontal, Trash2, Edit3, TrendingUp, ChevronDown, ChevronRight, UserPlus,
+  Grid3X3, LayoutList
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -15,6 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import CreateGoalModal from "@/components/goals/CreateGoalModal";
 import EditGoalModal from "@/components/goals/EditGoalModal";
 import CascadeGoalDialog from "@/components/goals/CascadeGoalDialog";
+import GoalCard from "@/components/goals/GoalCard";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
@@ -51,13 +53,9 @@ function GoalsView({ user }) {
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [filterType, setFilterType] = useState("all");
+  const [viewMode, setViewMode] = useState("grid");
   const [showCreate, setShowCreate] = useState(false);
   const [editingGoal, setEditingGoal] = useState(null);
-  const [confirmDelete, setConfirmDelete] = useState(null);
-  const [cascadeGoal, setCascadeGoal] = useState(null);
-  const [expandedParents, setExpandedParents] = useState({});
 
   useEffect(() => { loadGoals(); }, [user]);
 
@@ -74,7 +72,7 @@ function GoalsView({ user }) {
   };
 
   const handleCreate = async (goalData) => {
-    const newGoal = await base44.entities.Goal.create({ ...goalData, client_id: user.client_id });
+    const newGoal = await base44.entities.Goal.create(goalData);
     setGoals(prev => [newGoal, ...prev]);
     setShowCreate(false);
     toast.success("Goal created");
@@ -87,59 +85,15 @@ function GoalsView({ user }) {
     toast.success("Goal updated");
   };
 
-  const handleDelete = async () => {
-    if (!confirmDelete) return;
-    await base44.entities.Goal.delete(confirmDelete.id);
-    setGoals(prev => prev.filter(g => g.id !== confirmDelete.id));
-    setConfirmDelete(null);
+  const handleDelete = async (goalId) => {
+    await base44.entities.Goal.delete(goalId);
+    setGoals(prev => prev.filter(g => g.id !== goalId));
     toast.success("Goal deleted");
   };
 
-  // Auto-rollup: recalculate parent progress from sub-goals' average
-  const rollupParentProgress = async (parentGoalId, allGoals) => {
-    const subGoals = allGoals.filter(g => g.cascaded_from_goal_id === parentGoalId);
-    if (subGoals.length === 0) return;
-    const avg = Math.round(subGoals.reduce((sum, g) => sum + (g.progress || 0), 0) / subGoals.length);
-    await base44.entities.Goal.update(parentGoalId, { progress: avg });
-    setGoals(prev => prev.map(g => g.id === parentGoalId ? { ...g, progress: avg } : g));
-  };
-
-  const handleUpdateProgress = async (goalId, newProgress) => {
-    await base44.entities.Goal.update(goalId, { progress: newProgress });
-    const updatedGoals = goals.map(g => g.id === goalId ? { ...g, progress: newProgress } : g);
-    setGoals(updatedGoals);
-    // Find parent and rollup
-    const goal = updatedGoals.find(g => g.id === goalId);
-    if (goal?.cascaded_from_goal_id) {
-      await rollupParentProgress(goal.cascaded_from_goal_id, updatedGoals);
-    }
-  };
-
-  const handleBulkAssign = async () => {
-    try {
-      await base44.functions.invoke("bulkAssignGoals", { client_id: user.client_id });
-      toast.success("Bulk assignment triggered");
-    } catch {
-      toast.error("Failed to bulk assign goals");
-    }
-  };
-
-  // Build parent/child structure
-  const parentGoals = goals.filter(g => !g.cascaded_from_goal_id);
-  const subGoalsMap = {};
-  goals.forEach(g => {
-    if (g.cascaded_from_goal_id) {
-      if (!subGoalsMap[g.cascaded_from_goal_id]) subGoalsMap[g.cascaded_from_goal_id] = [];
-      subGoalsMap[g.cascaded_from_goal_id].push(g);
-    }
-  });
-
   const filtered = goals.filter(g => {
-    if (g.cascaded_from_goal_id) return false; // sub-goals shown inline
-    const matchSearch = !search || g.title?.toLowerCase().includes(search.toLowerCase()) || g.description?.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = filterStatus === "all" || g.status === filterStatus;
-    const matchType = filterType === "all" || g.goal_type === filterType;
-    return matchSearch && matchStatus && matchType;
+    if (!search) return true;
+    return g.title?.toLowerCase().includes(search.toLowerCase()) || g.description?.toLowerCase().includes(search.toLowerCase());
   });
 
   return (
@@ -148,213 +102,52 @@ function GoalsView({ user }) {
         <Button onClick={() => setShowCreate(true)} className="bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5">
           <Plus className="w-4 h-4" /> Create Goal
         </Button>
-        <Button variant="outline" onClick={handleBulkAssign} className="gap-1.5">
-          <Users className="w-4 h-4" /> Bulk Assign
-        </Button>
-        <div className="relative flex-1 max-w-sm">
+        <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <Input placeholder="Search goals..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
         </div>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-36"><SelectValue placeholder="Status" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="archived">Archived</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={filterType} onValueChange={setFilterType}>
-          <SelectTrigger className="w-36"><SelectValue placeholder="Type" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="standard">Standard</SelectItem>
-            <SelectItem value="okr_objective">OKR</SelectItem>
-            <SelectItem value="coaching_goal">Coaching</SelectItem>
-            <SelectItem value="action_item">Action Item</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Button variant={viewMode === "grid" ? "default" : "outline"} size="icon" onClick={() => setViewMode("grid")}>
+            <Grid3X3 className="w-4 h-4" />
+          </Button>
+          <Button variant={viewMode === "list" ? "default" : "outline"} size="icon" onClick={() => setViewMode("list")}>
+            <LayoutList className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
-
-      <p className="text-sm text-gray-500">{filtered.length} goal{filtered.length !== 1 ? "s" : ""} found</p>
 
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-[#0202ff]" /></div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
           <Target className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">No goals match your filters</p>
+          <p className="text-gray-500 font-medium">{search ? "No goals found" : "No goals yet"}</p>
+          {!search && (
+            <Button onClick={() => setShowCreate(true)} className="mt-4 bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5">
+              <Plus className="w-4 h-4" /> Create Your First Goal
+            </Button>
+          )}
         </div>
       ) : (
-        <AnimatePresence>
-          <div className="space-y-3">
-            {filtered.map((goal, i) => {
-              const subGoals = subGoalsMap[goal.id] || [];
-              const isExpanded = expandedParents[goal.id] !== false; // default expanded
-              return (
-                <motion.div key={goal.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
-                  {/* Parent goal card */}
-                  <Card className="border border-gray-100 shadow-sm rounded-xl hover:shadow-md transition-all">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-4">
-                        <div className="w-1 self-stretch rounded-full flex-shrink-0" style={{ backgroundColor: goal.color || "#0202ff" }} />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                {subGoals.length > 0 && (
-                                  <button onClick={() => setExpandedParents(p => ({ ...p, [goal.id]: !isExpanded }))} className="flex-shrink-0">
-                                    {isExpanded ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
-                                  </button>
-                                )}
-                                <h3 className="font-semibold text-gray-900 truncate">{goal.title}</h3>
-                              </div>
-                              {goal.description && <p className="text-sm text-gray-500 mt-0.5 truncate">{goal.description}</p>}
-                              <div className="flex flex-wrap gap-2 mt-2">
-                                <Badge variant="outline" className={`text-xs border ${STATUS_COLORS[goal.status] || STATUS_COLORS.active}`}>
-                                  {goal.status || "active"}
-                                </Badge>
-                                <Badge variant="outline" className="text-xs border border-gray-200 text-gray-600">
-                                  {TYPE_LABELS[goal.goal_type] || "Standard"}
-                                </Badge>
-                                {subGoals.length > 0 && (
-                                  <Badge variant="outline" className="text-xs border border-purple-200 text-purple-700 bg-purple-50 gap-1">
-                                    <GitBranch className="w-2.5 h-2.5" /> {subGoals.length} sub-goal{subGoals.length !== 1 ? "s" : ""}
-                                  </Badge>
-                                )}
-                                {goal.timeframe_end && (
-                                  <span className="flex items-center gap-1 text-xs text-gray-400">
-                                    <Calendar className="w-3 h-3" />
-                                    Due {format(new Date(goal.timeframe_end), "MMM d, yyyy")}
-                                  </span>
-                                )}
-                              </div>
-                              {/* Progress bar with inline edit */}
-                              <div className="mt-3 flex items-center gap-2">
-                                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                  <div className="h-full rounded-full transition-all duration-500"
-                                    style={{ width: `${goal.progress || 0}%`, backgroundColor: (goal.progress || 0) >= 80 ? "#00C875" : (goal.progress || 0) >= 50 ? "#0202ff" : "#FFCB00" }} />
-                                </div>
-                                <input
-                                  type="number"
-                                  min={0} max={100}
-                                  value={goal.progress || 0}
-                                  onChange={e => handleUpdateProgress(goal.id, Math.min(100, Math.max(0, Number(e.target.value))))}
-                                  className="w-12 text-xs font-bold text-center border border-gray-200 rounded-md py-0.5 focus:outline-none focus:border-[#0202ff]"
-                                  disabled={subGoals.length > 0}
-                                  title={subGoals.length > 0 ? "Progress auto-calculated from sub-goals" : "Edit progress"}
-                                />
-                                <span className="text-xs text-gray-400">%</span>
-                                {subGoals.length > 0 && <span className="text-xs text-gray-400 italic">auto</span>}
-                              </div>
-                            </div>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
-                                  <MoreHorizontal className="w-4 h-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => setEditingGoal(goal)}>
-                                  <Edit3 className="w-3.5 h-3.5 mr-2" /> Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setCascadeGoal(goal)}>
-                                  <GitBranch className="w-3.5 h-3.5 mr-2" /> Cascade to Team
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => setConfirmDelete(goal)} className="text-red-600 focus:text-red-600">
-                                  <Trash2 className="w-3.5 h-3.5 mr-2" /> Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Sub-goals (children) */}
-                  {subGoals.length > 0 && isExpanded && (
-                    <div className="ml-6 mt-1 space-y-1 border-l-2 border-dashed border-gray-200 pl-4">
-                      {subGoals.map(sub => (
-                        <Card key={sub.id} className="border border-gray-100 shadow-sm rounded-lg bg-gray-50/50">
-                          <CardContent className="p-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-1 self-stretch rounded-full flex-shrink-0" style={{ backgroundColor: sub.color || "#0202ff" }} />
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <p className="text-sm font-medium text-gray-800 truncate">{sub.title}</p>
-                                  <Badge variant="outline" className="text-xs text-gray-500 border-gray-200">sub-goal</Badge>
-                                </div>
-                                {sub.assigned_to_emails?.[0] && (
-                                  <p className="text-xs text-gray-400 mt-0.5">Assigned to {sub.assigned_to_emails[0]}</p>
-                                )}
-                                <div className="mt-2 flex items-center gap-2">
-                                  <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                    <div className="h-full rounded-full transition-all duration-500"
-                                      style={{ width: `${sub.progress || 0}%`, backgroundColor: (sub.progress || 0) >= 80 ? "#00C875" : (sub.progress || 0) >= 50 ? "#0202ff" : "#FFCB00" }} />
-                                  </div>
-                                  <input
-                                    type="number"
-                                    min={0} max={100}
-                                    value={sub.progress || 0}
-                                    onChange={e => handleUpdateProgress(sub.id, Math.min(100, Math.max(0, Number(e.target.value))))}
-                                    className="w-10 text-xs font-bold text-center border border-gray-200 rounded py-0.5 focus:outline-none focus:border-[#0202ff]"
-                                    title="Edit sub-goal progress"
-                                  />
-                                  <span className="text-xs text-gray-400">%</span>
-                                </div>
-                              </div>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0">
-                                    <MoreHorizontal className="w-3.5 h-3.5" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => setEditingGoal(sub)}>
-                                    <Edit3 className="w-3.5 h-3.5 mr-2" /> Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => setConfirmDelete(sub)} className="text-red-600 focus:text-red-600">
-                                    <Trash2 className="w-3.5 h-3.5 mr-2" /> Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </motion.div>
-              );
-            })}
-          </div>
-        </AnimatePresence>
+        <div className={viewMode === "grid" ? "grid md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-3"}>
+          {filtered.map((goal, i) => (
+            <GoalCard
+              key={goal.id}
+              goal={goal}
+              viewMode={viewMode}
+              index={i}
+              onDelete={handleDelete}
+              onEdit={setEditingGoal}
+              onRefresh={loadGoals}
+            />
+          ))}
+        </div>
       )}
 
       <CreateGoalModal isOpen={showCreate} onClose={() => setShowCreate(false)} onSubmit={handleCreate} />
       {editingGoal && (
         <EditGoalModal isOpen={!!editingGoal} onClose={() => setEditingGoal(null)} onSubmit={handleUpdate} goal={editingGoal} />
       )}
-      {cascadeGoal && (
-        <CascadeGoalDialog
-          goal={cascadeGoal}
-          isOpen={!!cascadeGoal}
-          onClose={() => setCascadeGoal(null)}
-          onSuccess={loadGoals}
-        />
-      )}
-      <ConfirmDialog
-        isOpen={!!confirmDelete}
-        onClose={() => setConfirmDelete(null)}
-        onConfirm={handleDelete}
-        title="Delete Goal"
-        description={`Are you sure you want to delete "${confirmDelete?.title}"? This cannot be undone.`}
-        confirmText="Delete"
-      />
     </div>
   );
 }
