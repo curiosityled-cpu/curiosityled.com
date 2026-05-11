@@ -108,7 +108,7 @@ export default function GoalHeader({
 
   return (
     <TooltipProvider>
-      <div className="bg-white sticky top-16 z-40 shadow-sm border-b border-[#E1E5F3]">
+      <div className="bg-white sticky top-0 z-40 shadow-sm border-b border-[#E1E5F3]">
         <motion.div
           className="absolute top-0 left-0 right-0 h-1"
           style={{ backgroundColor: goalColor }}
