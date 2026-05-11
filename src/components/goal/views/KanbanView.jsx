@@ -97,6 +97,16 @@ export default function KanbanView({ milestones = [], goal, onEditTask, onDelete
                     </div>
                   </div>
 
+                  {/* Column Header */}
+                  <div className="p-3 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-[#323338]">{column.title}</h3>
+                      <Badge className={`${column.badgeColor} border-0 rounded-full px-2 py-0.5 text-xs font-semibold`}>
+                        {milestonesByStatus[column.id]?.length || 0}
+                      </Badge>
+                    </div>
+                  </div>
+
                   {/* Column Content */}
                   <div className={`p-3 min-h-[400px] ${column.color}`}>
                     <div className="space-y-2">
