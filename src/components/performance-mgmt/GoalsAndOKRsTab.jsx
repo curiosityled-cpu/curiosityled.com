@@ -64,7 +64,7 @@ function GoalsView({ user }) {
   const loadGoals = async () => {
     setLoading(true);
     try {
-      const data = await base44.entities.Goal.filter({ client_id: user.client_id }, "-updated_date");
+      const data = await base44.entities.Goal.list("-updated_date");
       setGoals(data);
     } catch {
       toast.error("Failed to load goals");
