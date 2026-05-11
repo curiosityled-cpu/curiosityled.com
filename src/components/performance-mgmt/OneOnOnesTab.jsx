@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Search, Users, Calendar, CheckCircle2, Clock, Video, MessageSquare, ClipboardList, Zap, BarChart2 } from "lucide-react";
+import { Loader2, Plus, Search, Users, Calendar, CheckCircle2, Clock, Video, MessageSquare, ClipboardList, Zap, BarChart2, Eye, Pencil, Trash2 } from "lucide-react";
 import { format, isPast } from "date-fns";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -41,9 +41,16 @@ function SessionsView({ user, users, isManager }) {
   const loadSessions = async () => {
     setLoading(true);
     try {
-      const filter = isManager ? { client_id: user.client_id } : { coachee_email: user.email };
-      const data = await base44.entities.CoachingSession.filter(filter, "-scheduled_date");
-      setSessions(data);
+      // Load sessions where user is coach OR coachee so both parties see the meeting
+      const [asCoach, asCoachee] = await Promise.all([
+        base44.entities.CoachingSession.filter({ coach_email: user.email }, "-scheduled_date").catch(() => []),
+        base44.entities.CoachingSession.filter({ coachee_email: user.email }, "-scheduled_date").catch(() => []),
+      ]);
+      // Merge and deduplicate by id
+      const merged = [...asCoach, ...asCoachee];
+      const deduped = Array.from(new Map(merged.map(s => [s.id, s])).values());
+      deduped.sort((a, b) => new Date(b.scheduled_date || b.session_date) - new Date(a.scheduled_date || a.session_date));
+      setSessions(deduped);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
@@ -126,8 +133,12 @@ function SessionsView({ user, users, isManager }) {
       ) : (
         <div className="space-y-2">
           {filtered.map((session, i) => {
-            const participantEmail = session.coachee_email || session.participant_email || "—";
-            const participant = users.find(u => u.email === participantEmail);
+            // If user is the coachee, show the coach (manager); otherwise show the coachee
+            const otherEmail = session.coach_email === user.email
+              ? (session.coachee_email || session.participant_email || "—")
+              : (session.coach_email || "—");
+            const participant = users.find(u => u.email === otherEmail);
+            const participantEmail = otherEmail;
             const sessionDateStr = session.scheduled_date || session.session_date;
             const isPastSession = sessionDateStr && isPast(new Date(sessionDateStr));
             return (
@@ -170,14 +181,29 @@ function SessionsView({ user, users, isManager }) {
                             <Video className="w-3 h-3" /> Join
                           </Button>
                         )}
-                        {session.status === "completed" && isManager && (
+                        {/* Both parties can view/record meeting notes */}
+                        {session.status === "completed" && (
                           <Button size="sm" variant="outline" className="h-8 gap-1 text-xs" onClick={() => setMeetingSession(session)}>
-                            <ClipboardList className="w-3 h-3" /> Record
+                            <ClipboardList className="w-3 h-3" /> {session.coach_email === user.email ? "Record" : "View Notes"}
                           </Button>
                         )}
-                        {session.status === "scheduled" && isPastSession && isManager && (
+                        {/* Only initiator (coach) can mark complete */}
+                        {session.status === "scheduled" && isPastSession && session.coach_email === user.email && (
                           <Button size="sm" className="h-8 gap-1 text-xs bg-green-600 hover:bg-green-700 text-white" onClick={() => markComplete(session)}>
                             <CheckCircle2 className="w-3 h-3" /> Complete
+                          </Button>
+                        )}
+                        {/* Only initiator (coach) can delete */}
+                        {session.coach_email === user.email && (
+                          <Button size="sm" variant="outline" className="h-8 gap-1 text-xs text-red-600 border-red-200 hover:bg-red-50" onClick={async () => {
+                            if (!confirm("Delete this 1-on-1?")) return;
+                            try {
+                              await base44.entities.CoachingSession.delete(session.id);
+                              setSessions(prev => prev.filter(s => s.id !== session.id));
+                              toast.success("Session deleted");
+                            } catch { toast.error("Failed to delete session"); }
+                          }}>
+                            <Trash2 className="w-3 h-3" />
                           </Button>
                         )}
                       </div>
@@ -205,7 +231,7 @@ function SessionsView({ user, users, isManager }) {
 }
 
 const SUB_TABS = [
-  { id: "sessions", label: "1-on-1s", icon: Calendar },
+  { id: "sessions", label: "1-on-1", icon: Calendar },
   { id: "checkin", label: "Check-In", icon: Zap },
   { id: "actions", label: "Actions", icon: ClipboardList },
   { id: "insights", label: "Insights", icon: BarChart2 },

@@ -2,21 +2,24 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
-import { BarChart2, Target, Users, Loader2 } from "lucide-react";
+import { Target, Users, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import GoalsAndOKRsTab from "@/components/performance-mgmt/GoalsAndOKRsTab";
 import OneOnOnesTab from "@/components/performance-mgmt/OneOnOnesTab";
-import PerformanceOverviewTab from "@/components/performance-mgmt/PerformanceOverviewTab";
 
-const TABS = [
-  { id: "overview", label: "Overview & Analytics", icon: BarChart2 },
-  { id: "goals", label: "Goals & OKRs", icon: Target },
-  { id: "1on1s", label: "1-on-1s", icon: Users },
-];
+const USER_LEVEL_1_ROLES = ["User Level 1"];
+
+function getTabs(appRole) {
+  const isLevel1 = USER_LEVEL_1_ROLES.includes(appRole);
+  const tabs = [];
+  tabs.push({ id: "goals", label: "Goals & OKRs", icon: Target });
+  tabs.push({ id: "1on1s", label: "1-on-1", icon: Users });
+  return tabs;
+}
 
 export default function MyPerformance() {
   const { user, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("goals");
   const [fullUser, setFullUser] = useState(null);
 
   useEffect(() => {
@@ -45,39 +48,43 @@ export default function MyPerformance() {
       subtitle="Track your goals, 1-on-1s, and personal development"
     >
       {/* Tab Navigation */}
-      <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 w-fit mb-6 shadow-sm">
-        {TABS.map(tab => {
-          const Icon = tab.icon;
-          const active = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
-              style={{
-                backgroundColor: active ? "#0202ff" : "transparent",
-                color: active ? "white" : "#6b7280",
-              }}
-            >
-              <Icon className="w-4 h-4" />
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
+      {(() => {
+        const tabs = getTabs(fullUser?.app_role || fullUser?.data?.app_role);
+        return (
+          <>
+            <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 w-fit mb-6 shadow-sm">
+              {tabs.map(tab => {
+                const Icon = tab.icon;
+                const active = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                    style={{
+                      backgroundColor: active ? "#0202ff" : "transparent",
+                      color: active ? "white" : "#6b7280",
+                    }}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
 
-      {/* Tab Content */}
-      <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }}>
-        {activeTab === "overview" && (
-          <PerformanceOverviewTab user={fullUser} personalOnly />
-        )}
-        {activeTab === "goals" && (
-          <GoalsAndOKRsTab user={fullUser} personalOnly />
-        )}
-        {activeTab === "1on1s" && (
-          <OneOnOnesTab user={fullUser} />
-        )}
-      </motion.div>
+            {/* Tab Content */}
+            <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }}>
+              {activeTab === "goals" && (
+                <GoalsAndOKRsTab user={fullUser} />
+              )}
+              {activeTab === "1on1s" && (
+                <OneOnOnesTab user={fullUser} />
+              )}
+            </motion.div>
+          </>
+        );
+      })()}
     </MVPPageLayout>
   );
 }

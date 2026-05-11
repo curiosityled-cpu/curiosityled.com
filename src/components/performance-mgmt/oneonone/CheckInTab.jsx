@@ -89,10 +89,12 @@ function CheckInForm({ user, targetEmail, targetName, onSaved, weekOf, existingC
     }
     setSaving(true);
     try {
+      // Resolve manager email: use prop, user field, or data sub-field
+      const resolvedManagerEmail = user.manager_email || user.data?.manager_email || "";
       const payload = {
         client_id: user.client_id,
         employee_email: targetEmail,
-        manager_email: user.manager_email || "",
+        manager_email: resolvedManagerEmail,
         week_of: weekOf,
         ...form,
       };
@@ -438,15 +440,17 @@ export default function CheckInTab({ user, isManager, teamMembers = [] }) {
   const loadCheckIns = async () => {
     setLoading(true);
     try {
-      let filter = {};
+      let data = [];
       if (!isManager) {
-        filter = { employee_email: user.email };
+        // Direct report: load their own check-ins (includes ones created as prework)
+        data = await base44.entities.WeeklyCheckIn.filter({ employee_email: user.email }, "-week_of", 50);
       } else if (filterEmployee !== "all") {
-        filter = { manager_email: user.email, employee_email: filterEmployee };
+        // Manager viewing a specific team member
+        data = await base44.entities.WeeklyCheckIn.filter({ manager_email: user.email, employee_email: filterEmployee }, "-week_of", 50);
       } else {
-        filter = { manager_email: user.email };
+        // Manager viewing all team — load by manager_email
+        data = await base44.entities.WeeklyCheckIn.filter({ manager_email: user.email }, "-week_of", 50);
       }
-      const data = await base44.entities.WeeklyCheckIn.filter(filter, "-week_of", 50);
       setCheckIns(data);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
