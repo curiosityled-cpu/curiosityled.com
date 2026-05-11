@@ -278,7 +278,7 @@ function SessionsView({ user, users, isManager }) {
 }
 
 const SUB_TABS = [
-  { id: "sessions", label: "Sessions", icon: Calendar },
+  { id: "sessions", label: "1-on-1s", icon: Calendar },
   { id: "checkin", label: "Check-In", icon: Zap },
   { id: "actions", label: "Actions", icon: ClipboardList },
   { id: "insights", label: "Insights", icon: BarChart2 },

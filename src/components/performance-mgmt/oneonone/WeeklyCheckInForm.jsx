@@ -12,19 +12,21 @@ import { toast } from "sonner";
 const ENERGY_LABELS = { 1: "Exhausted", 2: "Low", 3: "Okay", 4: "Good", 5: "Energised" };
 const ENERGY_COLORS = { 1: "#ef4444", 2: "#f97316", 3: "#eab308", 4: "#22c55e", 5: "#0202ff" };
 
-function EnergyPicker({ value, onChange }) {
+function EnergyPicker({ value, onChange, readOnly = false }) {
   return (
     <div className="flex gap-2">
       {[1, 2, 3, 4, 5].map(n => (
         <button
           key={n}
           type="button"
-          onClick={() => onChange(n)}
+          onClick={() => !readOnly && onChange(n)}
+          disabled={readOnly}
           className="flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-all"
           style={{
             borderColor: value === n ? ENERGY_COLORS[n] : "#e5e7eb",
             backgroundColor: value === n ? `${ENERGY_COLORS[n]}15` : "white",
-            color: value === n ? ENERGY_COLORS[n] : "#6b7280"
+            color: value === n ? ENERGY_COLORS[n] : "#6b7280",
+            cursor: readOnly ? "default" : "pointer"
           }}
         >
           {n}
@@ -34,6 +36,24 @@ function EnergyPicker({ value, onChange }) {
   );
 }
 
+const EMPLOYEE_FIELDS = [
+  { key: "accomplishments", label: "What did they accomplish this week?", employeeLabel: "What did you accomplish this week?", icon: CheckCircle2, color: "#22c55e", placeholder: "Key wins, shipped work, progress made..." },
+  { key: "blockers", label: "What's blocking them?", employeeLabel: "What's blocking you?", icon: AlertCircle, color: "#ef4444", placeholder: "Obstacles, dependencies, friction..." },
+  { key: "help_needed", label: "What help do they need?", employeeLabel: "What help do you need?", icon: HelpCircle, color: "#f97316", placeholder: "Resources, decisions, unblocking..." },
+  { key: "next_priority", label: "Their top priority next week", employeeLabel: "Top priority next week", icon: Target, color: "#0202ff", placeholder: "Most important thing to move forward..." },
+];
+
+const MANAGER_FIELDS = [
+  { key: "feedback_to_give", label: "Feedback to share", icon: MessageSquare, color: "#8b5cf6", placeholder: "Recognition, coaching, suggestions..." },
+  { key: "concerns", label: "Concerns or follow-ups", icon: AlertCircle, color: "#f97316", placeholder: "Things to monitor or address..." },
+];
+
+const EMPTY_FORM = {
+  accomplishments: "", blockers: "", help_needed: "",
+  energy_level: 3, next_priority: "",
+  feedback_to_give: "", concerns: ""
+};
+
 export default function WeeklyCheckInForm({ user, isManager, teamMembers = [] }) {
   const weekOf = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
 
@@ -41,22 +61,24 @@ export default function WeeklyCheckInForm({ user, isManager, teamMembers = [] })
   const [existing, setExisting] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    accomplishments: "", blockers: "", help_needed: "",
-    energy_level: 3, next_priority: "",
-    feedback_to_give: "", concerns: ""
-  });
+  const [form, setForm] = useState({ ...EMPTY_FORM });
 
-  // When isManager status is known, load the appropriate check-in
+  // Employees load their own check-in on mount
   useEffect(() => {
-    if (isManager === false) {
+    if (!isManager) {
       loadCheckIn(user.email);
     }
   }, [isManager]);
 
+  // Managers load the selected employee's check-in
   useEffect(() => {
-    if (isManager && selectedEmployee) loadCheckIn(selectedEmployee);
-  }, [selectedEmployee]);
+    if (isManager && selectedEmployee) {
+      loadCheckIn(selectedEmployee);
+    } else if (isManager && !selectedEmployee) {
+      setExisting(null);
+      setForm({ ...EMPTY_FORM });
+    }
+  }, [isManager, selectedEmployee]);
 
   const loadCheckIn = async (empEmail) => {
     setLoading(true);
@@ -66,8 +88,8 @@ export default function WeeklyCheckInForm({ user, isManager, teamMembers = [] })
         week_of: weekOf
       });
       if (results.length > 0) {
-        setExisting(results[0]);
         const r = results[0];
+        setExisting(r);
         setForm({
           accomplishments: r.accomplishments || "",
           blockers: r.blockers || "",
@@ -79,7 +101,7 @@ export default function WeeklyCheckInForm({ user, isManager, teamMembers = [] })
         });
       } else {
         setExisting(null);
-        setForm({ accomplishments: "", blockers: "", help_needed: "", energy_level: 3, next_priority: "", feedback_to_give: "", concerns: "" });
+        setForm({ ...EMPTY_FORM });
       }
     } catch (e) {
       console.error(e);
@@ -108,7 +130,7 @@ export default function WeeklyCheckInForm({ user, isManager, teamMembers = [] })
         const created = await base44.entities.WeeklyCheckIn.create(payload);
         setExisting(created);
       }
-      toast.success(existing ? "Check-in updated" : "Check-in submitted!");
+      toast.success(existing ? "Check-in updated" : isManager ? "Response saved" : "Check-in submitted!");
     } catch {
       toast.error("Failed to save check-in");
     } finally {
@@ -118,17 +140,11 @@ export default function WeeklyCheckInForm({ user, isManager, teamMembers = [] })
 
   const set = (field) => (e) => setForm(p => ({ ...p, [field]: typeof e === "object" ? e.target.value : e }));
 
-  const employeeFields = [
-    { key: "accomplishments", label: "What did you accomplish this week?", icon: CheckCircle2, color: "#22c55e", placeholder: "Key wins, shipped work, progress made..." },
-    { key: "blockers", label: "What's blocking you?", icon: AlertCircle, color: "#ef4444", placeholder: "Obstacles, dependencies, friction..." },
-    { key: "help_needed", label: "What help do you need?", icon: HelpCircle, color: "#f97316", placeholder: "Resources, decisions, unblocking..." },
-    { key: "next_priority", label: "Top priority next week", icon: Target, color: "#0202ff", placeholder: "Most important thing to move forward..." },
-  ];
-
-  if (loading) return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-[#0202ff]" /></div>;
+  const showForm = !isManager || !!selectedEmployee;
 
   return (
     <div className="space-y-4 max-w-2xl">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-semibold text-gray-900">Weekly Check-In</h3>
@@ -136,11 +152,13 @@ export default function WeeklyCheckInForm({ user, isManager, teamMembers = [] })
         </div>
         {existing && (
           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 gap-1">
-            <CheckCircle2 className="w-3 h-3" /> Submitted
+            <CheckCircle2 className="w-3 h-3" />
+            {isManager ? (existing.manager_reviewed ? "Reviewed" : "Pending Review") : "Submitted"}
           </Badge>
         )}
       </div>
 
+      {/* Manager: team member selector */}
       {isManager && (
         <div>
           <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
@@ -153,19 +171,28 @@ export default function WeeklyCheckInForm({ user, isManager, teamMembers = [] })
               ))}
             </SelectContent>
           </Select>
+          {isManager && selectedEmployee && !loading && !existing && (
+            <p className="text-xs text-amber-600 mt-2">No check-in submitted yet for this week.</p>
+          )}
         </div>
       )}
 
-      {(!isManager || selectedEmployee) && (
+      {/* Loading state */}
+      {loading && <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-[#0202ff]" /></div>}
+
+      {/* Form content */}
+      {!loading && showForm && (
         <>
-          {/* Employee fields — editable by employee; read-only for manager */}
+          {/* Employee fields */}
           <div className="space-y-3">
-            {employeeFields.map(({ key, label, icon: Icon, color, placeholder }) => (
+            {EMPLOYEE_FIELDS.map(({ key, label, employeeLabel, icon: Icon, color, placeholder }) => (
               <Card key={key} className="border border-gray-100 shadow-sm rounded-xl">
                 <CardContent className="p-4 space-y-2">
                   <div className="flex items-center gap-2">
                     <Icon className="w-4 h-4" style={{ color }} />
-                    <span className="text-sm font-medium text-gray-700">{label}</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      {isManager ? label : employeeLabel}
+                    </span>
                   </div>
                   <Textarea
                     rows={2}
@@ -185,7 +212,9 @@ export default function WeeklyCheckInForm({ user, isManager, teamMembers = [] })
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Zap className="w-4 h-4 text-yellow-500" />
-                    <span className="text-sm font-medium text-gray-700">Energy level this week</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      {isManager ? "Their energy level this week" : "Energy level this week"}
+                    </span>
                   </div>
                   {form.energy_level && (
                     <span className="text-xs font-medium" style={{ color: ENERGY_COLORS[form.energy_level] }}>
@@ -193,30 +222,16 @@ export default function WeeklyCheckInForm({ user, isManager, teamMembers = [] })
                     </span>
                   )}
                 </div>
-                {isManager ? (
-                  <div className="flex gap-2">
-                    {[1,2,3,4,5].map(n => (
-                      <div key={n} className="flex-1 py-2 rounded-lg border-2 text-sm font-medium text-center"
-                        style={{ borderColor: form.energy_level === n ? ENERGY_COLORS[n] : "#e5e7eb", backgroundColor: form.energy_level === n ? `${ENERGY_COLORS[n]}15` : "white", color: form.energy_level === n ? ENERGY_COLORS[n] : "#6b7280" }}>
-                        {n}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <EnergyPicker value={form.energy_level} onChange={v => setForm(p => ({ ...p, energy_level: v }))} />
-                )}
+                <EnergyPicker value={form.energy_level} onChange={v => setForm(p => ({ ...p, energy_level: v }))} readOnly={isManager} />
               </CardContent>
             </Card>
           </div>
 
-          {/* Manager fields */}
+          {/* Manager response fields */}
           {isManager && (
             <div className="space-y-3 pt-2 border-t border-dashed border-gray-200">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Your response (private)</p>
-              {[
-                { key: "feedback_to_give", label: "Feedback to share", icon: MessageSquare, color: "#8b5cf6", placeholder: "Recognition, coaching, suggestions..." },
-                { key: "concerns", label: "Concerns or follow-ups", icon: AlertCircle, color: "#f97316", placeholder: "Things to monitor or address..." },
-              ].map(({ key, label, icon: Icon, color, placeholder }) => (
+              {MANAGER_FIELDS.map(({ key, label, icon: Icon, color, placeholder }) => (
                 <Card key={key} className="border border-gray-100 shadow-sm rounded-xl">
                   <CardContent className="p-4 space-y-2">
                     <div className="flex items-center gap-2">
@@ -231,8 +246,10 @@ export default function WeeklyCheckInForm({ user, isManager, teamMembers = [] })
           )}
 
           <Button onClick={handleSave} disabled={saving} className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-            {existing ? (isManager ? "Save Response" : "Update Check-In") : "Submit Check-In"}
+            {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+            {isManager
+              ? (existing?.manager_reviewed ? "Update Response" : "Save Response")
+              : (existing ? "Update Check-In" : "Submit Check-In")}
           </Button>
         </>
       )}
