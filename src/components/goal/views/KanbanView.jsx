@@ -62,10 +62,13 @@ export default function KanbanView({ milestones = [], goal, onEditTask, onDelete
         [destStatus]: destMilestones
       }));
       
+      // Save the new status to the database
       const milestone = milestones.find(m => m.id === draggableId);
-      if (milestone && onRefresh) {
-        // Just refresh the parent - the drag state is already updated optimistically
-        onRefresh();
+      if (milestone) {
+        await base44.entities.Milestone.update(draggableId, {
+          data: { ...(milestone.data || {}), status: destStatus }
+        });
+        if (onRefresh) onRefresh();
       }
     }
   };
