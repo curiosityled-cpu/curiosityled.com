@@ -286,8 +286,17 @@ export default function ScheduleOneOnOneModal({ isOpen, onClose, onCreated, user
         ? (new Date("1970-01-01T" + form.end_time) - new Date("1970-01-01T" + form.start_time)) / 60000
         : 30;
 
+      // Resolve client_id — try user object, then participant, then fetch fresh user data
+      let clientId = user.client_id || user.data?.client_id;
+      if (!clientId) {
+        try {
+          const freshMe = await base44.auth.me();
+          clientId = freshMe.client_id || freshMe.data?.client_id;
+        } catch {}
+      }
+
       const newSession = await base44.entities.CoachingSession.create({
-        client_id: user.client_id,
+        ...(clientId ? { client_id: clientId } : {}),
         coach_email: user.email,
         coachee_email: form.participant_email,
         scheduled_date: sessionDate,
