@@ -256,7 +256,8 @@ export default function OneOnOnesTab({ user }) {
     (user.subordinate_emails || []).includes(u.email)
   );
 
-  const isManager = isManagerRole(user?.app_role || user?.role) || teamMembers.length > 0;
+  // Anyone can schedule a 1-on-1 — not just formal managers
+  const isManager = true;
 
   return (
     <div className="space-y-5">
