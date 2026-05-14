@@ -244,30 +244,29 @@ export default function OneOnOnesTab({ user }) {
   useEffect(() => {
     const loadUsers = async () => {
       try {
-        // First, try to get direct reports by querying users where manager_email = current user
-        // This works for all users regardless of admin role
-        const [directReportsRes, allUsersRes] = await Promise.allSettled([
-          base44.entities.User.filter({ manager_email: user.email }),
-          base44.functions.invoke("listAllUsers", {}),
-        ]);
+        // Fetch all users from the admin function, then filter direct reports client-side
+        // manager_email is stored in user.data.manager_email
+        const allUsersRes = await base44.functions.invoke("listAllUsers", {}).catch(() => null);
+        const allUsers = allUsersRes?.data?.users || [];
 
-        const directReports = directReportsRes.status === "fulfilled"
-          ? (directReportsRes.value || [])
-          : [];
-
-        const allUsers = allUsersRes.status === "fulfilled" && allUsersRes.value?.data?.users
-          ? allUsersRes.value.data.users
-          : [];
-
-        // Merge: prefer allUsers list (richer data), but always include direct reports
-        const merged = [...allUsers];
-        for (const dr of directReports) {
-          if (!merged.find(u => u.email === dr.email)) {
-            merged.push({ email: dr.email, full_name: dr.data?.display_name || dr.full_name || dr.email, ...dr.data });
-          }
+        // If allUsers is empty (non-admin), fall back to fetching the User entity directly
+        // The User entity stores extended fields (manager_email) inside data.*
+        let usersToShow = allUsers;
+        if (allUsers.length === 0) {
+          try {
+            const allUsersEntity = await base44.entities.User.list();
+            usersToShow = allUsersEntity.map(u => ({
+              email: u.email,
+              full_name: u.data?.display_name || u.full_name || u.email,
+              manager_email: u.data?.manager_email || u.manager_email,
+              client_id: u.data?.client_id || u.client_id,
+              current_role: u.data?.current_role,
+              ...u.data,
+            }));
+          } catch {}
         }
 
-        setUsers(merged.filter(u => u.email !== user.email));
+        setUsers(usersToShow.filter(u => u.email !== user.email));
       } catch (e) { console.error(e); }
     };
     loadUsers();
@@ -275,6 +274,7 @@ export default function OneOnOnesTab({ user }) {
 
   const teamMembers = users.filter(u =>
     u.manager_email === user.email ||
+    u.data?.manager_email === user.email ||
     (user.subordinate_emails || []).includes(u.email)
   );
 
