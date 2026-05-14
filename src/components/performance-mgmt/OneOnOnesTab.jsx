@@ -244,8 +244,30 @@ export default function OneOnOnesTab({ user }) {
   useEffect(() => {
     const loadUsers = async () => {
       try {
-        const res = await base44.functions.invoke("listAllUsers", {});
-        if (res.data?.users) setUsers(res.data.users.filter(u => u.email !== user.email));
+        // First, try to get direct reports by querying users where manager_email = current user
+        // This works for all users regardless of admin role
+        const [directReportsRes, allUsersRes] = await Promise.allSettled([
+          base44.entities.User.filter({ manager_email: user.email }),
+          base44.functions.invoke("listAllUsers", {}),
+        ]);
+
+        const directReports = directReportsRes.status === "fulfilled"
+          ? (directReportsRes.value || [])
+          : [];
+
+        const allUsers = allUsersRes.status === "fulfilled" && allUsersRes.value?.data?.users
+          ? allUsersRes.value.data.users
+          : [];
+
+        // Merge: prefer allUsers list (richer data), but always include direct reports
+        const merged = [...allUsers];
+        for (const dr of directReports) {
+          if (!merged.find(u => u.email === dr.email)) {
+            merged.push({ email: dr.email, full_name: dr.data?.display_name || dr.full_name || dr.email, ...dr.data });
+          }
+        }
+
+        setUsers(merged.filter(u => u.email !== user.email));
       } catch (e) { console.error(e); }
     };
     loadUsers();
