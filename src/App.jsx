@@ -27,6 +27,7 @@ import PendingRole from './pages/PendingRole';
 import SeedLinkedInCourses from './pages/SeedLinkedInCourses';
 import OrgBusinessGoals from './pages/OrgBusinessGoals';
 import PerformanceManager from './pages/PerformanceManager';
+import LandingPage from './pages/LandingPage';
 import MyPerformance from './pages/MyPerformance';
 import Insights from './pages/Insights';
 import ReportBuilder from './pages/ReportBuilder';
@@ -95,6 +96,9 @@ const AuthenticatedApp = () => {
 
       {/* Redirect old ExperienceManagement URL to new DevelopmentManager */}
       <Route path="/ExperienceManagement" element={<Navigate to="/DevelopmentManager" replace />} />
+
+      {/* Public Landing Page */}
+      <Route path="/LandingPage" element={<LandingPage />} />
 
       {/* Legacy Dashboard — always accessible with full layout */}
       <Route path="/Dashboard" element={<LayoutWrapper currentPageName="Dashboard"><Pages.Dashboard /></LayoutWrapper>} />
