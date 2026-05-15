@@ -71,7 +71,6 @@ const NAV_CONFIG = {
 
   executive: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: BarChart3 },
-  { label: 'Goal Manager', path: '/GoalManager', icon: Target },
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }]
 
 };
