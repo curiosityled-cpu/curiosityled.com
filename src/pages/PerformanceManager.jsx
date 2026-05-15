@@ -44,8 +44,8 @@ export default function PerformanceManager() {
 
   return (
     <MVPPageLayout
-      title="Performance Manager"
-      subtitle="Manage goals, OKRs, and review cycles across your organization"
+      title="Goal Manager"
+      subtitle="Manage goals and OKRs across your organization"
     >
       {/* Tab navigation */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
