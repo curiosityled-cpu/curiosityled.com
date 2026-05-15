@@ -102,7 +102,6 @@ const AuthenticatedApp = () => {
       {/* MVP-specific routes */}
       <Route path="/my-leadership" element={<MVPLayout><MyLeadership /></MVPLayout>} />
       <Route path="/my-development" element={<MVPLayout><MyDevelopment /></MVPLayout>} />
-      <Route path="/my-goals" element={<Navigate to="/my-performance" replace />} />
       <Route path="/experience-overview" element={<MVPLayout><ExperienceOverview /></MVPLayout>} />
       <Route path="/report-builder-mvp" element={<MVPLayout><ReportBuilderMVP /></MVPLayout>} />
       <Route path="/manager-detail/:id" element={<MVPLayout><ManagerDetail /></MVPLayout>} />
@@ -119,9 +118,10 @@ const AuthenticatedApp = () => {
       <Route path="/OrgBusinessGoals" element={mvpRole ? <MVPPage><OrgBusinessGoals /></MVPPage> : <LayoutWrapper currentPageName="OrgBusinessGoals"><OrgBusinessGoals /></LayoutWrapper>} />
       <Route path="/PerformanceManager" element={<Navigate to="/GoalManager" replace />} />
       <Route path="/GoalManager" element={mvpRole ? <MVPPage><PerformanceManager /></MVPPage> : <LayoutWrapper currentPageName="GoalManager"><PerformanceManager /></LayoutWrapper>} />
-      <Route path="/my-performance" element={<MVPPage><MyPerformance /></MVPPage>} />
-      {/* Redirect /Performance to My Performance goals tab */}
-      <Route path="/Performance" element={<Navigate to="/my-performance?tab=goals" replace />} />
+      <Route path="/my-performance" element={<Navigate to="/my-goals" replace />} />
+      <Route path="/my-goals" element={<MVPPage><MyPerformance /></MVPPage>} />
+      {/* Redirect /Performance to My Goals */}
+      <Route path="/Performance" element={<Navigate to="/my-goals" replace />} />
 
       {/* All other legacy pages — MVP users still get MVPLayout shell */}
       {Object.entries(Pages).map(([path, Page]) => (
