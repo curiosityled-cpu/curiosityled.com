@@ -32,7 +32,7 @@ export default function MyPerformance() {
 
   return (
     <MVPPageLayout
-      title="My Performance"
+      title="My Goals"
       subtitle="Track your goals and personal development"
     >
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }}>
