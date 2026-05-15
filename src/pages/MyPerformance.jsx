@@ -22,7 +22,7 @@ export default function MyPerformance() {
 
   if (loading || !fullUser) {
     return (
-      <MVPPageLayout title="My Performance" subtitle="Track your goals and personal development">
+      <MVPPageLayout title="My Goals" subtitle="Track your goals and personal development">
         <div className="flex justify-center py-24">
           <Loader2 className="w-8 h-8 animate-spin text-[#0202ff]" />
         </div>
@@ -32,8 +32,8 @@ export default function MyPerformance() {
 
   return (
     <MVPPageLayout
-      title="My Performance"
-      subtitle="Track your goals and personal development"
+    title="My Goals"
+    subtitle="Track your goals and personal development"
     >
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }}>
         <GoalsAndOKRsTab user={fullUser} />
