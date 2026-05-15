@@ -54,7 +54,7 @@ export const getFriendlyRoleLabel = (appRole) => {
 const NAV_CONFIG = {
   manager: [
   { label: 'My Leadership', path: '/my-leadership', icon: Home },
-  { label: 'My Goals', path: '/my-performance', icon: BarChart2 },
+  { label: 'My Performance', path: '/my-performance', icon: BarChart2 },
   { label: 'My Development', path: '/my-development', icon: BookOpen }],
 
   buyer: [
