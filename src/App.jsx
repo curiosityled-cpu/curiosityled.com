@@ -9,6 +9,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate } from 'r
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import LandingPage from './pages/LandingPage';
 // MVP Role-Based Pages
 import MVPLayout, { getMVPRole } from '@/components/mvp/MVPLayout';
 import MyLeadership from './pages/MyLeadership';
@@ -58,9 +59,14 @@ const AuthenticatedApp = () => {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
-      navigateToLogin();
-      return null;
+      // Show the public landing page instead of redirecting
+      return (
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/LandingPage" element={<LandingPage />} />
+          <Route path="*" element={<LandingPage />} />
+        </Routes>
+      );
     }
   }
 
@@ -92,6 +98,9 @@ const AuthenticatedApp = () => {
           <MVPLayout><MyLeadership /></MVPLayout>
         )
       } />
+
+      {/* Public landing page — accessible to authenticated users too */}
+      <Route path="/LandingPage" element={<LandingPage />} />
 
       {/* Redirect old ExperienceManagement URL to new DevelopmentManager */}
       <Route path="/ExperienceManagement" element={<Navigate to="/DevelopmentManager" replace />} />
