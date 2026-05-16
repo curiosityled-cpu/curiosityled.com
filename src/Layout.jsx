@@ -552,30 +552,22 @@ function LayoutContent({ children }) {
                     </Button>
                   ) : (
                     <Link to="/" className="flex items-center">
-                      <div className="w-10 h-10 flex items-center justify-center">
-                        <img
-                          src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"
-                          alt="Curiosity Led Logo"
-                          className="w-10 h-10 object-contain"
-                        />
-                      </div>
+                      <img
+                        src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5d0ecb26b_CuriosityLedLogoBBW1.png"
+                        alt="Curiosity Led"
+                        className="h-9 object-contain"
+                      />
                     </Link>
                   )}
                 </div>
 
                 {/* Desktop: Always Show Logo */}
                 <Link to="/" className="hidden md:flex items-center">
-                  <div className="w-10 h-10 mr-3 flex items-center justify-center">
-                    <img
-                      src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"
-                      alt="Curiosity Led Logo"
-                      className="w-10 h-10 object-contain"
-                    />
-                  </div>
-                  <div className="hidden sm:block">
-                    <h1 className="text-xl font-bold text-gray-900 dark:text-white">Curiosity Led</h1>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Leadership Development Platform</p>
-                  </div>
+                  <img
+                    src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5d0ecb26b_CuriosityLedLogoBBW1.png"
+                    alt="Curiosity Led"
+                    className="h-10 object-contain"
+                  />
                 </Link>
 
                 <div className="flex items-center gap-2 md:gap-4">
