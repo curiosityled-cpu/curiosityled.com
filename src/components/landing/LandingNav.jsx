@@ -23,13 +23,12 @@ export default function LandingNav() {
     >
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center">
           <img
-            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"
+            src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/7f8bef2bf_CuriosityLedLogoBBW1.png"
             alt="Curiosity Led"
-            className="w-9 h-9 object-contain"
+            className="h-10 object-contain"
           />
-          <span className="text-[#0a0a0a] font-bold text-lg tracking-tight">Curiosity Led</span>
         </div>
 
         {/* CTAs */}
