@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 // MVP Role-Based Pages
 import MVPLayout, { getMVPRole } from '@/components/mvp/MVPLayout';
+import LandingPage from './pages/LandingPage';
 import MyLeadership from './pages/MyLeadership';
 import MyDevelopment from './pages/MyDevelopment';
 import MyGoalsMVP from './pages/MyGoalsMVP';
@@ -81,7 +82,7 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route path="/" element={
         !mvpRole ? (
-          <MVPLayout><PendingRole /></MVPLayout>
+          <LandingPage />
         ) : mvpRole === 'buyer' ? (
           <Navigate to="/Insights?tab=org" replace />
         ) : mvpRole === 'analyst' ? (
@@ -92,6 +93,9 @@ const AuthenticatedApp = () => {
           <MVPLayout><MyLeadership /></MVPLayout>
         )
       } />
+
+      {/* Public landing page — no auth required */}
+      <Route path="/LandingPage" element={<LandingPage />} />
 
       {/* Redirect old ExperienceManagement URL to new DevelopmentManager */}
       <Route path="/ExperienceManagement" element={<Navigate to="/DevelopmentManager" replace />} />
