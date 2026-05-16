@@ -2,7 +2,7 @@ import React from "react";
 
 export default function LandingFooter() {
   return (
-    <footer className="bg-[#0f1030] py-10 border-t border-white/10">
+    <footer className="bg-[#1a1a2e] py-10 border-t border-white/10">
       <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center">
           <img
