@@ -2,7 +2,7 @@ import React from "react";
 
 export default function LandingFooter() {
   return (
-    <footer className="bg-[#0a0a14] py-10 border-t border-gray-800">
+    <footer className="bg-[#0f1030] py-10 border-t border-white/10">
       <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <img
@@ -12,7 +12,7 @@ export default function LandingFooter() {
           />
           <span className="text-white font-bold text-sm">Curiosity Led</span>
         </div>
-        <p className="text-gray-500 text-xs text-center">
+        <p className="text-gray-300 text-xs text-center">
           © {new Date().getFullYear()} Curiosity Led. Built for healthcare organizations developing newly promoted and newly hired leaders.
         </p>
         <div className="flex items-center gap-4">
@@ -20,7 +20,7 @@ export default function LandingFooter() {
             href="https://eosoria.wixstudio.com/mysite"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-gray-500 hover:text-gray-400 transition-colors"
+            className="text-xs text-gray-400 hover:text-gray-200 transition-colors"
           >
             curiosityled.com
           </a>
@@ -28,8 +28,7 @@ export default function LandingFooter() {
             href="https://cal.com/curiosityled/discoverycall"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs font-semibold hover:opacity-80 transition-opacity"
-            style={{ color: "#0202ff" }}
+            className="text-xs font-semibold text-blue-300 hover:text-blue-200 transition-colors"
           >
             Book a demo →
           </a>
