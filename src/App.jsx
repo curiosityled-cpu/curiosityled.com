@@ -64,6 +64,11 @@ const AuthenticatedApp = () => {
     }
   }
 
+  // If not authenticated and no error, show landing page
+  if (!isAuthenticated && !authError) {
+    return <LandingPage />;
+  }
+
   // Redirect root based on MVP role
   const mvpRole = getMVPRole(user?.app_role || user?.data?.app_role || user?.role);
 
