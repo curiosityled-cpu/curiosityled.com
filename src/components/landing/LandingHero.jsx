@@ -99,12 +99,11 @@ export default function LandingHero() {
                 alt="Curiosity Led app"
                 className="w-full hidden"
               />
-              {/* App UI mockup using actual app colors */}
+              {/* App UI mockup — Leadership Risk Intelligence view */}
               <div className="bg-white">
-                {/* Sidebar + content layout */}
                 <div className="flex h-[420px]">
                   {/* Sidebar */}
-                  <div className="w-52 bg-[#0f0f1a] flex flex-col py-4 flex-shrink-0">
+                  <div className="w-44 bg-[#0f0f1a] flex flex-col py-4 flex-shrink-0">
                     <div className="px-4 mb-6 flex items-center gap-2">
                       <img
                         src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"
@@ -114,7 +113,7 @@ export default function LandingHero() {
                       <span className="text-white text-xs font-bold">Curiosity Led</span>
                     </div>
                     {[
-                      { label: "My Leadership", active: true },
+                      { label: "Insights", active: true },
                       { label: "Development Manager", active: false },
                       { label: "Goal Manager", active: false },
                       { label: "Report Builder", active: false },
@@ -133,50 +132,62 @@ export default function LandingHero() {
                     ))}
                   </div>
 
-                  {/* Main content */}
-                  <div className="flex-1 p-5 bg-gray-50 overflow-hidden">
-                    <div className="text-lg font-bold text-gray-900 mb-1">My Leadership</div>
-                    <div className="text-xs text-gray-500 mb-4">Here's your leadership snapshot.</div>
+                  {/* Main content — Risk Intelligence Dashboard */}
+                  <div className="flex-1 p-4 bg-gray-50 overflow-hidden">
+                    <div className="text-sm font-bold text-gray-900 mb-0.5">Leadership Intelligence</div>
+                    <div className="text-[10px] text-gray-500 mb-3">Organisation-wide risk & readiness snapshot</div>
 
-                    {/* Archetype card */}
-                    <div className="rounded-xl overflow-hidden mb-3 shadow-sm">
-                      <div className="bg-[#0202ff] px-4 py-3">
-                        <div className="text-[10px] font-semibold text-blue-200 uppercase tracking-wider mb-1">
-                          YOUR LEADERSHIP ARCHETYPE
+                    {/* Top stats */}
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                      {[
+                        { label: "At-Risk Managers", value: "3", color: "#ef4444" },
+                        { label: "Interventions Active", value: "7", color: "#0202ff" },
+                        { label: "Readiness Score", value: "74%", color: "#16a34a" },
+                      ].map((s) => (
+                        <div key={s.label} className="bg-white rounded-lg p-2 shadow-sm border border-gray-100 text-center">
+                          <div className="text-sm font-bold" style={{ color: s.color }}>{s.value}</div>
+                          <div className="text-[9px] text-gray-500 leading-tight mt-0.5">{s.label}</div>
                         </div>
-                        <div className="text-white font-bold text-sm">The Performance Catalyst</div>
-                      </div>
-                      <div className="bg-white px-4 py-3">
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="bg-gray-50 rounded-lg p-2">
-                            <div className="text-[9px] font-semibold text-gray-400 uppercase mb-1">Core Strengths</div>
-                            <div className="text-[11px] text-gray-700">• Communication (80%)</div>
-                            <div className="text-[11px] text-gray-700">• Situational Intelligence (75%)</div>
-                          </div>
-                          <div className="bg-gray-50 rounded-lg p-2">
-                            <div className="text-[9px] font-semibold text-gray-400 uppercase mb-1">Growth Areas</div>
-                            <div className="text-[11px] text-gray-700">• Resource Management (65%)</div>
-                            <div className="text-[11px] text-gray-700">• Performance Mgmt (70%)</div>
-                          </div>
-                        </div>
-                      </div>
+                      ))}
                     </div>
 
-                    {/* Stats row */}
-                    <div className="grid grid-cols-3 gap-2">
+                    {/* At-risk manager list */}
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-3">
+                      <div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-gray-700 uppercase tracking-wider">Flagged This Week</span>
+                        <span className="text-[9px] text-red-500 font-semibold">3 managers</span>
+                      </div>
                       {[
-                        { label: "Goals", value: "3", sub: "Active" },
-                        { label: "Journeys", value: "5", sub: "In Progress" },
-                        { label: "Risk Level", value: "Low", sub: "On Track" },
-                      ].map((s) => (
-                        <div key={s.label} className="bg-white rounded-lg p-2.5 shadow-sm border border-gray-100">
-                          <div className="text-xs font-bold text-gray-900">{s.value}</div>
-                          <div className="text-[10px] text-gray-500">{s.label}</div>
-                          <div
-                            className="text-[9px] font-medium mt-0.5"
-                            style={{ color: "#0202ff" }}
-                          >
-                            {s.sub}
+                        { name: "J. Martinez", risk: "High", signal: "Missed 3 check-ins", color: "#ef4444" },
+                        { name: "T. Okafor", risk: "Medium", signal: "Goal stall · 6 weeks", color: "#f59e0b" },
+                        { name: "S. Chen", risk: "Medium", signal: "Low engagement trend", color: "#f59e0b" },
+                      ].map((m) => (
+                        <div key={m.name} className="px-3 py-2 flex items-center justify-between border-b border-gray-50 last:border-0">
+                          <div>
+                            <div className="text-[11px] font-semibold text-gray-800">{m.name}</div>
+                            <div className="text-[9px] text-gray-400">{m.signal}</div>
+                          </div>
+                          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: m.color + "20", color: m.color }}>
+                            {m.risk}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Intervention progress */}
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-3 py-2">
+                      <div className="text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-2">Intervention Progress</div>
+                      {[
+                        { label: "Coaching assigned", pct: 85 },
+                        { label: "Learning in flow", pct: 62 },
+                      ].map((p) => (
+                        <div key={p.label} className="mb-1.5">
+                          <div className="flex justify-between mb-0.5">
+                            <span className="text-[9px] text-gray-500">{p.label}</span>
+                            <span className="text-[9px] font-semibold text-gray-700">{p.pct}%</span>
+                          </div>
+                          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width: `${p.pct}%`, backgroundColor: "#0202ff" }} />
                           </div>
                         </div>
                       ))}
@@ -192,8 +203,8 @@ export default function LandingHero() {
                 ↑
               </div>
               <div>
-                <div className="text-xs font-bold text-gray-900">Early risk detected</div>
-                <div className="text-[10px] text-gray-500">3 managers flagged this week</div>
+                <div className="text-xs font-bold text-gray-900">Risk detected early</div>
+                <div className="text-[10px] text-gray-500">Intervention triggered before escalation</div>
               </div>
             </div>
           </div>
