@@ -36,8 +36,8 @@ export default function LandingHero() {
 
             {/* Headline */}
             <h1 className="text-4xl lg:text-5xl xl:text-[52px] font-bold text-[#0a0a0a] leading-[1.1] tracking-tight mb-6">
-              Spot leadership risk before it shows up in{" "}
-              <span style={{ color: "#0202ff" }}>retention, readiness, and team performance.</span>
+              Spot leadership risk{" "}
+              <span style={{ color: "#0202ff" }}>before it hits your metrics.</span>
             </h1>
 
             {/* Subheadline */}

@@ -3,7 +3,7 @@ import LandingNav from "@/components/landing/LandingNav";
 import LandingHero from "@/components/landing/LandingHero";
 import LandingProblem from "@/components/landing/LandingProblem";
 import LandingShift from "@/components/landing/LandingShift";
-import LandingHowItWorks from "@/components/landing/LandingHowItWorks";
+import LandingExplainer from "@/components/landing/LandingExplainer";
 import Landing90Days from "@/components/landing/Landing90Days";
 import LandingFAQ from "@/components/landing/LandingFAQ";
 import LandingBeyond from "@/components/landing/LandingBeyond";
@@ -17,7 +17,7 @@ export default function LandingPage() {
       <LandingHero />
       <LandingProblem />
       <LandingShift />
-      <LandingHowItWorks />
+      <LandingExplainer />
       <Landing90Days />
       <LandingFAQ />
       <LandingBeyond />
