@@ -44,7 +44,7 @@ export default function LandingShift() {
           <div className="space-y-6">
             <div className="rounded-2xl overflow-hidden shadow-sm">
               <img
-                src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5fee15d96_Body39.png"
+                src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/4f536a59b_image.png"
                 alt="Team collaborating proactively"
                 className="w-full h-52 object-cover object-center"
               />
