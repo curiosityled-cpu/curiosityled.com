@@ -99,10 +99,13 @@ export default function LandingHowItWorks() {
 
           {/* App UI: Leadership Intelligence Hub mockup */}
           <motion.div
-            initial={{ opacity: 0, x: 80, scale: 0.95 }}
-            whileInView={{ opacity: 1, x: 0, scale: 1 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: 0.9, ease: "easeOut", delay: 0.2 }}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.3 }}
+            variants={{
+              hidden: { opacity: 0, x: 80, scale: 0.95 },
+              show: { opacity: 1, x: 0, scale: 1, transition: { duration: 0.9, ease: "easeOut", delay: 0.2, staggerChildren: 0.15, delayChildren: 0.5 } }
+            }}
             className="rounded-2xl overflow-hidden shadow-xl border border-gray-200 bg-white"
           >
             {/* Chrome bar */}
@@ -122,9 +125,6 @@ export default function LandingHowItWorks() {
               <motion.div
                 className="grid grid-cols-3 gap-3 mb-4"
                 variants={gridContainerVariants}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true, amount: 0.5 }}
               >
                 {[
                   { label: "At Risk", count: "3", color: "#ef4444", bg: "#fef2f2" },
@@ -147,9 +147,6 @@ export default function LandingHowItWorks() {
               <motion.div
                 className="space-y-2"
                 variants={gridContainerVariants}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true, amount: 0.5 }}
               >
                 {[
                   { name: "Sarah M.", role: "Charge Nurse → Manager", risk: "High", prog: 35 },
