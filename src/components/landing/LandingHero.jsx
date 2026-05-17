@@ -40,9 +40,9 @@ export default function LandingHero() {
             {/* Bullets */}
             <ul className="space-y-3 mb-10">
               {[
-                "See earlier signals of leadership risk and overload.",
-                "Support managers in the moment of need, not after the damage is done.",
-                "Give HR one clear system for progress, readiness, and intervention visibility.",
+                "Support at‑risk managers before issues escalate.",
+                "Deliver coaching and learning in the flow of work instead of pulling managers out of it.",
+                "Give HR and leaders a shared view of progress, readiness, and where to intervene.",
               ].map((b, i) => (
                 <li key={i} className="flex items-start gap-3">
                   <span
