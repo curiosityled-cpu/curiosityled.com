@@ -1,18 +1,26 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence, useAnimation } from "framer-motion";
 
-const stepsContainerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.18, delayChildren: 0.1 }
-  }
-};
+function useInViewAnimation(threshold = 0.1) {
+  const ref = useRef(null);
+  const controls = useAnimation();
 
-const stepItemVariants = {
-  hidden: { opacity: 0, x: -40 },
-  show: { opacity: 1, x: 0, transition: { duration: 0.55, ease: "easeOut" } }
-};
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          controls.start("show");
+          observer.disconnect();
+        }
+      },
+      { threshold }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [controls, threshold]);
+
+  return { ref, controls };
+}
 
 const steps = [
   {
@@ -152,15 +160,22 @@ const steps = [
 export default function LandingHowItWorks() {
   const [activeStep, setActiveStep] = useState(0);
 
+  const { ref: headerRef, controls: headerControls } = useInViewAnimation(0.1);
+  const { ref: stepsRef, controls: stepsControls } = useInViewAnimation(0.1);
+  const { ref: mockupRef, controls: mockupControls } = useInViewAnimation(0.1);
+
   return (
     <section id="how-it-works" className="py-24 bg-gray-50">
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.1 }}
-          transition={{ duration: 0.7 }}
+          ref={headerRef}
+          animate={headerControls}
+          initial="hidden"
+          variants={{
+            hidden: { opacity: 0, y: 40 },
+            show: { opacity: 1, y: 0, transition: { duration: 0.7 } }
+          }}
           className="text-center mb-16"
         >
           <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full border border-blue-100 bg-blue-50">
@@ -176,18 +191,24 @@ export default function LandingHowItWorks() {
         <div className="grid lg:grid-cols-2 gap-12 items-start">
           {/* Steps */}
           <motion.div
-            className="space-y-3"
-            variants={stepsContainerVariants}
+            ref={stepsRef}
+            animate={stepsControls}
             initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, amount: 0.1 }}
+            variants={{
+              hidden: { opacity: 0 },
+              show: { opacity: 1, transition: { staggerChildren: 0.18, delayChildren: 0.1 } }
+            }}
+            className="space-y-3"
           >
             {steps.map((step, i) => {
               const isActive = activeStep === i;
               return (
                 <motion.div
                   key={i}
-                  variants={stepItemVariants}
+                  variants={{
+                    hidden: { opacity: 0, x: -40 },
+                    show: { opacity: 1, x: 0, transition: { duration: 0.55, ease: "easeOut" } }
+                  }}
                   onClick={() => setActiveStep(i)}
                   className="flex gap-5 p-4 rounded-xl cursor-pointer transition-all duration-200 border"
                   style={{
@@ -215,12 +236,15 @@ export default function LandingHowItWorks() {
             })}
           </motion.div>
 
-          {/* App UI mockup — swaps on step click */}
+          {/* App UI mockup */}
           <motion.div
-            initial={{ opacity: 0, x: 60 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, amount: 0.1 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+            ref={mockupRef}
+            animate={mockupControls}
+            initial="hidden"
+            variants={{
+              hidden: { opacity: 0, x: 60 },
+              show: { opacity: 1, x: 0, transition: { duration: 0.8, ease: "easeOut", delay: 0.3 } }
+            }}
             className="rounded-2xl overflow-hidden shadow-xl border border-gray-200 bg-white sticky top-24"
           >
             {/* Chrome bar */}
@@ -243,10 +267,7 @@ export default function LandingHowItWorks() {
                   transition={{ duration: 0.35, ease: "easeOut" }}
                 >
                   <div className="flex items-center gap-2 mb-4">
-                    <span
-                      className="text-xs font-bold px-2 py-0.5 rounded-full text-white"
-                      style={{ backgroundColor: "#0202ff" }}
-                    >
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: "#0202ff" }}>
                       {steps[activeStep].num}
                     </span>
                     <div className="text-sm font-bold text-gray-900">{steps[activeStep].mockup.heading}</div>
