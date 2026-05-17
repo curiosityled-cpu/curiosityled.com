@@ -12,7 +12,7 @@ export default function LandingFinalCTA() {
           Curiosity Led helps healthcare organizations identify leadership risk earlier, support managers in the flow of work, and create one clearer view of development progress, readiness, and intervention impact.
         </p>
         <a
-          href="https://cal.com/curiosityled/discoverycall"
+          href="https://calendly.com/team-curiosityled/discoverycall"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 bg-white font-bold text-sm px-8 py-4 rounded-xl hover:bg-blue-50 transition-all shadow-lg"

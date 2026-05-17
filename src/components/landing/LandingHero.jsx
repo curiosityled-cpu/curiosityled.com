@@ -59,7 +59,7 @@ export default function LandingHero() {
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-3">
               <a
-                href="https://cal.com/curiosityled/discoverycall"
+                href="https://calendly.com/team-curiosityled/discoverycall"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg font-semibold text-white text-sm transition-all hover:opacity-90"
