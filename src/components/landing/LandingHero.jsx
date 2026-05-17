@@ -41,13 +41,8 @@ export default function LandingHero() {
             </h1>
 
             {/* Subheadline */}
-            <p className="text-lg text-gray-500 leading-relaxed mb-4 font-medium">
-              Curiosity Led helps HR and Talent leaders spot leadership risk earlier, support managers in the flow of work, and build a clearer story of impact.
-            </p>
-
-            {/* Support paragraph */}
-            <p className="text-base text-gray-500 leading-relaxed mb-8">
-              Healthcare organizations are already investing in manager development. Curiosity Led turns those efforts into a more measurable system by bringing assessments, learning, and goals into managers' daily tools and connecting that activity to one leadership view HR can stand behind.
+            <p className="text-lg text-gray-600 leading-relaxed mb-8 font-medium">
+              Earlier signals. In-workflow support. Clearer leadership visibility.
             </p>
 
             {/* Bullets */}
