@@ -1,5 +1,6 @@
 import React from "react";
 import { ArrowRight, ChevronDown } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function LandingHero() {
   const scrollToHow = () => {
@@ -27,24 +28,46 @@ export default function LandingHero() {
           {/* Left: Copy */}
           <div>
             {/* Headline */}
-            <h1 className="text-4xl lg:text-5xl xl:text-[52px] font-bold text-[#0a0a0a] leading-[1.1] tracking-tight mb-6">
+            <motion.h1
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="text-4xl lg:text-5xl xl:text-[52px] font-bold text-[#0a0a0a] leading-[1.1] tracking-tight mb-6"
+            >
               Spot leadership risk{" "}
               <span style={{ color: "#0202ff" }}>before it hits your metrics.</span>
-            </h1>
+            </motion.h1>
 
             {/* Subheadline */}
-            <p className="text-lg text-gray-600 leading-relaxed mb-8 font-medium">
+            <motion.p
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.4 }}
+              className="text-lg text-gray-600 leading-relaxed mb-8 font-medium"
+            >
               Earlier signals. In-workflow support. Clearer leadership visibility.
-            </p>
+            </motion.p>
 
             {/* Bullets */}
-            <ul className="space-y-3 mb-10">
+            <motion.ul
+              className="space-y-3 mb-10"
+              initial="hidden"
+              animate="show"
+              variants={{
+                hidden: { opacity: 0 },
+                show: { opacity: 1, transition: { staggerChildren: 0.15, delayChildren: 0.6 } }
+              }}
+            >
               {[
                 "Support at\u2011risk managers before issues escalate.",
                 "Deliver coaching and learning in the flow of work.",
                 "Give one shared view of progress, readiness, and where to intervene.",
               ].map((b, i) => (
-                <li key={i} className="flex items-start gap-3">
+                <motion.li
+                  key={i}
+                  variants={{ hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
+                  className="flex items-start gap-3"
+                >
                   <span
                     className="mt-1 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold"
                     style={{ backgroundColor: "#0202ff" }}
@@ -52,12 +75,17 @@ export default function LandingHero() {
                     ✓
                   </span>
                   <span className="text-gray-700 text-sm leading-relaxed">{b}</span>
-                </li>
+                </motion.li>
               ))}
-            </ul>
+            </motion.ul>
 
             {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-3">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.1 }}
+              className="flex flex-col sm:flex-row gap-3"
+            >
               <a
                 href="https://calendly.com/team-curiosityled/discoverycall"
                 target="_blank"
@@ -75,11 +103,16 @@ export default function LandingHero() {
                 See how it works
                 <ChevronDown className="w-4 h-4" />
               </button>
-            </div>
+            </motion.div>
           </div>
 
           {/* Right: App screenshot */}
-          <div className="relative lg:block">
+          <motion.div
+            initial={{ opacity: 0, x: 80, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{ duration: 0.9, delay: 0.5, ease: "easeOut" }}
+            className="relative lg:block"
+          >
             <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-gray-100">
               {/* Browser chrome */}
               <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center gap-2">
@@ -168,7 +201,12 @@ export default function LandingHero() {
             </div>
 
             {/* Floating badge */}
-            <div className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg border border-gray-100 px-4 py-3 flex items-center gap-3">
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.6, delay: 1.6 }}
+              className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg border border-gray-100 px-4 py-3 flex items-center gap-3"
+            >
               <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: "#0202ff" }}>
                 ↑
               </div>
@@ -176,8 +214,8 @@ export default function LandingHero() {
                 <div className="text-xs font-bold text-gray-900">Risk detected early</div>
                 <div className="text-[10px] text-gray-500">Intervention triggered before escalation</div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
 
         {/* Proof strip */}
