@@ -11,17 +11,23 @@ function useScrollReveal(ref) {
 
     const check = () => {
       const rect = el.getBoundingClientRect();
-      const inView = rect.top < window.innerHeight - 80;
+      const inView = rect.top < window.innerHeight - 60;
       if (inView) {
         setRevealed(true);
-        window.removeEventListener("scroll", check, true);
       }
     };
 
-    // Check immediately AND on every scroll
-    check();
-    window.addEventListener("scroll", check, true);
-    return () => window.removeEventListener("scroll", check, true);
+    // Listen on every possible scroll container
+    const containers = [window, document, document.documentElement, document.body];
+    containers.forEach(c => c.addEventListener("scroll", check, { passive: true, capture: true }));
+
+    // Delay initial check by 2 frames so the hidden CSS state renders first
+    const id = requestAnimationFrame(() => requestAnimationFrame(check));
+
+    return () => {
+      clearTimeout(id);
+      containers.forEach(c => c.removeEventListener("scroll", check, { capture: true }));
+    };
   }, [ref]);
 
   return revealed;
