@@ -21,7 +21,7 @@ export default function LandingBeyond() {
         <div className="text-center mb-14">
           <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full border border-blue-100 bg-blue-50">
             <span className="w-2 h-2 rounded-full bg-[#0202ff]" />
-            <span className="text-xs font-semibold text-[#0202ff] uppercase tracking-wider">Positioning</span>
+            <span className="text-xs font-semibold text-[#0202ff] uppercase tracking-wider">Who we are</span>
           </div>
           <h2 className="text-3xl lg:text-4xl font-bold text-[#0a0a0a] mb-4 leading-tight">
             Beyond support: leadership visibility.
