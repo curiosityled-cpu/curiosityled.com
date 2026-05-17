@@ -1,182 +1,159 @@
 import React, { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence, useAnimation } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
-function useInViewAnimation(threshold = 0.1) {
-  const ref = useRef(null);
-  const controls = useAnimation();
+// Fires callback once when the ref element scrolls into view
+function useScrollReveal(ref) {
+  const [revealed, setRevealed] = useState(false);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          controls.start("show");
-          observer.disconnect();
-        }
-      },
-      { threshold }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [controls, threshold]);
+    const el = ref.current;
+    if (!el) return;
 
-  return { ref, controls };
+    const check = () => {
+      const rect = el.getBoundingClientRect();
+      const inView = rect.top < window.innerHeight - 80;
+      if (inView) {
+        setRevealed(true);
+        window.removeEventListener("scroll", check, true);
+      }
+    };
+
+    // Check immediately AND on every scroll
+    check();
+    window.addEventListener("scroll", check, true);
+    return () => window.removeEventListener("scroll", check, true);
+  }, [ref]);
+
+  return revealed;
 }
 
-const steps = [
-  {
-    num: "01",
-    title: "Assess early",
-    desc: "Establish a baseline for newly promoted or newly hired leaders and surface where support may be needed before issues escalate.",
-    mockup: {
-      heading: "Baseline Assessment",
-      content: (
-        <div className="space-y-3">
-          <div className="text-xs text-gray-500 mb-2">Competency scores — Sarah M.</div>
-          {[
-            { label: "Decision Making", score: 42, color: "#ef4444" },
-            { label: "Communication", score: 67, color: "#f59e0b" },
-            { label: "Resource Mgmt", score: 55, color: "#f59e0b" },
-            { label: "Situational Intel", score: 38, color: "#ef4444" },
-          ].map((c) => (
-            <div key={c.label}>
-              <div className="flex justify-between text-[10px] text-gray-600 mb-1">
-                <span>{c.label}</span><span style={{ color: c.color }}>{c.score}%</span>
-              </div>
-              <div className="w-full bg-gray-100 rounded-full h-1.5">
-                <motion.div
-                  className="h-1.5 rounded-full"
-                  style={{ backgroundColor: c.color }}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${c.score}%` }}
-                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-                />
-              </div>
-            </div>
-          ))}
-          <div className="mt-3 p-2 rounded-lg bg-red-50 border border-red-100 text-[10px] text-red-700">
-            ⚠ 2 competencies below threshold — coaching recommended
+const MOCKUP_CONTENT = [
+  // Step 01 — Assess early
+  <div key="01" className="space-y-3">
+    <div className="text-xs text-gray-500 mb-2">Competency scores — Sarah M.</div>
+    {[
+      { label: "Decision Making", score: 42, color: "#ef4444" },
+      { label: "Communication", score: 67, color: "#f59e0b" },
+      { label: "Resource Mgmt", score: 55, color: "#f59e0b" },
+      { label: "Situational Intel", score: 38, color: "#ef4444" },
+    ].map((c) => (
+      <div key={c.label}>
+        <div className="flex justify-between text-[10px] text-gray-600 mb-1">
+          <span>{c.label}</span>
+          <span style={{ color: c.color }}>{c.score}%</span>
+        </div>
+        <div className="w-full bg-gray-100 rounded-full h-1.5">
+          <motion.div
+            className="h-1.5 rounded-full"
+            style={{ backgroundColor: c.color }}
+            initial={{ width: 0 }}
+            animate={{ width: `${c.score}%` }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
+          />
+        </div>
+      </div>
+    ))}
+    <div className="mt-3 p-2 rounded-lg bg-red-50 border border-red-100 text-[10px] text-red-700">
+      ⚠ 2 competencies below threshold — coaching recommended
+    </div>
+  </div>,
+
+  // Step 02 — Focus the next action
+  <div key="02" className="space-y-2">
+    <div className="text-xs text-gray-500 mb-2">Action plan — Sarah M.</div>
+    {[
+      { action: "Complete Decision-Making module", type: "Learning", due: "This week", color: "#0202ff", bg: "#eff0ff" },
+      { action: "Schedule 1:1 coaching session", type: "Coaching", due: "By Friday", color: "#10b981", bg: "#f0fdf4" },
+      { action: "Set 30-day development goal", type: "Goal", due: "Today", color: "#f59e0b", bg: "#fffbeb" },
+    ].map((a, i) => (
+      <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg border border-gray-100 bg-white">
+        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded" style={{ color: a.color, backgroundColor: a.bg }}>{a.type}</span>
+        <span className="text-[10px] text-gray-700 flex-1">{a.action}</span>
+        <span className="text-[9px] text-gray-400">{a.due}</span>
+      </div>
+    ))}
+  </div>,
+
+  // Step 03 — Reinforce in the workflow
+  <div key="03" className="space-y-2">
+    <div className="text-xs text-gray-500 mb-2">Active touchpoints — this week</div>
+    {[
+      { icon: "📬", label: "Slack nudge sent", sub: "Decision-making tip", time: "2h ago", done: true },
+      { icon: "📚", label: "Module unlocked", sub: "Conflict Resolution 101", time: "Yesterday", done: true },
+      { icon: "🗓", label: "Coaching session", sub: "Confirmed for Thursday 2pm", time: "Upcoming", done: false },
+      { icon: "🎯", label: "Goal check-in", sub: "30-day milestone due", time: "In 3 days", done: false },
+    ].map((n, i) => (
+      <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-50 border border-gray-100">
+        <span className="text-sm">{n.icon}</span>
+        <div className="flex-1 min-w-0">
+          <div className="text-[10px] font-semibold text-gray-800">{n.label}</div>
+          <div className="text-[9px] text-gray-400 truncate">{n.sub}</div>
+        </div>
+        <span className={`text-[9px] font-medium ${n.done ? "text-green-600" : "text-blue-500"}`}>{n.time}</span>
+      </div>
+    ))}
+  </div>,
+
+  // Step 04 — Give leadership one view
+  <div key="04" className="space-y-3">
+    <div className="grid grid-cols-3 gap-2 mb-3">
+      {[
+        { label: "At Risk", count: "3", color: "#ef4444", bg: "#fef2f2" },
+        { label: "Progressing", count: "18", color: "#10b981", bg: "#f0fdf4" },
+        { label: "On Watch", count: "7", color: "#f59e0b", bg: "#fffbeb" },
+      ].map((s) => (
+        <div key={s.label} className="rounded-xl p-2.5 text-center border" style={{ backgroundColor: s.bg, borderColor: s.color + "33" }}>
+          <div className="text-lg font-bold" style={{ color: s.color }}>{s.count}</div>
+          <div className="text-[9px] text-gray-600 mt-0.5">{s.label}</div>
+        </div>
+      ))}
+    </div>
+    <div className="space-y-1.5">
+      {[
+        { name: "Sarah M.", role: "Charge Nurse → Manager", risk: "High", prog: 35 },
+        { name: "Daniel K.", role: "Clinical Lead → Director", risk: "Medium", prog: 62 },
+        { name: "Priya R.", role: "Operations → VP", risk: "Low", prog: 84 },
+      ].map((m, i) => (
+        <div key={i} className="flex items-center gap-2.5 py-2 px-2.5 rounded-lg bg-gray-50 border border-gray-100">
+          <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0" style={{ backgroundColor: "#0202ff" }}>{m.name[0]}</div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[10px] font-semibold text-gray-900">{m.name}</div>
+            <div className="text-[9px] text-gray-400 truncate">{m.role}</div>
           </div>
-        </div>
-      )
-    }
-  },
-  {
-    num: "02",
-    title: "Focus the next action",
-    desc: "Turn insight into one clear goal and one practical next step tied to what the manager is actually handling in their team right now.",
-    mockup: {
-      heading: "Recommended Next Steps",
-      content: (
-        <div className="space-y-2">
-          <div className="text-xs text-gray-500 mb-2">Action plan — Sarah M.</div>
-          {[
-            { action: "Complete Decision-Making module", type: "Learning", due: "This week", color: "#0202ff", bg: "#eff0ff" },
-            { action: "Schedule 1:1 coaching session", type: "Coaching", due: "By Friday", color: "#10b981", bg: "#f0fdf4" },
-            { action: "Set 30-day development goal", type: "Goal", due: "Today", color: "#f59e0b", bg: "#fffbeb" },
-          ].map((a, i) => (
-            <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg border border-gray-100 bg-white">
-              <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded" style={{ color: a.color, backgroundColor: a.bg }}>{a.type}</span>
-              <span className="text-[10px] text-gray-700 flex-1">{a.action}</span>
-              <span className="text-[9px] text-gray-400">{a.due}</span>
-            </div>
-          ))}
-        </div>
-      )
-    }
-  },
-  {
-    num: "03",
-    title: "Reinforce in the workflow",
-    desc: "Deliver nudges, learning, and coaching loops in the tools managers already use, so support stays connected to real situations.",
-    mockup: {
-      heading: "Workflow Nudges",
-      content: (
-        <div className="space-y-2">
-          <div className="text-xs text-gray-500 mb-2">Active touchpoints — this week</div>
-          {[
-            { icon: "📬", label: "Slack nudge sent", sub: "Decision-making tip", time: "2h ago", done: true },
-            { icon: "📚", label: "Module unlocked", sub: "Conflict Resolution 101", time: "Yesterday", done: true },
-            { icon: "🗓", label: "Coaching session", sub: "Confirmed for Thursday 2pm", time: "Upcoming", done: false },
-            { icon: "🎯", label: "Goal check-in", sub: "30-day milestone due", time: "In 3 days", done: false },
-          ].map((n, i) => (
-            <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-50 border border-gray-100">
-              <span className="text-sm">{n.icon}</span>
-              <div className="flex-1 min-w-0">
-                <div className="text-[10px] font-semibold text-gray-800">{n.label}</div>
-                <div className="text-[9px] text-gray-400 truncate">{n.sub}</div>
-              </div>
-              <span className={`text-[9px] font-medium ${n.done ? "text-green-600" : "text-blue-500"}`}>{n.time}</span>
-            </div>
-          ))}
-        </div>
-      )
-    }
-  },
-  {
-    num: "04",
-    title: "Give leadership one view",
-    desc: "Bring assessments, actions, progress, and key lifecycle metrics into a single Leadership Intelligence Hub so HR and executive sponsors can see who is at risk.",
-    mockup: {
-      heading: "Org Leadership Overview",
-      content: (
-        <div className="space-y-3">
-          <div className="grid grid-cols-3 gap-2 mb-3">
-            {[
-              { label: "At Risk", count: "3", color: "#ef4444", bg: "#fef2f2" },
-              { label: "Progressing", count: "18", color: "#10b981", bg: "#f0fdf4" },
-              { label: "On Watch", count: "7", color: "#f59e0b", bg: "#fffbeb" },
-            ].map((s) => (
-              <div key={s.label} className="rounded-xl p-2.5 text-center border" style={{ backgroundColor: s.bg, borderColor: s.color + "33" }}>
-                <div className="text-lg font-bold" style={{ color: s.color }}>{s.count}</div>
-                <div className="text-[9px] text-gray-600 mt-0.5">{s.label}</div>
-              </div>
-            ))}
+          <div className="w-12 bg-gray-200 rounded-full h-1">
+            <div className="h-1 rounded-full" style={{ width: `${m.prog}%`, backgroundColor: m.prog > 70 ? "#10b981" : m.prog > 50 ? "#f59e0b" : "#ef4444" }} />
           </div>
-          <div className="space-y-1.5">
-            {[
-              { name: "Sarah M.", role: "Charge Nurse → Manager", risk: "High", prog: 35 },
-              { name: "Daniel K.", role: "Clinical Lead → Director", risk: "Medium", prog: 62 },
-              { name: "Priya R.", role: "Operations → VP", risk: "Low", prog: 84 },
-            ].map((m, i) => (
-              <div key={i} className="flex items-center gap-2.5 py-2 px-2.5 rounded-lg bg-gray-50 border border-gray-100">
-                <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0" style={{ backgroundColor: "#0202ff" }}>{m.name[0]}</div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[10px] font-semibold text-gray-900">{m.name}</div>
-                  <div className="text-[9px] text-gray-400 truncate">{m.role}</div>
-                </div>
-                <div className="w-12 bg-gray-200 rounded-full h-1">
-                  <div className="h-1 rounded-full" style={{ width: `${m.prog}%`, backgroundColor: m.prog > 70 ? "#10b981" : m.prog > 50 ? "#f59e0b" : "#ef4444" }} />
-                </div>
-                <span className="text-[8px] font-semibold px-1 py-0.5 rounded" style={{ color: m.risk === "High" ? "#ef4444" : m.risk === "Medium" ? "#f59e0b" : "#10b981", backgroundColor: m.risk === "High" ? "#fef2f2" : m.risk === "Medium" ? "#fffbeb" : "#f0fdf4" }}>{m.risk}</span>
-              </div>
-            ))}
-          </div>
+          <span className="text-[8px] font-semibold px-1 py-0.5 rounded" style={{ color: m.risk === "High" ? "#ef4444" : m.risk === "Medium" ? "#f59e0b" : "#10b981", backgroundColor: m.risk === "High" ? "#fef2f2" : m.risk === "Medium" ? "#fffbeb" : "#f0fdf4" }}>{m.risk}</span>
         </div>
-      )
-    }
-  },
+      ))}
+    </div>
+  </div>,
 ];
+
+const steps = [
+  { num: "01", title: "Assess early", desc: "Establish a baseline for newly promoted or newly hired leaders and surface where support may be needed before issues escalate." },
+  { num: "02", title: "Focus the next action", desc: "Turn insight into one clear goal and one practical next step tied to what the manager is actually handling in their team right now." },
+  { num: "03", title: "Reinforce in the workflow", desc: "Deliver nudges, learning, and coaching loops in the tools managers already use, so support stays connected to real situations." },
+  { num: "04", title: "Give leadership one view", desc: "Bring assessments, actions, progress, and key lifecycle metrics into a single Leadership Intelligence Hub so HR and executive sponsors can see who is at risk." },
+];
+
+const MOCKUP_HEADINGS = ["Baseline Assessment", "Recommended Next Steps", "Workflow Nudges", "Org Leadership Overview"];
 
 export default function LandingHowItWorks() {
   const [activeStep, setActiveStep] = useState(0);
-
-  const { ref: headerRef, controls: headerControls } = useInViewAnimation(0.1);
-  const { ref: stepsRef, controls: stepsControls } = useInViewAnimation(0.1);
-  const { ref: mockupRef, controls: mockupControls } = useInViewAnimation(0.1);
+  const sectionRef = useRef(null);
+  const revealed = useScrollReveal(sectionRef);
 
   return (
-    <section id="how-it-works" className="py-24 bg-gray-50">
+    <section id="how-it-works" ref={sectionRef} className="py-24 bg-gray-50">
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
-        <motion.div
-          ref={headerRef}
-          animate={headerControls}
-          initial="hidden"
-          variants={{
-            hidden: { opacity: 0, y: 40 },
-            show: { opacity: 1, y: 0, transition: { duration: 0.7 } }
+        <div
+          className="text-center mb-16 transition-all duration-700"
+          style={{
+            opacity: revealed ? 1 : 0,
+            transform: revealed ? "translateY(0)" : "translateY(40px)",
           }}
-          className="text-center mb-16"
         >
           <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full border border-blue-100 bg-blue-50">
             <span className="w-2 h-2 rounded-full bg-[#0202ff]" />
@@ -185,38 +162,26 @@ export default function LandingHowItWorks() {
           <h2 className="text-3xl lg:text-4xl font-bold text-[#0a0a0a] mb-4">
             One system from assessment to executive view.
           </h2>
-        </motion.div>
+        </div>
 
         {/* Steps + App mockup */}
         <div className="grid lg:grid-cols-2 gap-12 items-start">
           {/* Steps */}
-          <motion.div
-            ref={stepsRef}
-            animate={stepsControls}
-            initial="hidden"
-            variants={{
-              hidden: { opacity: 0 },
-              show: { opacity: 1, transition: { staggerChildren: 0.18, delayChildren: 0.1 } }
-            }}
-            className="space-y-3"
-          >
+          <div className="space-y-3">
             {steps.map((step, i) => {
               const isActive = activeStep === i;
               return (
-                <motion.div
+                <div
                   key={i}
-                  variants={{
-                    hidden: { opacity: 0, x: -40 },
-                    show: { opacity: 1, x: 0, transition: { duration: 0.55, ease: "easeOut" } }
-                  }}
                   onClick={() => setActiveStep(i)}
-                  className="flex gap-5 p-4 rounded-xl cursor-pointer transition-all duration-200 border"
+                  className="flex gap-5 p-4 rounded-xl cursor-pointer border transition-all duration-500"
                   style={{
+                    opacity: revealed ? 1 : 0,
+                    transform: revealed ? "translateX(0)" : "translateX(-40px)",
+                    transitionDelay: `${i * 120 + 200}ms`,
                     backgroundColor: isActive ? "#eff0ff" : "transparent",
                     borderColor: isActive ? "#0202ff33" : "transparent",
                   }}
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
                 >
                   <div
                     className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center font-bold text-sm transition-all duration-200"
@@ -231,21 +196,19 @@ export default function LandingHowItWorks() {
                     <div className="font-bold text-[#0a0a0a] mb-1">{step.title}</div>
                     <p className="text-gray-500 text-sm leading-relaxed">{step.desc}</p>
                   </div>
-                </motion.div>
+                </div>
               );
             })}
-          </motion.div>
+          </div>
 
           {/* App UI mockup */}
-          <motion.div
-            ref={mockupRef}
-            animate={mockupControls}
-            initial="hidden"
-            variants={{
-              hidden: { opacity: 0, x: 60 },
-              show: { opacity: 1, x: 0, transition: { duration: 0.8, ease: "easeOut", delay: 0.3 } }
+          <div
+            className="rounded-2xl overflow-hidden shadow-xl border border-gray-200 bg-white sticky top-24 transition-all duration-700"
+            style={{
+              opacity: revealed ? 1 : 0,
+              transform: revealed ? "translateX(0)" : "translateX(60px)",
+              transitionDelay: "400ms",
             }}
-            className="rounded-2xl overflow-hidden shadow-xl border border-gray-200 bg-white sticky top-24"
           >
             {/* Chrome bar */}
             <div className="bg-gray-100 border-b border-gray-200 px-4 py-2.5 flex items-center gap-2">
@@ -270,13 +233,13 @@ export default function LandingHowItWorks() {
                     <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: "#0202ff" }}>
                       {steps[activeStep].num}
                     </span>
-                    <div className="text-sm font-bold text-gray-900">{steps[activeStep].mockup.heading}</div>
+                    <div className="text-sm font-bold text-gray-900">{MOCKUP_HEADINGS[activeStep]}</div>
                   </div>
-                  {steps[activeStep].mockup.content}
+                  {MOCKUP_CONTENT[activeStep]}
                 </motion.div>
               </AnimatePresence>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>
