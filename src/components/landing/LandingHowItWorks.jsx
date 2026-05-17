@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Fires callback once when the ref element scrolls into view
 function useScrollReveal(ref) {
   const [revealed, setRevealed] = useState(false);
 
@@ -9,25 +8,18 @@ function useScrollReveal(ref) {
     const el = ref.current;
     if (!el) return;
 
-    const check = () => {
-      const rect = el.getBoundingClientRect();
-      const inView = rect.top < window.innerHeight - 60;
-      if (inView) {
-        setRevealed(true);
-      }
-    };
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setRevealed(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -60px 0px" }
+    );
 
-    // Listen on every possible scroll container
-    const containers = [window, document, document.documentElement, document.body];
-    containers.forEach(c => c.addEventListener("scroll", check, { passive: true, capture: true }));
-
-    // Delay initial check by 2 frames so the hidden CSS state renders first
-    const id = requestAnimationFrame(() => requestAnimationFrame(check));
-
-    return () => {
-      clearTimeout(id);
-      containers.forEach(c => c.removeEventListener("scroll", check, { capture: true }));
-    };
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [ref]);
 
   return revealed;
@@ -154,12 +146,11 @@ export default function LandingHowItWorks() {
     <section id="how-it-works" ref={sectionRef} className="py-24 bg-gray-50">
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
-        <div
-          className="text-center mb-16 transition-all duration-700"
-          style={{
-            opacity: revealed ? 1 : 0,
-            transform: revealed ? "translateY(0)" : "translateY(40px)",
-          }}
+        <motion.div
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 40 }}
+          animate={revealed ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
+          transition={{ duration: 0.6 }}
         >
           <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full border border-blue-100 bg-blue-50">
             <span className="w-2 h-2 rounded-full bg-[#0202ff]" />
@@ -168,7 +159,7 @@ export default function LandingHowItWorks() {
           <h2 className="text-3xl lg:text-4xl font-bold text-[#0a0a0a] mb-4">
             One system from assessment to executive view.
           </h2>
-        </div>
+        </motion.div>
 
         {/* Steps + App mockup */}
         <div className="grid lg:grid-cols-2 gap-12 items-start">
@@ -177,44 +168,45 @@ export default function LandingHowItWorks() {
             {steps.map((step, i) => {
               const isActive = activeStep === i;
               return (
-                <div
+                <motion.div
                   key={i}
                   onClick={() => setActiveStep(i)}
-                  className="flex gap-5 p-4 rounded-xl cursor-pointer border transition-all duration-500"
-                  style={{
-                    opacity: revealed ? 1 : 0,
-                    transform: revealed ? "translateX(0)" : "translateX(-40px)",
-                    transitionDelay: `${i * 120 + 200}ms`,
-                    backgroundColor: isActive ? "#eff0ff" : "transparent",
-                    borderColor: isActive ? "#0202ff33" : "transparent",
-                  }}
+                  className="flex gap-5 p-4 rounded-xl cursor-pointer border"
+                  initial={{ opacity: 0, x: -40 }}
+                  animate={revealed ? {
+                    opacity: 1,
+                    x: 0,
+                    backgroundColor: isActive ? "#eff0ff" : "rgba(0,0,0,0)",
+                    borderColor: isActive ? "#0202ff33" : "rgba(0,0,0,0)",
+                  } : { opacity: 0, x: -40 }}
+                  transition={{ duration: 0.5, delay: revealed ? i * 0.12 + 0.2 : 0 }}
                 >
-                  <div
-                    className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center font-bold text-sm transition-all duration-200"
-                    style={{
+                  <motion.div
+                    className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center font-bold text-sm"
+                    animate={{
                       backgroundColor: isActive ? "#0202ff" : "#e5e7eb",
                       color: isActive ? "#fff" : "#6b7280",
                     }}
+                    transition={{ duration: 0.2 }}
                   >
                     {step.num}
-                  </div>
+                  </motion.div>
                   <div>
                     <div className="font-bold text-[#0a0a0a] mb-1">{step.title}</div>
                     <p className="text-gray-500 text-sm leading-relaxed">{step.desc}</p>
-                  </div>
-                </div>
+                    </div>
+                    </motion.div>
+
               );
             })}
           </div>
 
           {/* App UI mockup */}
-          <div
-            className="rounded-2xl overflow-hidden shadow-xl border border-gray-200 bg-white sticky top-24 transition-all duration-700"
-            style={{
-              opacity: revealed ? 1 : 0,
-              transform: revealed ? "translateX(0)" : "translateX(60px)",
-              transitionDelay: "400ms",
-            }}
+          <motion.div
+            className="rounded-2xl overflow-hidden shadow-xl border border-gray-200 bg-white sticky top-24"
+            initial={{ opacity: 0, x: 60 }}
+            animate={revealed ? { opacity: 1, x: 0 } : { opacity: 0, x: 60 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
           >
             {/* Chrome bar */}
             <div className="bg-gray-100 border-b border-gray-200 px-4 py-2.5 flex items-center gap-2">
@@ -245,7 +237,7 @@ export default function LandingHowItWorks() {
                 </motion.div>
               </AnimatePresence>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
