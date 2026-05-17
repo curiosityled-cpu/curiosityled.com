@@ -31,6 +31,15 @@ export default function LandingBeyond() {
           </p>
         </div>
 
+        {/* Leader reviewing data image */}
+        <div className="mb-10 rounded-2xl overflow-hidden max-w-3xl mx-auto shadow-sm">
+          <img
+            src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/91932fbf0_Body93.png"
+            alt="Leader reviewing leadership data"
+            className="w-full h-64 object-cover object-top"
+          />
+        </div>
+
         <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           {/* Not */}
           <div className="rounded-2xl border border-gray-200 bg-white p-6">

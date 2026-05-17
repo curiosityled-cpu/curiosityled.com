@@ -35,6 +35,15 @@ export default function LandingProblem() {
           Managers feel like they are juggling development on top of the job, while HR struggles to explain what is actually working.
         </p>
 
+        {/* Overworked manager image */}
+        <div className="mb-12 rounded-2xl overflow-hidden max-h-72 w-full">
+          <img
+            src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/4318994b8_Body21.png"
+            alt="Overwhelmed manager under pressure"
+            className="w-full h-72 object-cover object-center"
+          />
+        </div>
+
         {/* Quote cards */}
         <div className="grid md:grid-cols-3 gap-6">
           {quotes.map((q, i) => (

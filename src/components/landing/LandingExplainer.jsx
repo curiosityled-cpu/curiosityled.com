@@ -236,7 +236,8 @@ export default function LandingExplainer() {
     <section className="py-24 bg-gray-50">
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
-        <div className="mb-14">
+        <div className="mb-14 grid lg:grid-cols-2 gap-10 items-center">
+          <div>
           <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full border border-blue-100 bg-blue-50">
             <span className="w-2 h-2 rounded-full bg-[#0202ff]" />
             <span className="text-xs font-semibold text-[#0202ff] uppercase tracking-wider">How it works</span>
@@ -247,6 +248,15 @@ export default function LandingExplainer() {
           <p className="text-gray-500 max-w-xl leading-relaxed">
             One system helps you spot risk, guide action, reinforce behavior in the flow of work, and give leadership a clearer view of progress.
           </p>
+          </div>
+          {/* Manager engaged with platform image */}
+          <div className="rounded-2xl overflow-hidden shadow-sm hidden lg:block">
+            <img
+              src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/4ee147e79_Body38.png"
+              alt="Manager engaging with the platform"
+              className="w-full h-64 object-cover object-top"
+            />
+          </div>
         </div>
 
         {/* Desktop: side-by-side tabs */}

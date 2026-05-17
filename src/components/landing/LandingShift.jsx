@@ -40,8 +40,16 @@ export default function LandingShift() {
             </a>
           </div>
 
-          {/* Right: comparison table */}
-          <div className="space-y-3">
+          {/* Right: image + comparison table */}
+          <div className="space-y-6">
+            <div className="rounded-2xl overflow-hidden shadow-sm">
+              <img
+                src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5fee15d96_Body39.png"
+                alt="Team collaborating proactively"
+                className="w-full h-52 object-cover object-center"
+              />
+            </div>
+            <div className="space-y-3">
             {/* Header */}
             <div className="grid grid-cols-2 gap-3 mb-2">
               <div className="text-xs font-bold uppercase tracking-wider text-gray-400 text-center">Today</div>
@@ -69,6 +77,7 @@ export default function LandingShift() {
                 </div>
               </div>
             ))}
+            </div>
           </div>
         </div>
       </div>
