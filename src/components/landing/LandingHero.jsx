@@ -26,14 +26,6 @@ export default function LandingHero() {
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           {/* Left: Copy */}
           <div>
-            {/* Label */}
-            <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full border border-blue-100 bg-blue-50">
-              <span className="w-2 h-2 rounded-full bg-[#0202ff]" />
-              <span className="text-xs font-semibold text-[#0202ff] uppercase tracking-wider">
-                Built for healthcare organizations
-              </span>
-            </div>
-
             {/* Headline */}
             <h1 className="text-4xl lg:text-5xl xl:text-[52px] font-bold text-[#0a0a0a] leading-[1.1] tracking-tight mb-6">
               Spot leadership risk{" "}
