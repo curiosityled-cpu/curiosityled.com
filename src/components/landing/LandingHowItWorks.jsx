@@ -159,7 +159,7 @@ export default function LandingHowItWorks() {
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.5 }}
+          viewport={{ once: true, amount: 0.1 }}
           transition={{ duration: 0.7 }}
           className="text-center mb-16"
         >
@@ -180,7 +180,7 @@ export default function LandingHowItWorks() {
             variants={stepsContainerVariants}
             initial="hidden"
             whileInView="show"
-            viewport={{ once: true, amount: 0.3 }}
+            viewport={{ once: true, amount: 0.1 }}
           >
             {steps.map((step, i) => {
               const isActive = activeStep === i;
@@ -219,7 +219,7 @@ export default function LandingHowItWorks() {
           <motion.div
             initial={{ opacity: 0, x: 60 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
+            viewport={{ once: true, amount: 0.1 }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
             className="rounded-2xl overflow-hidden shadow-xl border border-gray-200 bg-white sticky top-24"
           >
