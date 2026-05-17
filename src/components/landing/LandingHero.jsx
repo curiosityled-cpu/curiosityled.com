@@ -102,36 +102,6 @@ export default function LandingHero() {
               {/* App UI mockup — Leadership Risk Intelligence view */}
               <div className="bg-white">
                 <div className="flex h-[420px]">
-                  {/* Sidebar */}
-                  <div className="w-44 bg-[#0f0f1a] flex flex-col py-4 flex-shrink-0">
-                    <div className="px-4 mb-6 flex items-center gap-2">
-                      <img
-                        src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"
-                        alt=""
-                        className="w-6 h-6"
-                      />
-                      <span className="text-white text-xs font-bold">Curiosity Led</span>
-                    </div>
-                    {[
-                      { label: "Insights", active: true },
-                      { label: "Development Manager", active: false },
-                      { label: "Goal Manager", active: false },
-                      { label: "Report Builder", active: false },
-                      { label: "User Management", active: false },
-                    ].map((item) => (
-                      <div
-                        key={item.label}
-                        className={`px-4 py-2 mx-2 rounded-lg mb-1 text-xs ${
-                          item.active
-                            ? "text-[#0202ff] bg-blue-900/20 font-semibold"
-                            : "text-gray-400"
-                        }`}
-                      >
-                        {item.label}
-                      </div>
-                    ))}
-                  </div>
-
                   {/* Main content — Risk Intelligence Dashboard */}
                   <div className="flex-1 p-4 bg-gray-50 overflow-hidden">
                     <div className="text-sm font-bold text-gray-900 mb-0.5">Leadership Intelligence</div>
