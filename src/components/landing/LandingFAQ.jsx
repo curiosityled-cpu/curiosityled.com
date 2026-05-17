@@ -4,19 +4,19 @@ import { ChevronDown } from "lucide-react";
 const faqs = [
   {
     q: "Will managers use it?",
-    a: "Curiosity Led is designed around real management moments, so support is tied to current challenges rather than another training layer to complete later.",
+    a: "Curiosity Led is designed around real leadership moments, not another course catalog. Managers get timely prompts, goals, and guidance linked to what they are facing that week, inside tools they already use.",
   },
   {
     q: "Can we prove impact?",
-    a: "The platform connects assessment, action, and progress into one clearer leadership story instead of scattering signals across programs and systems.",
+    a: "Every assessment, goal, and coaching loop feeds into one leadership view, so you can show how development activity connects to behavior, readiness, and risk instead of relying on anecdotes or scattered spreadsheets.",
   },
   {
     q: "Will this create more admin work?",
-    a: "Curiosity Led is built to reduce fragmentation and give HR a more scalable way to support manager cohorts without manually stitching together updates, interventions, and reporting.",
+    a: "Curiosity Led is built to reduce fragmentation. Assigning cohorts, monitoring progress, and reporting outcomes happen in one place, so HR and L&D spend less time chasing updates and stitching data together.",
   },
   {
     q: "Will executives get a usable view?",
-    a: "The Leadership Intelligence Hub is designed to show risk, readiness, bench strength, and intervention visibility in one place.",
+    a: "The Leadership Intelligence Hub summarizes bench strength, risk, and readiness at a glance and shows where intervention is happening, making leadership-development conversations more concrete and defensible.",
   },
 ];
 

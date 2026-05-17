@@ -25,7 +25,7 @@ export default function LandingShift() {
             </h2>
 
             <p className="text-gray-500 leading-relaxed mb-8">
-              Curiosity Led changes the timing of leadership development. Instead of waiting for a problem to surface and then assigning support, it helps you assess earlier, act sooner, and connect development activity to a clearer picture of leadership progress.
+              Curiosity Led changes when development happens. Instead of waiting for a problem to surface and then assigning support, it helps you see risk sooner, intervene earlier, and connect every coaching conversation, learning moment, and goal to a clearer picture of how managers are actually leading.
             </p>
 
             <a

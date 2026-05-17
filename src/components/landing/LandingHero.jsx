@@ -36,19 +36,18 @@ export default function LandingHero() {
 
             {/* Headline */}
             <h1 className="text-4xl lg:text-5xl xl:text-[52px] font-bold text-[#0a0a0a] leading-[1.1] tracking-tight mb-6">
-              Spot manager risk signals early,{" "}
-              <span style={{ color: "#0202ff" }}>before that risk shows up</span>{" "}
-              in retention, readiness, and team performance.
+              Spot leadership risk before it shows up in{" "}
+              <span style={{ color: "#0202ff" }}>retention, readiness, and team performance.</span>
             </h1>
 
             {/* Subheadline */}
             <p className="text-lg text-gray-500 leading-relaxed mb-4 font-medium">
-              For healthcare organizations that need earlier leadership signals and one clearer story of manager progress, intervention, and impact.
+              Curiosity Led helps HR and Talent leaders spot leadership risk earlier, support managers in the flow of work, and build a clearer story of impact.
             </p>
 
             {/* Support paragraph */}
             <p className="text-base text-gray-500 leading-relaxed mb-8">
-              Curiosity Led helps HR and Talent teams identify at-risk new leaders sooner, deliver support in the flow of work, and track progress in one leadership view—so development is no longer reactive, fragmented, or impossible to defend.
+              Healthcare organizations are already investing in manager development. Curiosity Led turns those efforts into a more measurable system by bringing assessments, learning, and goals into managers' daily tools and connecting that activity to one leadership view HR can stand behind.
             </p>
 
             {/* Bullets */}
@@ -216,7 +215,7 @@ export default function LandingHero() {
         {/* Proof strip */}
         <div className="mt-16 pt-8 border-t border-gray-100">
           <p className="text-center text-xs text-gray-400 max-w-2xl mx-auto">
-            Designed for healthcare organizations developing newly promoted and newly hired leaders. Early programs indicate stronger engagement, lower admin burden, and clearer links between development activity and leadership visibility.
+            Designed for healthcare HR and L&D teams. Early programs indicate stronger manager engagement, lower admin burden, and clearer links between development activity and leadership visibility.
           </p>
         </div>
       </div>

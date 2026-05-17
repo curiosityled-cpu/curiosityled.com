@@ -9,7 +9,7 @@ export default function LandingFinalCTA() {
           Give HR a clearer leadership story before risk becomes loss.
         </h2>
         <p className="text-blue-200 text-lg leading-relaxed mb-10 max-w-2xl mx-auto">
-          Curiosity Led helps healthcare organizations spot manager risk signals earlier, support leaders sooner, and create one clearer view of development progress, readiness, and intervention impact.
+          Curiosity Led helps healthcare organizations identify leadership risk earlier, support managers in the flow of work, and create one clearer view of development progress, readiness, and intervention impact.
         </p>
         <a
           href="https://cal.com/curiosityled/discoverycall"

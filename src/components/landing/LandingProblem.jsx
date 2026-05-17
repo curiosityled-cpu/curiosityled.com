@@ -11,7 +11,7 @@ const quotes = [
   },
   {
     persona: "Executive Sponsor",
-    quote: "We are investing in leadership, but we still discover risk too late and cannot prove impact.",
+    quote: "We are investing in leadership, but risk is still discovered too late and impact is still hard to prove.",
   },
 ];
 
@@ -26,12 +26,13 @@ export default function LandingProblem() {
         </div>
 
         <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6 leading-tight max-w-2xl">
-          Why support still arrives too late.
+          Why manager support still arrives too late.
         </h2>
 
         <p className="text-gray-200 text-lg leading-relaxed max-w-3xl mb-16">
-          Most healthcare organizations are not short on leadership activity. They already have programs, coaching, learning platforms, and interventions in place. The problem is that these are often time-consuming, disconnected from daily work, and triggered{" "}
-          <span className="text-white font-bold">after the behavior has already affected teams, engagement, or patient-facing outcomes.</span>
+          Most healthcare organizations already have leadership programs, coaching, and learning platforms. The problem is that support often lives outside daily work and gets triggered only{" "}
+          <span className="text-white font-bold">after a behavior has impacted the team, engagement has slipped, or risk has already grown.</span>{" "}
+          Managers feel like they are juggling development on top of the job, while HR struggles to explain what is actually working.
         </p>
 
         {/* Quote cards */}

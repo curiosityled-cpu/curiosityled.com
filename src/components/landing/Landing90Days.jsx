@@ -2,9 +2,9 @@ import React from "react";
 import { CheckCircle2 } from "lucide-react";
 
 const outcomes = [
-  "At-risk new leaders are identified earlier.",
+  "At-risk leaders are identified earlier.",
   "Managers receive support at the moment of need.",
-  "Development is tied more closely to real behavior.",
+  "Development is tied more closely to real behavior in their teams.",
   "Leaders get a clearer view of risk, readiness, and intervention priorities.",
 ];
 
@@ -34,7 +34,7 @@ export default function Landing90Days() {
             </ul>
 
             <p className="text-gray-200 text-sm leading-relaxed border-l-2 border-white/30 pl-4 italic">
-              The goal is not more leadership activity. The goal is earlier visibility, better timing, and a leadership-development story that HR can defend with more confidence.
+              The goal is not more leadership activity. The goal is earlier visibility, better timing, and a leadership-development story HR can defend when executives ask what is working and where to invest.
             </p>
           </div>
 

@@ -4,22 +4,22 @@ const steps = [
   {
     num: "01",
     title: "Assess early",
-    desc: "Establish a baseline for newly promoted and newly hired leaders and surface where support may be needed first.",
+    desc: "Establish a baseline for newly promoted or newly hired leaders and surface where support may be needed before issues escalate.",
   },
   {
     num: "02",
     title: "Focus the next action",
-    desc: "Turn insight into one clear goal and one practical next step tied to what the manager is actually handling.",
+    desc: "Turn insight into one clear goal and one practical next step tied to what the manager is actually handling in their team right now.",
   },
   {
     num: "03",
     title: "Reinforce in the workflow",
-    desc: "Support managers with timely guidance and coaching loops so development stays connected to real work instead of becoming another disconnected program.",
+    desc: "Deliver nudges, learning, and coaching loops in the tools managers already use, so support stays connected to real situations instead of becoming another disconnected program.",
   },
   {
     num: "04",
     title: "Give leadership one view",
-    desc: "Use the Leadership Intelligence Hub to see who is at risk, who is progressing, and where intervention or investment should go next.",
+    desc: "Bring assessments, actions, progress, and key lifecycle metrics from across HR into a single Leadership Intelligence Hub so HR and executive sponsors can see who is at risk, who is progressing, and where to focus intervention or investment next.",
   },
 ];
 
