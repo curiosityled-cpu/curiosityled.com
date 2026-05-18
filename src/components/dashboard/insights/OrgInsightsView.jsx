@@ -658,31 +658,6 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
               </Card>
               </motion.div>
 
-      {/* Consolidated Strategic Cards — stacked */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="space-y-6">
-        <OrgHealthCard
-          metrics={metrics}
-          assessments={filteredData.assessments}
-          goals={filteredData.goals}
-          assignedLearning={filteredData.assignedLearning}
-          strategicRisks={strategicRisks}
-          strategicOpportunities={strategicOpportunities}
-          onPromptAtreus={promptAtreus}
-          executiveBriefing={executiveBriefing}
-          generatingBriefing={generatingBriefing}
-          generatingAll={generatingAll}
-          onRefreshBriefing={generateExecutiveBriefing}
-        />
-        <TalentPipelineCard
-          metrics={metrics}
-          assessments={filteredData.assessments}
-          assignedLearning={filteredData.assignedLearning}
-          journeyEnrollments={filteredData.journeyEnrollments}
-          allUsers={rawData.allUsers}
-          workforceMetrics={rawData.workforceMetrics}
-        />
-      </motion.div>
-
       {/* Talent Care Lifecycle Bar */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <TalentCareLifecycleBar
@@ -709,6 +684,31 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Consolidated Strategic Cards — stacked */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="space-y-6">
+        <OrgHealthCard
+          metrics={metrics}
+          assessments={filteredData.assessments}
+          goals={filteredData.goals}
+          assignedLearning={filteredData.assignedLearning}
+          strategicRisks={strategicRisks}
+          strategicOpportunities={strategicOpportunities}
+          onPromptAtreus={promptAtreus}
+          executiveBriefing={executiveBriefing}
+          generatingBriefing={generatingBriefing}
+          generatingAll={generatingAll}
+          onRefreshBriefing={generateExecutiveBriefing}
+        />
+        <TalentPipelineCard
+          metrics={metrics}
+          assessments={filteredData.assessments}
+          assignedLearning={filteredData.assignedLearning}
+          journeyEnrollments={filteredData.journeyEnrollments}
+          allUsers={rawData.allUsers}
+          workforceMetrics={rawData.workforceMetrics}
+        />
+      </motion.div>
 
       {/* Executive KPI Sections — Workforce Stability, Succession & Engagement */}
       <div className="space-y-6">
