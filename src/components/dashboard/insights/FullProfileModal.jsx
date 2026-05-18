@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
-  X, Download, Mail, Star, Target, Lightbulb, CheckCircle,
+  X, Download, Mail, Lightbulb, CheckCircle,
   Zap, Brain, Users, BarChart3, Loader2, Send, AlertTriangle,
-  Eye, Sun, Coffee, Moon, TrendingUp, Layers, BookOpen, ChevronDown, ChevronUp
+  Eye, Sun, Coffee, Moon, TrendingUp, Layers
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import {
@@ -47,7 +47,6 @@ const TABS = [
   { id: "stress",     label: "Stress Analysis",   icon: AlertTriangle },
   { id: "blindspots", label: "Blind Spots",        icon: Eye },
   { id: "practices",  label: "Daily Practices",    icon: Sun },
-  { id: "plan",       label: "Development Plan",   icon: Target },
 ];
 
 // ── Share Email Dialog ────────────────────────────────────────────────────────
@@ -503,6 +502,7 @@ function PracticesTab({ report }) {
 
 function CompetenciesTab({ report, assessment }) {
   const insights = report?.competency_insights;
+  const plan = report?.development_plan;
   if (!insights?.length) return <p className="text-gray-500 text-sm">No competency insights available.</p>;
 
   return (
@@ -510,6 +510,7 @@ function CompetenciesTab({ report, assessment }) {
       {insights.map((c, i) => {
         const band = getBand(c.score);
         const meta = BAND_META[band] || BAND_META.Awareness;
+        const planItem = plan?.find(p => p.competency === c.competency);
         return (
           <div key={i} className="rounded-xl border border-gray-100 overflow-hidden">
             <div className="px-5 py-3 bg-gray-50 flex items-center justify-between">
@@ -519,9 +520,9 @@ function CompetenciesTab({ report, assessment }) {
                 <span className="font-bold text-sm" style={{ color: '#0012ff' }}>{c.score}%</span>
               </div>
             </div>
-            <div className="px-5 pt-2 pb-1 bg-white">
+            <div className="px-5 pt-2 pb-3 bg-white">
               <Progress value={c.score} className="h-2 mb-3" />
-              <div className="grid sm:grid-cols-2 gap-4 pb-3">
+              <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5">What This Means</p>
                   <p className="text-sm text-gray-600 leading-relaxed">{c.strength_narrative}</p>
@@ -534,46 +535,12 @@ function CompetenciesTab({ report, assessment }) {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function DevelopmentPlanTab({ report }) {
-  const plan = report?.development_plan;
-  if (!plan?.length) return <p className="text-gray-500 text-sm">No development plan available.</p>;
-
-  return (
-    <div className="space-y-4">
-      <p className="text-sm text-gray-500 leading-relaxed">
-        Your personalized development plan is tailored to your current competency levels and <strong>{report?.archetype}</strong> leadership style. Focus on 1–2 areas at a time for maximum impact.
-      </p>
-      {plan.map((item, i) => {
-        const compInfo = COMP_KEYS.find(c => c.full === item.competency);
-        const insightComp = report?.competency_insights?.find(c => c.competency === item.competency);
-        const score = insightComp?.score ?? 0;
-        const band = getBand(score);
-        const meta = BAND_META[band];
-        return (
-          <div key={i} className="rounded-xl border border-gray-100 p-5 hover:shadow-sm transition-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-[#0012ff]/10 rounded-lg">
-                  <BookOpen className="w-4 h-4 text-[#0012ff]" />
+              {planItem?.actionable_steps && (
+                <div className="mt-3 bg-blue-50 rounded-lg p-3 border border-blue-100">
+                  <p className="text-xs font-bold uppercase tracking-wider text-blue-600 mb-1.5">Development Steps</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{planItem.actionable_steps}</p>
                 </div>
-                <span className="font-semibold text-sm text-gray-900">{item.competency}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge className={`${meta?.color} text-xs`}>{band}</Badge>
-                <span className="text-sm font-bold" style={{ color: '#0012ff' }}>{score}%</span>
-              </div>
-            </div>
-            <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
-              <p className="text-xs font-bold uppercase tracking-wider text-blue-600 mb-1.5">Actionable Steps</p>
-              <p className="text-sm text-gray-700 leading-relaxed">{item.actionable_steps}</p>
+              )}
             </div>
           </div>
         );
@@ -581,6 +548,8 @@ function DevelopmentPlanTab({ report }) {
     </div>
   );
 }
+
+
 
 // ── Main Modal ────────────────────────────────────────────────────────────────
 
@@ -892,7 +861,6 @@ export default function FullProfileModal({ open, onClose, user, assessment, insi
                 {activeTab === "stress"       && <StressTab report={report} />}
                 {activeTab === "blindspots"   && <BlindSpotsTab report={report} />}
                 {activeTab === "practices"    && <PracticesTab report={report} />}
-                {activeTab === "plan"         && <DevelopmentPlanTab report={report} />}
               </>
             )}
           </div>
