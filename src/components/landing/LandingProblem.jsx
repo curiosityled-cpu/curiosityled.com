@@ -38,7 +38,7 @@ export default function LandingProblem() {
         {/* Overworked manager image */}
         <div className="mb-12 rounded-2xl overflow-hidden max-h-72 w-full">
           <img
-            src="https://raw.githubusercontent.com/curiosityled-cpu/curiosityled.com/main/public/Body%20(37).png"
+            src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5a422878f_image.png"
             alt="Overwhelmed manager under pressure"
             className="w-full h-72 object-cover object-center"
           />

@@ -25,7 +25,7 @@ export default function LandingNav() {
         {/* Logo */}
         <div className="flex items-center">
           <img
-            src="https://raw.githubusercontent.com/curiosityled-cpu/curiosityled.com/main/public/CuriosityLedLogoBBW%20(1).png"
+            src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/7f8bef2bf_CuriosityLedLogoBBW1.png"
             alt="Curiosity Led"
             className="h-10 object-contain"
           />
