@@ -18,6 +18,10 @@ const faqs = [
     q: "Will executives get a usable view?",
     a: "The Leadership Intelligence Hub summarizes bench strength, risk, and readiness at a glance and shows where intervention is happening, making leadership-development conversations more concrete and defensible.",
   },
+  {
+    q: "Will this fit our existing leadership framework?",
+    a: "Curiosity Led can work with your organization's own competency model or use our built-in competency library, so you do not have to replace the leadership language and structure you already use.",
+  },
 ];
 
 export default function LandingFAQ() {
