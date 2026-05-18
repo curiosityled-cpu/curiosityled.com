@@ -68,38 +68,30 @@ const MOCKUP_CONTENT = [
     ))}
   </div>,
 
-  // Step 04 — Give leadership one view
+  // Step 04 — Use your model or ours
   <div key="04" className="space-y-3">
-    <div className="grid grid-cols-3 gap-2 mb-3">
-      {[
-        { label: "At Risk", count: "3", color: "#ef4444", bg: "#fef2f2" },
-        { label: "Progressing", count: "18", color: "#10b981", bg: "#f0fdf4" },
-        { label: "On Watch", count: "7", color: "#f59e0b", bg: "#fffbeb" },
-      ].map((s) => (
-        <div key={s.label} className="rounded-xl p-2.5 text-center border" style={{ backgroundColor: s.bg, borderColor: s.color + "33" }}>
-          <div className="text-lg font-bold" style={{ color: s.color }}>{s.count}</div>
-          <div className="text-[9px] text-gray-600 mt-0.5">{s.label}</div>
+    <div className="text-xs text-gray-500 mb-2">Competency framework — active model</div>
+    <div className="flex gap-2 mb-3">
+      {["Your Model", "Built-in Library"].map((label, i) => (
+        <div key={label} className="flex-1 rounded-lg p-2.5 text-center border text-[10px] font-semibold" style={{ backgroundColor: i === 0 ? "#eff0ff" : "#f9fafb", borderColor: i === 0 ? "#0202ff55" : "#e5e7eb", color: i === 0 ? "#0202ff" : "#6b7280" }}>
+          {label}
         </div>
       ))}
     </div>
-    <div className="space-y-1.5">
-      {[
-        { name: "Sarah M.", role: "Charge Nurse → Manager", risk: "High", prog: 35 },
-        { name: "Daniel K.", role: "Clinical Lead → Director", risk: "Medium", prog: 62 },
-        { name: "Priya R.", role: "Operations → VP", risk: "Low", prog: 84 },
-      ].map((m, i) => (
-        <div key={i} className="flex items-center gap-2.5 py-2 px-2.5 rounded-lg bg-gray-50 border border-gray-100">
-          <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0" style={{ backgroundColor: "#0202ff" }}>{m.name[0]}</div>
-          <div className="flex-1 min-w-0">
-            <div className="text-[10px] font-semibold text-gray-900">{m.name}</div>
-            <div className="text-[9px] text-gray-400 truncate">{m.role}</div>
-          </div>
-          <div className="w-12 bg-gray-200 rounded-full h-1">
-            <div className="h-1 rounded-full" style={{ width: `${m.prog}%`, backgroundColor: m.prog > 70 ? "#10b981" : m.prog > 50 ? "#f59e0b" : "#ef4444" }} />
-          </div>
-          <span className="text-[8px] font-semibold px-1 py-0.5 rounded" style={{ color: m.risk === "High" ? "#ef4444" : m.risk === "Medium" ? "#f59e0b" : "#10b981", backgroundColor: m.risk === "High" ? "#fef2f2" : m.risk === "Medium" ? "#fffbeb" : "#f0fdf4" }}>{m.risk}</span>
-        </div>
-      ))}
+    {[
+      { label: "Korn Ferry: Strategic Agility", mapped: true },
+      { label: "Korn Ferry: Inspiring Others", mapped: true },
+      { label: "Decision Making", mapped: true },
+      { label: "Stakeholder Management", mapped: false },
+    ].map((c, i) => (
+      <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-50 border border-gray-100">
+        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: c.mapped ? "#10b981" : "#d1d5db" }} />
+        <span className="text-[10px] text-gray-700 flex-1">{c.label}</span>
+        <span className="text-[9px] font-medium" style={{ color: c.mapped ? "#10b981" : "#9ca3af" }}>{c.mapped ? "Mapped" : "Pending"}</span>
+      </div>
+    ))}
+    <div className="mt-1 p-2 rounded-lg bg-blue-50 border border-blue-100 text-[10px] text-blue-700">
+      3 of 4 competencies mapped to your framework
     </div>
   </div>,
 ];
@@ -111,7 +103,7 @@ const steps = [
   { num: "04", title: "Give leadership one view", desc: "Bring assessments, actions, progress, and key lifecycle metrics into a single Leadership Intelligence Hub so HR and executive sponsors can see who is at risk." },
 ];
 
-const MOCKUP_HEADINGS = ["Baseline Assessment", "Recommended Next Steps", "Workflow Nudges", "Org Leadership Overview"];
+const MOCKUP_HEADINGS = ["Baseline Assessment", "Recommended Next Steps", "Workflow Nudges", "Competency Framework"];
 
 export default function LandingHowItWorks() {
   const [activeStep, setActiveStep] = useState(0);
