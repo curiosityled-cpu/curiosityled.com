@@ -6,7 +6,7 @@ export default function LandingFooter() {
       <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center">
           <img
-            src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/eac41b779_CuriosityLedLogoWBB.png"
+            src="https://raw.githubusercontent.com/curiosityled-cpu/curiosityled.com/main/public/CuriosityLedLogoWBB.png"
             alt="Curiosity Led"
             className="h-10 object-contain"
           />
