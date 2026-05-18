@@ -1,29 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
-function useScrollReveal(ref) {
-  const [revealed, setRevealed] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setRevealed(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.1, rootMargin: "0px 0px -60px 0px" }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [ref]);
-
-  return revealed;
-}
 
 const MOCKUP_CONTENT = [
   // Step 01 — Assess early
@@ -139,17 +115,17 @@ const MOCKUP_HEADINGS = ["Baseline Assessment", "Recommended Next Steps", "Workf
 
 export default function LandingHowItWorks() {
   const [activeStep, setActiveStep] = useState(0);
-  const sectionRef = useRef(null);
-  const revealed = useScrollReveal(sectionRef);
 
   return (
-    <section id="how-it-works" ref={sectionRef} className="py-24 bg-gray-50">
+    <section id="how-it-works" className="py-24 bg-gray-50">
       <div className="max-w-6xl mx-auto px-6">
+
         {/* Header */}
         <motion.div
           className="text-center mb-16"
           initial={{ opacity: 0, y: 40 }}
-          animate={revealed ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.6 }}
         >
           <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full border border-blue-100 bg-blue-50">
@@ -163,7 +139,8 @@ export default function LandingHowItWorks() {
 
         {/* Steps + App mockup */}
         <div className="grid lg:grid-cols-2 gap-12 items-start">
-          {/* Steps */}
+
+          {/* Steps list */}
           <div className="space-y-3">
             {steps.map((step, i) => {
               const isActive = activeStep === i;
@@ -177,8 +154,9 @@ export default function LandingHowItWorks() {
                     borderColor: isActive ? "#0202ff55" : "transparent",
                   }}
                   initial={{ opacity: 0, x: -40 }}
-                  animate={{ opacity: revealed ? 1 : 0, x: revealed ? 0 : -40 }}
-                  transition={{ duration: 0.5, delay: i * 0.12 + 0.2 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 0.5, delay: i * 0.12 }}
                 >
                   <div
                     className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center font-bold text-sm transition-colors duration-200"
@@ -202,8 +180,9 @@ export default function LandingHowItWorks() {
           <motion.div
             className="rounded-2xl overflow-hidden shadow-xl border border-gray-200 bg-white sticky top-24"
             initial={{ opacity: 0, x: 60 }}
-            animate={revealed ? { opacity: 1, x: 0 } : { opacity: 0, x: 60 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
           >
             {/* Chrome bar */}
             <div className="bg-gray-100 border-b border-gray-200 px-4 py-2.5 flex items-center gap-2">
@@ -235,6 +214,7 @@ export default function LandingHowItWorks() {
               </AnimatePresence>
             </div>
           </motion.div>
+
         </div>
       </div>
     </section>
