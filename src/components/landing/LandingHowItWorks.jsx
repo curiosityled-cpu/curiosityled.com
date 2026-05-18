@@ -129,14 +129,7 @@ export default function LandingHowItWorks() {
           </h2>
         </motion.div>
 
-        {/* How it works image */}
-        <div className="mb-16 rounded-2xl overflow-hidden shadow-sm w-full">
-          <img
-            src="https://raw.githubusercontent.com/curiosityled-cpu/curiosityled.com/main/public/18T115222051.png"
-            alt="How Curiosity Led works"
-            className="w-full h-auto object-cover"
-          />
-        </div>
+
 
         {/* Steps + App mockup */}
         <div className="grid lg:grid-cols-2 gap-12 items-start">
