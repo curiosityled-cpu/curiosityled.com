@@ -725,7 +725,7 @@ export default function FullProfileModal({ open, onClose, user, assessment, insi
       if (report?.daily_practices) {
         y = checkPage(y, 40);
         y = sectionTitle("6. Daily Practices", y);
-        [{ label: "Morning (5 min)", items: report.daily_practices.morning }, { label: "Mid-Day (3 min)", items: report.daily_practices.midday }, { label: "Evening (5 min)", items: report.daily_practices.evening }].forEach(({ label, items }) => {
+        [{ label: "Planning (5 min)", items: report.daily_practices.morning }, { label: "Mid-Day (3 min)", items: report.daily_practices.midday }, { label: "Evening (5 min)", items: report.daily_practices.evening }].forEach(({ label, items }) => {
           if (!items?.length) return;
           y = checkPage(y, 20);
           doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(0, 18, 255);
