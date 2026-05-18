@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import LeadershipLifecycleFilter from "@/components/intelligence/LeadershipLifecycleFilter";
 
 const COLORS = {
   'At Risk': '#ef4444',
@@ -46,6 +47,7 @@ function LoadingSkeleton() {
 
 export default function LeadershipIntelligenceHub() {
   const { user } = useAuth();
+  const [selectedStage, setSelectedStage] = useState(null);
 
   // client_id stored in data for most roles
   const clientId = user?.data?.client_id || user?.client_id;
@@ -140,6 +142,16 @@ export default function LeadershipIntelligenceHub() {
         ? `Org-wide view across ${stats.total} leader${stats.total !== 1 ? 's' : ''} in your organisation.`
         : clientId ? 'Organizational leadership health at a glance.' : 'No organisation linked to your account yet.'}
     >
+
+      <LeadershipLifecycleFilter selectedStage={selectedStage} onStageChange={setSelectedStage} />
+
+      {selectedStage && (
+        <div className="flex items-center gap-2 px-1">
+          <span className="text-xs text-gray-500">Filtering by lifecycle stage:</span>
+          <span className="text-xs font-semibold text-[#0202ff] capitalize">{selectedStage}</span>
+          <button onClick={() => setSelectedStage(null)} className="text-xs text-gray-400 hover:text-gray-600 underline ml-1">Clear</button>
+        </div>
+      )}
 
       {isLoading ? <LoadingSkeleton /> : !stats || stats.total === 0 ? (
         <Card className="border border-dashed border-gray-200 shadow-sm rounded-2xl">
