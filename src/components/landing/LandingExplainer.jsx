@@ -222,7 +222,7 @@ export default function LandingExplainer() {
           {/* Manager engaged with platform image */}
           <div className="rounded-2xl overflow-hidden shadow-sm hidden lg:block">
             <img
-              src="https://raw.githubusercontent.com/curiosityled/curiosity-led/main/public/18T115222051.png"
+              src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5e94bb5e0_image.png"
               alt="Manager engaging with the platform"
               className="w-full h-64 object-cover object-top"
             />
