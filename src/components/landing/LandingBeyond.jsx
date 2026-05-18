@@ -27,7 +27,7 @@ export default function LandingBeyond() {
             Beyond support: leadership visibility.
           </h2>
           <p className="text-gray-500 max-w-2xl mx-auto leading-relaxed">
-            Curiosity Led is not another LMS, another leadership program, or another coaching marketplace. It is a system that makes leadership development more timely, measurable, and tied to real behavior before problems escalate. That gives organizations a stronger foundation for succession planning, career pathing, and leadership investment decisions that can be explained with more than anecdotes.
+            Curiosity Led is not another LMS, another leadership program, or another coaching marketplace. It is a system that makes leadership development more timely, measurable, and tied to real behavior before problems escalate. That gives organizations a stronger foundation for career pathing, succession decisions, and leadership investment that can be explained with more than anecdotes.
           </p>
         </div>
 
