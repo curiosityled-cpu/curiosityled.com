@@ -40,7 +40,7 @@ export default function LandingNav() {
             Log in
           </button>
           <a
-            href="https://calendly.com/team-curiosityled/discoverycall"
+            href="https://cal.com/curiosityled/bookdemo"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm font-semibold text-white px-4 py-2 rounded-lg transition-all hover:opacity-90"

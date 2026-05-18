@@ -24,7 +24,7 @@ export default function LandingFooter() {
             curiosityled.com
           </a>
           <a
-            href="https://calendly.com/team-curiosityled/discoverycall"
+            href="https://cal.com/curiosityled/bookdemo"
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs font-semibold text-blue-300 hover:text-blue-200 transition-colors"

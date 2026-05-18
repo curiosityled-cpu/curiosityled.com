@@ -29,7 +29,7 @@ export default function LandingShift() {
             </p>
 
             <a
-              href="https://cal.com/curiosityled/discoverycall"
+              href="https://cal.com/curiosityled/bookdemo"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-sm font-semibold transition-colors hover:opacity-80"
