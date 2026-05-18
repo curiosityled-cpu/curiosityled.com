@@ -267,35 +267,67 @@ function BehaviorTab({ report }) {
       <div>
         <SectionHeading icon={Brain} title="How You Make Decisions" />
         <p className="text-gray-700 text-sm leading-relaxed mb-4">{bp.decision_making}</p>
-        {bp.decision_questions?.length > 0 && (
-          <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-            <p className="text-xs font-semibold text-blue-700 uppercase tracking-wider mb-3">Questions you naturally ask</p>
-            <ul className="space-y-2">
-              {bp.decision_questions.map((q, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                  <span className="text-[#0012ff] font-bold mt-0.5">›</span> "{q}"
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <div className="grid sm:grid-cols-2 gap-3">
+          {bp.decision_tendencies?.length > 0 && (
+            <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+              <p className="text-xs font-semibold text-blue-700 uppercase tracking-wider mb-3">Your Decision Tendencies</p>
+              <ul className="space-y-2">
+                {bp.decision_tendencies.map((t, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                    <CheckCircle className="w-3.5 h-3.5 text-blue-500 mt-0.5 shrink-0" />
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {bp.decision_derailers?.length > 0 && (
+            <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
+              <p className="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-3">Watch Out For</p>
+              <ul className="space-y-2">
+                {bp.decision_derailers.map((d, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                    <Zap className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" />
+                    {d}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
 
       <div>
         <SectionHeading icon={Users} title="Your Communication Style" color="text-purple-600" bg="bg-purple-50" />
         <p className="text-gray-700 text-sm leading-relaxed mb-4">{bp.communication_style}</p>
-        {bp.communication_phrases?.length > 0 && (
-          <div className="bg-purple-50 rounded-xl p-4 border border-purple-100">
-            <p className="text-xs font-semibold text-purple-700 uppercase tracking-wider mb-3">Phrases you might use</p>
-            <ul className="space-y-2">
-              {bp.communication_phrases.map((p, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                  <span className="text-purple-500 font-bold mt-0.5">›</span> "{p}"
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <div className="grid sm:grid-cols-2 gap-3">
+          {bp.communication_tendencies?.length > 0 && (
+            <div className="bg-purple-50 rounded-xl p-4 border border-purple-100">
+              <p className="text-xs font-semibold text-purple-700 uppercase tracking-wider mb-3">How You Communicate</p>
+              <ul className="space-y-2">
+                {bp.communication_tendencies.map((t, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                    <CheckCircle className="w-3.5 h-3.5 text-purple-500 mt-0.5 shrink-0" />
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {bp.communication_derailers?.length > 0 && (
+            <div className="bg-rose-50 rounded-xl p-4 border border-rose-100">
+              <p className="text-xs font-semibold text-rose-700 uppercase tracking-wider mb-3">Watch Out For</p>
+              <ul className="space-y-2">
+                {bp.communication_derailers.map((d, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                    <Zap className="w-3.5 h-3.5 text-rose-500 mt-0.5 shrink-0" />
+                    {d}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
 
       {bp.daily_approach?.length > 0 && (
