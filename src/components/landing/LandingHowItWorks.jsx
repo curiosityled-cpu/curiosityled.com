@@ -130,7 +130,7 @@ export default function LandingHowItWorks() {
         </motion.div>
 
         {/* How it works image */}
-        <div className="mb-16 rounded-2xl overflow-hidden shadow-sm max-w-4xl mx-auto">
+        <div className="mb-16 rounded-2xl overflow-hidden shadow-sm w-full">
           <img
             src="https://raw.githubusercontent.com/curiosityled-cpu/curiosityled.com/main/public/Body%20(38).png"
             alt="How Curiosity Led works"
