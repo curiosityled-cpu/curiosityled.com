@@ -554,7 +554,7 @@ function LayoutContent({ children }) {
                     <Link to="/" className="flex items-center">
                       <div className="w-10 h-10 flex items-center justify-center">
                         <img
-                          src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"
+                          src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/7f8bef2bf_CuriosityLedLogoBBW1.png"
                           alt="Curiosity Led Logo"
                           className="w-10 h-10 object-contain"
                         />
@@ -567,7 +567,7 @@ function LayoutContent({ children }) {
                 <Link to="/" className="hidden md:flex items-center">
                   <div className="w-10 h-10 mr-3 flex items-center justify-center">
                     <img
-                      src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"
+                      src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/7f8bef2bf_CuriosityLedLogoBBW1.png"
                       alt="Curiosity Led Logo"
                       className="w-10 h-10 object-contain"
                     />
