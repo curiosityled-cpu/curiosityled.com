@@ -47,7 +47,6 @@ const TABS = [
   { id: "stress",     label: "Stress Analysis",   icon: AlertTriangle },
   { id: "blindspots", label: "Blind Spots",        icon: Eye },
   { id: "practices",  label: "Daily Practices",    icon: Sun },
-  { id: "competencies",label: "Competencies",      icon: BarChart3 },
   { id: "plan",       label: "Development Plan",   icon: Target },
 ];
 
@@ -250,26 +249,10 @@ function OverviewTab({ report, assessment, user }) {
         </div>
       </div>
 
-      {/* Competency quick view */}
+      {/* Competency Detail */}
       <div>
-        <SectionHeading icon={BarChart3} title="Competency at a Glance" />
-        <div className="space-y-2.5">
-          {compRows.map(c => {
-            const meta = BAND_META[c.band] || BAND_META.Awareness;
-            return (
-              <div key={c.key} className="flex items-center gap-3">
-                <span className="text-xs text-gray-600 w-36 shrink-0">{c.full}</span>
-                <div className="flex-1">
-                  <Progress value={c.score} className="h-2" />
-                </div>
-                <div className="flex items-center gap-2 shrink-0 w-28 justify-end">
-                  <span className="font-bold text-sm" style={{ color: '#0012ff' }}>{c.score}%</span>
-                  <Badge className={`${meta.color} text-xs`}>{c.band}</Badge>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <SectionHeading icon={BarChart3} title="Competencies" />
+        <CompetenciesTab report={report} assessment={assessment} />
       </div>
     </div>
   );
@@ -877,7 +860,6 @@ export default function FullProfileModal({ open, onClose, user, assessment, insi
                 {activeTab === "stress"       && <StressTab report={report} />}
                 {activeTab === "blindspots"   && <BlindSpotsTab report={report} />}
                 {activeTab === "practices"    && <PracticesTab report={report} />}
-                {activeTab === "competencies" && <CompetenciesTab report={report} assessment={assessment} />}
                 {activeTab === "plan"         && <DevelopmentPlanTab report={report} />}
               </>
             )}
