@@ -554,7 +554,7 @@ function LayoutContent({ children }) {
                     <Link to="/" className="flex items-center">
                       <div className="w-10 h-10 flex items-center justify-center">
                         <img
-                          src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/7f8bef2bf_CuriosityLedLogoBBW1.png"
+                          src="https://raw.githubusercontent.com/curiosityled-cpu/curiosityled.com/main/public/CuriosityLedLogoBBW%20(1).png"
                           alt="Curiosity Led Logo"
                           className="w-10 h-10 object-contain"
                         />
