@@ -179,26 +179,27 @@ Deno.serve(async (req) => {
       status: "generating"
     });
 
-    // Generate AI content — only truly personalized narrative sections
-    // Static/archetype content is injected server-side; no need to ask the LLM for it
-    const aiPrompt = `Generate a personalized leadership report snippet for ${user.full_name || "this leader"}, a ${archetype} archetype with overall score ${assessment.overall_pct}% (${assessment.band_overall || getBand(assessment.overall_pct)}).
+    // Generate AI content — personalized narrative sections + score-sensitive competency insights
+    const aiPrompt = `Generate a personalized leadership report for ${user.full_name || "this leader"}, a ${archetype} archetype. Overall: ${assessment.overall_pct}% (${assessment.band_overall || getBand(assessment.overall_pct)}).
 
-Top strengths: ${top3}
-Development areas: ${bottom3}
+Competency scores: ${compData.map(c => `${c.competency} ${c.score}% (${c.band})`).join(", ")}
+Top strengths: ${top3} | Development areas: ${bottom3}
 
 Return JSON only:
 {
-  "leadership_dna_description": "2-3 sentences personalizing this leader's DNA using their actual scores.",
+  "leadership_dna_description": "2-3 sentences personalizing this leader's DNA referencing their actual top scores.",
   "behavioral_patterns_decision": "1 sentence on how they make decisions based on archetype + top scores.",
-  "behavioral_patterns_communication": "1 sentence on their communication style.",
-  "stress_early": ["3 early-stage stress behaviors"],
+  "behavioral_patterns_communication": "1 sentence on their communication style based on their scores.",
+  "stress_early": ["3 early-stage stress behaviors for this archetype"],
   "stress_moderate": ["3 moderate-stage stress behaviors"],
   "stress_high": ["3 high-stage stress behaviors"],
   "recovery_strategies": [
     {"number": 1, "title": "...", "description": "..."},
     {"number": 2, "title": "...", "description": "..."},
     {"number": 3, "title": "...", "description": "..."}
-  ]
+  ],
+  "competency_insights": [${compData.map(c => `{"competency":"${c.competency}","score":${c.score},"strength_narrative":"1 sentence on what ${c.score}% means for this leader","growth_area":"1 specific actionable tip at this score level"}`).join(",")}],
+  "development_plan": [${compData.map(c => `{"competency":"${c.competency}","actionable_steps":"2 specific steps for ${c.competency} at ${c.score}%"}`).join(",")}]
 }`;
 
     const aiResult = await base44.integrations.Core.InvokeLLM({
@@ -212,7 +213,9 @@ Return JSON only:
           stress_early: { type: "array", items: { type: "string" } },
           stress_moderate: { type: "array", items: { type: "string" } },
           stress_high: { type: "array", items: { type: "string" } },
-          recovery_strategies: { type: "array", items: { type: "object", properties: { number: { type: "number" }, title: { type: "string" }, description: { type: "string" } } } }
+          recovery_strategies: { type: "array", items: { type: "object", properties: { number: { type: "number" }, title: { type: "string" }, description: { type: "string" } } } },
+          competency_insights: { type: "array", items: { type: "object", properties: { competency: { type: "string" }, score: { type: "number" }, strength_narrative: { type: "string" }, growth_area: { type: "string" } } } },
+          development_plan: { type: "array", items: { type: "object", properties: { competency: { type: "string" }, actionable_steps: { type: "string" } } } }
         }
       }
     });
@@ -266,13 +269,13 @@ Return JSON only:
         midday: archetypeData.midday_practices,
         evening: archetypeData.evening_practices
       },
-      competency_insights: compData.map(c => ({
+      competency_insights: aiResult.competency_insights?.length ? aiResult.competency_insights : compData.map(c => ({
         competency: c.competency,
         score: c.score,
         strength_narrative: `Your ${c.competency} score of ${c.score}% reflects ${c.band} level capability.`,
         growth_area: `Focus on targeted development activities to advance your ${c.competency} skills.`
       })),
-      development_plan: compData.map(c => ({
+      development_plan: aiResult.development_plan?.length ? aiResult.development_plan : compData.map(c => ({
         competency: c.competency,
         actionable_steps: `Build structured practice around ${c.competency} through mentorship, deliberate learning, and applied experience.`
       }))
