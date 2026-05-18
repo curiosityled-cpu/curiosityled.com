@@ -300,7 +300,7 @@ function BehaviorTab({ report }) {
 
       {bp.daily_approach?.length > 0 && (
         <div>
-          <SectionHeading icon={Layers} title="Your Daily Leadership Approach" color="text-teal-600" bg="bg-teal-50" />
+          <SectionHeading icon={Layers} title="Leadership Approach" color="text-teal-600" bg="bg-teal-50" />
           <div className="space-y-3">
             {bp.daily_approach.map((item, i) => (
               <div key={i} className="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
@@ -436,7 +436,7 @@ function PracticesTab({ report }) {
   if (!dp) return <p className="text-gray-500 text-sm">No daily practices available.</p>;
 
   const sections = [
-    { label: "Morning Routine", icon: Sun, items: dp.morning, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100", time: "5 minutes" },
+    { label: "Planning", icon: Sun, items: dp.morning, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100", time: "5 minutes" },
     { label: "Mid-Day Check-In", icon: Coffee, items: dp.midday, color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-100", time: "3 minutes" },
     { label: "Evening Reflection", icon: Moon, items: dp.evening, color: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-100", time: "5 minutes" },
   ];
