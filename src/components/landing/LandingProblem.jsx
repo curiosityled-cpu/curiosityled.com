@@ -38,7 +38,7 @@ export default function LandingProblem() {
         {/* Overworked manager image */}
         <div className="mb-12 rounded-2xl overflow-hidden max-h-72 w-full">
           <img
-            src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=1200&q=80"
+            src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5a422878f_image.png"
             alt="Overwhelmed manager under pressure"
             className="w-full h-72 object-cover object-center"
           />

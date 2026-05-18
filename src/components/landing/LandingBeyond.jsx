@@ -34,7 +34,7 @@ export default function LandingBeyond() {
         {/* Leader reviewing data image */}
         <div className="mb-10 rounded-2xl overflow-hidden max-w-3xl mx-auto shadow-sm">
           <img
-            src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=1200&q=80"
+            src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5ef0756e0_image.png"
             alt="Leader reviewing leadership data"
             className="w-full h-64 object-cover object-top"
           />

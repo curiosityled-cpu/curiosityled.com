@@ -25,7 +25,7 @@ export default function LandingNav() {
         {/* Logo */}
         <div className="flex items-center">
           <img
-            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"
+            src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/7f8bef2bf_CuriosityLedLogoBBW1.png"
             alt="Curiosity Led"
             className="h-10 object-contain"
           />
