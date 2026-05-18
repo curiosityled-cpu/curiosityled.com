@@ -108,7 +108,7 @@ const steps = [
   { num: "01", title: "Assess early", desc: "Establish a baseline for newly promoted or newly hired leaders and surface where support may be needed before issues escalate." },
   { num: "02", title: "Focus the next action", desc: "Turn insight into one clear goal and one practical next step tied to what the manager is actually handling in their team right now." },
   { num: "03", title: "Reinforce in the workflow", desc: "Deliver nudges, learning, and coaching loops in the tools managers already use, so support stays connected to real situations." },
-  { num: "04", title: "Give leadership one view", desc: "Bring assessments, actions, progress, and key lifecycle metrics into a single Leadership Intelligence Hub so HR and executive sponsors can see who is at risk." },
+  { num: "04", title: "Use your model or ours", desc: "Map Curiosity Led to your organization's existing competency model, including frameworks such as Korn Ferry, or use our built-in library of leadership competencies." },
 ];
 
 const MOCKUP_HEADINGS = ["Baseline Assessment", "Recommended Next Steps", "Workflow Nudges", "Org Leadership Overview"];
