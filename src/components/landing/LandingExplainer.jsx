@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const panels = [
   {
@@ -199,7 +200,13 @@ export default function LandingExplainer() {
     <section className="py-24 bg-gray-50">
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
-        <div className="mb-14 grid lg:grid-cols-2 gap-10 items-center">
+        <motion.div
+          className="mb-14 grid lg:grid-cols-2 gap-10 items-center"
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6 }}
+        >
           <div>
           <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full border border-blue-100 bg-blue-50">
             <span className="w-2 h-2 rounded-full bg-[#0202ff]" />
@@ -220,10 +227,15 @@ export default function LandingExplainer() {
               className="w-full h-64 object-cover object-top"
             />
           </div>
-        </div>
+        </motion.div>
 
         {/* Desktop: side-by-side tabs */}
-        <div className="hidden md:grid md:grid-cols-5 gap-8 items-start">
+        <motion.div
+          className="hidden md:grid md:grid-cols-5 gap-8 items-start"
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.15 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
           {/* Left: tab list */}
           <div className="col-span-2 space-y-1">
             {panels.map((panel, i) => (
@@ -261,17 +273,29 @@ export default function LandingExplainer() {
 
           {/* Right: visual panel */}
           <div className="col-span-3">
-            <div
-              className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm min-h-[340px]"
-              style={{ transition: "all 0.2s ease" }}
-            >
-              <ActiveVisual key={active} />
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm min-h-[340px] overflow-hidden">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={active}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <ActiveVisual />
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Mobile: accordion */}
-        <div className="md:hidden space-y-2">
+        <motion.div
+          className="md:hidden space-y-2"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.15 }}
+          transition={{ duration: 0.5 }}
           {panels.map((panel, i) => (
             <div
               key={panel.id}
@@ -296,17 +320,27 @@ export default function LandingExplainer() {
                 </div>
                 <span className="text-gray-400 text-lg leading-none">{active === i ? "−" : "+"}</span>
               </button>
-              {active === i && (
-                <div className="px-4 pb-5 space-y-4">
-                  <p className="text-sm text-gray-500 leading-relaxed">{panel.body}</p>
-                  <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                    <panel.visual />
-                  </div>
-                </div>
-              )}
+              <AnimatePresence>
+                {active === i && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-4 pb-5 space-y-4">
+                      <p className="text-sm text-gray-500 leading-relaxed">{panel.body}</p>
+                      <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                        <panel.visual />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
