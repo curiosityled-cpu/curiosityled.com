@@ -171,32 +171,29 @@ export default function LandingHowItWorks() {
                 <motion.div
                   key={i}
                   onClick={() => setActiveStep(i)}
-                  className="flex gap-5 p-4 rounded-xl cursor-pointer border"
+                  className="flex gap-5 p-4 rounded-xl cursor-pointer border transition-colors duration-200"
+                  style={{
+                    backgroundColor: isActive ? "#eff0ff" : "transparent",
+                    borderColor: isActive ? "#0202ff55" : "transparent",
+                  }}
                   initial={{ opacity: 0, x: -40 }}
-                  animate={revealed ? {
-                    opacity: 1,
-                    x: 0,
-                    backgroundColor: isActive ? "#eff0ff" : "rgba(0,0,0,0)",
-                    borderColor: isActive ? "#0202ff33" : "rgba(0,0,0,0)",
-                  } : { opacity: 0, x: -40 }}
-                  transition={{ duration: 0.5, delay: revealed ? i * 0.12 + 0.2 : 0 }}
+                  animate={{ opacity: revealed ? 1 : 0, x: revealed ? 0 : -40 }}
+                  transition={{ duration: 0.5, delay: i * 0.12 + 0.2 }}
                 >
-                  <motion.div
-                    className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center font-bold text-sm"
-                    animate={{
+                  <div
+                    className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center font-bold text-sm transition-colors duration-200"
+                    style={{
                       backgroundColor: isActive ? "#0202ff" : "#e5e7eb",
                       color: isActive ? "#fff" : "#6b7280",
                     }}
-                    transition={{ duration: 0.2 }}
                   >
                     {step.num}
-                  </motion.div>
+                  </div>
                   <div>
                     <div className="font-bold text-[#0a0a0a] mb-1">{step.title}</div>
                     <p className="text-gray-500 text-sm leading-relaxed">{step.desc}</p>
-                    </div>
-                    </motion.div>
-
+                  </div>
+                </motion.div>
               );
             })}
           </div>
