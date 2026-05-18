@@ -132,10 +132,10 @@ export default function LandingHowItWorks() {
         {/* How it works image */}
         <div className="mb-16 rounded-2xl overflow-hidden shadow-sm max-w-4xl mx-auto">
           <img
-             src="https://cdn.jsdelivr.net/gh/curiosityled-cpu/curiosityled.com@main/public/Body18T115222.051.png"
-             alt="How Curiosity Led works"
-             className="w-full h-auto object-cover rounded-2xl"
-           />
+            src="https://raw.githubusercontent.com/curiosityled-cpu/curiosityled.com/main/public/Body%20(38).png"
+            alt="How Curiosity Led works"
+            className="w-full h-auto object-cover"
+          />
         </div>
 
         {/* Steps + App mockup */}
