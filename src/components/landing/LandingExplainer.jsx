@@ -236,6 +236,7 @@ export default function LandingExplainer() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.15 }}
           transition={{ duration: 0.6, delay: 0.1 }}
+        >
           {/* Left: tab list */}
           <div className="col-span-2 space-y-1">
             {panels.map((panel, i) => (
@@ -296,6 +297,7 @@ export default function LandingExplainer() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.15 }}
           transition={{ duration: 0.5 }}
+        >
           {panels.map((panel, i) => (
             <div
               key={panel.id}
