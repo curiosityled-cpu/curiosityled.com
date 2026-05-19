@@ -162,7 +162,7 @@ export default function LandingInteractivePreview() {
         >
           <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full border border-blue-100 bg-blue-50">
             <span className="w-2 h-2 rounded-full bg-[#0202ff]" />
-            <span className="text-xs font-semibold text-[#0202ff] uppercase tracking-wider">Interactive Preview</span>
+            <span className="text-xs font-semibold text-[#0202ff] uppercase tracking-wider">For Every Level</span>
           </div>
           <h2 className="text-3xl lg:text-4xl font-bold text-[#0a0a0a] mb-4 leading-tight">
             One platform. Every perspective.
