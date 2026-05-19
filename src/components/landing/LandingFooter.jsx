@@ -12,7 +12,7 @@ export default function LandingFooter() {
           />
         </div>
         <p className="text-gray-300 text-xs text-center">
-          © {new Date().getFullYear()} Curiosity Led. Built for healthcare organizations developing newly promoted and newly hired leaders.
+          © {new Date().getFullYear()} Curiosity Led.
         </p>
         <div className="flex items-center gap-4">
           <a
