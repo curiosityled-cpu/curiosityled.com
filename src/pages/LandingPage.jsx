@@ -11,6 +11,11 @@ import LandingFinalCTA from "@/components/landing/LandingFinalCTA";
 import LandingFooter from "@/components/landing/LandingFooter";
 
 export default function LandingPage() {
+  useEffect(() => {
+    document.title = "Curiosity Led";
+    return () => { document.title = "Curiosity Led"; };
+  }, []);
+
   return (
     <div className="min-h-screen bg-white font-sans">
       <LandingNav />
