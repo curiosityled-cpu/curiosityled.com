@@ -9,6 +9,7 @@ import LandingFAQ from "@/components/landing/LandingFAQ";
 import LandingBeyond from "@/components/landing/LandingBeyond";
 import LandingFinalCTA from "@/components/landing/LandingFinalCTA";
 import LandingFooter from "@/components/landing/LandingFooter";
+import LandingInteractivePreview from "@/components/landing/LandingInteractivePreview";
 
 export default function LandingPage() {
   useEffect(() => {
@@ -23,6 +24,7 @@ export default function LandingPage() {
       <LandingProblem />
       <LandingShift />
       <LandingExplainer />
+      <LandingInteractivePreview />
       <Landing90Days />
       <LandingFAQ />
       <LandingBeyond />
