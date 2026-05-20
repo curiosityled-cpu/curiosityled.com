@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, User, TrendingUp, AlertTriangle, CheckCircle2, ArrowRight, ChevronRight } from "lucide-react";
+import { Users, User, TrendingUp, AlertTriangle, CheckCircle2, ArrowRight, ChevronRight, Lock } from "lucide-react";
 
 const IndividualView = () => (
   <div className="space-y-4">
@@ -165,10 +165,10 @@ export default function LandingInteractivePreview() {
             <span className="text-xs font-semibold text-[#0202ff] uppercase tracking-wider">For Every Level</span>
           </div>
           <h2 className="text-3xl lg:text-4xl font-bold text-[#0a0a0a] mb-4 leading-tight">
-            One platform. Every perspective.
+            One platform. Clear boundaries.
           </h2>
-          <p className="text-gray-500 max-w-xl mx-auto leading-relaxed">
-            Managers get a clear development path. Executives get the organizational visibility to act before problems escalate.
+          <p className="text-gray-500 max-w-2xl mx-auto leading-relaxed">
+            Leaders get a private development view. Executives get an aggregated organizational view designed to support readiness, succession, and earlier intervention.
           </p>
         </motion.div>
 
@@ -244,15 +244,16 @@ export default function LandingInteractivePreview() {
                     {view === "individual" ? "Your development journey and active goals" : "Organization-wide visibility and succession data"}
                   </div>
                 </div>
-                <div
-                  className="text-[10px] font-bold px-2.5 py-1 rounded-full"
-                  style={{
-                    backgroundColor: view === "individual" ? "#eef0ff" : "#f0fdf4",
-                    color: view === "individual" ? "#0202ff" : "#10b981",
-                  }}
-                >
-                  {view === "individual" ? "Leader" : "Executive"}
-                </div>
+                {view === "individual" ? (
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                    <Lock className="w-2.5 h-2.5" />
+                    Private to you
+                  </div>
+                ) : (
+                  <div className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                    Aggregated view
+                  </div>
+                )}
               </div>
 
               <AnimatePresence mode="wait">
@@ -269,21 +270,32 @@ export default function LandingInteractivePreview() {
             </div>
           </div>
 
-          {/* Caption */}
-          <div className="flex items-center justify-center gap-6 mt-6 text-xs text-gray-400">
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-red-400" />
-              At-risk leaders surfaced early
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-green-400" />
-              Succession gaps identified
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#0202ff" }} />
-              Action tied to real behavior
-            </div>
-          </div>
+          {/* View-specific support text */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={view}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25 }}
+              className="mt-5 text-center"
+            >
+              {view === "individual" ? (
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  Managers see their own strengths, goals, and next steps in a private development view built for reflection and action.
+                </p>
+              ) : (
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  Executives see trends across cohorts, readiness signals, and succession insights — not individual responses.
+                </p>
+              )}
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Trust reassurance line */}
+          <p className="mt-5 text-center text-xs text-gray-400 leading-relaxed">
+            Curiosity Led is designed for development and organizational visibility — not individual surveillance.
+          </p>
         </motion.div>
       </div>
     </section>
