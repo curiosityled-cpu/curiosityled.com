@@ -69,12 +69,15 @@ export default function CompetencyExpandableCard({ fieldKey, score, insight, lea
           <p className="text-sm text-gray-500 mt-1 line-clamp-1">{def.definition}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <div className="w-24 hidden sm:block relative">
-            <Progress value={score} className="h-2" />
+          <div className="w-24 hidden sm:block relative h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full ${band.bar}`}
+              style={{ width: `${score}%` }}
+            />
             {/* Industry Benchmark marker on mini bar */}
             <div
-              className="absolute top-0 h-full w-0.5 bg-black"
-              style={{ left: `${benchmark}%` }}
+              className="absolute top-0 h-full bg-black"
+              style={{ left: `${benchmark}%`, width: "2px" }}
             />
           </div>
           {open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
