@@ -66,25 +66,28 @@ export default function LandingProblem() {
         </div>
 
         {/* Quote cards */}
-        <div className="grid md:grid-cols-3 gap-6">
-          {[
-            { persona: "Manager", quote: "I do not need another program to finish. I need help with what is happening this week." },
-            { persona: "HR / Talent", quote: "I have programs and coaching, but no single, defensible leadership story." },
-            { persona: "Executive Sponsor", quote: "We are investing in leadership, but succession conversations still start without a clear picture of who is ready." },
-          ].map((q, i) => (
-            <div
-              key={i}
-              className="rounded-2xl border border-white/15 bg-white/8 p-6 flex flex-col"
-              style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
-            >
-              <div className="text-xs font-bold uppercase tracking-wider mb-4 px-2.5 py-1 rounded-full self-start bg-white/15 text-white">
-                {q.persona}
-              </div>
-              <blockquote className="text-gray-100 text-sm leading-relaxed flex-1 italic">
-                "{q.quote}"
-              </blockquote>
+        <div>
+          <div className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6">
+            What we hear from healthcare teams
+          </div>
+          <div className="rounded-3xl border border-white/20 p-8 md:p-10" style={{ backgroundColor: "rgba(60,55,90,0.5)" }}>
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                { persona: "Manager", quote: "I do not need another program to finish. I need help with what is happening this week." },
+                { persona: "HR / Talent", quote: "I have programs and coaching, but no single, defensible leadership story." },
+                { persona: "Executive Sponsor", quote: "We are investing in leadership, but succession conversations still start without a clear picture of who is ready." },
+              ].map((q, i) => (
+                <div key={i} className="flex flex-col">
+                  <div className="text-xs font-bold uppercase tracking-wider mb-3 text-gray-300">
+                    {q.persona}
+                  </div>
+                  <blockquote className="text-gray-100 text-sm leading-relaxed italic font-light">
+                    "{q.quote}"
+                  </blockquote>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </section>
