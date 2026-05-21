@@ -40,14 +40,18 @@ const STRENGTHS_MAP = {
   pm:   { strength: "Sets clear goals; provides regular constructive feedback; develops team accountability", dev: "Deepen coaching skills to address performance gaps before they escalate" },
 };
 
+// Industry benchmarks (Corporate sector, First-Line manager level targets)
+const INDUSTRY_BENCHMARKS = { si: 68, dm: 70, comm: 72, rm: 71, sm: 72, pm: 69 };
+
 export default function CompetencyExpandableCard({ fieldKey, score, insight, leadershipLevel }) {
-  const [open, setOpen] = useState(false);
-  const levelTargets = leadershipLevel ? (LEVEL_TARGETS[leadershipLevel] || DEFAULT_TARGETS) : DEFAULT_TARGETS;
-  const target = levelTargets[fieldKey] || 70;
-  const def  = COMPETENCY_DEFINITIONS[fieldKey] || { name: fieldKey, definition: "" };
-  const band = SCORE_BAND(score);
-  const maps = STRENGTHS_MAP[fieldKey] || {};
-  const gap  = score - target;
+   const [open, setOpen] = useState(false);
+   const levelTargets = leadershipLevel ? (LEVEL_TARGETS[leadershipLevel] || DEFAULT_TARGETS) : DEFAULT_TARGETS;
+   const target = levelTargets[fieldKey] || 70;
+   const benchmark = INDUSTRY_BENCHMARKS[fieldKey] || 70;
+   const def  = COMPETENCY_DEFINITIONS[fieldKey] || { name: fieldKey, definition: "" };
+   const band = SCORE_BAND(score);
+   const maps = STRENGTHS_MAP[fieldKey] || {};
+   const gap  = score - target;
 
   return (
     <div className="border rounded-xl bg-white overflow-hidden transition-shadow hover:shadow-md">
@@ -60,13 +64,18 @@ export default function CompetencyExpandableCard({ fieldKey, score, insight, lea
           <div className="flex items-center gap-3 flex-wrap">
             <span className="font-semibold text-gray-900">{def.name}</span>
             <Badge className={`text-xs ${band.color}`}>{score}% — {band.label}</Badge>
-            <span className="text-xs text-gray-400">Target {target}%</span>
+            <span className="text-xs text-gray-400">Industry Benchmark {benchmark}%</span>
           </div>
           <p className="text-sm text-gray-500 mt-1 line-clamp-1">{def.definition}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <div className="w-24 hidden sm:block">
+          <div className="w-24 hidden sm:block relative">
             <Progress value={score} className="h-2" />
+            {/* Industry Benchmark marker on mini bar */}
+            <div
+              className="absolute top-0 h-full w-0.5 bg-black"
+              style={{ left: `${benchmark}%` }}
+            />
           </div>
           {open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
         </div>
@@ -79,17 +88,17 @@ export default function CompetencyExpandableCard({ fieldKey, score, insight, lea
           <div className="pt-4">
             <div className="flex justify-between text-xs text-gray-500 mb-1">
               <span>Your Score</span>
-              <span>Target {target}%{leadershipLevel ? ` (${leadershipLevel.replace(/_/g, " ")})` : ""}</span>
+              <span>Industry Benchmark {benchmark}%</span>
             </div>
             <div className="relative h-3 bg-gray-200 rounded-full overflow-hidden">
               <div
                 className={`absolute left-0 top-0 h-full rounded-full transition-all ${band.bar}`}
                 style={{ width: `${score}%` }}
               />
-              {/* Target marker */}
+              {/* Industry Benchmark marker */}
               <div
-                className="absolute top-0 h-full w-0.5 bg-gray-700"
-                style={{ left: `${target}%` }}
+                className="absolute top-0 h-full bg-black"
+                style={{ left: `${benchmark}%`, width: "2px" }}
               />
             </div>
             <div className="flex justify-between text-xs mt-1">
