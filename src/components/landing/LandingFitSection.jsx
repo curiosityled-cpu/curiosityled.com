@@ -48,36 +48,19 @@ export default function LandingFitSection() {
             </ul>
           </motion.div>
 
-          {/* Right: visual comparison */}
+          {/* Right: image */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.6, delay: 0.15 }}
-            className="space-y-3"
+            className="rounded-2xl overflow-hidden"
           >
-            <div className="grid grid-cols-2 gap-3 mb-2">
-              <div className="text-xs font-bold uppercase tracking-wider text-gray-400 text-center">Without Curiosity Led</div>
-              <div className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: "#0202ff" }}>With Curiosity Led</div>
-            </div>
-            {[
-              { before: "Programs running in silos", after: "One connected development view" },
-              { before: "Competency model sits in a doc", after: "Framework active in daily work" },
-              { before: "Readiness is a spreadsheet", after: "Readiness visible in real time" },
-              { before: "Impact hard to explain", after: "Progress tied to clear evidence" },
-            ].map((row, i) => (
-              <div key={i} className="grid grid-cols-2 gap-3 items-stretch">
-                <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center">
-                  <span className="text-sm text-gray-400 line-through">{row.before}</span>
-                </div>
-                <div
-                  className="rounded-xl px-4 py-3 flex items-center border"
-                  style={{ backgroundColor: "#eef0ff", borderColor: "#c7ccff" }}
-                >
-                  <span className="text-sm font-semibold" style={{ color: "#0202ff" }}>{row.after}</span>
-                </div>
-              </div>
-            ))}
+            <img
+              src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=500&fit=crop"
+              alt="Integrated systems"
+              className="w-full h-full object-cover"
+            />
           </motion.div>
         </div>
       </div>

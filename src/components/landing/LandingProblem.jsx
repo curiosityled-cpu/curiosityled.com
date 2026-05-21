@@ -19,20 +19,34 @@ export default function LandingProblem() {
   return (
     <section className="py-24 bg-[#1a1a2e]">
       <div className="max-w-6xl mx-auto px-6">
-        {/* Section label */}
-        <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full border border-white/20 bg-white/10">
-          <span className="w-2 h-2 rounded-full bg-white" />
-          <span className="text-xs font-semibold text-white uppercase tracking-wider">The problem</span>
+        <div className="grid lg:grid-cols-2 gap-12 items-center mb-14">
+          {/* Left content */}
+          <div>
+            {/* Section label */}
+            <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full border border-white/20 bg-white/10">
+              <span className="w-2 h-2 rounded-full bg-white" />
+              <span className="text-xs font-semibold text-white uppercase tracking-wider">The problem</span>
+            </div>
+
+            <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6 leading-tight">
+              Most leadership development starts too late and stays too fragmented.
+            </h2>
+
+            <p className="text-gray-200 text-lg leading-relaxed mb-8">
+              Healthcare organizations are already investing in manager development, coaching, and assessments. The challenge is that support often sits{" "}
+              <span className="text-white font-bold">outside the flow of work</span>, leadership signals are scattered across systems, and succession conversations start without a clear view of readiness or progress.
+            </p>
+          </div>
+
+          {/* Right image */}
+          <div className="rounded-2xl overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop"
+              alt="Team collaboration"
+              className="w-full h-full object-cover"
+            />
+          </div>
         </div>
-
-        <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6 leading-tight max-w-2xl">
-          Most leadership development starts too late and stays too fragmented.
-        </h2>
-
-        <p className="text-gray-200 text-lg leading-relaxed max-w-3xl mb-14">
-          Healthcare organizations are already investing in manager development, coaching, and assessments. The challenge is that support often sits{" "}
-          <span className="text-white font-bold">outside the flow of work</span>, leadership signals are scattered across systems, and succession conversations start without a clear view of readiness or progress.
-        </p>
 
         {/* Proof point cards */}
         <div className="grid md:grid-cols-3 gap-6 mb-14">

@@ -54,28 +54,13 @@ export default function Landing90Days() {
             </p>
           </div>
 
-          {/* Right: timeline visual */}
-          <div className="space-y-4">
-            {[
-              { week: "Week 1–2", label: "Baseline assessment complete", sub: "Competency landscape, readiness signals, and development priorities identified", pct: 15 },
-              { week: "Week 3–6", label: "Manager support active", sub: "In-workflow guidance tied to real leadership moments and goals", pct: 45 },
-              { week: "Week 7–10", label: "Readiness picture clearer", sub: "HR and sponsors see progression, watch areas, and succession gaps", pct: 70 },
-              { week: "Week 11–13", label: "Defensible impact story", sub: "Development connected to behavior change and organizational readiness", pct: 90 },
-            ].map((t, i) => (
-              <div key={i} className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="text-[10px] font-semibold text-gray-300 uppercase tracking-wider mb-0.5">{t.week}</div>
-                    <div className="text-sm font-bold text-white">{t.label}</div>
-                    <div className="text-xs text-gray-200 mt-0.5">{t.sub}</div>
-                  </div>
-                  <div className="text-sm font-bold flex-shrink-0 ml-3 text-white">{t.pct}%</div>
-                </div>
-                <div className="w-full bg-white/15 rounded-full h-1.5">
-                  <div className="h-1.5 rounded-full bg-white" style={{ width: `${t.pct}%` }} />
-                </div>
-              </div>
-            ))}
+          {/* Right: image */}
+          <div className="rounded-2xl overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=500&fit=crop"
+              alt="Progress and timeline"
+              className="w-full h-full object-cover"
+            />
           </div>
         </div>
       </div>

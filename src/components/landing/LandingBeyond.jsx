@@ -31,43 +31,57 @@ export default function LandingBeyond() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-          {/* Not */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-6">
-            <div className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4">We are not</div>
-            <ul className="space-y-3">
-              {notList.map((item, i) => (
-                <li key={i} className="flex items-center gap-3">
-                  <div className="w-5 h-5 rounded-full bg-red-50 border border-red-100 flex items-center justify-center flex-shrink-0">
-                    <X className="w-3 h-3 text-red-400" />
-                  </div>
-                  <span className="text-gray-500 text-sm">{item}</span>
-                </li>
-              ))}
-            </ul>
+        <div className="grid lg:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
+          {/* Image */}
+          <div className="rounded-2xl overflow-hidden order-2 lg:order-1">
+            <img
+              src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=500&fit=crop"
+              alt="Leadership clarity"
+              className="w-full h-full object-cover"
+            />
           </div>
 
-          {/* Is */}
-          <div
-            className="rounded-2xl border p-6"
-            style={{ backgroundColor: "#eef0ff", borderColor: "#c7ccff" }}
-          >
-            <div className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: "#0202ff" }}>
-              We are
+          {/* Content */}
+          <div className="order-1 lg:order-2">
+            <div className="grid md:grid-cols-2 gap-6 mb-8">
+              {/* Not */}
+              <div className="rounded-2xl border border-gray-200 bg-white p-6">
+                <div className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4">We are not</div>
+                <ul className="space-y-3">
+                  {notList.map((item, i) => (
+                    <li key={i} className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-full bg-red-50 border border-red-100 flex items-center justify-center flex-shrink-0">
+                        <X className="w-3 h-3 text-red-400" />
+                      </div>
+                      <span className="text-gray-500 text-sm">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Is */}
+              <div
+                className="rounded-2xl border p-6"
+                style={{ backgroundColor: "#eef0ff", borderColor: "#c7ccff" }}
+              >
+                <div className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: "#0202ff" }}>
+                  We are
+                </div>
+                <ul className="space-y-3">
+                  {isList.map((item, i) => (
+                    <li key={i} className="flex items-center gap-3">
+                      <div
+                        className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: "#0202ff" }}
+                      >
+                        <Check className="w-3 h-3 text-white" />
+                      </div>
+                      <span className="text-sm font-medium" style={{ color: "#0a0a2e" }}>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-            <ul className="space-y-3">
-              {isList.map((item, i) => (
-                <li key={i} className="flex items-center gap-3">
-                  <div
-                    className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: "#0202ff" }}
-                  >
-                    <Check className="w-3 h-3 text-white" />
-                  </div>
-                  <span className="text-sm font-medium" style={{ color: "#0a0a2e" }}>{item}</span>
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
       </div>
