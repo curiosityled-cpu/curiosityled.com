@@ -41,8 +41,8 @@ export default function LandingProblem() {
           {/* Right image */}
           <div className="rounded-2xl overflow-hidden">
             <img
-              src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop"
-              alt="Team collaboration"
+              src="/web_overworked_CREDIT-PeopleImages_iStock-654187068.png"
+              alt="Overworked manager"
               className="w-full h-full object-cover"
             />
           </div>

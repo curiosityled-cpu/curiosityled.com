@@ -57,7 +57,7 @@ export default function Landing90Days() {
           {/* Right: image */}
           <div className="rounded-2xl overflow-hidden">
             <img
-              src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=500&fit=crop"
+              src="/18T115222051.png"
               alt="Progress and timeline"
               className="w-full h-full object-cover"
             />

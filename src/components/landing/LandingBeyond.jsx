@@ -31,19 +31,10 @@ export default function LandingBeyond() {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
-          {/* Image */}
-          <div className="rounded-2xl overflow-hidden order-2 lg:order-1">
-            <img
-              src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=500&fit=crop"
-              alt="Leadership clarity"
-              className="w-full h-full object-cover"
-            />
-          </div>
-
+        <div className="max-w-3xl mx-auto">
           {/* Content */}
-          <div className="order-1 lg:order-2">
-            <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div>
+            <div className="grid md:grid-cols-2 gap-6">
               {/* Not */}
               <div className="rounded-2xl border border-gray-200 bg-white p-6">
                 <div className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4">We are not</div>

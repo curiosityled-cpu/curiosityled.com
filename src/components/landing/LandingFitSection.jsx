@@ -57,7 +57,7 @@ export default function LandingFitSection() {
             className="rounded-2xl overflow-hidden"
           >
             <img
-              src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=500&fit=crop"
+              src="/Body (50).png"
               alt="Integrated systems"
               className="w-full h-full object-cover"
             />

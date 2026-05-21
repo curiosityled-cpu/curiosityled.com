@@ -222,7 +222,7 @@ export default function LandingExplainer() {
           {/* Manager engaged with platform image */}
           <div className="rounded-2xl overflow-hidden shadow-sm hidden lg:block">
             <img
-              src="https://raw.githubusercontent.com/curiosityled-cpu/curiosityled.com/main/public/18T115222051.png"
+              src="/White and Blue How to Start a Saas Product Webinar Instagram Post_edited.jpg"
               alt="Manager engaging with the platform"
               className="w-full h-64 object-cover object-top"
             />
