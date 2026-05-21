@@ -1,17 +1,17 @@
 import React from "react";
 
-const quotes = [
+const proofPoints = [
   {
-    persona: "Manager",
-    quote: "I do not need another program to finish. I need help with what is happening this week.",
+    title: "Development happens after strain is already visible.",
+    body: "Support gets triggered once a behavior has impacted the team — not before.",
   },
   {
-    persona: "HR / Talent",
-    quote: "I have programs and coaching, but no single, defensible leadership story.",
+    title: "HR gets disconnected signals instead of one defensible story.",
+    body: "Assessments, coaching, and goals sit in different places, making impact hard to explain.",
   },
   {
-    persona: "Executive Sponsor",
-    quote: "We are investing in leadership, but risk is still discovered too late and impact is still hard to prove.",
+    title: "Succession discussions begin without enough visibility.",
+    body: "Readiness conversations start without a clear view of bench strength or progression.",
   },
 ];
 
@@ -26,27 +26,38 @@ export default function LandingProblem() {
         </div>
 
         <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6 leading-tight max-w-2xl">
-          Why manager support still arrives too late.
+          Most leadership development starts too late and stays too fragmented.
         </h2>
 
-        <p className="text-gray-200 text-lg leading-relaxed max-w-3xl mb-16">
-          Most healthcare organizations already have leadership programs, coaching, and learning platforms. The problem is that support often lives outside daily work and gets triggered only{" "}
-          <span className="text-white font-bold">after a behavior has impacted the team, engagement has slipped, or risk has already grown.</span>{" "}
-          Managers feel like they are juggling development on top of the job, while HR struggles to explain what is actually working.
+        <p className="text-gray-200 text-lg leading-relaxed max-w-3xl mb-14">
+          Healthcare organizations are already investing in manager development, coaching, and assessments. The challenge is that support often sits{" "}
+          <span className="text-white font-bold">outside the flow of work</span>, leadership signals are scattered across systems, and succession conversations start without a clear view of readiness or progress.
         </p>
 
-        {/* Overworked manager image */}
-        <div className="mb-12 rounded-2xl overflow-hidden max-h-72 w-full">
-          <img
-            src="https://raw.githubusercontent.com/curiosityled-cpu/curiosityled.com/main/public/web_overworked_CREDIT-PeopleImages_iStock-654187068.png"
-            alt="Overwhelmed manager under pressure"
-            className="w-full h-72 object-cover object-center"
-          />
+        {/* Proof point cards */}
+        <div className="grid md:grid-cols-3 gap-6 mb-14">
+          {proofPoints.map((p, i) => (
+            <div
+              key={i}
+              className="rounded-2xl border border-white/15 p-6 flex flex-col gap-3"
+              style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+            >
+              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(255,255,255,0.15)" }}>
+                <span className="text-white text-sm font-bold">{i + 1}</span>
+              </div>
+              <div className="text-white font-semibold text-sm leading-snug">{p.title}</div>
+              <div className="text-gray-300 text-sm leading-relaxed">{p.body}</div>
+            </div>
+          ))}
         </div>
 
         {/* Quote cards */}
         <div className="grid md:grid-cols-3 gap-6">
-          {quotes.map((q, i) => (
+          {[
+            { persona: "Manager", quote: "I do not need another program to finish. I need help with what is happening this week." },
+            { persona: "HR / Talent", quote: "I have programs and coaching, but no single, defensible leadership story." },
+            { persona: "Executive Sponsor", quote: "We are investing in leadership, but succession conversations still start without a clear picture of who is ready." },
+          ].map((q, i) => (
             <div
               key={i}
               className="rounded-2xl border border-white/15 bg-white/8 p-6 flex flex-col"

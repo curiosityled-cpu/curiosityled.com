@@ -2,14 +2,15 @@ import React, { useState, useEffect } from "react";
 import LandingNav from "@/components/landing/LandingNav";
 import LandingHero from "@/components/landing/LandingHero";
 import LandingProblem from "@/components/landing/LandingProblem";
-import LandingShift from "@/components/landing/LandingShift";
+import LandingBuyerNeeds from "@/components/landing/LandingBuyerNeeds";
 import LandingExplainer from "@/components/landing/LandingExplainer";
+import LandingObjectionStrip from "@/components/landing/LandingObjectionStrip";
+import LandingInteractivePreview from "@/components/landing/LandingInteractivePreview";
+import LandingFitSection from "@/components/landing/LandingFitSection";
 import Landing90Days from "@/components/landing/Landing90Days";
-import LandingFAQ from "@/components/landing/LandingFAQ";
 import LandingBeyond from "@/components/landing/LandingBeyond";
 import LandingFinalCTA from "@/components/landing/LandingFinalCTA";
 import LandingFooter from "@/components/landing/LandingFooter";
-import LandingInteractivePreview from "@/components/landing/LandingInteractivePreview";
 
 export default function LandingPage() {
   useEffect(() => {
@@ -22,11 +23,12 @@ export default function LandingPage() {
       <LandingNav />
       <LandingHero />
       <LandingProblem />
-      <LandingShift />
+      <LandingBuyerNeeds />
       <LandingExplainer />
+      <LandingObjectionStrip />
       <LandingInteractivePreview />
+      <LandingFitSection />
       <Landing90Days />
-      <LandingFAQ />
       <LandingBeyond />
       <LandingFinalCTA />
       <LandingFooter />

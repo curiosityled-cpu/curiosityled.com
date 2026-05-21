@@ -11,9 +11,10 @@ export default function LandingFooter() {
             className="h-10 object-contain"
           />
         </div>
-        <p className="text-gray-300 text-xs text-center">
-          © {new Date().getFullYear()} Curiosity Led.
-        </p>
+        <div className="text-center">
+          <p className="text-gray-300 text-xs">© {new Date().getFullYear()} Curiosity Led.</p>
+          <p className="text-gray-500 text-xs mt-1">Leadership development, readiness visibility, and succession insight for healthcare organizations.</p>
+        </div>
         <div className="flex items-center gap-4">
           <a
             href="https://eosoria.wixstudio.com/mysite"

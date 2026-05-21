@@ -2,16 +2,16 @@ import React from "react";
 import { X, Check } from "lucide-react";
 
 const notList = [
-  "Another LMS",
-  "Another leadership program",
+  "Another LMS or e-learning platform",
+  "Another standalone leadership program",
   "Another coaching marketplace",
 ];
 
 const isList = [
-  "A system that surfaces leadership risk earlier",
-  "In-the-workflow support tied to real management moments",
-  "One clear view of progress, readiness, and intervention",
-  "A foundation for career pathing and succession decisions",
+  "A connected system for manager support, readiness, and succession",
+  "In-workflow guidance tied to real management challenges",
+  "One clear view of development progress and organizational readiness",
+  "Compatible with your existing competency model and leadership programs",
 ];
 
 export default function LandingBeyond() {
@@ -24,20 +24,11 @@ export default function LandingBeyond() {
             <span className="text-xs font-semibold text-[#0202ff] uppercase tracking-wider">Who we are</span>
           </div>
           <h2 className="text-3xl lg:text-4xl font-bold text-[#0a0a0a] mb-4 leading-tight">
-            Beyond support: leadership visibility.
+            Not another tool. A clearer system.
           </h2>
           <p className="text-gray-500 max-w-2xl mx-auto leading-relaxed">
-            Curiosity Led is not another LMS, another leadership program, or another coaching marketplace. It is a system that makes leadership development more timely, measurable, and tied to real behavior before problems escalate. That gives organizations a stronger foundation for succession planning, career pathing, and leadership investment decisions that can be explained with more than anecdotes.
+            Curiosity Led is not another LMS, leadership program, or coaching marketplace. It brings together the development activity you are already running and makes it more visible, more timely, and easier to act on — giving organizations a stronger foundation for succession planning, readiness conversations, and leadership investment decisions.
           </p>
-        </div>
-
-        {/* Leader reviewing data image */}
-        <div className="mb-10 rounded-2xl overflow-hidden max-w-3xl mx-auto shadow-sm">
-          <img
-            src="https://raw.githubusercontent.com/curiosityled-cpu/curiosityled.com/main/public/Body%20(50).png"
-            alt="Leader reviewing leadership data"
-            className="w-full h-64 object-cover object-top"
-          />
         </div>
 
         <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
@@ -61,10 +52,7 @@ export default function LandingBeyond() {
             className="rounded-2xl border p-6"
             style={{ backgroundColor: "#eef0ff", borderColor: "#c7ccff" }}
           >
-            <div
-              className="text-xs font-bold uppercase tracking-wider mb-4"
-              style={{ color: "#0202ff" }}
-            >
+            <div className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: "#0202ff" }}>
               We are
             </div>
             <ul className="space-y-3">
@@ -76,9 +64,7 @@ export default function LandingBeyond() {
                   >
                     <Check className="w-3 h-3 text-white" />
                   </div>
-                  <span className="text-sm font-medium" style={{ color: "#0a0a2e" }}>
-                    {item}
-                  </span>
+                  <span className="text-sm font-medium" style={{ color: "#0a0a2e" }}>{item}</span>
                 </li>
               ))}
             </ul>

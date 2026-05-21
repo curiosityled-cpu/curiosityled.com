@@ -34,8 +34,8 @@ export default function LandingHero() {
               transition={{ duration: 0.7, delay: 0.2 }}
               className="text-4xl lg:text-5xl xl:text-[52px] font-bold text-[#0a0a0a] leading-[1.1] tracking-tight mb-6"
             >
-              Spot leadership risk{" "}
-              <span style={{ color: "#0202ff" }}>before it hits your metrics.</span>
+              Support for every manager.{" "}
+              <span style={{ color: "#0202ff" }}>Clarity for HR.</span>
             </motion.h1>
 
             {/* Subheadline */}
@@ -45,7 +45,7 @@ export default function LandingHero() {
               transition={{ duration: 0.7, delay: 0.4 }}
               className="text-lg text-gray-600 leading-relaxed mb-8 font-medium"
             >
-              Earlier signals. In-workflow support. Clearer leadership visibility.
+              Support managers in the flow of work, build clearer readiness and succession visibility, and connect leadership development to measurable impact.
             </motion.p>
 
             {/* Bullets */}
@@ -59,9 +59,9 @@ export default function LandingHero() {
               }}
             >
               {[
-                "Support at\u2011risk managers before issues escalate.",
-                "Deliver coaching and learning in the flow of work.",
-                "Give one shared view of progress, readiness, and where to intervene.",
+                "Support managers with timely, in-workflow guidance.",
+                "See readiness, bench strength, and succession gaps more clearly.",
+                "Bring assessments, goals, and development activity into one leadership view.",
               ].map((b, i) => (
                 <motion.li
                   key={i}
@@ -211,8 +211,8 @@ export default function LandingHero() {
                 ↑
               </div>
               <div>
-                <div className="text-xs font-bold text-gray-900">Risk detected early</div>
-                <div className="text-[10px] text-gray-500">Intervention triggered before escalation</div>
+                <div className="text-xs font-bold text-gray-900">Readiness improving</div>
+                <div className="text-[10px] text-gray-500">Development tied to measurable progress</div>
               </div>
             </motion.div>
           </motion.div>
@@ -221,7 +221,7 @@ export default function LandingHero() {
         {/* Proof strip */}
         <div className="mt-16 pt-8 border-t border-gray-100">
           <p className="text-center text-xs text-gray-400 max-w-2xl mx-auto">
-            Designed for healthcare HR and L&D teams. Early programs indicate stronger manager engagement, lower admin burden, and clearer links between development activity and leadership visibility.
+            Designed for healthcare HR, Talent, and L&D teams — helping organizations connect manager development to readiness, succession, and measurable leadership impact.
           </p>
         </div>
       </div>
