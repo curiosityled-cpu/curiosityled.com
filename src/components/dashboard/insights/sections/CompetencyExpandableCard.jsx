@@ -98,7 +98,7 @@ export default function CompetencyExpandableCard({ fieldKey, score, insight, lea
               {/* Industry Benchmark marker */}
               <div
                 className="absolute top-0 h-full bg-black"
-                style={{ left: `${benchmark}%`, width: "2px" }}
+                style={{ left: `${benchmark}%`, width: "4px" }}
               />
             </div>
             <div className="flex justify-between text-xs mt-1">
