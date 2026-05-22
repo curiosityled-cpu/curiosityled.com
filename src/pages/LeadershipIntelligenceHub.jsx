@@ -1,8 +1,10 @@
-import React, { useMemo, useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { AlertTriangle, TrendingUp, CheckCircle, BarChart2, Users } from "lucide-react";
+import { AlertTriangle, TrendingUp, CheckCircle, BarChart2, Users, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
@@ -47,6 +49,7 @@ function LoadingSkeleton() {
 
 export default function LeadershipIntelligenceHub() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [selectedStage, setSelectedStage] = useState(null);
 
   // client_id stored in data for most roles
@@ -181,6 +184,22 @@ export default function LeadershipIntelligenceHub() {
               label="Ready" pct={stats.pctOnTrack} count={stats.onTrack}
               icon={CheckCircle} iconBg="bg-emerald-50" iconColor="text-emerald-500" valueColor="text-emerald-600"
             />
+          </div>
+
+          {/* Navigation to Org Insights */}
+          <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-2xl border border-indigo-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-1">Dive Deeper into Aggregate Data</h3>
+                <p className="text-sm text-gray-600">View the Capability vs. Execution Matrix and detailed organizational insights.</p>
+              </div>
+              <Button
+                onClick={() => navigate('/Insights?tab=org')}
+                className="bg-[#0202ff] hover:bg-[#0101dd] text-white flex items-center gap-2 shrink-0"
+              >
+                Org Insights <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Distribution Chart */}

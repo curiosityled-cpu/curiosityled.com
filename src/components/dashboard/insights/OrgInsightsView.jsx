@@ -769,10 +769,10 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         };
 
         const quadrantConfig = [
-          { key: 'topRight',    label: 'High Performers',    sub: 'Strong capability + strong execution', color: 'bg-green-50 border-green-200', badge: 'bg-green-100 text-green-800', dot: 'bg-green-500' },
-          { key: 'topLeft',     label: 'Execution Leaders',  sub: 'Delivering results — build capability', color: 'bg-blue-50 border-blue-200',  badge: 'bg-blue-100 text-blue-800',  dot: 'bg-blue-500' },
-          { key: 'bottomRight', label: 'Untapped Potential', sub: 'High capability — needs execution focus', color: 'bg-amber-50 border-amber-200', badge: 'bg-amber-100 text-amber-800', dot: 'bg-amber-500' },
-          { key: 'bottomLeft',  label: 'Needs Support',      sub: 'Priority for coaching & development', color: 'bg-red-50 border-red-200',    badge: 'bg-red-100 text-red-800',    dot: 'bg-red-500' },
+          { key: 'topRight',    label: 'Pace Setters',    sub: 'High Capability & High Execution: Empower and elevate.', color: 'bg-green-50 border-green-200', badge: 'bg-green-100 text-green-800', dot: 'bg-green-500' },
+          { key: 'topLeft',     label: 'Results Drivers',  sub: 'High Execution, Emerging Capability: Develop and assign strategic challenges.', color: 'bg-blue-50 border-blue-200',  badge: 'bg-blue-100 text-blue-800',  dot: 'bg-blue-500' },
+          { key: 'bottomRight', label: 'High Potentials', sub: 'High Capability, Developing Execution: Provide structured goal support and mentorship.', color: 'bg-amber-50 border-amber-200', badge: 'bg-amber-100 text-amber-800', dot: 'bg-amber-500' },
+          { key: 'bottomLeft',  label: 'Foundational Support',      sub: 'Developing Capability & Execution: Focus on core skills and goal attainment.', color: 'bg-red-50 border-red-200',    badge: 'bg-red-100 text-red-800',    dot: 'bg-red-500' },
         ];
 
         return (
@@ -786,9 +786,15 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
               </CardHeader>
               <CardContent>
                 {/* How to read this */}
-                <div className="mb-5 p-3 bg-indigo-50 border border-indigo-200 rounded-lg text-sm text-indigo-800">
-                  <strong>How to use this:</strong> Each leader is placed in a quadrant based on their Leadership Assessment Score (capability) and Goal Completion Rate (execution). 
-                  The threshold for each axis is <strong>{capThreshold}%</strong>. Focus coaching resources on the bottom-left; stretch assignments on the top-left; execution support on the bottom-right.
+                <div className="mb-5 p-3 bg-indigo-50 border border-indigo-200 rounded-lg text-sm text-indigo-800 space-y-2">
+                  <strong>How to Interpret:</strong>
+                  <p>Leaders are mapped by <strong>Capability</strong> (Leadership Assessment Score, horizontal) and <strong>Execution</strong> (Goal Completion Rate, vertical). The midpoint for both is <strong>{capThreshold}%</strong>.</p>
+                  <ul className="list-disc list-inside space-y-1 mt-2 text-xs">
+                    <li><strong>Foundational Support (Bottom-Left):</strong> Prioritize core coaching and essential goal attainment.</li>
+                    <li><strong>Results Drivers (Top-Left):</strong> Focus on capability building and strategic development.</li>
+                    <li><strong>High Potentials (Bottom-Right):</strong> Provide execution mentorship and structured goal support.</li>
+                    <li><strong>Pace Setters (Top-Right):</strong> Elevate with strategic opportunities and leadership expansion.</li>
+                  </ul>
                 </div>
                 {usingEstimated && (
                   <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
@@ -815,7 +821,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
                                   <span className={`w-2 h-2 rounded-full shrink-0 ${q.dot}`} />
                                   {l.name}
                                 </span>
-                                <span className="text-gray-400 shrink-0 ml-2">{l.assessmentScore}% / {l.goalCompletionRate}%</span>
+                                <span className="text-gray-400 shrink-0 ml-2 text-xs">Cap: {l.assessmentScore}% / Exec: {l.goalCompletionRate}%</span>
                               </li>
                             ))}
                           </ul>
@@ -828,10 +834,9 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
                 </div>
 
                 {/* Axis legend */}
-                <div className="mt-4 flex items-center gap-6 text-xs text-gray-400">
-                  <span><strong className="text-gray-600">X-axis (horizontal):</strong> Leadership Assessment Score</span>
-                  <span><strong className="text-gray-600">Y-axis (vertical):</strong> Goal Completion Rate</span>
-                  <span>Threshold: {capThreshold}% on both axes</span>
+                <div className="mt-4 grid grid-cols-2 gap-4 text-xs text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                  <span><strong>Horizontal Axis (Left-Right):</strong> Capability — {capThreshold}% Midpoint</span>
+                  <span><strong>Vertical Axis (Bottom-Top):</strong> Execution — {capThreshold}% Midpoint</span>
                 </div>
               </CardContent>
             </Card>
