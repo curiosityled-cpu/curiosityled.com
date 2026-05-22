@@ -869,12 +869,22 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
                             {leaders.length > 0 ? (
                               <ul className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
                                 {leaders.map((l, i) => (
-                                  <li key={i} className="flex items-center justify-between text-xs">
-                                    <span className="flex items-center gap-1.5 text-gray-700 truncate">
-                                      <span className={`w-2 h-2 rounded-full shrink-0 ${q.dot}`} />
-                                      {l.name}
-                                    </span>
-                                    <span className="text-gray-400 shrink-0 ml-2 text-xs">Cap: {l.assessmentScore}% / Exec: {l.goalCompletionRate}%</span>
+                                  <li key={i} className="flex items-center justify-between text-xs group relative">
+                                   <span className="flex items-center gap-1.5 text-gray-700 truncate">
+                                     <span
+                                       className={`w-2.5 h-2.5 rounded-full shrink-0 cursor-pointer ${q.dot} relative`}
+                                       title={`${l.name} — Capability: ${l.assessmentScore}% | Execution: ${l.goalCompletionRate}%`}
+                                     >
+                                       <span className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 hidden group-hover:flex flex-col items-start bg-gray-900 text-white text-xs rounded-lg shadow-lg px-3 py-2 whitespace-nowrap pointer-events-none min-w-max">
+                                         <span className="font-semibold mb-0.5">{l.name}</span>
+                                         <span className="text-gray-300">Capability: <strong className="text-white">{l.assessmentScore}%</strong></span>
+                                         <span className="text-gray-300">Execution: <strong className="text-white">{l.goalCompletionRate}%</strong></span>
+                                         <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+                                       </span>
+                                     </span>
+                                     {l.name}
+                                   </span>
+                                   <span className="text-gray-400 shrink-0 ml-2 text-xs">Cap: {l.assessmentScore}% / Exec: {l.goalCompletionRate}%</span>
                                   </li>
                                 ))}
                               </ul>
