@@ -846,13 +846,13 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
                 )}
 
                 {/* 2×2 grid with axis arrows */}
-                <div className="flex gap-0">
-                  {/* Left axis label (vertical - Execution) */}
-                  <div className="flex items-center justify-center">
-                    <div className="flex items-center gap-1 text-xs font-semibold text-gray-700 whitespace-nowrap" style={{ transform: 'rotate(-90deg)', transformOrigin: 'center', width: '120px', justifyContent: 'center' }}>
+                <div className="flex gap-3">
+                  {/* Left axis arrow (vertical - Execution) */}
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <div className="flex items-center gap-1 text-xs font-semibold text-gray-700 transform -rotate-90 whitespace-nowrap origin-center" style={{ marginRight: '60px' }}>
                       Execution {capThreshold}%
-                      <ArrowRight className="w-3 h-3 text-gray-500 flex-shrink-0" />
                     </div>
+                    <ArrowRight className="w-4 h-4 text-gray-500 transform -rotate-90" />
                   </div>
 
                   <div className="flex-1">
