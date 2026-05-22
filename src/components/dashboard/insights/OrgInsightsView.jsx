@@ -81,6 +81,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
   const navigate = useNavigate();
   const { openWithContext } = useAtreusChat();
   const [activeLifecycleStage, setActiveLifecycleStage] = useState(null);
+  const [matrixDepartment, setMatrixDepartment] = useState('all');
 
   const promptAtreus = (prompt) => {
     openWithContext({ draftMessage: prompt });
@@ -750,8 +751,32 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
 
       {/* Capability vs. Execution Matrix */}
       {(() => {
-        const realData = chartData.correlationData.filter(d => d.hasRealGoalData);
-        const allData = chartData.correlationData;
+        // Derive unique departments from users for the filter dropdown
+        const departments = [...new Set(
+          rawData.allUsers.map(u => u.department).filter(Boolean)
+        )].sort();
+
+        // Filter correlationData by selected matrixDepartment
+        let matrixFilteredCorrelation = chartData.correlationData;
+        if (matrixDepartment !== 'all') {
+          const deptEmails = new Set(
+            rawData.allUsers.filter(u => u.department === matrixDepartment).map(u => u.email)
+          );
+          matrixFilteredCorrelation = matrixFilteredCorrelation.filter(d => {
+            const email = rawData.allUsers.find(u => u.full_name === d.name || u.full_name?.split(' ')[0] === d.name)?.email;
+            return deptEmails.has(email);
+          });
+          // Fallback: match by name substring against email prefix
+          if (matrixFilteredCorrelation.length === 0) {
+            const deptNameSet = new Set(
+              rawData.allUsers.filter(u => u.department === matrixDepartment).map(u => u.full_name || u.email?.split('@')[0])
+            );
+            matrixFilteredCorrelation = chartData.correlationData.filter(d => deptNameSet.has(d.name));
+          }
+        }
+
+        const realData = matrixFilteredCorrelation.filter(d => d.hasRealGoalData);
+        const allData = matrixFilteredCorrelation;
         const dataToUse = realData.length > 0 ? realData : allData;
         const usingEstimated = realData.length === 0 && allData.length > 0;
 
@@ -779,10 +804,28 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-lg">Capability vs. Execution Matrix</CardTitle>
-                <p className="text-sm text-gray-600">
-                  Where does each leader sit — strong capability, strong execution, or both? Use this to prioritise coaching and development interventions.
-                </p>
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <CardTitle className="text-lg">Capability vs. Execution Matrix</CardTitle>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Where does each leader sit — strong capability, strong execution, or both? Use this to prioritise coaching and development interventions.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs text-gray-500 whitespace-nowrap">Filter by dept/team:</span>
+                    <Select value={matrixDepartment} onValueChange={setMatrixDepartment}>
+                      <SelectTrigger className="w-44 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Departments</SelectItem>
+                        {departments.map(dept => (
+                          <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 {/* How to read this */}
