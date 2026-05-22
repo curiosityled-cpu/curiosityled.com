@@ -748,6 +748,38 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         </Card>
       </motion.div>
 
+      {/* Correlation Analysis */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
+        <Card className="border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-lg">Performance Correlation Analysis</CardTitle>
+            <p className="text-sm text-gray-600">Relationship between leadership assessment scores and goal achievement</p>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={350}>
+              <ScatterChart>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="assessmentScore" name="Leadership Score" unit="%" />
+                <YAxis dataKey="goalCompletionRate" name="Goal Completion" unit="%" />
+                <ZAxis range={[100, 400]} />
+                <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+                <Legend />
+                <Scatter name="Leaders" data={chartData.correlationData} fill="#8b5cf6" />
+              </ScatterChart>
+            </ResponsiveContainer>
+            {chartData.correlationData.length === 0 && (
+              <div className="text-center py-8 text-gray-400 text-sm">No data points available for this filter.</div>
+            )}
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-900">
+              <strong>Insight:</strong> This chart reveals the correlation between leadership capability and execution effectiveness. 
+              Leaders in the upper-right quadrant demonstrate both strong capability and high performance.
+              {chartData.correlationData.some(d => !d.hasRealGoalData) && (
+                <span className="block mt-1 text-xs text-blue-700">* Goal completion estimated from assessment scores where no goal data exists.</span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* Pre-Generated Leader Insights (from AssessmentInsights entity) */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>

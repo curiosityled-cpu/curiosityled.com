@@ -54,15 +54,15 @@ export default function TalentPipelineCard({ metrics, assessments, assignedLearn
   });
   const topStyles = Object.entries(styles).sort((a, b) => b[1] - a[1]).slice(0, 3);
 
-  // Succession pipeline bar data — use assessments.length as denominator (counts are derived from it)
-  const totalPeople = assessments.length || 1;
+  // Succession pipeline bar data
+  const totalPeople = allUsers.length || assessments.length || 1;
   const successionTiers = [
-    { label: 'Ready Now (≥85%)', count: readyNowCount, color: 'bg-green-500', pct: Math.min(100, Math.round((readyNowCount / totalPeople) * 100)) },
-    { label: 'Near-Term (75–84%)', count: ready6m, color: 'bg-blue-400', pct: Math.min(100, Math.round((ready6m / totalPeople) * 100)) },
-    { label: 'Developing (65–74%)', count: ready12m, color: 'bg-yellow-400', pct: Math.min(100, Math.round((ready12m / totalPeople) * 100)) },
-    { label: 'Early Stage (<65%)', count: needsDev, color: 'bg-gray-300', pct: Math.min(100, Math.round((needsDev / totalPeople) * 100)) },
+    { label: 'Ready Now (≥85%)', count: readyNowCount, color: 'bg-green-500', pct: Math.round((readyNowCount / totalPeople) * 100) },
+    { label: 'Near-Term (75–84%)', count: ready6m, color: 'bg-blue-400', pct: Math.round((ready6m / totalPeople) * 100) },
+    { label: 'Developing (65–74%)', count: ready12m, color: 'bg-yellow-400', pct: Math.round((ready12m / totalPeople) * 100) },
+    { label: 'Early Stage (<65%)', count: needsDev, color: 'bg-gray-300', pct: Math.round((needsDev / totalPeople) * 100) },
   ];
-  const benchStrength = totalPeople > 0 ? Math.min(100, Math.round(((readyNowCount + ready6m * 0.5) / totalPeople) * 100)) : 0;
+  const benchStrength = totalPeople > 0 ? Math.round(((readyNowCount + ready6m * 0.5) / totalPeople) * 100) : 0;
   const pipelineHealth = benchStrength >= 25 ? { label: 'Strong', color: 'bg-green-100 text-green-700' } :
                          benchStrength >= 12 ? { label: 'Moderate', color: 'bg-yellow-100 text-yellow-700' } :
                                                { label: 'Needs Attention', color: 'bg-red-100 text-red-700' };
