@@ -748,38 +748,87 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         </Card>
       </motion.div>
 
-      {/* Correlation Analysis */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
-        <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-lg">Performance Correlation Analysis</CardTitle>
-            <p className="text-sm text-gray-600">Relationship between leadership assessment scores and goal achievement</p>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
-              <ScatterChart>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="assessmentScore" name="Leadership Score" unit="%" />
-                <YAxis dataKey="goalCompletionRate" name="Goal Completion" unit="%" />
-                <ZAxis range={[100, 400]} />
-                <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-                <Legend />
-                <Scatter name="Leaders" data={chartData.correlationData} fill="#8b5cf6" />
-              </ScatterChart>
-            </ResponsiveContainer>
-            {chartData.correlationData.length === 0 && (
-              <div className="text-center py-8 text-gray-400 text-sm">No data points available for this filter.</div>
-            )}
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-900">
-              <strong>Insight:</strong> This chart reveals the correlation between leadership capability and execution effectiveness. 
-              Leaders in the upper-right quadrant demonstrate both strong capability and high performance.
-              {chartData.correlationData.some(d => !d.hasRealGoalData) && (
-                <span className="block mt-1 text-xs text-blue-700">* Goal completion estimated from assessment scores where no goal data exists.</span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+      {/* Capability vs. Execution Matrix */}
+      {(() => {
+        const realData = chartData.correlationData.filter(d => d.hasRealGoalData);
+        if (realData.length === 0) return null;
+
+        // Quadrant thresholds (midpoints)
+        const capThreshold = 70;
+        const execThreshold = 70;
+
+        const quadrants = {
+          topRight:    realData.filter(d => d.assessmentScore >= capThreshold && d.goalCompletionRate >= execThreshold),
+          topLeft:     realData.filter(d => d.assessmentScore <  capThreshold && d.goalCompletionRate >= execThreshold),
+          bottomRight: realData.filter(d => d.assessmentScore >= capThreshold && d.goalCompletionRate <  execThreshold),
+          bottomLeft:  realData.filter(d => d.assessmentScore <  capThreshold && d.goalCompletionRate <  execThreshold),
+        };
+
+        const quadrantConfig = [
+          { key: 'topRight',    label: 'High Performers',    sub: 'Strong capability + strong execution', color: 'bg-green-50 border-green-200', badge: 'bg-green-100 text-green-800', dot: 'bg-green-500' },
+          { key: 'topLeft',     label: 'Execution Leaders',  sub: 'Delivering results — build capability', color: 'bg-blue-50 border-blue-200',  badge: 'bg-blue-100 text-blue-800',  dot: 'bg-blue-500' },
+          { key: 'bottomRight', label: 'Untapped Potential', sub: 'High capability — needs execution focus', color: 'bg-amber-50 border-amber-200', badge: 'bg-amber-100 text-amber-800', dot: 'bg-amber-500' },
+          { key: 'bottomLeft',  label: 'Needs Support',      sub: 'Priority for coaching & development', color: 'bg-red-50 border-red-200',    badge: 'bg-red-100 text-red-800',    dot: 'bg-red-500' },
+        ];
+
+        return (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
+            <Card className="border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-lg">Capability vs. Execution Matrix</CardTitle>
+                <p className="text-sm text-gray-600">
+                  Where does each leader sit — strong capability, strong execution, or both? Use this to prioritise coaching and development interventions.
+                </p>
+              </CardHeader>
+              <CardContent>
+                {/* How to read this */}
+                <div className="mb-5 p-3 bg-indigo-50 border border-indigo-200 rounded-lg text-sm text-indigo-800">
+                  <strong>How to use this:</strong> Each leader is placed in a quadrant based on their Leadership Assessment Score (capability) and Goal Completion Rate (execution). 
+                  The threshold for each axis is <strong>{capThreshold}%</strong>. Focus coaching resources on the bottom-left; stretch assignments on the top-left; execution support on the bottom-right.
+                </div>
+
+                {/* 2×2 grid */}
+                <div className="grid grid-cols-2 gap-3">
+                  {quadrantConfig.map(q => {
+                    const leaders = quadrants[q.key];
+                    return (
+                      <div key={q.key} className={`rounded-xl border p-4 ${q.color}`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-semibold text-sm text-gray-800">{q.label}</span>
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${q.badge}`}>{leaders.length} leader{leaders.length !== 1 ? 's' : ''}</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mb-3">{q.sub}</p>
+                        {leaders.length > 0 ? (
+                          <ul className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                            {leaders.map((l, i) => (
+                              <li key={i} className="flex items-center justify-between text-xs">
+                                <span className="flex items-center gap-1.5 text-gray-700 truncate">
+                                  <span className={`w-2 h-2 rounded-full shrink-0 ${q.dot}`} />
+                                  {l.name}
+                                </span>
+                                <span className="text-gray-400 shrink-0 ml-2">{l.assessmentScore}% / {l.goalCompletionRate}%</span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-xs text-gray-400 italic">No leaders in this quadrant</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Axis legend */}
+                <div className="mt-4 flex items-center gap-6 text-xs text-gray-400">
+                  <span><strong className="text-gray-600">X-axis (horizontal):</strong> Leadership Assessment Score</span>
+                  <span><strong className="text-gray-600">Y-axis (vertical):</strong> Goal Completion Rate</span>
+                  <span>Threshold: {capThreshold}% on both axes</span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        );
+      })()}
 
       {/* Pre-Generated Leader Insights (from AssessmentInsights entity) */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
