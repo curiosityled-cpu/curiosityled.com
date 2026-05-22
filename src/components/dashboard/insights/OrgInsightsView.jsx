@@ -845,41 +845,53 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
                   </div>
                 )}
 
-                {/* 2×2 grid */}
-                <div className="grid grid-cols-2 gap-3">
-                  {quadrantConfig.map(q => {
-                    const leaders = quadrants[q.key];
-                    return (
-                      <div key={q.key} className={`rounded-xl border p-4 ${q.color}`}>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-semibold text-sm text-gray-800">{q.label}</span>
-                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${q.badge}`}>{leaders.length} leader{leaders.length !== 1 ? 's' : ''}</span>
-                        </div>
-                        <p className="text-xs text-gray-500 mb-3">{q.sub}</p>
-                        {leaders.length > 0 ? (
-                          <ul className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
-                            {leaders.map((l, i) => (
-                              <li key={i} className="flex items-center justify-between text-xs">
-                                <span className="flex items-center gap-1.5 text-gray-700 truncate">
-                                  <span className={`w-2 h-2 rounded-full shrink-0 ${q.dot}`} />
-                                  {l.name}
-                                </span>
-                                <span className="text-gray-400 shrink-0 ml-2 text-xs">Cap: {l.assessmentScore}% / Exec: {l.goalCompletionRate}%</span>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-xs text-gray-400 italic">No leaders in this quadrant</p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                {/* 2×2 grid with axis arrows */}
+                <div className="flex gap-3">
+                  {/* Left axis arrow (vertical - Execution) */}
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <div className="flex items-center gap-1 text-xs font-semibold text-gray-700 transform -rotate-90 whitespace-nowrap origin-center" style={{ marginRight: '60px' }}>
+                      Execution {capThreshold}%
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-gray-500 transform -rotate-90" />
+                  </div>
 
-                {/* Axis legend */}
-                <div className="mt-4 grid grid-cols-2 gap-4 text-xs text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-200">
-                  <span><strong>Horizontal Axis (Left-Right):</strong> Capability — {capThreshold}% Midpoint</span>
-                  <span><strong>Vertical Axis (Bottom-Top):</strong> Execution — {capThreshold}% Midpoint</span>
+                  <div className="flex-1">
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      {quadrantConfig.map(q => {
+                        const leaders = quadrants[q.key];
+                        return (
+                          <div key={q.key} className={`rounded-xl border p-4 ${q.color}`}>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-semibold text-sm text-gray-800">{q.label}</span>
+                              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${q.badge}`}>{leaders.length} leader{leaders.length !== 1 ? 's' : ''}</span>
+                            </div>
+                            <p className="text-xs text-gray-500 mb-3">{q.sub}</p>
+                            {leaders.length > 0 ? (
+                              <ul className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                                {leaders.map((l, i) => (
+                                  <li key={i} className="flex items-center justify-between text-xs">
+                                    <span className="flex items-center gap-1.5 text-gray-700 truncate">
+                                      <span className={`w-2 h-2 rounded-full shrink-0 ${q.dot}`} />
+                                      {l.name}
+                                    </span>
+                                    <span className="text-gray-400 shrink-0 ml-2 text-xs">Cap: {l.assessmentScore}% / Exec: {l.goalCompletionRate}%</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="text-xs text-gray-400 italic">No leaders in this quadrant</p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Bottom axis arrow (horizontal - Capability) */}
+                    <div className="flex items-center justify-center gap-2 text-xs font-semibold text-gray-700">
+                      <span>Capability {capThreshold}%</span>
+                      <ArrowRight className="w-4 h-4 text-gray-500" />
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
