@@ -846,7 +846,16 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
                 )}
 
                 {/* 2×2 grid with axis arrows */}
-                <div className="flex-1">
+                <div className="flex gap-3">
+                  {/* Left axis arrow (vertical - Execution) */}
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <div className="flex items-center gap-1 text-xs font-semibold text-gray-700 transform -rotate-90 whitespace-nowrap origin-center" style={{ marginRight: '60px' }}>
+                      Execution {capThreshold}%
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-gray-500 transform -rotate-90" />
+                  </div>
+
+                  <div className="flex-1">
                     <div className="grid grid-cols-2 gap-3 mb-4">
                       {quadrantConfig.map(q => {
                         const leaders = quadrants[q.key];
@@ -877,17 +886,12 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
                       })}
                     </div>
 
-                    {/* Axis labels with arrows */}
-                    <div className="flex items-end justify-between gap-4 mt-4 text-xs font-semibold text-gray-700">
-                      <div className="flex items-center gap-1">
-                        <span>Execution {capThreshold}%</span>
-                        <ArrowRight className="w-3 h-3 text-gray-500 transform -rotate-90" />
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span>Capability {capThreshold}%</span>
-                        <ArrowRight className="w-3 h-3 text-gray-500" />
-                      </div>
+                    {/* Bottom axis arrow (horizontal - Capability) */}
+                    <div className="flex items-center justify-center gap-2 text-xs font-semibold text-gray-700">
+                      <span>Capability {capThreshold}%</span>
+                      <ArrowRight className="w-4 h-4 text-gray-500" />
                     </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
