@@ -751,17 +751,21 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
       {/* Capability vs. Execution Matrix */}
       {(() => {
         const realData = chartData.correlationData.filter(d => d.hasRealGoalData);
-        if (realData.length === 0) return null;
+        const allData = chartData.correlationData;
+        const dataToUse = realData.length > 0 ? realData : allData;
+        const usingEstimated = realData.length === 0 && allData.length > 0;
+
+        if (allData.length === 0) return null;
 
         // Quadrant thresholds (midpoints)
         const capThreshold = 70;
         const execThreshold = 70;
 
         const quadrants = {
-          topRight:    realData.filter(d => d.assessmentScore >= capThreshold && d.goalCompletionRate >= execThreshold),
-          topLeft:     realData.filter(d => d.assessmentScore <  capThreshold && d.goalCompletionRate >= execThreshold),
-          bottomRight: realData.filter(d => d.assessmentScore >= capThreshold && d.goalCompletionRate <  execThreshold),
-          bottomLeft:  realData.filter(d => d.assessmentScore <  capThreshold && d.goalCompletionRate <  execThreshold),
+          topRight:    dataToUse.filter(d => d.assessmentScore >= capThreshold && d.goalCompletionRate >= execThreshold),
+          topLeft:     dataToUse.filter(d => d.assessmentScore <  capThreshold && d.goalCompletionRate >= execThreshold),
+          bottomRight: dataToUse.filter(d => d.assessmentScore >= capThreshold && d.goalCompletionRate <  execThreshold),
+          bottomLeft:  dataToUse.filter(d => d.assessmentScore <  capThreshold && d.goalCompletionRate <  execThreshold),
         };
 
         const quadrantConfig = [
@@ -786,6 +790,11 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
                   <strong>How to use this:</strong> Each leader is placed in a quadrant based on their Leadership Assessment Score (capability) and Goal Completion Rate (execution). 
                   The threshold for each axis is <strong>{capThreshold}%</strong>. Focus coaching resources on the bottom-left; stretch assignments on the top-left; execution support on the bottom-right.
                 </div>
+                {usingEstimated && (
+                  <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+                    <strong>Note:</strong> No goal data found for these leaders yet. Execution scores are estimated from assessment scores. Matrix will update automatically once leaders have goals assigned.
+                  </div>
+                )}
 
                 {/* 2×2 grid */}
                 <div className="grid grid-cols-2 gap-3">
