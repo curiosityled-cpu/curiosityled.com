@@ -848,8 +848,8 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
                 {/* 2×2 grid with axis arrows */}
                 <div className="flex gap-2">
                   {/* Left axis label (vertical - Execution) */}
-                  <div className="flex items-center justify-center">
-                    <div className="flex items-center gap-1 text-xs font-semibold text-gray-700 whitespace-nowrap" style={{ transform: 'rotate(-90deg)', transformOrigin: 'center' }}>
+                  <div className="flex items-center justify-center" style={{ width: '20px', minWidth: '20px' }}>
+                    <div className="flex items-center gap-1 text-xs font-semibold text-gray-700 whitespace-nowrap" style={{ transform: 'rotate(-90deg) translateX(-50%)', transformOrigin: 'left center', position: 'absolute' }}>
                       Execution {capThreshold}%
                       <ArrowRight className="w-3 h-3 text-gray-500 flex-shrink-0" />
                     </div>
