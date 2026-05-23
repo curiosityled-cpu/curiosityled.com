@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, AlertTriangle, Zap, GitBranch, Shield, Brain, Sparkles, RefreshCw, Loader2, ChevronDown, ChevronUp, Info } from "lucide-react";
+import { TrendingUp, AlertTriangle, Zap, GitBranch, Shield, Brain, Sparkles, RefreshCw, Loader2, ChevronDown, ChevronUp, Info, ChevronRight, Eye } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const BENCHMARKS = { si: 75, dm: 77, comm: 78, rm: 78, sm: 79, pm: 76 };
@@ -33,41 +33,33 @@ function DimensionBar({ label, score, benchmark, isPrimary }) {
           }`}
           style={{ width: `${Math.min(score, 100)}%` }}
         />
-        {/* Benchmark marker */}
-        <div
-          className="absolute top-0 bottom-0 w-0.5 bg-gray-400"
-          style={{ left: `${benchmark}%` }}
-          title={`Target: ${benchmark}%`}
-        />
+        <div className="absolute top-0 bottom-0 w-0.5 bg-gray-400" style={{ left: `${benchmark}%` }} title={`Target: ${benchmark}%`} />
       </div>
     </div>
   );
 }
 
-function SectionShell({ title, purpose, badge, collapsible = false, defaultOpen = true, children }) {
-  const [open, setOpen] = useState(defaultOpen);
+// Compact detail drawer — slides in from right conceptually, rendered inline below trigger
+function DetailDrawer({ open, title, children, onClose }) {
   return (
-    <div className="border border-gray-100 rounded-xl bg-gray-50/50 overflow-hidden">
-      <div
-        className={`flex items-start justify-between px-4 py-3 ${collapsible ? "cursor-pointer hover:bg-gray-100/60 transition-colors" : ""}`}
-        onClick={collapsible ? () => setOpen(v => !v) : undefined}
-      >
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-gray-900">{title}</span>
-            {badge && (
-              <Badge className={`text-[10px] px-1.5 py-0 border ${badge.color}`}>{badge.label}</Badge>
-            )}
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          className="overflow-hidden"
+        >
+          <div className="mt-2 rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100">
+              <span className="text-xs font-semibold text-gray-800">{title}</span>
+              <button onClick={onClose} className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Close ×</button>
+            </div>
+            <div className="px-4 py-3">{children}</div>
           </div>
-          {purpose && <p className="text-[11px] text-gray-500 mt-0.5">{purpose}</p>}
-        </div>
-        {collapsible && (open
-          ? <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-          : <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-        )}
-      </div>
-      {open && <div className="px-4 pb-4">{children}</div>}
-    </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -77,7 +69,10 @@ export default function OrgHealthCard({
   onPromptAtreus, executiveBriefing, generatingBriefing, generatingAll, onRefreshBriefing
 }) {
   const { competencyAverages } = metrics;
-  const [briefingExpanded, setBriefingExpanded] = useState(false);
+  const [openDrawer, setOpenDrawer] = useState(null); // "risk" | "velocity" | "dimensions" | "briefing"
+  const [showAllDimensions, setShowAllDimensions] = useState(false);
+
+  const toggleDrawer = (key) => setOpenDrawer(prev => prev === key ? null : key);
 
   const meIndex = Math.round(
     competencyAverages.dm * 0.35 +
@@ -90,6 +85,10 @@ export default function OrgHealthCard({
     meIndex >= 80 ? { label: "High", color: "bg-emerald-100 text-emerald-700 border-emerald-200" } :
     meIndex >= 65 ? { label: "Developing", color: "bg-amber-100 text-amber-700 border-amber-200" } :
                     { label: "Needs Attention", color: "bg-red-100 text-red-700 border-red-200" };
+  const meInterpretation =
+    meIndex >= 80 ? "Strong and above benchmark." :
+    meIndex >= 65 ? "Building — targeted coaching recommended." :
+                    "Below threshold — leadership review needed.";
 
   const dimensions = [
     { key: "dm",   label: DIMENSION_LABELS.dm,   score: competencyAverages.dm,   isPrimary: true },
@@ -100,6 +99,13 @@ export default function OrgHealthCard({
     { key: "sm",   label: DIMENSION_LABELS.sm,   score: competencyAverages.sm,   isPrimary: false },
   ];
 
+  // Sort: show top 2 strengths and top 2 gaps by default
+  const sorted = [...dimensions].sort((a, b) => b.score - a.score);
+  const top2 = sorted.slice(0, 2);
+  const bottom2 = sorted.slice(-2);
+  const defaultDimensions = [...top2, ...bottom2].filter((d, i, arr) => arr.findIndex(x => x.key === d.key) === i);
+  const visibleDimensions = showAllDimensions ? dimensions : defaultDimensions;
+
   // Flight risk
   const lowScorers = assessments.filter(a => (a.overall_pct ?? a.data?.overall_pct ?? 0) < 50).length;
   const staleGoals = goals.filter(g => ['overdue', 'on_hold'].includes(g.status ?? g.data?.status)).length;
@@ -107,7 +113,8 @@ export default function OrgHealthCard({
   const learningRate = assignedLearning.length > 0 ? Math.round((completedLearning / assignedLearning.length) * 100) : 0;
   const incompleteLearning = assignedLearning.filter(l => (l.status ?? l.data?.status) !== 'completed').length;
   const velocityLabel = learningRate >= 70 ? 'High' : learningRate >= 50 ? 'Moderate' : 'Low';
-  const velocityColor = learningRate >= 70 ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : learningRate >= 50 ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-red-100 text-red-700 border-red-200';
+  const velocityColor = learningRate >= 70 ? 'text-emerald-600' : learningRate >= 50 ? 'text-amber-600' : 'text-red-600';
+  const velocityBadge = learningRate >= 70 ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : learningRate >= 50 ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-red-100 text-red-700 border-red-200';
 
   const allRisks = strategicRisks?.length > 0 ? strategicRisks : (() => {
     const derived = [];
@@ -136,7 +143,7 @@ export default function OrgHealthCard({
               <Shield className="w-5 h-5 text-indigo-600" />
               Organizational Leadership Health
             </CardTitle>
-            <p className="text-xs text-gray-500 mt-0.5">Manager Effectiveness, skill gaps, and flight risk signals</p>
+            <p className="text-xs text-gray-500 mt-0.5">Manager Effectiveness, skill gaps, and risk signals</p>
           </div>
           <Badge className={`text-[11px] border ${hasNoData ? "bg-amber-100 text-amber-700 border-amber-200" : "bg-indigo-100 text-indigo-700 border-indigo-200"}`}>
             {hasNoData ? "Data not connected" : "Decision-ready"}
@@ -152,220 +159,259 @@ export default function OrgHealthCard({
           </div>
         ) : (
           <>
-            {/* ME Index anchor + exception cards */}
-            <div className="flex flex-col md:flex-row gap-4">
-              {/* Left: ME Index score */}
-              <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 md:w-56 flex-shrink-0">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold text-indigo-900">ME Index</span>
-                  <Badge className={`text-[10px] border ${meTier.color}`}>{meTier.label}</Badge>
-                </div>
-                <div className="text-4xl font-bold text-indigo-700 mb-1">{meIndex}%</div>
-                <div className="flex items-center gap-1 text-[11px] text-indigo-600 mb-3">
-                  <GitBranch className="w-3 h-3" />
-                  Decision Quality: <strong className="ml-0.5">{decisionQuality}%</strong>
-                </div>
-                <div className="text-[10px] text-gray-500 space-y-0.5">
-                  <p>DM (35%) + SI (30%) + Comm (20%) + PM (15%)</p>
-                  <p className="text-indigo-500">{metrics.totalAssessments} leaders assessed</p>
-                </div>
-              </div>
-
-              {/* Right: exception cards */}
-              <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Flight Risk */}
-                <div className="border border-gray-200 rounded-xl p-3 bg-white">
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
-                    <span className="text-xs font-semibold text-gray-700">Flight Risk Signals</span>
-                    <span className={`ml-auto text-base font-bold ${lowScorers > 0 ? 'text-red-600' : 'text-emerald-600'}`}>{lowScorers}</span>
+            {/* ── LAYER A: Headline ── */}
+            <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-xs font-semibold text-indigo-900 uppercase tracking-wide">ME Index</span>
+                    <Badge className={`text-[10px] border ${meTier.color}`}>{meTier.label}</Badge>
                   </div>
-                  <div className="space-y-1 text-xs text-gray-600">
-                    <div className="flex justify-between">
-                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-red-400 rounded-full" />Capability below 50%</span>
-                      <span className="font-medium">{lowScorers}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-amber-400 rounded-full" />Stale/overdue goals</span>
-                      <span className="font-medium">{staleGoals}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-blue-400 rounded-full" />Incomplete learning</span>
-                      <span className="font-medium">{incompleteLearning}</span>
-                    </div>
-                  </div>
-                  {lowScorers > 0 && (
-                    <p className="text-[10px] text-red-500 mt-2 font-medium">
-                      {lowScorers} leader{lowScorers > 1 ? "s" : ""} flagged — review with managers
-                    </p>
-                  )}
+                  <div className="text-4xl font-bold text-indigo-700">{meIndex}%</div>
+                  <p className="text-xs text-indigo-600 mt-1">{meInterpretation}</p>
                 </div>
-
-                {/* Learning Velocity */}
-                <div className="border border-gray-200 rounded-xl p-3 bg-white">
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <Zap className="w-3.5 h-3.5 text-yellow-600" />
-                    <span className="text-xs font-semibold text-gray-700">Learning Velocity</span>
-                    <div className="ml-auto flex items-center gap-1">
-                      <span className={`text-base font-bold ${learningRate >= 70 ? 'text-emerald-600' : learningRate >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{learningRate}%</span>
-                      <Badge className={`text-[10px] px-1 py-0 border ${velocityColor}`}>{velocityLabel}</Badge>
-                    </div>
+                <div className="sm:text-right space-y-1">
+                  <div className="flex items-center gap-2 sm:justify-end">
+                    <GitBranch className="w-3.5 h-3.5 text-indigo-500" />
+                    <span className="text-xs text-indigo-700">Decision Quality: <strong>{decisionQuality}%</strong></span>
                   </div>
-                  <div className="space-y-1 text-xs text-gray-600">
-                    <div className="flex justify-between">
-                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />Completed</span>
-                      <span className="font-medium">{completedLearning}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-gray-300 rounded-full" />Remaining</span>
-                      <span className="font-medium">{incompleteLearning}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-blue-400 rounded-full" />Total assigned</span>
-                      <span className="font-medium">{assignedLearning.length}</span>
-                    </div>
-                  </div>
+                  <p className="text-[10px] text-indigo-500">{metrics.totalAssessments} leaders assessed</p>
+                  <p className="text-[10px] text-gray-400">DM 35% · SI 30% · Comm 20% · PM 15%</p>
                 </div>
               </div>
             </div>
 
-            {/* Dimension comparison bars */}
-            <SectionShell
-              title="Competency Dimensions"
-              purpose="Score vs. industry benchmark — click any dimension for details"
-              badge={{ label: "Directional", color: "bg-slate-100 text-slate-600 border-slate-200" }}
-              collapsible
-              defaultOpen={true}
-            >
-              <div className="space-y-3 pt-1">
-                {dimensions.map(d => (
+            {/* ── LAYER B: Two diagnostic cards ── */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Risk Signals */}
+              <div className="border border-gray-200 rounded-xl bg-white overflow-hidden">
+                <button
+                  onClick={() => toggleDrawer("risk")}
+                  className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
+                    <span className="text-xs font-semibold text-gray-700">Risk Signals</span>
+                    {lowScorers > 0 && <span className="text-xs font-bold text-red-600 ml-1">{lowScorers} flagged</span>}
+                  </div>
+                  <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${openDrawer === "risk" ? "rotate-180" : ""}`} />
+                </button>
+                <div className="px-3 pb-2.5 grid grid-cols-3 gap-1 text-center">
+                  <div>
+                    <div className={`text-lg font-bold ${lowScorers > 0 ? 'text-red-600' : 'text-emerald-600'}`}>{lowScorers}</div>
+                    <div className="text-[10px] text-gray-500">Below 50%</div>
+                  </div>
+                  <div>
+                    <div className={`text-lg font-bold ${staleGoals > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>{staleGoals}</div>
+                    <div className="text-[10px] text-gray-500">Stale goals</div>
+                  </div>
+                  <div>
+                    <div className={`text-lg font-bold ${incompleteLearning > 5 ? 'text-amber-600' : 'text-gray-700'}`}>{incompleteLearning}</div>
+                    <div className="text-[10px] text-gray-500">Incomplete learning</div>
+                  </div>
+                </div>
+                <DetailDrawer open={openDrawer === "risk"} title="Risk Signal Detail" onClose={() => setOpenDrawer(null)}>
+                  <div className="space-y-2 text-xs text-gray-600">
+                    <div className="flex justify-between items-center py-1 border-b border-gray-50">
+                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-red-400 rounded-full inline-block" />Leaders scoring below 50% capability</span>
+                      <span className="font-bold text-red-600">{lowScorers}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-gray-50">
+                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-amber-400 rounded-full inline-block" />Goals in overdue or on-hold status</span>
+                      <span className="font-bold text-amber-600">{staleGoals}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1">
+                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-blue-400 rounded-full inline-block" />Incomplete learning assignments</span>
+                      <span className="font-bold">{incompleteLearning}</span>
+                    </div>
+                    {lowScorers > 0 && (
+                      <p className="text-[10px] text-red-500 pt-1 font-medium">{lowScorers} leader{lowScorers > 1 ? "s" : ""} flagged — recommend manager review this cycle.</p>
+                    )}
+                    <p className="text-[10px] text-gray-400 pt-1">Source: Platform capability assessments, goal records, learning assignments.</p>
+                  </div>
+                </DetailDrawer>
+              </div>
+
+              {/* Learning Velocity */}
+              <div className="border border-gray-200 rounded-xl bg-white overflow-hidden">
+                <button
+                  onClick={() => toggleDrawer("velocity")}
+                  className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <Zap className="w-3.5 h-3.5 text-yellow-500" />
+                    <span className="text-xs font-semibold text-gray-700">Learning Velocity</span>
+                    <Badge className={`text-[9px] px-1 py-0 border ml-1 ${velocityBadge}`}>{velocityLabel}</Badge>
+                  </div>
+                  <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${openDrawer === "velocity" ? "rotate-180" : ""}`} />
+                </button>
+                <div className="px-3 pb-2.5 grid grid-cols-3 gap-1 text-center">
+                  <div>
+                    <div className={`text-lg font-bold ${velocityColor}`}>{learningRate}%</div>
+                    <div className="text-[10px] text-gray-500">Completion</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold text-emerald-600">{completedLearning}</div>
+                    <div className="text-[10px] text-gray-500">Done</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold text-gray-600">{assignedLearning.length}</div>
+                    <div className="text-[10px] text-gray-500">Assigned</div>
+                  </div>
+                </div>
+                <DetailDrawer open={openDrawer === "velocity"} title="Learning Velocity Detail" onClose={() => setOpenDrawer(null)}>
+                  <div className="space-y-2 text-xs text-gray-600">
+                    <div className="flex justify-between items-center py-1 border-b border-gray-50">
+                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-emerald-400 rounded-full inline-block" />Completed</span>
+                      <span className="font-bold text-emerald-600">{completedLearning}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-gray-50">
+                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-gray-300 rounded-full inline-block" />Remaining</span>
+                      <span className="font-bold">{incompleteLearning}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1">
+                      <span>Total assigned</span>
+                      <span className="font-bold">{assignedLearning.length}</span>
+                    </div>
+                    <p className="text-[10px] text-gray-400 pt-1">Target: ≥70% completion rate. Source: Platform-assigned learning records.</p>
+                  </div>
+                </DetailDrawer>
+              </div>
+            </div>
+
+            {/* ── LAYER C: Competency dimensions — top 2 strengths + top 2 gaps ── */}
+            <div className="border border-gray-100 rounded-xl bg-gray-50/50 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3">
+                <div>
+                  <span className="text-sm font-semibold text-gray-900">Competency Dimensions</span>
+                  <p className="text-[11px] text-gray-500 mt-0.5">
+                    {showAllDimensions ? "All 6 dimensions" : "Top 2 strengths & top 2 gaps"} vs. industry benchmark
+                  </p>
+                </div>
+                <Badge className="text-[10px] border bg-slate-100 text-slate-600 border-slate-200">Directional</Badge>
+              </div>
+              <div className="px-4 pb-4 space-y-3">
+                {visibleDimensions.map(d => (
                   <DimensionBar key={d.key} label={d.label} score={d.score} benchmark={BENCHMARKS[d.key]} isPrimary={d.isPrimary} />
                 ))}
-                <p className="text-[10px] text-gray-400 pt-1">Vertical bar = industry benchmark. DM and SI are the primary drivers of Manager Effectiveness.</p>
+                <button
+                  onClick={() => setShowAllDimensions(v => !v)}
+                  className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors mt-1"
+                >
+                  {showAllDimensions ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  {showAllDimensions ? "Show key dimensions only" : "View all 6 dimensions"}
+                </button>
+                <p className="text-[10px] text-gray-400">Vertical bar = industry benchmark. DM and SI are primary drivers of Manager Effectiveness.</p>
               </div>
-            </SectionShell>
+            </div>
 
-            {/* Executive AI Briefing */}
-            <SectionShell
-              title="Executive AI Briefing"
-              purpose="Auditable synthesis — each point is drawn from platform-native data above"
-              badge={{ label: "AI-generated", color: "bg-purple-100 text-purple-700 border-purple-200" }}
-              collapsible
-              defaultOpen={true}
-            >
-              <div className="space-y-3 pt-1">
-                {/* Snapshot KPIs */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                  {[
-                    { label: "ME Index", value: `${meIndex}%`, sub: "Manager Effectiveness", color: "text-purple-700", bg: "bg-purple-50 border-purple-200" },
-                    { label: "At Risk", value: metrics.atRiskLeaders, sub: "leaders below 60%", color: metrics.atRiskLeaders > 0 ? "text-red-700" : "text-emerald-700", bg: metrics.atRiskLeaders > 0 ? "bg-red-50 border-red-200" : "bg-emerald-50 border-emerald-200" },
-                    { label: "High Potential", value: metrics.highPotentialLeaders, sub: "leaders above 85%", color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
-                    { label: "Goal Rate", value: `${metrics.goalCompletionRate}%`, sub: "completion", color: metrics.goalCompletionRate >= 70 ? "text-emerald-700" : "text-amber-700", bg: metrics.goalCompletionRate >= 70 ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200" },
-                  ].map(({ label, value, sub, color, bg }) => (
-                    <div key={label} className={`rounded-xl border p-3 bg-white ${bg}`}>
-                      <div className="text-[10px] text-gray-500 uppercase tracking-wide font-medium mb-0.5">{label}</div>
-                      <div className={`text-2xl font-bold ${color}`}>{value}</div>
-                      <div className="text-[10px] text-gray-500">{sub}</div>
-                    </div>
-                  ))}
+            {/* ── LAYER D: Executive AI Briefing — compact, supporting role ── */}
+            <div className="border border-purple-100 rounded-xl bg-purple-50/40 overflow-hidden">
+              <button
+                onClick={() => toggleDrawer("briefing")}
+                className="w-full flex items-center justify-between px-4 py-3 hover:bg-purple-50 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-purple-600" />
+                  <span className="text-sm font-semibold text-purple-900">Executive AI Briefing</span>
+                  <Badge className="text-[10px] border bg-purple-100 text-purple-700 border-purple-200">AI-generated</Badge>
                 </div>
-
-                {/* Narrative */}
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-purple-600" />
-                    <span className="text-xs font-semibold text-purple-800">Strategic Context</span>
-                  </div>
+                <div className="flex items-center gap-2">
                   {onRefreshBriefing && (
                     <button
-                      onClick={onRefreshBriefing}
+                      onClick={(e) => { e.stopPropagation(); onRefreshBriefing(); }}
                       disabled={generatingAll}
-                      className="text-xs text-purple-600 hover:text-purple-800 flex items-center gap-1 disabled:opacity-50 transition-colors"
+                      className="text-xs text-purple-500 hover:text-purple-700 flex items-center gap-1 disabled:opacity-50"
                     >
                       {generatingAll ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-                      Refresh
                     </button>
                   )}
+                  <ChevronDown className={`w-3.5 h-3.5 text-purple-400 transition-transform ${openDrawer === "briefing" ? "rotate-180" : ""}`} />
                 </div>
+              </button>
 
+              {/* One-sentence context always visible */}
+              <div className="px-4 pb-3">
                 {generatingBriefing && !executiveBriefing ? (
-                  <div className="flex items-center gap-3 py-2 text-purple-600">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="text-sm">Generating briefing…</span>
+                  <div className="flex items-center gap-2 text-purple-600 text-xs">
+                    <Loader2 className="w-3 h-3 animate-spin" />Generating briefing…
                   </div>
                 ) : executiveBriefing ? (
-                  <div>
-                    <p className="text-sm text-gray-700 leading-relaxed">
-                      {briefingExpanded ? executiveBriefing : executiveBriefing.split('\n\n')[0]}
-                    </p>
-                    {executiveBriefing.split('\n\n').length > 1 && (
-                      <button
-                        onClick={() => setBriefingExpanded(v => !v)}
-                        className="text-xs text-purple-600 hover:text-purple-800 font-medium mt-2"
-                      >
-                        {briefingExpanded ? "Collapse ↑" : "Read full briefing ↓"}
-                      </button>
-                    )}
-                    <p className="text-[10px] text-gray-400 mt-2 flex items-center gap-1">
-                      <Info className="w-3 h-3" />
-                      Generated from {metrics.totalAssessments} assessments, {metrics.totalGoals} goals, {metrics.totalLearning} learning records
-                    </p>
-                  </div>
-                ) : null}
-
-                {/* Risks & Opportunities — two columns */}
-                {(allRisks.length > 0 || allOpps.length > 0) && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                    {allRisks.length > 0 && (
-                      <div>
-                        <p className="text-[11px] font-semibold text-red-700 mb-2 flex items-center gap-1">
-                          <AlertTriangle className="w-3 h-3" /> Top Risks
-                        </p>
-                        <div className="space-y-1.5">
-                          {allRisks.map((risk, idx) => (
-                            <button
-                              key={idx}
-                              className="w-full text-left p-2.5 bg-red-50 border border-red-100 rounded-lg hover:bg-red-100 transition-colors"
-                              onClick={() => onPromptAtreus?.(`Strategic risk: "${risk.title}". ${risk.description || ''} Help me develop an action plan.`)}
-                            >
-                              <div className="flex items-center gap-1.5 mb-0.5">
-                                <Badge className="bg-red-600 text-white text-[10px] px-1.5 py-0">{risk.severity}</Badge>
-                                <span className="text-xs font-semibold text-red-800 leading-tight line-clamp-1">{risk.title}</span>
-                              </div>
-                              {risk.description && <p className="text-[10px] text-red-600 line-clamp-1">{risk.description}</p>}
-                              <p className="text-[10px] text-red-400 mt-0.5">Ask Atreus →</p>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {allOpps.length > 0 && (
-                      <div>
-                        <p className="text-[11px] font-semibold text-emerald-700 mb-2 flex items-center gap-1">
-                          <TrendingUp className="w-3 h-3" /> Top Opportunities
-                        </p>
-                        <div className="space-y-1.5">
-                          {allOpps.map((opp, idx) => (
-                            <button
-                              key={idx}
-                              className="w-full text-left p-2.5 bg-emerald-50 border border-emerald-100 rounded-lg hover:bg-emerald-100 transition-colors"
-                              onClick={() => onPromptAtreus?.(`Strategic opportunity: "${opp.title}". ${opp.description || ''} Help me create a plan.`)}
-                            >
-                              <div className="flex items-center gap-1.5 mb-0.5">
-                                <Badge className="bg-emerald-600 text-white text-[10px] px-1.5 py-0">{opp.potential}</Badge>
-                                <span className="text-xs font-semibold text-emerald-800 leading-tight line-clamp-1">{opp.title}</span>
-                              </div>
-                              {opp.description && <p className="text-[10px] text-emerald-600 line-clamp-1">{opp.description}</p>}
-                              <p className="text-[10px] text-emerald-400 mt-0.5">Ask Atreus →</p>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <p className="text-xs text-gray-700 leading-relaxed line-clamp-2">{executiveBriefing.split('\n\n')[0]}</p>
+                ) : (
+                  <p className="text-xs text-gray-400 italic">Click Refresh to generate a strategic briefing from your data.</p>
                 )}
               </div>
-            </SectionShell>
+
+              {/* Expanded briefing with risks/opps */}
+              <DetailDrawer open={openDrawer === "briefing"} title="Full Strategic Briefing" onClose={() => setOpenDrawer(null)}>
+                <div className="space-y-4">
+                  {executiveBriefing && (
+                    <div>
+                      <p className="text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-purple-500" />Strategic Context
+                      </p>
+                      <p className="text-xs text-gray-700 leading-relaxed">{executiveBriefing}</p>
+                      <p className="text-[10px] text-gray-400 mt-2 flex items-center gap-1">
+                        <Info className="w-3 h-3" />
+                        Generated from {metrics.totalAssessments} assessments, {metrics.totalGoals} goals, {metrics.totalLearning} learning records
+                      </p>
+                    </div>
+                  )}
+
+                  {(allRisks.length > 0 || allOpps.length > 0) && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-gray-100">
+                      {allRisks.length > 0 && (
+                        <div>
+                          <p className="text-[11px] font-semibold text-red-700 mb-2 flex items-center gap-1">
+                            <AlertTriangle className="w-3 h-3" />Top Risks
+                          </p>
+                          <div className="space-y-1.5">
+                            {allRisks.map((risk, idx) => (
+                              <button
+                                key={idx}
+                                className="w-full text-left p-2.5 bg-red-50 border border-red-100 rounded-lg hover:bg-red-100 transition-colors"
+                                onClick={() => onPromptAtreus?.(`Strategic risk: "${risk.title}". ${risk.description || ''} Help me develop an action plan.`)}
+                              >
+                                <div className="flex items-center gap-1.5 mb-0.5">
+                                  <Badge className="bg-red-600 text-white text-[10px] px-1.5 py-0">{risk.severity}</Badge>
+                                  <span className="text-xs font-semibold text-red-800 line-clamp-1">{risk.title}</span>
+                                </div>
+                                {risk.description && <p className="text-[10px] text-red-600 line-clamp-1">{risk.description}</p>}
+                                <p className="text-[10px] text-red-400 mt-0.5">Ask Atreus →</p>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {allOpps.length > 0 && (
+                        <div>
+                          <p className="text-[11px] font-semibold text-emerald-700 mb-2 flex items-center gap-1">
+                            <TrendingUp className="w-3 h-3" />Top Opportunities
+                          </p>
+                          <div className="space-y-1.5">
+                            {allOpps.map((opp, idx) => (
+                              <button
+                                key={idx}
+                                className="w-full text-left p-2.5 bg-emerald-50 border border-emerald-100 rounded-lg hover:bg-emerald-100 transition-colors"
+                                onClick={() => onPromptAtreus?.(`Strategic opportunity: "${opp.title}". ${opp.description || ''} Help me create a plan.`)}
+                              >
+                                <div className="flex items-center gap-1.5 mb-0.5">
+                                  <Badge className="bg-emerald-600 text-white text-[10px] px-1.5 py-0">{opp.potential}</Badge>
+                                  <span className="text-xs font-semibold text-emerald-800 line-clamp-1">{opp.title}</span>
+                                </div>
+                                {opp.description && <p className="text-[10px] text-emerald-600 line-clamp-1">{opp.description}</p>}
+                                <p className="text-[10px] text-emerald-400 mt-0.5">Ask Atreus →</p>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </DetailDrawer>
+            </div>
           </>
         )}
       </CardContent>
