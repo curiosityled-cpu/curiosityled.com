@@ -437,7 +437,7 @@ export default function TalentPipelineCard({
             icon={Users}
             iconColor="text-emerald-600"
             collapsible
-            defaultOpen={true}
+            defaultOpen={false}
           >
             {total === 0 ? (
               <p className="text-xs text-gray-400 py-2">No assessment data available{levelFilter !== "All Levels" ? ` for ${levelFilter}` : ""}. Bench strength cannot be estimated.</p>
@@ -516,7 +516,7 @@ export default function TalentPipelineCard({
             icon={TrendingDown}
             iconColor="text-amber-600"
             collapsible
-            defaultOpen={true}
+            defaultOpen={false}
           >
             {total === 0 ? (
               <p className="text-xs text-gray-400 py-2">Insufficient data to identify gaps. Ensure leaders have completed assessments.</p>
@@ -597,7 +597,7 @@ export default function TalentPipelineCard({
             icon={Brain}
             iconColor="text-purple-600"
             collapsible
-            defaultOpen={true}
+            defaultOpen={false}
           >
             <div className="space-y-1">
               {DRIVER_SIGNALS.map((signal) => (
