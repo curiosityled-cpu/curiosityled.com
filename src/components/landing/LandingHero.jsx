@@ -59,7 +59,7 @@ export default function LandingHero() {
               }}
             >
               {[
-                "Support managers with timely, in-workflow guidance.",
+                "Support managers with timely, in-workflow guidance and development.",
                 "See readiness, bench strength, and succession gaps more clearly.",
                 "Bring assessments, goals, and development activity into one leadership view.",
               ].map((b, i) => (
