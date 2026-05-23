@@ -62,6 +62,8 @@ export default function TalentPipelineDrillDown({ open, onClose, bandKey, leader
               const score = a.overall_pct ?? a.data?.overall_pct ?? 0;
               const email = a.user_email ?? a.data?.user_email ?? "";
               const name = a.user_name ?? a.data?.user_name ?? email ?? `Leader ${i + 1}`;
+              const title = a.job_title ?? a.data?.job_title ?? null;
+              const manager = a.manager_name ?? a.data?.manager_name ?? null;
               const level = a.leadership_level ?? a.data?.leadership_level ?? null;
               const isEnrolled = activeEnrollments?.has(email);
               const submissionDate = a.submission_date ?? a.data?.submission_date;
@@ -69,15 +71,19 @@ export default function TalentPipelineDrillDown({ open, onClose, bandKey, leader
 
               return (
                 <div key={a.id ?? i} className="flex items-start gap-3 p-3 rounded-lg border border-gray-100 bg-white hover:bg-gray-50 transition-colors">
-                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                    <User className="w-4 h-4 text-gray-400" />
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-100 to-purple-50 flex items-center justify-center flex-shrink-0 text-xs font-medium text-purple-600">
+                    {name?.charAt(0) ?? "?"}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-medium text-gray-900 truncate">{name}</span>
-                      <span className="text-xs font-bold text-gray-700 flex-shrink-0">{score}%</span>
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-semibold text-gray-900 truncate">{name}</div>
+                        {title && <div className="text-[11px] text-gray-600 truncate">{title}</div>}
+                        {manager && <div className="text-[10px] text-gray-500 truncate">Manager: {manager}</div>}
+                      </div>
+                      <span className="text-xs font-bold text-gray-700 flex-shrink-0 whitespace-nowrap ml-2">{score}%</span>
                     </div>
-                    <div className="h-1.5 bg-gray-100 rounded-full mt-1 overflow-hidden">
+                    <div className="h-1.5 bg-gray-100 rounded-full mt-1.5 overflow-hidden">
                       <div className={`h-full ${meta.bar} rounded-full`} style={{ width: `${score}%` }} />
                     </div>
                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
@@ -86,7 +92,7 @@ export default function TalentPipelineDrillDown({ open, onClose, bandKey, leader
                       )}
                       {isEnrolled && (
                         <span className="text-[10px] text-blue-600 bg-blue-50 rounded px-1.5 py-0.5 flex items-center gap-1">
-                          <BookOpen className="w-2.5 h-2.5" /> Actively developing
+                          <BookOpen className="w-2.5 h-2.5" /> Developing
                         </span>
                       )}
                       {displayDate && (
