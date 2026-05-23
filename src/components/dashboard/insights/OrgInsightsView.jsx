@@ -684,11 +684,6 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
             description="Talent loss signals and their correlation with leadership effectiveness"
             valueProposition="Connecting your HRIS data unlocks turnover, first-year attrition, and critical role vacancy rates — enabling direct correlation with leadership capability scores to identify which teams are most at risk."
             dataSources={["HRIS / HR System", "ATS / Talent Data", "CSV Upload", "API Integration"]}
-            expectedUnlocks={[
-              "Turnover rate correlated to leadership capability score",
-              "First-year attrition by manager and leadership level",
-              "Critical role vacancy tracking and risk flags",
-            ]}
             sampleMetrics={[
               { label: "Overall Turnover Rate", hint: "Target: <15%" },
               { label: "Regrettable Turnover", hint: "Target: <5%" },
@@ -717,11 +712,6 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
                   : "Engagement outcomes cannot yet be evaluated because employee sentiment data is not connected. Upload eNPS or engagement survey results to enable this signal."
               }
               dataSources={["eNPS Survey Data", "Engagement Survey Platform", "Culture Amp / Glint", "CSV Upload"]}
-              expectedUnlocks={[
-                "eNPS score correlated to leadership effectiveness",
-                "Engagement index by team and leadership level",
-                "Absenteeism and burnout risk as leading indicators",
-              ]}
               sampleMetrics={[
                 { label: "eNPS Score", hint: "Range: -100 to +100" },
                 { label: "Engagement Index", hint: "Target: ≥70/100" },

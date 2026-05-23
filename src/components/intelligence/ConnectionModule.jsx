@@ -1,34 +1,14 @@
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Database, Upload, ArrowRight, Lock, CheckCircle2, Circle, ChevronDown, ChevronUp } from "lucide-react";
-
-const CONNECTION_STEPS = [
-  { key: "connect", label: "Connect" },
-  { key: "map", label: "Map fields" },
-  { key: "validate", label: "Validate" },
-  { key: "active", label: "Active" },
-];
+import { Database, Upload, ArrowRight, Lock } from "lucide-react";
 
 /**
  * Connection module — shown in place of empty analytics sections.
- * Converts "no data" into a purposeful setup experience.
+ * Converts "no data" into a setup experience with sample metrics shown in disabled state.
  */
-export default function ConnectionModule({
-  icon: Icon,
-  iconColor = "text-gray-500",
-  title,
-  description,
-  valueProposition,
-  dataSources = [],
-  sampleMetrics = [],
-  expectedUnlocks = [],
-  onConnect,
-  onUploadCSV,
-}) {
-  const [whyOpen, setWhyOpen] = useState(false);
-
+export default function ConnectionModule({ icon: Icon, iconColor = "text-gray-500", title, description, valueProposition, dataSources = [], sampleMetrics = [], onConnect, onUploadCSV }) {
   return (
     <Card className="border-0 shadow-lg">
       <CardHeader className="pb-3">
@@ -45,60 +25,11 @@ export default function ConnectionModule({
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-
-        {/* Connection steps progress */}
-        <div className="flex items-center gap-0">
-          {CONNECTION_STEPS.map((step, i) => (
-            <React.Fragment key={step.key}>
-              <div className="flex flex-col items-center gap-1">
-                <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-colors ${
-                  i === 0 ? "border-indigo-500 bg-indigo-50 text-indigo-600" : "border-gray-200 bg-white text-gray-300"
-                }`}>
-                  {i === 0 ? <Circle className="w-3 h-3 text-indigo-500" /> : <Circle className="w-3 h-3" />}
-                </div>
-                <span className={`text-[10px] font-medium whitespace-nowrap ${i === 0 ? "text-indigo-600" : "text-gray-300"}`}>
-                  {step.label}
-                </span>
-              </div>
-              {i < CONNECTION_STEPS.length - 1 && (
-                <div className={`h-0.5 flex-1 mx-1 mb-4 ${i === 0 ? "bg-indigo-200" : "bg-gray-100"}`} />
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-
-        {/* Value proposition + why connect toggle */}
+      <CardContent className="space-y-5">
+        {/* Value proposition */}
         <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
-          <button
-            onClick={() => setWhyOpen(v => !v)}
-            className="w-full flex items-center justify-between text-left"
-          >
-            <span className="text-[11px] font-semibold text-slate-700">Why connect this?</span>
-            {whyOpen ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
-          </button>
-          {whyOpen && (
-            <p className="text-xs text-slate-600 leading-relaxed mt-2">{valueProposition}</p>
-          )}
-          {!whyOpen && (
-            <p className="text-xs text-slate-500 mt-1 line-clamp-2">{valueProposition}</p>
-          )}
+          <p className="text-xs text-slate-700 leading-relaxed">{valueProposition}</p>
         </div>
-
-        {/* Expected unlocks */}
-        {expectedUnlocks.length > 0 && (
-          <div>
-            <p className="text-[11px] font-medium text-gray-500 mb-2 uppercase tracking-wide">Expected unlocks</p>
-            <div className="space-y-1">
-              {expectedUnlocks.map((unlock, i) => (
-                <div key={i} className="flex items-start gap-2 text-xs text-gray-600">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0 mt-0.5" />
-                  <span>{unlock}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Sample metrics — disabled state */}
         {sampleMetrics.length > 0 && (
