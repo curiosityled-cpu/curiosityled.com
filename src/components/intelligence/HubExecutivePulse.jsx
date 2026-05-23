@@ -42,10 +42,10 @@ export default function HubExecutivePulse({ metrics, assessments = [], workforce
       valueBg: "text-indigo-700",
       label: "Leadership Health",
       value: meIndex > 0 ? `${meIndex}%` : "—",
-      sub: "Manager Effectiveness Index",
       trend: meIndex >= 70 ? "strong" : meIndex >= 55 ? "moderate" : "low",
       trendColors: { strong: "text-emerald-600", moderate: "text-amber-600", low: "text-red-600" },
       trendLabels: { strong: "Strong", moderate: "Building", low: "Needs attention" },
+      scrollTo: "org-health",
     },
     {
       id: "risk",
@@ -55,10 +55,10 @@ export default function HubExecutivePulse({ metrics, assessments = [], workforce
       valueBg: metrics.atRiskLeaders > 0 ? "text-red-700" : "text-emerald-700",
       label: "Immediate Risk",
       value: metrics.atRiskLeaders > 0 ? metrics.atRiskLeaders : "0",
-      sub: "leaders below 60% capability",
       trend: metrics.atRiskLeaders > 3 ? "high" : metrics.atRiskLeaders > 0 ? "medium" : "none",
       trendColors: { high: "text-red-600", medium: "text-amber-600", none: "text-emerald-600" },
       trendLabels: { high: "High risk", medium: "Monitor", none: "Clear" },
+      scrollTo: "org-health",
     },
     {
       id: "succession",
@@ -68,10 +68,10 @@ export default function HubExecutivePulse({ metrics, assessments = [], workforce
       valueBg: "text-purple-700",
       label: "Succession Coverage",
       value: benchCoverage !== null ? `${benchCoverage}%` : "—",
-      sub: "leaders at 70%+ readiness",
       trend: benchCoverage !== null ? (benchCoverage >= 40 ? "strong" : benchCoverage >= 20 ? "moderate" : "low") : "no-data",
       trendColors: { strong: "text-emerald-600", moderate: "text-amber-600", low: "text-red-600", "no-data": "text-gray-400" },
       trendLabels: { strong: "Solid bench", moderate: "Building", low: "Thin bench", "no-data": "No data" },
+      scrollTo: "talent-pipeline",
     },
     {
       id: "confidence",
@@ -81,7 +81,6 @@ export default function HubExecutivePulse({ metrics, assessments = [], workforce
       valueBg: dataConfidencePct >= 60 ? "text-slate-700" : "text-amber-700",
       label: "Data Confidence",
       value: `${dataConfidencePct}%`,
-      sub: `${dataConfidenceParts.length} of 5 signals connected`,
       trend: dataConfidencePct >= 60 ? "good" : "partial",
       trendColors: { good: "text-slate-600", partial: "text-amber-600" },
       trendLabels: { good: "Directional", partial: "Partial data" },
@@ -132,6 +131,24 @@ export default function HubExecutivePulse({ metrics, assessments = [], workforce
     },
   ].filter(Boolean);
 
+  // One-line interpretations per card
+  const interpretations = {
+    health: meIndex >= 70 ? `Strong performance across ${metrics.totalAssessments} assessed leaders.`
+      : meIndex >= 55 ? `Building — targeted development recommended.`
+      : meIndex > 0 ? `Needs attention — coaching review advised.`
+      : "No assessment data connected yet.",
+    risk: metrics.atRiskLeaders > 3 ? `High — ${metrics.atRiskLeaders} leaders require manager review this cycle.`
+      : metrics.atRiskLeaders > 0 ? `${metrics.atRiskLeaders} leader${metrics.atRiskLeaders > 1 ? "s" : ""} flagged — monitor and review.`
+      : "No leaders below threshold. Continue monitoring.",
+    succession: benchCoverage === null ? "No assessment data to estimate coverage."
+      : benchCoverage >= 40 ? `Coverage solid — mostly ready-soon cohort.`
+      : benchCoverage >= 20 ? `Building bench. Review ready-soon pipeline.`
+      : "Thin bench. Succession planning needs attention.",
+    confidence: dataConfidencePct >= 60 ? `${dataConfidenceParts.join(", ")} connected.`
+      : dataConfidenceParts.length === 1 ? `Platform-native only; HRIS and engagement not connected.`
+      : `Missing: ${["capability","execution","development","workforce","engagement"].filter(s => !dataConfidenceParts.includes(s)).join(", ")}.`,
+  };
+
   return (
     <div className="space-y-4">
       {/* Scorecard row */}
@@ -145,7 +162,8 @@ export default function HubExecutivePulse({ metrics, assessments = [], workforce
               key={card.id}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`rounded-xl border p-4 ${card.bg}`}
+              onClick={() => card.scrollTo && onScrollTo?.(card.scrollTo)}
+              className={`rounded-xl border p-4 ${card.bg} ${card.scrollTo ? "cursor-pointer hover:shadow-md transition-shadow" : ""}`}
             >
               <div className="flex items-center justify-between mb-2">
                 <Icon className={`w-4 h-4 ${card.iconColor}`} />
@@ -153,7 +171,8 @@ export default function HubExecutivePulse({ metrics, assessments = [], workforce
               </div>
               <div className={`text-2xl font-bold ${card.valueBg}`}>{card.value}</div>
               <div className="text-xs font-medium text-gray-700 mt-0.5">{card.label}</div>
-              <div className="text-[11px] text-gray-500 mt-0.5">{card.sub}</div>
+              <div className="text-[11px] text-gray-500 mt-0.5 leading-relaxed">{interpretations[card.id]}</div>
+              {card.scrollTo && <div className="text-[10px] text-indigo-500 mt-1.5 font-medium">View section →</div>}
             </motion.div>
           );
         })}
