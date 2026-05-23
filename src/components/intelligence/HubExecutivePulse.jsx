@@ -132,14 +132,6 @@ export default function HubExecutivePulse({ metrics, assessments = [], workforce
     },
   ].filter(Boolean);
 
-  // One-line interpretations for each scorecard
-  const interpretations = {
-    health: meIndex >= 70 ? "Performing well across key leadership competencies." : meIndex >= 55 ? "Building — primary drivers below target." : "Action needed — capability gaps detected.",
-    risk: metrics.atRiskLeaders > 3 ? `${metrics.atRiskLeaders} leaders require urgent manager review.` : metrics.atRiskLeaders > 0 ? `${metrics.atRiskLeaders} leader${metrics.atRiskLeaders > 1 ? "s" : ""} flagged — schedule coaching review.` : "No immediate risk signals detected.",
-    succession: benchCoverage === null ? "Run assessments to populate succession coverage." : benchCoverage >= 40 ? "Coverage strong — validate with manager calibration." : benchCoverage >= 20 ? "Building bench — accelerate ready-soon cohort." : "Thin bench — prioritise development investments.",
-    confidence: dataConfidencePct >= 60 ? "Most signals connected — data is directional." : `${5 - dataConfidenceParts.length} signal${5 - dataConfidenceParts.length !== 1 ? "s" : ""} not yet connected — HRIS & engagement missing.`,
-  };
-
   return (
     <div className="space-y-4">
       {/* Scorecard row */}
@@ -153,18 +145,15 @@ export default function HubExecutivePulse({ metrics, assessments = [], workforce
               key={card.id}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`rounded-xl border p-4 cursor-default ${card.bg} hover:shadow-md transition-shadow`}
+              className={`rounded-xl border p-4 ${card.bg}`}
             >
               <div className="flex items-center justify-between mb-2">
                 <Icon className={`w-4 h-4 ${card.iconColor}`} />
-                <span className={`text-[11px] font-semibold ${trendColor}`}>{trendLabel}</span>
+                <span className={`text-[11px] font-medium ${trendColor}`}>{trendLabel}</span>
               </div>
               <div className={`text-2xl font-bold ${card.valueBg}`}>{card.value}</div>
-              <div className="text-xs font-semibold text-gray-700 mt-0.5">{card.label}</div>
+              <div className="text-xs font-medium text-gray-700 mt-0.5">{card.label}</div>
               <div className="text-[11px] text-gray-500 mt-0.5">{card.sub}</div>
-              <p className="text-[11px] text-gray-600 mt-2 leading-snug border-t border-white/60 pt-1.5">
-                {interpretations[card.id]}
-              </p>
             </motion.div>
           );
         })}
