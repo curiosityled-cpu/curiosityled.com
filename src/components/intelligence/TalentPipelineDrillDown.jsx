@@ -16,7 +16,7 @@ function getBandKey(score) {
   return "buildNow";
 }
 
-export default function TalentPipelineDrillDown({ open, onClose, bandKey, leaders, activeEnrollments }) {
+export default function TalentPipelineDrillDown({ open, onClose, bandKey, leaders, activeEnrollments, allUsers = [] }) {
   if (!bandKey) return null;
   const meta = BAND_META[bandKey];
 
@@ -60,10 +60,12 @@ export default function TalentPipelineDrillDown({ open, onClose, bandKey, leader
           ) : (
             leaders.map((a, i) => {
               const score = a.overall_pct ?? a.data?.overall_pct ?? 0;
-              const email = a.user_email ?? a.data?.user_email ?? "";
-              const name = a.user_name ?? a.data?.user_name ?? email ?? `Leader ${i + 1}`;
-              const title = a.job_title ?? a.data?.job_title ?? null;
-              const manager = a.manager_name ?? a.data?.manager_name ?? null;
+              const email = a.user_email ?? a.data?.user_email ?? a.email ?? a.data?.email ?? "";
+              // Look up full user profile for richer data
+              const userProfile = allUsers.find(u => u.email === email || u.data?.email === email);
+              const name = userProfile?.full_name ?? a.user_name ?? a.data?.user_name ?? email?.split("@")[0] ?? `Leader ${i + 1}`;
+              const title = userProfile?.job_title ?? userProfile?.current_role ?? userProfile?.data?.job_title ?? userProfile?.data?.current_role ?? a.job_title ?? a.data?.job_title ?? null;
+              const manager = userProfile?.manager_name ?? userProfile?.manager_email ?? userProfile?.data?.manager_name ?? userProfile?.data?.manager_email ?? a.manager_name ?? a.data?.manager_name ?? null;
               const level = a.leadership_level ?? a.data?.leadership_level ?? null;
               const isEnrolled = activeEnrollments?.has(email);
               const submissionDate = a.submission_date ?? a.data?.submission_date;

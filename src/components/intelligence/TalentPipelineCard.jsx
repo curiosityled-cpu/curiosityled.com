@@ -630,6 +630,7 @@ export default function TalentPipelineCard({
         bandKey={drillBand}
         leaders={drillLeaders}
         activeEnrollments={activeEnrollments}
+        allUsers={allUsers}
       />
     </>
   );
