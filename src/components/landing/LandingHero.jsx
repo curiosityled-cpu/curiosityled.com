@@ -40,12 +40,12 @@ export default function LandingHero() {
 
             {/* Subheadline */}
             <motion.p
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.4 }}
-              className="text-lg text-gray-600 leading-relaxed mb-8 font-medium"
+             initial={{ opacity: 0, y: 30 }}
+             animate={{ opacity: 1, y: 0 }}
+             transition={{ duration: 0.7, delay: 0.4 }}
+             className="text-lg text-gray-600 leading-relaxed mb-8 font-medium"
             >
-              Support managers in the flow of work, build clearer readiness and succession visibility, and connect leadership development to measurable impact.
+             Curiosity Led is a Leadership Intelligence System designed to support managers in the flow of work, build clearer readiness and succession visibility, and connect leadership development to measurable impact.
             </motion.p>
 
             {/* Bullets */}
