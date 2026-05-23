@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, AlertTriangle, Zap, GitBranch, Shield, Brain, Sparkles, RefreshCw, Loader2, ChevronDown, ChevronUp, Info, ChevronRight, Eye } from "lucide-react";
+import { TrendingUp, AlertTriangle, Zap, GitBranch, Shield, Brain, Sparkles, RefreshCw, Loader2, ChevronDown, ChevronUp, Info, ChevronRight, Eye, HelpCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const BENCHMARKS = { si: 75, dm: 77, comm: 78, rm: 78, sm: 79, pm: 76 };
@@ -74,6 +74,8 @@ export default function OrgHealthCard({
 
   const toggleDrawer = (key) => setOpenDrawer(prev => prev === key ? null : key);
 
+  const [showMETooltip, setShowMETooltip] = useState(false);
+
   const meIndex = Math.round(
     competencyAverages.dm * 0.35 +
     competencyAverages.si * 0.30 +
@@ -82,9 +84,9 @@ export default function OrgHealthCard({
   );
   const decisionQuality = Math.round(competencyAverages.dm * 0.55 + competencyAverages.si * 0.45);
   const meTier =
-    meIndex >= 80 ? { label: "High", color: "bg-emerald-100 text-emerald-700 border-emerald-200" } :
-    meIndex >= 65 ? { label: "Developing", color: "bg-amber-100 text-amber-700 border-amber-200" } :
-                    { label: "Needs Attention", color: "bg-red-100 text-red-700 border-red-200" };
+    meIndex >= 80 ? { label: "High", color: "bg-emerald-100 text-emerald-700 border-emerald-200", meaning: "Above benchmark. Sustain through continued development and stretch opportunities." } :
+    meIndex >= 65 ? { label: "Building", color: "bg-amber-100 text-amber-700 border-amber-200", meaning: "A developmental score band indicating growth is underway. Targeted coaching and structured learning are recommended to close the gap to benchmark." } :
+                    { label: "Needs Attention", color: "bg-red-100 text-red-700 border-red-200", meaning: "Below benchmark threshold. Leadership review and structured intervention are recommended." };
   const meInterpretation =
     meIndex >= 80 ? "Strong and above benchmark." :
     meIndex >= 65 ? "Building — targeted coaching recommended." :
@@ -163,9 +165,27 @@ export default function OrgHealthCard({
             <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                  <div className="flex items-center gap-2 mb-0.5">
+                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                     <span className="text-xs font-semibold text-indigo-900 uppercase tracking-wide">ME Index</span>
-                    <Badge className={`text-[10px] border ${meTier.color}`}>{meTier.label}</Badge>
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowMETooltip(v => !v)}
+                        className="flex items-center gap-1"
+                      >
+                        <Badge className={`text-[10px] border ${meTier.color}`}>{meTier.label}</Badge>
+                        <HelpCircle className="w-3 h-3 text-indigo-400 hover:text-indigo-600" />
+                      </button>
+                      {showMETooltip && (
+                        <div className="absolute left-0 top-6 z-50 w-72 bg-white border border-gray-200 rounded-xl shadow-lg p-3 text-xs leading-relaxed">
+                          <div className="flex justify-between mb-1.5">
+                            <span className="font-semibold text-gray-900">What "{meTier.label}" means</span>
+                            <button onClick={() => setShowMETooltip(false)} className="text-gray-400 hover:text-gray-600">×</button>
+                          </div>
+                          <p className="text-gray-600 mb-2">{meTier.meaning}</p>
+                          <p className="text-gray-400">ME Index = DM (35%) + SI (30%) + Communication (20%) + Performance Management (15%). Benchmark target: 77%.</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="text-4xl font-bold text-indigo-700">{meIndex}%</div>
                   <p className="text-xs text-indigo-600 mt-1">{meInterpretation}</p>
@@ -192,7 +212,7 @@ export default function OrgHealthCard({
                   <div className="flex items-center gap-1.5">
                     <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
                     <span className="text-xs font-semibold text-gray-700">Risk Signals</span>
-                    {lowScorers > 0 && <span className="text-xs font-bold text-red-600 ml-1">{lowScorers} flagged</span>}
+                    {lowScorers > 0 && <span className="text-xs font-bold text-red-600 ml-1">{lowScorers} require{lowScorers === 1 ? "s" : ""} review</span>}
                   </div>
                   <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${openDrawer === "risk" ? "rotate-180" : ""}`} />
                 </button>
@@ -225,7 +245,7 @@ export default function OrgHealthCard({
                       <span className="font-bold">{incompleteLearning}</span>
                     </div>
                     {lowScorers > 0 && (
-                      <p className="text-[10px] text-red-500 pt-1 font-medium">{lowScorers} leader{lowScorers > 1 ? "s" : ""} flagged — recommend manager review this cycle.</p>
+                      <p className="text-[10px] text-amber-600 pt-1 font-medium">{lowScorers} leader{lowScorers > 1 ? "s" : ""} require{lowScorers === 1 ? "s" : ""} review this cycle. These signals are for coaching and development prioritisation — not employment action.</p>
                     )}
                     <p className="text-[10px] text-gray-400 pt-1">Source: Platform capability assessments, goal records, learning assignments.</p>
                   </div>
@@ -274,36 +294,52 @@ export default function OrgHealthCard({
                       <span className="font-bold">{assignedLearning.length}</span>
                     </div>
                     <p className="text-[10px] text-gray-400 pt-1">Target: ≥70% completion rate. Source: Platform-assigned learning records.</p>
+                    <p className="text-[10px] text-amber-600 pt-1">Low completion may reflect time constraints, assignment relevance, or workflow friction — not necessarily lack of motivation. Review assignment design before drawing conclusions about leader behaviour.</p>
                   </div>
                 </DetailDrawer>
               </div>
             </div>
 
             {/* ── LAYER C: Competency dimensions — top 2 strengths + top 2 gaps ── */}
-            <div className="border border-gray-100 rounded-xl bg-gray-50/50 overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3">
-                <div>
-                  <span className="text-sm font-semibold text-gray-900">Competency Dimensions</span>
-                  <p className="text-[11px] text-gray-500 mt-0.5">
-                    {showAllDimensions ? "All 6 dimensions" : "Top 2 strengths & top 2 gaps"} vs. industry benchmark
-                  </p>
+            {(() => {
+              // Build narrative summary connecting dimensions to ME Index
+              const lowestDim = [...dimensions].sort((a,b) => (a.score - BENCHMARKS[a.key]) - (b.score - BENCHMARKS[b.key]))[0];
+              const secondLowest = [...dimensions].sort((a,b) => (a.score - BENCHMARKS[a.key]) - (b.score - BENCHMARKS[b.key]))[1];
+              const belowBenchmark = dimensions.filter(d => d.score < BENCHMARKS[d.key]);
+              const narrativeLine = belowBenchmark.length > 0
+                ? `Leadership Health is being held back most by ${lowestDim.label}${secondLowest && secondLowest.score < BENCHMARKS[secondLowest.key] ? ` and ${secondLowest.label}` : ""}. These are the highest-leverage areas for development investment.`
+                : "All dimensions are at or above benchmark — focus now on sustaining strengths and deepening primary drivers.";
+              return (
+                <div className="border border-gray-100 rounded-xl bg-gray-50/50 overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <div>
+                      <span className="text-sm font-semibold text-gray-900">Competency Dimensions</span>
+                      <p className="text-[11px] text-gray-500 mt-0.5">
+                        {showAllDimensions ? "All 6 dimensions" : "Top 2 strengths & top 2 gaps"} vs. industry benchmark
+                      </p>
+                    </div>
+                    <Badge className="text-[10px] border bg-slate-100 text-slate-600 border-slate-200">Directional</Badge>
+                  </div>
+                  {/* Connecting narrative */}
+                  <div className="mx-4 mb-2 px-3 py-2 bg-indigo-50 border border-indigo-100 rounded-lg">
+                    <p className="text-[11px] text-indigo-800 leading-relaxed">{narrativeLine}</p>
+                  </div>
+                  <div className="px-4 pb-4 space-y-3">
+                    {visibleDimensions.map(d => (
+                      <DimensionBar key={d.key} label={d.label} score={d.score} benchmark={BENCHMARKS[d.key]} isPrimary={d.isPrimary} />
+                    ))}
+                    <button
+                      onClick={() => setShowAllDimensions(v => !v)}
+                      className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors mt-1"
+                    >
+                      {showAllDimensions ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                      {showAllDimensions ? "Show key dimensions only" : "View all 6 dimensions"}
+                    </button>
+                    <p className="text-[10px] text-gray-400">Vertical bar = industry benchmark (source: platform calibration norms). DM and SI are primary drivers of Manager Effectiveness.</p>
+                  </div>
                 </div>
-                <Badge className="text-[10px] border bg-slate-100 text-slate-600 border-slate-200">Directional</Badge>
-              </div>
-              <div className="px-4 pb-4 space-y-3">
-                {visibleDimensions.map(d => (
-                  <DimensionBar key={d.key} label={d.label} score={d.score} benchmark={BENCHMARKS[d.key]} isPrimary={d.isPrimary} />
-                ))}
-                <button
-                  onClick={() => setShowAllDimensions(v => !v)}
-                  className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors mt-1"
-                >
-                  {showAllDimensions ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                  {showAllDimensions ? "Show key dimensions only" : "View all 6 dimensions"}
-                </button>
-                <p className="text-[10px] text-gray-400">Vertical bar = industry benchmark. DM and SI are primary drivers of Manager Effectiveness.</p>
-              </div>
-            </div>
+              );
+            })()}
 
             {/* ── LAYER D: Executive AI Briefing — compact, supporting role ── */}
             <div className="border border-purple-100 rounded-xl bg-purple-50/40 overflow-hidden">
@@ -314,7 +350,7 @@ export default function OrgHealthCard({
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-purple-600" />
                   <span className="text-sm font-semibold text-purple-900">Executive AI Briefing</span>
-                  <Badge className="text-[10px] border bg-purple-100 text-purple-700 border-purple-200">AI-generated</Badge>
+                  <Badge className="text-[10px] border bg-purple-100 text-purple-700 border-purple-200">AI synthesis</Badge>
                 </div>
                 <div className="flex items-center gap-2">
                   {onRefreshBriefing && (
@@ -331,7 +367,7 @@ export default function OrgHealthCard({
               </button>
 
               {/* One-sentence context always visible */}
-              <div className="px-4 pb-3">
+              <div className="px-4 pb-3 space-y-1">
                 {generatingBriefing && !executiveBriefing ? (
                   <div className="flex items-center gap-2 text-purple-600 text-xs">
                     <Loader2 className="w-3 h-3 animate-spin" />Generating briefing…
@@ -341,6 +377,7 @@ export default function OrgHealthCard({
                 ) : (
                   <p className="text-xs text-gray-400 italic">Click Refresh to generate a strategic briefing from your data.</p>
                 )}
+                <p className="text-[10px] text-gray-400">AI-generated synthesis from {metrics.totalAssessments} assessments, {metrics.totalGoals} goals, {metrics.totalLearning} learning records. Intended for development conversation prep — not sole decision criteria.</p>
               </div>
 
               {/* Expanded briefing with risks/opps */}

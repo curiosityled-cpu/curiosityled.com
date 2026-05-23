@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Users, Layers, Shield, Database, ChevronDown, ChevronRight, TrendingUp, TrendingDown, ArrowRight } from "lucide-react";
+import { AlertTriangle, Users, Layers, Shield, Database, ChevronDown, ChevronRight, TrendingUp, TrendingDown, ArrowRight, Info } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 /**
@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
  */
 export default function HubExecutivePulse({ metrics, assessments = [], workforceMetrics = [], onScrollTo }) {
   const [expandedAlert, setExpandedAlert] = useState(null);
+  const [openHowMeasuredTop, setOpenHowMeasuredTop] = useState(null);
 
   const meIndex = Math.round(
     metrics.competencyAverages.dm * 0.35 +
@@ -70,9 +71,11 @@ export default function HubExecutivePulse({ metrics, assessments = [], workforce
       value: meIndex > 0 ? `${meIndex}%` : "—",
       sub: "Manager Effectiveness Index",
       interpretation: meInterpretation,
+      howMeasured: "Weighted average of capability scores across assessed leaders: Decision Making (35%), Situational Intelligence (30%), Communication (20%), Performance Management (15%).",
       trend: meIndex >= 70 ? "up" : "down",
       trendColor: meIndex >= 70 ? "text-emerald-600" : "text-red-500",
       scrollTo: "org-health",
+      size: "large",
     },
     {
       id: "risk",
@@ -82,11 +85,13 @@ export default function HubExecutivePulse({ metrics, assessments = [], workforce
       valueBg: metrics.atRiskLeaders > 0 ? "text-red-700" : "text-emerald-700",
       label: "Immediate Risk",
       value: String(metrics.atRiskLeaders),
-      sub: "leaders below 60% capability",
+      sub: "leaders requiring review this cycle",
       interpretation: riskInterpretation,
+      howMeasured: "Leaders with capability assessment scores below 60%, indicating a need for targeted coaching or manager review. Not an employment risk classification.",
       trend: metrics.atRiskLeaders === 0 ? "up" : "down",
       trendColor: metrics.atRiskLeaders === 0 ? "text-emerald-600" : "text-red-500",
       scrollTo: "org-health",
+      size: "normal",
     },
     {
       id: "succession",
@@ -96,25 +101,29 @@ export default function HubExecutivePulse({ metrics, assessments = [], workforce
       valueBg: "text-purple-700",
       label: "Succession Coverage",
       value: benchCoverage !== null ? `${benchCoverage}%` : "—",
-      sub: "weighted readiness score",
+      sub: `weighted bench score · ${assessments.length} assessed leaders`,
       interpretation: successionInterpretation,
+      howMeasured: `Weighted formula: Ready Now leaders count fully (85%+ score), Ready Soon leaders count at 50% weight (70–84%). Denominator is all assessed leaders (${assessments.length}). Based on assessed leaders only — does not reflect unassessed population.`,
       trend: benchCoverage !== null && benchCoverage >= 30 ? "up" : "down",
       trendColor: benchCoverage !== null && benchCoverage >= 30 ? "text-emerald-600" : "text-amber-600",
       scrollTo: "talent-pipeline",
+      size: "normal",
     },
     {
       id: "confidence",
       icon: Database,
-      iconColor: "text-slate-600",
-      bg: dataConfidencePct >= 60 ? "bg-slate-50 border-slate-200" : "bg-amber-50 border-amber-200",
-      valueBg: dataConfidencePct >= 60 ? "text-slate-700" : "text-amber-700",
+      iconColor: "text-slate-500",
+      bg: "bg-slate-50 border-slate-200",
+      valueBg: dataConfidencePct >= 60 ? "text-slate-600" : "text-slate-500",
       label: "Data Confidence",
       value: `${dataConfidencePct}%`,
-      sub: `${connectedSignals.length} of 5 signals connected`,
+      sub: `${connectedSignals.length} of 5 signals active`,
       interpretation: confidenceInterpretation,
+      howMeasured: `Hub-wide signal coverage: ${connectedSignals.length > 0 ? connectedSignals.join(", ") + " connected." : "No signals connected yet."} Missing: ${["Capability","Execution","Development","Workforce","Engagement"].filter((_,i) => !dataConnected[i]).join(", ") || "none"}. Low confidence means all metrics should be treated as directional only.`,
       trend: dataConfidencePct >= 60 ? "up" : "neutral",
-      trendColor: dataConfidencePct >= 60 ? "text-slate-600" : "text-amber-600",
+      trendColor: "text-slate-400",
       scrollTo: "workforce",
+      size: "quiet",
     },
   ];
 
@@ -187,25 +196,51 @@ export default function HubExecutivePulse({ metrics, assessments = [], workforce
         {scorecards.map((card) => {
           const Icon = card.icon;
           const TrendIcon = card.trend === "up" ? TrendingUp : card.trend === "down" ? TrendingDown : null;
+          const isQuiet = card.size === "quiet";
           return (
-            <motion.button
+            <motion.div
               key={card.id}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              onClick={() => onScrollTo?.(card.scrollTo)}
-              className={`rounded-xl border p-4 text-left hover:shadow-md transition-all cursor-pointer group ${card.bg}`}
+              className={`rounded-xl border p-4 text-left transition-all relative group ${card.bg} ${isQuiet ? "opacity-80" : ""}`}
             >
-              <div className="flex items-center justify-between mb-2">
-                <Icon className={`w-4 h-4 ${card.iconColor}`} />
-                {TrendIcon && <TrendIcon className={`w-3.5 h-3.5 ${card.trendColor}`} />}
-              </div>
-              <div className={`text-2xl font-bold ${card.valueBg}`}>{card.value}</div>
-              <div className="text-xs font-medium text-gray-700 mt-0.5">{card.label}</div>
-              <div className="text-[11px] text-gray-500 mt-0.5 leading-snug">{card.interpretation}</div>
-              <div className="text-[10px] text-gray-400 mt-1 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
-                View detail <ArrowRight className="w-2.5 h-2.5" />
-              </div>
-            </motion.button>
+              <button
+                onClick={() => onScrollTo?.(card.scrollTo)}
+                className="w-full text-left"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <Icon className={`w-4 h-4 ${card.iconColor}`} />
+                  {TrendIcon && !isQuiet && <TrendIcon className={`w-3.5 h-3.5 ${card.trendColor}`} />}
+                </div>
+                <div className={`${isQuiet ? "text-xl" : "text-2xl"} font-bold ${card.valueBg}`}>{card.value}</div>
+                <div className={`${isQuiet ? "text-[11px] text-gray-500" : "text-xs font-medium text-gray-700"} mt-0.5`}>{card.label}</div>
+                <div className="text-[11px] text-gray-500 mt-0.5 leading-snug">{card.interpretation}</div>
+                <div className="text-[11px] text-gray-400 mt-1 leading-snug">{card.sub}</div>
+              </button>
+              {/* How measured */}
+              <button
+                onClick={(e) => { e.stopPropagation(); setOpenHowMeasuredTop(prev => prev === card.id ? null : card.id); }}
+                className="mt-2 flex items-center gap-1 text-[10px] text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <Info className="w-2.5 h-2.5" />
+                How measured
+              </button>
+              <AnimatePresence>
+                {openHowMeasuredTop === card.id && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-2 p-2.5 bg-white border border-gray-200 rounded-lg text-[10px] text-gray-600 leading-relaxed shadow-sm">
+                      {card.howMeasured}
+                      <button onClick={() => setOpenHowMeasuredTop(null)} className="block mt-1 text-gray-400 hover:text-gray-600">Close ×</button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
           );
         })}
       </div>

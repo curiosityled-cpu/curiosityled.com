@@ -21,7 +21,7 @@ const BANDS = [
   {
     key: "readySoon",
     label: "Ready Soon",
-    sublabel: "On track — needs continued development or validation",
+    sublabel: "On track — within a development range, not a fixed timeframe",
     threshold: [70, 84],
     color: "bg-blue-400",
     hoverBg: "hover:bg-blue-50",
@@ -450,6 +450,7 @@ export default function TalentPipelineCard({
                       weighted bench coverage · {total} leader{total !== 1 ? "s" : ""} assessed
                       {levelFilter !== "All Levels" && <span className="ml-1 text-purple-600">· {levelFilter}</span>}
                     </div>
+                    <div className="text-[10px] text-gray-400 mt-0.5">Ready Now (full weight) + Ready Soon (0.5 weight) ÷ {total} assessed. Based on assessed leaders only.</div>
                   </div>
                   <Badge className={`text-xs border ${benchBadgeColor}`}>{benchLabel}</Badge>
                 </div>
@@ -512,7 +513,13 @@ export default function TalentPipelineCard({
           {/* ── CARD 2: Readiness Gaps ──────────────────────────────────────── */}
           <SectionCard
             title="Readiness Gaps"
-            subtitle="Where development and succession coverage need attention first"
+            subtitle={total === 0 ? "Where development and succession coverage need attention first" :
+              thinnestLevel && thinnestData
+                ? `Largest gap: only ${thinnestData.readyNow} ready-now leader${thinnestData.readyNow !== 1 ? "s" : ""} in ${thinnestLevel}`
+                : buildNow.length > 0
+                ? `${buildNow.length} leader${buildNow.length !== 1 ? "s" : ""} in early development — structured investment needed`
+                : "No critical gaps detected in current data"
+            }
             icon={TrendingDown}
             iconColor="text-amber-600"
             collapsible
@@ -593,7 +600,7 @@ export default function TalentPipelineCard({
           {/* ── CARD 3: Readiness Drivers ───────────────────────────────────── */}
           <SectionCard
             title="Readiness Drivers"
-            subtitle="Signals contributing to readiness estimates — click any driver to see how it is measured"
+            subtitle={`Capability evidence is ${capabilityScore !== null ? `strongest at ${capabilityScore}%` : "the primary connected signal"}; calibration and experience data not yet connected`}
             icon={Brain}
             iconColor="text-purple-600"
             collapsible

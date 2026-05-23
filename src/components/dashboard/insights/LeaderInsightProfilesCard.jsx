@@ -127,6 +127,7 @@ function ProfilesAccordion({ profiles, allUsers, mode }) {
         const dept = u?.department ? ` · ${u.department}` : '';
 
         if (isInsightMode) {
+          const topRec = item.recommendations?.[0];
           return (
             <AccordionItem key={item.id || idx} value={`profile-${idx}`} className="border rounded-lg px-1 bg-white">
               <AccordionTrigger className="px-3 py-3 hover:no-underline">
@@ -134,6 +135,7 @@ function ProfilesAccordion({ profiles, allUsers, mode }) {
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-gray-900 text-sm truncate">{name}</p>
                     {(role || dept) && <p className="text-xs text-gray-500 truncate">{role}{dept}</p>}
+                    {topRec && <p className="text-[10px] text-gray-400 truncate mt-0.5">Next move: {topRec}</p>}
                   </div>
                   <Badge className="bg-purple-100 text-purple-800 shrink-0 text-xs">
                     {item.archetype || 'Processing...'}
@@ -155,6 +157,11 @@ function ProfilesAccordion({ profiles, allUsers, mode }) {
           : band === 'Developing'
           ? 'bg-yellow-100 text-yellow-800'
           : 'bg-red-100 text-red-800';
+        const nextMove = score >= 80
+          ? 'Consider stretch assignment or succession consideration at current level.'
+          : score >= 60
+          ? 'Targeted coaching or structured learning to develop gap areas.'
+          : 'Prioritise foundational capability development with manager support.';
 
         return (
           <AccordionItem key={item.id || idx} value={`profile-${idx}`} className="border rounded-lg px-1 bg-white">
@@ -163,15 +170,20 @@ function ProfilesAccordion({ profiles, allUsers, mode }) {
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-gray-900 text-sm truncate">{name}</p>
                   {(role || dept) && <p className="text-xs text-gray-500 truncate">{role}{dept}</p>}
+                  <p className="text-[10px] text-gray-400 truncate mt-0.5">Next move: {nextMove}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <Badge className={`${bandColor} text-xs`}>{band}</Badge>
+                  <Badge className={`${bandColor} text-xs`}>{band} <span className="text-[9px] opacity-70 ml-0.5">dev band</span></Badge>
                   <span className="font-bold text-gray-800 text-sm">{score}%</span>
                 </div>
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-3 pb-4">
               <RawAssessmentContent a={item} />
+              <div className="mt-3 pt-2 border-t border-gray-100">
+                <p className="text-[11px] font-semibold text-blue-700 mb-0.5">Recommended next move</p>
+                <p className="text-[11px] text-gray-600">{nextMove}</p>
+              </div>
             </AccordionContent>
           </AccordionItem>
         );
@@ -356,7 +368,10 @@ export default function LeaderInsightProfilesCard({ rawData }) {
                 Leader Insight Profiles
               </CardTitle>
               <p className="text-sm text-gray-600 mt-1">
-                Pre-generated AI insights from completed assessments — updated automatically after each submission
+                Development-oriented AI summaries from completed assessments — click any profile to view drivers, recommended next move, and confidence context
+              </p>
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-2.5 py-1.5 mt-2">
+                These profiles are intended for development support. Labels such as Developing, Proficient, and Emerging reflect a developmental score band — not a performance rating. Leaders should be able to contextualise and discuss these summaries with their manager.
               </p>
             </div>
             <Button variant="outline" size="sm" onClick={() => setShowModal(true)} className="shrink-0">
