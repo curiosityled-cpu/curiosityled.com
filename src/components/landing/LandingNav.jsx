@@ -15,6 +15,10 @@ export default function LandingNav() {
     base44.auth.redirectToLogin("/");
   };
 
+  const handleLogoClick = () => {
+    document.getElementById("hero")?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -23,13 +27,16 @@ export default function LandingNav() {
     >
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center">
+        <button
+          onClick={handleLogoClick}
+          className="flex items-center hover:opacity-80 transition-opacity"
+        >
           <img
             src="https://raw.githubusercontent.com/curiosityled-cpu/curiosityled.com/main/public/CuriosityLedLogoBBW%20(1).png"
             alt="Curiosity Led"
             className="h-10 object-contain"
           />
-        </div>
+        </button>
 
         {/* CTAs */}
         <div className="flex items-center gap-3">

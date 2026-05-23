@@ -8,7 +8,7 @@ export default function LandingHero() {
   };
 
   return (
-    <section className="relative min-h-screen flex flex-col justify-center pt-24 pb-16 overflow-hidden bg-white">
+    <section id="hero" className="relative min-h-screen flex flex-col justify-center pt-24 pb-16 overflow-hidden bg-white">
       {/* Subtle grid background */}
       <div
         className="absolute inset-0 opacity-[0.03]"
