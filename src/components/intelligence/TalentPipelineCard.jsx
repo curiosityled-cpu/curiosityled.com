@@ -437,7 +437,7 @@ export default function TalentPipelineCard({
             icon={Users}
             iconColor="text-emerald-600"
             collapsible
-            defaultOpen={false}
+            defaultOpen={true}
           >
             {total === 0 ? (
               <p className="text-xs text-gray-400 py-2">No assessment data available{levelFilter !== "All Levels" ? ` for ${levelFilter}` : ""}. Bench strength cannot be estimated.</p>
