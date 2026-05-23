@@ -5,8 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Brain,
   TrendingUp,
@@ -16,11 +14,10 @@ import {
   BookOpen,
   BarChart3,
   Loader2,
-  Calendar as CalendarIcon,
-  CheckCircle,
   ArrowRight,
   Shield,
-  Activity
+  Activity,
+  Heart
 } from "lucide-react";
 import {
   LineChart,
@@ -50,8 +47,10 @@ import TalentCareStagePanel from "@/components/intelligence/TalentCareStagePanel
 import OrgHealthCard from "@/components/intelligence/OrgHealthCard";
 import TalentPipelineCard from "@/components/intelligence/TalentPipelineCard";
 import WorkforceStabilityCard from "@/components/intelligence/WorkforceStabilityCard";
-
 import EngagementCultureCard from "@/components/intelligence/EngagementCultureCard";
+import HubExecutivePulse from "@/components/intelligence/HubExecutivePulse";
+import HubStickyBar from "@/components/intelligence/HubStickyBar";
+import ConnectionModule from "@/components/intelligence/ConnectionModule";
 
 // Map AI-generated dashboard names to actual MVP routes
 const DASHBOARD_ROUTES = {
@@ -101,6 +100,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
     industry: 'all'
   });
 
+  const [lastRefreshed, setLastRefreshed] = useState(new Date());
   const [showCustomDateDialog, setShowCustomDateDialog] = useState(false);
   const [customDateRange, setCustomDateRange] = useState({ from: null, to: null });
   const [appliedCustomDateRange, setAppliedCustomDateRange] = useState({ from: null, to: null });
@@ -160,6 +160,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
         assessmentInsights: assessmentInsights || [],
         workforceMetrics: workforceMetrics || []
       });
+      setLastRefreshed(new Date());
     } finally {
       setLoading(false);
     }
@@ -568,99 +569,55 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
     );
   }
 
+  // Scroll to section helper
+  const scrollToSection = (id) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  // Data confidence calculation
+  const dataConfidenceParts = [
+    filteredData.assessments.length > 0,
+    metrics.totalGoals > 0,
+    metrics.totalJourneys > 0,
+    rawData.workforceMetrics?.length > 0,
+    rawData.workforceMetrics?.[0]?.enps_score != null,
+  ].filter(Boolean).length;
+  const dataConfidencePct = Math.round((dataConfidenceParts / 5) * 100);
+
+  const hasWorkforceData = rawData.workforceMetrics?.length > 0;
+  const hasEngagementData = hasWorkforceData && rawData.workforceMetrics[0]?.enps_score != null;
+
+  // Trend chart sparse data check
+  const trendDataPoints = chartData.trendData.filter(d => d.assessmentScore > 0);
+  const hasSufficientTrendData = trendDataPoints.length >= 3;
+
   return (
-    <div className="space-y-8">
-      {/* Unified Filters */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-        <Card className="border-0 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Brain className="w-4 h-4 text-purple-500" />
-                <span className="text-sm font-medium text-gray-700">Intelligence Filters:</span>
-              </div>
+    <div className="space-y-6">
+      {/* ── LAYER 1: Sticky context bar ─────────────────────────────────────── */}
+      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
+        <HubStickyBar
+          filters={filters}
+          onFilterChange={(key, value) => setFilters(prev => ({ ...prev, [key]: value }))}
+          dataConfidence={dataConfidencePct}
+          lastRefreshed={lastRefreshed}
+          onRefresh={loadAllData}
+          refreshing={loading}
+        />
+      </motion.div>
 
-              <Select value={filters.timeframe} onValueChange={handleTimeRangeChange}>
-                <SelectTrigger className="w-48">
-                  {filters.timeframe === 'custom' && appliedCustomDateRange.from && appliedCustomDateRange.to ? (
-                    <span className="text-sm">
-                      {format(appliedCustomDateRange.from, 'MMM d')} - {format(appliedCustomDateRange.to, 'MMM d')}
-                    </span>
-                  ) : (
-                    <SelectValue />
-                  )}
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="3months">Last 3 Months</SelectItem>
-                  <SelectItem value="6months">Last 6 Months</SelectItem>
-                  <SelectItem value="12months">Last 12 Months</SelectItem>
-                  <SelectItem value="all">All Time</SelectItem>
-                  <SelectItem value="custom">Custom Range...</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={filters.division} onValueChange={(value) => setFilters({ ...filters, division: value })}>
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Divisions</SelectItem>
-                  <SelectItem value="operations">Operations</SelectItem>
-                  <SelectItem value="sales">Sales</SelectItem>
-                  <SelectItem value="technology">Technology</SelectItem>
-                  <SelectItem value="finance">Finance</SelectItem>
-                  <SelectItem value="hr">HR</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={filters.level} onValueChange={(value) => setFilters({ ...filters, level: value })}>
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Levels</SelectItem>
-                  <SelectItem value="manager">Managers</SelectItem>
-                  <SelectItem value="director">Directors</SelectItem>
-                  <SelectItem value="vp">VPs</SelectItem>
-                  <SelectItem value="c-suite">C-Suite</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={filters.tenure} onValueChange={(value) => setFilters({ ...filters, tenure: value })}>
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Tenure</SelectItem>
-                  <SelectItem value="<1">Under 1 Year</SelectItem>
-                  <SelectItem value="1-2">1 - 2 Years</SelectItem>
-                  <SelectItem value="3-5">3 - 5 Years</SelectItem>
-                  <SelectItem value="6-10">6 - 10 Years</SelectItem>
-                  <SelectItem value="11-15">11 - 15 Years</SelectItem>
-                  <SelectItem value="16-20">16 - 20 Years</SelectItem>
-                  <SelectItem value="20+">20+ Years</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={filters.riskProfile} onValueChange={(value) => setFilters({ ...filters, riskProfile: value })}>
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Risk Profiles</SelectItem>
-                  <SelectItem value="at_risk">At-Risk Only</SelectItem>
-                  <SelectItem value="high_potential">High-Potential Only</SelectItem>
-                </SelectContent>
-              </Select>
-
-
-              </div>
-              </CardContent>
-              </Card>
-              </motion.div>
+      {/* ── LAYER 2: Executive Pulse — summary first ─────────────────────────── */}
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+        <HubExecutivePulse
+          metrics={metrics}
+          assessments={filteredData.assessments}
+          workforceMetrics={rawData.workforceMetrics}
+          onScrollTo={scrollToSection}
+        />
+      </motion.div>
 
       {/* Talent Care Lifecycle Bar */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
         <TalentCareLifecycleBar
           activeStage={activeLifecycleStage}
           onStageChange={setActiveLifecycleStage}
@@ -686,65 +643,131 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         )}
       </AnimatePresence>
 
-      {/* Consolidated Strategic Cards — stacked */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="space-y-6">
-        <OrgHealthCard
-          metrics={metrics}
-          assessments={filteredData.assessments}
-          goals={filteredData.goals}
-          assignedLearning={filteredData.assignedLearning}
-          strategicRisks={strategicRisks}
-          strategicOpportunities={strategicOpportunities}
-          onPromptAtreus={promptAtreus}
-          executiveBriefing={executiveBriefing}
-          generatingBriefing={generatingBriefing}
-          generatingAll={generatingAll}
-          onRefreshBriefing={generateExecutiveBriefing}
-        />
-        <TalentPipelineCard
-          metrics={metrics}
-          assessments={filteredData.assessments}
-          assignedLearning={filteredData.assignedLearning}
-          journeyEnrollments={filteredData.journeyEnrollments}
-          allUsers={rawData.allUsers}
-          workforceMetrics={rawData.workforceMetrics}
-        />
+      {/* ── LAYER 3: Priority sections ───────────────────────────────────────── */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-6">
+        <div id="org-health">
+          <OrgHealthCard
+            metrics={metrics}
+            assessments={filteredData.assessments}
+            goals={filteredData.goals}
+            assignedLearning={filteredData.assignedLearning}
+            strategicRisks={strategicRisks}
+            strategicOpportunities={strategicOpportunities}
+            onPromptAtreus={promptAtreus}
+            executiveBriefing={executiveBriefing}
+            generatingBriefing={generatingBriefing}
+            generatingAll={generatingAll}
+            onRefreshBriefing={generateExecutiveBriefing}
+          />
+        </div>
+        <div id="talent-pipeline">
+          <TalentPipelineCard
+            metrics={metrics}
+            assessments={filteredData.assessments}
+            assignedLearning={filteredData.assignedLearning}
+            journeyEnrollments={filteredData.journeyEnrollments}
+            allUsers={rawData.allUsers}
+            workforceMetrics={rawData.workforceMetrics}
+          />
+        </div>
       </motion.div>
 
-      {/* Executive KPI Sections — Workforce Stability, Succession & Engagement */}
-      <div className="space-y-6">
-        <WorkforceStabilityCard workforceMetrics={rawData.workforceMetrics} />
+      {/* ── LAYER 4: Workforce & Engagement — connection modules when empty ──── */}
+      <div id="workforce" className="space-y-6">
+        {hasWorkforceData ? (
+          <WorkforceStabilityCard workforceMetrics={rawData.workforceMetrics} />
+        ) : (
+          <ConnectionModule
+            icon={Users}
+            iconColor="text-rose-500"
+            title="Workforce Stability & Retention"
+            description="Talent loss signals and their correlation with leadership effectiveness"
+            valueProposition="Connecting your HRIS data unlocks turnover, first-year attrition, and critical role vacancy rates — enabling direct correlation with leadership capability scores to identify which teams are most at risk."
+            dataSources={["HRIS / HR System", "ATS / Talent Data", "CSV Upload", "API Integration"]}
+            sampleMetrics={[
+              { label: "Overall Turnover Rate", hint: "Target: <15%" },
+              { label: "Regrettable Turnover", hint: "Target: <5%" },
+              { label: "First-Year Turnover", hint: "Target: <10%" },
+              { label: "Critical Role Vacancies", hint: "Target: <5%" },
+            ]}
+            onUploadCSV={() => toast.info("Contact your administrator to upload workforce metrics CSV")}
+          />
+        )}
 
-        <EngagementCultureCard
-          workforceMetrics={rawData.workforceMetrics}
-          leadershipScore={metrics.avgLeadershipScore}
-        />
+        <div id="engagement">
+          {hasEngagementData ? (
+            <EngagementCultureCard
+              workforceMetrics={rawData.workforceMetrics}
+              leadershipScore={metrics.avgLeadershipScore}
+            />
+          ) : (
+            <ConnectionModule
+              icon={Heart}
+              iconColor="text-pink-500"
+              title="Engagement & Culture"
+              description="Employee sentiment as a leading indicator of leadership health"
+              valueProposition={
+                metrics.avgLeadershipScore > 0
+                  ? `Engagement outcomes cannot yet be evaluated because employee sentiment data is not connected. Current leadership scores average ${metrics.avgLeadershipScore}% — connecting engagement data would reveal whether this is translating to workforce sentiment.`
+                  : "Engagement outcomes cannot yet be evaluated because employee sentiment data is not connected. Upload eNPS or engagement survey results to enable this signal."
+              }
+              dataSources={["eNPS Survey Data", "Engagement Survey Platform", "Culture Amp / Glint", "CSV Upload"]}
+              sampleMetrics={[
+                { label: "eNPS Score", hint: "Range: -100 to +100" },
+                { label: "Engagement Index", hint: "Target: ≥70/100" },
+                { label: "Absenteeism Rate", hint: "Target: <3%" },
+                { label: "Leadership Correlation", hint: "Derived metric" },
+              ]}
+              onUploadCSV={() => toast.info("Contact your administrator to upload engagement survey data")}
+            />
+          )}
+        </div>
       </div>
 
-      {/* Integrated Trend Analysis */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+      {/* ── Trend Analysis — sparse data aware ─────────────────────────────── */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
         <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-lg">DM / SI / Manager Effectiveness Trends</CardTitle>
-            <p className="text-sm text-gray-600">Track the primary drivers of Manager Effectiveness over time alongside overall leadership performance</p>
+          <CardHeader className="pb-3">
+            <div className="flex items-start justify-between">
+              <div>
+                <CardTitle className="text-base">DM / SI / Manager Effectiveness Trends</CardTitle>
+                <p className="text-xs text-gray-500 mt-0.5">Track primary drivers of Manager Effectiveness over time</p>
+              </div>
+              <Badge className={`text-[11px] border ${hasSufficientTrendData ? "bg-slate-100 text-slate-600 border-slate-200" : "bg-amber-100 text-amber-700 border-amber-200"}`}>
+                {hasSufficientTrendData ? "Directional" : "Sparse data"}
+              </Badge>
+            </div>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
-              <LineChart data={chartData.trendData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis domain={[0, 100]} />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="dmScore" stroke="#0d9488" strokeWidth={3} name="Decision Making %" dot={{ r: 4 }} />
-                <Line type="monotone" dataKey="siScore" stroke="#7c3aed" strokeWidth={3} name="Situational Intelligence %" dot={{ r: 4 }} />
-                <Line type="monotone" dataKey="assessmentScore" stroke="#94a3b8" strokeWidth={1.5} strokeDasharray="4 4" name="Overall Leadership %" />
-                <Line type="monotone" dataKey="goalCompletion" stroke="#3b82f6" strokeWidth={1.5} strokeDasharray="4 4" name="Goal Completion %" />
-              </LineChart>
-            </ResponsiveContainer>
-            <div className="mt-3 p-3 bg-indigo-50 border border-indigo-200 rounded-lg text-sm text-indigo-800">
-              <strong>Focus:</strong> The solid lines (DM &amp; SI) are the primary indicators of Manager Effectiveness on this platform. Tracking their trajectory reveals whether leadership interventions are improving decision quality over time.
-            </div>
+            {!hasSufficientTrendData ? (
+              <div className="py-8 text-center space-y-2">
+                <p className="text-sm font-medium text-gray-600">Not enough history to establish a trend</p>
+                <p className="text-xs text-gray-400">
+                  {trendDataPoints.length} of 6 periods have data. Current snapshot:{" "}
+                  {metrics.totalAssessments > 0 ? `Leadership avg ${metrics.avgLeadershipScore}%` : "No assessments yet"}.
+                </p>
+                <p className="text-xs text-gray-400">Revisit after more data accumulates across multiple periods.</p>
+              </div>
+            ) : (
+              <>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={chartData.trendData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="dmScore" stroke="#0d9488" strokeWidth={2.5} name="Decision Making %" dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="siScore" stroke="#7c3aed" strokeWidth={2.5} name="Situational Intelligence %" dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="assessmentScore" stroke="#94a3b8" strokeWidth={1.5} strokeDasharray="4 4" name="Overall Leadership %" />
+                    <Line type="monotone" dataKey="goalCompletion" stroke="#3b82f6" strokeWidth={1.5} strokeDasharray="4 4" name="Goal Completion %" />
+                  </LineChart>
+                </ResponsiveContainer>
+                <p className="text-[11px] text-gray-400 mt-3">
+                  Solid lines (DM & SI) are primary Manager Effectiveness drivers. Sample size: {trendDataPoints.length} active periods of {chartData.trendData.length}.
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       </motion.div>
@@ -803,16 +826,21 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         return (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
             <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <CardTitle className="text-lg">Capability vs. Execution Matrix</CardTitle>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Where does each leader sit — strong capability, strong execution, or both? Use this to prioritise coaching and development interventions.
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs text-gray-500 whitespace-nowrap">Filter by dept/team:</span>
+              <CardHeader className="pb-3">
+                 <div className="flex flex-wrap items-start justify-between gap-4">
+                   <div>
+                     <div className="flex items-center gap-2">
+                       <CardTitle className="text-base">Capability vs. Execution Matrix</CardTitle>
+                       <Badge className={`text-[11px] border ${usingEstimated ? "bg-amber-100 text-amber-700 border-amber-200" : "bg-slate-100 text-slate-600 border-slate-200"}`}>
+                         {usingEstimated ? "Estimated execution" : "Observed data"}
+                       </Badge>
+                     </div>
+                     <p className="text-xs text-gray-500 mt-0.5">
+                       Leadership capability vs. execution — use to prioritise coaching interventions
+                     </p>
+                   </div>
+                   <div className="flex items-center gap-2 shrink-0">
+                     <span className="text-xs text-gray-500 whitespace-nowrap">Filter by dept/team:</span>
                     <Select value={matrixDepartment} onValueChange={setMatrixDepartment}>
                       <SelectTrigger className="w-44 text-sm">
                         <SelectValue />
@@ -828,22 +856,20 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
                 </div>
               </CardHeader>
               <CardContent>
-                {/* How to read this */}
-                <div className="mb-5 p-3 bg-indigo-50 border border-indigo-200 rounded-lg text-sm text-indigo-800 space-y-2">
-                  <strong>How to Interpret:</strong>
-                  <p>Leaders are mapped by <strong>Capability</strong> (Leadership Assessment Score, horizontal) and <strong>Execution</strong> (Goal Completion Rate, vertical). The midpoint for both is <strong>{capThreshold}%</strong>.</p>
-                  <ul className="list-disc list-inside space-y-1 mt-2 text-xs">
-                    <li><strong>Foundational Support (Bottom-Left):</strong> Prioritize core coaching and essential goal attainment.</li>
-                    <li><strong>Results Drivers (Top-Left):</strong> Focus on capability building and strategic development.</li>
-                    <li><strong>High Potentials (Bottom-Right):</strong> Provide execution mentorship and structured goal support.</li>
-                    <li><strong>Pace Setters (Top-Right):</strong> Elevate with strategic opportunities and leadership expansion.</li>
-                  </ul>
-                </div>
-                {usingEstimated && (
-                  <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
-                    <strong>Note:</strong> No goal data found for these leaders yet. Execution scores are estimated from assessment scores. Matrix will update automatically once leaders have goals assigned.
-                  </div>
-                )}
+                 {/* Compact inline explainer */}
+                 <div className="mb-4 flex items-start gap-2 text-xs text-gray-600">
+                   <span className="flex-shrink-0 mt-0.5 text-indigo-500">ℹ</span>
+                   <span>
+                     Leaders are mapped by <strong>Capability</strong> (assessment score) vs <strong>Execution</strong> (goal completion). Midpoint: <strong>{capThreshold}%</strong>.
+                     {" "}<button className="text-indigo-600 hover:underline">Learn more</button>
+                   </span>
+                 </div>
+                 {usingEstimated && (
+                   <div className="mb-4 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-start gap-2">
+                     <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-amber-600" />
+                     <span><strong>Limited confidence:</strong> No goal data found. Execution is <em>estimated</em> from assessment scores — not measured. Matrix updates once goals are assigned.</span>
+                   </div>
+                 )}
 
                 {/* 2×2 grid with axis arrows */}
                 <div className="flex gap-2">
@@ -899,8 +925,8 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         );
       })()}
 
-      {/* Pre-Generated Leader Insights (from AssessmentInsights entity) */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
+      {/* ── Leader Insight Profiles ─────────────────────────────────────────── */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
         <LeaderInsightProfilesCard rawData={rawData} />
       </motion.div>
 
@@ -1010,93 +1036,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         </Card>
       </motion.div>}
 
-      {/* Custom Date Range Dialog */}
-      <Dialog open={showCustomDateDialog} onOpenChange={(open) => {
-        if (!open) handleCancelCustomRange();
-      }}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl">Select Custom Date Range</DialogTitle>
-            <p className="text-sm text-gray-600 mt-1">Choose a date range to filter your analytics</p>
-          </DialogHeader>
-          
-          <div className="flex flex-wrap gap-2 py-2 border-b">
-            <Button variant="outline" size="sm" onClick={() => setQuickRange(7)} className="text-xs">
-              Last 7 Days
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setQuickRange(14)} className="text-xs">
-              Last 14 Days
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setQuickRange(30)} className="text-xs">
-              Last 30 Days
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setQuickRange(60)} className="text-xs">
-              Last 60 Days
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setQuickRange(90)} className="text-xs">
-              Last 90 Days
-            </Button>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                <CalendarIcon className="w-4 h-4" />
-                From Date
-              </label>
-              <Calendar
-                mode="single"
-                selected={customDateRange.from}
-                onSelect={(date) => setCustomDateRange({ ...customDateRange, from: date })}
-                disabled={(date) => date > new Date() || (customDateRange.to && date > customDateRange.to)}
-                className="rounded-lg border shadow-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                <CalendarIcon className="w-4 h-4" />
-                To Date
-              </label>
-              <Calendar
-                mode="single"
-                selected={customDateRange.to}
-                onSelect={(date) => setCustomDateRange({ ...customDateRange, to: date })}
-                disabled={(date) => date > new Date() || (customDateRange.from && date < customDateRange.from)}
-                className="rounded-lg border shadow-sm"
-              />
-            </div>
-          </div>
-          
-          {customDateRange.from && customDateRange.to && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center"
-            >
-              <p className="text-sm font-medium text-blue-900">
-                Selected Range: {format(customDateRange.from, 'MMM d, yyyy')} - {format(customDateRange.to, 'MMM d, yyyy')}
-              </p>
-              <p className="text-xs text-blue-700 mt-1">
-                {Math.ceil((customDateRange.to - customDateRange.from) / (1000 * 60 * 60 * 24))} days
-              </p>
-            </motion.div>
-          )}
-          
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={handleCancelCustomRange}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleCustomDateApply}
-              disabled={!customDateRange.from || !customDateRange.to}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Apply Date Range
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
