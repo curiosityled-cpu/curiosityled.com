@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { isAfter, isBefore, startOfDay, subDays } from "date-fns";
+import { getMobilityThresholds } from "@/lib/intelligenceSettings";
 
 const PAGE_SIZE = 8; // Triage shortlist — not a full roster
 
@@ -349,20 +350,23 @@ export default function LeaderInsightProfilesCard({ rawData, activeLifecycleStag
 
   const mode = hasInsights ? 'insights' : 'raw';
 
+  // Mobility thresholds from centralized settings (client-configurable in future)
+  const { highPotentialThreshold, promotionReadyThreshold } = getMobilityThresholds();
+
   // Sort by highest development priority: lowest score first (most need)
   // For transition stage, sort by readiness band (highest scorers first for succession)
   const sortedProfiles = useMemo(() => {
-    // Apply mobility chip pre-filter
+    // Apply mobility chip pre-filter using configured thresholds
     let pool = [...filteredProfiles];
     if (activeMobilityChip === 'high_potential') {
       pool = pool.filter(item => {
         const score = hasInsights ? (item.overall_score || 0) : (item.overall_pct || 0);
-        return score >= 85;
+        return score >= highPotentialThreshold;
       });
     } else if (activeMobilityChip === 'promotion_ready') {
       pool = pool.filter(item => {
         const score = hasInsights ? (item.overall_score || 0) : (item.overall_pct || 0);
-        return score >= 75;
+        return score >= promotionReadyThreshold;
       });
     }
     const sorted = pool;
@@ -380,7 +384,7 @@ export default function LeaderInsightProfilesCard({ rawData, activeLifecycleStag
       const scoreB = hasInsights ? (b.overall_score || 0) : (b.overall_pct || 0);
       return scoreA - scoreB;
     });
-  }, [filteredProfiles, activeLifecycleStage, activeMobilityChip, hasInsights]);
+  }, [filteredProfiles, activeLifecycleStage, activeMobilityChip, hasInsights, highPotentialThreshold, promotionReadyThreshold]);
 
   const FiltersRow = () => (
     <div className="flex flex-wrap gap-2 mt-3">
@@ -494,8 +498,8 @@ export default function LeaderInsightProfilesCard({ rawData, activeLifecycleStag
                           <HelpCircle className="w-2.5 h-2.5 opacity-60" />
                         </span>
                       </TooltipTrigger>
-                      <TooltipContent side="bottom" className="max-w-[220px] text-xs">
-                        These thresholds are current platform defaults and may not reflect universal HR standards.
+                      <TooltipContent side="bottom" className="max-w-[240px] text-xs">
+                        Showing leaders scoring ≥{highPotentialThreshold}%. These are platform defaults and may not reflect universal HR standards.
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -510,8 +514,8 @@ export default function LeaderInsightProfilesCard({ rawData, activeLifecycleStag
                           <HelpCircle className="w-2.5 h-2.5 opacity-60" />
                         </span>
                       </TooltipTrigger>
-                      <TooltipContent side="bottom" className="max-w-[220px] text-xs">
-                        These thresholds are current platform defaults and may not reflect universal HR standards.
+                      <TooltipContent side="bottom" className="max-w-[240px] text-xs">
+                        Showing leaders scoring ≥{promotionReadyThreshold}%. These are platform defaults and may not reflect universal HR standards.
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>

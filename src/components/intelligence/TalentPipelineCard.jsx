@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Layers, Info, AlertTriangle, CheckCircle2, Clock, TrendingDown, Users, Brain, ArrowRight, ChevronDown, ChevronUp, Filter, MapPin } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import TalentPipelineDrillDown from "./TalentPipelineDrillDown";
+import { DRIVER_STATUS, deriveDriverStates } from "@/lib/intelligenceSettings";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -43,31 +44,26 @@ const DRIVER_SIGNALS = [
     key: "capability",
     label: "Capability Evidence",
     description: "Leadership assessment score across core competencies. Derived from the platform's leadership assessment.",
-    available: true,
   },
   {
     key: "execution",
     label: "Execution & Follow-Through",
     description: "Goal completion rate — translates capability into demonstrated results. Based on completed goals tracked in the platform.",
-    available: true,
   },
   {
     key: "development",
     label: "Development Engagement",
     description: "Active participation in learning journeys, coaching, and programs. Based on journey enrollment data.",
-    available: true,
   },
   {
     key: "experience",
     label: "Experience Context",
     description: "Role tenure, span of control, and leadership level. Not yet connected — requires HRIS integration.",
-    available: false,
   },
   {
     key: "calibration",
     label: "Manager & Talent Calibration",
     description: "Talent review input and manager endorsement. Not yet connected — requires talent review module.",
-    available: false,
   },
 ];
 
@@ -174,22 +170,17 @@ function BandRow({ band, count, total, onClick }) {
   );
 }
 
-// Driver signal row with expandable detail
-// score: number = measured value, null = not connected (data source absent), undefined = no signal yet (connected but no data)
-function DriverRow({ signal, score }) {
+// Driver signal row with expandable detail.
+// driverState: { status: "not_connected" | "no_signal_yet" | "measured", score: number|null }
+function DriverRow({ signal, driverState }) {
   const [expanded, setExpanded] = useState(false);
 
-  // Distinguish three states:
-  // - not connected: signal.available === false  → "Not Connected"
-  // - no signal yet: signal.available === true but score === null → "No Signal Yet"
-  // - measured: signal.available === true and score is a number
-  const isMeasured = signal.available && score !== null && score !== undefined;
-  const isNotConnected = !signal.available;
-  // no signal yet = available but score is null/undefined
-  const isNoSignal = signal.available && (score === null || score === undefined);
+  const isMeasured    = driverState?.status === DRIVER_STATUS.MEASURED;
+  const isNotConnected = driverState?.status === DRIVER_STATUS.NOT_CONNECTED || !driverState;
+  const isNoSignal    = driverState?.status === DRIVER_STATUS.NO_SIGNAL_YET;
+  const score         = driverState?.score ?? null;
 
   const stateLabel = isNotConnected ? "Not Connected" : isNoSignal ? "No Signal Yet" : null;
-  const stateLabelColor = "text-gray-400 italic text-[10px]";
 
   return (
     <div>
@@ -207,7 +198,7 @@ function DriverRow({ signal, score }) {
               {isMeasured ? (
                 <span className="text-xs font-bold text-gray-700">{score}%</span>
               ) : (
-                <span className={stateLabelColor}>{stateLabel}</span>
+                <span className="text-gray-400 italic text-[10px]">{stateLabel}</span>
               )}
               {expanded
                 ? <ChevronUp className="w-3 h-3 text-gray-300 group-hover:text-gray-500" />
@@ -320,27 +311,20 @@ export default function TalentPipelineCard({
     return s < 70 && activeEnrollments.has(email);
   });
 
-  // ── Driver signals ────────────────────────────────────────────────────────
-  const hasGoalData = (metrics?.totalGoals ?? 0) > 0;
-  const hasDevelopmentData = journeyEnrollments.length > 0 || assignedLearning.length > 0;
+  // ── Driver states (structured, centralized) ───────────────────────────────
+  const driverStates = useMemo(() => deriveDriverStates({
+    filtered,
+    metrics,
+    journeyEnrollments,
+    assignedLearning,
+    allUsers,
+    activeEnrollments,
+  }), [filtered, metrics, journeyEnrollments, assignedLearning, allUsers, activeEnrollments]);
 
-  const capabilityScore = total > 0
-    ? Math.round(filtered.reduce((sum, a) => sum + getScore(a), 0) / total)
+  // Convenience aliases for use in action text below
+  const capabilityScore = driverStates.capability.status === DRIVER_STATUS.MEASURED
+    ? driverStates.capability.score
     : null;
-
-  const goalCompletionRate = hasGoalData ? (metrics?.goalCompletionRate ?? null) : null;
-
-  const developmentEngagementRate = hasDevelopmentData && allUsers.length > 0
-    ? Math.round((activeEnrollments.size / allUsers.length) * 100)
-    : null;
-
-  const driverScores = {
-    capability: capabilityScore,
-    execution: goalCompletionRate,
-    development: developmentEngagementRate,
-    experience: null,
-    calibration: null,
-  };
 
   // ── Action text ───────────────────────────────────────────────────────────
   let benchAction = "Review ready-soon leaders with their managers to validate succession readiness before the next talent cycle.";
@@ -651,7 +635,7 @@ export default function TalentPipelineCard({
                 <DriverRow
                   key={signal.key}
                   signal={signal}
-                  score={driverScores[signal.key]}
+                  driverState={driverStates[signal.key]}
                 />
               ))}
             </div>
