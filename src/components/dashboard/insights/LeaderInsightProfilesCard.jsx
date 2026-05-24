@@ -20,7 +20,11 @@ import {
   Search,
   Maximize2,
   X,
+  HelpCircle,
+  ArrowUpDown,
+  Filter as FilterIcon,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { isAfter, isBefore, startOfDay, subDays } from "date-fns";
 
 const PAGE_SIZE = 8; // Triage shortlist — not a full roster
@@ -468,17 +472,61 @@ export default function LeaderInsightProfilesCard({ rawData, activeLifecycleStag
       <Card className="border-0 shadow-lg">
         <CardHeader>
           <div className="flex items-start justify-between gap-4">
-            <div>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-purple-600" />
-                Leader Insight Profiles
-              </CardTitle>
-              <p className="text-sm text-gray-600 mt-1">
-                {activeLifecycleStage === 'transition'
-                  ? 'Succession triage shortlist — sorted by readiness (highest first). Click any profile for bench evidence and recommended next move.'
-                  : 'Development triage shortlist — sorted by highest development priority first. Click any profile for competency gaps, confidence, and recommended next move.'}
-              </p>
-              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-2.5 py-1.5 mt-2">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap mb-1">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-purple-600" />
+                  Leader Insight Profiles
+                </CardTitle>
+                {/* Sort label */}
+                <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border bg-slate-100 text-slate-600 border-slate-200">
+                  <ArrowUpDown className="w-2.5 h-2.5" />
+                  {activeLifecycleStage === 'transition' ? 'Sorted: Succession Readiness' : 'Sorted: Development Priority'}
+                </span>
+                {/* Mobility chip filter label */}
+                {activeMobilityChip === 'high_potential' && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 cursor-default">
+                          <FilterIcon className="w-2.5 h-2.5" />
+                          Filtered: High Potential
+                          <HelpCircle className="w-2.5 h-2.5 opacity-60" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-[220px] text-xs">
+                        These thresholds are current platform defaults and may not reflect universal HR standards.
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                {activeMobilityChip === 'promotion_ready' && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border bg-purple-100 text-purple-700 border-purple-200 cursor-default">
+                          <FilterIcon className="w-2.5 h-2.5" />
+                          Filtered: Promotion Ready
+                          <HelpCircle className="w-2.5 h-2.5 opacity-60" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-[220px] text-xs">
+                        These thresholds are current platform defaults and may not reflect universal HR standards.
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </div>
+              {/* Onboarding caution */}
+              {activeLifecycleStage === 'onboarding' && (
+                <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-2 mb-2">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-800 leading-relaxed">
+                    Early signals in the onboarding stage are directional and based on limited data. Use these insights to guide initial support, not to make conclusive judgments.
+                  </p>
+                </div>
+              )}
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-2.5 py-1.5">
                 These profiles are intended for development support. Labels such as Developing, Proficient, and Emerging reflect a developmental score band — not a performance rating. Leaders should be able to contextualise and discuss these summaries with their manager.
               </p>
             </div>

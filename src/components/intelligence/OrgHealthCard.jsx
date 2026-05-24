@@ -66,7 +66,8 @@ function DetailDrawer({ open, title, children, onClose }) {
 export default function OrgHealthCard({
   metrics, assessments, goals, assignedLearning,
   strategicRisks, strategicOpportunities,
-  onPromptAtreus, executiveBriefing, generatingBriefing, generatingAll, onRefreshBriefing
+  onPromptAtreus, executiveBriefing, generatingBriefing, generatingAll, onRefreshBriefing,
+  activeLifecycleStage,
 }) {
   const { competencyAverages } = metrics;
   const [openDrawer, setOpenDrawer] = useState(null); // "risk" | "velocity" | "dimensions" | "briefing"
@@ -154,6 +155,14 @@ export default function OrgHealthCard({
       </CardHeader>
 
       <CardContent className="space-y-4">
+        {activeLifecycleStage === 'onboarding' && !hasNoData && (
+          <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-800 leading-relaxed">
+              Early signals in the onboarding stage are directional and based on limited data. Use these insights to guide initial support, not to make conclusive judgments.
+            </p>
+          </div>
+        )}
         {hasNoData ? (
           <div className="py-8 text-center text-gray-400">
             <Shield className="w-8 h-8 mx-auto mb-2 opacity-40" />

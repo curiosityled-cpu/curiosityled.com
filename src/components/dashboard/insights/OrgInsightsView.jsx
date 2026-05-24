@@ -697,6 +697,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
                 generatingBriefing={generatingBriefing}
                 generatingAll={generatingAll}
                 onRefreshBriefing={generateExecutiveBriefing}
+                activeLifecycleStage={activeLifecycleStage}
               />
             )}
           </div>

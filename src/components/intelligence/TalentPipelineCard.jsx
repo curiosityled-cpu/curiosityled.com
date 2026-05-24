@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Layers, Info, AlertTriangle, CheckCircle2, Clock, TrendingDown, Users, Brain, ArrowRight, ChevronDown, ChevronUp, Filter } from "lucide-react";
+import { Layers, Info, AlertTriangle, CheckCircle2, Clock, TrendingDown, Users, Brain, ArrowRight, ChevronDown, ChevronUp, Filter, MapPin } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import TalentPipelineDrillDown from "./TalentPipelineDrillDown";
 
@@ -175,9 +175,21 @@ function BandRow({ band, count, total, onClick }) {
 }
 
 // Driver signal row with expandable detail
+// score: number = measured value, null = not connected (data source absent), undefined = no signal yet (connected but no data)
 function DriverRow({ signal, score }) {
   const [expanded, setExpanded] = useState(false);
-  const isAvailable = signal.available && score !== null;
+
+  // Distinguish three states:
+  // - not connected: signal.available === false  → "Not Connected"
+  // - no signal yet: signal.available === true but score === null → "No Signal Yet"
+  // - measured: signal.available === true and score is a number
+  const isMeasured = signal.available && score !== null && score !== undefined;
+  const isNotConnected = !signal.available;
+  // no signal yet = available but score is null/undefined
+  const isNoSignal = signal.available && (score === null || score === undefined);
+
+  const stateLabel = isNotConnected ? "Not Connected" : isNoSignal ? "No Signal Yet" : null;
+  const stateLabelColor = "text-gray-400 italic text-[10px]";
 
   return (
     <div>
@@ -185,17 +197,17 @@ function DriverRow({ signal, score }) {
         onClick={() => setExpanded(v => !v)}
         className="w-full text-left flex items-start gap-3 rounded-lg px-2 py-1.5 -mx-2 hover:bg-gray-50 transition-colors group"
       >
-        <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${isAvailable ? "bg-purple-500" : "bg-gray-300"}`} />
+        <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${isMeasured ? "bg-purple-500" : "bg-gray-300"}`} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
-            <span className={`text-xs font-medium ${isAvailable ? "text-gray-800" : "text-gray-400"}`}>
+            <span className={`text-xs font-medium ${isMeasured ? "text-gray-800" : "text-gray-400"}`}>
               {signal.label}
             </span>
             <div className="flex items-center gap-2">
-              {isAvailable ? (
+              {isMeasured ? (
                 <span className="text-xs font-bold text-gray-700">{score}%</span>
               ) : (
-                <span className="text-[10px] text-gray-400 italic">Not connected</span>
+                <span className={stateLabelColor}>{stateLabel}</span>
               )}
               {expanded
                 ? <ChevronUp className="w-3 h-3 text-gray-300 group-hover:text-gray-500" />
@@ -203,7 +215,7 @@ function DriverRow({ signal, score }) {
               }
             </div>
           </div>
-          {isAvailable && (
+          {isMeasured && (
             <div className="h-1 bg-gray-100 rounded-full mt-1 overflow-hidden">
               <div className="h-full bg-purple-400 rounded-full" style={{ width: `${score}%` }} />
             </div>
@@ -213,9 +225,14 @@ function DriverRow({ signal, score }) {
       {expanded && (
         <div className="ml-5 mt-1 mb-1 px-3 py-2 bg-gray-50 rounded-lg border border-gray-100">
           <p className="text-[11px] text-gray-600 leading-relaxed">{signal.description}</p>
-          {!isAvailable && (
+          {isNotConnected && (
             <p className="text-[10px] text-amber-600 mt-1">
               This signal is not yet connected. Readiness estimates will be more reliable once it is available.
+            </p>
+          )}
+          {isNoSignal && (
+            <p className="text-[10px] text-amber-600 mt-1">
+              This data source is connected but no signal has been observed yet for this population.
             </p>
           )}
         </div>
@@ -234,6 +251,7 @@ export default function TalentPipelineCard({
   journeyEnrollments = [],
   allUsers = [],
   workforceMetrics = [],
+  activeLifecycleStage,
 }) {
   // ── Filter state ──────────────────────────────────────────────────────────
   const [levelFilter, setLevelFilter] = useState("All Levels");
@@ -430,6 +448,16 @@ export default function TalentPipelineCard({
 
         <CardContent className="space-y-4">
 
+          {/* ── Onboarding caution note ── */}
+          {activeLifecycleStage === 'onboarding' && (
+            <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-800 leading-relaxed">
+                Early signals in the onboarding stage are directional and based on limited data. Use these insights to guide initial support, not to make conclusive judgments.
+              </p>
+            </div>
+          )}
+
           {/* ── CARD 1: Bench Strength ──────────────────────────────────────── */}
           <SectionCard
             title="Bench Strength"
@@ -563,19 +591,31 @@ export default function TalentPipelineCard({
                   )}
 
                   {thinnestLevel && thinnestData && (
-                    <button
-                      onClick={() => setLevelFilter(thinnestLevel)}
-                      className="w-full text-left flex items-start gap-2.5 p-2.5 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors group"
-                    >
-                      <Clock className="w-3.5 h-3.5 text-slate-600 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="text-[11px] font-medium text-slate-900">Thinnest bench: {thinnestLevel}</p>
-                        <p className="text-[10px] text-slate-600 mt-0.5">
-                          Only {thinnestData.readyNow} of {thinnestData.total} assessed leaders at this level are in the ready-now band.
-                        </p>
+                    thinnestLevel === "Unspecified" ? (
+                      <div className="flex items-start gap-2.5 p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                        <MapPin className="w-3.5 h-3.5 text-slate-500 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-[11px] font-medium text-slate-900">Leadership Role Mapping Incomplete</p>
+                          <p className="text-[10px] text-slate-600 mt-0.5">
+                            Please complete role mapping in Admin Settings to accurately interpret bench gaps. Leaders without level classifications cannot be placed in readiness bands.
+                          </p>
+                        </div>
                       </div>
-                      <span className="text-[10px] text-slate-400 group-hover:text-slate-600 flex-shrink-0 mt-0.5">Filter →</span>
-                    </button>
+                    ) : (
+                      <button
+                        onClick={() => setLevelFilter(thinnestLevel)}
+                        className="w-full text-left flex items-start gap-2.5 p-2.5 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors group"
+                      >
+                        <Clock className="w-3.5 h-3.5 text-slate-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-[11px] font-medium text-slate-900">Thinnest bench: {thinnestLevel}</p>
+                          <p className="text-[10px] text-slate-600 mt-0.5">
+                            Only {thinnestData.readyNow} of {thinnestData.total} assessed leaders at this level are in the ready-now band.
+                          </p>
+                        </div>
+                        <span className="text-[10px] text-slate-400 group-hover:text-slate-600 flex-shrink-0 mt-0.5">Filter →</span>
+                      </button>
+                    )
                   )}
 
                   {buildNow.length === 0 && highEngagementLowCap.length === 0 && !thinnestLevel && (

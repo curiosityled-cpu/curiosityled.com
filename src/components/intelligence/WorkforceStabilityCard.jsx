@@ -72,7 +72,7 @@ export default function WorkforceStabilityCard({ workforceMetrics }) {
                 Workforce Stability & Retention
               </CardTitle>
               <p className="text-sm text-gray-500 mt-1">
-                Talent loss signals and their correlation with leadership effectiveness
+                Compare workforce stability patterns alongside leadership signals to identify possible retention or vacancy risks.
               </p>
             </div>
             {hasData && latest.period && (
@@ -126,9 +126,7 @@ export default function WorkforceStabilityCard({ workforceMetrics }) {
 
           {hasData && (
             <div className="mt-4 p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700">
-              <strong>Leadership Correlation:</strong> High regrettable turnover often signals gaps in managerial effectiveness —
-              particularly in Decision Making and Stakeholder Management. Cross-reference with assessment scores above to identify
-              which teams or levels are most at risk.
+              <strong>Pattern note:</strong> Workforce stability patterns may align with leadership signals such as manager effectiveness and engagement — particularly in Decision Making and Stakeholder Management. Cross-reference with assessment scores above to identify which teams or levels may carry the most risk.
             </div>
           )}
         </CardContent>

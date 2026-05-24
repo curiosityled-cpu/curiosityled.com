@@ -13,6 +13,7 @@ import {
   Star
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Stage support status labels
 const SUPPORT_STATUS = {
@@ -164,11 +165,27 @@ export default function TalentCareLifecycleBar({ activeStage, onStageChange, act
                     <div className={`text-[10px] mt-0.5 leading-tight ${isActive ? "text-white/80" : "text-gray-400"}`}>
                       {stage.description}
                     </div>
-                    {!isActive && (
-                      <span className={`inline-block mt-1 text-[9px] px-1.5 py-0.5 rounded border font-medium ${SUPPORT_STATUS_STYLE[supportStatus]}`}>
-                        {supportStatus}
-                      </span>
-                    )}
+                    {!isActive && (() => {
+                      const tooltipText = {
+                        "Supported today": "This stage view is supported by current connected data and available insights.",
+                        "Directional": "This stage view includes partial or early signals and should be interpreted with caution.",
+                        "Coming soon": "This stage view is not yet supported by enough connected data or product capability.",
+                      }[supportStatus] || supportStatus;
+                      return (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className={`inline-block mt-1 text-[9px] px-1.5 py-0.5 rounded border font-medium cursor-default ${SUPPORT_STATUS_STYLE[supportStatus]}`}>
+                                {supportStatus}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" className="max-w-[200px] text-xs">
+                              {tooltipText}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      );
+                    })()}
                   </div>
                 </motion.button>
 
