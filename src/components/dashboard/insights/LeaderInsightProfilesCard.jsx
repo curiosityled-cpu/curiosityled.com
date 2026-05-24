@@ -23,7 +23,25 @@ import {
 } from "lucide-react";
 import { isAfter, isBefore, startOfDay, subDays } from "date-fns";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 8; // Triage shortlist — not a full roster
+
+// Stage-aware next move language
+function getStageNextMove(score, stage) {
+  if (stage === 'development') {
+    return score >= 80 ? 'Assign a stretch coaching engagement to accelerate capability.' : score >= 60 ? 'Prioritise targeted learning in lowest-scoring competency.' : 'Enroll in structured foundational development programme.';
+  }
+  if (stage === 'performance') {
+    return score >= 80 ? 'Align to a critical strategic initiative — high execution potential.' : score >= 60 ? 'Review goal quality and provide structured goal support.' : 'Coaching intervention: capability and goal-setting review needed.';
+  }
+  if (stage === 'transition') {
+    return score >= 85 ? 'Promotion-ready — surface for succession slate this cycle.' : score >= 70 ? 'Ready Soon — assign readiness accelerator or stretch project.' : 'Not yet succession-ready — prioritise capability development first.';
+  }
+  if (stage === 'retention') {
+    return score >= 80 ? 'High-value retention risk — ensure active development and recognition.' : score >= 60 ? 'Check engagement signals — at risk of disengagement without development investment.' : 'Intervention needed: low capability + retention risk is a compounding signal.';
+  }
+  // Default / no stage
+  return score >= 80 ? 'Consider stretch assignment or succession consideration at current level.' : score >= 60 ? 'Targeted coaching or structured learning to develop gap areas.' : 'Prioritise foundational capability development with manager support.';
+}
 
 // Shared profile card content (used in both inline accordion and modal)
 function ProfileContent({ insight, u }) {
@@ -115,7 +133,7 @@ function RawAssessmentContent({ a }) {
   );
 }
 
-function ProfilesAccordion({ profiles, allUsers, mode }) {
+function ProfilesAccordion({ profiles, allUsers, mode, activeLifecycleStage, onPromptAtreus }) {
   const isInsightMode = mode === 'insights';
 
   return (
@@ -128,6 +146,8 @@ function ProfilesAccordion({ profiles, allUsers, mode }) {
 
         if (isInsightMode) {
           const topRec = item.recommendations?.[0];
+          const score = item.overall_score || 0;
+          const stageNextMove = getStageNextMove(score, activeLifecycleStage);
           return (
             <AccordionItem key={item.id || idx} value={`profile-${idx}`} className="border rounded-lg px-1 bg-white">
               <AccordionTrigger className="px-3 py-3 hover:no-underline">
@@ -135,7 +155,7 @@ function ProfilesAccordion({ profiles, allUsers, mode }) {
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-gray-900 text-sm truncate">{name}</p>
                     {(role || dept) && <p className="text-xs text-gray-500 truncate">{role}{dept}</p>}
-                    {topRec && <p className="text-[10px] text-gray-400 truncate mt-0.5">Next move: {topRec}</p>}
+                    <p className="text-[10px] text-indigo-600 truncate mt-0.5">↳ {stageNextMove}</p>
                   </div>
                   <Badge className="bg-purple-100 text-purple-800 shrink-0 text-xs">
                     {item.archetype || 'Processing...'}
@@ -144,6 +164,20 @@ function ProfilesAccordion({ profiles, allUsers, mode }) {
               </AccordionTrigger>
               <AccordionContent className="px-3 pb-4">
                 <ProfileContent insight={item} u={u} />
+                <div className="mt-3 pt-2 border-t border-gray-100 space-y-2">
+                  <div className="bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2">
+                    <p className="text-[11px] font-semibold text-indigo-700 mb-0.5">Recommended next move</p>
+                    <p className="text-[11px] text-indigo-800">{stageNextMove}</p>
+                  </div>
+                  {onPromptAtreus && (
+                    <button
+                      onClick={() => onPromptAtreus(`Tell me more about ${name}'s leadership development profile. Their archetype is "${item.archetype || 'unknown'}". Key development areas: ${(item.development_areas || []).slice(0,2).join(', ')}. What should be the next coaching or development focus?`)}
+                      className="text-xs text-purple-600 hover:text-purple-800 flex items-center gap-1 font-medium"
+                    >
+                      <Zap className="w-3 h-3" /> Ask Atreus about {name?.split(' ')[0]} →
+                    </button>
+                  )}
+                </div>
               </AccordionContent>
             </AccordionItem>
           );
@@ -157,11 +191,22 @@ function ProfilesAccordion({ profiles, allUsers, mode }) {
           : band === 'Developing'
           ? 'bg-yellow-100 text-yellow-800'
           : 'bg-red-100 text-red-800';
-        const nextMove = score >= 80
-          ? 'Consider stretch assignment or succession consideration at current level.'
-          : score >= 60
-          ? 'Targeted coaching or structured learning to develop gap areas.'
-          : 'Prioritise foundational capability development with manager support.';
+        const nextMove = getStageNextMove(score, activeLifecycleStage);
+
+        // Top 2 competency gaps (lowest scores)
+        const competencies = [
+          { label: 'Situational Intel', val: item.si_pct },
+          { label: 'Decision Making', val: item.dm_pct },
+          { label: 'Communication', val: item.comm_pct },
+          { label: 'Resource Mgmt', val: item.rm_pct },
+          { label: 'Stakeholder Mgmt', val: item.sm_pct },
+          { label: 'Performance Mgmt', val: item.pm_pct },
+        ].filter(c => c.val != null).sort((a, b) => a.val - b.val);
+        const top2Gaps = competencies.slice(0, 2);
+
+        // Data count for confidence
+        const dataPoints = competencies.filter(c => c.val != null).length;
+        const confidenceLabel = dataPoints >= 5 ? 'Moderate confidence' : dataPoints >= 3 ? 'Low confidence' : 'Very limited data';
 
         return (
           <AccordionItem key={item.id || idx} value={`profile-${idx}`} className="border rounded-lg px-1 bg-white">
@@ -170,7 +215,7 @@ function ProfilesAccordion({ profiles, allUsers, mode }) {
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-gray-900 text-sm truncate">{name}</p>
                   {(role || dept) && <p className="text-xs text-gray-500 truncate">{role}{dept}</p>}
-                  <p className="text-[10px] text-gray-400 truncate mt-0.5">Next move: {nextMove}</p>
+                  <p className="text-[10px] text-indigo-600 truncate mt-0.5">↳ {nextMove}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <Badge className={`${bandColor} text-xs`}>{band} <span className="text-[9px] opacity-70 ml-0.5">dev band</span></Badge>
@@ -179,10 +224,38 @@ function ProfilesAccordion({ profiles, allUsers, mode }) {
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-3 pb-4">
-              <RawAssessmentContent a={item} />
-              <div className="mt-3 pt-2 border-t border-gray-100">
-                <p className="text-[11px] font-semibold text-blue-700 mb-0.5">Recommended next move</p>
-                <p className="text-[11px] text-gray-600">{nextMove}</p>
+              <div className="space-y-3">
+                {/* Top 2 gaps */}
+                {top2Gaps.length > 0 && (
+                  <div>
+                    <p className="text-[11px] font-semibold text-orange-700 mb-1">Top 2 Development Gaps</p>
+                    <div className="flex gap-2">
+                      {top2Gaps.map(c => (
+                        <div key={c.label} className="flex-1 bg-orange-50 border border-orange-100 rounded-lg p-2 text-center">
+                          <div className="text-xs font-bold text-orange-700">{c.val}%</div>
+                          <div className="text-[10px] text-gray-500">{c.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {/* Full scores */}
+                <RawAssessmentContent a={item} />
+                {/* Confidence */}
+                <p className="text-[10px] text-gray-400">Data confidence: {confidenceLabel} — based on {dataPoints} competency scores from {item.submission_ts ? new Date(item.submission_ts).toLocaleDateString() : 'unknown date'} assessment.</p>
+                {/* Next move */}
+                <div className="bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2">
+                  <p className="text-[11px] font-semibold text-indigo-700 mb-0.5">Recommended next move</p>
+                  <p className="text-[11px] text-indigo-800">{nextMove}</p>
+                </div>
+                {onPromptAtreus && (
+                  <button
+                    onClick={() => onPromptAtreus(`Tell me more about ${name}'s leadership development profile. Their overall assessment score is ${score}%. Their top development gaps are ${top2Gaps.map(c => `${c.label} (${c.val}%)`).join(' and ')}. What should be the priority coaching or development focus?`)}
+                    className="text-xs text-purple-600 hover:text-purple-800 flex items-center gap-1 font-medium"
+                  >
+                    <Zap className="w-3 h-3" /> Ask Atreus about {name?.split(' ')[0]} →
+                  </button>
+                )}
               </div>
             </AccordionContent>
           </AccordionItem>
@@ -192,7 +265,7 @@ function ProfilesAccordion({ profiles, allUsers, mode }) {
   );
 }
 
-export default function LeaderInsightProfilesCard({ rawData }) {
+export default function LeaderInsightProfilesCard({ rawData, activeLifecycleStage, onPromptAtreus }) {
   const [search, setSearch] = useState('');
   const [archetypeFilter, setArchetypeFilter] = useState('all');
   const [riskFilter, setRiskFilter] = useState('all');
@@ -272,6 +345,26 @@ export default function LeaderInsightProfilesCard({ rawData }) {
 
   const mode = hasInsights ? 'insights' : 'raw';
 
+  // Sort by highest development priority: lowest score first (most need)
+  // For transition stage, sort by readiness band (highest scorers first for succession)
+  const sortedProfiles = useMemo(() => {
+    const sorted = [...filteredProfiles];
+    if (activeLifecycleStage === 'transition') {
+      // Ready-now leaders first (highest score)
+      return sorted.sort((a, b) => {
+        const scoreA = hasInsights ? (a.overall_score || 0) : (a.overall_pct || 0);
+        const scoreB = hasInsights ? (b.overall_score || 0) : (b.overall_pct || 0);
+        return scoreB - scoreA;
+      });
+    }
+    // Default: lowest score first = highest development priority
+    return sorted.sort((a, b) => {
+      const scoreA = hasInsights ? (a.overall_score || 0) : (a.overall_pct || 0);
+      const scoreB = hasInsights ? (b.overall_score || 0) : (b.overall_pct || 0);
+      return scoreA - scoreB;
+    });
+  }, [filteredProfiles, activeLifecycleStage, hasInsights]);
+
   const FiltersRow = () => (
     <div className="flex flex-wrap gap-2 mt-3">
       <div className="relative flex-1 min-w-[160px]">
@@ -333,7 +426,7 @@ export default function LeaderInsightProfilesCard({ rawData }) {
       </Select>
     </div>
   );
-  const visibleProfiles = filteredProfiles.slice(0, PAGE_SIZE);
+  const visibleProfiles = sortedProfiles.slice(0, PAGE_SIZE);
   const totalCount = filteredProfiles.length;
 
   if (!hasInsights && !hasAssessments) {
@@ -368,7 +461,9 @@ export default function LeaderInsightProfilesCard({ rawData }) {
                 Leader Insight Profiles
               </CardTitle>
               <p className="text-sm text-gray-600 mt-1">
-                Development-oriented AI summaries from completed assessments — click any profile to view drivers, recommended next move, and confidence context
+                {activeLifecycleStage === 'transition'
+                  ? 'Succession triage shortlist — sorted by readiness (highest first). Click any profile for bench evidence and recommended next move.'
+                  : 'Development triage shortlist — sorted by highest development priority first. Click any profile for competency gaps, confidence, and recommended next move.'}
               </p>
               <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-2.5 py-1.5 mt-2">
                 These profiles are intended for development support. Labels such as Developing, Proficient, and Emerging reflect a developmental score band — not a performance rating. Leaders should be able to contextualise and discuss these summaries with their manager.
@@ -395,7 +490,7 @@ export default function LeaderInsightProfilesCard({ rawData }) {
             <div className="text-center py-8 text-gray-400 text-sm">No profiles match your filters.</div>
           ) : (
             <div className="overflow-y-auto max-h-[560px] pr-1">
-              <ProfilesAccordion profiles={visibleProfiles} allUsers={rawData.allUsers} mode={mode} />
+              <ProfilesAccordion profiles={visibleProfiles} allUsers={rawData.allUsers} mode={mode} activeLifecycleStage={activeLifecycleStage} onPromptAtreus={onPromptAtreus} />
               {totalCount > PAGE_SIZE && (
                 <p className="text-sm text-center text-gray-500 mt-3">
                   Showing {PAGE_SIZE} of {totalCount} profiles —{' '}
@@ -433,7 +528,7 @@ export default function LeaderInsightProfilesCard({ rawData }) {
             {filteredProfiles.length === 0 ? (
               <div className="text-center py-8 text-gray-400 text-sm">No profiles match your filters.</div>
             ) : (
-              <ProfilesAccordion profiles={filteredProfiles} allUsers={rawData.allUsers} mode={mode} />
+              <ProfilesAccordion profiles={sortedProfiles} allUsers={rawData.allUsers} mode={mode} activeLifecycleStage={activeLifecycleStage} onPromptAtreus={onPromptAtreus} />
             )}
           </div>
         </DialogContent>

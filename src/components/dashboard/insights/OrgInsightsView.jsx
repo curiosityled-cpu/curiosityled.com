@@ -43,7 +43,7 @@ import { useNavigate } from "react-router-dom";
 import LeaderInsightProfilesCard from "./LeaderInsightProfilesCard";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import TalentCareLifecycleBar from "@/components/intelligence/TalentCareLifecycleBar";
-import TalentCareStagePanel from "@/components/intelligence/TalentCareStagePanel";
+import LifecycleNarrativeHeader from "./LifecycleNarrativeHeader";
 import OrgHealthCard from "@/components/intelligence/OrgHealthCard";
 import TalentPipelineCard from "@/components/intelligence/TalentPipelineCard";
 import WorkforceStabilityCard from "@/components/intelligence/WorkforceStabilityCard";
@@ -80,7 +80,20 @@ export default function OrgInsightsView({ user, onMetricsUpdate }) {
   const navigate = useNavigate();
   const { openWithContext } = useAtreusChat();
   const [activeLifecycleStage, setActiveLifecycleStage] = useState(null);
+  const [activeMobilityChip, setActiveMobilityChip] = useState(null);
   const [matrixDepartment, setMatrixDepartment] = useState('all');
+
+  // Role-based display preset: 'executive' | 'practitioner'
+  const appRole = user?.data?.app_role || user?.app_role || '';
+  const isExecutiveRole = ['Super Administrator', 'Admin Level 2', 'Analyst'].some(r => appRole.includes(r));
+  const [displayPreset, setDisplayPreset] = useState(isExecutiveRole ? 'executive' : 'practitioner');
+  // Allow user override — track which sections the user has manually expanded
+  const [userExpandedSections, setUserExpandedSections] = useState({});
+  const toggleUserExpand = (section) => setUserExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  const isSectionVisible = (section, defaultForPreset) => {
+    if (userExpandedSections[section] !== undefined) return userExpandedSections[section];
+    return defaultForPreset;
+  };
 
   const promptAtreus = (prompt) => {
     openWithContext({ draftMessage: prompt });
@@ -621,21 +634,24 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         <TalentCareLifecycleBar
           activeStage={activeLifecycleStage}
           onStageChange={setActiveLifecycleStage}
+          activeMobilityChip={activeMobilityChip}
+          onMobilityChipChange={setActiveMobilityChip}
         />
       </motion.div>
 
-      {/* Stage Panel — shown when a stage is selected */}
+      {/* Lifecycle Narrative Header — shown when a stage is selected */}
       <AnimatePresence mode="wait">
         {activeLifecycleStage && (
           <motion.div
-            key={activeLifecycleStage}
+            key={activeLifecycleStage + (activeMobilityChip || '')}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
           >
-            <TalentCareStagePanel
+            <LifecycleNarrativeHeader
               stageId={activeLifecycleStage}
+              mobilityChip={activeMobilityChip}
               metrics={metrics}
               onPromptAtreus={promptAtreus}
             />
@@ -643,34 +659,76 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         )}
       </AnimatePresence>
 
-      {/* ── LAYER 3: Priority sections ───────────────────────────────────────── */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-6">
-        <div id="org-health">
-          <OrgHealthCard
-            metrics={metrics}
-            assessments={filteredData.assessments}
-            goals={filteredData.goals}
-            assignedLearning={filteredData.assignedLearning}
-            strategicRisks={strategicRisks}
-            strategicOpportunities={strategicOpportunities}
-            onPromptAtreus={promptAtreus}
-            executiveBriefing={executiveBriefing}
-            generatingBriefing={generatingBriefing}
-            generatingAll={generatingAll}
-            onRefreshBriefing={generateExecutiveBriefing}
-          />
-        </div>
-        <div id="talent-pipeline">
-          <TalentPipelineCard
-            metrics={metrics}
-            assessments={filteredData.assessments}
-            assignedLearning={filteredData.assignedLearning}
-            journeyEnrollments={filteredData.journeyEnrollments}
-            allUsers={rawData.allUsers}
-            workforceMetrics={rawData.workforceMetrics}
-          />
-        </div>
-      </motion.div>
+      {/* ── LAYER 3: Priority sections — order adapts to lifecycle stage ──────── */}
+      {(() => {
+        // Confidence thresholds
+        const assessmentCount = filteredData.assessments.length;
+        const orgHealthLowConf = assessmentCount < 3;
+        const talentPipelineLowConf = assessmentCount < 5;
+        const matrixHidden = assessmentCount < 5;
+        const profilesEmpty = assessmentCount < 2;
+
+        // Stage-based section order
+        // attraction/onboarding: Talent Pipeline first, then Org Health
+        // development: Org Health first, then Talent Pipeline
+        // performance: Org Health first, then Talent Pipeline
+        // transition: Talent Pipeline first, then Org Health
+        // retention: Workforce/Engagement first (below), then Org Health
+        const talentFirst = ['attraction', 'transition'].includes(activeLifecycleStage);
+
+        const OrgHealthSection = (
+          <div id="org-health" key="org-health">
+            {orgHealthLowConf ? (
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 text-center">
+                <Shield className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm font-medium text-gray-600">Organizational Leadership Health</p>
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 mt-3 inline-block">Insufficient data for reliable insight — fewer than 3 assessments completed.</p>
+              </div>
+            ) : (
+              <OrgHealthCard
+                metrics={metrics}
+                assessments={filteredData.assessments}
+                goals={filteredData.goals}
+                assignedLearning={filteredData.assignedLearning}
+                strategicRisks={strategicRisks}
+                strategicOpportunities={strategicOpportunities}
+                onPromptAtreus={promptAtreus}
+                executiveBriefing={executiveBriefing}
+                generatingBriefing={generatingBriefing}
+                generatingAll={generatingAll}
+                onRefreshBriefing={generateExecutiveBriefing}
+              />
+            )}
+          </div>
+        );
+
+        const TalentSection = (
+          <div id="talent-pipeline" key="talent-pipeline">
+            {talentPipelineLowConf ? (
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 text-center">
+                <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm font-medium text-gray-600">Talent Pipeline</p>
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 mt-3 inline-block">Insufficient data — fewer than 5 assessments completed. Pipeline accuracy improves with more data.</p>
+              </div>
+            ) : (
+              <TalentPipelineCard
+                metrics={metrics}
+                assessments={filteredData.assessments}
+                assignedLearning={filteredData.assignedLearning}
+                journeyEnrollments={filteredData.journeyEnrollments}
+                allUsers={rawData.allUsers}
+                workforceMetrics={rawData.workforceMetrics}
+              />
+            )}
+          </div>
+        );
+
+        return (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-6">
+            {talentFirst ? [TalentSection, OrgHealthSection] : [OrgHealthSection, TalentSection]}
+          </motion.div>
+        );
+      })()}
 
       {/* ── LAYER 4: Workforce & Engagement — connection modules when empty ──── */}
       <div id="workforce" className="space-y-6">
@@ -803,7 +861,15 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         const dataToUse = realData.length > 0 ? realData : allData;
         const usingEstimated = realData.length === 0 && allData.length > 0;
 
+        // Confidence threshold: hide matrix if fewer than 5 assessments
+        if (filteredData.assessments.length < 5) return null;
         if (allData.length === 0) return null;
+
+        // Stage visibility: show by default in Develop/Perform stages; hidden in executive preset unless user expanded
+        const stageShowsMatrix = !activeLifecycleStage || ['development', 'performance'].includes(activeLifecycleStage);
+        const presetShowsMatrix = displayPreset !== 'executive';
+        if (!stageShowsMatrix && !isSectionVisible('matrix', false)) return null;
+        if (!presetShowsMatrix && !isSectionVisible('matrix', false)) return null;
 
         // Quadrant thresholds (midpoints)
         const capThreshold = 70;
@@ -817,10 +883,10 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         };
 
         const quadrantConfig = [
-          { key: 'topRight',    label: 'Pace Setters',    sub: 'High Capability & High Execution: Empower and elevate.', color: 'bg-green-50 border-green-200', badge: 'bg-green-100 text-green-800', dot: 'bg-green-500' },
-          { key: 'topLeft',     label: 'Results Drivers',  sub: 'High Execution, Emerging Capability: Develop and assign strategic challenges.', color: 'bg-blue-50 border-blue-200',  badge: 'bg-blue-100 text-blue-800',  dot: 'bg-blue-500' },
-          { key: 'bottomRight', label: 'High Potentials', sub: 'High Capability, Developing Execution: Provide structured goal support and mentorship.', color: 'bg-amber-50 border-amber-200', badge: 'bg-amber-100 text-amber-800', dot: 'bg-amber-500' },
-          { key: 'bottomLeft',  label: 'Foundational Support',      sub: 'Developing Capability & Execution: Focus on core skills and goal attainment.', color: 'bg-red-50 border-red-200',    badge: 'bg-red-100 text-red-800',    dot: 'bg-red-500' },
+          { key: 'topRight',    label: 'Leverage & Stretch',      sub: 'High Capability & High Execution — empower, elevate, and assign strategic stretch.', color: 'bg-green-50 border-green-200', badge: 'bg-green-100 text-green-800', dot: 'bg-green-500' },
+          { key: 'topLeft',     label: 'Unblock & Activate',      sub: 'High Execution, Building Capability — remove blockers, invest in targeted development.', color: 'bg-blue-50 border-blue-200',  badge: 'bg-blue-100 text-blue-800',  dot: 'bg-blue-500' },
+          { key: 'bottomRight', label: 'Build & Sustain',         sub: 'High Capability, Developing Execution — structured goal support and mentorship.', color: 'bg-amber-50 border-amber-200', badge: 'bg-amber-100 text-amber-800', dot: 'bg-amber-500' },
+          { key: 'bottomLeft',  label: 'Prioritise Development',  sub: 'Building Capability & Execution — focus on foundational skills and goal attainment.', color: 'bg-red-50 border-red-200',    badge: 'bg-red-100 text-red-800',    dot: 'bg-red-500' },
         ];
 
         return (
@@ -836,10 +902,18 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
                        </Badge>
                      </div>
                      <p className="text-xs text-gray-500 mt-0.5">
-                       Leadership capability vs. execution — use to prioritise coaching interventions
+                       Practitioner intervention tool — Leadership capability vs. execution to prioritise coaching
                      </p>
-                   </div>
-                   <div className="flex items-center gap-2 shrink-0">
+                     </div>
+                     <div className="flex items-center gap-2 shrink-0">
+                     {/* Disabled "Observed only" toggle — coming soon */}
+                     <div className="flex items-center gap-1.5 opacity-50 cursor-not-allowed" title="Coming soon: filter matrix to show only leaders with observed goal data">
+                       <div className="w-7 h-4 bg-gray-200 rounded-full relative">
+                         <div className="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full shadow" />
+                       </div>
+                       <span className="text-xs text-gray-400">Observed only</span>
+                       <span className="text-[9px] bg-slate-100 text-slate-500 border border-slate-200 px-1 py-0.5 rounded">coming soon</span>
+                     </div>
                      <span className="text-xs text-gray-500 whitespace-nowrap">Filter by dept/team:</span>
                     <Select value={matrixDepartment} onValueChange={setMatrixDepartment}>
                       <SelectTrigger className="w-44 text-sm">
@@ -927,7 +1001,15 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
 
       {/* ── Leader Insight Profiles ─────────────────────────────────────────── */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-        <LeaderInsightProfilesCard rawData={rawData} />
+        {filteredData.assessments.length < 2 ? (
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 text-center">
+            <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+            <p className="text-sm font-medium text-gray-600">Leader Insight Profiles</p>
+            <p className="text-xs text-gray-500 mt-2">No profiles available yet — run at least 2 assessments to populate this triage shortlist.</p>
+          </div>
+        ) : (
+          <LeaderInsightProfilesCard rawData={rawData} activeLifecycleStage={activeLifecycleStage} onPromptAtreus={promptAtreus} />
+        )}
       </motion.div>
 
       {/* Quick Access Dashboard Links — hidden, can re-enable */}

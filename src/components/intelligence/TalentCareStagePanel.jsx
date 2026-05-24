@@ -113,6 +113,30 @@ const STAGE_CONTENT = {
     leaderMetrics: ["Goal Completion Rate %", "Overdue Goals", "Goal-to-Assessment Correlation", "OKR Progress %"],
     executiveMetrics: ["Org Goal Achievement Rate", "Critical Role Performance Index", "Strategy Execution Score"]
   },
+  transition: {
+    executiveSummary: "Mobility & Succession is where leadership investment pays off. This stage surfaces who is ready to move, where internal mobility strengthens the bench, and whether succession slates reflect actual assessed readiness — not just tenure or visibility.",
+    riskSignals: [
+      "Succession slates populated by tenure rather than assessed readiness",
+      "Ready-Now bench coverage below 20% for critical roles",
+      "High-potential leaders with no active development plan or mobility conversation",
+      "Promotion decisions made without capability evidence",
+      "Internal mobility rate declining while external hiring for leadership roles increases"
+    ],
+    protectiveFactors: [
+      "Bench coverage ≥40% across critical roles (Ready Now + Ready Soon weighted)",
+      "Succession slates validated against leadership assessment data",
+      "High-potential leaders in active stretch assignments or coaching engagements",
+      "Internal mobility rate above 30% of leadership appointments",
+      "Regular talent review cadence (quarterly or semi-annual) with documented outcomes"
+    ],
+    listeningEvents: [
+      { name: "Succession Planning Review", cadence: "Semi-annual or Annual", owner: "CHRO / Business Leaders" },
+      { name: "Talent Calibration Session", cadence: "Quarterly", owner: "HR / Senior Leadership" },
+      { name: "High-Potential Check-In", cadence: "Quarterly", owner: "HR / Manager" }
+    ],
+    leaderMetrics: ["Bench Coverage %", "Ready-Now Count", "Ready-Soon Count", "Internal Mobility Rate", "HiPo Retention Rate"],
+    executiveMetrics: ["Critical Role Succession Coverage", "Promotion Pipeline Depth", "Internal Appointment Rate", "Succession Slate Validity Score"]
+  },
   retention: {
     executiveSummary: "Retention is the outcome of everything that came before. Flight risk is highest where engagement is low, development investment feels invisible, or manager relationships are poor. The Talent Risk formula (Vulnerability × Risk Signals – Protective Factors) is most critical here.",
     riskSignals: [
