@@ -659,22 +659,22 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         )}
       </AnimatePresence>
 
-      {/* ── LAYER 3: Priority sections — order adapts to lifecycle stage ──────── */}
+      {/* ── LAYERS 3–5: Stage-aware section ordering ─────────────────────────── */}
       {(() => {
-        // Confidence thresholds
         const assessmentCount = filteredData.assessments.length;
         const orgHealthLowConf = assessmentCount < 3;
         const talentPipelineLowConf = assessmentCount < 5;
-        const matrixHidden = assessmentCount < 5;
-        const profilesEmpty = assessmentCount < 2;
 
-        // Stage-based section order
-        // attraction/onboarding: Talent Pipeline first, then Org Health
-        // development: Org Health first, then Talent Pipeline
-        // performance: Org Health first, then Talent Pipeline
-        // transition: Talent Pipeline first, then Org Health
-        // retention: Workforce/Engagement first (below), then Org Health
+        // Stage layout config: defines which sections are "primary" and their order.
+        // 'retention' floats Workforce/Engagement to the top.
+        // 'transition' floats Talent Pipeline first.
+        // 'performance' / 'development' keep Org Health first.
+        // null / 'separation' = default order.
+        const retentionFirst = activeLifecycleStage === 'retention';
         const talentFirst = ['attraction', 'transition'].includes(activeLifecycleStage);
+
+        // Whether to show Trend chart (deprioritised for succession/retention focus stages)
+        const showTrend = !['transition', 'retention', 'separation', 'attraction'].includes(activeLifecycleStage);
 
         const OrgHealthSection = (
           <div id="org-health" key="org-health">
@@ -718,71 +718,96 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
                 journeyEnrollments={filteredData.journeyEnrollments}
                 allUsers={rawData.allUsers}
                 workforceMetrics={rawData.workforceMetrics}
+                activeLifecycleStage={activeLifecycleStage}
+                activeMobilityChip={activeMobilityChip}
               />
             )}
           </div>
         );
 
+        const WorkforceEngagementSection = (
+          <div id="workforce" key="workforce" className="space-y-6">
+            {hasWorkforceData ? (
+              <WorkforceStabilityCard workforceMetrics={rawData.workforceMetrics} />
+            ) : (
+              <ConnectionModule
+                icon={Users}
+                iconColor="text-rose-500"
+                title="Workforce Stability & Retention"
+                description="Talent loss signals and their correlation with leadership effectiveness"
+                valueProposition="Connecting your HRIS data unlocks turnover, first-year attrition, and critical role vacancy rates — enabling direct correlation with leadership capability scores to identify which teams are most at risk."
+                dataSources={["HRIS / HR System", "ATS / Talent Data", "CSV Upload", "API Integration"]}
+                sampleMetrics={[
+                  { label: "Overall Turnover Rate", hint: "Target: <15%" },
+                  { label: "Regrettable Turnover", hint: "Target: <5%" },
+                  { label: "First-Year Turnover", hint: "Target: <10%" },
+                  { label: "Critical Role Vacancies", hint: "Target: <5%" },
+                ]}
+                onUploadCSV={() => toast.info("Contact your administrator to upload workforce metrics CSV")}
+              />
+            )}
+            <div id="engagement">
+              {hasEngagementData ? (
+                <EngagementCultureCard
+                  workforceMetrics={rawData.workforceMetrics}
+                  leadershipScore={metrics.avgLeadershipScore}
+                />
+              ) : (
+                <ConnectionModule
+                  icon={Heart}
+                  iconColor="text-pink-500"
+                  title="Engagement & Culture"
+                  description="Employee sentiment as a leading indicator of leadership health"
+                  valueProposition={
+                    metrics.avgLeadershipScore > 0
+                      ? `Engagement outcomes cannot yet be evaluated because employee sentiment data is not connected. Current leadership scores average ${metrics.avgLeadershipScore}% — connecting engagement data would reveal whether this is translating to workforce sentiment.`
+                      : "Engagement outcomes cannot yet be evaluated because employee sentiment data is not connected. Upload eNPS or engagement survey results to enable this signal."
+                  }
+                  dataSources={["eNPS Survey Data", "Engagement Survey Platform", "Culture Amp / Glint", "CSV Upload"]}
+                  sampleMetrics={[
+                    { label: "eNPS Score", hint: "Range: -100 to +100" },
+                    { label: "Engagement Index", hint: "Target: ≥70/100" },
+                    { label: "Absenteeism Rate", hint: "Target: <3%" },
+                    { label: "Leadership Correlation", hint: "Derived metric" },
+                  ]}
+                  onUploadCSV={() => toast.info("Contact your administrator to upload engagement survey data")}
+                />
+              )}
+            </div>
+          </div>
+        );
+
+        // Build the ordered section list based on active stage
+        let sectionOrder;
+        if (retentionFirst) {
+          // Retain: Workforce/Engagement → Org Health → Talent Pipeline
+          sectionOrder = [WorkforceEngagementSection, OrgHealthSection, TalentSection];
+        } else if (talentFirst) {
+          // Attract & Hire / Mobility & Succession: Talent Pipeline → Org Health → Workforce/Engagement
+          sectionOrder = [TalentSection, OrgHealthSection, WorkforceEngagementSection];
+        } else {
+          // Develop / Perform / Onboarding / default: Org Health → Talent Pipeline → Workforce/Engagement
+          sectionOrder = [OrgHealthSection, TalentSection, WorkforceEngagementSection];
+        }
+
         return (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-6">
-            {talentFirst ? [TalentSection, OrgHealthSection] : [OrgHealthSection, TalentSection]}
-          </motion.div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeLifecycleStage || 'default'}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
+            >
+              {sectionOrder}
+            </motion.div>
+          </AnimatePresence>
         );
       })()}
 
-      {/* ── LAYER 4: Workforce & Engagement — connection modules when empty ──── */}
-      <div id="workforce" className="space-y-6">
-        {hasWorkforceData ? (
-          <WorkforceStabilityCard workforceMetrics={rawData.workforceMetrics} />
-        ) : (
-          <ConnectionModule
-            icon={Users}
-            iconColor="text-rose-500"
-            title="Workforce Stability & Retention"
-            description="Talent loss signals and their correlation with leadership effectiveness"
-            valueProposition="Connecting your HRIS data unlocks turnover, first-year attrition, and critical role vacancy rates — enabling direct correlation with leadership capability scores to identify which teams are most at risk."
-            dataSources={["HRIS / HR System", "ATS / Talent Data", "CSV Upload", "API Integration"]}
-            sampleMetrics={[
-              { label: "Overall Turnover Rate", hint: "Target: <15%" },
-              { label: "Regrettable Turnover", hint: "Target: <5%" },
-              { label: "First-Year Turnover", hint: "Target: <10%" },
-              { label: "Critical Role Vacancies", hint: "Target: <5%" },
-            ]}
-            onUploadCSV={() => toast.info("Contact your administrator to upload workforce metrics CSV")}
-          />
-        )}
-
-        <div id="engagement">
-          {hasEngagementData ? (
-            <EngagementCultureCard
-              workforceMetrics={rawData.workforceMetrics}
-              leadershipScore={metrics.avgLeadershipScore}
-            />
-          ) : (
-            <ConnectionModule
-              icon={Heart}
-              iconColor="text-pink-500"
-              title="Engagement & Culture"
-              description="Employee sentiment as a leading indicator of leadership health"
-              valueProposition={
-                metrics.avgLeadershipScore > 0
-                  ? `Engagement outcomes cannot yet be evaluated because employee sentiment data is not connected. Current leadership scores average ${metrics.avgLeadershipScore}% — connecting engagement data would reveal whether this is translating to workforce sentiment.`
-                  : "Engagement outcomes cannot yet be evaluated because employee sentiment data is not connected. Upload eNPS or engagement survey results to enable this signal."
-              }
-              dataSources={["eNPS Survey Data", "Engagement Survey Platform", "Culture Amp / Glint", "CSV Upload"]}
-              sampleMetrics={[
-                { label: "eNPS Score", hint: "Range: -100 to +100" },
-                { label: "Engagement Index", hint: "Target: ≥70/100" },
-                { label: "Absenteeism Rate", hint: "Target: <3%" },
-                { label: "Leadership Correlation", hint: "Derived metric" },
-              ]}
-              onUploadCSV={() => toast.info("Contact your administrator to upload engagement survey data")}
-            />
-          )}
-        </div>
-      </div>
-
-      {/* ── Trend Analysis — sparse data aware ─────────────────────────────── */}
+      {/* ── Trend Analysis — hidden for stages where it's low-signal ────────── */}
+      {!['transition', 'retention', 'separation', 'attraction'].includes(activeLifecycleStage) && (
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
         <Card className="border-0 shadow-lg">
           <CardHeader className="pb-3">
@@ -829,6 +854,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
           </CardContent>
         </Card>
       </motion.div>
+      )}
 
       {/* Capability vs. Execution Matrix */}
       {(() => {
@@ -865,7 +891,9 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         if (filteredData.assessments.length < 5) return null;
         if (allData.length === 0) return null;
 
-        // Stage visibility: show by default in Develop/Perform stages; hidden in executive preset unless user expanded
+        // Stage visibility: always show for performance/development; hide for stages where it adds no signal
+        const stageHidesMatrix = ['attraction', 'retention', 'separation'].includes(activeLifecycleStage);
+        if (stageHidesMatrix) return null;
         const stageShowsMatrix = !activeLifecycleStage || ['development', 'performance'].includes(activeLifecycleStage);
         const presetShowsMatrix = displayPreset !== 'executive';
         if (!stageShowsMatrix && !isSectionVisible('matrix', false)) return null;
@@ -1008,7 +1036,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
             <p className="text-xs text-gray-500 mt-2">No profiles available yet — run at least 2 assessments to populate this triage shortlist.</p>
           </div>
         ) : (
-          <LeaderInsightProfilesCard rawData={rawData} activeLifecycleStage={activeLifecycleStage} onPromptAtreus={promptAtreus} />
+          <LeaderInsightProfilesCard rawData={rawData} activeLifecycleStage={activeLifecycleStage} activeMobilityChip={activeMobilityChip} onPromptAtreus={promptAtreus} />
         )}
       </motion.div>
 

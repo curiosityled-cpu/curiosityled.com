@@ -265,7 +265,7 @@ function ProfilesAccordion({ profiles, allUsers, mode, activeLifecycleStage, onP
   );
 }
 
-export default function LeaderInsightProfilesCard({ rawData, activeLifecycleStage, onPromptAtreus }) {
+export default function LeaderInsightProfilesCard({ rawData, activeLifecycleStage, activeMobilityChip, onPromptAtreus }) {
   const [search, setSearch] = useState('');
   const [archetypeFilter, setArchetypeFilter] = useState('all');
   const [riskFilter, setRiskFilter] = useState('all');
@@ -348,7 +348,20 @@ export default function LeaderInsightProfilesCard({ rawData, activeLifecycleStag
   // Sort by highest development priority: lowest score first (most need)
   // For transition stage, sort by readiness band (highest scorers first for succession)
   const sortedProfiles = useMemo(() => {
-    const sorted = [...filteredProfiles];
+    // Apply mobility chip pre-filter
+    let pool = [...filteredProfiles];
+    if (activeMobilityChip === 'high_potential') {
+      pool = pool.filter(item => {
+        const score = hasInsights ? (item.overall_score || 0) : (item.overall_pct || 0);
+        return score >= 85;
+      });
+    } else if (activeMobilityChip === 'promotion_ready') {
+      pool = pool.filter(item => {
+        const score = hasInsights ? (item.overall_score || 0) : (item.overall_pct || 0);
+        return score >= 75;
+      });
+    }
+    const sorted = pool;
     if (activeLifecycleStage === 'transition') {
       // Ready-now leaders first (highest score)
       return sorted.sort((a, b) => {
@@ -363,7 +376,7 @@ export default function LeaderInsightProfilesCard({ rawData, activeLifecycleStag
       const scoreB = hasInsights ? (b.overall_score || 0) : (b.overall_pct || 0);
       return scoreA - scoreB;
     });
-  }, [filteredProfiles, activeLifecycleStage, hasInsights]);
+  }, [filteredProfiles, activeLifecycleStage, activeMobilityChip, hasInsights]);
 
   const FiltersRow = () => (
     <div className="flex flex-wrap gap-2 mt-3">
