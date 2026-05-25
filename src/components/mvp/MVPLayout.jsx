@@ -58,19 +58,19 @@ const NAV_CONFIG = {
   { label: 'My Development', path: '/my-development', icon: BookOpen }],
 
   buyer: [
-  { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: BarChart3 },
+  { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
   { label: 'Development Manager', path: '/DevelopmentManager', icon: Users },
   { label: 'Goal Manager', path: '/GoalManager', icon: Target },
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 },
   { label: 'User Management', path: '/UserManagement', icon: UserCog }],
 
   analyst: [
-  { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: BarChart3 },
+  { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
   { label: 'Goal Manager', path: '/GoalManager', icon: Target },
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }],
 
   executive: [
-  { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: BarChart3 },
+  { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }]
 
 };
