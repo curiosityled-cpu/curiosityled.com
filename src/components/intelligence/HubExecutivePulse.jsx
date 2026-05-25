@@ -277,7 +277,10 @@ export default function HubExecutivePulse({ metrics, assessments = [], workforce
                     <p>{alert.detail}</p>
                     {onScrollTo && (
                       <button
-                        onClick={() => { onScrollTo(alert.scrollTo); setExpandedAlert(null); }}
+                        onClick={() => { 
+                          setExpandedAlert(null);
+                          setTimeout(() => onScrollTo(alert.scrollTo), 200);
+                        }}
                         className="text-[11px] text-indigo-600 hover:text-indigo-800 font-medium whitespace-nowrap flex-shrink-0 flex items-center gap-1"
                       >
                         {alert.action}
