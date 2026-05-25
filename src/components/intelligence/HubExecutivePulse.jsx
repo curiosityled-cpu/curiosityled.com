@@ -182,11 +182,7 @@ export default function HubExecutivePulse({ metrics, assessments = [], workforce
   ].filter(Boolean);
 
   const handleAlertClick = (alert) => {
-    const isExpanding = expandedAlert !== alert.id;
-    setExpandedAlert(isExpanding ? alert.id : null);
-    if (isExpanding && onScrollTo) {
-      setTimeout(() => onScrollTo(alert.scrollTo), 200);
-    }
+    setExpandedAlert(prev => prev === alert.id ? null : alert.id);
   };
 
   return (
