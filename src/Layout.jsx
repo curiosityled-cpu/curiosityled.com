@@ -468,7 +468,7 @@ function LayoutContent({ children }) {
 
   // Secondary navigation items (shown in More menu on mobile, all tabs on desktop)
   const secondaryNavItems = [
-      { id: 'insights', label: 'Insights', icon: Sparkles },
+      { id: 'insights', label: 'Insights', icon: Brain },
       { id: 'reports', label: 'Reports', icon: FileText },
   ];
 
