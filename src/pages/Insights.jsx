@@ -4,9 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Sparkles,
+  Brain,
   Users,
-  Building2,
   RefreshCw,
   FileText,
   FileDown,
@@ -207,12 +206,12 @@ function Insights() {
   // View toggle tabs - only include tabs user has access to
   // When navigated via MVP nav (?tab=org), only show the Leadership Intelligence Hub tab
   const viewTabs = forcedOrgView
-    ? (canViewOrgInsights ? [{ id: VIEW_SCOPES.ORG, label: 'Leadership Intelligence Hub', icon: Building2 }] : [])
+    ? (canViewOrgInsights ? [{ id: VIEW_SCOPES.ORG, label: 'Leadership Intelligence Hub', icon: Brain }] : [])
     : [
-        ...(canViewPersonal ? [{ id: VIEW_SCOPES.MY, label: 'Insights', icon: Sparkles }] : []),
+        ...(canViewPersonal ? [{ id: VIEW_SCOPES.MY, label: 'Insights', icon: Brain }] : []),
         ...(canViewTeamInsights ? [{ id: VIEW_SCOPES.TEAM, label: 'Team Insights', icon: Users }] : []),
         ...(canViewAdminInsights ? [{ id: VIEW_SCOPES.ADMIN, label: 'Administration Insights', icon: GraduationCap }] : []),
-        ...(canViewOrgInsights ? [{ id: VIEW_SCOPES.ORG, label: 'Leadership Intelligence Hub', icon: Building2 }] : [])
+        ...(canViewOrgInsights ? [{ id: VIEW_SCOPES.ORG, label: 'Leadership Intelligence Hub', icon: Brain }] : [])
       ];
 
   // If forcedOrgView (?tab=org), always show ORG regardless of permission load timing.
