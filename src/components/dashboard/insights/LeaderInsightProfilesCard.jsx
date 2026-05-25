@@ -350,8 +350,14 @@ export default function LeaderInsightProfilesCard({ rawData, activeLifecycleStag
 
   const mode = hasInsights ? 'insights' : 'raw';
 
-  // Mobility thresholds from centralized settings (client-configurable in future)
-  const { highPotentialThreshold, promotionReadyThreshold } = getMobilityThresholds();
+  // Mobility thresholds — read once from the centralized settings utility.
+  // Pass a clientSettings object here when per-client config is wired from a database entity.
+  // e.g. getMobilityThresholds(clientIntelligenceSettings)
+  // Until that wiring exists, this returns platform defaults (85 / 75) as fallback.
+  const { highPotentialThreshold, promotionReadyThreshold } = useMemo(
+    () => getMobilityThresholds(/* clientSettings: null — not yet wired */),
+    [] // stable: defaults never change at runtime; update deps when client config is wired
+  );
 
   // Sort by highest development priority: lowest score first (most need)
   // For transition stage, sort by readiness band (highest scorers first for succession)
