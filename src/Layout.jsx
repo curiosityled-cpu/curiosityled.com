@@ -2,7 +2,7 @@ import React, { useState, useEffect, createContext, useContext, useCallback } fr
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
-import { Home, BarChart3, BookOpen, Target, Brain, Menu, X, Map, Sparkles, Bell, User, Settings as SettingsIcon, LogOut, CreditCard, Building2, Shield, Users as UsersIcon, CheckCircle, LayoutGrid, FileText, GraduationCap, Eye, ClipboardList, Trophy, FlaskConical, Minimize2, Mail, Paintbrush, ArrowLeft, ChevronLeft } from "lucide-react";
+import { Home, BarChart3, BookOpen, Target, Brain, Menu, X, Map, Bell, User, Settings as SettingsIcon, LogOut, CreditCard, Building2, Shield, Users as UsersIcon, CheckCircle, LayoutGrid, FileText, GraduationCap, Eye, ClipboardList, Trophy, FlaskConical, Minimize2, Mail, Paintbrush, ArrowLeft, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AuthProvider, useAuth } from "@/components/useAuth";
@@ -468,7 +468,7 @@ function LayoutContent({ children }) {
 
   // Secondary navigation items (shown in More menu on mobile, all tabs on desktop)
   const secondaryNavItems = [
-      { id: 'insights', label: 'Insights', icon: Sparkles },
+      { id: 'insights', label: 'Insights', icon: Brain },
       { id: 'reports', label: 'Reports', icon: FileText },
   ];
 
