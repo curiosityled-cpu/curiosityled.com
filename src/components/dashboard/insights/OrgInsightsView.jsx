@@ -654,6 +654,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
               mobilityChip={activeMobilityChip}
               metrics={metrics}
               onPromptAtreus={promptAtreus}
+              onScrollTo={scrollToSection}
             />
           </motion.div>
         )}
@@ -1029,7 +1030,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
       })()}
 
       {/* ── Leader Insight Profiles ─────────────────────────────────────────── */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+      <motion.div id="leader-profiles" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
         {filteredData.assessments.length < 2 ? (
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 text-center">
             <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />

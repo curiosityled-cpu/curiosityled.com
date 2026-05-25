@@ -20,8 +20,11 @@ const STAGE_CONFIG = {
     topAction: "Review Talent Pipeline to identify where leadership-ready candidates are thinnest.",
     guidance: {
       lookFor: "Quality of leadership pipeline, early signs of leadership potential",
+      lookForAction: { type: "scroll", target: "talent-pipeline", label: "View Pipeline" },
       listenTo: "Candidate feedback, interview insights",
+      listenToAction: { type: "atreus", prompt: "What are the key early leadership signals I should be listening to during the Attract & Hire stage? Summarise what candidate feedback and interview insights typically reveal about leadership potential.", label: "Ask Atreus" },
       actOn: "Refine recruitment strategy and early development planning",
+      actOnAction: { type: "atreus", prompt: "Based on the Attract & Hire stage, what specific actions should I take to refine our recruitment strategy and begin early development planning for incoming leaders?", label: "Get Actions" },
     },
   },
   onboarding: {
@@ -37,8 +40,11 @@ const STAGE_CONFIG = {
     topAction: "Identify new leaders without completed baseline assessments and confirm structured onboarding support is in place.",
     guidance: {
       lookFor: "90-day assessment results, early goal alignment",
+      lookForAction: { type: "scroll", target: "leader-profiles", label: "View Profiles" },
       listenTo: "New leader feedback, manager check-ins",
+      listenToAction: { type: "atreus", prompt: "What should I be listening for during the Onboarding stage? How do I interpret new leader feedback and manager check-in patterns to identify integration risks early?", label: "Ask Atreus" },
       actOn: "Support integration and adjust onboarding support where needed",
+      actOnAction: { type: "atreus", prompt: "Based on the Onboarding stage, what are the most important actions to take to support new leader integration and adjust onboarding where gaps exist?", label: "Get Actions" },
     },
   },
   development: {
@@ -54,8 +60,11 @@ const STAGE_CONFIG = {
     topAction: "Identify leaders with lowest DM and SI scores and assign targeted coaching or structured learning.",
     guidance: {
       lookFor: "Competency growth, learning journey progress",
+      lookForAction: { type: "scroll", target: "org-health", label: "View Org Health" },
       listenTo: "Coaching feedback, peer input",
+      listenToAction: { type: "atreus", prompt: "In the Development stage, what coaching feedback and peer input patterns indicate whether development interventions are working? What signals should I watch for?", label: "Ask Atreus" },
       actOn: "Assign stretch work and targeted coaching",
+      actOnAction: { type: "atreus", prompt: "Based on the Development stage, what specific development actions should I prioritise? Focus on assigning stretch work and targeted coaching for leaders with DM and SI gaps.", label: "Get Actions" },
     },
   },
   performance: {
@@ -71,8 +80,11 @@ const STAGE_CONFIG = {
     topAction: "Use the Capability vs. Execution Matrix to prioritise coaching conversations this cycle.",
     guidance: {
       lookFor: "Goal achievement, manager effectiveness patterns",
+      lookForAction: { type: "scroll", target: "org-health", label: "View Org Health" },
       listenTo: "Review data, team feedback",
+      listenToAction: { type: "atreus", prompt: "In the Perform stage, what should I listen for in review data and team feedback? How do I identify whether underperformance is a capability gap or an execution/blockers issue?", label: "Ask Atreus" },
       actOn: "Address performance gaps and reinforce strong execution",
+      actOnAction: { type: "atreus", prompt: "Based on the Perform stage, what actions should I take to address performance gaps and reinforce strong execution? Use the capability vs. execution lens to guide priorities.", label: "Get Actions" },
     },
   },
   transition: {
@@ -88,8 +100,11 @@ const STAGE_CONFIG = {
     topAction: "Validate succession slates against Talent Pipeline readiness bands — prioritise ready-now and ready-soon leaders.",
     guidance: {
       lookFor: "Readiness depth, succession pipeline gaps",
+      lookForAction: { type: "scroll", target: "talent-pipeline", label: "View Pipeline" },
       listenTo: "Readiness assessments, career aspirations",
+      listenToAction: { type: "atreus", prompt: "In the Mobility & Succession stage, how should I interpret readiness assessment data and career aspiration signals? What patterns indicate a leader is truly succession-ready?", label: "Ask Atreus" },
       actOn: "Validate successors and plan next moves",
+      actOnAction: { type: "atreus", prompt: "Based on the Mobility & Succession stage, what specific actions should I take to validate succession slates and plan next moves for ready-now and ready-soon leaders?", label: "Get Actions" },
     },
   },
   retention: {
@@ -105,8 +120,11 @@ const STAGE_CONFIG = {
     topAction: "Cross-reference Workforce Stability metrics with Leader Profiles to identify at-risk leaders who may lack development investment.",
     guidance: {
       lookFor: "Flight-risk signals, engagement patterns",
+      lookForAction: { type: "scroll", target: "leader-profiles", label: "View Profiles" },
       listenTo: "Stay interviews, team sentiment",
+      listenToAction: { type: "atreus", prompt: "In the Retain stage, what should I listen for in stay interviews and team sentiment data? What signals distinguish a recoverable retention risk from an imminent departure?", label: "Ask Atreus" },
       actOn: "Address retention drivers and reinforce support",
+      actOnAction: { type: "atreus", prompt: "Based on the Retain stage, what actions should I take to address retention drivers and reinforce support for at-risk leaders? Focus on high-impact, near-term interventions.", label: "Get Actions" },
     },
   },
   separation: {
@@ -122,8 +140,11 @@ const STAGE_CONFIG = {
     topAction: "Use the Retain stage view to identify at-risk leaders before separation occurs.",
     guidance: {
       lookFor: "Continuity risk, leadership exit patterns",
+      lookForAction: null,
       listenTo: "Transition feedback, handoff context",
+      listenToAction: null,
       actOn: "Secure succession coverage and knowledge transfer",
+      actOnAction: null,
     },
   },
 };
@@ -146,13 +167,22 @@ const VIEW_MODE_LABEL = {
   filtered:      { label: "Filtered to stage cohort",   style: "bg-white/15 text-white/90 border-white/20" },
 };
 
-export default function LifecycleNarrativeHeader({ stageId, mobilityChip, metrics, onPromptAtreus }) {
+export default function LifecycleNarrativeHeader({ stageId, mobilityChip, metrics, onPromptAtreus, onScrollTo }) {
   const config = STAGE_CONFIG[stageId];
   if (!config) return null;
 
   const Icon = config.icon;
   const chipContext = mobilityChip ? MOBILITY_CHIP_CONTEXT[mobilityChip] : null;
   const viewMode = VIEW_MODE_LABEL[config.viewMode] || VIEW_MODE_LABEL.reprioritized;
+
+  const handleGuidanceAction = (action) => {
+    if (!action) return;
+    if (action.type === "scroll" && onScrollTo) {
+      onScrollTo(action.target);
+    } else if (action.type === "atreus" && onPromptAtreus) {
+      onPromptAtreus(action.prompt);
+    }
+  };
 
   return (
     <motion.div
@@ -194,27 +224,27 @@ export default function LifecycleNarrativeHeader({ stageId, mobilityChip, metric
 
         {/* Compact guidance cluster: Look for / Listen to / Act on */}
         <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
-          <div className="flex items-start gap-2 bg-white/10 rounded-lg px-3 py-2.5">
-            <Search className="w-3.5 h-3.5 text-white/70 mt-0.5 shrink-0" />
-            <div>
-              <p className="text-[10px] font-semibold text-white/60 uppercase tracking-wider mb-0.5">Look for</p>
-              <p className="text-xs text-white/90 leading-snug">{config.guidance.lookFor}</p>
+          {[
+            { icon: Search, label: "Look for", text: config.guidance.lookFor, action: config.guidance.lookForAction },
+            { icon: Ear,    label: "Listen to", text: config.guidance.listenTo, action: config.guidance.listenToAction },
+            { icon: Zap,    label: "Act on",    text: config.guidance.actOn,    action: config.guidance.actOnAction },
+          ].map(({ icon: ItemIcon, label, text, action }) => (
+            <div key={label} className="flex items-start gap-2 bg-white/10 rounded-lg px-3 py-2.5">
+              <ItemIcon className="w-3.5 h-3.5 text-white/70 mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-semibold text-white/60 uppercase tracking-wider mb-0.5">{label}</p>
+                <p className="text-xs text-white/90 leading-snug">{text}</p>
+                {action && (
+                  <button
+                    onClick={() => handleGuidanceAction(action)}
+                    className="mt-1.5 text-[10px] font-semibold text-white/70 hover:text-white underline underline-offset-2 transition-colors"
+                  >
+                    {action.label} →
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-          <div className="flex items-start gap-2 bg-white/10 rounded-lg px-3 py-2.5">
-            <Ear className="w-3.5 h-3.5 text-white/70 mt-0.5 shrink-0" />
-            <div>
-              <p className="text-[10px] font-semibold text-white/60 uppercase tracking-wider mb-0.5">Listen to</p>
-              <p className="text-xs text-white/90 leading-snug">{config.guidance.listenTo}</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-2 bg-white/10 rounded-lg px-3 py-2.5">
-            <Zap className="w-3.5 h-3.5 text-white/70 mt-0.5 shrink-0" />
-            <div>
-              <p className="text-[10px] font-semibold text-white/60 uppercase tracking-wider mb-0.5">Act on</p>
-              <p className="text-xs text-white/90 leading-snug">{config.guidance.actOn}</p>
-            </div>
-          </div>
+          ))}
         </div>
 
         {/* Bottom strip: priority order + Atreus CTA */}
