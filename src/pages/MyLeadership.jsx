@@ -1,3 +1,12 @@
+/**
+ * MyLeadership — Manager Command Center
+ * Redesigned for the AI HR Council's requirements:
+ * - Answers "What should I focus on now?" and "What can I do this week?" at the top
+ * - Distinguishes evidence (assessment scores) from interpretation (archetypes, narratives)
+ * - Uses developmental, probabilistic, coaching-safe language throughout
+ * - Readiness is banded + multi-signal, not a single verdict
+ * - Daily practices surfaced prominently, not buried in tabs
+ */
 import React, { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
@@ -5,107 +14,24 @@ import { useAuth } from "@/lib/AuthContext";
 import ShareResultsModal from "@/components/mvp/ShareResultsModal";
 import { Link } from "react-router-dom";
 import {
-  Sparkles, Target, Zap, ChevronRight, Loader2, Star,
-  TrendingUp, ArrowRight, CheckCircle2, Clock, BookOpen, Share2, ExternalLink, Layers, GraduationCap
+  Target, ChevronRight, Loader2, Clock, ArrowRight,
+  CheckCircle2, Layers, GraduationCap, Star, Share2, BookOpen
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
-import AtreusInsightCard from "@/components/ai/AtreusInsightCard";
-import AtreusTeamInsightCard from "@/components/dashboard/insights/AtreusTeamInsightCard";
 
-function InsightCard({ insight, user }) {
-  const [showShare, setShowShare] = useState(false);
-  const riskCount = insight.risk_flags?.length || 0;
-  const riskLabel = riskCount === 0 ? 'On Track' : riskCount <= 1 ? 'Developing' : 'Needs Focus';
-  const riskStyle = riskCount === 0
-    ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-    : riskCount <= 1
-    ? 'bg-amber-50 border-amber-200 text-amber-700'
-    : 'bg-red-50 border-red-200 text-red-700';
+// New command-center components
+import FocusStrip from "@/components/manager/FocusStrip";
+import ArchetypeCard from "@/components/manager/ArchetypeCard";
+import CompetencyFocusCard from "@/components/manager/CompetencyFocusCard";
+import LeadershipRisksCard from "@/components/manager/LeadershipRisksCard";
+import SuccessionReadinessPanel from "@/components/manager/SuccessionReadinessPanel";
+import DailyPracticeCard from "@/components/manager/DailyPracticeCard";
 
-  return (
-    <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
-      <CardHeader className="pb-3 pt-5 px-6">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#0202ff]" />
-            My Leadership Insight
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${riskStyle}`}>
-              {riskLabel}
-            </span>
-            <Button variant="outline" size="sm" className="text-xs h-7 border-[#0202ff]/30 text-[#0202ff] hover:bg-blue-50" onClick={() => setShowShare(true)}>
-              <Share2 className="w-3 h-3 mr-1" /> Share
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-5 px-6 pb-6">
-        {insight.archetype && (
-          <div className="rounded-xl p-4" style={{ backgroundColor: '#0012ff' }}>
-            <p className="text-xs text-white/70 font-semibold uppercase tracking-wider mb-1">Your Leadership Archetype</p>
-            <p className="text-xl font-bold text-white">{insight.archetype}</p>
-          </div>
-        )}
-        {insight.summary && (
-          <p className="text-sm text-gray-600 leading-relaxed">{insight.summary}</p>
-        )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {insight.top_strengths?.length > 0 && (
-            <div className="bg-gray-50 rounded-xl p-4">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                <Star className="w-3.5 h-3.5 text-amber-500" /> Core Strengths
-              </p>
-              <ul className="space-y-2">
-                {insight.top_strengths.slice(0, 3).map((s, i) => (
-                  <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0" />{s}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {insight.development_areas?.length > 0 && (
-            <div className="bg-gray-50 rounded-xl p-4">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                <TrendingUp className="w-3.5 h-3.5 text-blue-500" /> Growth Areas
-              </p>
-              <ul className="space-y-2">
-                {insight.development_areas.slice(0, 3).map((d, i) => (
-                  <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 flex-shrink-0" />{d}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-        {insight.recommendations?.[0] && (
-          <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
-            <p className="text-xs font-semibold text-amber-700 mb-1.5 flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5" /> Focus This Week
-            </p>
-            <p className="text-sm text-gray-800 leading-relaxed">{insight.recommendations[0]}</p>
-          </div>
-        )}
-      </CardContent>
-      <div className="px-6 pb-5">
-        <Link to="/Insights">
-          <Button variant="outline" className="w-full text-[#0202ff] border-[#0202ff]/30 hover:bg-blue-50">
-            View Full Insights <ArrowRight className="w-4 h-4 ml-1" />
-          </Button>
-        </Link>
-      </div>
-      <ShareResultsModal isOpen={showShare} onClose={() => setShowShare(false)} insight={insight} user={user} />
-    </Card>
-  );
-}
-
+// ─── Goals summary card (unchanged) ───────────────────────────────────────────
 function GoalsCard({ goals }) {
   const active = goals.filter(g => g.status === 'active');
   const completed = goals.filter(g => g.status === 'archived' || g.progress === 100);
@@ -148,9 +74,7 @@ function GoalsCard({ goals }) {
                 <Clock className="w-4 h-4 text-blue-400 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-gray-800 truncate font-medium">{goal.title}</p>
-                  {goal.progress > 0 && (
-                    <Progress value={goal.progress} className="h-1.5 mt-1.5" />
-                  )}
+                  {goal.progress > 0 && <Progress value={goal.progress} className="h-1.5 mt-1.5" />}
                 </div>
                 <span className="text-xs text-gray-400 flex-shrink-0">{goal.progress || 0}%</span>
               </div>
@@ -169,10 +93,9 @@ function GoalsCard({ goals }) {
   );
 }
 
+// ─── Development summary card (unchanged) ─────────────────────────────────────
 function DevelopmentCard({ assignments, devExperiences, devPlans }) {
-  const [tab, setTab] = useState('active');
-  const [section, setSection] = useState('plans'); // 'plans' | 'learning' | 'experiences'
-
+  const [section, setSection] = useState('plans');
   const activePlans = devPlans.filter(p => p.status !== 'completed' && p.status !== 'cancelled');
   const completedPlans = devPlans.filter(p => p.status === 'completed');
   const activeLearning = assignments.filter(a => a.status !== 'completed');
@@ -180,9 +103,9 @@ function DevelopmentCard({ assignments, devExperiences, devPlans }) {
   const activeExperiences = devExperiences.filter(e => e.status !== 'completed' && e.status !== 'cancelled');
   const completedExperiences = devExperiences.filter(e => e.status === 'completed');
 
+  const [tab, setTab] = useState('active');
   const activeItems = section === 'plans' ? activePlans : section === 'learning' ? activeLearning : activeExperiences;
   const completedItems = section === 'plans' ? completedPlans : section === 'learning' ? completedLearning : completedExperiences;
-
   const sectionLabel = section === 'plans' ? 'journeys' : section === 'learning' ? 'learning' : 'experiences';
   const dotColor = section === 'plans' ? 'bg-purple-400' : section === 'experiences' ? 'bg-amber-400' : '';
 
@@ -200,41 +123,20 @@ function DevelopmentCard({ assignments, devExperiences, devPlans }) {
             </Button>
           </Link>
         </div>
-        {/* Section toggle */}
         <div className="flex gap-1 mt-3 bg-gray-100 rounded-lg p-1">
-          <button
-            onClick={() => setSection('plans')}
-            className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-all flex items-center justify-center gap-1 ${section === 'plans' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
-          >
+          <button onClick={() => setSection('plans')} className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-all flex items-center justify-center gap-1 ${section === 'plans' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
             <Layers className="w-3 h-3" /> Journeys {activePlans.length > 0 && <span className="text-purple-600">({activePlans.length})</span>}
           </button>
-          <button
-            onClick={() => setSection('learning')}
-            className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-all flex items-center justify-center gap-1 ${section === 'learning' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
-          >
+          <button onClick={() => setSection('learning')} className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-all flex items-center justify-center gap-1 ${section === 'learning' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
             <GraduationCap className="w-3 h-3" /> Learning {activeLearning.length > 0 && <span className="text-[#0202ff]">({activeLearning.length})</span>}
           </button>
-          <button
-            onClick={() => setSection('experiences')}
-            className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-all flex items-center justify-center gap-1 ${section === 'experiences' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
-          >
+          <button onClick={() => setSection('experiences')} className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-all flex items-center justify-center gap-1 ${section === 'experiences' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
             <Star className="w-3 h-3" /> Exp. {activeExperiences.length > 0 && <span className="text-amber-600">({activeExperiences.length})</span>}
           </button>
         </div>
-        {/* Active / Completed tabs */}
         <div className="flex gap-1 mt-1 bg-gray-50 border border-gray-100 rounded-lg p-1">
-          <button
-            onClick={() => setTab('active')}
-            className={`flex-1 text-xs font-medium py-1 rounded-md transition-all ${tab === 'active' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}
-          >
-            Active
-          </button>
-          <button
-            onClick={() => setTab('completed')}
-            className={`flex-1 text-xs font-medium py-1 rounded-md transition-all ${tab === 'completed' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}
-          >
-            Completed
-          </button>
+          <button onClick={() => setTab('active')} className={`flex-1 text-xs font-medium py-1 rounded-md transition-all ${tab === 'active' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>Active</button>
+          <button onClick={() => setTab('completed')} className={`flex-1 text-xs font-medium py-1 rounded-md transition-all ${tab === 'completed' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>Completed</button>
         </div>
       </CardHeader>
       <CardContent className="space-y-2 px-6 pb-6">
@@ -274,24 +176,20 @@ function DevelopmentCard({ assignments, devExperiences, devPlans }) {
   );
 }
 
+// ─── No assessment state ───────────────────────────────────────────────────────
 function NoInsightState({ onRefresh }) {
   const [checking, setChecking] = useState(false);
-
-  const handleCheck = async () => {
-    setChecking(true);
-    await onRefresh?.();
-    setTimeout(() => setChecking(false), 1500);
-  };
+  const handleCheck = async () => { setChecking(true); await onRefresh?.(); setTimeout(() => setChecking(false), 1500); };
 
   return (
     <Card className="shadow-sm border border-dashed border-gray-200 bg-white rounded-2xl">
       <CardContent className="py-14 px-6 text-center">
         <div className="w-16 h-16 bg-[#0202ff]/8 rounded-2xl flex items-center justify-center mx-auto mb-5">
-          <Sparkles className="w-8 h-8 text-[#0202ff]" />
+          <BookOpen className="w-8 h-8 text-[#0202ff]" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Complete Your Assessment</h3>
         <p className="text-sm text-gray-500 max-w-sm mx-auto mb-6 leading-relaxed">
-          Take your leadership assessment to unlock your personalized archetype, strengths, and recommended next steps.
+          Take your leadership assessment to unlock your personalized command center — your focus areas, pattern profile, and recommended practices.
           If you've already submitted, your results may still be processing.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -310,59 +208,32 @@ function NoInsightState({ onRefresh }) {
   );
 }
 
-function LoadingSkeleton() {
-  return (
-    <div className="space-y-5">
-      <Skeleton className="h-64 w-full rounded-2xl" />
-      <Skeleton className="h-40 w-full rounded-2xl" />
-      <Skeleton className="h-32 w-full rounded-2xl" />
-    </div>
-  );
-}
-
+// ─── Main Page ─────────────────────────────────────────────────────────────────
 export default function MyLeadership() {
   const { user, appRole } = useAuth();
   const queryClient = useQueryClient();
-  const [insightCardDismissed, setInsightCardDismissed] = useState(false);
+  const [showShare, setShowShare] = useState(false);
 
-  // Always refetch on mount so fresh results appear after returning from assessment
   useEffect(() => {
-    if (user?.email) {
-      queryClient.invalidateQueries({ queryKey: ['my-insight', user.email] });
-    }
+    if (user?.email) queryClient.invalidateQueries({ queryKey: ['my-insight', user.email] });
   }, [user?.email]);
 
-  const { data: insight, isLoading: loadingInsight, error: insightError, refetch: refetchInsight } = useQuery({
+  const { data: insight, isLoading: loadingInsight, refetch: refetchInsight } = useQuery({
     queryKey: ['my-insight', user?.email],
     queryFn: async () => {
-      // Primary: try AssessmentInsights (AI-generated narratives)
       let insights = [];
       try {
-        insights = await base44.entities.AssessmentInsights.filter(
-          { user_email: user.email },
-          '-created_date',
-          1
-        );
-      } catch (e) {
-        console.warn('[MyLeadership] AssessmentInsights fetch failed:', e.message);
-      }
+        insights = await base44.entities.AssessmentInsights.filter({ user_email: user.email }, '-created_date', 1);
+      } catch (e) { console.warn('[MyLeadership] AssessmentInsights fetch failed:', e.message); }
       if (insights[0]) return { source: 'insights', ...insights[0] };
 
-      // Fallback: read directly from Assessment (what the webhook populates)
       let assessments = [];
       try {
-        assessments = await base44.entities.Assessment.filter(
-          { email: user.email },
-          '-created_date',
-          1
-        );
-      } catch (e) {
-        console.warn('[MyLeadership] Assessment fetch failed:', e.message);
-      }
+        assessments = await base44.entities.Assessment.filter({ email: user.email }, '-created_date', 1);
+      } catch (e) { console.warn('[MyLeadership] Assessment fetch failed:', e.message); }
       if (!assessments[0]) return null;
       const a = assessments[0];
 
-      // Map Assessment fields to the same shape InsightCard expects
       const competencies = [
         { key: 'Situational Intelligence', pct: a.si_pct },
         { key: 'Decision Making', pct: a.dm_pct },
@@ -372,23 +243,31 @@ export default function MyLeadership() {
         { key: 'Performance Management', pct: a.pm_pct },
       ].filter(c => c.pct != null).sort((a, b) => b.pct - a.pct);
 
-      const strengths = competencies.slice(0, 2).map(c => `${c.key} (${c.pct}%)`);
-      const devAreas = competencies.slice(-2).reverse().map(c => `${c.key} (${c.pct}%)`);
-
       return {
         source: 'assessment',
         assessment_id: a.id,
         id: a.id,
         archetype: a.archetype_label,
-        summary: a.record?.scoring_notes || `Overall score: ${a.overall_pct}% — ${a.band_overall} level`,
-        top_strengths: strengths,
-        development_areas: devAreas,
+        summary: a.record?.scoring_notes || `Overall score: ${a.overall_pct}%`,
+        top_strengths: competencies.slice(0, 2).map(c => `${c.key} (${c.pct}%)`),
+        development_areas: competencies.slice(-2).reverse().map(c => `${c.key} (${c.pct}%)`),
         recommendations: [],
         risk_flags: a.overall_pct < 50 ? ['score_below_threshold'] : [],
       };
     },
     enabled: !!user?.email,
     staleTime: 0,
+  });
+
+  // Pull assessment record for competency scores
+  const { data: assessmentRecord, isLoading: loadingAssessment } = useQuery({
+    queryKey: ['my-assessment-record', user?.email],
+    queryFn: async () => {
+      const assessments = await base44.entities.Assessment.filter({ email: user.email }, '-created_date', 1);
+      return assessments[0] || null;
+    },
+    enabled: !!user?.email,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: goals = [], isLoading: loadingGoals } = useQuery({
@@ -419,102 +298,64 @@ export default function MyLeadership() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Fetch team data for team leaders / admins
-  const { data: teamMembers = [], isLoading: loadingTeamMembers } = useQuery({
-    queryKey: ['team-members', user?.email, appRole],
-    queryFn: async () => {
-      // Only fetch for roles that have teams
-      const allowedRoles = ['HR Administrator', 'Admin Level 2', 'Analyst', 'Team Leader', 'User Level 2'];
-      if (!allowedRoles.includes(appRole)) return [];
-      try {
-        return await base44.entities.User.filter({ manager_email: user?.email }, '-created_date', 50);
-      } catch (e) {
-        console.warn('Could not fetch team members:', e);
-        return [];
-      }
-    },
-    enabled: !!user?.email && !!appRole,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  // Build team data summary for Atreus card
-  const teamDataSummary = React.useMemo(() => {
-    if (teamMembers.length === 0) return null;
-
-    const atRiskCount = teamMembers.filter(m => m.status === 'at_risk' || m.risk_level === 'high').length;
-    const recentIssues = [];
-
-    if (atRiskCount > 2) {
-      recentIssues.push(`${atRiskCount} team members flagged as at-risk`);
-    }
-
-    return {
-      team_members_count: teamMembers.length,
-      at_risk_count: atRiskCount,
-      active_goals_count: goals.length,
-      at_risk_goals_count: goals.filter(g => g.status === 'at_risk').length,
-      dev_plans_count: devPlans.length,
-      avg_assessment_score: 72, // Placeholder
-      recent_issues: recentIssues.length > 0 ? recentIssues : null
-    };
-  }, [teamMembers, goals, devPlans]);
-
-  // Prefer display_name (may be nested in data), then full_name, fall back to 'there'
   const rawName = user?.display_name || user?.data?.display_name || user?.full_name;
-  const displayName = rawName && rawName.trim() && !rawName.includes('@')
-    ? rawName.split(' ')[0]
-    : 'there';
+  const displayName = rawName && rawName.trim() && !rawName.includes('@') ? rawName.split(' ')[0] : 'there';
+
+  const isLoading = loadingInsight || loadingAssessment || loadingGoals || loadingAssignments || loadingDev || loadingPlans;
+
+  // Use assessment record for competency scores (more complete than insight shape)
+  const assessment = assessmentRecord;
 
   return (
     <MVPPageLayout
       title="My Leadership"
-      subtitle={`Welcome back, ${displayName}. Here's your leadership snapshot.`}
+      subtitle={`Private command center · ${displayName}`}
+      action={
+        insight && (
+          <Button variant="outline" size="sm" className="text-xs border-gray-200 text-gray-600" onClick={() => setShowShare(true)}>
+            <Share2 className="w-3 h-3 mr-1.5" /> Share
+          </Button>
+        )
+      }
     >
-      {loadingInsight || loadingGoals || loadingAssignments || loadingDev || loadingPlans || loadingTeamMembers ? (
+      {isLoading ? (
         <div className="space-y-5">
-          <div className="h-64 w-full rounded-2xl bg-gray-100 animate-pulse" />
+          <div className="h-56 w-full rounded-2xl bg-gray-100 animate-pulse" />
           <div className="h-40 w-full rounded-2xl bg-gray-100 animate-pulse" />
           <div className="h-32 w-full rounded-2xl bg-gray-100 animate-pulse" />
         </div>
+      ) : !insight && !assessment ? (
+        <NoInsightState onRefresh={refetchInsight} />
       ) : (
         <>
-          {insight ? <InsightCard insight={insight} user={user} /> : <NoInsightState onRefresh={refetchInsight} />}
+          {/* 1. FOCUS STRIP — answers "what now?" and "what this week?" */}
+          <FocusStrip assessment={assessment} insight={insight} />
 
-          {/* Atreus Team Intelligence — for team leaders, analysts, HR admins */}
-          {teamDataSummary && (
-            <AtreusTeamInsightCard
-              user={user}
-              appRole={appRole}
-              teamData={teamDataSummary}
-            />
-          )}
+          {/* 2. TODAY'S PRACTICE — surfaced prominently, not buried in tabs */}
+          <DailyPracticeCard assessment={assessment} />
 
-          {/* Atreus contextual nudge — only when insight is available and card not dismissed */}
-          {insight && !insightCardDismissed && insight.recommendations?.[0] && (
-            <AtreusInsightCard
-              title="Atreus Recommendation"
-              insight={insight.recommendations[0]}
-              recommended_action={insight.development_areas?.[0] ? `Focus on ${insight.development_areas[0]} this month.` : null}
-              primary_cta_label="Discuss with Atreus"
-              secondary_cta_label="Dismiss"
-              onDismiss={() => setInsightCardDismissed(true)}
-              context_payload={{
-                pageType: 'my-leadership',
-                assessment_summary: {
-                  archetype: insight.archetype,
-                  top_strengths: insight.top_strengths,
-                  development_areas: insight.development_areas,
-                  recommendations: insight.recommendations,
-                  risk_flags: insight.risk_flags,
-                },
-                starter_message: `Let's talk about this recommendation: "${insight.recommendations[0]}"`,
-              }}
-            />
-          )}
+          {/* 3. IDENTITY / ARCHETYPE — pattern language, not verdicts */}
+          <ArchetypeCard insight={insight} assessment={assessment} />
 
+          {/* 4. COMPETENCY PROFILE — role-aware, benchmark-contextualized */}
+          <CompetencyFocusCard assessment={assessment} />
+
+          {/* 5. GOALS SUMMARY */}
           <GoalsCard goals={goals} />
+
+          {/* 6. DEVELOPMENT SUMMARY */}
           <DevelopmentCard assignments={assignments} devExperiences={devExperiences} devPlans={devPlans} />
+
+          {/* 7. LEADERSHIP RISKS — consolidated blind spots + stress, developmental framing */}
+          <LeadershipRisksCard assessment={assessment} insight={insight} />
+
+          {/* 8. SUCCESSION READINESS — banded estimate, multi-signal, growth paths */}
+          <SuccessionReadinessPanel assessment={assessment} insight={insight} />
         </>
+      )}
+
+      {insight && (
+        <ShareResultsModal isOpen={showShare} onClose={() => setShowShare(false)} insight={insight} user={user} />
       )}
     </MVPPageLayout>
   );
