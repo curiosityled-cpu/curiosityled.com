@@ -179,22 +179,20 @@ export default function TalentCareLifecycleBar({ activeStage, onStageChange, act
           })}
 
           {/* View All Stages button styled as a stage card */}
-          {activeStage && (
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={() => { onStageChange(null); onMobilityChipChange?.(null); }}
-              className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-white transition-all cursor-pointer text-left text-gray-700"
-            >
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-white border border-gray-200">
-                <span className="text-xs font-bold text-gray-500">↺</span>
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={() => { onStageChange(null); onMobilityChipChange?.(null); }}
+            className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-white transition-all cursor-pointer text-left text-gray-700"
+          >
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-white border border-gray-200">
+              <span className="text-xs font-bold text-gray-500">↺</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-semibold leading-tight truncate text-gray-800">
+                View All Stages
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-semibold leading-tight truncate text-gray-800">
-                  View All Stages
-                </div>
-              </div>
-            </motion.button>
-          )}
+            </div>
+          </motion.button>
         </div>
       </div>
 
