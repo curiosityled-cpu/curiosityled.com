@@ -117,18 +117,25 @@ export default function TalentCareLifecycleBar({ activeStage, onStageChange, act
             <span className="text-gray-400">Executive Pulse stays fixed.</span>
           </p>
         </div>
+        {activeStage && (
+          <button
+            onClick={() => { onStageChange(null); onMobilityChipChange?.(null); }}
+            className="text-xs text-gray-400 hover:text-gray-600 border border-gray-200 rounded-md px-2.5 py-1 transition-colors shrink-0 ml-3"
+          >
+            View All Stages
+          </button>
+        )}
       </div>
 
       {/* Desktop: wrapped 2-row grid — all stages visible at once */}
       <div className="hidden md:block px-5 py-4">
-        <div className="flex items-end justify-between gap-2.5 mb-3">
-          <div className="grid grid-cols-4 gap-2.5 flex-1">
-            {STAGES.map((stage) => {
-              const Icon = stage.icon;
-              const isActive = activeStage === stage.id;
-              const supportStatus = SUPPORT_STATUS[stage.id];
+        <div className="grid grid-cols-4 gap-2.5">
+          {STAGES.map((stage) => {
+            const Icon = stage.icon;
+            const isActive = activeStage === stage.id;
+            const supportStatus = SUPPORT_STATUS[stage.id];
 
-              const btn = (
+            const btn = (
               <motion.button
                 key={stage.id}
                 whileTap={{ scale: 0.97 }}
@@ -160,35 +167,24 @@ export default function TalentCareLifecycleBar({ activeStage, onStageChange, act
               </motion.button>
             );
 
-              // Wrap with tooltip for support status explanation
-              const tooltipText = {
-                "Supported today": "This stage view is supported by current connected data and available insights.",
-                "Directional": "This stage view includes partial or early signals — treat as directional.",
-                "Coming soon": "This stage view is not yet supported by enough connected data.",
-              }[supportStatus];
+            // Wrap with tooltip for support status explanation
+            const tooltipText = {
+              "Supported today": "This stage view is supported by current connected data and available insights.",
+              "Directional": "This stage view includes partial or early signals — treat as directional.",
+              "Coming soon": "This stage view is not yet supported by enough connected data.",
+            }[supportStatus];
 
-              return (
-                <TooltipProvider key={stage.id}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>{btn}</TooltipTrigger>
-                    <TooltipContent side="bottom" className="max-w-[200px] text-xs">
-                      <strong>{stage.label}</strong>: {tooltipText}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              );
-            })}
-          </div>
-          
-          {/* View All Stages button aligned with last row */}
-          {activeStage && (
-            <button
-              onClick={() => { onStageChange(null); onMobilityChipChange?.(null); }}
-              className="text-xs text-gray-400 hover:text-gray-600 border border-gray-200 rounded-md px-2.5 py-1 transition-colors shrink-0 h-fit"
-            >
-              View All Stages
-            </button>
-          )}
+            return (
+              <TooltipProvider key={stage.id}>
+                <Tooltip>
+                  <TooltipTrigger asChild>{btn}</TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-[200px] text-xs">
+                    <strong>{stage.label}</strong>: {tooltipText}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            );
+          })}
         </div>
       </div>
 
