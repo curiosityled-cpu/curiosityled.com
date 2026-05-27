@@ -49,36 +49,5 @@
   },
   "required": [
     "user_email"
-  ],
-  "rls": {
-    "read": {
-      "$or": [
-        {
-          "user_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "Platform Admin"
-          }
-        }
-      ]
-    },
-    "write": {
-      "$or": [
-        {
-          "user_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "Platform Admin",
-                "Super Administrator"
-              ]
-            }
-          }
-        }
-      ]
-    }
-  }
+  ]
 }

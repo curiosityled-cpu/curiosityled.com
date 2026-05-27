@@ -215,9 +215,15 @@ Deno.serve(async (req) => {
       ? PROMPTS[forcePromptType]
       : selectPrompt(riskScore, tonePref, recentPulses);
 
-    // 5. Upsert TonePreference and stamp last_prompt_sent_at
-    if (tonePref?.id) {
-      await base44.asServiceRole.entities.TonePreference.update(tonePref.id, {
+    // 5. Upsert TonePreference — update if exists, create if not (dedup safe)
+    // Re-query with limit 1 to ensure we have the latest record
+    const freshTonePrefRows = await base44.asServiceRole.entities.TonePreference.filter(
+      { user_email: targetEmail }, '-updated_date', 1
+    );
+    const freshTonePref = freshTonePrefRows[0] || null;
+
+    if (freshTonePref?.id) {
+      await base44.asServiceRole.entities.TonePreference.update(freshTonePref.id, {
         last_prompt_sent_at: now.toISOString()
       });
     } else {
@@ -229,8 +235,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 6. Create an in-platform notification as the v1 delivery mechanism
-    // (Teams Adaptive Card delivery replaces this in Phase 2)
+    // 6. Create an in-platform notification (v1 delivery; Teams Adaptive Card in Phase 2)
+    // NOTE: metadata is stored in related_entity_type/action_url as Notification has no metadata field.
     await base44.asServiceRole.entities.Notification.create({
       user_email: targetEmail,
       type: 'atreus_checkin',
@@ -238,14 +244,15 @@ Deno.serve(async (req) => {
       message: promptTemplate.body,
       is_read: false,
       scheduled_for: now.toISOString(),
-      metadata: {
-        prompt_type: promptTemplate.prompt_type,
+      priority: 'medium',
+      related_entity_type: promptTemplate.prompt_type,
+      action_url: JSON.stringify({
         options: promptTemplate.options,
-        optional_text_placeholder: promptTemplate.optional_text,
-        why_explanation: promptTemplate.why,
-        operator_mode_risk_score: riskScore,
+        optional_text: promptTemplate.optional_text,
+        why: promptTemplate.why,
+        risk_score: riskScore,
         field: promptTemplate.field
-      }
+      })
     });
 
     return Response.json({
