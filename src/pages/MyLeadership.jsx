@@ -15,6 +15,7 @@ import {
   Settings, BarChart3, Layers, Star, MessageSquare, RefreshCw,
   Eye, EyeOff, Info, AlertCircle, Circle, Flame, Calendar
 } from "lucide-react";
+import ManagerCheckIn from "@/components/checkin/ManagerCheckIn";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -165,35 +166,7 @@ function TodayCard({ focus, insight, onOpenAtreus }) {
   );
 }
 
-/** Quick check-in — feeds pattern awareness */
-function CheckInCard({ onOpenAtreus }) {
-  const prompts = [
-    "How are you showing up in your team this week?",
-    "What's one thing you're carrying that you could hand off?",
-    "When did you last give clear, specific feedback?",
-    "How much of today felt intentional vs reactive?",
-  ];
-  const prompt = prompts[new Date().getDay() % prompts.length];
-
-  return (
-    <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-      onClick={onOpenAtreus}>
-      <CardContent className="px-5 py-4">
-        <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center flex-shrink-0">
-            <MessageSquare className="w-4 h-4 text-amber-500" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Quick check-in</p>
-            <p className="text-sm text-gray-800 leading-snug font-medium">{prompt}</p>
-            <p className="text-xs text-gray-400 mt-1.5">Tap to reflect with Atreus · 2 min</p>
-          </div>
-          <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0 mt-1" />
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+// CheckInCard is now handled by ManagerCheckIn component
 
 /** Patterns — what CL is noticing, evidence-tagged */
 function PatternsCard({ insight, goals }) {
@@ -560,8 +533,11 @@ export default function MyLeadership() {
             onOpenAtreus={() => openAtreus(todayFocus.atreus ? todayFocus.action : undefined)}
           />
 
-          {/* 2. Quick check-in */}
-          <CheckInCard onOpenAtreus={() => openAtreus()} />
+          {/* 2. Quick check-in — live interactive card */}
+          <ManagerCheckIn
+            promptType={/* rotate by day */ ['baseline_energy', 'confidence_check', 'baseline_energy', 'overload_check', 'confidence_check'][new Date().getDay() % 5]}
+            onComplete={() => {}}
+          />
 
           {/* 3. PATTERNS — what CL is noticing */}
           {insight && (

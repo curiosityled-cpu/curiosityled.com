@@ -1,0 +1,79 @@
+{
+  "name": "TonePreference",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the manager"
+    },
+    "tone_mode": {
+      "type": "string",
+      "enum": [
+        "gentle_observant",
+        "warm_candid",
+        "close_friend",
+        "respectfully_confronting"
+      ],
+      "default": "warm_candid",
+      "description": "How direct Atreus should be with this manager"
+    },
+    "cadence_preference": {
+      "type": "string",
+      "enum": [
+        "every_other_day",
+        "important_only",
+        "paused"
+      ],
+      "default": "every_other_day",
+      "description": "How often the manager wants to receive check-in prompts"
+    },
+    "user_understanding_ack": {
+      "type": "boolean",
+      "default": false,
+      "description": "Manager has confirmed they understand what their tone choice means"
+    },
+    "last_prompt_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of the last prompt sent to this manager (anti-spam)"
+    },
+    "teams_onboarding_complete": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the manager has completed the Teams tone onboarding flow"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Client ID for multi-tenant support"
+    }
+  },
+  "required": [
+    "user_email"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

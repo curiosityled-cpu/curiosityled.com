@@ -29,6 +29,7 @@ import {
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { Link, useLocation } from "react-router-dom";
+import CheckInSettings from "@/components/checkin/CheckInSettings";
 import { createPageUrl } from "@/utils";
 
 export default function Settings() {
@@ -356,7 +357,7 @@ export default function Settings() {
         </div>
 
         <Tabs defaultValue={isAdmin ? "platform" : "notifications"} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full" style={{ gridTemplateColumns: isAdmin ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)' }}>
+          <TabsList className="grid w-full" style={{ gridTemplateColumns: isAdmin ? 'repeat(5, 1fr)' : 'repeat(4, 1fr)' }}>
             {isAdmin && (
               <TabsTrigger value="platform">
                 <SettingsIcon className="w-4 h-4 mr-2" />
@@ -366,6 +367,10 @@ export default function Settings() {
             <TabsTrigger value="notifications">
               <Bell className="w-4 h-4 mr-2" />
               Notifications
+            </TabsTrigger>
+            <TabsTrigger value="checkin">
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Check-ins
             </TabsTrigger>
             <TabsTrigger value="ai-coach">
               <Sparkles className="w-4 h-4 mr-2" />
@@ -656,6 +661,18 @@ export default function Settings() {
                   </Select>
                 </CardContent>
               </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="checkin">
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-1">Atreus Check-in Settings</h2>
+                <p className="text-sm text-gray-500">
+                  Control how Atreus reaches out to you, what tone it uses, and what data it draws on.
+                </p>
+              </div>
+              <CheckInSettings />
             </div>
           </TabsContent>
 

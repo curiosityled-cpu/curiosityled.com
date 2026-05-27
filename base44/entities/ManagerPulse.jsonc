@@ -1,0 +1,158 @@
+{
+  "name": "ManagerPulse",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the manager this pulse belongs to"
+    },
+    "energy_level": {
+      "type": "string",
+      "enum": [
+        "drained",
+        "stretched",
+        "steady",
+        "strong"
+      ],
+      "description": "How energised the manager feels right now"
+    },
+    "mental_clarity": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Perceived mental clarity (1=foggy, 5=sharp)"
+    },
+    "perceived_load": {
+      "type": "string",
+      "enum": [
+        "light",
+        "manageable",
+        "heavy",
+        "unsustainable"
+      ],
+      "description": "How heavy the overall load feels"
+    },
+    "biggest_weight_today": {
+      "type": "string",
+      "description": "Short free-text: what is weighing on them most today (optional)"
+    },
+    "avoidance_flag": {
+      "type": "string",
+      "enum": [
+        "yes",
+        "no",
+        "not_sure"
+      ],
+      "description": "Whether the manager is aware of avoiding something today"
+    },
+    "confidence_today": {
+      "type": "string",
+      "enum": [
+        "low",
+        "uncertain",
+        "steady",
+        "high"
+      ],
+      "description": "How confident they feel in their leadership right now"
+    },
+    "motivation_today": {
+      "type": "string",
+      "enum": [
+        "flat",
+        "low",
+        "moderate",
+        "high"
+      ],
+      "description": "Current motivation level"
+    },
+    "room_today": {
+      "type": "string",
+      "enum": [
+        "none",
+        "tight",
+        "some",
+        "plenty"
+      ],
+      "description": "How much breathing room they have today"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "teams",
+        "web",
+        "atreus"
+      ],
+      "default": "web",
+      "description": "Surface where this pulse was captured"
+    },
+    "prompt_type": {
+      "type": "string",
+      "enum": [
+        "baseline_energy",
+        "overload_check",
+        "weekly_reflection",
+        "follow_up",
+        "contextual"
+      ],
+      "default": "baseline_energy",
+      "description": "Type of prompt that generated this pulse"
+    },
+    "operator_mode_response": {
+      "type": "string",
+      "enum": [
+        "very_much",
+        "somewhat",
+        "not_really",
+        "skipped"
+      ],
+      "description": "Response to the overload \u2192 overcontrol prompt"
+    },
+    "delegation_commitment": {
+      "type": "string",
+      "description": "Any commitment made around delegation or handing off work"
+    },
+    "follow_up_sent": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether a follow-up prompt has been scheduled for this pulse"
+    },
+    "follow_up_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When the follow-up should be sent"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Client ID for multi-tenant support"
+    }
+  },
+  "required": [
+    "user_email"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}
