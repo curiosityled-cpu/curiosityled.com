@@ -51,7 +51,7 @@ const PROMPTS = {
       { label: "Not great", value: "low" }
     ],
     optional_text: "What's shaking it, if anything?",
-    prompt_type: "baseline_energy",
+    prompt_type: "contextual",
     field: "confidence_today"
   },
   overload_overcontrol: {
@@ -137,23 +137,9 @@ function computeOperatorModeRisk(recentPulses, recentActivity) {
   return Math.min(score, 100);
 }
 
-// ─── Anti-spam check ─────────────────────────────────────────────────────────
-
-function canSendPrompt(tonePref, now) {
-  if (!tonePref) return true;
-  if (tonePref.cadence_preference === 'paused') return false;
-  if (!tonePref.last_prompt_sent_at) return true;
-
-  const lastSent = new Date(tonePref.last_prompt_sent_at);
-  const hoursSinceLast = (now - lastSent) / 3600000;
-
-  // Never send more than once in 12 hours
-  return hoursSinceLast >= 12;
-}
-
 // ─── Select which prompt to send ─────────────────────────────────────────────
 
-function selectPrompt(riskScore, tonePref, pulseHistory) {
+function selectPrompt(riskScore, pulseHistory) {
   // High risk → overload prompt
   if (riskScore >= 60) return PROMPTS.overload_overcontrol;
 
@@ -161,9 +147,14 @@ function selectPrompt(riskScore, tonePref, pulseHistory) {
   const dayOfWeek = new Date().getDay();
   if (dayOfWeek === 5) return PROMPTS.weekly_reflection;
 
-  // Rotate baseline prompts based on day of week / pulse history
-  const recentFields = pulseHistory.slice(0, 3).map(p => p.prompt_type);
-  const hasConfidenceRecent = recentFields.includes('confidence_today');
+  // Only look at system-sent pulse markers (not user responses) for rotation
+  const recentSentTypes = pulseHistory
+    .filter(p => p.source === 'system')
+    .slice(0, 5)
+    .map(p => p.prompt_type);
+
+  // confidence_check uses prompt_type 'contextual' — avoid repeating within last 5 prompts
+  const hasConfidenceRecent = recentSentTypes.includes('contextual');
 
   if (!hasConfidenceRecent && Math.random() > 0.6) return PROMPTS.confidence_check;
   if (dayOfWeek % 2 === 0) return PROMPTS.clarity_check;
@@ -194,13 +185,13 @@ Deno.serve(async (req) => {
       base44.asServiceRole.entities.UserActivity.filter({ user_email: targetEmail }, '-date', 3)
     ]);
 
-    // Derive tone mode and last_prompt_sent_at from recent pulses
-    const lastPulse = recentPulses[0] || null;
-    const lastPromptSentAt = lastPulse?.created_date ? new Date(lastPulse.created_date) : null;
+    // Derive last prompt sent time from system-sourced pulses only
+    // (source: 'system' = prompt was sent; other sources = user responses, don't count for anti-spam)
+    const lastSystemPulse = recentPulses.find(p => p.source === 'system') || null;
+    const lastPromptSentAt = lastSystemPulse?.created_date ? new Date(lastSystemPulse.created_date) : null;
     const toneModePreference = 'warm_candid'; // default; could be extended to store in ManagerPulse
 
     // 2. Anti-spam gate (skip for explicit force calls from admin)
-    // Derived from last pulse created_date instead of TonePreference
     const isForced = body.force === true;
     if (!isForced && lastPromptSentAt) {
       const hoursSinceLast = (now - lastPromptSentAt) / 3600000;
@@ -219,7 +210,7 @@ Deno.serve(async (req) => {
     // 4. Select prompt
     const promptTemplate = forcePromptType && PROMPTS[forcePromptType]
       ? PROMPTS[forcePromptType]
-      : selectPrompt(riskScore, null, recentPulses);
+      : selectPrompt(riskScore, recentPulses);
 
     // 5. Track prompt in ManagerPulse as a "sent prompt" record
     // (TonePreference writes are silently failing; derive state from ManagerPulse instead)

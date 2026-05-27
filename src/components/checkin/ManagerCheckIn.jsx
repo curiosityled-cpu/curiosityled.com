@@ -41,7 +41,7 @@ const PROMPTS = {
     ],
     optional_text: "What's shaking it, if anything?",
     field: "confidence_today",
-    prompt_type: "baseline_energy"
+    prompt_type: "contextual"
   },
   overload_check: {
     title: "Are you in 'I'll just do it' mode?",
