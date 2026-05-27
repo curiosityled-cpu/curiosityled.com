@@ -116,16 +116,21 @@ Deno.serve(async (req) => {
 
       activityData.operator_mode_risk_score = Math.min(riskScore, 100);
 
-      // Upsert UserActivity record for today
+      // Upsert UserActivity record for today — sort by most recent to get canonical record
       const existing = await base44.asServiceRole.entities.UserActivity.filter({
         user_email: email,
         date: today
-      }, null, 1);
+      }, '-created_date', 5);
 
       let writeError = null;
       try {
-        if (existing[0]) {
+        if (existing.length > 0) {
+          // Update the most recent record
           await base44.asServiceRole.entities.UserActivity.update(existing[0].id, activityData);
+          // Delete any duplicates for today (shouldn't exist, but clean up if they do)
+          for (let i = 1; i < existing.length; i++) {
+            await base44.asServiceRole.entities.UserActivity.delete(existing[i].id);
+          }
         } else {
           await base44.asServiceRole.entities.UserActivity.create(activityData);
         }
