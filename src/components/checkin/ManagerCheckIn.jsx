@@ -29,6 +29,19 @@ const PROMPTS = {
     field: "perceived_load",
     prompt_type: "baseline_energy"
   },
+  clarity_check: {
+    title: "Clear, stretched, or already behind?",
+    body: "When you look at today, which of these feels closest to where you actually are?",
+    why: "I'm watching for stretches where you keep feeling 'behind' before the day even starts. Those are often the weeks where leadership takes the biggest hit.",
+    options: [
+      { label: "I feel clear", value: "steady", field_value: "steady" },
+      { label: "I feel stretched", value: "stretched", field_value: "stretched" },
+      { label: "Already behind", value: "drained", field_value: "drained" }
+    ],
+    optional_text: "What's making it feel that way?",
+    field: "energy_level",
+    prompt_type: "baseline_energy"
+  },
   confidence_check: {
     title: "How steady are you feeling today?",
     body: "Not 'are you doing your job' — just, how settled do you feel in yourself as a leader right now?",
@@ -82,50 +95,33 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
   const [done, setDone] = useState(() => sessionStorage.getItem(storageKey) === '1');
   const [followUp, setFollowUp] = useState(null);
 
-  const handleSelect = async (option) => {
+  const handleSelect = (option) => {
     if (saving || done) return;
     setSelected(option.value);
-
-    // Determine follow-up message
+    // Determine follow-up message but don't save yet — wait for "Done" action
     const fu = FOLLOWUPS[promptType]?.[option.value] || null;
     setFollowUp(fu);
+  };
 
-    // Save to ManagerPulse
+  const handleDone = async () => {
+    if (!selected || saving || done) return;
     setSaving(true);
     const pulseData = {
       user_email: user.email,
       source: "web",
       prompt_type: prompt.prompt_type,
-      [prompt.field]: option.field_value,
+      [prompt.field]: prompt.options.find(o => o.value === selected)?.field_value,
     };
     if (optionalText.trim()) {
       pulseData.biggest_weight_today = optionalText.trim();
     }
-
     await base44.entities.ManagerPulse.create(pulseData);
     setSaving(false);
     setDone(true);
     sessionStorage.setItem(storageKey, '1');
-
-    // Bubble up after a short moment
     setTimeout(() => {
-      if (onComplete) onComplete({ selected: option, optionalText, followUp: fu });
+      if (onComplete) onComplete({ selected, optionalText, followUp });
     }, 1800);
-  };
-
-  const handleSubmitText = async () => {
-    if (!selected || !optionalText.trim()) return;
-    // Update the most recent pulse with the optional text
-    setSaving(true);
-    const recent = await base44.entities.ManagerPulse.filter(
-      { user_email: user.email, prompt_type: prompt.prompt_type }, '-created_date', 1
-    );
-    if (recent[0]) {
-      await base44.entities.ManagerPulse.update(recent[0].id, {
-        biggest_weight_today: optionalText.trim()
-      });
-    }
-    setSaving(false);
   };
 
   return (
@@ -195,7 +191,7 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
           </AnimatePresence>
         )}
 
-        {/* Optional text (shown after selection, before done) */}
+        {/* Optional note + confirm (shown after selection, before done) */}
         {selected && !done && (
           <div className="space-y-2">
             <button
@@ -206,25 +202,21 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
               {showOptional ? "Never mind" : "Add a note (optional)"}
             </button>
             {showOptional && (
-              <div className="space-y-2">
-                <Textarea
-                  placeholder={prompt.optional_text}
-                  value={optionalText}
-                  onChange={(e) => setOptionalText(e.target.value)}
-                  className="text-sm resize-none h-20 rounded-xl border-gray-200 focus:border-[#0202ff]/40"
-                />
-                {optionalText.trim() && (
-                  <Button
-                    size="sm"
-                    onClick={handleSubmitText}
-                    disabled={saving}
-                    className="text-xs h-7 bg-gray-900 hover:bg-gray-800 text-white"
-                  >
-                    Save note
-                  </Button>
-                )}
-              </div>
+              <Textarea
+                placeholder={prompt.optional_text}
+                value={optionalText}
+                onChange={(e) => setOptionalText(e.target.value)}
+                className="text-sm resize-none h-20 rounded-xl border-gray-200 focus:border-[#0202ff]/40"
+              />
             )}
+            <Button
+              size="sm"
+              onClick={handleDone}
+              disabled={saving}
+              className="w-full text-xs h-8 bg-gray-900 hover:bg-gray-800 text-white rounded-xl"
+            >
+              {saving ? "Saving…" : "Done"}
+            </Button>
           </div>
         )}
 
