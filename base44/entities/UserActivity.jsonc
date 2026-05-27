@@ -58,7 +58,7 @@
       "items": {
         "type": "string"
       },
-      "description": "Which systems contributed to this record (e.g. ['outlook', 'base44_goals'])"
+      "description": "Which systems contributed to this record"
     },
     "calendar_connected": {
       "type": "boolean",
@@ -94,7 +94,12 @@
         },
         {
           "user_condition": {
-            "role": "Platform Admin"
+            "role": {
+              "$in": [
+                "Platform Admin",
+                "Super Administrator"
+              ]
+            }
           }
         }
       ]

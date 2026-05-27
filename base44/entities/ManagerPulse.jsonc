@@ -149,7 +149,12 @@
         },
         {
           "user_condition": {
-            "role": "Platform Admin"
+            "role": {
+              "$in": [
+                "Platform Admin",
+                "Super Administrator"
+              ]
+            }
           }
         }
       ]

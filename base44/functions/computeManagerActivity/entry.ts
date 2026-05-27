@@ -122,10 +122,16 @@ Deno.serve(async (req) => {
         date: today
       }, null, 1);
 
-      if (existing[0]) {
-        await base44.asServiceRole.entities.UserActivity.update(existing[0].id, activityData);
-      } else {
-        await base44.asServiceRole.entities.UserActivity.create(activityData);
+      let writeError = null;
+      try {
+        if (existing[0]) {
+          await base44.asServiceRole.entities.UserActivity.update(existing[0].id, activityData);
+        } else {
+          await base44.asServiceRole.entities.UserActivity.create(activityData);
+        }
+      } catch (e) {
+        writeError = e.message;
+        console.error(`[UserActivity write failed for ${email}]:`, e.message);
       }
 
       results.push({
@@ -133,7 +139,8 @@ Deno.serve(async (req) => {
         operator_mode_risk_score: riskScore,
         stalled_strategic_goals: stalledStrategic.length,
         learning_inertia_days: learningInertiaDays,
-        overdue_goals: overdueGoals.length
+        overdue_goals: overdueGoals.length,
+        write_error: writeError
       });
     }
 
