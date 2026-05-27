@@ -19,7 +19,8 @@
         "goal_assignment",
         "assessment_status",
         "certification_status",
-        "certification_expiring"
+        "certification_expiring",
+        "atreus_checkin"
       ],
       "description": "Type of notification"
     },
@@ -59,7 +60,7 @@
     },
     "related_entity_type": {
       "type": "string",
-      "description": "Type of related entity (e.g., 'Goal', 'AssignedLearning', 'OnboardingPlan', 'Certification', 'ExternalAssessmentResult')"
+      "description": "Type of related entity"
     },
     "related_entity_id": {
       "type": "string",
@@ -67,7 +68,7 @@
     },
     "action_url": {
       "type": "string",
-      "description": "Deep link URL to the related content in the app (optional, can be constructed client-side from related_entity)"
+      "description": "Deep link URL to the related content in the app"
     },
     "priority": {
       "type": "string",
@@ -89,9 +90,6 @@
   ],
   "rls": {
     "read": {
-      "user_email": "{{user.email}}"
-    },
-    "write": {
       "user_email": "{{user.email}}"
     }
   }

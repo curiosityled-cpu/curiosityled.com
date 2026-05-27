@@ -186,25 +186,31 @@ Deno.serve(async (req) => {
     const forcePromptType = body.prompt_type || null; // allow explicit override
     const now = new Date();
 
-    // 1. Load tone preference and anti-spam state
-    const [tonePrefRows, recentPulses, recentActivity] = await Promise.all([
-      base44.asServiceRole.entities.TonePreference.filter({ user_email: targetEmail }, '-updated_date', 1),
+    // 1. Load recent pulses for anti-spam and risk scoring
+    // NOTE: TonePreference writes are silently failing at platform level.
+    // Instead, derive anti-spam state from recent ManagerPulse records.
+    const [recentPulses, recentActivity] = await Promise.all([
       base44.asServiceRole.entities.ManagerPulse.filter({ user_email: targetEmail }, '-created_date', 7),
       base44.asServiceRole.entities.UserActivity.filter({ user_email: targetEmail }, '-date', 3)
     ]);
 
-    const tonePref = tonePrefRows[0] || null;
+    // Derive tone mode and last_prompt_sent_at from recent pulses
+    const lastPulse = recentPulses[0] || null;
+    const lastPromptSentAt = lastPulse?.created_date ? new Date(lastPulse.created_date) : null;
+    const toneModePreference = 'warm_candid'; // default; could be extended to store in ManagerPulse
 
     // 2. Anti-spam gate (skip for explicit force calls from admin)
+    // Derived from last pulse created_date instead of TonePreference
     const isForced = body.force === true;
-    if (!isForced && !canSendPrompt(tonePref, now)) {
-      return Response.json({
-        sent: false,
-        reason: 'Too soon since last prompt',
-        next_eligible: tonePref?.last_prompt_sent_at
-          ? new Date(new Date(tonePref.last_prompt_sent_at).getTime() + 12 * 3600000).toISOString()
-          : null
-      });
+    if (!isForced && lastPromptSentAt) {
+      const hoursSinceLast = (now - lastPromptSentAt) / 3600000;
+      if (hoursSinceLast < 12) {
+        return Response.json({
+          sent: false,
+          reason: 'Too soon since last prompt',
+          next_eligible: new Date(lastPromptSentAt.getTime() + 12 * 3600000).toISOString()
+        });
+      }
     }
 
     // 3. Compute risk score
@@ -213,46 +219,17 @@ Deno.serve(async (req) => {
     // 4. Select prompt
     const promptTemplate = forcePromptType && PROMPTS[forcePromptType]
       ? PROMPTS[forcePromptType]
-      : selectPrompt(riskScore, tonePref, recentPulses);
+      : selectPrompt(riskScore, null, recentPulses);
 
-    // 5. Upsert TonePreference — update if exists, create if not (dedup safe)
-    // Re-query with limit 1 to ensure we have the latest record
-    const freshTonePrefRows = await base44.asServiceRole.entities.TonePreference.filter(
-      { user_email: targetEmail }, '-updated_date', 1
-    );
-    const freshTonePref = freshTonePrefRows[0] || null;
-
-    if (freshTonePref?.id) {
-      await base44.asServiceRole.entities.TonePreference.update(freshTonePref.id, {
-        last_prompt_sent_at: now.toISOString()
-      });
-    } else {
-      await base44.asServiceRole.entities.TonePreference.create({
-        user_email: targetEmail,
-        tone_mode: 'warm_candid',
-        cadence_preference: 'every_other_day',
-        last_prompt_sent_at: now.toISOString()
-      });
-    }
-
-    // 6. Create an in-platform notification (v1 delivery; Teams Adaptive Card in Phase 2)
-    // NOTE: metadata is stored in related_entity_type/action_url as Notification has no metadata field.
-    await base44.asServiceRole.entities.Notification.create({
+    // 5. Track prompt in ManagerPulse as a "sent prompt" record
+    // (TonePreference writes are silently failing; derive state from ManagerPulse instead)
+    // This serves as both audit trail and anti-spam anchor.
+    await base44.asServiceRole.entities.ManagerPulse.create({
       user_email: targetEmail,
-      type: 'atreus_checkin',
-      title: promptTemplate.title,
-      message: promptTemplate.body,
-      is_read: false,
-      scheduled_for: now.toISOString(),
-      priority: 'medium',
-      related_entity_type: promptTemplate.prompt_type,
-      action_url: JSON.stringify({
-        options: promptTemplate.options,
-        optional_text: promptTemplate.optional_text,
-        why: promptTemplate.why,
-        risk_score: riskScore,
-        field: promptTemplate.field
-      })
+      source: 'system',
+      prompt_type: promptTemplate.prompt_type,
+      // No explicit response fields yet — this is a "sent prompt" marker
+      biggest_weight_today: null
     });
 
     return Response.json({
@@ -264,7 +241,7 @@ Deno.serve(async (req) => {
       why: promptTemplate.why,
       optional_text: promptTemplate.optional_text,
       operator_mode_risk_score: riskScore,
-      tone_mode: tonePref?.tone_mode || 'warm_candid'
+      tone_mode: toneModePreference
     });
 
   } catch (error) {
