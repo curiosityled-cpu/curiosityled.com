@@ -212,14 +212,30 @@ Deno.serve(async (req) => {
       ? PROMPTS[forcePromptType]
       : selectPrompt(riskScore, recentPulses);
 
-    // 5. Track prompt in ManagerPulse as a "sent prompt" record
-    // (TonePreference writes are silently failing; derive state from ManagerPulse instead)
-    // This serves as both audit trail and anti-spam anchor.
+    // 5. Write the "sent prompt" marker BEFORE returning — this is our anti-spam anchor.
+    // Write first so that parallel/rapid calls hitting the gate see this marker.
+    // Use today's date as an idempotency boundary: if a system record for today already exists
+    // and we're not forced, that's a double-send we want to prevent.
+    if (!isForced) {
+      const todayStr = now.toISOString().split('T')[0];
+      const todaySystemPulses = recentPulses.filter(p =>
+        p.source === 'system' &&
+        p.created_date &&
+        p.created_date.toString().startsWith(todayStr)
+      );
+      if (todaySystemPulses.length > 0) {
+        return Response.json({
+          sent: false,
+          reason: 'Already sent a prompt today',
+          next_eligible: new Date(new Date(todaySystemPulses[0].created_date).getTime() + 12 * 3600000).toISOString()
+        });
+      }
+    }
+
     await base44.asServiceRole.entities.ManagerPulse.create({
       user_email: targetEmail,
       source: 'system',
       prompt_type: promptTemplate.prompt_type,
-      // No explicit response fields yet — this is a "sent prompt" marker
       biggest_weight_today: null
     });
 
