@@ -195,8 +195,9 @@ Deno.serve(async (req) => {
 
     const tonePref = tonePrefRows[0] || null;
 
-    // 2. Anti-spam gate
-    if (!canSendPrompt(tonePref, now)) {
+    // 2. Anti-spam gate (skip for explicit force calls from admin)
+    const isForced = body.force === true;
+    if (!isForced && !canSendPrompt(tonePref, now)) {
       return Response.json({
         sent: false,
         reason: 'Too soon since last prompt',
@@ -214,13 +215,12 @@ Deno.serve(async (req) => {
       ? PROMPTS[forcePromptType]
       : selectPrompt(riskScore, tonePref, recentPulses);
 
-    // 5. Update last_prompt_sent_at to enforce anti-spam
-    if (tonePref) {
+    // 5. Upsert TonePreference and stamp last_prompt_sent_at
+    if (tonePref?.id) {
       await base44.asServiceRole.entities.TonePreference.update(tonePref.id, {
         last_prompt_sent_at: now.toISOString()
       });
     } else {
-      // Create default tone preference if none exists
       await base44.asServiceRole.entities.TonePreference.create({
         user_email: targetEmail,
         tone_mode: 'warm_candid',

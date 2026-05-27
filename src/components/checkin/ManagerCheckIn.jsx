@@ -72,12 +72,14 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
   const { user } = useAuth();
   const prompt = PROMPTS[promptType] || PROMPTS.baseline_energy;
 
+  // Persist "done today" in sessionStorage so re-mounts don't re-prompt
+  const storageKey = `cl_checkin_done_${promptType}_${new Date().toISOString().split('T')[0]}`;
   const [selected, setSelected] = useState(null);
   const [optionalText, setOptionalText] = useState("");
   const [showOptional, setShowOptional] = useState(false);
   const [showWhy, setShowWhy] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState(() => sessionStorage.getItem(storageKey) === '1');
   const [followUp, setFollowUp] = useState(null);
 
   const handleSelect = async (option) => {
@@ -103,6 +105,7 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
     await base44.entities.ManagerPulse.create(pulseData);
     setSaving(false);
     setDone(true);
+    sessionStorage.setItem(storageKey, '1');
 
     // Bubble up after a short moment
     setTimeout(() => {
