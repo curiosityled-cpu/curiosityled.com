@@ -27,15 +27,11 @@
     },
     "late_day_load_minutes": {
       "type": "number",
-      "description": "Total meeting minutes ending after 5pm local time"
+      "description": "Total meeting minutes ending after configured late threshold (e.g. 5pm)"
     },
     "one_to_one_count": {
       "type": "number",
       "description": "Count of recurring 1:1 meetings that day/week"
-    },
-    "days_since_last_1on1": {
-      "type": "number",
-      "description": "Days since the most recently confirmed 1:1 meeting"
     },
     "overdue_goals_count": {
       "type": "number",
@@ -55,14 +51,14 @@
       "type": "number",
       "minimum": 0,
       "maximum": 100,
-      "description": "Computed composite risk score for overload\u2192overcontrol pattern (0-100). Safe for HR aggregate views only \u2014 never attributed individually."
+      "description": "Computed composite risk score for overload\u2192overcontrol pattern (0-100)"
     },
     "source_systems": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Which systems contributed to this record (e.g. base44_goals, base44_learning, outlook_calendar)"
+      "description": "Which systems contributed to this record"
     },
     "calendar_connected": {
       "type": "boolean",
