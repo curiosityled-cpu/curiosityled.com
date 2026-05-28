@@ -74,15 +74,76 @@ function buildContextualPrompt(trigger, activity, toneMode) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const body = await req.json().catch(() => ({}));
+    const today = new Date().toISOString().split('T')[0];
 
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    // ── Connector webhook path (Google Calendar / Outlook fires this) ──────────
+    // When called from a connector automation the body has an `automation` key.
+    // Google Calendar webhooks only signal "something changed" — no user context.
+    // We treat it as a full-batch scan of all onboarded managers.
+    const isWebhookCall = !!body.automation;
+    if (isWebhookCall) {
+      // Acknowledge sync pings immediately
+      const state = body.data?._provider_meta?.['x-goog-resource-state'];
+      if (state === 'sync') return Response.json({ status: 'sync_ack' });
+
+      const tonePrefs = await base44.asServiceRole.entities.TonePreference.list('-created_date', 200);
+      const targetEmails = [...new Set(tonePrefs.map(t => t.user_email).filter(Boolean))];
+      const results = [];
+
+      for (const targetEmail of targetEmails) {
+        try {
+          const recentPulses = await base44.asServiceRole.entities.ManagerPulse.filter(
+            { user_email: targetEmail, source: 'system' }, '-created_date', 1
+          );
+          if (recentPulses.length > 0) {
+            const hoursSince = (Date.now() - new Date(recentPulses[0].created_date)) / 3600000;
+            if (hoursSince < 4) { results.push({ email: targetEmail, sent: false, reason: 'rate_limited' }); continue; }
+          }
+
+          const activityRecords = await base44.asServiceRole.entities.UserActivity.filter(
+            { user_email: targetEmail, date: today }, null, 1
+          );
+          const activity = activityRecords[0] || null;
+          if (!activity) { results.push({ email: targetEmail, sent: false, reason: 'no_activity' }); continue; }
+
+          let trigger = null;
+          if ((activity.back_to_back_density || 0) >= 0.7 && (activity.meeting_count_day || 0) >= 6) trigger = 'overload';
+          else if ((activity.late_day_load_minutes || 0) > 90) trigger = 'late_overload';
+          else if ((activity.operator_mode_risk_score || 0) >= 70) trigger = 'high_stakes';
+
+          if (!trigger) { results.push({ email: targetEmail, sent: false, reason: 'no_trigger' }); continue; }
+
+          const tonePrefsForUser = await base44.asServiceRole.entities.TonePreference.filter({ user_email: targetEmail }, null, 1);
+          const toneMode = tonePrefsForUser[0]?.tone_mode || 'warm_candid';
+          const prompt = buildContextualPrompt(trigger, activity, toneMode);
+
+          await base44.asServiceRole.entities.ManagerPulse.create({
+            user_email: targetEmail, prompt_type: prompt.prompt_type, source: 'system',
+          });
+          await base44.asServiceRole.functions.invoke('sendTeamsAdaptiveCard', {
+            user_email: targetEmail, prompt: { ...prompt, tone_mode: toneMode },
+          });
+
+          results.push({ email: targetEmail, sent: true, trigger });
+        } catch (err) {
+          results.push({ email: targetEmail, sent: false, error: err.message });
+        }
+      }
+
+      return Response.json({
+        source: 'webhook',
+        processed: results.filter(r => r.sent).length,
+        skipped: results.filter(r => !r.sent && !r.error).length,
+        failed: results.filter(r => r.error).length,
+      });
     }
 
-    const body = await req.json().catch(() => ({}));
+    // ── Direct / admin call path ───────────────────────────────────────────────
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
     const { user_email, force = false } = body;
-    const today = new Date().toISOString().split('T')[0];
 
     // If a specific user is requested, run for just them (admin only for others)
     // Otherwise iterate all onboarded managers
