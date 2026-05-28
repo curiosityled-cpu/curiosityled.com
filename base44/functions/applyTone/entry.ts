@@ -19,8 +19,6 @@
  *   - No meeting title or attendee references
  *   - No speculation beyond signals + user input
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-
 // ─── Tone variants per prompt family ─────────────────────────────────────────
 
 const TONE_VARIANTS = {
@@ -241,12 +239,10 @@ function applyToneToPrompt(promptFamily, toneMode, riskScore = 0, context = {}) 
 
 Deno.serve(async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // applyTone is pure computation — no entity access, no user data.
+    // It is invoked both by end-users AND by other backend functions (sendTeamsPrompt, computeEveningActuals)
+    // via asServiceRole.functions.invoke, which carries no user token.
+    // Auth check is therefore intentionally omitted here.
 
     const body = await req.json().catch(() => ({}));
     const {
