@@ -16,6 +16,8 @@ import {
   Eye, EyeOff, Info, AlertCircle, Circle, Flame, Calendar
 } from "lucide-react";
 import ManagerCheckIn from "@/components/checkin/ManagerCheckIn";
+import TrendSummaryCard from "@/components/checkin/TrendSummaryCard";
+import IntentLoopCard from "@/components/checkin/IntentLoopCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -509,6 +511,36 @@ export default function MyLeadership() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Manager-private trend and intent data
+  const { data: managerTrends } = useQuery({
+    queryKey: ['ml-trends', user?.email],
+    queryFn: () => base44.entities.ManagerTrends.filter({ user_email: user.email }, '-last_trend_computed_at', 1)
+      .then(r => r[0] || null),
+    enabled: !!user?.email,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const { data: morningIntents = [] } = useQuery({
+    queryKey: ['ml-intents', user?.email],
+    queryFn: () => {
+      const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+      return base44.entities.ManagerPulse.filter(
+        { user_email: user.email, prompt_type: 'morning_intent' }, '-created_date', 7
+      );
+    },
+    enabled: !!user?.email,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: eveningActuals = [] } = useQuery({
+    queryKey: ['ml-actuals', user?.email],
+    queryFn: () => base44.entities.ManagerPulse.filter(
+      { user_email: user.email, prompt_type: 'evening_actuals' }, '-created_date', 7
+    ),
+    enabled: !!user?.email,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const isLoading = loadingInsight || loadingGoals || loadingAssignments || loadingPlans;
   const firstName = getFirstName(user);
   const todayFocus = buildTodayFocus(insight, goals, assignments);
@@ -539,7 +571,17 @@ export default function MyLeadership() {
             onComplete={() => {}}
           />
 
-          {/* 3. PATTERNS — what CL is noticing */}
+          {/* 3. BEHAVIORAL TRENDS — what Atreus is noticing (private, from check-ins) */}
+          <TrendSummaryCard trends={managerTrends} onOpenAtreus={openAtreus} />
+
+          {/* 4. INTENT LOOP — this week's intentions vs actuals */}
+          <IntentLoopCard
+            morningIntents={morningIntents}
+            eveningActuals={eveningActuals}
+            onOpenAtreus={openAtreus}
+          />
+
+          {/* 5. PATTERNS — assessment-based (what CL is noticing from Index) */}
           {insight && (
             <PatternsCard insight={insight} goals={goals} />
           )}

@@ -34,7 +34,7 @@
     },
     "biggest_weight_today": {
       "type": "string",
-      "description": "Short free-text: what is weighing on them most today (optional)"
+      "description": "Short free-text: what is weighing on them most today (optional). ALWAYS PRIVATE."
     },
     "avoidance_flag": {
       "type": "string",
@@ -43,7 +43,7 @@
         "no",
         "not_sure"
       ],
-      "description": "Whether the manager is aware of avoiding something today"
+      "description": "Whether the manager is aware of avoiding something today. ALWAYS PRIVATE."
     },
     "confidence_today": {
       "type": "string",
@@ -53,7 +53,7 @@
         "steady",
         "high"
       ],
-      "description": "How confident they feel in their leadership right now"
+      "description": "How confident they feel in their leadership right now. ALWAYS PRIVATE."
     },
     "motivation_today": {
       "type": "string",
@@ -63,7 +63,7 @@
         "moderate",
         "high"
       ],
-      "description": "Current motivation level"
+      "description": "Current motivation level. ALWAYS PRIVATE."
     },
     "room_today": {
       "type": "string",
@@ -80,7 +80,8 @@
       "enum": [
         "teams",
         "web",
-        "atreus"
+        "atreus",
+        "system"
       ],
       "default": "web",
       "description": "Surface where this pulse was captured"
@@ -92,7 +93,12 @@
         "overload_check",
         "weekly_reflection",
         "follow_up",
-        "contextual"
+        "contextual",
+        "morning_intent",
+        "evening_actuals",
+        "resilience_check",
+        "motivation_check",
+        "avoidance_flag_check"
       ],
       "default": "baseline_energy",
       "description": "Type of prompt that generated this pulse"
@@ -109,7 +115,33 @@
     },
     "delegation_commitment": {
       "type": "string",
-      "description": "Any commitment made around delegation or handing off work"
+      "description": "Any commitment made around delegation or handing off work. ALWAYS PRIVATE."
+    },
+    "focus_category": {
+      "type": "string",
+      "enum": [
+        "delegation",
+        "strategic_work",
+        "team_support",
+        "personal_development",
+        "other"
+      ],
+      "description": "Structured category for morning intent declaration"
+    },
+    "focus_intention": {
+      "type": "string",
+      "description": "Free-text morning intent: what the manager wants to focus on today. ALWAYS PRIVATE."
+    },
+    "intent_actuals_gap": {
+      "type": "string",
+      "enum": [
+        "declared_delegation_operator_mode_detected",
+        "declared_strategic_tactical_overload_detected",
+        "declared_team_support_low_1on1_detected",
+        "no_gap_detected",
+        "insufficient_data"
+      ],
+      "description": "Result of evening comparison between declared intent and observed behavior. ALWAYS PRIVATE."
     },
     "follow_up_sent": {
       "type": "boolean",
@@ -128,5 +160,13 @@
   },
   "required": [
     "user_email"
-  ]
+  ],
+  "rls": {
+    "read": {
+      "user_email": "{{user.email}}"
+    },
+    "write": {
+      "user_email": "{{user.email}}"
+    }
+  }
 }

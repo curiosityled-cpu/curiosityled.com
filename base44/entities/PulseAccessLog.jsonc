@@ -1,0 +1,74 @@
+{
+  "name": "PulseAccessLog",
+  "type": "object",
+  "properties": {
+    "accessed_by": {
+      "type": "string",
+      "description": "Email of the user or system that accessed the private manager data"
+    },
+    "target_email": {
+      "type": "string",
+      "description": "Email of the manager whose private data was accessed"
+    },
+    "entity_accessed": {
+      "type": "string",
+      "enum": [
+        "ManagerPulse",
+        "ManagerTrends"
+      ],
+      "description": "Which private entity was accessed"
+    },
+    "fields_accessed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of field names that were read"
+    },
+    "reason_code": {
+      "type": "string",
+      "enum": [
+        "support_request",
+        "privacy_audit",
+        "diagnostic",
+        "computeBehaviorTrends",
+        "computeEveningActuals",
+        "sendTeamsPrompt",
+        "atreus_context"
+      ],
+      "description": "Reason for the access. Required \u2014 access without a valid code is rejected."
+    },
+    "function_name": {
+      "type": "string",
+      "description": "Name of the backend function that triggered the access"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the access occurred"
+    },
+    "record_count": {
+      "type": "number",
+      "description": "Number of records accessed in this operation"
+    }
+  },
+  "required": [
+    "accessed_by",
+    "target_email",
+    "entity_accessed",
+    "reason_code",
+    "timestamp"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "Platform Admin"
+      }
+    },
+    "write": {
+      "user_condition": {
+        "role": "Platform Admin"
+      }
+    }
+  }
+}

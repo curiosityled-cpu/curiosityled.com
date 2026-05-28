@@ -11,7 +11,7 @@
       "enum": [
         "gentle_observant",
         "warm_candid",
-        "close_friend",
+        "close_friend_candid",
         "respectfully_confronting"
       ],
       "default": "warm_candid",
@@ -41,6 +41,21 @@
       "type": "boolean",
       "default": false,
       "description": "Whether the manager has completed the Teams tone onboarding flow"
+    },
+    "calendar_consent_given": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the manager has explicitly consented to Outlook calendar reading"
+    },
+    "calendar_connected": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the Outlook calendar connection is active"
+    },
+    "user_timezone": {
+      "type": "string",
+      "default": "America/New_York",
+      "description": "Manager's local timezone for scheduling evening actuals and morning intent prompts"
     },
     "client_id": {
       "type": "string",
