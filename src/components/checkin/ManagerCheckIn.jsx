@@ -69,6 +69,61 @@ const PROMPTS = {
     optional_text: "What are you holding that probably shouldn't all sit with you?",
     field: "operator_mode_response",
     prompt_type: "overload_check"
+  },
+  morning_intent: {
+    title: "What's your intent for today?",
+    body: "Before the day takes over — what's the one thing you actually want to protect time for or lead well today?",
+    why: "Declared intentions help me understand when days match up and when they don't. It's the gap between what you planned and what happened that's most useful.",
+    options: [
+      { label: "Delegate something meaningful", value: "delegation", field_value: "delegation" },
+      { label: "Protect time for strategic work", value: "strategic_work", field_value: "strategic_work" },
+      { label: "Prioritise my team", value: "team_support", field_value: "team_support" },
+      { label: "Something personal / learning", value: "personal_development", field_value: "personal_development" }
+    ],
+    optional_text: "What specifically do you want to protect or do?",
+    field: "focus_category",
+    prompt_type: "morning_intent"
+  },
+  weekly_reflection: {
+    title: "How did this week actually go?",
+    body: "Not the output — the experience of it. Did you lead the way you wanted to this week?",
+    why: "Weekly reflection is one of the most reliable ways to build self-awareness over time. Even a quick honest answer is useful.",
+    options: [
+      { label: "Mostly yes", value: "strong", field_value: "strong" },
+      { label: "Mixed", value: "steady", field_value: "steady" },
+      { label: "Mostly in survival mode", value: "stretched", field_value: "stretched" },
+      { label: "Not at all", value: "drained", field_value: "drained" }
+    ],
+    optional_text: "What's one thing you'd do differently?",
+    field: "energy_level",
+    prompt_type: "weekly_reflection"
+  },
+  motivation_check: {
+    title: "What's your drive like today?",
+    body: "Not about what's on your list — just how much energy you actually have to lead right now.",
+    why: "Motivation naturally dips and surges. Tracking it over time helps me understand what drains you and what fuels you.",
+    options: [
+      { label: "Genuinely fired up", value: "high", field_value: "high" },
+      { label: "Getting on with it", value: "moderate", field_value: "moderate" },
+      { label: "Running on fumes", value: "low", field_value: "low" },
+      { label: "Flat today", value: "flat", field_value: "flat" }
+    ],
+    optional_text: "What's affecting your motivation today?",
+    field: "motivation_today",
+    prompt_type: "baseline_energy"
+  },
+  avoidance_check: {
+    title: "Is there something you're quietly putting off?",
+    body: "Most of us have something sitting on the edge of our awareness that we haven't quite got to. Anything like that today?",
+    why: "Avoidance is one of the most honest signals of where leadership is actually hard. Noticing it is the first step.",
+    options: [
+      { label: "Yes, definitely", value: "yes", field_value: "yes" },
+      { label: "Maybe — not sure", value: "not_sure", field_value: "not_sure" },
+      { label: "Not really today", value: "no", field_value: "no" }
+    ],
+    optional_text: "What is it, if you want to name it?",
+    field: "avoidance_flag",
+    prompt_type: "contextual"
   }
 };
 

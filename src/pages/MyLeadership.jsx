@@ -13,11 +13,13 @@ import {
   Brain, Target, BookOpen, ArrowRight, ChevronRight,
   Sparkles, TrendingUp, Clock, CheckCircle2, Zap, Shield,
   Settings, BarChart3, Layers, Star, MessageSquare, RefreshCw,
-  Eye, EyeOff, Info, AlertCircle, Circle, Flame, Calendar
+  Eye, EyeOff, Info, AlertCircle, Circle, Flame, Calendar, SlidersHorizontal, X
 } from "lucide-react";
 import ManagerCheckIn from "@/components/checkin/ManagerCheckIn";
 import TrendSummaryCard from "@/components/checkin/TrendSummaryCard";
 import IntentLoopCard from "@/components/checkin/IntentLoopCard";
+import ToneOnboarding from "@/components/checkin/ToneOnboarding";
+import CheckInSettings from "@/components/checkin/CheckInSettings";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -440,6 +442,7 @@ export default function MyLeadership() {
   const [privacyDismissed, setPrivacyDismissed] = useState(() =>
     localStorage.getItem('cl_privacy_banner_dismissed') === '1'
   );
+  const [showSettings, setShowSettings] = useState(false);
 
   const dismissPrivacy = () => {
     localStorage.setItem('cl_privacy_banner_dismissed', '1');
@@ -511,6 +514,17 @@ export default function MyLeadership() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Check if tone onboarding is complete
+  const { data: tonePref = null } = useQuery({
+    queryKey: ['ml-tone', user?.email],
+    queryFn: async () => {
+      const rows = await base44.entities.TonePreference.filter({ user_email: user.email }, null, 1);
+      return rows[0] || null;
+    },
+    enabled: !!user?.email,
+    staleTime: 5 * 60 * 1000,
+  });
+
   // Manager-private trend memory
   const { data: trends = null } = useQuery({
     queryKey: ['ml-trends', user?.email],
@@ -534,6 +548,19 @@ export default function MyLeadership() {
   const firstName = getFirstName(user);
   const todayFocus = buildTodayFocus(insight, goals, assignments);
 
+  // Derive today's check-in prompt type — expanded rotation
+  const day = new Date().getDay();
+  const hour = new Date().getHours();
+  const todayPromptType = (() => {
+    if (day === 5) return 'weekly_reflection';                        // Friday → reflect
+    if ((day === 1 || day === 2) && hour < 11) return 'morning_intent'; // Mon/Tue AM → intent
+    const rotation = ['baseline_energy', 'confidence_check', 'motivation_check', 'overload_check', 'avoidance_check', 'clarity_check'];
+    return rotation[day % rotation.length];
+  })();
+
+  // Tone onboarding needed if no TonePreference record exists yet
+  const needsToneOnboarding = tonePref === null;
+
   return (
     <MVPPageLayout
       title={`Good ${new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, ${firstName}.`}
@@ -544,42 +571,93 @@ export default function MyLeadership() {
       ) : (
         <div className="space-y-4">
 
-          {/* 0. Privacy / trust banner */}
-          {!privacyDismissed && <PrivacyBanner onDismiss={dismissPrivacy} />}
+          {/* 0. Tone onboarding gate — shown once, blocks until complete */}
+          {needsToneOnboarding && (
+            <div className="bg-white rounded-2xl border border-[#0202ff]/20 shadow-sm overflow-hidden">
+              <div className="px-5 pt-5 pb-2 flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center">
+                  <MessageSquare className="w-3.5 h-3.5 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">One quick thing before we start</p>
+                  <p className="text-xs text-gray-400">I usually talk like a supportive colleague who's honest but on your side. You can keep that, or change it.</p>
+                </div>
+              </div>
+              <div className="px-5 pb-5">
+                <ToneOnboarding
+                  existingTone={null}
+                  onComplete={() => {
+                    queryClient.invalidateQueries({ queryKey: ['ml-tone', user?.email] });
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Privacy / trust banner */}
+          {!needsToneOnboarding && !privacyDismissed && <PrivacyBanner onDismiss={dismissPrivacy} />}
+
+          {/* Settings panel toggle */}
+          {!needsToneOnboarding && (
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowSettings(s => !s)}
+                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                {showSettings ? 'Close settings' : 'Atreus settings'}
+              </button>
+            </div>
+          )}
+
+          {/* Inline settings panel */}
+          {showSettings && (
+            <div className="space-y-1">
+              <CheckInSettings />
+            </div>
+          )}
 
           {/* 1. TODAY — primary habit surface */}
-          <TodayCard
-            focus={todayFocus}
-            insight={insight}
-            onOpenAtreus={() => openAtreus(todayFocus.atreus ? todayFocus.action : undefined)}
-          />
+          {!needsToneOnboarding && (
+            <TodayCard
+              focus={todayFocus}
+              insight={insight}
+              onOpenAtreus={() => openAtreus(todayFocus.atreus ? todayFocus.action : undefined)}
+            />
+          )}
 
           {/* 2. Quick check-in — live interactive card */}
+          {!needsToneOnboarding && (
           <ManagerCheckIn
-            promptType={/* rotate by day */ ['baseline_energy', 'confidence_check', 'baseline_energy', 'overload_check', 'confidence_check'][new Date().getDay() % 5]}
+            promptType={todayPromptType}
             onComplete={() => {}}
           />
+          )}
 
           {/* 3. TREND MEMORY — what Atreus is noticing (private) */}
-          <TrendSummaryCard
-            trends={trends}
-            onOpenAtreus={openAtreus}
-          />
+          {!needsToneOnboarding && (
+            <TrendSummaryCard
+              trends={trends}
+              onOpenAtreus={openAtreus}
+            />
+          )}
 
           {/* 4. INTENT LOOP — this week's intentions vs actuals (private) */}
-          <IntentLoopCard
-            pulses={recentPulses}
-            trends={trends}
-            onOpenAtreus={openAtreus}
-          />
+          {!needsToneOnboarding && (
+            <IntentLoopCard
+              pulses={recentPulses}
+              trends={trends}
+              onOpenAtreus={openAtreus}
+            />
+          )}
 
           {/* 5. PATTERNS — assessment + goal signals */}
-          {insight && (
+          {!needsToneOnboarding && insight && (
             <PatternsCard insight={insight} goals={goals} />
           )}
 
           {/* No assessment yet */}
-          {!insight && (
+          {!needsToneOnboarding && !insight && (
             <Card className="shadow-sm border border-dashed border-gray-200 bg-white rounded-2xl">
               <CardContent className="py-10 px-6 text-center">
                 <Brain className="w-10 h-10 text-gray-200 mx-auto mb-3" />
@@ -597,11 +675,11 @@ export default function MyLeadership() {
           )}
 
           {/* 6. PLAN — goals pulse + suggested support */}
-          <GoalsPulseCard goals={goals} />
-          <SuggestedSupportCard assignments={assignments} devPlans={devPlans} />
+          {!needsToneOnboarding && <GoalsPulseCard goals={goals} />}
+          {!needsToneOnboarding && <SuggestedSupportCard assignments={assignments} devPlans={devPlans} />}
 
           {/* 7. EXPLORE DEEPER — full profile, plan, goals */}
-          <ExploreDeeperCard />
+          {!needsToneOnboarding && <ExploreDeeperCard />}
 
         </div>
       )}
