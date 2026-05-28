@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { Shield, Clock, MessageSquare, ChevronRight, Pencil, Eye } from "lucide-react";
+import { Shield, Clock, MessageSquare, Pencil, Eye } from "lucide-react";
 import VisibilityShareFlags from "@/components/privacy/VisibilityShareFlags";
 import { Button } from "@/components/ui/button";
 import ToneOnboarding from "./ToneOnboarding";
@@ -138,7 +138,7 @@ export default function CheckInSettings() {
           <p className="text-sm font-semibold text-gray-900">Sharing controls</p>
         </div>
         <div className="px-5 pb-5">
-          <VisibilityShareFlags />
+          <VisibilityShareFlags userEmail={tonePref?.user_email} />
         </div>
       </div>
 

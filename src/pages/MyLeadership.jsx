@@ -451,9 +451,11 @@ export default function MyLeadership() {
   };
 
   const openAtreus = (starterMessage) => openWithContext({
-    pageType: 'my-leadership',
-    starter_message: starterMessage || "I'd like to reflect on my leadership this week.",
-    user_name: getFirstName(user),
+    context: {
+      pageType: 'my-leadership',
+      user_name: getFirstName(user),
+    },
+    starterMessage: starterMessage || "I'd like to reflect on my leadership this week.",
   });
 
   useEffect(() => {

@@ -12,7 +12,6 @@
  */
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useAuth } from "@/lib/AuthContext";
 import { Shield, Users, BarChart3, BookOpen, Target, Info } from "lucide-react";
 import { toast } from "sonner";
 
@@ -63,15 +62,26 @@ const TOGGLE_ITEMS = [
   },
 ];
 
-export default function VisibilityShareFlags() {
-  const { user } = useAuth();
+/**
+ * userEmail prop: pass directly when rendering from a legacy auth context
+ * (e.g. PrivacySettings which uses @/components/useAuth).
+ * When omitted, fetches from base44.auth.me() directly.
+ */
+export default function VisibilityShareFlags({ userEmail: userEmailProp }) {
+  const [userEmail, setUserEmail] = useState(userEmailProp || null);
   const [prefs, setPrefs] = useState(null);
   const [saving, setSaving] = useState({});
   const [loading, setLoading] = useState(true);
 
+  // Resolve email: use prop if given, else fetch from SDK
   useEffect(() => {
-    if (!user?.email) return;
-    base44.entities.TonePreference.filter({ user_email: user.email }, null, 1)
+    if (userEmailProp) { setUserEmail(userEmailProp); return; }
+    base44.auth.me().then(u => { if (u?.email) setUserEmail(u.email); }).catch(() => {});
+  }, [userEmailProp]);
+
+  useEffect(() => {
+    if (!userEmail) return;
+    base44.entities.TonePreference.filter({ user_email: userEmail }, null, 1)
       .then(rows => {
         setPrefs(rows[0] || {
           share_energy_with_manager: false,
@@ -81,7 +91,7 @@ export default function VisibilityShareFlags() {
         });
         setLoading(false);
       });
-  }, [user?.email]);
+  }, [userEmail]);
 
   const handleToggle = async (key) => {
     const current = prefs?.[key] ?? TOGGLE_ITEMS.find(t => t.key === key)?.defaultOn ?? false;
@@ -99,7 +109,7 @@ export default function VisibilityShareFlags() {
         });
       } else {
         const created = await base44.entities.TonePreference.create({
-          user_email: user.email,
+          user_email: userEmail,
           [key]: newVal,
           visibility_last_reviewed_at: updated.visibility_last_reviewed_at,
         });

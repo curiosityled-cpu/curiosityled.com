@@ -261,7 +261,14 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const targetEmail = body.user_email || user.email;
+    const isForced = body.force === true;
+
+    // Allow service-role / orchestrator calls when force=true and user_email is provided
+    if (!user && !(isForced && body.user_email)) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const targetEmail = body.user_email || user?.email;
     const forcePromptType = body.prompt_type || null; // allow explicit override
     const now = new Date();
 
@@ -279,7 +286,6 @@ Deno.serve(async (req) => {
     const lastPromptSentAt = lastSystemPulse?.created_date ? new Date(lastSystemPulse.created_date) : null;
 
     // 2. Anti-spam gate (skip for explicit force calls from admin)
-    const isForced = body.force === true;
     if (!isForced && lastPromptSentAt) {
       const hoursSinceLast = (now - lastPromptSentAt) / 3600000;
       if (hoursSinceLast < 12) {

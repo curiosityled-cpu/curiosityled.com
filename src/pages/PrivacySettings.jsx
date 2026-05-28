@@ -292,7 +292,7 @@ function PrivacySettings() {
                   <h3 className="text-lg font-semibold text-gray-900 mb-1">Sharing Controls</h3>
                   <p className="text-sm text-gray-500">Choose what aggregated signals — if any — are shared beyond your private view.</p>
                 </div>
-                <VisibilityShareFlags />
+                <VisibilityShareFlags userEmail={user?.email} />
               </TabsContent>
 
               <TabsContent value="my-data" className="mt-6">
