@@ -298,9 +298,9 @@ Deno.serve(async (req) => {
           identity_friction_active,
         };
 
-        // Delete existing then create fresh — avoids RLS update restrictions on asServiceRole
-        if (existingTrends.length > 0) {
-          await base44.asServiceRole.entities.ManagerTrends.delete(existingTrends[0].id);
+        // Delete ALL existing records then create fresh — avoids RLS update restrictions and duplicate accumulation
+        for (const existing of existingTrends) {
+          await base44.asServiceRole.entities.ManagerTrends.delete(existing.id);
         }
         await base44.asServiceRole.entities.ManagerTrends.create(trendsPayload);
 
