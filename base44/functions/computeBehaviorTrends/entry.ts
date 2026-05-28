@@ -140,17 +140,10 @@ Deno.serve(async (req) => {
 
     for (const email of managerEmails) {
       try {
-        // Fetch pulses — manager-private, accessed via service role with audit reason
-        console.log(`[DEBUG] fetching pulses for: ${email}`);
+        // Fetch pulses — manager-private, accessed via service role
         const allPulses = await base44.asServiceRole.entities.ManagerPulse.filter(
           { user_email: email }, '-created_date', 100
         );
-
-        console.log(`[DEBUG] ${email} — total pulses fetched: ${allPulses.length}`);
-        if (allPulses.length > 0) {
-          const s = allPulses[0];
-          console.log(`[DEBUG] first pulse created_date raw: ${JSON.stringify(s.created_date)}, type: ${typeof s.created_date}, energy: ${s.energy_level}`);
-        }
 
         const cutoff14d = new Date(now.getTime() - 14 * 86400000);
         const cutoff28d = new Date(now.getTime() - 28 * 86400000);
@@ -168,7 +161,7 @@ Deno.serve(async (req) => {
         const pulses28d = allPulses.filter(p => { const d = toDate(p.created_date); return d && d >= cutoff28d; });
         const pulses7d = allPulses.filter(p => { const d = toDate(p.created_date); return d && d >= cutoff7d; });
 
-        console.log(`[DEBUG] ${email} — pulses14d: ${pulses14d.length}, cutoff14d: ${cutoff14d.toISOString()}`);
+
 
         // Minimum data gate
         if (pulses14d.length < 3) {

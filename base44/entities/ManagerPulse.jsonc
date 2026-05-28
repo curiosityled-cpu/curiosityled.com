@@ -178,9 +178,6 @@
     "user_email"
   ],
   "rls": {
-    "read": {
-      "user_email": "{{user.email}}"
-    },
     "write": {
       "$or": [
         {
