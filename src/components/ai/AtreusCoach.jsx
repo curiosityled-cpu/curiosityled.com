@@ -685,7 +685,26 @@ export default function AtreusCoach({
       cross_session: crossSessionData
     };
 
-    return buildAtreusSystemPrompt({ userName, userRole, pageType, contextSummary, viewportFocus, crossSessionData, externalQuals });
+    // Fetch tone preference and manager trends for private coaching context
+    let toneMode = 'warm_candid';
+    let managerTrends = null;
+    let operatorRiskScore = 0;
+    try {
+      if (user?.email) {
+        const [tonePrefs, trends, activityRecords] = await Promise.all([
+          base44.entities.TonePreference.filter({ user_email: user.email }, '-created_date', 1),
+          base44.entities.ManagerTrends.filter({ user_email: user.email }, '-last_trend_computed_at', 1),
+          base44.entities.UserActivity.filter({ user_email: user.email }, '-date', 1),
+        ]);
+        if (tonePrefs[0]?.tone_mode) toneMode = tonePrefs[0].tone_mode;
+        if (trends[0]) managerTrends = trends[0];
+        if (activityRecords[0]?.operator_mode_risk_score) operatorRiskScore = activityRecords[0].operator_mode_risk_score;
+      }
+    } catch (e) {
+      // Silently fall back to defaults — never fail Atreus init for missing context
+    }
+
+    return buildAtreusSystemPrompt({ userName, userRole, pageType, contextSummary, viewportFocus, crossSessionData, externalQuals, toneMode, managerTrends, operatorRiskScore });
   };
 
   const handleSendMessage = async (messageText = null) => {
