@@ -20,6 +20,7 @@ import {
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { withAuthProtection } from "@/components/hoc/withAuthProtection";
+import CalendarConsentCard from "@/components/checkin/CalendarConsentCard";
 import PHIDetectionConfig from "@/components/privacy/PHIDetectionConfig";
 import AccessLogsViewer from "@/components/privacy/AccessLogsViewer";
 import DataDownloadPanel from "@/components/privacy/DataDownloadPanel";
@@ -32,6 +33,8 @@ function PrivacySettings() {
   const [loading, setLoading] = useState(true);
   const [privacyData, setPrivacyData] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [tonePrefs, setTonePrefs] = useState(null);
+  const [calendarLoading, setCalendarLoading] = useState(false);
 
   useEffect(() => {
     loadPrivacyData();
@@ -42,10 +45,13 @@ function PrivacySettings() {
     
     try {
       setLoading(true);
-      // Load user's privacy preferences and compliance data
       const userPrefs = user.privacy_preferences || {};
       const trainingStatus = user.privacy_training_completed || false;
       const lastDataDownload = user.last_data_download_date || null;
+
+      // Load calendar consent / tone prefs
+      const prefs = await base44.entities.TonePreference.filter({ user_email: user.email }, '-created_date', 1);
+      setTonePrefs(prefs[0] || null);
       
       setPrivacyData({
         preferences: userPrefs,
@@ -57,6 +63,41 @@ function PrivacySettings() {
       toast.error("Failed to load privacy settings");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCalendarConsent = async (provider) => {
+    setCalendarLoading(true);
+    try {
+      const data = { calendar_consent_given: true, calendar_connected: true };
+      if (tonePrefs?.id) {
+        await base44.entities.TonePreference.update(tonePrefs.id, data);
+        setTonePrefs(prev => ({ ...prev, ...data }));
+      } else {
+        const created = await base44.entities.TonePreference.create({ user_email: user.email, ...data });
+        setTonePrefs(created);
+      }
+      toast.success('Calendar connected — Atreus will check in more thoughtfully.');
+    } catch (e) {
+      toast.error('Could not connect calendar');
+    } finally {
+      setCalendarLoading(false);
+    }
+  };
+
+  const handleCalendarDisconnect = async () => {
+    if (!window.confirm('Disconnect your calendar? Atreus will no longer use meeting load to time check-ins.')) return;
+    setCalendarLoading(true);
+    try {
+      if (tonePrefs?.id) {
+        await base44.entities.TonePreference.update(tonePrefs.id, { calendar_consent_given: false, calendar_connected: false });
+        setTonePrefs(prev => ({ ...prev, calendar_consent_given: false, calendar_connected: false }));
+      }
+      toast.success('Calendar disconnected.');
+    } catch (e) {
+      toast.error('Could not disconnect calendar');
+    } finally {
+      setCalendarLoading(false);
     }
   };
 
@@ -212,6 +253,19 @@ function PrivacySettings() {
                         <li>✓ Control data sharing preferences</li>
                       </ul>
                     </div>
+                  </div>
+
+                  {/* Calendar connection */}
+                  <div className="mt-6">
+                    <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                      <span>📅</span> Calendar Connection
+                    </h4>
+                    <CalendarConsentCard
+                      tonePrefs={tonePrefs}
+                      onConsent={handleCalendarConsent}
+                      onDisconnect={handleCalendarDisconnect}
+                      loading={calendarLoading}
+                    />
                   </div>
 
                   {user?.client_id && (
