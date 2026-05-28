@@ -119,38 +119,8 @@
   ],
   "rls": {
     "read": {
-      "$or": [
-        {
-          "user_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "admin",
-                "Platform Admin"
-              ]
-            }
-          }
-        }
-      ]
+      "user_email": "{{user.email}}"
     },
-    "write": {
-      "$or": [
-        {
-          "user_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "admin",
-                "Platform Admin"
-              ]
-            }
-          }
-        }
-      ]
-    }
+    "write": {}
   }
 }
