@@ -31,6 +31,7 @@ import { toast } from "sonner";
 import { Link, useLocation } from "react-router-dom";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
 import CalendarConsentCard from "@/components/checkin/CalendarConsentCard";
+import OrgVisibilityPanel from "@/components/privacy/OrgVisibilityPanel";
 import { createPageUrl } from "@/utils";
 
 export default function Settings() {
@@ -358,7 +359,7 @@ export default function Settings() {
         </div>
 
         <Tabs defaultValue={isAdmin ? "platform" : "notifications"} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full" style={{ gridTemplateColumns: isAdmin ? 'repeat(5, 1fr)' : 'repeat(4, 1fr)' }}>
+          <TabsList className="grid w-full" style={{ gridTemplateColumns: isAdmin ? 'repeat(6, 1fr)' : 'repeat(5, 1fr)' }}>
             {isAdmin && (
               <TabsTrigger value="platform">
                 <SettingsIcon className="w-4 h-4 mr-2" />
@@ -372,6 +373,10 @@ export default function Settings() {
             <TabsTrigger value="checkin">
               <MessageSquare className="w-4 h-4 mr-2" />
               Check-ins
+            </TabsTrigger>
+            <TabsTrigger value="privacy-visibility">
+              <Shield className="w-4 h-4 mr-2" />
+              What org sees
             </TabsTrigger>
             <TabsTrigger value="ai-coach">
               <Sparkles className="w-4 h-4 mr-2" />
@@ -678,6 +683,18 @@ export default function Settings() {
                 onConnect={(provider) => toast.success(`${provider === 'microsoft_365' ? 'Microsoft 365' : 'Google'} calendar connected`)}
                 onDisconnect={() => toast.success('Calendar disconnected')}
               />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="privacy-visibility">
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-1">Privacy & Visibility</h2>
+                <p className="text-sm text-gray-500">
+                  Understand exactly what Curiosity Led shares with your organisation and what stays private to you.
+                </p>
+              </div>
+              <OrgVisibilityPanel userEmail={user?.email} />
             </div>
           </TabsContent>
 
