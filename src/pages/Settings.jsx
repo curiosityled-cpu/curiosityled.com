@@ -30,6 +30,7 @@ import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { Link, useLocation } from "react-router-dom";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
+import CalendarConsentCard from "@/components/checkin/CalendarConsentCard";
 import { createPageUrl } from "@/utils";
 
 export default function Settings() {
@@ -665,7 +666,7 @@ export default function Settings() {
           </TabsContent>
 
           <TabsContent value="checkin">
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-1">Atreus Check-in Settings</h2>
                 <p className="text-sm text-gray-500">
@@ -673,6 +674,10 @@ export default function Settings() {
                 </p>
               </div>
               <CheckInSettings />
+              <CalendarConsentCard
+                onConnect={(provider) => toast.success(`${provider === 'microsoft_365' ? 'Microsoft 365' : 'Google'} calendar connected`)}
+                onDisconnect={() => toast.success('Calendar disconnected')}
+              />
             </div>
           </TabsContent>
 
