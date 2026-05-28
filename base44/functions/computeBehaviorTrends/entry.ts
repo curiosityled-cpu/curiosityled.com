@@ -141,6 +141,7 @@ Deno.serve(async (req) => {
     for (const email of managerEmails) {
       try {
         // Fetch pulses — manager-private, accessed via service role with audit reason
+        console.log(`[DEBUG] fetching pulses for: ${email}`);
         const allPulses = await base44.asServiceRole.entities.ManagerPulse.filter(
           { user_email: email }, '-created_date', 100
         );

@@ -65,10 +65,6 @@
         "role": "Platform Admin"
       }
     },
-    "write": {
-      "user_condition": {
-        "role": "Platform Admin"
-      }
-    }
+    "write": {}
   }
 }

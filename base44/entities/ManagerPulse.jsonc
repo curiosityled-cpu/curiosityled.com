@@ -182,7 +182,14 @@
       "user_email": "{{user.email}}"
     },
     "write": {
-      "user_email": "{{user.email}}"
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "source": "system"
+        }
+      ]
     }
   }
 }
