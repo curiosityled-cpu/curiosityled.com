@@ -124,6 +124,20 @@ const PROMPTS = {
     optional_text: "What is it, if you want to name it?",
     field: "avoidance_flag",
     prompt_type: "contextual"
+  },
+  optimism_check: {
+    title: "How do things feel from where you're sitting?",
+    body: "Not about today's to-do list — just your broader sense of how things are trending for you and your team right now.",
+    why: "How optimistic you feel about the trajectory of things is one of the quieter but more telling signals I track. It tends to shift before other things do.",
+    options: [
+      { label: "Genuinely hopeful", value: "optimistic", field_value: "optimistic" },
+      { label: "Cautiously okay", value: "cautiously_hopeful", field_value: "cautiously_hopeful" },
+      { label: "Not sure which way", value: "uncertain", field_value: "uncertain" },
+      { label: "Things feel heavy", value: "pessimistic", field_value: "pessimistic" }
+    ],
+    optional_text: "What's shaping that feeling?",
+    field: "optimism_today",
+    prompt_type: "contextual"
   }
 };
 

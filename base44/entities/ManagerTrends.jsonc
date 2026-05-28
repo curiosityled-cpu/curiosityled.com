@@ -36,6 +36,26 @@
       ],
       "description": "Direction of resilience_signal responses over last 14 days. ALWAYS PRIVATE."
     },
+    "motivation_trend": {
+      "type": "string",
+      "enum": [
+        "improving",
+        "stable",
+        "declining",
+        "insufficient_data"
+      ],
+      "description": "Direction of motivation_today responses over last 14 days. ALWAYS PRIVATE."
+    },
+    "optimism_trend": {
+      "type": "string",
+      "enum": [
+        "improving",
+        "stable",
+        "declining",
+        "insufficient_data"
+      ],
+      "description": "Direction of optimism_today responses over last 14 days. ALWAYS PRIVATE."
+    },
     "identity_friction_signals": {
       "type": "number",
       "description": "Count of check-ins in last 7 days where identity_friction was true. ALWAYS PRIVATE."

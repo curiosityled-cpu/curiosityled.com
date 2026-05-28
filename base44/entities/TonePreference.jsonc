@@ -42,6 +42,14 @@
       "default": false,
       "description": "Whether the manager has completed the Teams tone onboarding flow"
     },
+    "teams_conversation_id": {
+      "type": "string",
+      "description": "Microsoft Teams 1:1 conversation ID for bot-to-user card delivery. Set during bot installation."
+    },
+    "teams_user_id": {
+      "type": "string",
+      "description": "Microsoft Teams user AAD object ID. Used to open new conversations if needed."
+    },
     "calendar_consent_given": {
       "type": "boolean",
       "default": false,
