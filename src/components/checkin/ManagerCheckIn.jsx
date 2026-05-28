@@ -124,6 +124,20 @@ const PROMPTS = {
     optional_text: "What is it, if you want to name it?",
     field: "avoidance_flag",
     prompt_type: "contextual"
+  },
+  optimism_check: {
+    title: "How does the near future feel from where you're sitting?",
+    body: "Not about outcomes — just your gut sense of what's coming. Does it feel open, uncertain, or closed off?",
+    why: "Optimism about what's ahead affects how you lead today. Tracking it over time helps me understand your cycles and support you at the right moments.",
+    options: [
+      { label: "Genuinely hopeful", value: "optimistic", field_value: "optimistic" },
+      { label: "Cautiously okay", value: "hopeful", field_value: "hopeful" },
+      { label: "Uncertain", value: "uncertain", field_value: "uncertain" },
+      { label: "Flat or bleak", value: "pessimistic", field_value: "pessimistic" }
+    ],
+    optional_text: "What's shaping how you see things right now?",
+    field: "optimism_today",
+    prompt_type: "contextual"
   }
 };
 

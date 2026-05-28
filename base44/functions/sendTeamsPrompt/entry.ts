@@ -352,6 +352,28 @@ Deno.serve(async (req) => {
       biggest_weight_today: null
     });
 
+    // 8. Attempt real Teams delivery via Adaptive Card (with in-app fallback)
+    let teamsResult = null;
+    try {
+      teamsResult = await base44.asServiceRole.functions.invoke('sendTeamsAdaptiveCard', {
+        user_email: targetEmail,
+        prompt: {
+          title: finalTitle,
+          body: finalBody,
+          why: finalWhy,
+          options: promptTemplate.options,
+          optional_text: promptTemplate.optional_text,
+          prompt_type: promptTemplate.prompt_type,
+          field: promptTemplate.field,
+          tone_mode: toneMode,
+          override_preamble: overridePreamble,
+        },
+      });
+    } catch (deliveryErr) {
+      // Non-fatal — prompt was already recorded via ManagerPulse marker
+      console.error('[sendTeamsPrompt] Teams delivery error (non-fatal):', deliveryErr.message);
+    }
+
     return Response.json({
       sent: true,
       prompt_type: promptTemplate.prompt_type,
@@ -363,6 +385,7 @@ Deno.serve(async (req) => {
       operator_mode_risk_score: riskScore,
       tone_mode: toneMode,
       override_preamble: overridePreamble,
+      teams_delivery: teamsResult?.teams_delivery || null,
     });
 
   } catch (error) {

@@ -82,107 +82,120 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const { user_email, force = false } = body;
+    const today = new Date().toISOString().split('T')[0];
 
-    const targetEmail = user_email || user.email;
-    if (!targetEmail) {
-      return Response.json({ error: 'user_email required' }, { status: 400 });
+    // If a specific user is requested, run for just them (admin only for others)
+    // Otherwise iterate all onboarded managers
+    let targetEmails = [];
+
+    if (user_email) {
+      if (user_email !== user.email && user.role !== 'admin') {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+      targetEmails = [user_email];
+    } else {
+      // Admin-only: iterate all onboarded managers
+      if (user.role !== 'admin') {
+        return Response.json({ error: 'Forbidden: Admin required for batch run' }, { status: 403 });
+      }
+      const tonePrefs = await base44.asServiceRole.entities.TonePreference.list('-created_date', 200);
+      targetEmails = [...new Set(tonePrefs.map(t => t.user_email).filter(Boolean))];
     }
 
-    // Admin check for running on behalf of others
-    if (targetEmail !== user.email && user.role !== 'admin') {
-      return Response.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    const results = [];
 
-    // Rate limiting: check if we sent a contextual prompt in last 4 hours
-    if (!force) {
-      const recentPulses = await base44.asServiceRole.entities.ManagerPulse.filter(
-        { user_email: targetEmail, source: 'system' },
-        '-created_date',
-        1
-      );
-      if (recentPulses.length > 0) {
-        const lastPulse = recentPulses[0];
-        const hoursSince = (Date.now() - new Date(lastPulse.created_date)) / 3600000;
-        if (hoursSince < 4) {
-          return Response.json({
-            sent: false,
-            reason: `Rate limited — last contextual prompt sent ${Math.round(hoursSince)}h ago`
-          });
+    for (const targetEmail of targetEmails) {
+      try {
+        // Rate limiting: check if we sent a contextual prompt in last 4 hours
+        if (!force) {
+          const recentPulses = await base44.asServiceRole.entities.ManagerPulse.filter(
+            { user_email: targetEmail, source: 'system' },
+            '-created_date',
+            1
+          );
+          if (recentPulses.length > 0) {
+            const lastPulse = recentPulses[0];
+            const hoursSince = (Date.now() - new Date(lastPulse.created_date)) / 3600000;
+            if (hoursSince < 4) {
+              results.push({ email: targetEmail, sent: false, reason: `Rate limited (${Math.round(hoursSince)}h ago)` });
+              continue;
+            }
+          }
         }
+
+        // Get today's activity signals
+        const activityRecords = await base44.asServiceRole.entities.UserActivity.filter(
+          { user_email: targetEmail, date: today },
+          null,
+          1
+        );
+        const activity = activityRecords[0] || null;
+
+        if (!activity) {
+          results.push({ email: targetEmail, sent: false, reason: 'No activity data for today' });
+          continue;
+        }
+
+        // Determine trigger type
+        let trigger = null;
+        if ((activity.back_to_back_density || 0) >= 0.7 && (activity.meeting_count_day || 0) >= 6) {
+          trigger = 'overload';
+        } else if ((activity.late_day_load_minutes || 0) > 90) {
+          trigger = 'late_overload';
+        } else if ((activity.operator_mode_risk_score || 0) >= 70) {
+          trigger = 'high_stakes';
+        }
+
+        if (!trigger) {
+          results.push({ email: targetEmail, sent: false, reason: 'No contextual trigger met' });
+          continue;
+        }
+
+        // Get tone preference
+        const tonePrefs = await base44.asServiceRole.entities.TonePreference.filter(
+          { user_email: targetEmail }, null, 1
+        );
+        const toneMode = tonePrefs[0]?.tone_mode || 'warm_candid';
+
+        // Build the contextual prompt
+        const prompt = buildContextualPrompt(trigger, activity, toneMode);
+
+        // Write system pulse marker
+        await base44.asServiceRole.entities.ManagerPulse.create({
+          user_email: targetEmail,
+          prompt_type: prompt.prompt_type,
+          source: 'system',
+        });
+
+        // Deliver via Teams (with in-app notification fallback)
+        await base44.asServiceRole.functions.invoke('sendTeamsAdaptiveCard', {
+          user_email: targetEmail,
+          prompt: { ...prompt, tone_mode: toneMode },
+        });
+
+        results.push({ email: targetEmail, sent: true, trigger, prompt_type: prompt.prompt_type });
+
+      } catch (err) {
+        results.push({ email: targetEmail, sent: false, error: err.message });
       }
     }
 
-    // Get today's activity signals
-    const today = new Date().toISOString().split('T')[0];
-    const activityRecords = await base44.asServiceRole.entities.UserActivity.filter(
-      { user_email: targetEmail, date: today },
-      null,
-      1
-    );
-    const activity = activityRecords[0] || null;
-
-    if (!activity) {
-      return Response.json({ sent: false, reason: 'No activity data for today' });
+    // Single-user shorthand response
+    if (user_email) {
+      const r = results[0];
+      return Response.json({
+        sent: r?.sent || false,
+        trigger: r?.trigger || null,
+        prompt_type: r?.prompt_type || null,
+        reason: r?.reason || r?.error || null,
+      });
     }
-
-    // Determine trigger type
-    let trigger = null;
-
-    if (
-      (activity.back_to_back_density || 0) >= 0.7 &&
-      (activity.meeting_count_day || 0) >= 6
-    ) {
-      trigger = 'overload';
-    } else if ((activity.late_day_load_minutes || 0) > 90) {
-      trigger = 'late_overload';
-    }
-
-    // Check for high-stakes keyword match in recent calendar data
-    // (meeting titles not stored in UserActivity — this is a best-effort inference)
-    if (!trigger && (activity.operator_mode_risk_score || 0) >= 70) {
-      trigger = 'high_stakes';
-    }
-
-    if (!trigger) {
-      return Response.json({ sent: false, reason: 'No contextual trigger met today' });
-    }
-
-    // Get tone preference
-    const tonePrefs = await base44.asServiceRole.entities.TonePreference.filter(
-      { user_email: targetEmail },
-      null,
-      1
-    );
-    const toneMode = tonePrefs[0]?.tone_mode || 'warm_candid';
-
-    // Build the contextual prompt
-    const prompt = buildContextualPrompt(trigger, activity, toneMode);
-
-    // Create a system-sourced ManagerPulse as a placeholder (marks this as sent)
-    await base44.asServiceRole.entities.ManagerPulse.create({
-      user_email: targetEmail,
-      prompt_type: prompt.prompt_type,
-      source: 'system',
-    });
-
-    // Create in-app notification with the prompt
-    await base44.asServiceRole.entities.Notification.create({
-      user_email: targetEmail,
-      type: 'atreus_checkin',
-      title: prompt.title,
-      message: `${prompt.body}\n\n_"${prompt.why}"_`,
-      scheduled_for: new Date().toISOString(),
-      status: 'pending',
-      priority: 'medium',
-      related_entity_type: 'contextual_trigger',
-    });
 
     return Response.json({
-      sent: true,
-      trigger,
-      prompt_type: prompt.prompt_type,
-      tone_mode: toneMode,
-      title: prompt.title,
+      processed: results.filter(r => r.sent).length,
+      skipped: results.filter(r => !r.sent && !r.error).length,
+      failed: results.filter(r => r.error).length,
+      results,
     });
 
   } catch (error) {

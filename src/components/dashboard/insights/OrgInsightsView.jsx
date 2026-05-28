@@ -42,6 +42,7 @@ import { useNavigate } from "react-router-dom";
 
 import LeaderInsightProfilesCard from "./LeaderInsightProfilesCard";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
+import OrgPulseAggregatesView from "@/components/privacy/OrgPulseAggregatesView";
 import TalentCareLifecycleBar from "@/components/intelligence/TalentCareLifecycleBar";
 import LifecycleNarrativeHeader from "./LifecycleNarrativeHeader";
 import OrgHealthCard from "@/components/intelligence/OrgHealthCard";
@@ -1040,6 +1041,17 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         ) : (
           <LeaderInsightProfilesCard rawData={rawData} activeLifecycleStage={activeLifecycleStage} activeMobilityChip={activeMobilityChip} onPromptAtreus={promptAtreus} />
         )}
+      </motion.div>
+
+      {/* ── Atreus Leadership Intelligence (Category B Aggregates) ─────────── */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+        <div className="space-y-3">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900">Manager Wellbeing Intelligence</h3>
+            <p className="text-xs text-gray-500 mt-0.5">Aggregate, anonymised signals from Atreus check-ins — Category B data only. No individual attribution.</p>
+          </div>
+          <OrgPulseAggregatesView />
+        </div>
       </motion.div>
 
       {/* Quick Access Dashboard Links — hidden, can re-enable */}

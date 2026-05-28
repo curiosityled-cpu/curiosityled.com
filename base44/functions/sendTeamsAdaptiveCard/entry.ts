@@ -1,131 +1,168 @@
 /**
- * sendTeamsAdaptiveCard — render prompts as Teams Adaptive Cards and send via Graph API
- * 
- * Converts sendTeamsPrompt output → adaptive card JSON → sends via Microsoft Graph
- * Handles manager response capture through interactive buttons
+ * sendTeamsAdaptiveCard — real Teams Adaptive Card delivery via Microsoft Graph API.
+ *
+ * Sends check-in prompts as interactive Adaptive Cards to a manager's Teams chat.
+ * Response buttons use Action.Submit so responses are captured back via webhook.
+ * Includes a "Why this?" toggle section inline in the card.
+ *
+ * Requires:
+ *   - TEAMS_BOT_APP_ID, TEAMS_BOT_APP_PASSWORD secrets (for Graph auth)
+ *   - TonePreference.teams_conversation_id stored per manager (set during onboarding)
+ *
+ * Falls back gracefully to in-app notification if Teams delivery fails.
  */
-
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-function buildAdaptiveCard(prompt, toneMode) {
-  const cardJson = {
-    type: "message",
+// ─── Get Graph API access token via client credentials ────────────────────────
+
+async function getGraphToken() {
+  const tenantId = Deno.env.get('TEAMS_TENANT_ID') || 'common';
+  const clientId = Deno.env.get('TEAMS_BOT_APP_ID');
+  const clientSecret = Deno.env.get('TEAMS_BOT_APP_PASSWORD');
+
+  if (!clientId || !clientSecret) {
+    throw new Error('TEAMS_BOT_APP_ID and TEAMS_BOT_APP_PASSWORD secrets are required for Teams delivery');
+  }
+
+  const tokenRes = await fetch(
+    `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        scope: 'https://graph.microsoft.com/.default',
+        grant_type: 'client_credentials',
+      }),
+    }
+  );
+  const tokenData = await tokenRes.json();
+  if (!tokenData.access_token) {
+    throw new Error(`Graph token error: ${tokenData.error_description || JSON.stringify(tokenData)}`);
+  }
+  return tokenData.access_token;
+}
+
+// ─── Build Adaptive Card JSON ─────────────────────────────────────────────────
+
+function buildAdaptiveCard(prompt) {
+  const actionButtons = (prompt.options || []).map(opt => ({
+    type: 'Action.Submit',
+    title: opt.label,
+    data: {
+      action: 'pulse_response',
+      pulse_field: prompt.field || 'energy_level',
+      value: opt.value || opt.field_value,
+      prompt_type: prompt.prompt_type,
+    },
+  }));
+
+  return {
+    type: 'message',
     attachments: [
       {
-        contentType: "application/vnd.microsoft.card.adaptive",
+        contentType: 'application/vnd.microsoft.card.adaptive',
         contentUrl: null,
         content: {
-          $schema: "http://adaptivecards.io/schemas/adaptive-card.json",
-          type: "AdaptiveCard",
-          version: "1.6",
+          $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+          type: 'AdaptiveCard',
+          version: '1.4',
           body: [
+            // Atreus header
             {
-              type: "Container",
-              style: "accent",
-              body: [
+              type: 'Container',
+              style: 'accent',
+              bleed: true,
+              items: [
                 {
-                  type: "ColumnSet",
-                  columns: [
-                    {
-                      width: "stretch",
-                      items: [
-                        {
-                          type: "TextBlock",
-                          text: "🎯 Atreus Check-In",
-                          weight: "bolder",
-                          size: "large",
-                          color: "dark"
-                        }
-                      ]
-                    },
-                    {
-                      width: "auto",
-                      items: [
-                        {
-                          type: "TextBlock",
-                          text: getToneEmoji(toneMode),
-                          size: "extraLarge",
-                          horizontalAlignment: "right"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              type: "Container",
-              body: [
-                {
-                  type: "TextBlock",
-                  text: prompt.title,
-                  weight: "bolder",
-                  size: "medium",
-                  wrap: true
+                  type: 'TextBlock',
+                  text: '🧭 Atreus check-in',
+                  weight: 'Bolder',
+                  size: 'Small',
+                  color: 'Light',
+                  spacing: 'None',
                 },
-                {
-                  type: "TextBlock",
-                  text: prompt.body,
-                  wrap: true,
-                  spacing: "medium",
-                  color: "dark"
-                }
-              ]
+              ],
             },
+            // Title
             {
-              type: "Container",
-              body: [
-                {
-                  type: "ActionSet",
-                  actions: (prompt.options || []).map(opt => ({
-                    type: "Action.OpenUrl",
-                    title: opt.label,
-                    url: `https://atreus.curiosityled.com/respond?pulse_id=${prompt.pulse_id}&option=${opt.value}`,
-                    style: "positive"
-                  }))
-                },
-                {
-                  type: "TextBlock",
-                  text: prompt.optional_text || "",
-                  size: "small",
-                  color: "accent",
-                  spacing: "medium",
-                  wrap: true
-                }
-              ]
+              type: 'TextBlock',
+              text: prompt.title,
+              weight: 'Bolder',
+              size: 'Medium',
+              wrap: true,
+              spacing: 'Medium',
             },
+            // Body
             {
-              type: "Container",
+              type: 'TextBlock',
+              text: prompt.body,
+              wrap: true,
+              color: 'Default',
+              spacing: 'Small',
+            },
+            // Optional text prompt (shown after options)
+            ...(prompt.optional_text ? [{
+              type: 'Input.Text',
+              id: 'optional_note',
+              placeholder: prompt.optional_text,
+              isMultiline: false,
+              spacing: 'Medium',
+            }] : []),
+            // Action buttons
+            {
+              type: 'ActionSet',
+              actions: actionButtons,
+              spacing: 'Medium',
+            },
+            // "Why this?" section — always visible, subtle
+            {
+              type: 'Container',
               separator: true,
-              body: [
+              spacing: 'Medium',
+              items: [
                 {
-                  type: "TextBlock",
-                  text: `Why: ${prompt.why}`,
-                  size: "small",
-                  color: "medium",
+                  type: 'TextBlock',
+                  text: `**Why I asked this:** ${prompt.why}`,
+                  wrap: true,
+                  size: 'Small',
+                  color: 'Accent',
                   isSubtle: true,
-                  wrap: true
-                }
-              ]
-            }
-          ]
-        }
-      }
-    ]
+                  spacing: 'Small',
+                },
+              ],
+            },
+          ],
+        },
+      },
+    ],
   };
-
-  return cardJson;
 }
 
-function getToneEmoji(toneMode) {
-  const emojis = {
-    gentle_observant: "🌿",
-    warm_candid: "💙",
-    close_friend_candid: "🤝",
-    respectfully_confronting: "💪"
-  };
-  return emojis[toneMode] || "💭";
+// ─── Send card to Teams conversation ─────────────────────────────────────────
+
+async function sendCardToTeams(conversationId, card, graphToken) {
+  const res = await fetch(
+    `https://graph.microsoft.com/v1.0/chats/${conversationId}/messages`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${graphToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(card),
+    }
+  );
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Graph send failed (${res.status}): ${err}`);
+  }
+  return await res.json();
 }
+
+// ─── Main handler ─────────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
   try {
@@ -136,28 +173,61 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const payload = await req.json();
-    const { prompt, user_email, teams_channel_id } = payload;
+    const payload = await req.json().catch(() => ({}));
+    const { prompt, user_email } = payload;
 
-    if (!prompt || !user_email || !teams_channel_id) {
-      return Response.json({
-        error: 'Missing required fields: prompt, user_email, teams_channel_id'
-      }, { status: 400 });
+    const targetEmail = user_email || user.email;
+
+    if (!prompt) {
+      return Response.json({ error: 'Missing required field: prompt' }, { status: 400 });
     }
 
-    // Build adaptive card
-    const adaptiveCard = buildAdaptiveCard(prompt, prompt.tone_mode);
+    // Build the adaptive card
+    const adaptiveCard = buildAdaptiveCard(prompt);
 
-    // TODO: Integrate with Microsoft Graph API to send via Teams
-    // Requires: teams_channel_id, Graph API token, endpoint
-    // For MVP: return card structure for review
+    // Look up the manager's Teams conversation ID
+    const tonePrefs = await base44.asServiceRole.entities.TonePreference.filter(
+      { user_email: targetEmail }, '-created_date', 1
+    );
+    const teamsConversationId = tonePrefs[0]?.teams_conversation_id || null;
+
+    let teamsDelivery = { attempted: false, success: false, reason: null };
+
+    if (teamsConversationId) {
+      try {
+        const graphToken = await getGraphToken();
+        const result = await sendCardToTeams(teamsConversationId, adaptiveCard, graphToken);
+        teamsDelivery = { attempted: true, success: true, message_id: result.id };
+      } catch (teamsErr) {
+        teamsDelivery = { attempted: true, success: false, reason: teamsErr.message };
+        console.error('[sendTeamsAdaptiveCard] Teams delivery failed, falling back to notification:', teamsErr.message);
+      }
+    } else {
+      teamsDelivery = { attempted: false, success: false, reason: 'No teams_conversation_id on TonePreference — manager has not connected Teams' };
+    }
+
+    // Fallback: always create an in-app notification so the prompt is never lost
+    if (!teamsDelivery.success) {
+      await base44.asServiceRole.entities.Notification.create({
+        user_email: targetEmail,
+        type: 'atreus_checkin',
+        title: prompt.title,
+        message: `${prompt.body}\n\n_Why I asked this: ${prompt.why}_`,
+        scheduled_for: new Date().toISOString(),
+        sent_at: new Date().toISOString(),
+        status: 'sent',
+        priority: 'medium',
+        related_entity_type: 'atreus_prompt',
+        action_url: '/my-leadership',
+      });
+    }
 
     return Response.json({
       success: true,
-      card: adaptiveCard,
-      message: "Adaptive card structure ready for Teams delivery",
-      tone_applied: prompt.tone_mode,
-      tone_emoji: getToneEmoji(prompt.tone_mode)
+      card_built: true,
+      teams_delivery: teamsDelivery,
+      fallback_notification_created: !teamsDelivery.success,
+      tone_applied: prompt.tone_mode || 'warm_candid',
     });
 
   } catch (error) {
