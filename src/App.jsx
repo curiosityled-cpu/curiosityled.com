@@ -29,6 +29,7 @@ import SeedLinkedInCourses from './pages/SeedLinkedInCourses';
 import OrgBusinessGoals from './pages/OrgBusinessGoals';
 import PerformanceManager from './pages/PerformanceManager';
 import MyPerformance from './pages/MyPerformance';
+import MyRhythm from './pages/MyRhythm';
 import Insights from './pages/Insights';
 import ReportBuilder from './pages/ReportBuilder';
 import { AuthProvider as FullAuthProvider } from '@/components/useAuth';
@@ -128,6 +129,7 @@ const AuthenticatedApp = () => {
       <Route path="/GoalManager" element={mvpRole ? <MVPPage><PerformanceManager /></MVPPage> : <LayoutWrapper currentPageName="GoalManager"><PerformanceManager /></LayoutWrapper>} />
       <Route path="/my-performance" element={<Navigate to="/my-goals" replace />} />
       <Route path="/my-goals" element={<MVPPage><MyPerformance /></MVPPage>} />
+      <Route path="/my-rhythm" element={<MVPPage><MyRhythm /></MVPPage>} />
       {/* Redirect /Performance to My Goals */}
       <Route path="/Performance" element={<Navigate to="/my-goals" replace />} />
 
