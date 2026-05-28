@@ -57,6 +57,16 @@ const TONE_VARIANTS = {
   },
 };
 
+function humanizeLanguage(text) {
+  if (!text) return text;
+  // Remove corporate jargon
+  return text
+    .replace(/leadership behavior/gi, 'how you lead')
+    .replace(/organizational context/gi, 'what\'s going on around you')
+    .replace(/manage your energy/gi, 'protect yourself')
+    .replace(/optimize delegation/gi, 'hand off what doesn\'t need you');
+}
+
 function applyToneInline(promptFamily, toneMode, riskScore = 0) {
   const validTones = ['gentle_observant', 'warm_candid', 'close_friend_candid', 'respectfully_confronting'];
   let effectiveTone = validTones.includes(toneMode) ? toneMode : 'warm_candid';
@@ -301,15 +311,16 @@ Deno.serve(async (req) => {
       promptTemplate = selectPrompt(riskScore, recentPulses);
     }
 
-    // 6. Apply tone — inlined to avoid inter-function auth/cache issues
+    // 6. Apply tone with person-not-title language pass
     const promptFamily = promptTemplate.prompt_type === 'morning_intent'
       ? 'morning_intent'
       : (Object.keys(PROMPTS).find(k => PROMPTS[k] === promptTemplate) || promptTemplate.prompt_type || 'baseline_energy');
     const toneAdjusted = applyToneInline(promptFamily, toneMode, riskScore);
 
-    const finalTitle = toneAdjusted?.title || promptTemplate.title;
-    const finalBody = toneAdjusted?.body || promptTemplate.body;
-    const finalWhy = toneAdjusted?.why || promptTemplate.why;
+    // Humanize language: remove corporate jargon, speak to the person
+    const finalTitle = humanizeLanguage(toneAdjusted?.title || promptTemplate.title);
+    const finalBody = humanizeLanguage(toneAdjusted?.body || promptTemplate.body);
+    const finalWhy = humanizeLanguage(toneAdjusted?.why || promptTemplate.why);
     const overridePreamble = toneAdjusted?.override_preamble || null;
 
     // 7. Write the "sent prompt" marker BEFORE returning — this is our anti-spam anchor.
