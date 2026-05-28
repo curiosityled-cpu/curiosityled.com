@@ -15,7 +15,7 @@ import { Link } from "react-router-dom";
 import {
   Brain, TrendingUp, TrendingDown, Minus, Shield, Calendar,
   MessageSquare, Target, ChevronRight, Zap, RotateCcw, CheckCircle2,
-  Circle, AlertCircle, Info, Flame, BookOpen, ArrowRight, Clock
+  AlertCircle, Info, Flame, BookOpen, ArrowRight
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -454,9 +454,11 @@ export default function MyRhythm() {
   const { openWithContext } = useAtreusChat();
 
   const openAtreus = (msg) => openWithContext({
-    pageType: 'my-rhythm',
-    starter_message: msg || "I want to talk through my leadership patterns.",
-    user_name: user?.full_name?.split(' ')[0] || 'there',
+    context: {
+      pageType: 'my-rhythm',
+      user_name: user?.full_name?.split(' ')[0] || 'there',
+    },
+    starterMessage: msg || "I want to talk through my leadership patterns.",
   });
 
   const { data: trends = null, isLoading: loadingTrends } = useQuery({

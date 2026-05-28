@@ -30,12 +30,16 @@ export default function TeamsSettings() {
   const [calendarSaving, setCalendarSaving] = useState(false);
 
   useEffect(() => {
-    if (!user?.email) return;
+    if (!user?.email) {
+      setPrefsLoading(false);
+      return;
+    }
     base44.entities.TonePreference.filter({ user_email: user.email }, null, 1)
       .then(rows => {
         setTonePrefs(rows[0] || null);
         setPrefsLoading(false);
-      });
+      })
+      .catch(() => setPrefsLoading(false));
   }, [user?.email]);
 
   const handleCalendarConsent = async (provider) => {
@@ -77,13 +81,11 @@ export default function TeamsSettings() {
 
   // Mark Teams onboarding complete once the user visits
   useEffect(() => {
-    if (!user?.email || prefsLoading) return;
-    if (tonePrefs && !tonePrefs.teams_onboarding_complete) {
-      base44.entities.TonePreference.update(tonePrefs.id, { teams_onboarding_complete: true })
-        .then(() => setTonePrefs(prev => ({ ...prev, teams_onboarding_complete: true })))
-        .catch(() => {});
-    }
-  }, [prefsLoading, tonePrefs?.id]);
+    if (!user?.email || prefsLoading || !tonePrefs?.id || tonePrefs.teams_onboarding_complete) return;
+    base44.entities.TonePreference.update(tonePrefs.id, { teams_onboarding_complete: true })
+      .then(() => setTonePrefs(prev => ({ ...prev, teams_onboarding_complete: true })))
+      .catch(() => {});
+  }, [prefsLoading, tonePrefs?.id, tonePrefs?.teams_onboarding_complete]);
 
   if (authLoading || prefsLoading) {
     return (

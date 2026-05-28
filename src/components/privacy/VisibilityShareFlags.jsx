@@ -13,7 +13,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { Shield, Users, BarChart3, BookOpen, Target, Info, CheckCircle2 } from "lucide-react";
+import { Shield, Users, BarChart3, BookOpen, Target, Info } from "lucide-react";
 import { toast } from "sonner";
 
 const CATEGORY_A_FIELDS = [
@@ -22,13 +22,6 @@ const CATEGORY_A_FIELDS = [
   "Your conversations with Atreus",
   "Identity friction signals",
   "Avoidance flags and confidence scores",
-];
-
-const CATEGORY_B_FIELDS = [
-  "Overall energy & confidence trends (directional only)",
-  "Overload pattern score (0–100 composite)",
-  "Delegation intent vs actuals gaps",
-  "Stretch frequency over 14 days",
 ];
 
 const TOGGLE_ITEMS = [

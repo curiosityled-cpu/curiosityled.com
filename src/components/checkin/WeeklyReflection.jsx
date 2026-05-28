@@ -91,8 +91,6 @@ export default function WeeklyReflection({ onComplete, onSkip }) {
   const handleSubmit = async (finalAnswers) => {
     setSaving(true);
     try {
-      const tonePref = await base44.entities.TonePreference.filter({ user_email: user.email }, null, 1);
-      
       await base44.entities.ManagerPulse.create({
         user_email: user.email,
         prompt_type: 'weekly_reflection',
