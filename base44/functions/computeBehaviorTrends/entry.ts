@@ -145,13 +145,29 @@ Deno.serve(async (req) => {
           { user_email: email }, '-created_date', 100
         );
 
-        const cutoff14d = new Date(date14dAgo);
-        const cutoff28d = new Date(date28dAgo);
-        const cutoff7d = new Date(date7dAgo);
+        console.log(`[DEBUG] ${email} — total pulses fetched: ${allPulses.length}`);
+        if (allPulses.length > 0) {
+          const s = allPulses[0];
+          console.log(`[DEBUG] first pulse created_date raw: ${JSON.stringify(s.created_date)}, type: ${typeof s.created_date}, energy: ${s.energy_level}`);
+        }
 
-        const pulses14d = allPulses.filter(p => p.created_date && new Date(p.created_date) >= cutoff14d);
-        const pulses28d = allPulses.filter(p => p.created_date && new Date(p.created_date) >= cutoff28d);
-        const pulses7d = allPulses.filter(p => p.created_date && new Date(p.created_date) >= cutoff7d);
+        const cutoff14d = new Date(now.getTime() - 14 * 86400000);
+        const cutoff28d = new Date(now.getTime() - 28 * 86400000);
+        const cutoff7d = new Date(now.getTime() - 7 * 86400000);
+
+        const toDate = (v) => {
+          if (!v) return null;
+          if (v instanceof Date) return v;
+          // Handle MongoDB-style $date objects
+          if (typeof v === 'object' && v.$date) return new Date(v.$date);
+          return new Date(v);
+        };
+
+        const pulses14d = allPulses.filter(p => { const d = toDate(p.created_date); return d && d >= cutoff14d; });
+        const pulses28d = allPulses.filter(p => { const d = toDate(p.created_date); return d && d >= cutoff28d; });
+        const pulses7d = allPulses.filter(p => { const d = toDate(p.created_date); return d && d >= cutoff7d; });
+
+        console.log(`[DEBUG] ${email} — pulses14d: ${pulses14d.length}, cutoff14d: ${cutoff14d.toISOString()}`);
 
         // Minimum data gate
         if (pulses14d.length < 3) {

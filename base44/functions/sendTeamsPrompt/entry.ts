@@ -254,16 +254,12 @@ function selectPrompt(riskScore, pulseHistory) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await req.json().catch(() => ({}));
     const isForced = body.force === true;
 
-    // Allow service-role / orchestrator calls when force=true and user_email is provided
+    const user = await base44.auth.me();
+
+    // Allow unauthenticated service-role calls when force=true and user_email is explicit
     if (!user && !(isForced && body.user_email)) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
