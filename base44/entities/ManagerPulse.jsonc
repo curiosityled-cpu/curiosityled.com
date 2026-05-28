@@ -65,6 +65,25 @@
       ],
       "description": "Current motivation level. ALWAYS PRIVATE."
     },
+    "resilience_signal": {
+      "type": "string",
+      "enum": [
+        "depleted",
+        "fragile",
+        "holding",
+        "bouncing_back"
+      ],
+      "description": "How capable the manager feels of recovering from setbacks right now. ALWAYS PRIVATE."
+    },
+    "identity_friction": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the manager reported feeling disconnected from or uncertain about their role identity. ALWAYS PRIVATE."
+    },
+    "identity_friction_note": {
+      "type": "string",
+      "description": "Optional free-text about the nature of the identity friction. ALWAYS PRIVATE."
+    },
     "room_today": {
       "type": "string",
       "enum": [

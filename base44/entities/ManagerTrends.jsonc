@@ -26,6 +26,25 @@
       ],
       "description": "Direction of energy_level responses over last 14 days. ALWAYS PRIVATE."
     },
+    "resilience_trend": {
+      "type": "string",
+      "enum": [
+        "improving",
+        "stable",
+        "declining",
+        "insufficient_data"
+      ],
+      "description": "Direction of resilience_signal responses over last 14 days. ALWAYS PRIVATE."
+    },
+    "identity_friction_signals": {
+      "type": "number",
+      "description": "Count of check-ins in last 7 days where identity_friction was true. ALWAYS PRIVATE."
+    },
+    "identity_friction_active": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the manager is currently in an active identity friction period. ALWAYS PRIVATE."
+    },
     "overload_pattern_strength": {
       "type": "number",
       "minimum": 0,

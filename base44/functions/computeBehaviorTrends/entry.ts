@@ -17,6 +17,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 const ENERGY_ORDER = { drained: 0, stretched: 1, steady: 2, strong: 3 };
 const CONFIDENCE_ORDER = { low: 0, uncertain: 1, steady: 2, high: 3 };
+const RESILIENCE_ORDER = { depleted: 0, fragile: 1, holding: 2, bouncing_back: 3 };
 
 function trendDirection(values) {
   if (values.length < 3) return 'insufficient_data';
@@ -100,10 +101,12 @@ Signals:
 - Average energy level: ${avgEnergy !== null ? avgEnergy.toFixed(1) + '/3' : 'not enough data'}
 - Energy trend (14d): ${trends.energy_trend}
 - Confidence trend (14d): ${trends.confidence_trend}
+- Resilience trend (14d): ${trends.resilience_trend || 'insufficient_data'}
 - Average meeting load: ${avgMeetingMins !== null ? Math.round(avgMeetingMins) + ' mins/day' : 'unknown'}
 - Overload pattern strength: ${trends.overload_pattern_strength}/100
 - Stretch/drain days in 14d: ${trends.stretch_frequency_14d}
 - Delegation intent vs actuals gap this week: ${trends.delegation_gap_count_7d || 0} times
+- Identity friction signals this week: ${trends.identity_friction_signals || 0}
 
 Output ONLY the sentence. No quotes. No explanation.`;
 
@@ -212,6 +215,16 @@ Deno.serve(async (req) => {
           p.intent_actuals_gap === 'declared_delegation_operator_mode_detected'
         ).length;
 
+        // ─── Resilience trend ───────────────────────────────────────────────
+        const resilienceValues = pulses14d
+          .filter(p => p.resilience_signal)
+          .map(p => RESILIENCE_ORDER[p.resilience_signal] ?? 1);
+        const resilience_trend = trendDirection(resilienceValues);
+
+        // ─── Identity friction detection (7d) ──────────────────────────────
+        const identity_friction_signals = pulses7d.filter(p => p.identity_friction === true).length;
+        const identity_friction_active = identity_friction_signals >= 2;
+
         // Summaries
         const summary_7d = buildSummary7d(pulses7d.filter(p => p.source !== 'system'), activity7d);
         const summary_28d = buildSummary28d(pulses14d, pulses28d);
@@ -220,11 +233,14 @@ Deno.serve(async (req) => {
         const trendData = {
           energy_trend,
           confidence_trend,
+          resilience_trend,
           overload_pattern_strength,
           stretch_frequency_14d,
           operator_risk_trajectory,
           overload_acknowledgment_rate,
           delegation_gap_count_7d,
+          identity_friction_signals,
+          identity_friction_active,
         };
 
         // Generate LLM narrative (only if enough data)
@@ -254,6 +270,7 @@ Deno.serve(async (req) => {
           user_email: email,
           confidence_trend,
           energy_trend,
+          resilience_trend,
           overload_pattern_strength,
           stretch_frequency_14d,
           operator_risk_trajectory,
@@ -267,6 +284,8 @@ Deno.serve(async (req) => {
           learning_stall_detected,
           delegation_intent_count_7d,
           delegation_gap_count_7d,
+          identity_friction_signals,
+          identity_friction_active,
         };
 
         if (existingTrends.length > 0) {
