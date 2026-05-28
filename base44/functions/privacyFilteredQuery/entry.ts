@@ -1,13 +1,15 @@
 /**
- * privacyFilteredQuery — enforce privacy boundaries on entity reads.
- *
+ * privacyFilteredQuery — backend handler to enforce privacy boundaries on entity reads.
  * Strips sensitive fields from ManagerPulse and ManagerTrends before returning to non-owner/non-admin users.
  * Always-private fields are removed entirely. Abstractable fields are transformed to safe aggregates.
- *
- * Use: const filtered = await privacyFilteredQuery('ManagerPulse', records, user, requester_role);
  */
 
-const ALWAYS_PRIVATE = ['confidence_today', 'resilience_signal', 'emotional_strain', 'identity_friction', 'identity_friction_note', 'avoidance_flag', 'biggest_weight_today', 'motivation_today', 'ai_conversation_content'];
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+
+const ALWAYS_PRIVATE = [
+  'confidence_today', 'resilience_signal', 'emotional_strain', 'identity_friction',
+  'identity_friction_note', 'avoidance_flag', 'biggest_weight_today', 'motivation_today'
+];
 
 const ABSTRACTABLE = {
   ManagerPulse: {
@@ -22,7 +24,7 @@ const ABSTRACTABLE = {
   }
 };
 
-export async function applyPrivacyFilter(entityName, records, userEmail, userRole) {
+function applyPrivacyFilter(entityName, records, userEmail, userRole) {
   if (!Array.isArray(records)) records = [records];
   
   // Admins and record owners always see unfiltered
@@ -55,8 +57,31 @@ export async function applyPrivacyFilter(entityName, records, userEmail, userRol
   });
 }
 
-// Export for use in entity automations
-export const PRIVACY_RULES = {
-  always_private: ALWAYS_PRIVATE,
-  abstractable: ABSTRACTABLE
-};
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const payload = await req.json();
+    const { entity_name, records, target_email } = payload;
+
+    if (!entity_name || !records || !target_email) {
+      return Response.json({ error: 'Missing required fields: entity_name, records, target_email' }, { status: 400 });
+    }
+
+    const filtered = applyPrivacyFilter(entity_name, records, target_email, user.role);
+
+    return Response.json({
+      success: true,
+      filtered_records: filtered,
+      count: filtered.length,
+      user_role: user.role
+    });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+});
