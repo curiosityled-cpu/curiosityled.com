@@ -30,6 +30,7 @@ import OrgBusinessGoals from './pages/OrgBusinessGoals';
 import PerformanceManager from './pages/PerformanceManager';
 import MyPerformance from './pages/MyPerformance';
 import MyRhythm from './pages/MyRhythm';
+import TeamsSettings from './pages/TeamsSettings';
 import Insights from './pages/Insights';
 import ReportBuilder from './pages/ReportBuilder';
 import { AuthProvider as FullAuthProvider } from '@/components/useAuth';
@@ -130,6 +131,7 @@ const AuthenticatedApp = () => {
       <Route path="/my-performance" element={<Navigate to="/my-goals" replace />} />
       <Route path="/my-goals" element={<MVPPage><MyPerformance /></MVPPage>} />
       <Route path="/my-rhythm" element={<MVPPage><MyRhythm /></MVPPage>} />
+      <Route path="/teams-settings" element={<TeamsSettings />} />
       {/* Redirect /Performance to My Goals */}
       <Route path="/Performance" element={<Navigate to="/my-goals" replace />} />
 

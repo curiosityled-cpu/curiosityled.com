@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { withAuthProtection } from "@/components/hoc/withAuthProtection";
 import CalendarConsentCard from "@/components/checkin/CalendarConsentCard";
+import VisibilityShareFlags from "@/components/privacy/VisibilityShareFlags";
 import PHIDetectionConfig from "@/components/privacy/PHIDetectionConfig";
 import AccessLogsViewer from "@/components/privacy/AccessLogsViewer";
 import DataDownloadPanel from "@/components/privacy/DataDownloadPanel";
@@ -106,6 +107,7 @@ function PrivacySettings() {
     const tabs = [
       { id: "overview", label: "Overview", icon: Shield, roles: ["all"] },
       { id: "my-data", label: "My Data", icon: Download, roles: ["all"] },
+      { id: "visibility", label: "Sharing Controls", icon: Users, roles: ["all"] },
       { id: "access-logs", label: "Access Logs", icon: Eye, roles: ["all"] },
       { id: "training", label: "Privacy Training", icon: FileText, roles: ["all"] }
     ];
@@ -283,6 +285,14 @@ function PrivacySettings() {
                     </div>
                   )}
                 </div>
+              </TabsContent>
+
+              <TabsContent value="visibility" className="mt-6">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">Sharing Controls</h3>
+                  <p className="text-sm text-gray-500">Choose what aggregated signals — if any — are shared beyond your private view.</p>
+                </div>
+                <VisibilityShareFlags />
               </TabsContent>
 
               <TabsContent value="my-data" className="mt-6">

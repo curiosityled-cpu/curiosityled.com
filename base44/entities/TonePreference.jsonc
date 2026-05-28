@@ -65,6 +65,31 @@
     "client_id": {
       "type": "string",
       "description": "Client ID for multi-tenant support"
+    },
+    "share_energy_with_manager": {
+      "type": "boolean",
+      "default": false,
+      "description": "Category C: Manager has opted in to share their energy/load trends (not raw check-ins) with their direct manager. Never PHI, never raw text."
+    },
+    "share_energy_with_hr": {
+      "type": "boolean",
+      "default": false,
+      "description": "Category C: Manager has opted in to share their energy/load trends with HR. Aggregated signals only, never raw check-ins."
+    },
+    "share_goals_progress_with_manager": {
+      "type": "boolean",
+      "default": true,
+      "description": "Category C: Whether goal progress is visible to the manager's direct manager. Default on \u2014 goals are professional commitments."
+    },
+    "share_learning_with_hr": {
+      "type": "boolean",
+      "default": true,
+      "description": "Category C: Whether learning and development activity is visible in HR analytics. Default on \u2014 standard L&D data."
+    },
+    "visibility_last_reviewed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the manager last reviewed their visibility settings"
     }
   },
   "required": [
