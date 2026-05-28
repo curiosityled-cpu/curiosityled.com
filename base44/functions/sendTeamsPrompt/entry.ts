@@ -245,27 +245,6 @@ function selectPrompt(riskScore, pulseHistory) {
   const hasConfidenceRecent = recentSentTypes.includes('contextual');
 
   if (!hasConfidenceRecent && Math.random() > 0.6) return PROMPTS.confidence_check;
-
-  // Occasionally rotate in optimism/motivation checks (roughly 1 in 5 times)
-  const rand = Math.random();
-  if (rand < 0.1) {
-    // Optimism check — quarterly-feel signal
-    return {
-      title: "How do things feel from where you're sitting?",
-      body: "Not about today's to-do list — just your broader sense of how things are trending for you and your team right now.",
-      why: "How optimistic you feel about the trajectory of things is one of the quieter but more telling signals I track. It tends to shift before other things do.",
-      options: [
-        { label: "Genuinely hopeful", value: "optimistic" },
-        { label: "Cautiously okay", value: "cautiously_hopeful" },
-        { label: "Not sure which way", value: "uncertain" },
-        { label: "Things feel heavy", value: "pessimistic" }
-      ],
-      optional_text: "What's shaping that feeling?",
-      prompt_type: "contextual",
-      field: "optimism_today"
-    };
-  }
-
   if (dayOfWeek % 2 === 0) return PROMPTS.clarity_check;
   return PROMPTS.baseline_energy;
 }
@@ -366,17 +345,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    const createdPulse = await base44.asServiceRole.entities.ManagerPulse.create({
+    await base44.asServiceRole.entities.ManagerPulse.create({
       user_email: targetEmail,
       source: 'system',
       prompt_type: promptTemplate.prompt_type,
       biggest_weight_today: null
     });
 
-    // 8. Build the prompt payload for delivery
-    const promptPayload = {
+    return Response.json({
       sent: true,
-      pulse_id: createdPulse?.id || null,
       prompt_type: promptTemplate.prompt_type,
       title: finalTitle,
       body: finalBody,
@@ -386,24 +363,6 @@ Deno.serve(async (req) => {
       operator_mode_risk_score: riskScore,
       tone_mode: toneMode,
       override_preamble: overridePreamble,
-    };
-
-    // 9. Attempt Teams Adaptive Card delivery (non-blocking — failure falls back gracefully)
-    let teamsResult = null;
-    try {
-      teamsResult = await base44.functions.invoke('sendTeamsAdaptiveCard', {
-        prompt: promptPayload,
-        user_email: targetEmail,
-      });
-    } catch (teamsErr) {
-      // Teams delivery failure is non-fatal — in-product notification is the fallback
-      teamsResult = { teams_delivered: false, teams_error: teamsErr.message };
-    }
-
-    return Response.json({
-      ...promptPayload,
-      teams_delivered: teamsResult?.data?.teams_delivered || false,
-      teams_error: teamsResult?.data?.teams_error || null,
     });
 
   } catch (error) {

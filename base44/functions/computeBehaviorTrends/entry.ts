@@ -18,8 +18,6 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 const ENERGY_ORDER = { drained: 0, stretched: 1, steady: 2, strong: 3 };
 const CONFIDENCE_ORDER = { low: 0, uncertain: 1, steady: 2, high: 3 };
 const RESILIENCE_ORDER = { depleted: 0, fragile: 1, holding: 2, bouncing_back: 3 };
-const MOTIVATION_ORDER = { flat: 0, low: 1, moderate: 2, high: 3 };
-const OPTIMISM_ORDER = { pessimistic: 0, uncertain: 1, cautiously_hopeful: 2, optimistic: 3 };
 
 function trendDirection(values) {
   if (values.length < 3) return 'insufficient_data';
@@ -233,18 +231,6 @@ Deno.serve(async (req) => {
           .map(p => RESILIENCE_ORDER[p.resilience_signal] ?? 1);
         const resilience_trend = trendDirection(resilienceValues);
 
-        // ─── Motivation trend ────────────────────────────────────────────────
-        const motivationValues = pulses14d
-          .filter(p => p.motivation_today)
-          .map(p => MOTIVATION_ORDER[p.motivation_today] ?? 1);
-        const motivation_trend = trendDirection(motivationValues);
-
-        // ─── Optimism trend ──────────────────────────────────────────────────
-        const optimismValues = pulses14d
-          .filter(p => p.optimism_today)
-          .map(p => OPTIMISM_ORDER[p.optimism_today] ?? 1);
-        const optimism_trend = trendDirection(optimismValues);
-
         // ─── Identity friction detection (7d) ──────────────────────────────
         const identity_friction_signals = pulses7d.filter(p => p.identity_friction === true).length;
         const identity_friction_active = identity_friction_signals >= 2;
@@ -258,8 +244,6 @@ Deno.serve(async (req) => {
           energy_trend,
           confidence_trend,
           resilience_trend,
-          motivation_trend,
-          optimism_trend,
           overload_pattern_strength,
           stretch_frequency_14d,
           operator_risk_trajectory,
@@ -297,8 +281,6 @@ Deno.serve(async (req) => {
           confidence_trend,
           energy_trend,
           resilience_trend,
-          motivation_trend,
-          optimism_trend,
           overload_pattern_strength,
           stretch_frequency_14d,
           operator_risk_trajectory,

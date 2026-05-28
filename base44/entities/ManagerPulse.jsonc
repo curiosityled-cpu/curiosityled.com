@@ -65,16 +65,6 @@
       ],
       "description": "Current motivation level. ALWAYS PRIVATE."
     },
-    "optimism_today": {
-      "type": "string",
-      "enum": [
-        "pessimistic",
-        "uncertain",
-        "cautiously_hopeful",
-        "optimistic"
-      ],
-      "description": "How hopeful they feel about how things are trending. ALWAYS PRIVATE."
-    },
     "resilience_signal": {
       "type": "string",
       "enum": [

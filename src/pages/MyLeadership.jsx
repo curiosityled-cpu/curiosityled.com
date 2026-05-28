@@ -557,7 +557,7 @@ export default function MyLeadership() {
   const todayPromptType = (() => {
     if (day === 5) return 'weekly_reflection';                        // Friday → reflect
     if ((day === 1 || day === 2) && hour < 11) return 'morning_intent'; // Mon/Tue AM → intent
-    const rotation = ['baseline_energy', 'confidence_check', 'motivation_check', 'optimism_check', 'overload_check', 'avoidance_check', 'clarity_check'];
+    const rotation = ['baseline_energy', 'confidence_check', 'motivation_check', 'overload_check', 'avoidance_check', 'clarity_check'];
     return rotation[day % rotation.length];
   })();
 
