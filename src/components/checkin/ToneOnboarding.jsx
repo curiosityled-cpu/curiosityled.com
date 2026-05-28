@@ -31,7 +31,7 @@ const TONE_OPTIONS = [
     recommended: true
   },
   {
-    value: "close_friend",
+    value: "close_friend_candid",
     label: "Close-friend candid",
     description: "More like a trusted peer who tells you what they really think.",
     example: "\"You know this 'I'll just do it' pattern. We've been here before.\"",

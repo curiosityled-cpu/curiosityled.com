@@ -16,6 +16,8 @@ import {
   Eye, EyeOff, Info, AlertCircle, Circle, Flame, Calendar
 } from "lucide-react";
 import ManagerCheckIn from "@/components/checkin/ManagerCheckIn";
+import TrendSummaryCard from "@/components/checkin/TrendSummaryCard";
+import IntentLoopCard from "@/components/checkin/IntentLoopCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -509,6 +511,25 @@ export default function MyLeadership() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Manager-private trend memory
+  const { data: trends = null } = useQuery({
+    queryKey: ['ml-trends', user?.email],
+    queryFn: async () => {
+      const rows = await base44.entities.ManagerTrends.filter({ user_email: user.email }, '-last_trend_computed_at', 1);
+      return rows[0] || null;
+    },
+    enabled: !!user?.email,
+    staleTime: 30 * 60 * 1000,
+  });
+
+  // Recent pulses for intent loop (last 7 days)
+  const { data: recentPulses = [] } = useQuery({
+    queryKey: ['ml-pulses', user?.email],
+    queryFn: () => base44.entities.ManagerPulse.filter({ user_email: user.email }, '-created_date', 20),
+    enabled: !!user?.email,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const isLoading = loadingInsight || loadingGoals || loadingAssignments || loadingPlans;
   const firstName = getFirstName(user);
   const todayFocus = buildTodayFocus(insight, goals, assignments);
@@ -539,7 +560,20 @@ export default function MyLeadership() {
             onComplete={() => {}}
           />
 
-          {/* 3. PATTERNS — what CL is noticing */}
+          {/* 3. TREND MEMORY — what Atreus is noticing (private) */}
+          <TrendSummaryCard
+            trends={trends}
+            onOpenAtreus={openAtreus}
+          />
+
+          {/* 4. INTENT LOOP — this week's intentions vs actuals (private) */}
+          <IntentLoopCard
+            pulses={recentPulses}
+            trends={trends}
+            onOpenAtreus={openAtreus}
+          />
+
+          {/* 5. PATTERNS — assessment + goal signals */}
           {insight && (
             <PatternsCard insight={insight} goals={goals} />
           )}
@@ -562,11 +596,11 @@ export default function MyLeadership() {
             </Card>
           )}
 
-          {/* 4. PLAN — goals pulse + suggested support */}
+          {/* 6. PLAN — goals pulse + suggested support */}
           <GoalsPulseCard goals={goals} />
           <SuggestedSupportCard assignments={assignments} devPlans={devPlans} />
 
-          {/* 5. EXPLORE DEEPER — full profile, plan, goals */}
+          {/* 7. EXPLORE DEEPER — full profile, plan, goals */}
           <ExploreDeeperCard />
 
         </div>

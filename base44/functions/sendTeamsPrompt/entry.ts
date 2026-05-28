@@ -92,14 +92,22 @@ const OVERLOAD_FOLLOWUPS = {
   skipped: null
 };
 
-// ─── Tone-aware phrasing ──────────────────────────────────────────────────────
+// ─── Morning intent prompt ────────────────────────────────────────────────────
 
-function applyTone(text, toneMode) {
-  // In v1, tone is primarily used in follow-up and pattern language.
-  // The base prompt language stays consistent to avoid confusion.
-  // Full tone-aware generation is handled by Atreus/LLM in Phase 3.
-  return text;
-}
+const MORNING_INTENT_PROMPT = {
+  title: "What's your intent for today?",
+  body: "Before the day takes over — what's the one thing you actually want to protect time for or lead well today?",
+  why: "Declared intentions help me understand when days match up and when they don't.",
+  options: [
+    { label: "Delegate something meaningful", value: "delegation" },
+    { label: "Protect time for strategic work", value: "strategic_work" },
+    { label: "Prioritise my team", value: "team_support" },
+    { label: "Something personal / learning", value: "personal_development" },
+  ],
+  optional_text: "What specifically do you want to protect or do?",
+  prompt_type: "morning_intent",
+  field: "focus_category"
+};
 
 // ─── Operator mode risk scoring ───────────────────────────────────────────────
 
@@ -147,13 +155,16 @@ function selectPrompt(riskScore, pulseHistory) {
   const dayOfWeek = new Date().getDay();
   if (dayOfWeek === 5) return PROMPTS.weekly_reflection;
 
+  // Monday / Tuesday morning → morning intent
+  const hour = new Date().getHours();
+  if ((dayOfWeek === 1 || dayOfWeek === 2) && hour < 11) return MORNING_INTENT_PROMPT;
+
   // Only look at system-sent pulse markers (not user responses) for rotation
   const recentSentTypes = pulseHistory
     .filter(p => p.source === 'system')
     .slice(0, 5)
     .map(p => p.prompt_type);
 
-  // confidence_check uses prompt_type 'contextual' — avoid repeating within last 5 prompts
   const hasConfidenceRecent = recentSentTypes.includes('contextual');
 
   if (!hasConfidenceRecent && Math.random() > 0.6) return PROMPTS.confidence_check;
@@ -189,7 +200,6 @@ Deno.serve(async (req) => {
     // (source: 'system' = prompt was sent; other sources = user responses, don't count for anti-spam)
     const lastSystemPulse = recentPulses.find(p => p.source === 'system') || null;
     const lastPromptSentAt = lastSystemPulse?.created_date ? new Date(lastSystemPulse.created_date) : null;
-    const toneModePreference = 'warm_candid'; // default; could be extended to store in ManagerPulse
 
     // 2. Anti-spam gate (skip for explicit force calls from admin)
     const isForced = body.force === true;
@@ -207,12 +217,44 @@ Deno.serve(async (req) => {
     // 3. Compute risk score
     const riskScore = computeOperatorModeRisk(recentPulses, recentActivity);
 
-    // 4. Select prompt
-    const promptTemplate = forcePromptType && PROMPTS[forcePromptType]
-      ? PROMPTS[forcePromptType]
-      : selectPrompt(riskScore, recentPulses);
+    // 4. Load tone preference
+    const tonePrefs = await base44.asServiceRole.entities.TonePreference.filter(
+      { user_email: targetEmail }, '-created_date', 1
+    );
+    const toneMode = tonePrefs[0]?.tone_mode || 'warm_candid';
 
-    // 5. Write the "sent prompt" marker BEFORE returning — this is our anti-spam anchor.
+    // 5. Select prompt (with tone override for morning_intent)
+    const promptKey = forcePromptType || null;
+    let promptTemplate;
+    if (promptKey === 'morning_intent') {
+      promptTemplate = MORNING_INTENT_PROMPT;
+    } else if (promptKey && PROMPTS[promptKey]) {
+      promptTemplate = PROMPTS[promptKey];
+    } else {
+      promptTemplate = selectPrompt(riskScore, recentPulses);
+    }
+
+    // 6. Apply tone via applyTone function
+    let toneAdjusted = null;
+    try {
+      const toneResult = await base44.asServiceRole.functions.invoke('applyTone', {
+        prompt_family: promptTemplate.prompt_type === 'morning_intent'
+          ? 'morning_intent'
+          : Object.keys(PROMPTS).find(k => PROMPTS[k] === promptTemplate) || 'baseline_energy',
+        tone_mode: toneMode,
+        risk_score: riskScore,
+      });
+      toneAdjusted = toneResult?.prompt || null;
+    } catch (e) {
+      console.warn('applyTone call failed, using default copy:', e.message);
+    }
+
+    const finalTitle = toneAdjusted?.title || promptTemplate.title;
+    const finalBody = toneAdjusted?.body || promptTemplate.body;
+    const finalWhy = toneAdjusted?.why || promptTemplate.why;
+    const overridePreamble = toneAdjusted?.override_preamble || null;
+
+    // 7. Write the "sent prompt" marker BEFORE returning — this is our anti-spam anchor.
     // Write first so that parallel/rapid calls hitting the gate see this marker.
     // Use today's date as an idempotency boundary: if a system record for today already exists
     // and we're not forced, that's a double-send we want to prevent.
@@ -242,13 +284,14 @@ Deno.serve(async (req) => {
     return Response.json({
       sent: true,
       prompt_type: promptTemplate.prompt_type,
-      title: promptTemplate.title,
-      body: promptTemplate.body,
+      title: finalTitle,
+      body: finalBody,
       options: promptTemplate.options,
-      why: promptTemplate.why,
+      why: finalWhy,
       optional_text: promptTemplate.optional_text,
       operator_mode_risk_score: riskScore,
-      tone_mode: toneModePreference
+      tone_mode: toneMode,
+      override_preamble: overridePreamble,
     });
 
   } catch (error) {
