@@ -10,6 +10,73 @@
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
+// ─── Inlined tone engine (mirror of applyTone — avoids inter-function auth issues) ───
+
+const TONE_VARIANTS = {
+  baseline_energy: {
+    gentle_observant: { title: "How are you doing today — honestly?", body: "I'm just checking in. No pressure to have a neat answer. How much space do you feel like you have right now?", why: "I'm just curious how today feels from the inside — not what your calendar says." },
+    warm_candid: { title: "How's today really feel?", body: "Before the day runs away from you — how much room do you actually have right now?", why: "I'm trying to understand how loaded your days feel over time, not just what's on your calendar." },
+    close_friend_candid: { title: "Real talk — how are you actually doing?", body: "Not the answer you'd give in a standup. How does today actually feel from where you're sitting?", why: "You know I'm asking because I track these patterns, and it matters." },
+    respectfully_confronting: { title: "Before you say 'fine' — how is today really?", body: "I want an honest read, not a polished one. How much capacity do you genuinely have right now?", why: "You've said things were fine before when they weren't. I'd rather know now." },
+  },
+  clarity_check: {
+    gentle_observant: { title: "Just checking — how clear does today feel?", body: "Some days feel focused, some feel scattered. Where are you landing today?", why: "Understanding your clarity day to day helps me offer support at the right moments." },
+    warm_candid: { title: "Clear, stretched, or already behind?", body: "When you look at today, which of these feels closest to where you actually are?", why: "I'm watching for stretches where you keep feeling 'behind' before the day even starts." },
+    close_friend_candid: { title: "Where's your head at today?", body: "Clear, running to catch up, or already underwater? No judgment — just want to know.", why: "You know I track this — and those 'already behind' runs matter." },
+    respectfully_confronting: { title: "Behind again, or genuinely clear today?", body: "I want to know honestly — are you clear or are you in catch-up mode before you've even started?", why: "The pattern of starting days already behind is worth naming if it keeps happening." },
+  },
+  confidence_check: {
+    gentle_observant: { title: "How settled do you feel today?", body: "Not about performance — just your sense of steadiness as a leader right now.", why: "I'm curious about how you feel, not how you're performing." },
+    warm_candid: { title: "How steady are you feeling today?", body: "Not 'are you doing your job' — just, how settled do you feel in yourself as a leader right now?", why: "Confidence ebbs and flows. Checking in helps me support you at the right moments." },
+    close_friend_candid: { title: "Feeling solid or a bit wobbly today?", body: "Leader hat off — how are you actually feeling about yourself today? Confident, unsure, or somewhere in between?", why: "You don't have to perform 'fine' for me. I track this so I can be useful." },
+    respectfully_confronting: { title: "Are you feeling as confident as you're acting?", body: "Sometimes the two don't match. Where are you honestly landing today on your own sense of steadiness?", why: "I'm asking because the gap between projected and felt confidence matters for how you lead." },
+  },
+  overload_overcontrol: {
+    gentle_observant: { title: "Are you taking on more than you need to?", body: "Your week looks quite full. I'm curious — has anything drifted onto your plate that maybe doesn't need to be there?", why: "Heavy weeks sometimes pull us into doing more ourselves. I'm just noticing and checking in." },
+    warm_candid: { title: "Are you in 'I'll just do it' mode again?", body: "This week looks heavy. When your days stack up like this, it's easy to start grabbing more work yourself instead of letting your team carry it.", why: "I can see your calendar is packed and some longer-term goals haven't moved much. That mix is exactly when you end up carrying more than you planned." },
+    close_friend_candid: { title: "You're doing everyone's job again, aren't you?", body: "Heavy calendar, goals stalled. You know what that means. Are you in the doing-it-all mode or catching it before it spirals?", why: "You know this pattern. I'm just making sure you do too." },
+    respectfully_confronting: { title: "This is the load-and-overcontrol pattern — are you seeing it?", body: "Your week is packed, your goals have stalled, and I'd bet you've taken on more than you passed down. Am I wrong?", why: "I'm naming it directly because that's what you asked me to do when things build up." },
+  },
+  weekly_reflection: {
+    gentle_observant: { title: "How did this week sit with you?", body: "Not the outcomes — how did it feel to lead this week? Anything you're glad about or wish had gone differently?", why: "Even a small pause at the end of the week tends to make the next one a little cleaner." },
+    warm_candid: { title: "How did this week actually go?", body: "Not the output — the experience of it. Did you lead the way you wanted to this week?", why: "Weekly reflection is one of the most reliable ways to build self-awareness over time." },
+    close_friend_candid: { title: "Honest review — how was your week, really?", body: "Not the version you'd put in a status update. Did you actually lead the way you wanted to, or were you just surviving?", why: "You know I'll remember what you say here." },
+    respectfully_confronting: { title: "Did you lead this week or just get through it?", body: "Be honest. There's a difference between leading well and managing to the end of the week. Which was this?", why: "This question matters because the gap between the two tends to compound." },
+  },
+  morning_intent: {
+    gentle_observant: { title: "What kind of leader do you want to be today?", body: "No pressure — just a small intention. If today could go well in one way that actually matters to you, what would that be?", why: "Starting with an intention — even a tiny one — tends to shift how the day unfolds." },
+    warm_candid: { title: "What's your intent for today?", body: "Before the day takes over — what's the one thing you actually want to protect time for or lead well today?", why: "Declared intentions help me understand when days match up and when they don't." },
+    close_friend_candid: { title: "What are you trying to actually do today?", body: "Not the to-do list — what's the thing you want to be intentional about today as a leader?", why: "I track these so we can see what actually happens vs what you planned." },
+    respectfully_confronting: { title: "Name it: what's your actual intention today?", body: "What specifically are you going to lead well today — not just get done? One thing.", why: "Intentions only mean something if they're specific. I'm going to check how it went." },
+  },
+  contextual: {
+    gentle_observant: { title: "How settled do you feel today?", body: "Not about performance — just your sense of steadiness as a leader right now.", why: "I'm curious about how you feel, not how you're performing." },
+    warm_candid: { title: "How steady are you feeling today?", body: "Not 'are you doing your job' — just, how settled do you feel in yourself as a leader right now?", why: "Confidence ebbs and flows. Checking in helps me support you at the right moments." },
+    close_friend_candid: { title: "Feeling solid or a bit wobbly today?", body: "Leader hat off — how are you actually feeling about yourself today?", why: "You don't have to perform 'fine' for me. I track this so I can be useful." },
+    respectfully_confronting: { title: "Are you feeling as confident as you're acting?", body: "Sometimes the two don't match. Where are you honestly landing today?", why: "I'm asking because the gap between projected and felt confidence matters." },
+  },
+};
+
+function applyToneInline(promptFamily, toneMode, riskScore = 0) {
+  const validTones = ['gentle_observant', 'warm_candid', 'close_friend_candid', 'respectfully_confronting'];
+  let effectiveTone = validTones.includes(toneMode) ? toneMode : 'warm_candid';
+  const overrideApplied = effectiveTone === 'gentle_observant' && riskScore >= 75;
+  if (overrideApplied) effectiveTone = 'warm_candid';
+
+  const family = TONE_VARIANTS[promptFamily];
+  if (!family) return null;
+
+  const variant = family[effectiveTone] || family['warm_candid'];
+  return {
+    ...variant,
+    tone_mode: effectiveTone,
+    override_applied: overrideApplied,
+    override_preamble: overrideApplied
+      ? "I'm going to be a little more direct than usual right now — not to alarm you, but because I think this moment deserves it."
+      : null,
+  };
+}
+
 // ─── Prompt templates ─────────────────────────────────────────────────────────
 
 const PROMPTS = {
@@ -234,20 +301,11 @@ Deno.serve(async (req) => {
       promptTemplate = selectPrompt(riskScore, recentPulses);
     }
 
-    // 6. Apply tone via applyTone function
-    let toneAdjusted = null;
-    try {
-      const toneResult = await base44.asServiceRole.functions.invoke('applyTone', {
-        prompt_family: promptTemplate.prompt_type === 'morning_intent'
-          ? 'morning_intent'
-          : Object.keys(PROMPTS).find(k => PROMPTS[k] === promptTemplate) || 'baseline_energy',
-        tone_mode: toneMode,
-        risk_score: riskScore,
-      });
-      toneAdjusted = toneResult?.prompt || null;
-    } catch (e) {
-      console.warn('applyTone call failed, using default copy:', e.message);
-    }
+    // 6. Apply tone — inlined to avoid inter-function auth/cache issues
+    const promptFamily = promptTemplate.prompt_type === 'morning_intent'
+      ? 'morning_intent'
+      : (Object.keys(PROMPTS).find(k => PROMPTS[k] === promptTemplate) || promptTemplate.prompt_type || 'baseline_energy');
+    const toneAdjusted = applyToneInline(promptFamily, toneMode, riskScore);
 
     const finalTitle = toneAdjusted?.title || promptTemplate.title;
     const finalBody = toneAdjusted?.body || promptTemplate.body;
