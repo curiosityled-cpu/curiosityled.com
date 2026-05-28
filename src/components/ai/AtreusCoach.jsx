@@ -620,72 +620,38 @@ export default function AtreusCoach({
 
   // Greeting and suggestions delegated to atreusGreetings.js helper
 
-  // Enhanced: Comprehensive system prompt with cross-session context
+  // Enhanced: Comprehensive system prompt with tone, trend memory, and cross-session context
   const buildSystemPrompt = async () => {
     const userName = context?.user_name || user?.full_name || 'the user';
-    const userRole = context?.userRole || appRole || 'User';
-    const pageType = context?.pageType || 'unknown page';
-    const viewportFocus = context?.viewport_focus || {};
-    
-    // Fetch cross-session context (cached)
     const crossSessionData = await getCrossSessionContext(base44, user?.email);
-    
-    // Fetch external qualifications for enhanced context
-    let externalQuals = null;
+
+    // Load tone preference and trend memory for this manager
+    let toneMode = 'warm_candid';
+    let riskScore = context?.operator_mode_risk_score || 0;
+    let trends = null;
+
     try {
-      if (!user?.email) throw new Error('No user email');
-      const [assessments, certs] = await Promise.all([
-        base44.entities.ExternalAssessmentResult.filter({ user_email: user.email, status: 'verified' }, '-created_date', 5),
-        base44.entities.Certification.filter({ user_email: user.email, status: 'verified' }, '-created_date', 10)
-      ]);
-      externalQuals = {
-        external_assessments: assessments.map(a => ({ type: a.assessment_type, result: a.designation_or_score, summary: a.ai_summary })),
-        certifications: certs.map(c => ({ name: c.name, issuer: c.issuing_body, competencies: c.competency_ids }))
-      };
-    } catch (error) {
-      console.error('Error fetching external qualifications:', error);
+      if (user?.email) {
+        const [tonePrefs, trendRecords] = await Promise.all([
+          base44.entities.TonePreference.filter({ user_email: user.email }, '-created_date', 1),
+          base44.entities.ManagerTrends.filter({ user_email: user.email }, '-last_trend_computed_at', 1),
+        ]);
+        toneMode = tonePrefs[0]?.tone_mode || 'warm_candid';
+        trends = trendRecords[0] || null;
+      }
+    } catch (e) {
+      console.warn('Could not load tone/trends for Atreus prompt:', e.message);
     }
-    
-    // Serialize granular context for LLM
-    const contextSummary = {
-      page: {
-        type: pageType,
-        viewing_focus: context?.viewing_focus,
-        data_id: context?.dataId,
-        path: context?.path
-      },
-      user: {
-        name: userName,
-        role: userRole,
-        email: context?.user_email || user?.email,
-        external_qualifications: externalQuals
-      },
-      current_state: {
-        filters: context?.current_filters,
-        visible_data: context?.visible_data_summary,
-        selected_items: context?.selected_items,
-        modal_focus: context?.modal_focus
-      },
-      viewport: {
-        focused_section: viewportFocus.focused_section,
-        visible_sections: viewportFocus.visible_sections,
-        section_labels: viewportFocus.section_labels,
-        total_sections: viewportFocus.section_count
-      },
-      insights: {
-        page_specific: context?.page_specific_insights,
-        available_actions: context?.available_actions
-      },
-      navigation: {
-        previous_page: context?.previous_page ? {
-          type: context.previous_page.pageType,
-          navigated_at: context.previous_page.navigated_at
-        } : null
-      },
-      cross_session: crossSessionData
+
+    const pageContext = {
+      page_type: context?.pageType,
+      path: context?.path,
+      user_role: context?.userRole || appRole,
+      visible_data: context?.visible_data_summary,
+      cross_session: crossSessionData,
     };
 
-    return buildAtreusSystemPrompt({ userName, userRole, pageType, contextSummary, viewportFocus, crossSessionData, externalQuals });
+    return buildAtreusSystemPrompt({ toneMode, riskScore, trends, pageContext, userName });
   };
 
   const handleSendMessage = async (messageText = null) => {
