@@ -130,7 +130,7 @@ const AuthenticatedApp = () => {
       <Route path="/GoalManager" element={mvpRole ? <MVPPage><PerformanceManager /></MVPPage> : <LayoutWrapper currentPageName="GoalManager"><PerformanceManager /></LayoutWrapper>} />
       <Route path="/my-performance" element={<Navigate to="/my-goals" replace />} />
       <Route path="/my-goals" element={<MVPPage><MyPerformance /></MVPPage>} />
-      <Route path="/my-rhythm" element={<MVPLayout><MyRhythm /></MVPLayout>} />
+      <Route path="/my-rhythm" element={<MVPPage><MyRhythm /></MVPPage>} />
       <Route path="/teams-settings" element={<TeamsSettings />} />
       {/* Redirect /Performance to My Goals */}
       <Route path="/Performance" element={<Navigate to="/my-goals" replace />} />
