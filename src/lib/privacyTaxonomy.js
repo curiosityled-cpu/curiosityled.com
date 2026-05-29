@@ -95,6 +95,27 @@ export const PRIVACY_TAXONOMY = {
     calendar_connected: 'C',
     client_id: 'D',
   },
+
+  // Post-meeting debrief tracking (aggregated, never attributed)
+  MeetingDebrief: {
+    user_email: 'D',
+    meeting_title: 'B',
+    meeting_duration_minutes: 'B',
+    post_meeting_sentiment: 'A', // How they felt after (private)
+    emotional_delta: 'A', // Change in energy/confidence (private)
+    timestamp: 'B',
+    client_id: 'D',
+  },
+
+  // SI weaving context
+  SituationalIntelligenceContext: {
+    user_email: 'D',
+    si_score: 'B', // Only aggregate, never attributed
+    woven_narrative: 'A', // Personalized SI-pattern fusion (private)
+    trend_reference: 'A', // Links to ManagerTrends (private)
+    timestamp: 'B',
+    client_id: 'D',
+  },
 };
 
 /**
