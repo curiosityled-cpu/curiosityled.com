@@ -59,12 +59,13 @@ Deno.serve(async (req) => {
     const intentPulses = recentPulses.filter(p => p.prompt_type === 'morning_intent');
     const actualsPulses = recentPulses.filter(p => p.prompt_type === 'evening_actuals');
 
-    let intentActualsAlignment = 'no_data';
+    // 1. Intent-actuals alignment (morning_intent → evening_actuals)
+    let intentActualsAlignmentScore = null;
+    const intentActualsAlignmentLabel = 'no_data';
     if (intentPulses.length > 0 && actualsPulses.length > 0) {
-      const gapCount = actualsPulses.filter(p => p.intent_actuals_gap).length;
+      const gapCount = actualsPulses.filter(p => p.intent_actuals_gap && p.intent_actuals_gap !== 'no_gap_detected' && p.intent_actuals_gap !== 'insufficient_data').length;
       const totalActuals = actualsPulses.length;
-      // Alignment = (1 - gap_rate) × 100
-      intentActualsAlignment = Math.round(((totalActuals - gapCount) / totalActuals) * 100);
+      intentActualsAlignmentScore = Math.round(((totalActuals - gapCount) / totalActuals) * 100);
     }
 
     // 2. Delegation follow-through
@@ -76,45 +77,43 @@ Deno.serve(async (req) => {
 
     // 3. Overload acknowledgment → action signals
     const overloadPulses = recentPulses.filter(p => p.prompt_type === 'overload_check');
-    const overloadAcknowledged = overloadPulses.filter(p => 
+    const overloadAcknowledged = overloadPulses.filter(p =>
       p.operator_mode_response && ['very_much', 'somewhat'].includes(p.operator_mode_response)
     ).length;
-    
+
     // Check if manager actually reduced load after acknowledging
-    const afterOverloadAck = recentPulses.filter(p => 
-      p.created_date && p.source !== 'system' && 
+    const afterOverloadAck = recentPulses.filter(p =>
+      p.created_date && p.source !== 'system' &&
       p.energy_level && ['steady', 'strong'].includes(p.energy_level)
     ).length;
-    
+
     const overload_action_signal = overloadAcknowledged > 0
-      ? (afterOverloadAck / overloadAcknowledged)
+      ? Math.min(1, afterOverloadAck / overloadAcknowledged)
       : null;
 
     // 4. Coaching theme resonance
     const coachingPulses = recentPulses.filter(p => p.biggest_weight_today?.startsWith('trigger:'));
-    const coachingThemeCount = coachingPulses.length;
     const resonanceThemes = {};
     coachingPulses.forEach(p => {
       const theme = p.biggest_weight_today?.split(':')[1];
-      if (theme) {
-        resonanceThemes[theme] = (resonanceThemes[theme] || 0) + 1;
-      }
+      if (theme) resonanceThemes[theme] = (resonanceThemes[theme] || 0) + 1;
     });
+
+    // Composite coaching follow-through score (0–100)
+    const alignmentVal = intentActualsAlignmentScore !== null ? intentActualsAlignmentScore : 50;
+    const delegationVal = delegation_followthrough_rate !== null ? delegation_followthrough_rate : 50;
+    const overloadVal = overload_action_signal !== null ? Math.round(overload_action_signal * 100) : 50;
+    const coaching_followthrough_score = Math.min(100, Math.round((alignmentVal + delegationVal + overloadVal) / 3));
 
     // ─── Update ManagerTrends with follow-through metrics ──────────────────
 
     const updatePayload = {
       ...trendRecord,
-      // New fields tracking follow-through
-      intent_actuals_alignment: typeof intentActualsAlignment === 'number' ? intentActualsAlignment : null,
+      intent_actuals_alignment: intentActualsAlignmentScore,
       delegation_followthrough_rate,
       overload_action_signal: overload_action_signal !== null ? Math.round(overload_action_signal * 100) : null,
       coaching_theme_resonance: Object.keys(resonanceThemes).length > 0 ? resonanceThemes : null,
-      coaching_followthrough_score: Math.round(
-        ((intentActualsAlignment !== 'no_data' ? intentActualsAlignment : 50) +
-         (delegation_followthrough_rate || 50) +
-         (overload_action_signal !== null ? overload_action_signal * 100 : 50)) / 3
-      ),
+      coaching_followthrough_score,
       last_trend_computed_at: now.toISOString()
     };
 
@@ -136,10 +135,10 @@ Deno.serve(async (req) => {
       success: true,
       manager_email,
       follow_through_metrics: {
-        intent_actuals_alignment,
+        intent_actuals_alignment: intentActualsAlignmentScore,
         delegation_followthrough_rate,
         overload_action_signal: overload_action_signal !== null ? Math.round(overload_action_signal * 100) : null,
-        coaching_followthrough_score: updatePayload.coaching_followthrough_score,
+        coaching_followthrough_score,
         resonant_themes: resonanceThemes
       }
     });
