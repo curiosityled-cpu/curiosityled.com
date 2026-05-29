@@ -343,12 +343,25 @@ Deno.serve(async (req) => {
     const toneMode = tonePrefs[0]?.tone_mode || 'warm_candid';
 
     // 5. Select prompt (with tone override for morning_intent)
-    const promptKey = forcePromptType || null;
+    // Alias external prompt_type names → internal PROMPTS keys
+    const PROMPT_KEY_ALIASES = {
+      overload_check:   'overload_overcontrol',
+      operator_mode:    'overload_overcontrol',
+      evening_actuals:  'weekly_reflection',  // closest structural match for end-of-day reflection
+    };
+    const resolvedPromptKey = forcePromptType
+      ? (PROMPT_KEY_ALIASES[forcePromptType] ?? forcePromptType)
+      : null;
+
     let promptTemplate;
-    if (promptKey === 'morning_intent') {
+    if (resolvedPromptKey === 'morning_intent') {
       promptTemplate = MORNING_INTENT_PROMPT;
-    } else if (promptKey && PROMPTS[promptKey]) {
-      promptTemplate = PROMPTS[promptKey];
+    } else if (resolvedPromptKey && PROMPTS[resolvedPromptKey]) {
+      promptTemplate = PROMPTS[resolvedPromptKey];
+    } else if (resolvedPromptKey === 'motivation_check' && PROMPTS.motivation_check) {
+      promptTemplate = PROMPTS.motivation_check;
+    } else if (resolvedPromptKey === 'optimism_check' && PROMPTS.optimism_check) {
+      promptTemplate = PROMPTS.optimism_check;
     } else {
       promptTemplate = selectPrompt(riskScore, recentPulses);
     }
