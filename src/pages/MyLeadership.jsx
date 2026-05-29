@@ -20,6 +20,8 @@ import TrendSummaryCard from "@/components/checkin/TrendSummaryCard";
 import IntentLoopCard from "@/components/checkin/IntentLoopCard";
 import ToneOnboarding from "@/components/checkin/ToneOnboarding";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
+import WeeklyFocusReflection from "@/components/checkin/WeeklyFocusReflection";
+import DecisionJournal from "@/components/intelligence/DecisionJournal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -444,6 +446,7 @@ export default function MyLeadership() {
     localStorage.getItem('cl_privacy_banner_dismissed') === '1'
   );
   const [showSettings, setShowSettings] = useState(false);
+  const [showWeeklyReflection, setShowWeeklyReflection] = useState(false);
 
   const dismissPrivacy = () => {
     localStorage.setItem('cl_privacy_banner_dismissed', '1');
@@ -699,11 +702,43 @@ export default function MyLeadership() {
           {!needsToneOnboarding && <GoalsPulseCard goals={goals} />}
           {!needsToneOnboarding && <SuggestedSupportCard assignments={assignments} devPlans={devPlans} />}
 
-          {/* 7. EXPLORE DEEPER — full profile, plan, goals */}
+          {/* 7. DECISION JOURNAL — track complex decisions */}
+          {!needsToneOnboarding && <DecisionJournal />}
+
+          {/* 8. WEEKLY REFLECTION — closed-loop reflection */}
+          {!needsToneOnboarding && (
+            <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => setShowWeeklyReflection(true)}
+            >
+              <CardContent className="px-5 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-green-50 border border-green-100 flex items-center justify-center">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">Weekly focus reflection</p>
+                    <p className="text-xs text-gray-500">Reflect on this week's wins, surprises, and learnings</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-300" />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* 9. EXPLORE DEEPER — full profile, plan, goals */}
           {!needsToneOnboarding && <ExploreDeeperCard />}
 
-        </div>
-      )}
-    </MVPPageLayout>
-  );
-}
+          </div>
+          )}
+
+          {/* Weekly Reflection Modal */}
+          <WeeklyFocusReflection
+          isOpen={showWeeklyReflection}
+          onClose={() => setShowWeeklyReflection(false)}
+          onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
+          }}
+          />
+          </MVPPageLayout>
+          );
+          }
