@@ -9,7 +9,6 @@
  */
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useAuth } from "@/components/useAuth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,15 +16,14 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
-export default function WeeklyFocusReflection({ isOpen, onClose, onSuccess }) {
-  const { user } = useAuth();
+export default function WeeklyFocusReflection({ isOpen, onClose, onSuccess, userEmail }) {
   const [reflection, setReflection] = useState("");
   const [surprises, setSurprises] = useState("");
   const [keyDecisions, setKeyDecisions] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    if (!reflection.trim()) {
+    if (!reflection.trim() || !userEmail) {
       toast.error("Please share your weekly reflection");
       return;
     }
@@ -34,7 +32,7 @@ export default function WeeklyFocusReflection({ isOpen, onClose, onSuccess }) {
     try {
       // Create a weekly debrief pulse record
       const pulse = await base44.entities.ManagerPulse.create({
-        user_email: user.email,
+        user_email: userEmail,
         prompt_type: 'weekly_reflection',
         source: 'web',
         biggest_weight_today: reflection,

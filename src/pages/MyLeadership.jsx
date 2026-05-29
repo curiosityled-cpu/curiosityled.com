@@ -738,6 +738,7 @@ export default function MyLeadership() {
           onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
           }}
+          userEmail={user?.email}
           />
           </MVPPageLayout>
           );
