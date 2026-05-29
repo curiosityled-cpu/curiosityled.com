@@ -63,10 +63,11 @@
     "started_at"
   ],
   "rls": {
+    "create": null,
     "read": {
       "$or": [
         {
-          "user_email": "{{user.email}}"
+          "data.user_email": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -74,7 +75,6 @@
               "$in": [
                 "Admin Level 2",
                 "Super Administrator",
-                "Partner Business Administrator",
                 "Platform Admin"
               ]
             }
@@ -82,18 +82,26 @@
         }
       ]
     },
-    "write": {
+    "update": {
       "$or": [
         {
-          "user_email": "{{user.email}}"
+          "data.user_email": "{{user.email}}"
         },
         {
           "user_condition": {
-            "role": {
-              "$in": [
-                "Platform Admin"
-              ]
-            }
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
           }
         }
       ]
