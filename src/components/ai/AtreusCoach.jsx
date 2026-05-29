@@ -643,6 +643,16 @@ export default function AtreusCoach({
         ]);
         toneMode = tonePrefs[0]?.tone_mode || 'warm_candid';
         trends = trendRecords[0] || null;
+
+        // Check for adaptive tone shift based on current state
+        try {
+          const adaptiveResponse = await base44.functions.invoke('computeAdaptiveTone', {});
+          if (adaptiveResponse.data?.should_adapt) {
+            toneMode = adaptiveResponse.data.recommended_tone;
+          }
+        } catch (e) {
+          // Adaptive tone is best-effort, don't block
+        }
       }
     } catch (e) {
       console.warn('Could not load tone/trends for Atreus prompt:', e.message);

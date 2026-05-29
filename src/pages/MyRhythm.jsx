@@ -21,6 +21,9 @@ import { TrendingUp, TrendingDown, Zap, Brain, Heart, AlertCircle, CheckCircle2,
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import BurnoutRiskCard from "@/components/intelligence/BurnoutRiskCard";
 import ResilienceRecoveryChart from "@/components/intelligence/ResilienceRecoveryChart";
+import EmotionalStateIndicators from "@/components/intelligence/EmotionalStateIndicators";
+import ToneAdaptationCard from "@/components/intelligence/ToneAdaptationCard";
+import TeamInsightsPanel from "@/components/intelligence/TeamInsightsPanel";
 
 function TrendIndicator({ trend, label }) {
   const isImproving = trend === 'improving';
@@ -288,6 +291,9 @@ export default function MyRhythm() {
 
           <TabsContent value="trends" className="space-y-6">
             <div className="grid grid-cols-1 gap-6">
+              {/* Emotional State Indicators */}
+              <EmotionalStateIndicators />
+
               {/* Burnout Risk Monitor */}
               <BurnoutRiskCard />
               
@@ -295,6 +301,12 @@ export default function MyRhythm() {
               <EnergyTrendCard trends={trends} pulses={pulses} />
               <ConfidenceTrendCard trends={trends} pulses={pulses} />
               <ResilienceRecoveryChart />
+
+              {/* Atreus Tone Adaptation */}
+              <ToneAdaptationCard />
+
+              {/* Team Pulse (managers only) */}
+              <TeamInsightsPanel />
 
               {/* Atreus Narrative */}
               {trends && (
