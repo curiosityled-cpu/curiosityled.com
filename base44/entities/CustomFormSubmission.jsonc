@@ -139,6 +139,11 @@
       "type": "object",
       "additionalProperties": true,
       "description": "Additional submission metadata"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this form submission"
     }
   },
   "required": [

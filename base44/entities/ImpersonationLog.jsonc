@@ -54,6 +54,11 @@
     "ip_address": {
       "type": "string",
       "description": "IP address of admin during impersonation"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this impersonation session"
     }
   },
   "required": [

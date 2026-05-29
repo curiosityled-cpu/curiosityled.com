@@ -27,6 +27,11 @@
         "SCIM"
       ],
       "description": "System that created this assignment"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this user role assignment"
     }
   },
   "required": [

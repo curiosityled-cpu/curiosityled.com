@@ -27,6 +27,11 @@
     "new_value": {
       "type": "string",
       "description": "New value (JSON string if complex)"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this branding change"
     }
   },
   "required": [

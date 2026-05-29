@@ -27,6 +27,11 @@
       "type": "object",
       "additionalProperties": true,
       "description": "Progress data at time of earning (for cumulative badges)"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this user badge"
     }
   },
   "required": [

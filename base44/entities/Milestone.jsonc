@@ -44,6 +44,11 @@
     "order_index": {
       "type": "number",
       "description": "Order within the group"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this milestone"
     }
   },
   "required": [

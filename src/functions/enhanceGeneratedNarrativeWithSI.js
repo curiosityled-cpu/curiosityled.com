@@ -10,7 +10,6 @@ import {
   buildSIAwareIntervention, 
   generateSIContextualSummary 
 } from '@/components/intelligence/SituationalIntelligenceWeaver.js';
-
 // deno-lint-ignore no-undef
 Deno.serve(async (req) => {
   try {

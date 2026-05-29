@@ -93,6 +93,11 @@
     "points_value": {
       "type": "number",
       "description": "Number of gamification points awarded for earning this certification (overrides default)"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this certification"
     }
   },
   "required": [

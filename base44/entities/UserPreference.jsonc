@@ -89,6 +89,11 @@
         }
       },
       "description": "Privacy and data retention preferences"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of these user preferences"
     }
   },
   "required": [

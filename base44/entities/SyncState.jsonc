@@ -17,6 +17,11 @@
     "user_email": {
       "type": "string",
       "description": "Email of the user whose calendar is being synced"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this sync state"
     }
   },
   "required": [

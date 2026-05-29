@@ -55,6 +55,11 @@
         "force_logout_user"
       ],
       "description": "How the session ended"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this session"
     }
   },
   "required": [

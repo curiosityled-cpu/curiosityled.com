@@ -57,6 +57,11 @@
       "type": "object",
       "additionalProperties": true,
       "description": "Additional metadata (e.g., Wix integration version)"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this provisioning API key"
     }
   },
   "required": [

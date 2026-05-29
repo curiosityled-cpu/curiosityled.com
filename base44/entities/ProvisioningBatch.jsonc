@@ -84,6 +84,11 @@
         "type": "string"
       },
       "description": "High-level batch errors"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this provisioning batch"
     }
   },
   "required": [

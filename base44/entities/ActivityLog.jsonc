@@ -60,6 +60,11 @@
       "type": "object",
       "additionalProperties": true,
       "description": "Additional context about the action"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this activity"
     }
   },
   "required": [

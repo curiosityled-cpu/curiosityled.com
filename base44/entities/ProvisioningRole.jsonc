@@ -21,6 +21,11 @@
       },
       "default": [],
       "description": "Array of permission strings"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this provisioning role"
     }
   },
   "required": [

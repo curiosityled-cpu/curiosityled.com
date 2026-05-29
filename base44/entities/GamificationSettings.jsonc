@@ -58,6 +58,11 @@
       "type": "boolean",
       "default": true,
       "description": "Whether to send notifications when users level up"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of these gamification settings"
     }
   },
   "required": [

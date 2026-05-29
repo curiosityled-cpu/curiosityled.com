@@ -83,6 +83,11 @@
       "type": "string",
       "format": "date-time",
       "description": "Timestamp when linked"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this provisioning user"
     }
   },
   "required": [

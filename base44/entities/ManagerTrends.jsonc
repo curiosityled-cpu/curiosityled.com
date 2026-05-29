@@ -122,6 +122,11 @@
     "client_id": {
       "type": "string",
       "description": "Client ID for multi-tenant support"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of these manager trends"
     }
   },
   "required": [

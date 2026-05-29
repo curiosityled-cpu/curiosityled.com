@@ -40,6 +40,11 @@
       "type": "string",
       "format": "date-time",
       "description": "When the action was executed"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this agent action"
     }
   },
   "required": [

@@ -63,6 +63,11 @@
       "type": "boolean",
       "default": false,
       "description": "Whether employee and manager reviewed together"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this weekly check-in"
     }
   },
   "required": [

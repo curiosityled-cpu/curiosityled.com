@@ -31,6 +31,11 @@
       "type": "string",
       "format": "date-time",
       "description": "Expiration timestamp (24h TTL from creation)"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this request nonce"
     }
   },
   "required": [
