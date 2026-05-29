@@ -169,14 +169,19 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
-    if (!user) {
+    // Allow service-role calls (no user session) when user_email is provided in payload
+    const payload = await req.json().catch(() => ({}));
+    if (!user && !payload.user_email) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const payload = await req.json().catch(() => ({}));
     const { prompt, user_email } = payload;
 
-    const targetEmail = user_email || user.email;
+    // Accept service-role calls (no user session) when user_email is explicit
+    const targetEmail = user_email || user?.email;
+
+    if (!targetEmail) {
+      return Response.json({ error: 'user_email required for service-role calls' }, { status: 400 });
+    }
 
     if (!prompt) {
       return Response.json({ error: 'Missing required field: prompt' }, { status: 400 });

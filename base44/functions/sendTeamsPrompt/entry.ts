@@ -49,6 +49,18 @@ const TONE_VARIANTS = {
     close_friend_candid: { title: "What are you trying to actually do today?", body: "Not the to-do list — what's the thing you want to be intentional about today as a leader?", why: "I track these so we can see what actually happens vs what you planned." },
     respectfully_confronting: { title: "Name it: what's your actual intention today?", body: "What specifically are you going to lead well today — not just get done? One thing.", why: "Intentions only mean something if they're specific. I'm going to check how it went." },
   },
+  motivation_check: {
+    gentle_observant: { title: "How motivated are you feeling today?", body: "Not about whether you'll get things done — just where your drive is sitting right now.", why: "Motivation shifts, and I track it over time so we can understand your patterns together." },
+    warm_candid: { title: "How's your motivation today?", body: "Flat, low, okay, or genuinely energised? No right answer — just honest.", why: "I track motivation alongside load and confidence. It's one of the quieter leading indicators." },
+    close_friend_candid: { title: "Feeling it today, or just going through the motions?", body: "Genuinely — where's your drive at today? High, moderate, low, or is it just not there?", why: "You know I track this. It matters for the bigger picture." },
+    respectfully_confronting: { title: "Motivated, or just showing up?", body: "There's a difference. Which is it today?", why: "Low motivation that goes unacknowledged tends to become burnout. I'd rather know now." },
+  },
+  optimism_check: {
+    gentle_observant: { title: "How does the near future feel to you?", body: "Not about outcomes — just your gut sense of what's coming. Open, uncertain, or closed off?", why: "Optimism about what's ahead affects how you lead today." },
+    warm_candid: { title: "How does the near future feel from where you're sitting?", body: "Genuinely hopeful, cautiously okay, uncertain, or flat? Just your honest read.", why: "I track this over time — it helps me understand your cycles and support you at the right moments." },
+    close_friend_candid: { title: "How does the future look from where you're standing?", body: "Real gut-check — optimistic, hopeful, uncertain, or a bit bleak right now?", why: "You know I'll use this. If it's been bleak for a while, that's worth looking at." },
+    respectfully_confronting: { title: "Hopeful about what's ahead, or not really?", body: "Be straight with me. Optimistic, uncertain, or is the outlook just flat right now?", why: "Sustained low optimism is one of the earliest warning signs. I need to know where you are." },
+  },
   contextual: {
     gentle_observant: { title: "How settled do you feel today?", body: "Not about performance — just your sense of steadiness as a leader right now.", why: "I'm curious about how you feel, not how you're performing." },
     warm_candid: { title: "How steady are you feeling today?", body: "Not 'are you doing your job' — just, how settled do you feel in yourself as a leader right now?", why: "Confidence ebbs and flows. Checking in helps me support you at the right moments." },
@@ -158,6 +170,34 @@ const PROMPTS = {
     optional_text: "What one thing would you do differently?",
     prompt_type: "weekly_reflection",
     field: "energy_level"
+  },
+  motivation_check: {
+    title: "How's your motivation today?",
+    body: "Flat, low, moderate, or high? No right answer — just honest.",
+    why: "I track motivation alongside load and confidence. It's one of the quieter leading indicators of where you're heading.",
+    options: [
+      { label: "Genuinely energised", value: "high" },
+      { label: "Moderate — okay", value: "moderate" },
+      { label: "Pretty low", value: "low" },
+      { label: "Flat — just going through it", value: "flat" }
+    ],
+    optional_text: "What's driving it, if you want to name it?",
+    prompt_type: "contextual",
+    field: "motivation_today"
+  },
+  optimism_check: {
+    title: "How does the near future feel from where you're sitting?",
+    body: "Not about outcomes — just your gut sense of what's coming. Does it feel open, uncertain, or closed off?",
+    why: "Optimism about what's ahead affects how you lead today. Tracking it over time helps me understand your cycles.",
+    options: [
+      { label: "Genuinely hopeful", value: "optimistic" },
+      { label: "Cautiously okay", value: "hopeful" },
+      { label: "Uncertain", value: "uncertain" },
+      { label: "Flat or bleak", value: "pessimistic" }
+    ],
+    optional_text: "What's shaping how you see things right now?",
+    prompt_type: "contextual",
+    field: "optimism_today"
   }
 };
 
