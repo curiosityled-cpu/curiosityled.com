@@ -6,6 +6,8 @@
  * - Category B (Aggregate Only): Can be summarized/counted but not attributed
  * - Category C (Shareable): Professional data visible to manager with consent
  * - Category D (Public): Role, title, visible to all
+ * 
+ * Build: 2026-05-29 — Registering 8 Tier 4 functions (captureMorningIntent, sendTeamsPromptWithTone, createEmotionalStateAlerts, operatorModeWowLoop, operatorModeDelegationFollowUp, auditHRPulseAggregates, weaveSimplifiedIntelligence, wirePostMeetingDebrief)
  */
 
 export const PRIVACY_TAXONOMY = {
