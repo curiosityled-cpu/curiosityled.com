@@ -498,21 +498,34 @@ export default function MyLeadership() {
 
   const { data: goals = [], isLoading: loadingGoals } = useQuery({
     queryKey: ['ml-goals', user?.email],
-    queryFn: () => base44.entities.Goal.filter({ created_by: user.email }, '-created_date', 15),
+    queryFn: async () => {
+      try {
+        // Try user_email first (assigned goals), fall back to created_by
+        const byEmail = await base44.entities.Goal.filter({ user_email: user.email }, '-created_date', 15);
+        if (byEmail.length > 0) return byEmail;
+        return await base44.entities.Goal.filter({ created_by: user.email }, '-created_date', 15);
+      } catch { return []; }
+    },
     enabled: !!user?.email,
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: assignments = [], isLoading: loadingAssignments } = useQuery({
     queryKey: ['ml-assignments', user?.email],
-    queryFn: () => base44.entities.AssignedLearning.filter({ user_email: user.email }, '-created_date', 10),
+    queryFn: async () => {
+      try { return await base44.entities.AssignedLearning.filter({ user_email: user.email }, '-created_date', 10); }
+      catch { return []; }
+    },
     enabled: !!user?.email,
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: devPlans = [], isLoading: loadingPlans } = useQuery({
     queryKey: ['ml-devplans', user?.email],
-    queryFn: () => base44.entities.DevelopmentPlan.filter({ user_email: user.email }, '-created_date', 5),
+    queryFn: async () => {
+      try { return await base44.entities.DevelopmentPlan.filter({ user_email: user.email }, '-created_date', 5); }
+      catch { return []; }
+    },
     enabled: !!user?.email,
     staleTime: 5 * 60 * 1000,
   });
@@ -532,8 +545,10 @@ export default function MyLeadership() {
   const { data: trends = null } = useQuery({
     queryKey: ['ml-trends', user?.email],
     queryFn: async () => {
-      const rows = await base44.entities.ManagerTrends.filter({ user_email: user.email }, '-last_trend_computed_at', 1);
-      return rows[0] || null;
+      try {
+        const rows = await base44.entities.ManagerTrends.filter({ user_email: user.email }, '-last_trend_computed_at', 1);
+        return rows[0] || null;
+      } catch { return null; }
     },
     enabled: !!user?.email,
     staleTime: 30 * 60 * 1000,
@@ -542,7 +557,10 @@ export default function MyLeadership() {
   // Recent pulses for intent loop (last 7 days)
   const { data: recentPulses = [] } = useQuery({
     queryKey: ['ml-pulses', user?.email],
-    queryFn: () => base44.entities.ManagerPulse.filter({ user_email: user.email }, '-created_date', 20),
+    queryFn: async () => {
+      try { return await base44.entities.ManagerPulse.filter({ user_email: user.email }, '-created_date', 20); }
+      catch { return []; }
+    },
     enabled: !!user?.email,
     staleTime: 5 * 60 * 1000,
   });
