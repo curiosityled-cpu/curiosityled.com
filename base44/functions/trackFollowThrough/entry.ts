@@ -90,19 +90,33 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Create follow-through record (if entity exists)
+    // Persist follow-through outcome as a system ManagerPulse record
+    // (avoids dependency on a separate FollowThroughRecord entity)
     try {
-      await base44.asServiceRole.entities.FollowThroughRecord?.create({
-        manager_email,
-        recommendation_pulse_id: recommendation_from_pulse_id,
-        recommendation_type: recommendationType,
-        recommended_action: recommendedAction,
-        follow_through_status: followThroughStatus,
-        follow_through_score: followThroughScore,
-        observed_at: new Date().toISOString()
+      await base44.asServiceRole.entities.ManagerPulse.create({
+        user_email: manager_email,
+        source: 'system',
+        prompt_type: 'follow_up',
+        intent_actuals_gap: followThroughStatus === 'completed'
+          ? 'no_gap_detected'
+          : followThroughStatus === 'partial'
+            ? 'declared_delegation_operator_mode_detected'
+            : recommendedAction === 'delegation'
+              ? 'declared_delegation_operator_mode_detected'
+              : recommendedAction === 'strategic_work'
+                ? 'declared_strategic_tactical_overload_detected'
+                : recommendedAction === 'team_support'
+                  ? 'declared_team_support_low_1on1_detected'
+                  : 'insufficient_data',
+        delegation_commitment: followThroughScore > 0
+          ? `Follow-through score: ${followThroughScore}/100 for ${recommendedAction}`
+          : null,
+        follow_up_sent: true,
+        follow_up_date: new Date().toISOString().split('T')[0]
       });
     } catch (e) {
-      // Entity doesn't exist yet — will be created in schema
+      // Non-fatal — result is still returned to caller
+      console.warn('[trackFollowThrough] Could not persist follow-through pulse:', e.message);
     }
 
     return Response.json({
