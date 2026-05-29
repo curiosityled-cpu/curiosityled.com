@@ -79,6 +79,11 @@
       "type": "object",
       "additionalProperties": true,
       "description": "Key-value pairs for terminology customization"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this branding configuration"
     }
   },
   "required": [],

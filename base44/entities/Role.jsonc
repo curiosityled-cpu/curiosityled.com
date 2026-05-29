@@ -285,6 +285,11 @@
       "type": "boolean",
       "default": false,
       "description": "Whether this is a platform-wide default role"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this role"
     }
   },
   "required": [

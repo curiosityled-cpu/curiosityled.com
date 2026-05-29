@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-undef
 /**
  * auditHRPulseAggregates
  *
@@ -11,7 +12,6 @@
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { PRIVACY_TAXONOMY, getHRSafeFields } from '../lib/privacyTaxonomy.js';
-// deno-lint-ignore no-undef
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);

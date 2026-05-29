@@ -80,6 +80,11 @@
       ],
       "default": "medium",
       "description": "Priority level of this notification"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this notification"
     }
   },
   "required": [

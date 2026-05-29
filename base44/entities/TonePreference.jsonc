@@ -100,6 +100,11 @@
       "type": "number",
       "default": 85,
       "description": "Overload pattern strength threshold above which cadence auto-pauses (0-100)"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this tone preference"
     }
   },
   "required": [

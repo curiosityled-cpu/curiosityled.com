@@ -137,6 +137,11 @@
     "ai_generated_report": {
       "type": "object",
       "description": "AI-generated comprehensive analysis"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this assessment submission"
     }
   },
   "required": [

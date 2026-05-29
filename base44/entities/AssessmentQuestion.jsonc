@@ -97,6 +97,11 @@
         ]
       },
       "description": "Array of 4 multiple-choice options"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this assessment question"
     }
   },
   "required": [

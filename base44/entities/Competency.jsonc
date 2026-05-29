@@ -99,6 +99,11 @@
       "type": "boolean",
       "default": false,
       "description": "Whether this is a platform-wide default competency"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this competency"
     }
   },
   "required": [

@@ -53,6 +53,11 @@
     "client_id": {
       "type": "string",
       "description": "Client-specific template override (null for platform default)"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this email template"
     }
   },
   "required": [

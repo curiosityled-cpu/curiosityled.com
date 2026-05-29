@@ -251,6 +251,11 @@
         "edit"
       ],
       "description": "Permission level for team-shared reports"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this scheduled report"
     }
   },
   "required": [

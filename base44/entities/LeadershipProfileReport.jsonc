@@ -224,6 +224,11 @@
     "error_message": {
       "type": "string",
       "description": "Error detail if generation failed"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this leadership profile report"
     }
   },
   "required": [

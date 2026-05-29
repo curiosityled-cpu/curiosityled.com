@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-undef
 /**
  * operatorModeWowLoop
  *
@@ -10,7 +11,6 @@
  * Called by computeEveningActuals automation trigger
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-// deno-lint-ignore no-undef
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
