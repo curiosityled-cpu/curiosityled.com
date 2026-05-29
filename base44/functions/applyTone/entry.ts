@@ -88,29 +88,6 @@ const TONE_VARIANTS = {
       why: "I'm asking because the gap between projected and felt confidence matters for how you lead.",
     },
   },
-  // Alias: 'overload_check' → same variants as overload_overcontrol
-  overload_check: {
-    gentle_observant: {
-      title: "Are you taking on more than you need to?",
-      body: "Your week looks quite full. I'm curious — has anything drifted onto your plate that maybe doesn't need to be there?",
-      why: "Heavy weeks sometimes pull us into doing more ourselves. I'm just noticing and checking in.",
-    },
-    warm_candid: {
-      title: "Are you in 'I'll just do it' mode again?",
-      body: "This week looks heavy. When your days stack up like this, it's easy to start grabbing more work yourself instead of letting your team carry it.",
-      why: "I can see your calendar is packed and some longer-term goals haven't moved much. That mix is exactly when you end up carrying more than you planned.",
-    },
-    close_friend_candid: {
-      title: "You're doing everyone's job again, aren't you?",
-      body: "Heavy calendar, goals stalled. You know what that means. Are you in the doing-it-all mode or catching it before it spirals?",
-      why: "You know this pattern. I'm just making sure you do too.",
-    },
-    respectfully_confronting: {
-      title: "This is the load-and-overcontrol pattern — are you seeing it?",
-      body: "Your week is packed, your goals have stalled, and I'd bet you've taken on more than you passed down. Am I wrong?",
-      why: "I'm naming it directly because that's what you asked me to do when things build up.",
-    },
-  },
   overload_overcontrol: {
     gentle_observant: {
       title: "Are you taking on more than you need to?",
