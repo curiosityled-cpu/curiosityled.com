@@ -22,6 +22,7 @@ import ToneOnboarding from "@/components/checkin/ToneOnboarding";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
 import WeeklyFocusReflection from "@/components/checkin/WeeklyFocusReflection";
 import DecisionJournal from "@/components/intelligence/DecisionJournal";
+import MorningIntentWidget from "@/components/checkin/MorningIntentWidget";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -641,16 +642,21 @@ export default function MyLeadership() {
             </div>
           )}
 
-          {/* 1. TODAY — primary habit surface */}
-          {!needsToneOnboarding && (
-            <TodayCard
-              focus={todayFocus}
-              insight={insight}
-              onOpenAtreus={() => openAtreus(todayFocus.atreus ? todayFocus.action : undefined)}
-            />
-          )}
+          {/* 0.5 MORNING INTENT — optional widget at top */}
+           {!needsToneOnboarding && (
+             <MorningIntentWidget userEmail={user?.email} />
+           )}
 
-          {/* 2. Quick check-in — live interactive card */}
+           {/* 1. TODAY — primary habit surface */}
+           {!needsToneOnboarding && (
+             <TodayCard
+               focus={todayFocus}
+               insight={insight}
+               onOpenAtreus={() => openAtreus(todayFocus.atreus ? todayFocus.action : undefined)}
+             />
+           )}
+
+           {/* 2. Quick check-in — live interactive card */}
           {!needsToneOnboarding && (
           <ManagerCheckIn
             promptType={todayPromptType}
