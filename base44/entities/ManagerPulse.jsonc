@@ -179,6 +179,16 @@
       "format": "date",
       "description": "When the follow-up should be sent"
     },
+    "visibility_level": {
+      "type": "string",
+      "enum": [
+        "private",
+        "manager_visible",
+        "hr_aggregate"
+      ],
+      "default": "private",
+      "description": "Manager-initiated visibility: private (sealed), manager_visible (manager can see), hr_aggregate (only in anonymized cohorts)"
+    },
     "client_id": {
       "type": "string",
       "description": "Client ID for multi-tenant support"

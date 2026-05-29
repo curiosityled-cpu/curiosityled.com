@@ -90,6 +90,16 @@
       "type": "string",
       "format": "date-time",
       "description": "When the manager last reviewed their visibility settings"
+    },
+    "adaptive_cadence_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to use adaptive cadence (pause/reduce when load is extreme)"
+    },
+    "adaptive_cadence_threshold": {
+      "type": "number",
+      "default": 85,
+      "description": "Overload pattern strength threshold above which cadence auto-pauses (0-100)"
     }
   },
   "required": [
