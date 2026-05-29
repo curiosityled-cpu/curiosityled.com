@@ -176,6 +176,50 @@ const TONE_VARIANTS = {
       why: "This pattern — setting an intention and then letting the day override it — is worth examining.",
     },
   },
+  evening_actuals: {
+    gentle_observant: {
+      title: "How did today actually unfold?",
+      body: "You started with an intention this morning. How did the day go from the inside — close to what you planned, or did it take over?",
+      why: "Comparing intentions to actuals over time helps me understand what genuinely gets in your way.",
+    },
+    warm_candid: {
+      title: "How did today actually go vs what you planned?",
+      body: "You had an intention this morning. Looking back — did today match that, or did it pull you somewhere else?",
+      why: "The gap between what you planned and what happened is one of the most useful signals I have.",
+    },
+    close_friend_candid: {
+      title: "Did today go the way you wanted?",
+      body: "You set an intention this morning. How did it actually land — did you get what you set out to do, or did the day win?",
+      why: "You know I track this. The pattern matters more than any single day.",
+    },
+    respectfully_confronting: {
+      title: "Did your intention survive the day?",
+      body: "You declared what you wanted this morning. What actually happened — and if it diverged, what took over?",
+      why: "I'm asking directly because the pattern of intention drift is worth confronting, not glossing over.",
+    },
+  },
+  identity_friction: {
+    gentle_observant: {
+      title: "Something about your role feels off — is that right?",
+      body: "No pressure to have a full answer. Sometimes a role shifts and it takes time to name what's different. What's sitting with you?",
+      why: "I've noticed some signals that something about your role identity feels uncertain. I wanted to gently check in.",
+    },
+    warm_candid: {
+      title: "Something about your role has been feeling uncertain lately.",
+      body: "That's shown up in your check-ins more than once. It's worth naming — what part of your role feels like it no longer quite fits?",
+      why: "Role friction that goes unnamed tends to grow. I'd rather we talk about it now.",
+    },
+    close_friend_candid: {
+      title: "You've been wrestling with something about your role, haven't you?",
+      body: "I've seen it come up a few times. Something isn't sitting right about who you are in this role. What's going on?",
+      why: "You know I don't bring this up unless it's real. What's actually shifting?",
+    },
+    respectfully_confronting: {
+      title: "Your role identity is in friction — let's name it.",
+      body: "This has shown up consistently enough that I think it needs to be said directly: something about who you are in this role isn't sitting right. What is it?",
+      why: "I'm naming it because unexamined role friction is one of the most corrosive things for a manager's effectiveness.",
+    },
+  },
 };
 
 // ─── Gap explanation templates ─────────────────────────────────────────────────

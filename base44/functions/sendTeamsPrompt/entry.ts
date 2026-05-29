@@ -347,7 +347,8 @@ Deno.serve(async (req) => {
     const PROMPT_KEY_ALIASES = {
       overload_check:   'overload_overcontrol',
       operator_mode:    'overload_overcontrol',
-      evening_actuals:  'weekly_reflection',  // closest structural match for end-of-day reflection
+      evening_actuals:  'weekly_reflection',  // end-of-day reflection — use weekly_reflection template
+      follow_up:        'weekly_reflection',  // intent follow-up — tone handled by applyTone follow_up family
     };
     const resolvedPromptKey = forcePromptType
       ? (PROMPT_KEY_ALIASES[forcePromptType] ?? forcePromptType)
