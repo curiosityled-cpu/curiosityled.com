@@ -19,6 +19,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TrendingUp, TrendingDown, Zap, Brain, Heart, AlertCircle, CheckCircle2, Target, Calendar } from "lucide-react";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
+import BurnoutRiskCard from "@/components/intelligence/BurnoutRiskCard";
+import ResilienceRecoveryChart from "@/components/intelligence/ResilienceRecoveryChart";
 
 function TrendIndicator({ trend, label }) {
   const isImproving = trend === 'improving';
@@ -286,26 +288,31 @@ export default function MyRhythm() {
 
           <TabsContent value="trends" className="space-y-6">
             <div className="grid grid-cols-1 gap-6">
+              {/* Burnout Risk Monitor */}
+              <BurnoutRiskCard />
+              
+              {/* Core Trend Cards */}
               <EnergyTrendCard trends={trends} pulses={pulses} />
               <ConfidenceTrendCard trends={trends} pulses={pulses} />
-              <ResilienceTrendCard trends={trends} pulses={pulses} />
-            </div>
+              <ResilienceRecoveryChart />
 
-            {trends && (
-              <Card className="shadow-sm border border-gray-100 bg-blue-50">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Brain className="w-5 h-5 text-blue-600" />
-                    Atreus is noticing...
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-700 leading-relaxed">
-                    {trends.summary_7d || 'Come back after more check-ins for pattern insights.'}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+              {/* Atreus Narrative */}
+              {trends && (
+                <Card className="shadow-sm border border-gray-100 bg-blue-50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Brain className="w-5 h-5 text-blue-600" />
+                      Atreus is noticing...
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-700 leading-relaxed">
+                      {trends.summary_7d || 'Come back after more check-ins for pattern insights.'}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="checkins">
