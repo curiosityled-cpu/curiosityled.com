@@ -29,6 +29,7 @@ import StrategicAssistant from "./StrategicAssistant";
 import LearningModuleCoach from "./LearningModuleCoach";
 import WorkflowSuggestionsPanel from "./WorkflowSuggestionsPanel";
 import { buildAtreusSystemPrompt } from "./atreusSystemPrompt";
+import PostConversationDebrief from "@/components/checkin/PostConversationDebrief";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,6 +84,10 @@ export default function AtreusCoach({
   // Workflow state
   const [activeWorkflow, setActiveWorkflow] = useState(null);
   const [workflowSuggestions, setWorkflowSuggestions] = useState([]);
+  
+  // Debrief modal state
+  const [showDebrief, setShowDebrief] = useState(false);
+  const [debriefType, setDebriefType] = useState('difficult');
 
   const [isInitialized, setIsInitialized] = useState(false);
   const isMountedRef = useRef(true);
@@ -1173,33 +1178,40 @@ export default function AtreusCoach({
           <div className="px-3 py-2 border-b flex-shrink-0 bg-white">
             <div className="flex gap-1.5 flex-wrap">
               {((() => {
-                const pageType = context?.pageType || 'unknown';
-                const isHub = pageType === 'ai-leadership-intelligence-hub' || pageType === 'org-insights';
-                if (isHub) return [
-                  { label: 'Goal Completion Drivers', icon: Target, prompt: `What are the primary drivers of low goal completion in my organization? Analyze the data and provide strategic recommendations.` },
-                  { label: 'Accelerate HiPo Growth', icon: TrendingUp, prompt: `How can we accelerate leadership development for high-potential leaders in our organization? What interventions will move the needle fastest?` },
-                  { label: 'Intervention Priority', icon: MessageSquare, prompt: `Which departments or leadership levels need the most immediate leadership intervention, and what actions should I take first?` },
-                  { label: 'Learning ROI', icon: BarChart2, prompt: `What's the ROI impact of our current learning initiatives on leadership performance and goal achievement?` },
-                ];
-                return [
-                  { label: 'Create Plan', icon: Map, prompt: `Create a focused development plan for me. Context: page=${pageType}, role=${appRole || 'User'}, name=${context?.user_name || user?.full_name || 'user'}. Goals: ${JSON.stringify(context?.visible_data_summary?.active_goals || context?.current_goals || null)}. Assessment: ${JSON.stringify(context?.page_specific_insights?.assessment_summary || context?.assessment_summary || null)}.` },
-                  { label: 'Prep Conversation', icon: MessageSquare, prompt: `Help me prepare for an upcoming leadership conversation. Context: page=${pageType}, role=${appRole || 'User'}. Recent activity: ${JSON.stringify(context?.activity_summary || context?.recent_activity || null)}. Goals context: ${JSON.stringify(context?.visible_data_summary || null)}.` },
-                  { label: 'Review Progress', icon: TrendingUp, prompt: `Review my current progress across goals and learning. Context: page=${pageType}, role=${appRole || 'User'}, name=${context?.user_name || user?.full_name || 'user'}. Learning progress: ${JSON.stringify(context?.learning_progress || null)}. Visible data: ${JSON.stringify(context?.visible_data_summary || null)}.` },
-                  { label: 'Analyze Results', icon: BarChart2, prompt: `Analyze my latest assessment results and surface the most important insights. Context: page=${pageType}, role=${appRole || 'User'}. Assessment data: ${JSON.stringify(context?.page_specific_insights?.assessment_summary || context?.assessment_summary || null)}. Competency data: ${JSON.stringify(context?.visible_data_summary || null)}.` },
-                ];
-              })()).map(({ label, icon: Icon, prompt }) => (
+                    const pageType = context?.pageType || 'unknown';
+                    const isHub = pageType === 'ai-leadership-intelligence-hub' || pageType === 'org-insights';
+                    if (isHub) return [
+                      { label: 'Goal Completion Drivers', icon: Target, prompt: `What are the primary drivers of low goal completion in my organization? Analyze the data and provide strategic recommendations.` },
+                      { label: 'Accelerate HiPo Growth', icon: TrendingUp, prompt: `How can we accelerate leadership development for high-potential leaders in our organization? What interventions will move the needle fastest?` },
+                      { label: 'Intervention Priority', icon: MessageSquare, prompt: `Which departments or leadership levels need the most immediate leadership intervention, and what actions should I take first?` },
+                      { label: 'Learning ROI', icon: BarChart2, prompt: `What's the ROI impact of our current learning initiatives on leadership performance and goal achievement?` },
+                    ];
+                    return [
+                      { label: 'Debrief Conversation', icon: MessageSquare, isAction: true, onAction: () => setShowDebrief(true) },
+                      { label: 'Create Plan', icon: Map, prompt: `Create a focused development plan for me. Context: page=${pageType}, role=${appRole || 'User'}, name=${context?.user_name || user?.full_name || 'user'}. Goals: ${JSON.stringify(context?.visible_data_summary?.active_goals || context?.current_goals || null)}. Assessment: ${JSON.stringify(context?.page_specific_insights?.assessment_summary || context?.assessment_summary || null)}.` },
+                      { label: 'Prep Conversation', icon: MessageSquare, prompt: `Help me prepare for an upcoming leadership conversation. Context: page=${pageType}, role=${appRole || 'User'}. Recent activity: ${JSON.stringify(context?.activity_summary || context?.recent_activity || null)}. Goals context: ${JSON.stringify(context?.visible_data_summary || null)}.` },
+                      { label: 'Review Progress', icon: TrendingUp, prompt: `Review my current progress across goals and learning. Context: page=${pageType}, role=${appRole || 'User'}, name=${context?.user_name || user?.full_name || 'user'}. Learning progress: ${JSON.stringify(context?.learning_progress || null)}. Visible data: ${JSON.stringify(context?.visible_data_summary || null)}.` },
+                      { label: 'Analyze Results', icon: BarChart2, prompt: `Analyze my latest assessment results and surface the most important insights. Context: page=${pageType}, role=${appRole || 'User'}. Assessment data: ${JSON.stringify(context?.page_specific_insights?.assessment_summary || context?.assessment_summary || null)}. Competency data: ${JSON.stringify(context?.visible_data_summary || null)}.` },
+                    ];
+                  })()).map(({ label, icon: Icon, prompt, isAction, onAction }) => (
                 <button
-                  key={label}
-                  onClick={() => !isTyping && handleSendMessage(prompt)}
-                  disabled={isTyping}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:bg-opacity-90"
-                  style={{ borderColor: 'rgba(2,2,255,0.25)', color: '#0202ff', backgroundColor: 'rgba(2,2,255,0.05)' }}
-                  onMouseEnter={e => !isTyping && (e.currentTarget.style.backgroundColor = 'rgba(2,2,255,0.12)')}
-                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'rgba(2,2,255,0.05)')}
-                >
-                  <Icon className="w-3 h-3" />
-                  {label}
-                </button>
+                   key={label}
+                   onClick={() => {
+                     if (isAction) {
+                       onAction?.();
+                     } else {
+                       !isTyping && handleSendMessage(prompt);
+                     }
+                   }}
+                   disabled={isTyping && !isAction}
+                   className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:bg-opacity-90"
+                   style={{ borderColor: 'rgba(2,2,255,0.25)', color: '#0202ff', backgroundColor: 'rgba(2,2,255,0.05)' }}
+                   onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(2,2,255,0.12)')}
+                   onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'rgba(2,2,255,0.05)')}
+                 >
+                   <Icon className="w-3 h-3" />
+                   {label}
+                 </button>
               ))}
             </div>
           </div>
@@ -1392,19 +1404,30 @@ export default function AtreusCoach({
       />
 
       <SmartFormModal
-        isOpen={showSmartForm}
-        onClose={() => {
-          setShowSmartForm(false);
-          setSmartFormType(null);
-          setSmartFormData({});
-        }}
-        formType={smartFormType}
-        prefilledData={smartFormData}
-        onSuccess={() => {
-          setShowSmartForm(false);
-          toast.success('Form submitted successfully!');
-        }}
-      />
+         isOpen={showSmartForm}
+         onClose={() => {
+           setShowSmartForm(false);
+           setSmartFormType(null);
+           setSmartFormData({});
+         }}
+         formType={smartFormType}
+         prefilledData={smartFormData}
+         onSuccess={() => {
+           setShowSmartForm(false);
+           toast.success('Form submitted successfully!');
+         }}
+       />
+
+      <PostConversationDebrief
+         isOpen={showDebrief}
+         onClose={() => setShowDebrief(false)}
+         conversationType={debriefType}
+         onSuccess={() => {
+           // After debrief saved, prompt user to reflect
+           const debriefPrompt = "Thanks for that reflection. Let's explore what that conversation revealed about how you lead.";
+           handleSendMessage(debriefPrompt);
+         }}
+       />
       </ErrorBoundary>
       );
       }
