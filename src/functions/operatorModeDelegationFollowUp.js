@@ -1,4 +1,3 @@
-// deno-lint-ignore-file no-undef
 /**
  * operatorModeDelegationFollowUp
  * 
@@ -7,6 +6,7 @@
  * schedule a gentle follow-up reflection.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+// deno-lint-ignore no-undef
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);

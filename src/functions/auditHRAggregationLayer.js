@@ -1,4 +1,3 @@
-// deno-lint-ignore-file no-undef
 /**
  * auditHRAggregationLayer
  * 
@@ -6,7 +5,24 @@
  * and only exposes aggregate statistics (counts, means, trends)
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-import { getHRSafeFields } from '@/lib/privacyTaxonomy.js';
+
+// Inlined from privacyTaxonomy — local imports cannot be resolved in Deno deploy
+const MANAGER_PULSE_TAXONOMY = {
+  user_email: 'D', energy_level: 'A', mental_clarity: 'A', perceived_load: 'A',
+  biggest_weight_today: 'A', avoidance_flag: 'A', confidence_today: 'A',
+  motivation_today: 'A', optimism_today: 'A', resilience_signal: 'A',
+  identity_friction: 'A', identity_friction_note: 'A', room_today: 'A',
+  source: 'B', prompt_type: 'B', operator_mode_response: 'A',
+  delegation_commitment: 'A', focus_category: 'A', focus_intention: 'A',
+  intent_actuals_gap: 'A', follow_up_sent: 'B', follow_up_date: 'B', client_id: 'D',
+};
+function getHRSafeFields() {
+  return Object.keys(MANAGER_PULSE_TAXONOMY).filter(f => {
+    const c = MANAGER_PULSE_TAXONOMY[f];
+    return c === 'B' || c === 'D';
+  });
+}
+// deno-lint-ignore no-undef
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
