@@ -8,7 +8,7 @@
  * - Recovery time after setbacks
  * - Daily check-in history log
  */
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -24,6 +24,10 @@ import ResilienceRecoveryChart from "@/components/intelligence/ResilienceRecover
 import EmotionalStateIndicators from "@/components/intelligence/EmotionalStateIndicators";
 import ToneAdaptationCard from "@/components/intelligence/ToneAdaptationCard";
 import TeamInsightsPanel from "@/components/intelligence/TeamInsightsPanel";
+import WeeklyMomentumSummary from "@/components/checkin/WeeklyMomentumSummary";
+import CommitmentTracker from "@/components/checkin/CommitmentTracker";
+import PrivacyExplainer from "@/components/checkin/PrivacyExplainer";
+import CheckInSettings from "@/components/checkin/CheckInSettings";
 
 function TrendIndicator({ trend, label }) {
   const isImproving = trend === 'improving';
@@ -284,9 +288,10 @@ export default function MyRhythm() {
         </div>
       ) : (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="trends">7-28d Trends</TabsTrigger>
-            <TabsTrigger value="checkins">Daily Check-Ins</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="trends">Trends</TabsTrigger>
+            <TabsTrigger value="momentum">This Week</TabsTrigger>
+            <TabsTrigger value="checkins">History</TabsTrigger>
           </TabsList>
 
           <TabsContent value="trends" className="space-y-6">
@@ -327,8 +332,15 @@ export default function MyRhythm() {
             </div>
           </TabsContent>
 
-          <TabsContent value="checkins">
+          <TabsContent value="momentum" className="space-y-4">
+            <WeeklyMomentumSummary pulses={pulses} trends={trends} />
+            <CommitmentTracker pulses={pulses} trends={trends} />
+            <PrivacyExplainer />
+          </TabsContent>
+
+          <TabsContent value="checkins" className="space-y-4">
             <DailyCheckInLog pulses={pulses} />
+            <CheckInSettings />
           </TabsContent>
         </Tabs>
       )}

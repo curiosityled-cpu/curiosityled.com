@@ -13,6 +13,7 @@ import React from "react";
 import { TrendingUp, TrendingDown, Minus, Info, Brain, Calendar, MessageSquare } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import SIEnrichedNarrative from "@/components/intelligence/SIEnrichedNarrative";
 
 const TREND_CONFIG = {
   improving: { label: "Trending up", icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-50" },
@@ -91,15 +92,8 @@ export default function TrendSummaryCard({ trends, onOpenAtreus }) {
 
       <CardContent className="px-5 pt-2 pb-5 space-y-3">
 
-        {/* Trend narrative — LLM-generated */}
-        {trends.trend_narrative && (
-          <div className="bg-[#0202ff]/4 border border-[#0202ff]/10 rounded-xl p-3.5 space-y-1.5">
-            <p className="text-sm text-gray-700 leading-relaxed italic">
-              "{trends.trend_narrative}"
-            </p>
-            <EvidenceTag type="atreus" />
-          </div>
-        )}
+        {/* Trend narrative — SI-enriched */}
+        <SIEnrichedNarrative trends={trends} baseNarrative={trends.trend_narrative} />
 
         {/* 7-day summary */}
         {trends.summary_7d && trends.summary_7d !== 'Not enough signal for a 7-day summary yet.' && (
