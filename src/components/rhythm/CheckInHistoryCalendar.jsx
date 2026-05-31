@@ -84,7 +84,9 @@ export default function CheckInHistoryCalendar({ pulses = [] }) {
             <div key={`empty-${i}`} className="aspect-square" />
           ))}
           {grid.map(({ key, date, pulse }) => {
-            const energy = pulse?.energy_level;
+            // Prefer energy_level; fall back to perceived_load for morning_intent / baseline_energy pulses
+            const LOAD_TO_ENERGY = { light: 'strong', manageable: 'steady', heavy: 'stretched', unsustainable: 'drained' };
+            const energy = pulse?.energy_level || (pulse?.perceived_load ? LOAD_TO_ENERGY[pulse.perceived_load] : null);
             const config = energy ? ENERGY_CONFIG[energy] : ENERGY_CONFIG.none;
             const isToday = key === new Date().toISOString().split("T")[0];
             return (

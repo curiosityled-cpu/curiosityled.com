@@ -37,10 +37,6 @@ export default function MorningIntentWidget({ userEmail }) {
         prompt_type: 'morning_intent',
         focus_category: category,
         focus_intention: intention,
-        // Minimal default values
-        energy_level: 'steady',
-        mental_clarity: 3,
-        perceived_load: 'manageable',
       });
 
       setSubmitted(true);
