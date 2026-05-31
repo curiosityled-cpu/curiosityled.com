@@ -56,20 +56,6 @@ function computeRiskScore(recentPulses, recentActivity) {
   return Math.min(score, 100);
 }
 
-// ─── Compute engagement rate (responses vs opportunities in last 14d) ─────────
-
-function computeEngagementRate(recentPulses) {
-  // Count web-sourced pulses (manager actually responded) in last 14 days
-  const cutoff = new Date(Date.now() - 14 * 24 * 3600000);
-  const responses = recentPulses.filter(p =>
-    p.source === 'web' &&
-    p.prompt_type !== 'follow_up' &&
-    new Date(p.created_date) > cutoff
-  ).length;
-  // Rough denominator: assume ~10 prompts sent in 14d (Mon–Fri, every_other_day)
-  return Math.min(responses / 10, 1.0);
-}
-
 // ─── Select final prompt type for this manager today ─────────────────────────
 
 function selectPromptType(dayOfWeek, riskScore, recentPulses, pendingTriggers) {
@@ -135,6 +121,8 @@ Deno.serve(async (req) => {
       }
 
       if (pref.cadence_preference === 'every_other_day') {
+        // Skip on even days (Mon, Wed, Fri) for every_other_day
+        // Actually: alternate by checking last prompt date
         const lastSent = pref.last_prompt_sent_at ? new Date(pref.last_prompt_sent_at) : null;
         if (lastSent) {
           const hoursSince = (now - lastSent) / 3600000;
@@ -165,21 +153,6 @@ Deno.serve(async (req) => {
         }
 
         const riskScore = computeRiskScore(recentPulses, recentActivity);
-        const engagementRate = computeEngagementRate(recentPulses);
-
-        // Adaptive cadence: if engagement is very low (< 20% response rate), back off
-        // unless risk is high (then we still need to reach them)
-        if (engagementRate < 0.2 && riskScore < 50 && pref.cadence_preference !== 'important_only') {
-          // Check last prompt wasn't more than 3 days ago (don't go completely silent)
-          const lastSent = pref.last_prompt_sent_at ? new Date(pref.last_prompt_sent_at) : null;
-          if (lastSent && (now - lastSent) / 3600000 < 72) {
-            results.push({ email, status: 'skipped', reason: 'Low engagement — backing off cadence', engagement_rate: engagementRate });
-            continue;
-          }
-        }
-
-        // Adaptive cadence: if engagement is high (> 70%) AND risk is moderate, allow slightly more frequent prompts
-        // (already handled by not suppressing, just log the engagement signal)
 
         // Check for unread predictive trigger notifications
         const pendingTriggers = recentNotifs
@@ -212,7 +185,6 @@ Deno.serve(async (req) => {
           status: 'ok',
           prompt_type: promptType,
           risk_score: riskScore,
-          engagement_rate: engagementRate,
           pending_triggers: pendingTriggers,
           send_result: sendResult?.sent,
         });

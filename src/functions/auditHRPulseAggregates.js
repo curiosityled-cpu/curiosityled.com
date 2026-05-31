@@ -11,35 +11,19 @@
  * Called by admin for compliance verification
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-
-// Inlined privacy taxonomy — local imports cannot be resolved in Deno deploy
-const MANAGER_PULSE_TAXONOMY = {
-  user_email: 'D', energy_level: 'A', mental_clarity: 'A', perceived_load: 'A',
-  biggest_weight_today: 'A', avoidance_flag: 'A', confidence_today: 'A',
-  motivation_today: 'A', optimism_today: 'A', resilience_signal: 'A',
-  identity_friction: 'A', identity_friction_note: 'A', room_today: 'A',
-  source: 'B', prompt_type: 'B', operator_mode_response: 'A',
-  delegation_commitment: 'A', focus_category: 'A', focus_intention: 'A',
-  intent_actuals_gap: 'A', follow_up_sent: 'B', follow_up_date: 'B', client_id: 'D',
-};
-
-function getHRSafeFields() {
-  return Object.keys(MANAGER_PULSE_TAXONOMY).filter(f => {
-    const c = MANAGER_PULSE_TAXONOMY[f];
-    return c === 'B' || c === 'D';
-  });
-}
-
+import { PRIVACY_TAXONOMY, getHRSafeFields } from '../lib/privacyTaxonomy.js';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
+    // Only admins can audit
     if (user?.role !== 'admin' && user?.app_role !== 'Platform Admin') {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    const allPulses = await base44.asServiceRole.entities.ManagerPulse.filter({}, null, 1000).catch(() => []);
+    // Audit: Get ManagerPulse and verify no Category A fields would be exposed
+    const allPulses = await base44.entities.ManagerPulse.filter({}, null, 1000).catch(() => []);
 
     if (allPulses.length === 0) {
       return Response.json({ audit_result: 'no_data' });
@@ -52,16 +36,28 @@ Deno.serve(async (req) => {
       byUser[p.user_email].push(p);
     });
 
+    // Check cohort sizes
     const cohortSizes = Object.entries(byUser).map(([email, pulses]) => ({
       email,
       count: pulses.length,
       meets_minimum: pulses.length >= 10,
     }));
 
-    const hrSafeFields = getHRSafeFields();
-    const categoryAFields = Object.keys(MANAGER_PULSE_TAXONOMY).filter(
-      field => MANAGER_PULSE_TAXONOMY[field] === 'A'
+    // Verify HR-safe fields (Category B + D only)
+    const hrSafeFields = getHRSafeFields('ManagerPulse');
+    const categoryAFields = Object.keys(PRIVACY_TAXONOMY.ManagerPulse).filter(
+      field => PRIVACY_TAXONOMY.ManagerPulse[field] === 'A'
     );
+
+    // Simulate what HR aggregation would return
+    const sampleAggregation = {
+      total_managers: allPulses.length,
+      avg_energy_level: 'N/A (Category A - never exposed)',
+      avg_mental_clarity: 'N/A (Category A - never exposed)',
+      // Only safe fields would be aggregated:
+      meeting_prompt_frequency: 'Would count source=teams entries (Category B)',
+      follow_up_rate: 'Would count follow_up_sent true (Category B)',
+    };
 
     const violations = [];
 
@@ -75,17 +71,16 @@ Deno.serve(async (req) => {
     // Check: minimum cohort enforced
     const undercohort = cohortSizes.filter(c => !c.meets_minimum);
     if (undercohort.length > 0) {
-      violations.push(`WARNING: ${undercohort.length} managers have <10 data points (would be filtered from aggregates)`);
+      violations.push(`WARNING: ${undercohort.length} managers have <10 data points (would be filtered)`);
     }
 
     return Response.json({
-      audit_status: violations.length === 0 ? 'PASS' : 'WARN',
+      audit_status: violations.length === 0 ? 'PASS' : 'FAIL',
       violations,
       cohort_summary: cohortSizes,
       hr_safe_fields_count: hrSafeFields.length,
       category_a_fields_protected: categoryAFields.length,
-      hr_safe_fields: hrSafeFields,
-      category_a_fields: categoryAFields,
+      sample_hr_aggregation: sampleAggregation,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

@@ -162,7 +162,6 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
   const [showWhy, setShowWhy] = useState(false);
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(() => sessionStorage.getItem(storageKey) === '1');
-  const [skipped, setSkipped] = useState(() => sessionStorage.getItem(storageKey + '_skip') === '1');
   const [followUp, setFollowUp] = useState(null);
 
   const handleSelect = (option) => {
@@ -171,12 +170,6 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
     // Determine follow-up message but don't save yet — wait for "Done" action
     const fu = FOLLOWUPS[promptType]?.[option.value] || null;
     setFollowUp(fu);
-  };
-
-  const handleSkip = () => {
-    sessionStorage.setItem(storageKey + '_skip', '1');
-    setSkipped(true);
-    if (onDismiss) onDismiss();
   };
 
   const handleDone = async () => {
@@ -199,9 +192,6 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
       if (onComplete) onComplete({ selected, optionalText, followUp });
     }, 1800);
   };
-
-  // If skipped today, show nothing (cadence adapts via storageKey)
-  if (skipped) return null;
 
   return (
     <motion.div
@@ -297,16 +287,6 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
               {saving ? "Saving…" : "Done"}
             </Button>
           </div>
-        )}
-
-        {/* Skip today */}
-        {!done && (
-          <button
-            onClick={handleSkip}
-            className="flex items-center gap-1.5 text-xs text-gray-300 hover:text-gray-500 transition-colors"
-          >
-            Skip today
-          </button>
         )}
 
         {/* Why this? */}

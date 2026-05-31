@@ -22,14 +22,7 @@ import ToneOnboarding from "@/components/checkin/ToneOnboarding";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
 import WeeklyFocusReflection from "@/components/checkin/WeeklyFocusReflection";
 import DecisionJournal from "@/components/intelligence/DecisionJournal";
-import DecisionJournalEntry from "@/components/intelligence/DecisionJournalEntry";
-import PostConversationDebrief from "@/components/checkin/PostConversationDebrief";
-import CommitmentTracker from "@/components/checkin/CommitmentTracker";
-import PrivacyExplainer from "@/components/checkin/PrivacyExplainer";
-import WeeklyMomentumSummary from "@/components/checkin/WeeklyMomentumSummary";
 import MorningIntentWidget from "@/components/checkin/MorningIntentWidget";
-import PreConversationPrep from "@/components/checkin/PreConversationPrep";
-import TeamPulseReflection from "@/components/checkin/TeamPulseReflection";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -455,10 +448,6 @@ export default function MyLeadership() {
   );
   const [showSettings, setShowSettings] = useState(false);
   const [showWeeklyReflection, setShowWeeklyReflection] = useState(false);
-  const [showDecisionEntry, setShowDecisionEntry] = useState(false);
-  const [showDebrief, setShowDebrief] = useState(false);
-  const [showPreConvoPrep, setShowPreConvoPrep] = useState(false);
-  const [showTeamPulse, setShowTeamPulse] = useState(false);
 
   const dismissPrivacy = () => {
     localStorage.setItem('cl_privacy_banner_dismissed', '1');
@@ -719,102 +708,7 @@ export default function MyLeadership() {
           {!needsToneOnboarding && <GoalsPulseCard goals={goals} />}
           {!needsToneOnboarding && <SuggestedSupportCard assignments={assignments} devPlans={devPlans} />}
 
-          {/* 7. WEEKLY MOMENTUM — "this week in your leadership" digest */}
-          {!needsToneOnboarding && (
-            <WeeklyMomentumSummary
-              pulses={recentPulses}
-              trends={trends}
-              onOpenAtreus={openAtreus}
-            />
-          )}
-
-          {/* 8. COMMITMENT TRACKER — closed-loop intentions vs actuals */}
-          {!needsToneOnboarding && (
-            <CommitmentTracker
-              pulses={recentPulses}
-              trends={trends}
-              onOpenAtreus={openAtreus}
-            />
-          )}
-
-          {/* 9. RITUAL ACTIONS — 2x2 grid of ritual entry points */}
-          {!needsToneOnboarding && (
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setShowDecisionEntry(s => !s)}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4 text-left hover:shadow-md transition-shadow group"
-              >
-                <div className="w-7 h-7 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center mb-2">
-                  <span className="text-sm">📓</span>
-                </div>
-                <p className="text-sm font-semibold text-gray-900 leading-snug">Log a decision</p>
-                <p className="text-xs text-gray-400 mt-0.5">Journal a call you made today</p>
-              </button>
-              <button
-                onClick={() => setShowDebrief(s => !s)}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4 text-left hover:shadow-md transition-shadow group"
-              >
-                <div className="w-7 h-7 rounded-lg bg-purple-50 border border-purple-100 flex items-center justify-center mb-2">
-                  <span className="text-sm">💬</span>
-                </div>
-                <p className="text-sm font-semibold text-gray-900 leading-snug">Debrief a conversation</p>
-                <p className="text-xs text-gray-400 mt-0.5">Capture how a tough talk went</p>
-              </button>
-              <button
-                onClick={() => setShowPreConvoPrep(s => !s)}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4 text-left hover:shadow-md transition-shadow group"
-              >
-                <div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center mb-2">
-                  <span className="text-sm">🎯</span>
-                </div>
-                <p className="text-sm font-semibold text-gray-900 leading-snug">Prep a conversation</p>
-                <p className="text-xs text-gray-400 mt-0.5">Before a tough or important talk</p>
-              </button>
-              <button
-                onClick={() => setShowTeamPulse(s => !s)}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4 text-left hover:shadow-md transition-shadow group"
-              >
-                <div className="w-7 h-7 rounded-lg bg-teal-50 border border-teal-100 flex items-center justify-center mb-2">
-                  <span className="text-sm">👥</span>
-                </div>
-                <p className="text-sm font-semibold text-gray-900 leading-snug">Team pulse</p>
-                <p className="text-xs text-gray-400 mt-0.5">How's your team doing this week?</p>
-              </button>
-            </div>
-          )}
-
-          {/* Decision entry (inline toggle) */}
-          {showDecisionEntry && (
-            <DecisionJournalEntry
-              onComplete={() => setShowDecisionEntry(false)}
-              onDismiss={() => setShowDecisionEntry(false)}
-            />
-          )}
-
-          {/* Post-conversation debrief (inline toggle) */}
-          {showDebrief && (
-            <PostConversationDebrief
-              onComplete={() => setShowDebrief(false)}
-              onDismiss={() => setShowDebrief(false)}
-            />
-          )}
-
-          {/* Pre-conversation prep (inline toggle) */}
-          {showPreConvoPrep && (
-            <PreConversationPrep
-              onComplete={() => setShowPreConvoPrep(false)}
-              onDismiss={() => setShowPreConvoPrep(false)}
-            />
-          )}
-
-          {/* Team pulse reflection (inline toggle) */}
-          {showTeamPulse && (
-            <TeamPulseReflection
-              onComplete={() => setShowTeamPulse(false)}
-            />
-          )}
-
-          {/* 10. DECISION JOURNAL (full history) */}
+          {/* 7. DECISION JOURNAL — track complex decisions */}
           {!needsToneOnboarding && <DecisionJournal />}
 
           {/* 8. WEEKLY REFLECTION — closed-loop reflection */}
@@ -837,10 +731,7 @@ export default function MyLeadership() {
             </Card>
           )}
 
-          {/* 11. PRIVACY EXPLAINER — always visible, never just once */}
-          {!needsToneOnboarding && <PrivacyExplainer />}
-
-          {/* 12. EXPLORE DEEPER — full profile, plan, goals */}
+          {/* 9. EXPLORE DEEPER — full profile, plan, goals */}
           {!needsToneOnboarding && <ExploreDeeperCard />}
 
           </div>
