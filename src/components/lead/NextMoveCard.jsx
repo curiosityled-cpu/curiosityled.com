@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
-function buildNextMove(pulse, trends, goals, assignments, insight) {
+function buildNextMove(pulse, trends, goals, assignments) {
   // Priority 1: avoidance signal
   if (pulse?.avoidance_flag === 'yes') {
     return {
