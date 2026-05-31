@@ -57,7 +57,7 @@ function IntentDayRow({ date, intent, actuals }) {
               </p>
             </div>
             {intent.focus_intention && (
-              <p className="text-[11px] text-gray-500 italic leading-snug pl-4.5">
+              <p className="text-[11px] text-gray-500 italic leading-snug pl-5">
                 "{intent.focus_intention}"
               </p>
             )}

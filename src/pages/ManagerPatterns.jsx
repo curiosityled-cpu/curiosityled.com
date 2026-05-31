@@ -89,7 +89,7 @@ export default function ManagerPatterns() {
 
   const { data: recentPulses = [] } = useQuery({
     queryKey: ['ml-pulses', user?.email],
-    queryFn: async () => { try { return await base44.entities.ManagerPulse.filter({ user_email: user.email }, '-created_date', 20); } catch { return []; } },
+    queryFn: async () => { try { return await base44.entities.ManagerPulse.filter({ user_email: user.email }, '-created_date', 50); } catch { return []; } },
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 

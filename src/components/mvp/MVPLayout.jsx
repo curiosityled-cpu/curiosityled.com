@@ -7,9 +7,8 @@ import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
 import {
   Brain, Target, Home, BarChart2, Users, LogOut, Menu, X,
-  ChevronRight, ChevronLeft, BarChart3, Map, Bell, User,
-  Settings, Shield, BookOpen, UserCog, TrendingUp, Sparkles } from
-"lucide-react";
+  ChevronRight, ChevronLeft, Bell, User,
+  Settings, Shield, UserCog, TrendingUp } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import AtreusCoach from "@/components/ai/AtreusCoach";
