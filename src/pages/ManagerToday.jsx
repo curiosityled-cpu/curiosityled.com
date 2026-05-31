@@ -3,7 +3,7 @@
  * Route: /today
  * This is the new home for managers: what matters right now.
  */
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";

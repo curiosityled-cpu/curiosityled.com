@@ -26,6 +26,7 @@ function buildGrid(pulses) {
     }
   });
 
+  // Build last 28 real days
   const days = [];
   for (let i = 27; i >= 0; i--) {
     const d = new Date(today);
@@ -33,11 +34,16 @@ function buildGrid(pulses) {
     const key = d.toISOString().split("T")[0];
     days.push({ key, date: d, pulse: map[key] || null });
   }
-  return days;
+
+  // Compute leading empty cells so day 0 lands on correct Mon-Sun column
+  // getDay() returns 0=Sun..6=Sat, convert to Mon=0..Sun=6
+  const firstDow = days[0].date.getDay();
+  const leadingEmpties = firstDow === 0 ? 6 : firstDow - 1; // Mon-based
+  return { days, leadingEmpties };
 }
 
-export default function CheckInHistoryCalendar({ pulses = [], compact = false }) {
-  const grid = useMemo(() => buildGrid(pulses), [pulses]);
+export default function CheckInHistoryCalendar({ pulses = [] }) {
+  const { days: grid, leadingEmpties } = useMemo(() => buildGrid(pulses), [pulses]);
   const checkedInDays = grid.filter(d => d.pulse).length;
   const streak = useMemo(() => {
     let s = 0;
@@ -68,10 +74,14 @@ export default function CheckInHistoryCalendar({ pulses = [], compact = false })
         </div>
       </div>
       <CardContent className="px-5 pt-3 pb-5">
-        {/* 28-day grid: 4 rows × 7 cols */}
+        {/* Grid: day headers + aligned day cells */}
         <div className="grid grid-cols-7 gap-1.5 mb-3">
-          {["M","T","W","T","F","S","S"].map((d, i) => (
-            <div key={i} className="text-center text-[9px] text-gray-300 font-medium pb-0.5">{d}</div>
+          {["Mo","Tu","We","Th","Fr","Sa","Su"].map((d) => (
+            <div key={d} className="text-center text-[9px] text-gray-300 font-medium pb-0.5">{d}</div>
+          ))}
+          {/* Leading empty cells to align first day to correct column */}
+          {Array.from({ length: leadingEmpties }).map((_, i) => (
+            <div key={`empty-${i}`} className="aspect-square" />
           ))}
           {grid.map(({ key, date, pulse }) => {
             const energy = pulse?.energy_level;

@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, Calendar, TrendingUp, AlertCircle } from "lucide-react";
+import { Calendar, AlertCircle } from "lucide-react";
 
 export default function TeamMeetingRhythm() {
   const { user } = useAuth();
@@ -26,7 +26,6 @@ export default function TeamMeetingRhythm() {
 
   if (activities.length === 0) return null;
 
-  const latest = activities[0];
   const avg1on1 = activities.reduce((s, a) => s + (a.one_to_one_count || 0), 0) / activities.length;
   const avgMeetingMins = activities.reduce((s, a) => s + (a.meeting_minutes_day || 0), 0) / activities.length;
   const avgB2B = activities.reduce((s, a) => s + (a.back_to_back_density || 0), 0) / activities.length;
