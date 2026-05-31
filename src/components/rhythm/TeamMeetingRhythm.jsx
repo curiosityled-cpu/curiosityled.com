@@ -15,10 +15,9 @@ export default function TeamMeetingRhythm() {
   const { data: activities = [] } = useQuery({
     queryKey: ["team-activity", user?.email],
     queryFn: async () => {
-      const rows = await base44.entities.UserActivity.filter(
-        { user_email: user.email }, "-date", 14
-      );
-      return rows;
+      try {
+        return await base44.entities.UserActivity.filter({ user_email: user.email }, "-date", 14);
+      } catch { return []; }
     },
     enabled: !!user?.email,
     staleTime: 15 * 60 * 1000,
