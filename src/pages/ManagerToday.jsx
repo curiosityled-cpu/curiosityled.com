@@ -25,6 +25,8 @@ import CheckInSettings from "@/components/checkin/CheckInSettings";
 import WeeklyFocusReflection from "@/components/checkin/WeeklyFocusReflection";
 import MorningIntentWidget from "@/components/checkin/MorningIntentWidget";
 import DecisionJournal from "@/components/intelligence/DecisionJournal";
+import MoodRingIndicator from "@/components/rhythm/MoodRingIndicator";
+import CheckInHistoryCalendar from "@/components/rhythm/CheckInHistoryCalendar";
 
 function getFirstName(user) {
   const raw = user?.display_name || user?.data?.display_name || user?.full_name;
@@ -263,9 +265,12 @@ export default function ManagerToday() {
     return rotation[day % rotation.length];
   })();
 
+  const todayPulse = recentPulses.find(p => p.created_date?.startsWith(new Date().toISOString().split("T")[0]));
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
       <HeroGreeting firstName={firstName} />
+      {todayPulse && <MoodRingIndicator todayPulse={todayPulse} />}
 
       {/* Tone onboarding gate */}
       {needsToneOnboarding && (
@@ -332,7 +337,12 @@ export default function ManagerToday() {
         </Card>
       )}
 
-      {/* 7. Explore deeper */}
+      {/* 7. Rhythm calendar */}
+      {!needsToneOnboarding && recentPulses.length > 0 && (
+        <CheckInHistoryCalendar pulses={recentPulses} />
+      )}
+
+      {/* 8. Explore deeper */}
       {!needsToneOnboarding && <ExploreDeeperCard />}
 
       <WeeklyFocusReflection

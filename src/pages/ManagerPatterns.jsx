@@ -13,6 +13,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import TrendSummaryCard from "@/components/checkin/TrendSummaryCard";
 import IntentLoopCard from "@/components/checkin/IntentLoopCard";
 import { Link } from "react-router-dom";
+import CheckInHistoryCalendar from "@/components/rhythm/CheckInHistoryCalendar";
+import EnergyTimeline from "@/components/rhythm/EnergyTimeline";
+import OperatorModeAlert from "@/components/rhythm/OperatorModeAlert";
 
 function SectionHeader({ title, subtitle }) {
   return (
@@ -112,6 +115,9 @@ export default function ManagerPatterns() {
 
       {hasData ? (
         <>
+          <OperatorModeAlert pulses={recentPulses} onOpenAtreus={openAtreus} />
+          <CheckInHistoryCalendar pulses={recentPulses} />
+          <EnergyTimeline pulses={recentPulses} />
           <TrendSummaryCard trends={trends} onOpenAtreus={openAtreus} />
           <IntentLoopCard pulses={recentPulses} trends={trends} onOpenAtreus={openAtreus} />
           {insight && <PatternCard insight={insight} goals={goals} />}

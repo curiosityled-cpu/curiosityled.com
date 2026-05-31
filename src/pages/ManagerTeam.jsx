@@ -9,6 +9,7 @@ import { Users, MessageSquare, Brain, ChevronRight, Calendar, Target, ArrowRight
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import TeamMeetingRhythm from "@/components/rhythm/TeamMeetingRhythm";
 
 function SectionHeader({ title, subtitle }) {
   return (
@@ -80,6 +81,9 @@ export default function ManagerTeam() {
           })}
         </CardContent>
       </Card>
+
+      {/* Calendar signals */}
+      <TeamMeetingRhythm />
 
       {/* Team resources */}
       <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
