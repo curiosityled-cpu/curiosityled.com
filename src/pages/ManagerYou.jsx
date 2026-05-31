@@ -10,8 +10,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import {
   User, Shield, Settings, Brain, TrendingUp, Bell,
-  ChevronRight, CheckCircle2, Clock, LogOut, Calendar,
-  Sliders, BookOpen, Eye
+  ChevronRight, LogOut, Calendar, Sliders, Eye
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -208,7 +207,7 @@ export default function ManagerYou() {
           to="/Profile"
         />
         <YouRow
-          icon={Notifications}
+          icon={Bell}
           iconBg="bg-gray-50"
           iconColor="text-gray-500"
           title="Notifications"
@@ -227,9 +226,4 @@ export default function ManagerYou() {
       </SectionCard>
     </div>
   );
-}
-
-// fallback for Bell icon used above
-function Notifications(props) {
-  return <Bell {...props} />;
 }
