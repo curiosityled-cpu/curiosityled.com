@@ -13,12 +13,12 @@
  */
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useAuth } from "@/components/useAuth";
+import { useAuth } from "@/lib/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Heart, AlertCircle } from "lucide-react";
+import { Loader2, Heart } from "lucide-react";
 import { toast } from "sonner";
 
 export default function PostConversationDebrief({ isOpen, onClose, conversationType = "difficult", onSuccess }) {

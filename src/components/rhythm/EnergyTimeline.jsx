@@ -32,7 +32,7 @@ function Sparkline({ values, color, label }) {
           {trend === "up"   && <TrendingUp className="w-3 h-3 text-emerald-500" />}
           {trend === "down" && <TrendingDown className="w-3 h-3 text-rose-400" />}
           {trend === "flat" && <Minus className="w-3 h-3 text-gray-400" />}
-          {label === "Load" ? ["high","moderate","low","light"][last - 1] : ["low","moderate","moderate","high"][last - 1]}
+          {label === "Load" ? ["high","moderate","low","light"][last - 1] : ["drained","stretched","steady","strong"][last - 1]}
         </span>
       </div>
       <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-9" preserveAspectRatio="none">
