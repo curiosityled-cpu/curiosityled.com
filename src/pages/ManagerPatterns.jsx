@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
-import { TrendingUp, AlertCircle, Info, Brain, ChevronRight, BarChart3, Eye, RefreshCw } from "lucide-react";
+import { TrendingUp, AlertCircle, Info, Brain, BarChart3, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import TrendSummaryCard from "@/components/checkin/TrendSummaryCard";
@@ -16,15 +16,6 @@ import { Link } from "react-router-dom";
 import CheckInHistoryCalendar from "@/components/rhythm/CheckInHistoryCalendar";
 import EnergyTimeline from "@/components/rhythm/EnergyTimeline";
 import OperatorModeAlert from "@/components/rhythm/OperatorModeAlert";
-
-function SectionHeader({ title, subtitle }) {
-  return (
-    <div className="pt-2 pb-1">
-      <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-      {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
-    </div>
-  );
-}
 
 function PatternCard({ insight, goals }) {
   const patterns = [];

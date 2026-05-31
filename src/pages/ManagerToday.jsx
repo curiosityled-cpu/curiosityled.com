@@ -245,7 +245,6 @@ export default function ManagerToday() {
         trends={trends}
         goals={goals}
         assignments={assignments}
-        insight={insight}
         onOpenAtreus={openAtreus}
       />
 
@@ -291,7 +290,6 @@ export default function ManagerToday() {
       {/* Upcoming friction */}
       <UpcomingFrictionCard
         trends={trends}
-        goals={goals}
         pulses={recentPulses}
         onOpenAtreus={openAtreus}
       />

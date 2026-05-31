@@ -113,14 +113,10 @@ export default function WhatMattersNowCard({ pulse, trends, goals, insight, onOp
           </div>
         )}
 
-        {/* Expanded body */}
-        {expanded && (
-          <p className="text-sm text-gray-500 leading-relaxed">{body}</p>
-        )}
-
+        <p className={`text-sm text-gray-500 leading-relaxed ${expanded ? '' : 'line-clamp-2'}`}>{body}</p>
         {!expanded && (
-          <button onClick={() => setExpanded(true)} className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
-            See why →
+          <button onClick={() => setExpanded(true)} className="text-xs text-gray-400 hover:text-gray-600 transition-colors -mt-1">
+            Read more →
           </button>
         )}
 

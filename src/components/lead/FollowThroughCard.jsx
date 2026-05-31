@@ -3,7 +3,7 @@
  * Shows prior commitment, asks for status, feeds pattern learning.
  */
 import React, { useState } from "react";
-import { CheckCircle2, Circle, MinusCircle, ChevronRight } from "lucide-react";
+import { CheckCircle2, Circle, MinusCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
@@ -51,7 +51,7 @@ export default function FollowThroughCard({ pulses, userEmail, onDone }) {
         prompt_type: 'follow_up',
         source: 'web',
         focus_intention: reflection || `Follow-through: ${selected} on "${commitment.text}"`,
-        intent_actuals_gap: selected === 'did_it' ? 'no_gap_detected' : selected === 'not_yet' ? 'insufficient_data' : 'no_gap_detected',
+        intent_actuals_gap: selected === 'did_it' ? 'no_gap_detected' : 'declared_delegation_operator_mode_detected',
       });
     } catch {}
     setLoading(false);

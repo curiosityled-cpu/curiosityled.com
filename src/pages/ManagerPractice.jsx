@@ -3,7 +3,7 @@
  * Route: /practice
  * Where managers actively work on leadership: prepare, reflect, work through, and grow.
  */
-import React, { useState } from "react";
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -11,8 +11,8 @@ import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { Link } from "react-router-dom";
 import {
   Brain, Target, BookOpen, ArrowRight, ChevronRight,
-  MessageSquare, Layers, Users, CheckCircle2, Clock,
-  Lightbulb, Shield, FileText, Zap, TrendingUp, PlayCircle
+  MessageSquare, Layers, Users, CheckCircle2,
+  Lightbulb, FileText, Zap, TrendingUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

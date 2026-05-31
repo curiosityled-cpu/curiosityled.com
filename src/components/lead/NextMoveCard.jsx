@@ -82,9 +82,9 @@ function buildNextMove(pulse, trends, goals, assignments, insight) {
   };
 }
 
-export default function NextMoveCard({ pulse, trends, goals, assignments, insight, onOpenAtreus }) {
+export default function NextMoveCard({ pulse, trends, goals, assignments, onOpenAtreus }) {
   const [done, setDone] = useState(false);
-  const move = buildNextMove(pulse, trends, goals, assignments, insight);
+  const move = buildNextMove(pulse, trends, goals, assignments);
 
   const handleAtreus = () => {
     onOpenAtreus(move.atreusMsg);
