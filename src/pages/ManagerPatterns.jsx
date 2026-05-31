@@ -1,0 +1,130 @@
+/**
+ * ManagerPatterns — Longitudinal memory, trends, interpretations.
+ * Route: /patterns
+ */
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
+import { useAtreusChat } from "@/components/ai/AtreusContext";
+import { TrendingUp, AlertCircle, Info, Brain, ChevronRight, BarChart3, Eye, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import TrendSummaryCard from "@/components/checkin/TrendSummaryCard";
+import IntentLoopCard from "@/components/checkin/IntentLoopCard";
+import { Link } from "react-router-dom";
+
+function SectionHeader({ title, subtitle }) {
+  return (
+    <div className="pt-2 pb-1">
+      <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+      {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
+    </div>
+  );
+}
+
+function PatternCard({ insight, goals }) {
+  const patterns = [];
+  if (insight?.top_strengths?.[0]) patterns.push({ type: 'supporting', text: `${insight.top_strengths[0].split(' (')[0]} appears to be a current strength you can lean on.`, tag: 'Assessment-based', tagColor: 'bg-emerald-50 text-emerald-700', icon: <TrendingUp className="w-3.5 h-3.5 text-emerald-500" /> });
+  if (insight?.development_areas?.[0]) patterns.push({ type: 'watch', text: `${insight.development_areas[0].split(' (')[0]} may benefit from more intentional focus — this pattern has appeared in recent signals.`, tag: 'AI-interpreted', tagColor: 'bg-amber-50 text-amber-700', icon: <AlertCircle className="w-3.5 h-3.5 text-amber-500" /> });
+  const stalled = goals.filter(g => g.status === 'active' && (g.progress || 0) < 20);
+  if (stalled.length > 0) patterns.push({ type: 'watch', text: `${stalled.length === 1 ? 'One active goal has' : `${stalled.length} active goals have`} made little progress. A momentum check may help.`, tag: 'Goal tracker', tagColor: 'bg-blue-50 text-blue-700', icon: <BarChart3 className="w-3.5 h-3.5 text-blue-400" /> });
+  if (patterns.length === 0) patterns.push({ type: 'neutral', text: 'Patterns build as you engage — check-ins, goals, and assessment results all contribute to what appears here.', tag: 'How this works', tagColor: 'bg-gray-100 text-gray-500', icon: <Info className="w-3.5 h-3.5 text-gray-400" /> });
+
+  return (
+    <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
+      <div className="px-5 pt-5 pb-2 flex items-center gap-2">
+        <div className="w-7 h-7 rounded-lg bg-purple-50 border border-purple-100 flex items-center justify-center">
+          <Eye className="w-3.5 h-3.5 text-purple-500" />
+        </div>
+        <p className="text-sm font-semibold text-gray-900">What we're noticing</p>
+      </div>
+      <CardContent className="px-5 pt-2 pb-5 space-y-3">
+        {patterns.map((p, i) => (
+          <div key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
+            <div className="mt-0.5 flex-shrink-0">{p.icon}</div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-gray-700 leading-relaxed">{p.text}</p>
+              <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full mt-1.5 ${p.tagColor}`}>{p.tag}</span>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+function EmptyState() {
+  return (
+    <Card className="shadow-sm border border-dashed border-gray-200 bg-white rounded-2xl">
+      <CardContent className="py-12 px-6 text-center">
+        <Brain className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+        <p className="text-sm font-semibold text-gray-700 mb-1">Patterns appear over time</p>
+        <p className="text-xs text-gray-400 max-w-xs mx-auto mb-4 leading-relaxed">
+          Daily check-ins, your Leadership Index, and goal activity all feed into what you'll see here. Come back after a few days of use.
+        </p>
+        <Link to="/today">
+          <Button size="sm" variant="outline" className="text-xs border-[#0202ff]/30 text-[#0202ff] hover:bg-blue-50">
+            Start your daily check-in →
+          </Button>
+        </Link>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function ManagerPatterns() {
+  const { user } = useAuth();
+  const { openWithContext } = useAtreusChat();
+  const openAtreus = (msg) => openWithContext({ context: { pageType: 'patterns', user_name: user?.full_name }, starterMessage: msg || "Help me understand my recent patterns." });
+
+  const { data: trends = null } = useQuery({
+    queryKey: ['ml-trends', user?.email],
+    queryFn: async () => { try { const rows = await base44.entities.ManagerTrends.filter({ user_email: user.email }, '-last_trend_computed_at', 1); return rows[0] || null; } catch { return null; } },
+    enabled: !!user?.email, staleTime: 30 * 60 * 1000,
+  });
+
+  const { data: recentPulses = [] } = useQuery({
+    queryKey: ['ml-pulses', user?.email],
+    queryFn: async () => { try { return await base44.entities.ManagerPulse.filter({ user_email: user.email }, '-created_date', 20); } catch { return []; } },
+    enabled: !!user?.email, staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: insight = null } = useQuery({
+    queryKey: ['ml-insight', user?.email],
+    queryFn: async () => {
+      try { const rows = await base44.entities.AssessmentInsights.filter({ user_email: user.email }, '-created_date', 1); return rows[0] || null; } catch { return null; }
+    },
+    enabled: !!user?.email, staleTime: 0,
+  });
+
+  const { data: goals = [] } = useQuery({
+    queryKey: ['ml-goals', user?.email],
+    queryFn: async () => { try { return await base44.entities.Goal.filter({ user_email: user.email }, '-created_date', 15); } catch { return []; } },
+    enabled: !!user?.email, staleTime: 5 * 60 * 1000,
+  });
+
+  const hasData = trends || recentPulses.length > 0 || insight;
+
+  return (
+    <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+      <SectionHeader title="Patterns" subtitle="Longitudinal memory — what Curiosity Led is noticing over time." />
+
+      {hasData ? (
+        <>
+          <TrendSummaryCard trends={trends} onOpenAtreus={openAtreus} />
+          <IntentLoopCard pulses={recentPulses} trends={trends} onOpenAtreus={openAtreus} />
+          {insight && <PatternCard insight={insight} goals={goals} />}
+
+          <div className="pt-2">
+            <Button variant="outline" className="w-full text-sm border-gray-200 text-gray-600 hover:bg-gray-50" onClick={() => openAtreus("Help me make sense of my patterns over the past month.")}>
+              <Brain className="w-4 h-4 mr-2 text-[#0202ff]" /> Explore patterns with Atreus
+            </Button>
+          </div>
+        </>
+      ) : (
+        <EmptyState />
+      )}
+    </div>
+  );
+}

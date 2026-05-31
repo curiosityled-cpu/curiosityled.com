@@ -8,7 +8,7 @@ import { base44 } from "@/api/base44Client";
 import {
   Brain, Target, Home, BarChart2, Users, LogOut, Menu, X,
   ChevronRight, ChevronLeft, BarChart3, Map, Bell, User,
-  Settings, Shield, BookOpen, UserCog } from
+  Settings, Shield, BookOpen, UserCog, TrendingUp, Sparkles } from
 "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -53,9 +53,11 @@ export const getFriendlyRoleLabel = (appRole) => {
 
 const NAV_CONFIG = {
   manager: [
-  { label: 'Today', path: '/my-leadership', icon: Home },
-  { label: 'My Goals', path: '/my-goals', icon: Target },
-  { label: 'My Development', path: '/my-development', icon: BookOpen }],
+  { label: 'Today', path: '/today', icon: Home },
+  { label: 'Patterns', path: '/patterns', icon: TrendingUp },
+  { label: 'Growth', path: '/growth', icon: Target },
+  { label: 'Team', path: '/team', icon: Users },
+  { label: 'Atreus', path: '/atreus-guide', icon: Brain }],
 
   buyer: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
@@ -138,7 +140,9 @@ function MVPLayoutInner({ children }) {
   const NavItem = ({ item, showLabel = true }) => {
     const Icon = item.icon;
     const itemPath = item.path.split('?')[0].split('#')[0];
-    const isActive = location.pathname === itemPath;
+    const isActive = location.pathname === itemPath ||
+      // Legacy today redirect
+      (itemPath === '/today' && location.pathname === '/my-leadership');
     const [navPathname, navSearch] = item.path.split('?');
     return (
       <Link

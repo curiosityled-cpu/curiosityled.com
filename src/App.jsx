@@ -31,6 +31,11 @@ import PerformanceManager from './pages/PerformanceManager';
 import MyPerformance from './pages/MyPerformance';
 import MyRhythm from './pages/MyRhythm';
 import TeamsSettings from './pages/TeamsSettings';
+import ManagerToday from './pages/ManagerToday';
+import ManagerPatterns from './pages/ManagerPatterns';
+import ManagerGrowth from './pages/ManagerGrowth';
+import ManagerTeam from './pages/ManagerTeam';
+import ManagerAtreus from './pages/ManagerAtreus';
 import Insights from './pages/Insights';
 import ReportBuilder from './pages/ReportBuilder';
 import { AuthProvider as FullAuthProvider } from '@/components/useAuth';
@@ -96,7 +101,7 @@ const AuthenticatedApp = () => {
         ) : mvpRole === 'executive' ? (
           <Navigate to="/Insights?tab=org" replace />
         ) : (
-          <MVPLayout><MyLeadership /></MVPLayout>
+          <MVPLayout><ManagerToday /></MVPLayout>
         )
       } />
 
@@ -109,8 +114,15 @@ const AuthenticatedApp = () => {
       {/* Legacy Dashboard — always accessible with full layout */}
       <Route path="/Dashboard" element={<LayoutWrapper currentPageName="Dashboard"><Pages.Dashboard /></LayoutWrapper>} />
 
+      {/* New manager nav routes (Phase 1) */}
+      <Route path="/today" element={<MVPLayout><ManagerToday /></MVPLayout>} />
+      <Route path="/patterns" element={<MVPLayout><ManagerPatterns /></MVPLayout>} />
+      <Route path="/growth" element={<MVPLayout><ManagerGrowth /></MVPLayout>} />
+      <Route path="/team" element={<MVPLayout><ManagerTeam /></MVPLayout>} />
+      <Route path="/atreus-guide" element={<MVPLayout><ManagerAtreus /></MVPLayout>} />
+
       {/* MVP-specific routes */}
-      <Route path="/my-leadership" element={<MVPLayout><MyLeadership /></MVPLayout>} />
+      <Route path="/my-leadership" element={<MVPLayout><ManagerToday /></MVPLayout>} />
       <Route path="/my-development" element={<MVPLayout><MyDevelopment /></MVPLayout>} />
       <Route path="/experience-overview" element={<MVPLayout><ExperienceOverview /></MVPLayout>} />
       <Route path="/report-builder-mvp" element={<MVPLayout><ReportBuilderMVP /></MVPLayout>} />

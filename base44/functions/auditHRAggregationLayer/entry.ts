@@ -6,7 +6,7 @@
  * and only exposes aggregate statistics (counts, means, trends)
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-import { getHRSafeFields } from '@/lib/privacyTaxonomy.js';
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -25,18 +25,11 @@ Deno.serve(async (req) => {
       findings: [],
     };
 
-    // Call getOrgPulseAggregates to check what data is exposed
     try {
-      const aggregates = await base44.functions.invoke('getOrgPulseAggregates', {
-        org_id,
-      });
+      const aggregates = await base44.functions.invoke('getOrgPulseAggregates', { org_id });
 
-      // Verify only HR-safe fields are present
-      const hrSafeFields = getHRSafeFields('ManagerPulse');
-      const dataKeys = Object.keys(aggregates || {});
-
-      // Check for Category A fields that should NOT be present
       const categoryAFields = ['energy_level', 'confidence_today', 'mental_clarity', 'biggest_weight_today', 'identity_friction_note'];
+      const dataKeys = Object.keys(aggregates || {});
       const exposedCategoryA = dataKeys.filter(key => categoryAFields.some(field => key.includes(field)));
 
       if (exposedCategoryA.length > 0) {
@@ -48,7 +41,6 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Verify minimum cohort enforcement
       if (aggregates.total_managers < 5) {
         auditReport.findings.push({
           severity: 'warning',
