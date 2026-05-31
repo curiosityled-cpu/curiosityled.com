@@ -14,7 +14,7 @@ import ToneOnboarding from "./ToneOnboarding";
 const TONE_LABELS = {
   gentle_observant: "Gentle and observant",
   warm_candid: "Warm but candid",
-  close_friend: "Close-friend candid",
+  close_friend_candid: "Close-friend candid",
   respectfully_confronting: "Respectfully confronting"
 };
 
@@ -89,7 +89,7 @@ export default function CheckInSettings() {
               <p className="text-xs text-gray-500 mt-0.5">
                 {tonePref?.tone_mode === 'gentle_observant' && "Atreus will mostly observe and ask questions, rarely push."}
                 {tonePref?.tone_mode === 'warm_candid' && "Supportive, but will point out patterns when it sees them."}
-                {tonePref?.tone_mode === 'close_friend' && "Atreus talks like a trusted peer who tells you what they really think."}
+                {tonePref?.tone_mode === 'close_friend_candid' && "Atreus talks like a trusted peer who tells you what they really think."}
                 {tonePref?.tone_mode === 'respectfully_confronting' && "Atreus will challenge you directly when you keep getting stuck."}
                 {!tonePref?.tone_mode && "Supportive, but will point out patterns when it sees them."}
               </p>

@@ -70,7 +70,11 @@ export default function EnergyTimeline({ pulses = [] }) {
   const energyValues = last14.map(p => ENERGY_VALUE[p.energy_level]).filter(Boolean);
   const loadValues   = last14.map(p => LOAD_VALUE[p.perceived_load]).filter(Boolean);
 
-  if (energyValues.length < 2) return null;
+  // Need at least 2 data points in either series to render anything useful
+  if (energyValues.length < 2 && loadValues.length < 2) return null;
+
+  const hasEnergy = energyValues.length >= 2;
+  const hasLoad = loadValues.length >= 2;
 
   return (
     <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
@@ -80,20 +84,22 @@ export default function EnergyTimeline({ pulses = [] }) {
       </div>
       <CardContent className="px-5 pt-2 pb-5">
         <div className="flex gap-4">
-          <Sparkline values={energyValues} color="#0202ff" label="Energy" />
-          {loadValues.length >= 2 && (
-            <Sparkline values={loadValues} color="#f59e0b" label="Load" />
-          )}
+          {hasEnergy && <Sparkline values={energyValues} color="#0202ff" label="Energy" />}
+          {hasLoad && <Sparkline values={loadValues} color="#f59e0b" label="Load" />}
         </div>
         <div className="mt-3 flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <div className="w-6 h-0.5 bg-[#0202ff] rounded" />
-            <span className="text-[10px] text-gray-400">Energy</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-6 h-0.5 bg-amber-400 rounded" />
-            <span className="text-[10px] text-gray-400">Load (inverted)</span>
-          </div>
+          {hasEnergy && (
+            <div className="flex items-center gap-1.5">
+              <div className="w-6 h-0.5 bg-[#0202ff] rounded" />
+              <span className="text-[10px] text-gray-400">Energy</span>
+            </div>
+          )}
+          {hasLoad && (
+            <div className="flex items-center gap-1.5">
+              <div className="w-6 h-0.5 bg-amber-400 rounded" />
+              <span className="text-[10px] text-gray-400">Load (inverted)</span>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

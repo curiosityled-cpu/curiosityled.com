@@ -83,7 +83,7 @@ export default function TrendSummaryCard({ trends, onOpenAtreus }) {
           </div>
           <div>
             <p className="text-sm font-semibold text-gray-900">What Atreus is noticing</p>
-            <p className="text-[10px] text-gray-400">Last {trends.data_points_14d} check-ins · Private to you</p>
+            <p className="text-[10px] text-gray-400">Recent check-ins · Private to you</p>
           </div>
         </div>
         <Badge variant="outline" className="text-[9px] border-gray-200 text-gray-400">Private</Badge>
@@ -135,7 +135,7 @@ export default function TrendSummaryCard({ trends, onOpenAtreus }) {
             <TrendingDown className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0 space-y-1">
               <p className="text-xs text-amber-800 leading-relaxed">
-                You've reported feeling stretched or drained in {trends.stretch_frequency_14d} of your last {trends.data_points_14d} check-ins. That's a pattern worth noticing.
+                You've reported feeling stretched or drained in {trends.stretch_frequency_14d} of your recent check-ins. That's a pattern worth noticing.
               </p>
               <EvidenceTag type="checkin" />
             </div>
