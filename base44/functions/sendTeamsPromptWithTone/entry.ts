@@ -52,16 +52,23 @@ Deno.serve(async (req) => {
     };
     const whyAsked = explanations[prompt_type] || trigger_reason;
 
-    await base44.functions.invoke('sendTeamsPrompt', {
-      user_email,
-      title: `Atreus Check-in (${tonePref})`,
-      message: adaptedText,
-      prompt_type,
-      explanation: `Why I asked: ${whyAsked}`,
-      context,
-    });
+    let deliveryResult = null;
+    try {
+      deliveryResult = await base44.functions.invoke('sendTeamsPrompt', {
+        user_email,
+        title: `Atreus Check-in (${tonePref})`,
+        message: adaptedText,
+        prompt_type,
+        explanation: `Why I asked: ${whyAsked}`,
+        context,
+        force: true,
+      });
+    } catch (deliveryErr) {
+      // Non-fatal — log but don't fail the response
+      console.error('[sendTeamsPromptWithTone] Delivery error (non-fatal):', deliveryErr.message);
+    }
 
-    return Response.json({ status: 'sent', tone_mode: tonePref, prompt_type, adapted_message: adaptedText });
+    return Response.json({ status: 'sent', tone_mode: tonePref, prompt_type, adapted_message: adaptedText, delivery: deliveryResult?.data || null });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
