@@ -345,10 +345,16 @@ Deno.serve(async (req) => {
     // 5. Select prompt (with tone override for morning_intent)
     // Alias external prompt_type names → internal PROMPTS keys
     const PROMPT_KEY_ALIASES = {
-      overload_check:   'overload_overcontrol',
-      operator_mode:    'overload_overcontrol',
-      evening_actuals:  'weekly_reflection',  // end-of-day reflection — use weekly_reflection template
-      follow_up:        'weekly_reflection',  // intent follow-up — tone handled by applyTone follow_up family
+      overload_check:     'overload_overcontrol',
+      operator_mode:      'overload_overcontrol',
+      evening_actuals:    'weekly_reflection',  // end-of-day reflection
+      follow_up:          'weekly_reflection',  // intent follow-up
+      contextual:         'confidence_check',   // contextual falls back to confidence_check template
+      avoidance_check:    'baseline_energy',    // avoidance → baseline template
+      clarity_check:      'clarity_check',
+      motivation_check:   'motivation_check',
+      optimism_check:     'optimism_check',
+      confidence_check:   'confidence_check',
     };
     const resolvedPromptKey = forcePromptType
       ? (PROMPT_KEY_ALIASES[forcePromptType] ?? forcePromptType)
@@ -359,10 +365,6 @@ Deno.serve(async (req) => {
       promptTemplate = MORNING_INTENT_PROMPT;
     } else if (resolvedPromptKey && PROMPTS[resolvedPromptKey]) {
       promptTemplate = PROMPTS[resolvedPromptKey];
-    } else if (resolvedPromptKey === 'motivation_check' && PROMPTS.motivation_check) {
-      promptTemplate = PROMPTS.motivation_check;
-    } else if (resolvedPromptKey === 'optimism_check' && PROMPTS.optimism_check) {
-      promptTemplate = PROMPTS.optimism_check;
     } else {
       promptTemplate = selectPrompt(riskScore, recentPulses);
     }
