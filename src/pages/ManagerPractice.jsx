@@ -3,7 +3,7 @@
  * Route: /practice
  * Where managers actively work on leadership: prepare, reflect, work through, and grow.
  */
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -19,14 +19,24 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import GrowProgressCard from "@/components/patterns/GrowProgressCard";
 import GrowExperiencesCard from "@/components/patterns/GrowExperiencesCard";
+import ActiveFocusSection from "@/components/patterns/ActiveFocusSection";
+import PracticeFlow from "@/components/practice/PracticeFlow";
 
 
-function PracticeActionTile({ icon: Icon, iconBg, iconColor, title, description, prompt, to }) {
+// Flow keys that use the structured PracticeFlow; others open Atreus directly
+const FLOW_KEYS = { Prepare: 'prepare', Debrief: 'debrief', 'Work through something': 'work_through', Reflect: 'reflect' };
+
+function PracticeActionTile({ icon: Icon, iconBg, iconColor, title, description, prompt, to, onStartFlow }) {
   const { openWithContext } = useAtreusChat();
   const [expanded, setExpanded] = React.useState(false);
+  const flowKey = FLOW_KEYS[title];
 
   const handleStart = () => {
-    openWithContext({ context: { pageType: 'practice' }, starterMessage: prompt });
+    if (flowKey && onStartFlow) {
+      onStartFlow(flowKey);
+    } else {
+      openWithContext({ context: { pageType: 'practice' }, starterMessage: prompt });
+    }
     setExpanded(false);
   };
 
@@ -64,9 +74,11 @@ function PracticeActionTile({ icon: Icon, iconBg, iconColor, title, description,
       </button>
       {expanded && (
         <div className="px-5 pb-4 pt-0 border-t border-gray-50 bg-gray-50/60 flex items-center justify-between gap-3">
-          <p className="text-xs text-gray-500 flex-1">Atreus will guide you through this session.</p>
+          <p className="text-xs text-gray-500 flex-1">
+            {flowKey ? 'A structured guide walks you through this step by step.' : 'Atreus will guide you through this session.'}
+          </p>
           <Button size="sm" className="bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs px-4" onClick={handleStart}>
-            Start session →
+            {flowKey ? 'Start guided flow →' : 'Start session →'}
           </Button>
         </div>
       )}
@@ -78,43 +90,14 @@ function SectionLabel({ children }) {
   return <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-1 pt-2">{children}</p>;
 }
 
-function ActiveFocusCard({ goals }) {
-  const active = goals.filter(g => g.status === 'active').slice(0, 2);
-  if (active.length === 0) return null;
-  return (
-    <Card className="shadow-sm border border-gray-100 bg-gradient-to-br from-blue-50 to-white rounded-2xl overflow-hidden">
-      <div className="px-5 pt-5 pb-2 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center">
-            <Target className="w-3.5 h-3.5 text-white" />
-          </div>
-          <p className="text-sm font-semibold text-gray-900">Active focus</p>
-        </div>
-        <Link to="/my-goals"><span className="text-xs text-[#0202ff] font-medium">Manage →</span></Link>
-      </div>
-      <CardContent className="px-5 pt-2 pb-5 space-y-3">
-        {active.map(g => (
-          <div key={g.id} className="space-y-1.5">
-            <p className="text-sm font-medium text-gray-800">{g.title}</p>
-            <div className="flex items-center gap-2">
-              <Progress value={g.progress || 0} className="h-1.5 flex-1" />
-              <span className="text-xs text-gray-500 flex-shrink-0">{g.progress || 0}%</span>
-            </div>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-  );
-}
-
-function GrowSection({ goals, assignments, devPlans, pulses, trends, onOpenAtreus }) {
+function GrowSection({ goals, assignments, devPlans, pulses, trends, insight, onOpenAtreus }) {
   const active = assignments.filter(a => a.status !== 'completed').slice(0, 2);
   const activePlan = devPlans.find(p => p.status === 'active');
 
   return (
     <div className="space-y-2">
       <SectionLabel>Grow</SectionLabel>
-      <ActiveFocusCard goals={goals} />
+      <ActiveFocusSection goals={goals} trends={trends} insight={insight} onOpenAtreus={onOpenAtreus} />
       
       {/* Learning */}
       {(active.length > 0 || activePlan) && (
@@ -188,6 +171,7 @@ function GrowSection({ goals, assignments, devPlans, pulses, trends, onOpenAtreu
 export default function ManagerPractice() {
   const { user } = useAuth();
   const { openWithContext } = useAtreusChat();
+  const [activeFlow, setActiveFlow] = useState(null);
   const openAtreus = (msg) => openWithContext({ context: { pageType: 'practice', user_name: user?.full_name }, starterMessage: msg });
 
   const { data: goals = [] } = useQuery({
@@ -226,6 +210,14 @@ export default function ManagerPractice() {
     enabled: !!user?.email, staleTime: 30 * 60 * 1000,
   });
 
+  const { data: insight = null } = useQuery({
+    queryKey: ['ml-insight', user?.email],
+    queryFn: async () => {
+      try { const rows = await base44.entities.AssessmentInsights.filter({ user_email: user.email }, '-created_date', 1); return rows[0] || null; } catch { return null; }
+    },
+    enabled: !!user?.email, staleTime: 0,
+  });
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
       {/* Header */}
@@ -234,74 +226,87 @@ export default function ManagerPractice() {
         <p className="text-sm text-gray-500 mt-1">Work on your leadership in the moment.</p>
       </div>
 
+      {/* Active flow overlay */}
+      {activeFlow && (
+        <PracticeFlow flowKey={activeFlow} onClose={() => setActiveFlow(null)} />
+      )}
+
       {/* Coach flows */}
-      <div className="space-y-2">
-        <SectionLabel>Coaching flows</SectionLabel>
-        <PracticeActionTile
-          icon={MessageSquare}
-          iconBg="bg-[#0202ff]/10"
-          iconColor="text-[#0202ff]"
-          title="Prepare"
-          description="Get ready for a hard conversation, 1:1, feedback, or stakeholder meeting."
-          prompt="I want to prepare for an upcoming conversation or meeting. Can you help me think through it?"
-        />
-        <PracticeActionTile
-          icon={CheckCircle2}
-          iconBg="bg-emerald-50"
-          iconColor="text-emerald-600"
-          title="Debrief"
-          description="Reflect after a difficult interaction, missed commitment, or important meeting."
-          prompt="I want to debrief something that just happened. Can we walk through it together?"
-        />
-        <PracticeActionTile
-          icon={Lightbulb}
-          iconBg="bg-amber-50"
-          iconColor="text-amber-600"
-          title="Work through something"
-          description="Feeling stuck, avoiding something, or overwhelmed? Let's name it and find a next step."
-          prompt="I'm stuck on something and want to work through it. Can you help me think it out?"
-        />
-        <PracticeActionTile
-          icon={FileText}
-          iconBg="bg-violet-50"
-          iconColor="text-violet-600"
-          title="Reflect"
-          description="Weekly reflection, end-of-day debrief, or momentum review."
-          prompt="I want to do a leadership reflection. Can you guide me through it?"
-        />
-        <PracticeActionTile
-          icon={Brain}
-          iconBg="bg-rose-50"
-          iconColor="text-rose-600"
-          title="Decision journal"
-          description="Capture a high-stakes decision — context, risks, and outcome review later."
-          prompt="I want to log a decision I'm working through. Can you help me capture the context and key considerations?"
-        />
-      </div>
+      {!activeFlow && (
+        <>
+          <div className="space-y-2">
+            <SectionLabel>Coaching flows</SectionLabel>
+            <PracticeActionTile
+              icon={MessageSquare}
+              iconBg="bg-[#0202ff]/10"
+              iconColor="text-[#0202ff]"
+              title="Prepare"
+              description="Get ready for a hard conversation, 1:1, feedback, or stakeholder meeting."
+              prompt="I want to prepare for an upcoming conversation or meeting. Can you help me think through it?"
+              onStartFlow={setActiveFlow}
+            />
+            <PracticeActionTile
+              icon={CheckCircle2}
+              iconBg="bg-emerald-50"
+              iconColor="text-emerald-600"
+              title="Debrief"
+              description="Reflect after a difficult interaction, missed commitment, or important meeting."
+              prompt="I want to debrief something that just happened. Can we walk through it together?"
+              onStartFlow={setActiveFlow}
+            />
+            <PracticeActionTile
+              icon={Lightbulb}
+              iconBg="bg-amber-50"
+              iconColor="text-amber-600"
+              title="Work through something"
+              description="Feeling stuck, avoiding something, or overwhelmed? Let's name it and find a next step."
+              prompt="I'm stuck on something and want to work through it. Can you help me think it out?"
+              onStartFlow={setActiveFlow}
+            />
+            <PracticeActionTile
+              icon={FileText}
+              iconBg="bg-violet-50"
+              iconColor="text-violet-600"
+              title="Reflect"
+              description="Weekly reflection, end-of-day debrief, or momentum review."
+              prompt="I want to do a leadership reflection. Can you guide me through it?"
+              onStartFlow={setActiveFlow}
+            />
+            <PracticeActionTile
+              icon={Brain}
+              iconBg="bg-rose-50"
+              iconColor="text-rose-600"
+              title="Decision journal"
+              description="Capture a high-stakes decision — context, risks, and outcome review later."
+              prompt="I want to log a decision I'm working through. Can you help me capture the context and key considerations?"
+            />
+          </div>
 
-      {/* Team flows */}
-      <div className="space-y-2">
-        <SectionLabel>Team</SectionLabel>
-        <PracticeActionTile
-          icon={Users}
-          iconBg="bg-sky-50"
-          iconColor="text-sky-600"
-          title="1:1 prep & notes"
-          description="Prepare questions, review commitments, and track conversation notes."
-          to="/team"
-        />
-        <PracticeActionTile
-          icon={Layers}
-          iconBg="bg-orange-50"
-          iconColor="text-orange-600"
-          title="Delegation planner"
-          description="Identify what to hand off and how to set your team up for success."
-          prompt="I want to think through what I should delegate. Can you help me work through it?"
-        />
-      </div>
+          {/* Team flows */}
+          <div className="space-y-2">
+            <SectionLabel>Team</SectionLabel>
+            <PracticeActionTile
+              icon={Users}
+              iconBg="bg-sky-50"
+              iconColor="text-sky-600"
+              title="1:1 prep & notes"
+              description="Prepare questions, review commitments, and track conversation notes."
+              to="/team"
+            />
+            <PracticeActionTile
+              icon={Layers}
+              iconBg="bg-orange-50"
+              iconColor="text-orange-600"
+              title="Delegation planner"
+              description="Identify what to hand off and how to set your team up for success."
+              prompt="I want to think through what I should delegate. Can you help me work through it?"
+            />
+          </div>
 
-      {/* Grow section */}
-      <GrowSection goals={goals} assignments={assignments} devPlans={devPlans} pulses={pulses} trends={trends} onOpenAtreus={openAtreus} />
+          {/* Grow section */}
+          <GrowSection goals={goals} assignments={assignments} devPlans={devPlans} pulses={pulses} trends={trends} insight={insight} onOpenAtreus={openAtreus} />
+        </>
+      )}
     </div>
   );
 }

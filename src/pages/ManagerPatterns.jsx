@@ -19,6 +19,8 @@ import OperatorModeAlert from "@/components/rhythm/OperatorModeAlert";
 import WhatsImprovingCard from "@/components/patterns/WhatsImprovingCard";
 import WatchlistCard from "@/components/patterns/WatchlistCard";
 import TriggerMapCard from "@/components/patterns/TriggerMapCard";
+import LeadingPatternCard from "@/components/patterns/LeadingPatternCard";
+import TrendSignalsChart from "@/components/patterns/TrendSignalsChart";
 
 function PatternCard({ insight, goals }) {
   const patterns = [];
@@ -152,8 +154,10 @@ export default function ManagerPatterns() {
       {hasData ? (
         <>
           <MemoryNarrativeCard trends={trends} />
+          <LeadingPatternCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreus} />
           <OperatorModeAlert pulses={recentPulses} onOpenAtreus={openAtreus} />
           <CheckInHistoryCalendar pulses={recentPulses} />
+          <TrendSignalsChart trends={trends} pulses={recentPulses} />
           <EnergyTimeline pulses={recentPulses} />
           <TrendSummaryCard trends={trends} onOpenAtreus={openAtreus} />
           <IntentLoopCard pulses={recentPulses} trends={trends} onOpenAtreus={openAtreus} />

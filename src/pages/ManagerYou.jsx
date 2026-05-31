@@ -3,15 +3,16 @@
  * Route: /you
  * Profile, assessments, preferences, privacy, connected tools.
  */
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import {
   User, Shield, Settings, Brain, TrendingUp, Bell,
-  ChevronRight, LogOut, Calendar, Sliders, Eye
+  ChevronRight, LogOut, Calendar, Sliders, Eye, Archive
 } from "lucide-react";
+import ResultsArchive from "@/components/you/ResultsArchive";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -55,6 +56,7 @@ function SectionLabel({ children }) {
 export default function ManagerYou() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [showArchive, setShowArchive] = useState(false);
   const firstName = getFirstName(user);
   const displayName = user?.display_name || user?.data?.display_name || user?.full_name || user?.email;
   const appRole = user?.app_role || user?.data?.app_role;
@@ -129,6 +131,24 @@ export default function ManagerYou() {
             subtitle={latestAssessment.archetype_label ? `Archetype: ${latestAssessment.archetype_label}` : 'See full report'}
             to="/AssessmentResults"
           />
+        )}
+        <div
+          onClick={() => setShowArchive(a => !a)}
+          className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer group"
+        >
+          <div className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center flex-shrink-0">
+            <Archive className="w-4 h-4 text-slate-500" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900">Results archive</p>
+            <p className="text-xs text-gray-500 mt-0.5">History, change over time, development themes</p>
+          </div>
+          <ChevronRight className={`w-4 h-4 text-gray-300 group-hover:text-gray-400 flex-shrink-0 transition-transform ${showArchive ? 'rotate-90' : ''}`} />
+        </div>
+        {showArchive && (
+          <div className="px-4 pb-4 pt-2 border-t border-gray-50">
+            <ResultsArchive />
+          </div>
         )}
       </SectionCard>
 
