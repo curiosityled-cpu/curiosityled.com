@@ -8,7 +8,7 @@ import { base44 } from "@/api/base44Client";
 import {
   Brain, Target, Home, BarChart2, Users, LogOut, Menu, X,
   ChevronRight, ChevronLeft, Bell, User,
-  Settings, Shield, UserCog, TrendingUp } from "lucide-react";
+  Settings, Shield, UserCog, TrendingUp, Dumbbell } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import AtreusCoach from "@/components/ai/AtreusCoach";
@@ -52,11 +52,10 @@ export const getFriendlyRoleLabel = (appRole) => {
 
 const NAV_CONFIG = {
   manager: [
-  { label: 'Today', path: '/today', icon: Home },
+  { label: 'Lead', path: '/today', icon: Home },
   { label: 'Patterns', path: '/patterns', icon: TrendingUp },
-  { label: 'Growth', path: '/growth', icon: Target },
-  { label: 'Team', path: '/team', icon: Users },
-  { label: 'Atreus', path: '/atreus-guide', icon: Brain }],
+  { label: 'Practice', path: '/practice', icon: Dumbbell },
+  { label: 'You', path: '/you', icon: User }],
 
   buyer: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
@@ -140,8 +139,8 @@ function MVPLayoutInner({ children }) {
     const Icon = item.icon;
     const itemPath = item.path.split('?')[0].split('#')[0];
     const isActive = location.pathname === itemPath ||
-      // Legacy today redirect
-      (itemPath === '/today' && location.pathname === '/my-leadership');
+      (itemPath === '/today' && (location.pathname === '/my-leadership' || location.pathname === '/')) ||
+      (itemPath === '/you' && ['/Profile', '/Settings', '/PrivacySettings', '/Notifications', '/teams-settings'].includes(location.pathname));
     const [navPathname, navSearch] = item.path.split('?');
     return (
       <Link

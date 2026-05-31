@@ -36,6 +36,8 @@ import ManagerPatterns from './pages/ManagerPatterns';
 import ManagerGrowth from './pages/ManagerGrowth';
 import ManagerTeam from './pages/ManagerTeam';
 import ManagerAtreus from './pages/ManagerAtreus';
+import ManagerPractice from './pages/ManagerPractice';
+import ManagerYou from './pages/ManagerYou';
 import Insights from './pages/Insights';
 import ReportBuilder from './pages/ReportBuilder';
 import { AuthProvider as FullAuthProvider } from '@/components/useAuth';
@@ -120,6 +122,8 @@ const AuthenticatedApp = () => {
       <Route path="/growth" element={<MVPLayout><ManagerGrowth /></MVPLayout>} />
       <Route path="/team" element={<MVPLayout><ManagerTeam /></MVPLayout>} />
       <Route path="/atreus-guide" element={<MVPLayout><ManagerAtreus /></MVPLayout>} />
+      <Route path="/practice" element={<MVPLayout><ManagerPractice /></MVPLayout>} />
+      <Route path="/you" element={<MVPLayout><ManagerYou /></MVPLayout>} />
 
       {/* MVP-specific routes */}
       <Route path="/my-leadership" element={<MVPLayout><ManagerToday /></MVPLayout>} />

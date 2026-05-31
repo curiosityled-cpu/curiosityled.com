@@ -59,8 +59,9 @@ function HeroGreeting({ firstName }) {
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   return (
     <div className="pt-2 pb-1">
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Lead</p>
       <h1 className="text-2xl font-bold text-gray-900">{greeting}, {firstName}.</h1>
-      <p className="text-sm text-gray-500 mt-1">Here's what matters right now.</p>
+      <p className="text-sm text-gray-500 mt-1">What matters right now.</p>
     </div>
   );
 }
@@ -142,10 +143,9 @@ function GoalsPulseCard({ goals }) {
 
 function ExploreDeeperCard() {
   const links = [
-    { label: 'My leadership rhythm', sub: 'Trends, patterns, and check-in log', path: '/patterns', icon: BarChart3, color: 'text-[#0202ff]' },
-    { label: 'Growth & development', sub: 'Goals, learning, journeys', path: '/growth', icon: Layers, color: 'text-blue-600' },
-    { label: 'Team & conversations', sub: '1:1 prep, delegation, team focus', path: '/team', icon: Target, color: 'text-emerald-600' },
-    { label: 'Deep guidance with Atreus', sub: 'Reflection, coaching, decision journal', path: '/atreus-guide', icon: Brain, color: 'text-purple-600' },
+    { label: 'Patterns', sub: 'What this system is noticing over time', path: '/patterns', icon: BarChart3, color: 'text-[#0202ff]' },
+    { label: 'Practice', sub: 'Prepare, reflect, debrief, work through', path: '/practice', icon: Layers, color: 'text-violet-600' },
+    { label: 'You', sub: 'Profile, assessments, preferences, privacy', path: '/you', icon: SlidersHorizontal, color: 'text-emerald-600' },
   ];
   return (
     <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">

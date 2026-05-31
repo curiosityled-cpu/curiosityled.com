@@ -111,7 +111,11 @@ export default function ManagerPatterns() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-      <SectionHeader title="Patterns" subtitle="Longitudinal memory — what Curiosity Led is noticing over time." />
+      <div className="pt-2 pb-1">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Patterns</p>
+        <h1 className="text-2xl font-bold text-gray-900">What we're noticing</h1>
+        <p className="text-sm text-gray-500 mt-1">Longitudinal memory — how you lead over time.</p>
+      </div>
 
       {hasData ? (
         <>
