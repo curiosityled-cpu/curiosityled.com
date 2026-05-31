@@ -72,18 +72,8 @@ export default function DecisionJournal() {
         prompt_type: 'contextual',
         source: 'web',
         biggest_weight_today: formData.decision,
-        identity_friction_note: formData.context || null,
-        delegation_commitment: formData.decision_made || null,
-        energy_level: null,
-        confidence_today: null,
-        motivation_today: null,
-        optimism_today: null,
-        resilience_signal: null,
-        mental_clarity: null,
-        perceived_load: null,
-        room_today: null,
-        avoidance_flag: null,
-        identity_friction: false,
+        ...(formData.context && { identity_friction_note: formData.context }),
+        ...(formData.decision_made && { delegation_commitment: formData.decision_made }),
       });
 
       setDecisions(prev => [pulse, ...prev]);
@@ -162,12 +152,12 @@ export default function DecisionJournal() {
                   </div>
                   {decision.identity_friction_note && (
                     <p className="text-xs text-gray-600 mt-1">
-                      <span className="font-semibold">Context:</span> {decision.identity_friction_note.substring(0, 80)}...
+                      <span className="font-semibold">Context:</span> {decision.identity_friction_note.length > 80 ? decision.identity_friction_note.substring(0, 80) + '…' : decision.identity_friction_note}
                     </p>
                   )}
                   {decision.delegation_commitment && (
                     <p className="text-xs text-gray-600 mt-1">
-                      <span className="font-semibold">Decision:</span> {decision.delegation_commitment.substring(0, 80)}...
+                      <span className="font-semibold">Decision:</span> {decision.delegation_commitment.length > 80 ? decision.delegation_commitment.substring(0, 80) + '…' : decision.delegation_commitment}
                     </p>
                   )}
                 </div>

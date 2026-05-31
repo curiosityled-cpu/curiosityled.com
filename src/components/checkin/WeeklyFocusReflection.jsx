@@ -36,18 +36,8 @@ export default function WeeklyFocusReflection({ isOpen, onClose, onSuccess, user
         prompt_type: 'weekly_reflection',
         source: 'web',
         biggest_weight_today: reflection,
-        identity_friction_note: surprises || null,
-        delegation_commitment: keyDecisions || null,
-        energy_level: null,
-        confidence_today: null,
-        motivation_today: null,
-        optimism_today: null,
-        resilience_signal: null,
-        mental_clarity: null,
-        perceived_load: null,
-        room_today: null,
-        avoidance_flag: null,
-        identity_friction: false,
+        ...(surprises && { identity_friction_note: surprises }),
+        ...(keyDecisions && { delegation_commitment: keyDecisions }),
       });
 
       toast.success("Weekly reflection saved. Great work closing the loop!");

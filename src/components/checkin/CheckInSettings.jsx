@@ -138,7 +138,7 @@ export default function CheckInSettings() {
           <p className="text-sm font-semibold text-gray-900">Sharing controls</p>
         </div>
         <div className="px-5 pb-5">
-          <VisibilityShareFlags userEmail={tonePref?.user_email} />
+          <VisibilityShareFlags userEmail={user?.email} />
         </div>
       </div>
 
