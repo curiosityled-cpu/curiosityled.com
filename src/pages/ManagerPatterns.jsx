@@ -57,6 +57,38 @@ function PatternCard({ insight, goals }) {
   );
 }
 
+function MemoryNarrativeCard({ trends }) {
+  const narrative = trends?.trend_narrative || trends?.summary_28d;
+  const computedAt = trends?.last_trend_computed_at;
+  const dataPoints = trends?.data_points_28d;
+
+  if (!narrative) return null;
+
+  const timeLabel = computedAt
+    ? new Date(computedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    : null;
+
+  return (
+    <Card className="shadow-sm border border-[#0202ff]/15 bg-gradient-to-br from-[#0202ff]/5 to-white rounded-2xl overflow-hidden">
+      <div className="px-5 pt-5 pb-2 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center">
+            <Brain className="w-3.5 h-3.5 text-white" />
+          </div>
+          <p className="text-sm font-semibold text-gray-900">What we've noticed — last 28 days</p>
+        </div>
+        {timeLabel && <span className="text-[10px] text-gray-400">Updated {timeLabel}</span>}
+      </div>
+      <CardContent className="px-5 pt-2 pb-5">
+        <p className="text-sm text-gray-700 leading-relaxed">{narrative}</p>
+        {dataPoints > 0 && (
+          <p className="text-[10px] text-gray-400 mt-2">Based on {dataPoints} check-in{dataPoints !== 1 ? 's' : ''} · Private to you</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function EmptyState() {
   return (
     <Card className="shadow-sm border border-dashed border-gray-200 bg-white rounded-2xl">
@@ -119,6 +151,7 @@ export default function ManagerPatterns() {
 
       {hasData ? (
         <>
+          <MemoryNarrativeCard trends={trends} />
           <OperatorModeAlert pulses={recentPulses} onOpenAtreus={openAtreus} />
           <CheckInHistoryCalendar pulses={recentPulses} />
           <EnergyTimeline pulses={recentPulses} />

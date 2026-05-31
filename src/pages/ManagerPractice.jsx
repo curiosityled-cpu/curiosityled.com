@@ -19,21 +19,57 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 
-function PracticeActionTile({ icon: Icon, iconBg, iconColor, title, description, ctaLabel, onClick, to }) {
-  const inner = (
-    <div className="flex items-center gap-4 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md active:scale-[0.99] transition-all group cursor-pointer">
-      <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
-        <Icon className={`w-5 h-5 ${iconColor}`} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-gray-900">{title}</p>
-        <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{description}</p>
-      </div>
-      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-400 flex-shrink-0" />
+function PracticeActionTile({ icon: Icon, iconBg, iconColor, title, description, prompt, to }) {
+  const { openWithContext } = useAtreusChat();
+  const [expanded, setExpanded] = React.useState(false);
+
+  const handleStart = () => {
+    openWithContext({ context: { pageType: 'practice' }, starterMessage: prompt });
+    setExpanded(false);
+  };
+
+  if (to) {
+    return (
+      <Link to={to}>
+        <div className="flex items-center gap-4 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group cursor-pointer">
+          <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
+            <Icon className={`w-5 h-5 ${iconColor}`} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900">{title}</p>
+            <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{description}</p>
+          </div>
+          <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-400 flex-shrink-0" />
+        </div>
+      </Link>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <button
+        className="w-full flex items-center gap-4 p-5 hover:bg-gray-50 transition-colors text-left"
+        onClick={() => setExpanded(e => !e)}
+      >
+        <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
+          <Icon className={`w-5 h-5 ${iconColor}`} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-gray-900">{title}</p>
+          <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{description}</p>
+        </div>
+        <ChevronRight className={`w-4 h-4 text-gray-300 flex-shrink-0 transition-transform ${expanded ? 'rotate-90' : ''}`} />
+      </button>
+      {expanded && (
+        <div className="px-5 pb-4 pt-0 border-t border-gray-50 bg-gray-50/60 flex items-center justify-between gap-3">
+          <p className="text-xs text-gray-500 flex-1">Atreus will guide you through this session.</p>
+          <Button size="sm" className="bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs px-4" onClick={handleStart}>
+            Start session →
+          </Button>
+        </div>
+      )}
     </div>
   );
-  if (to) return <Link to={to}>{inner}</Link>;
-  return <div onClick={onClick}>{inner}</div>;
 }
 
 function SectionLabel({ children }) {
@@ -143,12 +179,6 @@ function GrowSection({ goals, assignments, devPlans }) {
 
 export default function ManagerPractice() {
   const { user } = useAuth();
-  const { openWithContext } = useAtreusChat();
-
-  const openAtreus = (msg) => openWithContext({
-    context: { pageType: 'practice', user_name: user?.full_name },
-    starterMessage: msg
-  });
 
   const { data: goals = [] } = useQuery({
     queryKey: ['ml-goals', user?.email],
@@ -191,8 +221,7 @@ export default function ManagerPractice() {
           iconColor="text-[#0202ff]"
           title="Prepare"
           description="Get ready for a hard conversation, 1:1, feedback, or stakeholder meeting."
-          ctaLabel="Start prep"
-          onClick={() => openAtreus("I want to prepare for an upcoming conversation or meeting. Can you help me think through it?")}
+          prompt="I want to prepare for an upcoming conversation or meeting. Can you help me think through it?"
         />
         <PracticeActionTile
           icon={CheckCircle2}
@@ -200,8 +229,7 @@ export default function ManagerPractice() {
           iconColor="text-emerald-600"
           title="Debrief"
           description="Reflect after a difficult interaction, missed commitment, or important meeting."
-          ctaLabel="Start debrief"
-          onClick={() => openAtreus("I want to debrief something that just happened. Can we walk through it together?")}
+          prompt="I want to debrief something that just happened. Can we walk through it together?"
         />
         <PracticeActionTile
           icon={Lightbulb}
@@ -209,8 +237,7 @@ export default function ManagerPractice() {
           iconColor="text-amber-600"
           title="Work through something"
           description="Feeling stuck, avoiding something, or overwhelmed? Let's name it and find a next step."
-          ctaLabel="Talk it through"
-          onClick={() => openAtreus("I'm stuck on something and want to work through it. Can you help me think it out?")}
+          prompt="I'm stuck on something and want to work through it. Can you help me think it out?"
         />
         <PracticeActionTile
           icon={FileText}
@@ -218,8 +245,7 @@ export default function ManagerPractice() {
           iconColor="text-violet-600"
           title="Reflect"
           description="Weekly reflection, end-of-day debrief, or momentum review."
-          ctaLabel="Start reflection"
-          onClick={() => openAtreus("I want to do a leadership reflection. Can you guide me through it?")}
+          prompt="I want to do a leadership reflection. Can you guide me through it?"
         />
         <PracticeActionTile
           icon={Brain}
@@ -227,8 +253,7 @@ export default function ManagerPractice() {
           iconColor="text-rose-600"
           title="Decision journal"
           description="Capture a high-stakes decision — context, risks, and outcome review later."
-          ctaLabel="Log a decision"
-          onClick={() => openAtreus("I want to log a decision I'm working through. Can you help me capture the context and key considerations?")}
+          prompt="I want to log a decision I'm working through. Can you help me capture the context and key considerations?"
         />
       </div>
 
@@ -249,8 +274,7 @@ export default function ManagerPractice() {
           iconColor="text-orange-600"
           title="Delegation planner"
           description="Identify what to hand off and how to set your team up for success."
-          ctaLabel="Plan delegation"
-          onClick={() => openAtreus("I want to think through what I should delegate. Can you help me work through it?")}
+          prompt="I want to think through what I should delegate. Can you help me work through it?"
         />
       </div>
 
