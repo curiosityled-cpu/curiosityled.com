@@ -17,6 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import GrowProgressCard from "@/components/patterns/GrowProgressCard";
+import GrowExperiencesCard from "@/components/patterns/GrowExperiencesCard";
 
 
 function PracticeActionTile({ icon: Icon, iconBg, iconColor, title, description, prompt, to }) {
@@ -105,7 +107,7 @@ function ActiveFocusCard({ goals }) {
   );
 }
 
-function GrowSection({ goals, assignments, devPlans }) {
+function GrowSection({ goals, assignments, devPlans, pulses, trends, onOpenAtreus }) {
   const active = assignments.filter(a => a.status !== 'completed').slice(0, 2);
   const activePlan = devPlans.find(p => p.status === 'active');
 
@@ -173,12 +175,20 @@ function GrowSection({ goals, assignments, devPlans }) {
           <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-gray-400" />
         </div>
       </Link>
+
+      {/* Experiences */}
+      <GrowExperiencesCard goals={goals} trends={trends} onOpenAtreus={onOpenAtreus} />
+
+      {/* Progress */}
+      <GrowProgressCard goals={goals} pulses={pulses} assignments={assignments} />
     </div>
   );
 }
 
 export default function ManagerPractice() {
   const { user } = useAuth();
+  const { openWithContext } = useAtreusChat();
+  const openAtreus = (msg) => openWithContext({ context: { pageType: 'practice', user_name: user?.full_name }, starterMessage: msg });
 
   const { data: goals = [] } = useQuery({
     queryKey: ['ml-goals', user?.email],
@@ -202,6 +212,18 @@ export default function ManagerPractice() {
     queryKey: ['ml-devplans', user?.email],
     queryFn: async () => { try { return await base44.entities.DevelopmentPlan.filter({ user_email: user.email }, '-created_date', 5); } catch { return []; } },
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: pulses = [] } = useQuery({
+    queryKey: ['ml-pulses', user?.email],
+    queryFn: async () => { try { return await base44.entities.ManagerPulse.filter({ user_email: user.email }, '-created_date', 30); } catch { return []; } },
+    enabled: !!user?.email, staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: trends = null } = useQuery({
+    queryKey: ['ml-trends', user?.email],
+    queryFn: async () => { try { const r = await base44.entities.ManagerTrends.filter({ user_email: user.email }, '-last_trend_computed_at', 1); return r[0] || null; } catch { return null; } },
+    enabled: !!user?.email, staleTime: 30 * 60 * 1000,
   });
 
   return (
@@ -279,7 +301,7 @@ export default function ManagerPractice() {
       </div>
 
       {/* Grow section */}
-      <GrowSection goals={goals} assignments={assignments} devPlans={devPlans} />
+      <GrowSection goals={goals} assignments={assignments} devPlans={devPlans} pulses={pulses} trends={trends} onOpenAtreus={openAtreus} />
     </div>
   );
 }

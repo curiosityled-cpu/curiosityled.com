@@ -16,6 +16,9 @@ import { Link } from "react-router-dom";
 import CheckInHistoryCalendar from "@/components/rhythm/CheckInHistoryCalendar";
 import EnergyTimeline from "@/components/rhythm/EnergyTimeline";
 import OperatorModeAlert from "@/components/rhythm/OperatorModeAlert";
+import WhatsImprovingCard from "@/components/patterns/WhatsImprovingCard";
+import WatchlistCard from "@/components/patterns/WatchlistCard";
+import TriggerMapCard from "@/components/patterns/TriggerMapCard";
 
 function PatternCard({ insight, goals }) {
   const patterns = [];
@@ -130,6 +133,12 @@ export default function ManagerPatterns() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
+  const { data: activities = [] } = useQuery({
+    queryKey: ['ml-activities', user?.email],
+    queryFn: async () => { try { return await base44.entities.UserActivity.filter({ user_email: user.email }, '-date', 14); } catch { return []; } },
+    enabled: !!user?.email, staleTime: 15 * 60 * 1000,
+  });
+
   const hasData = trends || recentPulses.length > 0 || insight;
 
   return (
@@ -149,6 +158,9 @@ export default function ManagerPatterns() {
           <TrendSummaryCard trends={trends} onOpenAtreus={openAtreus} />
           <IntentLoopCard pulses={recentPulses} trends={trends} onOpenAtreus={openAtreus} />
           {insight && <PatternCard insight={insight} goals={goals} />}
+          <WhatsImprovingCard trends={trends} pulses={recentPulses} goals={goals} />
+          <TriggerMapCard trends={trends} pulses={recentPulses} activities={activities} onOpenAtreus={openAtreus} />
+          <WatchlistCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreus} />
 
           <div className="pt-2">
             <Button variant="outline" className="w-full text-sm border-gray-200 text-gray-600 hover:bg-gray-50" onClick={() => openAtreus("Help me make sense of my patterns over the past month.")}>
