@@ -3,7 +3,7 @@
  * Stretch experiences, weekly experiments, deliberate practice prompts.
  * Lives in Practice > Grow section.
  */
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Compass, CheckCircle2, ChevronRight, Brain, RefreshCw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -84,7 +84,7 @@ const EXPERIENCE_LIBRARY = [
   },
 ];
 
-function selectExperiences(goals, trends) {
+function selectExperiences(goals, trends, shuffleKey) {
   const themes = new Set();
 
   if ((trends?.overload_pattern_strength || 0) > 50) themes.add('overload');
@@ -107,8 +107,10 @@ function selectExperiences(goals, trends) {
 
   const themed = EXPERIENCE_LIBRARY.filter(e => themes.has(e.theme));
   const rest = EXPERIENCE_LIBRARY.filter(e => !themes.has(e.theme));
+  // Rotate by shuffleKey so the refresh button cycles through suggestions
   const ordered = [...themed, ...rest];
-  return ordered.slice(0, 3);
+  const offset = (shuffleKey * 3) % ordered.length;
+  return [...ordered.slice(offset), ...ordered.slice(0, offset)].slice(0, 3);
 }
 
 export default function GrowExperiencesCard({ goals = [], trends = null, onOpenAtreus }) {
@@ -116,8 +118,8 @@ export default function GrowExperiencesCard({ goals = [], trends = null, onOpenA
   const [shuffleKey, setShuffleKey] = useState(0);
 
   const experiences = React.useMemo(
-    () => selectExperiences(goals, trends),
-    [goals, trends, shuffleKey] // eslint-disable-line
+    () => selectExperiences(goals, trends, shuffleKey),
+    [goals, trends, shuffleKey]
   );
 
   const handleComplete = (id, reflectionPrompt) => {
