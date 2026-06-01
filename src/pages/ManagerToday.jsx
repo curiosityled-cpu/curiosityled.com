@@ -239,7 +239,7 @@ export default function ManagerToday() {
             <HeroGreeting firstName={firstName} />
             <div className="mt-4 grid grid-cols-[1fr_360px] gap-6 items-start">
               <div className="space-y-4">{mainContent}</div>
-              <div className="sticky top-4">{companionColumn}</div>
+              <div>{companionColumn}</div>
             </div>
           </div>
         </>
