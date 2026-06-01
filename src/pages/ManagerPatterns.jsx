@@ -9,9 +9,11 @@ import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { TrendingUp, AlertCircle, Info, Brain, BarChart3, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
-// Button kept for EmptyState CTA
 import { Card, CardContent } from "@/components/ui/card";
+import TrendSummaryCard from "@/components/checkin/TrendSummaryCard";
+import IntentLoopCard from "@/components/checkin/IntentLoopCard";
 import { Link } from "react-router-dom";
+import CheckInHistoryCalendar from "@/components/rhythm/CheckInHistoryCalendar";
 import EnergyTimeline from "@/components/rhythm/EnergyTimeline";
 import OperatorModeAlert from "@/components/rhythm/OperatorModeAlert";
 import WhatsImprovingCard from "@/components/patterns/WhatsImprovingCard";
@@ -63,21 +65,21 @@ function MemoryNarrativeCard({ trends }) {
     : null;
 
   return (
-    <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
+    <Card className="shadow-sm border border-[#0202ff]/15 bg-gradient-to-br from-[#0202ff]/5 to-white rounded-2xl overflow-hidden">
       <div className="px-5 pt-5 pb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center">
             <Brain className="w-3.5 h-3.5 text-white" />
           </div>
-          <p className="text-sm font-semibold text-gray-900">What Atreus has noticed — last 28 days</p>
+          <p className="text-sm font-semibold text-gray-900">What we've noticed — last 28 days</p>
         </div>
         {timeLabel && <span className="text-[10px] text-gray-400">Updated {timeLabel}</span>}
       </div>
       <CardContent className="px-5 pt-2 pb-5">
         <p className="text-sm text-gray-700 leading-relaxed">{narrative}</p>
-        <p className="text-[10px] text-gray-400 mt-2">
-          {dataPoints > 0 ? `Based on ${dataPoints} check-in${dataPoints !== 1 ? 's' : ''} · ` : ''}Private to you
-        </p>
+        {dataPoints > 0 && (
+          <p className="text-[10px] text-gray-400 mt-2">Based on {dataPoints} check-in{dataPoints !== 1 ? 's' : ''} · Private to you</p>
+        )}
       </CardContent>
     </Card>
   );
@@ -154,20 +156,20 @@ export default function ManagerPatterns() {
           <MemoryNarrativeCard trends={trends} />
           <LeadingPatternCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreus} />
           <OperatorModeAlert pulses={recentPulses} onOpenAtreus={openAtreus} />
+          <CheckInHistoryCalendar pulses={recentPulses} />
           <TrendSignalsChart trends={trends} pulses={recentPulses} />
           <EnergyTimeline pulses={recentPulses} />
+          <TrendSummaryCard trends={trends} onOpenAtreus={openAtreus} />
+          <IntentLoopCard pulses={recentPulses} trends={trends} onOpenAtreus={openAtreus} />
           {insight && <PatternCard insight={insight} goals={goals} />}
           <WhatsImprovingCard trends={trends} pulses={recentPulses} goals={goals} />
           <TriggerMapCard trends={trends} pulses={recentPulses} activities={activities} onOpenAtreus={openAtreus} />
           <WatchlistCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreus} />
 
-          <div className="pt-1 pb-2 flex justify-center">
-            <button
-              onClick={() => openAtreus("Help me make sense of my patterns over the past month.")}
-              className="flex items-center gap-1.5 text-sm text-[#0202ff] hover:underline"
-            >
-              <Brain className="w-3.5 h-3.5" /> Explore patterns with Atreus
-            </button>
+          <div className="pt-2">
+            <Button variant="outline" className="w-full text-sm border-gray-200 text-gray-600 hover:bg-gray-50" onClick={() => openAtreus("Help me make sense of my patterns over the past month.")}>
+              <Brain className="w-4 h-4 mr-2 text-[#0202ff]" /> Explore patterns with Atreus
+            </Button>
           </div>
         </>
       ) : (
