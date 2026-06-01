@@ -9,13 +9,12 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import {
-  Brain, MessageSquare, CheckCircle2, SlidersHorizontal, ChevronRight
+  Brain, MessageSquare, CheckCircle2, ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import ManagerCheckIn from "@/components/checkin/ManagerCheckIn";
 import ToneOnboarding from "@/components/checkin/ToneOnboarding";
-import CheckInSettings from "@/components/checkin/CheckInSettings";
 import WeeklyFocusReflection from "@/components/checkin/WeeklyFocusReflection";
 import MorningIntentWidget from "@/components/checkin/MorningIntentWidget";
 import MoodRingIndicator from "@/components/rhythm/MoodRingIndicator";
@@ -30,14 +29,17 @@ function getFirstName(user) {
 }
 
 
-function HeroGreeting({ firstName }) {
+function HeroGreeting({ firstName, frictionSlot }) {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   return (
-    <div className="pt-2 pb-1">
-      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Lead</p>
-      <h1 className="text-2xl font-bold text-gray-900">{greeting}, {firstName}.</h1>
-      <p className="text-sm text-gray-500 mt-1">What matters right now.</p>
+    <div className="pt-2 pb-1 flex items-start justify-between">
+      <div>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Lead</p>
+        <h1 className="text-2xl font-bold text-gray-900">{greeting}, {firstName}.</h1>
+        <p className="text-sm text-gray-500 mt-1">What matters right now.</p>
+      </div>
+      {frictionSlot && <div className="mt-1">{frictionSlot}</div>}
     </div>
   );
 }
@@ -47,7 +49,6 @@ export default function ManagerToday() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { openWithContext } = useAtreusChat();
-  const [showSettings, setShowSettings] = useState(false);
   const [showWeeklyReflection, setShowWeeklyReflection] = useState(false);
 
   const openAtreus = (msg) => openWithContext({ context: { pageType: 'today', user_name: getFirstName(user) }, starterMessage: msg || "I'd like to reflect on my leadership this week." });
@@ -133,15 +134,6 @@ export default function ManagerToday() {
     <div className="space-y-4">
       {todayPulse && <MoodRingIndicator todayPulse={todayPulse} />}
 
-      {/* Settings toggle */}
-      <div className="flex justify-end">
-        <button onClick={() => setShowSettings(s => !s)} className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors">
-          <SlidersHorizontal className="w-3.5 h-3.5" />
-          {showSettings ? 'Close settings' : 'Atreus settings'}
-        </button>
-      </div>
-      {showSettings && <CheckInSettings />}
-
       {/* Morning intent */}
       <MorningIntentWidget userEmail={user?.email} />
 
@@ -191,15 +183,8 @@ export default function ManagerToday() {
     </div>
   ) : null;
 
-  // Desktop right companion column
-  const companionColumn = !needsToneOnboarding ? (
-    <div className="space-y-4">
-      <UpcomingFrictionCard
-        trends={trends}
-        pulses={recentPulses}
-        onOpenAtreus={openAtreus}
-      />
-    </div>
+  const frictionIcon = !needsToneOnboarding ? (
+    <UpcomingFrictionCard trends={trends} pulses={recentPulses} onOpenAtreus={openAtreus} />
   ) : null;
 
   return (
@@ -207,7 +192,7 @@ export default function ManagerToday() {
       {/* Tone onboarding gate */}
       {needsToneOnboarding && (
         <div className="max-w-2xl mx-auto">
-          <HeroGreeting firstName={firstName} />
+          <HeroGreeting firstName={firstName} frictionSlot={null} />
           <div className="mt-4 bg-white rounded-2xl border border-[#0202ff]/20 shadow-sm overflow-hidden">
             <div className="px-5 pt-5 pb-2 flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center">
@@ -228,19 +213,9 @@ export default function ManagerToday() {
       {/* Main layout: single col mobile, two col desktop */}
       {!needsToneOnboarding && (
         <>
-          {/* Mobile: single column */}
-          <div className="md:hidden max-w-2xl mx-auto space-y-4">
-            <HeroGreeting firstName={firstName} />
+          <div className="max-w-2xl mx-auto space-y-4">
+            <HeroGreeting firstName={firstName} frictionSlot={frictionIcon} />
             {mainContent}
-          </div>
-
-          {/* Desktop: two column */}
-          <div className="hidden md:block max-w-6xl mx-auto">
-            <HeroGreeting firstName={firstName} />
-            <div className="mt-4 grid grid-cols-[1fr_360px] gap-6 items-start">
-              <div className="space-y-4">{mainContent}</div>
-              <div>{companionColumn}</div>
-            </div>
           </div>
         </>
       )}
