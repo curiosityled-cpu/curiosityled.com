@@ -8,23 +8,17 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
-import { Link } from "react-router-dom";
 import {
-  Brain, Target, ArrowRight, ChevronRight,
-  MessageSquare, CheckCircle2, SlidersHorizontal, BarChart3, Layers
+  Brain, MessageSquare, CheckCircle2, SlidersHorizontal, ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import ManagerCheckIn from "@/components/checkin/ManagerCheckIn";
-import TrendSummaryCard from "@/components/checkin/TrendSummaryCard";
-import IntentLoopCard from "@/components/checkin/IntentLoopCard";
 import ToneOnboarding from "@/components/checkin/ToneOnboarding";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
 import WeeklyFocusReflection from "@/components/checkin/WeeklyFocusReflection";
 import MorningIntentWidget from "@/components/checkin/MorningIntentWidget";
 import MoodRingIndicator from "@/components/rhythm/MoodRingIndicator";
-import CheckInHistoryCalendar from "@/components/rhythm/CheckInHistoryCalendar";
 import WhatMattersNowCard from "@/components/lead/WhatMattersNowCard";
 import NextMoveCard from "@/components/lead/NextMoveCard";
 import UpcomingFrictionCard from "@/components/lead/UpcomingFrictionCard";
@@ -35,14 +29,6 @@ function getFirstName(user) {
   return raw && raw.trim() && !raw.includes('@') ? raw.split(' ')[0] : 'there';
 }
 
-function timeAgo(dateStr) {
-  if (!dateStr) return null;
-  const days = Math.floor((Date.now() - new Date(dateStr)) / 86400000);
-  if (days === 0) return 'today';
-  if (days === 1) return 'yesterday';
-  if (days < 7) return `${days} days ago`;
-  return `${Math.floor(days / 7)} weeks ago`;
-}
 
 function HeroGreeting({ firstName }) {
   const hour = new Date().getHours();
@@ -56,74 +42,6 @@ function HeroGreeting({ firstName }) {
   );
 }
 
-
-
-function GoalsPulseCard({ goals }) {
-  const active = goals.filter(g => g.status === 'active');
-  const topGoal = [...active].sort((a, b) => (b.progress || 0) - (a.progress || 0))[0];
-  return (
-    <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
-      <div className="px-5 pt-5 pb-2 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center">
-            <Target className="w-3.5 h-3.5 text-emerald-600" />
-          </div>
-          <p className="text-sm font-semibold text-gray-900">Active focus</p>
-        </div>
-        <Link to="/growth"><span className="text-xs text-[#0202ff] hover:underline font-medium">View all →</span></Link>
-      </div>
-      <CardContent className="px-5 pt-2 pb-5">
-        {active.length === 0 ? (
-          <div className="flex items-center gap-3 py-3">
-            <p className="text-sm text-gray-500">No active goals yet. <Link to="/growth" className="text-[#0202ff] hover:underline">Set your first →</Link></p>
-          </div>
-        ) : topGoal ? (
-          <div className="space-y-3">
-            <p className="text-sm font-medium text-gray-800">{topGoal.title}</p>
-            <div className="flex items-center gap-2">
-              <Progress value={topGoal.progress || 0} className="h-1.5 flex-1" />
-              <span className="text-xs text-gray-500 flex-shrink-0">{topGoal.progress || 0}%</span>
-            </div>
-            {active.length > 1 && <p className="text-xs text-gray-400">+{active.length - 1} more active goal{active.length > 2 ? 's' : ''}</p>}
-          </div>
-        ) : null}
-      </CardContent>
-    </Card>
-  );
-}
-
-function ExploreDeeperCard() {
-  const links = [
-    { label: 'Patterns', sub: 'What this system is noticing over time', path: '/patterns', icon: BarChart3, color: 'text-[#0202ff]' },
-    { label: 'Practice', sub: 'Prepare, reflect, debrief, work through', path: '/practice', icon: Layers, color: 'text-violet-600' },
-    { label: 'You', sub: 'Profile, assessments, preferences, privacy', path: '/you', icon: SlidersHorizontal, color: 'text-emerald-600' },
-  ];
-  return (
-    <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
-      <div className="px-5 pt-5 pb-2">
-        <p className="text-sm font-semibold text-gray-900">Explore deeper</p>
-        <p className="text-xs text-gray-400 mt-0.5">When you have more time</p>
-      </div>
-      <CardContent className="px-5 pt-2 pb-5 space-y-1">
-        {links.map((l) => {
-          const Icon = l.icon;
-          return (
-            <Link key={l.path} to={l.path}>
-              <div className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors group">
-                <Icon className={`w-4 h-4 flex-shrink-0 ${l.color}`} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 group-hover:text-gray-900">{l.label}</p>
-                  <p className="text-xs text-gray-400">{l.sub}</p>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-400" />
-              </div>
-            </Link>
-          );
-        })}
-      </CardContent>
-    </Card>
-  );
-}
 
 export default function ManagerToday() {
   const { user } = useAuth();
@@ -255,10 +173,7 @@ export default function ManagerToday() {
         onDone={() => queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] })}
       />
 
-      {/* 5. Goals pulse */}
-      <GoalsPulseCard goals={goals} />
-
-      {/* 6. Weekly reflection */}
+      {/* 5. Weekly reflection */}
       <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden cursor-pointer hover:shadow-md transition-shadow" onClick={() => setShowWeeklyReflection(true)}>
         <CardContent className="px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -273,35 +188,17 @@ export default function ManagerToday() {
           <ChevronRight className="w-4 h-4 text-gray-300" />
         </CardContent>
       </Card>
-
-      {/* 7. Rhythm calendar */}
-      {recentPulses.length > 0 && <CheckInHistoryCalendar pulses={recentPulses} />}
-
-      {/* 8. Explore deeper (mobile only — desktop has companion column) */}
-      <div className="md:hidden">
-        <ExploreDeeperCard />
-      </div>
     </div>
   ) : null;
 
   // Desktop right companion column
   const companionColumn = !needsToneOnboarding ? (
     <div className="space-y-4">
-      {/* Upcoming friction */}
       <UpcomingFrictionCard
         trends={trends}
         pulses={recentPulses}
         onOpenAtreus={openAtreus}
       />
-
-      {/* Trend memory — compact */}
-      <TrendSummaryCard trends={trends} onOpenAtreus={openAtreus} />
-
-      {/* Intent loop */}
-      <IntentLoopCard pulses={recentPulses} trends={trends} onOpenAtreus={openAtreus} />
-
-      {/* Explore deeper */}
-      <ExploreDeeperCard />
     </div>
   ) : null;
 
