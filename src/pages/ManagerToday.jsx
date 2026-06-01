@@ -166,21 +166,14 @@ export default function ManagerToday() {
         onOpenAtreus={openAtreus}
       />
 
-      {/* 4. Watch this */}
-      <UpcomingFrictionCard
-        trends={trends}
-        pulses={recentPulses}
-        onOpenAtreus={openAtreus}
-      />
-
-      {/* 5. Follow-through */}
+      {/* 4. Follow-through */}
       <FollowThroughCard
         pulses={recentPulses}
         userEmail={user?.email}
         onDone={() => queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] })}
       />
 
-      {/* 6. Weekly reflection */}
+      {/* 5. Weekly reflection */}
       <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden cursor-pointer hover:shadow-md transition-shadow" onClick={() => setShowWeeklyReflection(true)}>
         <CardContent className="px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -195,6 +188,17 @@ export default function ManagerToday() {
           <ChevronRight className="w-4 h-4 text-gray-300" />
         </CardContent>
       </Card>
+    </div>
+  ) : null;
+
+  // Desktop right companion column
+  const companionColumn = !needsToneOnboarding ? (
+    <div className="space-y-4">
+      <UpcomingFrictionCard
+        trends={trends}
+        pulses={recentPulses}
+        onOpenAtreus={openAtreus}
+      />
     </div>
   ) : null;
 
@@ -221,12 +225,24 @@ export default function ManagerToday() {
         </div>
       )}
 
-      {/* Single column layout */}
+      {/* Main layout: single col mobile, two col desktop */}
       {!needsToneOnboarding && (
-        <div className="max-w-2xl mx-auto space-y-4">
-          <HeroGreeting firstName={firstName} />
-          {mainContent}
-        </div>
+        <>
+          {/* Mobile: single column */}
+          <div className="md:hidden max-w-2xl mx-auto space-y-4">
+            <HeroGreeting firstName={firstName} />
+            {mainContent}
+          </div>
+
+          {/* Desktop: two column */}
+          <div className="hidden md:block max-w-6xl mx-auto">
+            <HeroGreeting firstName={firstName} />
+            <div className="mt-4 grid grid-cols-[1fr_360px] gap-6 items-start">
+              <div className="space-y-4">{mainContent}</div>
+              <div className="sticky top-4">{companionColumn}</div>
+            </div>
+          </div>
+        </>
       )}
 
       <WeeklyFocusReflection
