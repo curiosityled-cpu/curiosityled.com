@@ -189,6 +189,7 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
     setSaving(false);
     setDone(true);
     sessionStorage.setItem(getStorageKey(), '1');
+    sessionStorage.setItem(getStorageKey() + '_selected', selected);
     if (optionalText.trim()) sessionStorage.setItem(getStorageKey() + '_text', optionalText.trim());
     setTimeout(() => {
       if (onComplete) onComplete({ selected, optionalText, followUp });
@@ -197,7 +198,9 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
 
   // Collapsed summary — shown after check-in is done
   if (done) {
-    const selectedOption = prompt.options.find(o => o.value === selected);
+    // Restore the selected option from sessionStorage when component remounts after done
+    const savedSelected = sessionStorage.getItem(getStorageKey() + '_selected') || selected;
+    const selectedOption = prompt.options.find(o => o.value === savedSelected);
     const savedText = sessionStorage.getItem(getStorageKey() + '_text') || '';
     const isMorningIntent = promptType === 'morning_intent';
 
