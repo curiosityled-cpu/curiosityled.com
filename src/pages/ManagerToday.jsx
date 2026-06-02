@@ -13,6 +13,7 @@ import {
   Brain, Target, ArrowRight, ChevronRight,
   MessageSquare, CheckCircle2, SlidersHorizontal, BarChart3, Layers
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -29,6 +30,7 @@ import WhatMattersNowCard from "@/components/lead/WhatMattersNowCard";
 import NextMoveCard from "@/components/lead/NextMoveCard";
 import UpcomingFrictionCard from "@/components/lead/UpcomingFrictionCard";
 import FollowThroughCard from "@/components/lead/FollowThroughCard";
+import LeadMicroAnalytics from "@/components/lead/LeadMicroAnalytics";
 
 function getFirstName(user) {
   const raw = user?.display_name || user?.data?.display_name || user?.full_name;
@@ -58,9 +60,15 @@ function HeroGreeting({ firstName }) {
 
 
 
-function GoalsPulseCard({ goals }) {
+function GoalsPulseCard({ goals, openAtreus }) {
   const active = goals.filter(g => g.status === 'active');
   const topGoal = [...active].sort((a, b) => (b.progress || 0) - (a.progress || 0))[0];
+
+  // Derive a behavioral commitment from the goal (the brief's model)
+  const commitment = topGoal?.description
+    ? topGoal.description.split('.')[0]
+    : topGoal ? `Work on "${topGoal.title}" this week` : null;
+
   return (
     <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
       <div className="px-5 pt-5 pb-2 flex items-center justify-between">
@@ -70,20 +78,41 @@ function GoalsPulseCard({ goals }) {
           </div>
           <p className="text-sm font-semibold text-gray-900">Active focus</p>
         </div>
-        <Link to="/growth"><span className="text-xs text-[#0202ff] hover:underline font-medium">View all →</span></Link>
+        <Link to="/my-goals"><span className="text-xs text-[#0202ff] hover:underline font-medium">View all →</span></Link>
       </div>
       <CardContent className="px-5 pt-2 pb-5">
         {active.length === 0 ? (
-          <div className="flex items-center gap-3 py-3">
-            <p className="text-sm text-gray-500">No active goals yet. <Link to="/growth" className="text-[#0202ff] hover:underline">Set your first →</Link></p>
+          <div className="py-3 space-y-2">
+            <p className="text-sm text-gray-500">No active growth focus yet.</p>
+            <Link to="/my-goals">
+              <button className="text-xs font-medium text-[#0202ff] hover:underline">Set a growth goal →</button>
+            </Link>
           </div>
         ) : topGoal ? (
           <div className="space-y-3">
-            <p className="text-sm font-medium text-gray-800">{topGoal.title}</p>
-            <div className="flex items-center gap-2">
-              <Progress value={topGoal.progress || 0} className="h-1.5 flex-1" />
-              <span className="text-xs text-gray-500 flex-shrink-0">{topGoal.progress || 0}%</span>
+            {/* Growth theme */}
+            <div>
+              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Growth theme</p>
+              <p className="text-sm font-medium text-gray-800">{topGoal.title}</p>
+              <div className="flex items-center gap-2 mt-1.5">
+                <Progress value={topGoal.progress || 0} className="h-1.5 flex-1" />
+                <span className="text-xs text-gray-500 flex-shrink-0">{topGoal.progress || 0}%</span>
+              </div>
             </div>
+            {/* Behavioral commitment */}
+            {commitment && (
+              <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-100">
+                <p className="text-[10px] font-semibold text-emerald-700 uppercase tracking-wide mb-0.5">This week's commitment</p>
+                <p className="text-xs text-emerald-800 leading-relaxed">{commitment}</p>
+              </div>
+            )}
+            {/* Practice tie-in */}
+            <button
+              onClick={() => openAtreus?.(`I want to make progress on my goal: "${topGoal.title}". Help me think through one small step I can take today.`)}
+              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#0202ff]/5 border border-[#0202ff]/15 text-xs font-medium text-[#0202ff] hover:bg-[#0202ff]/10 transition-colors"
+            >
+              <Brain className="w-3.5 h-3.5" /> Work on this with Atreus
+            </button>
             {active.length > 1 && <p className="text-xs text-gray-400">+{active.length - 1} more active goal{active.length > 2 ? 's' : ''}</p>}
           </div>
         ) : null}
@@ -214,6 +243,7 @@ export default function ManagerToday() {
   const mainContent = !needsToneOnboarding ? (
     <div className="space-y-4">
       {todayPulse && <MoodRingIndicator todayPulse={todayPulse} />}
+      <LeadMicroAnalytics pulse={todayPulse} trends={trends} goals={goals} />
 
       {/* Settings toggle */}
       <div className="flex justify-end">
@@ -256,7 +286,7 @@ export default function ManagerToday() {
       />
 
       {/* 5. Goals pulse */}
-      <GoalsPulseCard goals={goals} />
+      <GoalsPulseCard goals={goals} openAtreus={openAtreus} />
 
       {/* 6. Weekly reflection */}
       <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden cursor-pointer hover:shadow-md transition-shadow" onClick={() => setShowWeeklyReflection(true)}>

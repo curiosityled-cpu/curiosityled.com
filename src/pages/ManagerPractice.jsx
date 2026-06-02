@@ -21,6 +21,7 @@ import GrowProgressCard from "@/components/patterns/GrowProgressCard";
 import GrowExperiencesCard from "@/components/patterns/GrowExperiencesCard";
 import ActiveFocusSection from "@/components/patterns/ActiveFocusSection";
 import PracticeFlow from "@/components/practice/PracticeFlow";
+import WorkoutsSection from "@/components/practice/WorkoutsSection";
 
 
 // Flow keys that use the structured PracticeFlow; others open Atreus directly
@@ -98,7 +99,10 @@ function GrowSection({ goals, assignments, devPlans, pulses, trends, insight, on
     <div className="space-y-2">
       <SectionLabel>Grow</SectionLabel>
       <ActiveFocusSection goals={goals} trends={trends} insight={insight} onOpenAtreus={onOpenAtreus} />
-      
+
+      {/* Workouts — recommended exercises */}
+      <WorkoutsSection goals={goals} trends={trends} insight={insight} />
+
       {/* Learning */}
       {(active.length > 0 || activePlan) && (
         <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
@@ -118,15 +122,24 @@ function GrowSection({ goals, assignments, devPlans, pulses, trends, insight, on
                 <p className="text-sm font-medium text-gray-800">{activePlan.title}</p>
               </div>
             )}
-            {active.map(a => (
-              <div key={a.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                <Zap className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-800 truncate">{a.title}</p>
-                  {a.due_date && <p className="text-[10px] text-gray-400">Due {new Date(a.due_date).toLocaleDateString()}</p>}
+            {active.map(a => {
+              // Build "because of" reason
+              let because = null;
+              if (trends?.overload_pattern_strength > 40) because = "Because of your overload pattern";
+              else if (trends?.identity_friction_active) because = "Linked to your current role clarity signals";
+              else if (insight?.development_areas?.[0]) because = `Linked to your ${insight.development_areas[0].split(' (')[0]} development area`;
+              else if (goals.filter(g => g.status === 'active').length > 0) because = `Supports your active growth focus`;
+              return (
+                <div key={a.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
+                  <Zap className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-800 truncate">{a.title}</p>
+                    {because && <p className="text-[10px] text-[#0202ff]/70 font-medium mt-0.5">{because}</p>}
+                    {a.due_date && <p className="text-[10px] text-gray-400">Due {new Date(a.due_date).toLocaleDateString()}</p>}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
       )}
@@ -305,6 +318,7 @@ export default function ManagerPractice() {
 
           {/* Grow section */}
           <GrowSection goals={goals} assignments={assignments} devPlans={devPlans} pulses={pulses} trends={trends} insight={insight} onOpenAtreus={openAtreus} />
+
         </>
       )}
     </div>

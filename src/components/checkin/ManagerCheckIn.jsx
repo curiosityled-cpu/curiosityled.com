@@ -289,13 +289,13 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
           </div>
         )}
 
-        {/* Why this? */}
+        {/* Why this today? */}
         <button
           onClick={() => setShowWhy(!showWhy)}
           className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors"
         >
           <HelpCircle className="w-3 h-3" />
-          Why am I being asked this?
+          Why this today?
         </button>
         {showWhy && (
           <motion.div

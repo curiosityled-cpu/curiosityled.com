@@ -13,6 +13,7 @@ import {
   ChevronRight, LogOut, Calendar, Sliders, Eye, Archive
 } from "lucide-react";
 import ResultsArchive from "@/components/you/ResultsArchive";
+import ManagerProfileCard from "@/components/you/ManagerProfileCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -72,6 +73,14 @@ export default function ManagerYou() {
     enabled: !!user?.email, staleTime: 10 * 60 * 1000,
   });
 
+  const { data: customSubmissions = [] } = useQuery({
+    queryKey: ['you-custom-assessments', user?.email],
+    queryFn: async () => {
+      try { return await base44.entities.AssessmentSubmission.filter({ user_email: user.email }, '-created_date', 5); } catch { return []; }
+    },
+    enabled: !!user?.email, staleTime: 10 * 60 * 1000,
+  });
+
   const { data: tonePref } = useQuery({
     queryKey: ['ml-tone', user?.email],
     queryFn: async () => {
@@ -109,6 +118,10 @@ export default function ManagerYou() {
           <Badge variant="outline" className="text-[10px] mt-1.5">{appRole || 'Manager'}</Badge>
         </div>
       </div>
+
+      {/* Leadership context profile */}
+      <SectionLabel>Profile</SectionLabel>
+      <ManagerProfileCard />
 
       {/* Assessments */}
       <SectionLabel>Assessments</SectionLabel>
@@ -150,6 +163,27 @@ export default function ManagerYou() {
             <ResultsArchive />
           </div>
         )}
+        {/* Client-selected alternative assessments */}
+        {customSubmissions.length > 0 && customSubmissions.map(sub => (
+          <YouRow
+            key={sub.id}
+            icon={TrendingUp}
+            iconBg="bg-blue-50"
+            iconColor="text-blue-600"
+            title={sub.custom_assessment_id ? `Assessment — ${sub.leadership_level || 'Custom'}` : 'Custom Assessment'}
+            subtitle={`Completed ${sub.submission_date ? new Date(sub.submission_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : ''} · ${sub.status}`}
+            badge={sub.status === 'scored' ? 'Scored' : undefined}
+            to="/AssessmentResults"
+          />
+        ))}
+        <YouRow
+          icon={Eye}
+          iconBg="bg-gray-50"
+          iconColor="text-gray-500"
+          title="Take a new assessment"
+          subtitle="Leadership Index or client-assigned"
+          to="/LeadershipAssessment"
+        />
       </SectionCard>
 
       {/* Preferences */}

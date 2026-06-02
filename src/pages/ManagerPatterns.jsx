@@ -143,38 +143,69 @@ export default function ManagerPatterns() {
 
   const hasData = trends || recentPulses.length > 0 || insight;
 
+  const header = (
+    <div className="pt-2 pb-1">
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Patterns</p>
+      <h1 className="text-2xl font-bold text-gray-900">What we're noticing</h1>
+      <p className="text-sm text-gray-500 mt-1">Longitudinal memory — how you lead over time.</p>
+    </div>
+  );
+
+  if (!hasData) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+        {header}
+        <EmptyState />
+      </div>
+    );
+  }
+
+  // Left column — story narrative + patterns
+  const leftColumn = (
+    <div className="space-y-4">
+      <MemoryNarrativeCard trends={trends} />
+      <LeadingPatternCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreus} />
+      <OperatorModeAlert pulses={recentPulses} onOpenAtreus={openAtreus} />
+      <TrendSummaryCard trends={trends} onOpenAtreus={openAtreus} />
+      <IntentLoopCard pulses={recentPulses} trends={trends} onOpenAtreus={openAtreus} />
+      {insight && <PatternCard insight={insight} goals={goals} />}
+      <WhatsImprovingCard trends={trends} pulses={recentPulses} goals={goals} />
+      <div className="pt-2">
+        <Button variant="outline" className="w-full text-sm border-gray-200 text-gray-600 hover:bg-gray-50" onClick={() => openAtreus("Help me make sense of my patterns over the past month.")}>
+          <Brain className="w-4 h-4 mr-2 text-[#0202ff]" /> Explore patterns with Atreus
+        </Button>
+      </div>
+    </div>
+  );
+
+  // Right column — trend data + trigger modules
+  const rightColumn = (
+    <div className="space-y-4">
+      <CheckInHistoryCalendar pulses={recentPulses} />
+      <TrendSignalsChart trends={trends} pulses={recentPulses} />
+      <EnergyTimeline pulses={recentPulses} />
+      <TriggerMapCard trends={trends} pulses={recentPulses} activities={activities} onOpenAtreus={openAtreus} />
+      <WatchlistCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreus} />
+    </div>
+  );
+
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-      <div className="pt-2 pb-1">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Patterns</p>
-        <h1 className="text-2xl font-bold text-gray-900">What we're noticing</h1>
-        <p className="text-sm text-gray-500 mt-1">Longitudinal memory — how you lead over time.</p>
+    <div className="px-4 py-6">
+      {/* Mobile: single column */}
+      <div className="md:hidden max-w-2xl mx-auto space-y-4">
+        {header}
+        {leftColumn}
+        {rightColumn}
       </div>
 
-      {hasData ? (
-        <>
-          <MemoryNarrativeCard trends={trends} />
-          <LeadingPatternCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreus} />
-          <OperatorModeAlert pulses={recentPulses} onOpenAtreus={openAtreus} />
-          <CheckInHistoryCalendar pulses={recentPulses} />
-          <TrendSignalsChart trends={trends} pulses={recentPulses} />
-          <EnergyTimeline pulses={recentPulses} />
-          <TrendSummaryCard trends={trends} onOpenAtreus={openAtreus} />
-          <IntentLoopCard pulses={recentPulses} trends={trends} onOpenAtreus={openAtreus} />
-          {insight && <PatternCard insight={insight} goals={goals} />}
-          <WhatsImprovingCard trends={trends} pulses={recentPulses} goals={goals} />
-          <TriggerMapCard trends={trends} pulses={recentPulses} activities={activities} onOpenAtreus={openAtreus} />
-          <WatchlistCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreus} />
-
-          <div className="pt-2">
-            <Button variant="outline" className="w-full text-sm border-gray-200 text-gray-600 hover:bg-gray-50" onClick={() => openAtreus("Help me make sense of my patterns over the past month.")}>
-              <Brain className="w-4 h-4 mr-2 text-[#0202ff]" /> Explore patterns with Atreus
-            </Button>
-          </div>
-        </>
-      ) : (
-        <EmptyState />
-      )}
+      {/* Desktop: two-column */}
+      <div className="hidden md:block max-w-6xl mx-auto">
+        {header}
+        <div className="mt-4 grid grid-cols-[1fr_360px] gap-6 items-start">
+          <div>{leftColumn}</div>
+          <div className="sticky top-4">{rightColumn}</div>
+        </div>
+      </div>
     </div>
   );
 }

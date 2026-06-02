@@ -119,7 +119,7 @@ const AuthenticatedApp = () => {
       {/* New manager nav routes (Phase 1) */}
       <Route path="/today" element={<MVPLayout><ManagerToday /></MVPLayout>} />
       <Route path="/patterns" element={<MVPLayout><ManagerPatterns /></MVPLayout>} />
-      <Route path="/growth" element={<MVPLayout><ManagerGrowth /></MVPLayout>} />
+      <Route path="/growth" element={<Navigate to="/practice" replace />} />
       <Route path="/team" element={<MVPLayout><ManagerTeam /></MVPLayout>} />
       <Route path="/atreus-guide" element={<MVPLayout><ManagerAtreus /></MVPLayout>} />
       <Route path="/practice" element={<MVPLayout><ManagerPractice /></MVPLayout>} />

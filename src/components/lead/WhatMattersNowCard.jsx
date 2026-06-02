@@ -3,10 +3,11 @@
  * Pulls from self-report + goals + assessment + activity signals.
  */
 import React, { useState } from "react";
-import { Flame, ChevronDown, ChevronUp, Brain, ArrowRight } from "lucide-react";
+import { Flame, ChevronDown, ChevronUp, Brain, ArrowRight, Layers } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import WhatMattersNowDrawer from "@/components/lead/WhatMattersNowDrawer";
 
 function buildSituation(pulse, trends, goals, insight) {
   const chips = [];
@@ -116,9 +117,12 @@ export default function WhatMattersNowCard({ pulse, trends, goals, insight, onOp
         <p className={`text-sm text-gray-500 leading-relaxed ${expanded ? '' : 'line-clamp-2'}`}>{body}</p>
         {!expanded && (
           <button onClick={() => setExpanded(true)} className="text-xs text-gray-400 hover:text-gray-600 transition-colors -mt-1">
-            Read more →
+            See why →
           </button>
         )}
+
+        {/* Evidence drawer — reported / observed / interpreted */}
+        {expanded && <WhatMattersNowDrawer pulse={pulse} trends={trends} goals={goals} insight={insight} />}
 
         {/* Actions */}
         <div className="flex gap-2 pt-1">
