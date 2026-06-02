@@ -23,7 +23,6 @@ import IntentLoopCard from "@/components/checkin/IntentLoopCard";
 import ToneOnboarding from "@/components/checkin/ToneOnboarding";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
 import WeeklyFocusReflection from "@/components/checkin/WeeklyFocusReflection";
-import MorningIntentWidget from "@/components/checkin/MorningIntentWidget";
 import MoodRingIndicator from "@/components/rhythm/MoodRingIndicator";
 import CheckInHistoryCalendar from "@/components/rhythm/CheckInHistoryCalendar";
 import WhatMattersNowCard from "@/components/lead/WhatMattersNowCard";
@@ -239,6 +238,11 @@ export default function ManagerToday() {
 
   const todayPulse = recentPulses.find(p => p.created_date?.startsWith(new Date().toISOString().split("T")[0]));
 
+  // Determine if morning intent has been set today
+  const todayKey = new Date().toISOString().split('T')[0];
+  const hasMorningIntent = recentPulses.some(p => p.prompt_type === 'morning_intent' && p.created_date?.startsWith(todayKey));
+  const hasCheckedInToday = !!todayPulse;
+
   // Main column content (shared between mobile and desktop left column)
   const mainContent = !needsToneOnboarding ? (
     <div className="space-y-4">
@@ -254,11 +258,14 @@ export default function ManagerToday() {
       </div>
       {showSettings && <CheckInSettings />}
 
-      {/* Morning intent */}
-      <MorningIntentWidget userEmail={user?.email} />
-
-      {/* 1. Check-in */}
-      <ManagerCheckIn promptType={todayPromptType} onComplete={() => queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] })} />
+      {/* PRIMARY HERO CARD: single dominant entry point for the day
+          - If morning intent not set → show check-in with morning intent mode
+          - If check-in not done today → show check-in
+          - If both done → collapsed summary (handled inside ManagerCheckIn) */}
+      <ManagerCheckIn
+        promptType={!hasMorningIntent ? 'morning_intent' : todayPromptType}
+        onComplete={() => queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] })}
+      />
 
       {/* 2. What matters now */}
       <WhatMattersNowCard

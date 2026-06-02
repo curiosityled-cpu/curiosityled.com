@@ -3,10 +3,12 @@
  * Reduces ambiguity. Routes into the right Practice flow.
  */
 import React, { useState } from "react";
-import { Zap, ArrowRight, CheckCircle2, Brain } from "lucide-react";
+import { Zap, ArrowRight, CheckCircle2, Brain, BookmarkCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 
 function buildNextMove(pulse, trends, goals, assignments) {
   // Priority 1: avoidance signal
@@ -83,10 +85,30 @@ function buildNextMove(pulse, trends, goals, assignments) {
 }
 
 export default function NextMoveCard({ pulse, trends, goals, assignments, onOpenAtreus }) {
+  const { user } = useAuth();
   const [done, setDone] = useState(false);
+  const [committed, setCommitted] = useState(false);
   const move = buildNextMove(pulse, trends, goals, assignments);
 
-  const handleAtreus = () => {
+  const saveCommitment = async () => {
+    try {
+      await base44.entities.Goal.create({
+        user_email: user.email,
+        title: move.move,
+        description: move.reason,
+        status: 'active',
+        goal_type: 'behavioral_commitment',
+        source: 'next_move',
+        progress: 0,
+      });
+      setCommitted(true);
+    } catch (e) {
+      // non-blocking — commitment save is best-effort
+    }
+  };
+
+  const handleAtreus = async () => {
+    await saveCommitment();
     onOpenAtreus(move.atreusMsg);
   };
 
@@ -110,6 +132,13 @@ export default function NextMoveCard({ pulse, trends, goals, assignments, onOpen
             <p className="text-base font-semibold text-gray-900 leading-snug">{move.move}</p>
             <p className="text-xs text-gray-500 leading-relaxed">{move.reason}</p>
 
+            {committed && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 rounded-lg">
+                <BookmarkCheck className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                <p className="text-[10px] text-emerald-700 font-medium">Saved as a commitment</p>
+              </div>
+            )}
+
             <div className="flex gap-2 pt-1">
               {move.atreus ? (
                 <Button
@@ -120,7 +149,7 @@ export default function NextMoveCard({ pulse, trends, goals, assignments, onOpen
                   <Brain className="w-3 h-3 mr-1.5" /> {move.cta}
                 </Button>
               ) : (
-                <Link to={move.link} className="flex-1">
+                <Link to={move.link} className="flex-1" onClick={saveCommitment}>
                   <Button size="sm" className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-8">
                     {move.cta} <ArrowRight className="w-3 h-3 ml-1.5" />
                   </Button>

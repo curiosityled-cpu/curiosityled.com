@@ -189,10 +189,44 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
     setSaving(false);
     setDone(true);
     sessionStorage.setItem(getStorageKey(), '1');
+    if (optionalText.trim()) sessionStorage.setItem(getStorageKey() + '_text', optionalText.trim());
     setTimeout(() => {
       if (onComplete) onComplete({ selected, optionalText, followUp });
     }, 1800);
   };
+
+  // Collapsed summary — shown after check-in is done
+  if (done) {
+    const selectedOption = prompt.options.find(o => o.value === selected);
+    const savedText = sessionStorage.getItem(getStorageKey() + '_text') || '';
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.97 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-2xl border border-emerald-100 shadow-sm overflow-hidden"
+      >
+        <div className="px-4 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-6 h-6 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-gray-400 font-medium">Check-in done</p>
+              <p className="text-sm font-semibold text-gray-800 truncate">
+                {selectedOption?.label || "Logged today"}
+                {savedText && <span className="font-normal text-gray-500"> — {savedText.slice(0, 40)}{savedText.length > 40 ? '…' : ''}</span>}
+              </p>
+            </div>
+          </div>
+          {followUp && (
+            <div className="flex-shrink-0 text-[10px] text-[#0202ff] font-medium bg-[#0202ff]/5 px-2 py-1 rounded-lg max-w-[120px] text-right leading-tight hidden sm:block">
+              {followUp.slice(0, 60)}…
+            </div>
+          )}
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -224,45 +258,25 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
         <p className="text-sm text-gray-600 leading-relaxed">{prompt.body}</p>
 
         {/* Options */}
-        {!done ? (
-          <div className="grid grid-cols-2 gap-2">
-            {prompt.options.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => handleSelect(option)}
-                disabled={saving}
-                className={`text-left text-sm px-3 py-2.5 rounded-xl border transition-all font-medium leading-snug
-                  ${selected === option.value
-                    ? 'border-[#0202ff] bg-[#0202ff]/5 text-[#0202ff]'
-                    : 'border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 active:bg-gray-100'
-                  }`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <AnimatePresence>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="space-y-3"
+        <div className="grid grid-cols-2 gap-2">
+          {prompt.options.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => handleSelect(option)}
+              disabled={saving}
+              className={`text-left text-sm px-3 py-2.5 rounded-xl border transition-all font-medium leading-snug
+                ${selected === option.value
+                  ? 'border-[#0202ff] bg-[#0202ff]/5 text-[#0202ff]'
+                  : 'border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 active:bg-gray-100'
+                }`}
             >
-              <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded-xl px-3 py-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                <span>Got it — thanks for checking in.</span>
-              </div>
-              {followUp && (
-                <div className="bg-[#0202ff]/5 border border-[#0202ff]/15 rounded-xl px-3 py-3">
-                  <p className="text-sm text-gray-800 leading-relaxed">{followUp}</p>
-                </div>
-              )}
-            </motion.div>
-          </AnimatePresence>
-        )}
+              {option.label}
+            </button>
+          ))}
+        </div>
 
-        {/* Optional note + confirm (shown after selection, before done) */}
-        {selected && !done && (
+        {/* Optional note + confirm (shown after selection) */}
+        {selected && (
           <div className="space-y-2">
             <button
               onClick={() => setShowOptional(!showOptional)}
@@ -290,10 +304,10 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
           </div>
         )}
 
-        {/* Why this today? */}
+        {/* Why this today? — always visible as context link */}
         <button
           onClick={() => setShowWhy(!showWhy)}
-          className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+          className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-[#0202ff] transition-colors"
         >
           <HelpCircle className="w-3 h-3" />
           Why this today?

@@ -3,10 +3,11 @@
  * Stretch experiences, weekly experiments, deliberate practice prompts.
  * Lives in Practice > Grow section.
  */
-import React, { useState } from "react";
-import { Compass, CheckCircle2, ChevronRight, Brain, RefreshCw } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { Compass, CheckCircle2, Brain, RefreshCw, PlayCircle, MessageSquare } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 // Deliberate practice experiments keyed to goal/pattern context
 const EXPERIENCE_LIBRARY = [
@@ -113,18 +114,35 @@ function selectExperiences(goals, trends, shuffleKey) {
   return [...ordered.slice(offset), ...ordered.slice(0, offset)].slice(0, 3);
 }
 
+// State per experience: null | 'attempted' | 'completed'
 export default function GrowExperiencesCard({ goals = [], trends = null, onOpenAtreus }) {
-  const [completed, setCompleted] = useState({});
+  const [states, setStates] = useState({}); // id → 'attempted' | 'completed'
+  const [reflections, setReflections] = useState({}); // id → string
+  const [showReflection, setShowReflection] = useState({}); // id → bool
   const [shuffleKey, setShuffleKey] = useState(0);
 
-  const experiences = React.useMemo(
+  const experiences = useMemo(
     () => selectExperiences(goals, trends, shuffleKey),
     [goals, trends, shuffleKey]
   );
 
-  const handleComplete = (id, reflectionPrompt) => {
-    setCompleted(prev => ({ ...prev, [id]: true }));
-    onOpenAtreus?.(reflectionPrompt);
+  const markAttempted = (id) => {
+    setStates(prev => ({ ...prev, [id]: 'attempted' }));
+  };
+
+  const markCompleted = (id, reflectionPrompt) => {
+    setStates(prev => ({ ...prev, [id]: 'completed' }));
+    // Show the inline reflection prompt instead of immediately opening Atreus
+    setShowReflection(prev => ({ ...prev, [id]: true }));
+  };
+
+  const submitReflection = (id, reflectionPrompt) => {
+    const text = reflections[id]?.trim();
+    const msg = text
+      ? `I just completed "${experiences.find(e => e.id === id)?.title}". My reflection: ${text}. ${reflectionPrompt}`
+      : reflectionPrompt;
+    onOpenAtreus?.(msg);
+    setShowReflection(prev => ({ ...prev, [id]: false }));
   };
 
   return (
@@ -149,34 +167,87 @@ export default function GrowExperiencesCard({ goals = [], trends = null, onOpenA
       </div>
       <CardContent className="px-5 pt-2 pb-5 space-y-2.5">
         {experiences.map((exp) => {
-          const done = completed[exp.id];
+          const state = states[exp.id]; // undefined | 'attempted' | 'completed'
+          const isAttempted = state === 'attempted';
+          const isCompleted = state === 'completed';
+          const showingReflection = showReflection[exp.id];
+
           return (
             <div
               key={exp.id}
-              className={`p-4 rounded-xl border transition-all ${done ? 'bg-emerald-50 border-emerald-100' : 'bg-gray-50 border-gray-100'}`}
+              className={`p-4 rounded-xl border transition-all ${
+                isCompleted ? 'bg-emerald-50 border-emerald-100'
+                : isAttempted ? 'bg-amber-50 border-amber-100'
+                : 'bg-gray-50 border-gray-100'
+              }`}
             >
-              <div className="flex items-start gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <p className={`text-sm font-semibold ${done ? 'text-emerald-700 line-through' : 'text-gray-800'}`}>
-                      {exp.title}
-                    </p>
-                  </div>
-                  <p className="text-xs text-gray-500 leading-relaxed mb-2">{exp.description}</p>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-sky-50 text-sky-600">{exp.type}</span>
-                    <span className="text-[10px] text-gray-400">{exp.effort}</span>
-                  </div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm font-semibold mb-1 ${isCompleted ? 'text-emerald-700' : isAttempted ? 'text-amber-800' : 'text-gray-800'}`}>
+                  {exp.title}
+                </p>
+                <p className="text-xs text-gray-500 leading-relaxed mb-2">{exp.description}</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-sky-50 text-sky-600">{exp.type}</span>
+                  <span className="text-[10px] text-gray-400">{exp.effort}</span>
+                  {isAttempted && <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Attempted</span>}
+                  {isCompleted && <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Completed</span>}
                 </div>
               </div>
-              {!done && (
+
+              {/* Reflection prompt after completion */}
+              {isCompleted && showingReflection && (
+                <div className="mt-3 space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <MessageSquare className="w-3.5 h-3.5 text-[#0202ff]" />
+                    <p className="text-xs font-medium text-gray-700">{exp.reflectionPrompt}</p>
+                  </div>
+                  <Textarea
+                    placeholder="Write a few words (optional)…"
+                    value={reflections[exp.id] || ''}
+                    onChange={(e) => setReflections(prev => ({ ...prev, [exp.id]: e.target.value }))}
+                    className="text-xs resize-none h-16 rounded-xl border-gray-200"
+                  />
+                  <Button
+                    size="sm"
+                    className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-7"
+                    onClick={() => submitReflection(exp.id, exp.reflectionPrompt)}
+                  >
+                    <Brain className="w-3 h-3 mr-1.5" /> Reflect with Atreus
+                  </Button>
+                </div>
+              )}
+
+              {isCompleted && !showingReflection && (
+                <div className="flex items-center gap-1.5 mt-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  <p className="text-xs text-emerald-600 font-medium">Completed</p>
+                  <button
+                    className="ml-auto text-[10px] text-gray-400 hover:text-[#0202ff]"
+                    onClick={() => setShowReflection(prev => ({ ...prev, [exp.id]: true }))}
+                  >
+                    Reflect again →
+                  </button>
+                </div>
+              )}
+
+              {!isCompleted && (
                 <div className="flex gap-2 mt-3">
+                  {!isAttempted && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs h-7 border-amber-200 text-amber-700 hover:bg-amber-50"
+                      onClick={() => markAttempted(exp.id)}
+                    >
+                      <PlayCircle className="w-3 h-3 mr-1.5" /> I tried it
+                    </Button>
+                  )}
                   <Button
                     size="sm"
                     className="flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-7"
-                    onClick={() => handleComplete(exp.id, exp.reflectionPrompt)}
+                    onClick={() => markCompleted(exp.id, exp.reflectionPrompt)}
                   >
-                    <CheckCircle2 className="w-3 h-3 mr-1.5" /> Done — reflect
+                    <CheckCircle2 className="w-3 h-3 mr-1.5" /> Done
                   </Button>
                   <Button
                     size="sm"
@@ -186,12 +257,6 @@ export default function GrowExperiencesCard({ goals = [], trends = null, onOpenA
                   >
                     <Brain className="w-3 h-3 mr-1 text-[#0202ff]" /> Prep
                   </Button>
-                </div>
-              )}
-              {done && (
-                <div className="flex items-center gap-1.5 mt-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                  <p className="text-xs text-emerald-600 font-medium">Completed — Atreus reflection opened</p>
                 </div>
               )}
             </div>
