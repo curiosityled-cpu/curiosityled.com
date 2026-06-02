@@ -170,6 +170,7 @@ export default function PracticeFlow({ flowKey, onClose }) {
   const [responses, setResponses] = useState({});
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
+  const [debriefScheduled, setDebriefScheduled] = useState(false);
 
   const flow = FLOWS[flowKey];
   if (!flow) return null;
@@ -191,7 +192,6 @@ export default function PracticeFlow({ flowKey, onClose }) {
   const handleComplete = async () => {
     setSaving(true);
     try {
-      // Save flow responses as a ManagerPulse follow-up record
       const notes = Object.entries(responses)
         .map(([k, v]) => `${k}: ${v}`)
         .join('\n\n');
@@ -203,12 +203,30 @@ export default function PracticeFlow({ flowKey, onClose }) {
         focus_intention: `${flow.title} session: ${responses[flow.steps[0].id] || ''}`.slice(0, 500),
         description: notes.slice(0, 1000),
       });
+
+      // For Prepare flows: schedule a follow-up debrief notification for tomorrow
+      if (flowKey === 'prepare') {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(17, 0, 0, 0); // 5pm tomorrow
+        try {
+          await base44.entities.Notification.create({
+            user_email: user?.email,
+            type: 'system_prompt',
+            title: 'Debrief: How did it go?',
+            message: `Yesterday you prepared for: "${responses[flow.steps[0].id] || 'a conversation'}". Take 5 minutes to debrief what happened.`,
+            scheduled_for: tomorrow.toISOString(),
+            is_read: false,
+            related_entity_type: 'practice_debrief',
+          });
+          setDebriefScheduled(true);
+        } catch {}
+      }
     } catch {}
 
     setSaving(false);
     setDone(true);
 
-    // Open Atreus with full context
     setTimeout(() => {
       openWithContext({
         context: { pageType: 'practice', flow: flowKey },
@@ -227,6 +245,11 @@ export default function PracticeFlow({ flowKey, onClose }) {
         <p className="text-sm text-gray-500 leading-relaxed">
           Your responses have been saved privately. Atreus has your full context and is ready to go deeper.
         </p>
+        {debriefScheduled && (
+          <p className="text-[11px] text-[#0202ff]/70 bg-[#0202ff]/5 border border-[#0202ff]/10 rounded-xl px-3 py-2">
+            A debrief reminder has been scheduled for tomorrow at 5pm — to close the loop on how it went.
+          </p>
+        )}
         <Button size="sm" variant="outline" className="text-xs border-gray-200" onClick={onClose}>
           Back to Practice
         </Button>

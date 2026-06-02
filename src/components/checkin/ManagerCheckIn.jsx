@@ -157,7 +157,7 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
   // Persist "done today" in sessionStorage so re-mounts don't re-prompt
   // storageKey computed lazily inside the initializer to avoid stale-date closure
   const getStorageKey = () => `cl_checkin_done_${promptType}_${new Date().toISOString().split('T')[0]}`;
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(() => sessionStorage.getItem(getStorageKey() + '_val') || null);
   const [optionalText, setOptionalText] = useState("");
   const [showOptional, setShowOptional] = useState(false);
   const [showWhy, setShowWhy] = useState(false);
@@ -167,7 +167,7 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
 
   // Reset state when promptType changes (e.g. day rotation)
   useEffect(() => {
-    setSelected(null);
+    setSelected(sessionStorage.getItem(getStorageKey() + '_val') || null);
     setOptionalText("");
     setShowOptional(false);
     setShowWhy(false);
@@ -200,10 +200,46 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
     setSaving(false);
     setDone(true);
     sessionStorage.setItem(getStorageKey(), '1');
+    sessionStorage.setItem(getStorageKey() + '_val', selected);
     setTimeout(() => {
       if (onComplete) onComplete({ selected, optionalText, followUp });
     }, 1800);
   };
+
+  // Find the selected option label for the summary
+  const selectedOption = prompt.options.find(o => o.value === selected);
+
+  if (done) {
+    // Collapsed summary state
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.97 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
+      >
+        <div className="px-4 py-3.5 flex items-center gap-3">
+          <div className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Check-in done</p>
+            <p className="text-sm font-medium text-gray-800 leading-snug">
+              {selectedOption?.label || 'Checked in'}
+              {optionalText && <span className="text-gray-500 font-normal"> · "{optionalText.slice(0, 60)}{optionalText.length > 60 ? '…' : ''}"</span>}
+            </p>
+          </div>
+          <span className="text-[10px] text-gray-400 flex-shrink-0">Today</span>
+        </div>
+        {followUp && (
+          <div className="px-4 pb-3.5">
+            <div className="bg-[#0202ff]/5 border border-[#0202ff]/15 rounded-xl px-3 py-2.5">
+              <p className="text-xs text-gray-700 leading-relaxed">{followUp}</p>
+            </div>
+          </div>
+        )}
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -235,42 +271,22 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
         <p className="text-sm text-gray-600 leading-relaxed">{prompt.body}</p>
 
         {/* Options */}
-        {!done ? (
-          <div className="grid grid-cols-2 gap-2">
-            {prompt.options.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => handleSelect(option)}
-                disabled={saving}
-                className={`text-left text-sm px-3 py-2.5 rounded-xl border transition-all font-medium leading-snug
-                  ${selected === option.value
-                    ? 'border-[#0202ff] bg-[#0202ff]/5 text-[#0202ff]'
-                    : 'border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 active:bg-gray-100'
-                  }`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <AnimatePresence>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="space-y-3"
+        <div className="grid grid-cols-2 gap-2">
+          {prompt.options.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => handleSelect(option)}
+              disabled={saving}
+              className={`text-left text-sm px-3 py-2.5 rounded-xl border transition-all font-medium leading-snug
+                ${selected === option.value
+                  ? 'border-[#0202ff] bg-[#0202ff]/5 text-[#0202ff]'
+                  : 'border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 active:bg-gray-100'
+                }`}
             >
-              <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded-xl px-3 py-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                <span>Got it — thanks for checking in.</span>
-              </div>
-              {followUp && (
-                <div className="bg-[#0202ff]/5 border border-[#0202ff]/15 rounded-xl px-3 py-3">
-                  <p className="text-sm text-gray-800 leading-relaxed">{followUp}</p>
-                </div>
-              )}
-            </motion.div>
-          </AnimatePresence>
-        )}
+              {option.label}
+            </button>
+          ))}
+        </div>
 
         {/* Optional note + confirm (shown after selection, before done) */}
         {selected && !done && (

@@ -7,6 +7,8 @@ import { Zap, ArrowRight, CheckCircle2, Brain } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 
 function buildNextMove(pulse, trends, goals, assignments) {
   // Priority 1: avoidance signal
@@ -83,11 +85,30 @@ function buildNextMove(pulse, trends, goals, assignments) {
 }
 
 export default function NextMoveCard({ pulse, trends, goals, assignments, onOpenAtreus }) {
+  const { user } = useAuth();
   const [done, setDone] = useState(false);
+  const [accepted, setAccepted] = useState(false);
   const move = buildNextMove(pulse, trends, goals, assignments);
+
+  const handleAccept = async () => {
+    // Store commitment as a Goal record
+    try {
+      await base44.entities.Goal.create({
+        user_email: user?.email,
+        title: move.move,
+        description: move.reason,
+        status: 'active',
+        progress: 0,
+        source: 'next_move',
+      });
+    } catch {}
+    setAccepted(true);
+    setDone(true);
+  };
 
   const handleAtreus = () => {
     onOpenAtreus(move.atreusMsg);
+    handleAccept();
   };
 
   return (
@@ -101,9 +122,14 @@ export default function NextMoveCard({ pulse, trends, goals, assignments, onOpen
         </div>
 
         {done ? (
-          <div className="flex items-center gap-2 py-2">
-            <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-            <p className="text-sm font-medium text-gray-700">Nice. That's done.</p>
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 py-1">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              <p className="text-sm font-medium text-gray-700">
+                {accepted ? "Commitment saved to your goals." : "Marked done."}
+              </p>
+            </div>
+            {accepted && <p className="text-[10px] text-gray-400 pl-6">Added to your active goals — visible in Practice and Patterns.</p>}
           </div>
         ) : (
           <>
@@ -121,7 +147,7 @@ export default function NextMoveCard({ pulse, trends, goals, assignments, onOpen
                 </Button>
               ) : (
                 <Link to={move.link} className="flex-1">
-                  <Button size="sm" className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-8">
+                  <Button size="sm" className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-8" onClick={handleAccept}>
                     {move.cta} <ArrowRight className="w-3 h-3 ml-1.5" />
                   </Button>
                 </Link>

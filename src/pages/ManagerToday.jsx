@@ -254,11 +254,12 @@ export default function ManagerToday() {
       </div>
       {showSettings && <CheckInSettings />}
 
-      {/* Morning intent */}
-      <MorningIntentWidget userEmail={user?.email} />
-
-      {/* 1. Check-in */}
-      <ManagerCheckIn promptType={todayPromptType} onComplete={() => queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] })} />
+      {/* PRIMARY HERO CARD: Check-in (if not done today) OR Morning intent (if morning + no intent yet) OR Today's Read summary */}
+      {todayPromptType === 'morning_intent' && !todayPulse ? (
+        <MorningIntentWidget userEmail={user?.email} />
+      ) : (
+        <ManagerCheckIn promptType={todayPromptType} onComplete={() => queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] })} />
+      )}
 
       {/* 2. What matters now */}
       <WhatMattersNowCard
