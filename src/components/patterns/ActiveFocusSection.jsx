@@ -3,50 +3,56 @@
  * Shows 1-2 growth themes with: why they matter now, linked pattern, linked assessment insight, recent behavior.
  * Brief spec: "current growth themes, why they matter now, linked pattern(s), linked assessment insight(s), recent related behavior"
  */
-import React from "react";
-import { Target, Brain, TrendingUp, Zap, ArrowRight } from "lucide-react";
+import React, { useState } from "react";
+import { Target, Brain, ArrowRight, ChevronDown, ChevronUp, Activity, Lightbulb } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 
+function getLinkedPatterns(trends) {
+  const patterns = [];
+  if (trends?.overload_pattern_strength > 40) patterns.push({ label: `Overload pattern (${Math.round(trends.overload_pattern_strength)}%)`, color: "text-amber-700 bg-amber-50 border-amber-100" });
+  if (trends?.identity_friction_active) patterns.push({ label: "Role clarity friction", color: "text-violet-700 bg-violet-50 border-violet-100" });
+  if (trends?.energy_trend === 'declining') patterns.push({ label: "Energy declining", color: "text-rose-700 bg-rose-50 border-rose-100" });
+  if (trends?.delegation_gap_count_7d > 0) patterns.push({ label: `${trends.delegation_gap_count_7d} delegation gap${trends.delegation_gap_count_7d > 1 ? 's' : ''} this week`, color: "text-blue-700 bg-blue-50 border-blue-100" });
+  if (trends?.learning_stall_detected) patterns.push({ label: "Development stall", color: "text-gray-600 bg-gray-100 border-gray-200" });
+  return patterns;
+}
+
+function getLinkedInsights(insight) {
+  const items = [];
+  if (insight?.archetype) items.push({ label: `Archetype: ${insight.archetype}`, color: "text-purple-700 bg-purple-50 border-purple-100" });
+  if (insight?.development_areas?.[0]) items.push({ label: `Growth edge: ${insight.development_areas[0].split(' (')[0]}`, color: "text-indigo-700 bg-indigo-50 border-indigo-100" });
+  if (insight?.top_strengths?.[0]) items.push({ label: `Strength: ${insight.top_strengths[0]}`, color: "text-emerald-700 bg-emerald-50 border-emerald-100" });
+  return items;
+}
+
 function buildWhyNow(goal, trends, insight) {
   const reasons = [];
 
-  // Pattern link
-  if (trends?.overload_pattern_strength > 40 && (goal.title || '').toLowerCase().match(/delegat|lead|team/)) {
-    reasons.push({ label: "Active pattern", text: "Your overload pattern makes this directly relevant right now.", color: "text-amber-700", bg: "bg-amber-50" });
+  if (trends?.overload_pattern_strength > 40) {
+    reasons.push({ label: "Active pattern", text: "Your overload pattern makes delegation and boundary-setting directly relevant right now.", color: "text-amber-700", bg: "bg-amber-50" });
   }
   if (trends?.identity_friction_active) {
     reasons.push({ label: "Role clarity", text: "Current identity friction signals make this focus especially timely.", color: "text-violet-700", bg: "bg-violet-50" });
   }
-  if (trends?.learning_stall_detected) {
-    reasons.push({ label: "Development stall", text: "Development activity has dropped — focusing here helps reset momentum.", color: "text-blue-700", bg: "bg-blue-50" });
-  }
-
-  // Assessment link
   if (insight?.development_areas?.[0]) {
-    const area = insight.development_areas[0].split(' (')[0].toLowerCase();
-    const goalTitle = (goal.title || '').toLowerCase();
-    if (goalTitle.includes(area.split(' ')[0]) || goalTitle.includes('leadership') || goalTitle.includes('develop')) {
-      reasons.push({ label: "Assessment insight", text: `Your Leadership Index highlights ${insight.development_areas[0].split(' (')[0]} as a high-leverage area.`, color: "text-purple-700", bg: "bg-purple-50" });
-    }
+    reasons.push({ label: "Assessment insight", text: `Your Leadership Index highlights ${insight.development_areas[0].split(' (')[0]} as a high-leverage growth area.`, color: "text-purple-700", bg: "bg-purple-50" });
   }
-
-  // Recent behavior
   if ((goal.progress || 0) > 0 && (goal.progress || 0) < 30) {
-    reasons.push({ label: "Early momentum", text: "You've started this goal but haven't gained full traction yet. Now is the right time to push.", color: "text-emerald-700", bg: "bg-emerald-50" });
+    reasons.push({ label: "Early momentum", text: "You've started but haven't gained full traction yet — now is the right time to push.", color: "text-emerald-700", bg: "bg-emerald-50" });
   }
-
-  // Default reason if nothing triggered
   if (reasons.length === 0) {
     reasons.push({ label: "Your commitment", text: "You chose to work on this. That intention is part of your active development focus.", color: "text-gray-600", bg: "bg-gray-50" });
   }
-
   return reasons.slice(0, 2);
 }
 
 function GrowthThemeCard({ goal, trends, insight, onOpenAtreus }) {
+  const [showDetail, setShowDetail] = useState(false);
   const whyNow = buildWhyNow(goal, trends, insight);
+  const linkedPatterns = getLinkedPatterns(trends);
+  const linkedInsights = getLinkedInsights(insight);
 
   return (
     <div className="p-4 bg-white rounded-xl border border-gray-100 space-y-3">
@@ -59,16 +65,48 @@ function GrowthThemeCard({ goal, trends, insight, onOpenAtreus }) {
         </div>
       </div>
 
-      {/* Why this matters now */}
-      <div className="space-y-1.5">
-        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Why this matters now</p>
-        {whyNow.map((r, i) => (
-          <div key={i} className={`flex items-start gap-2 px-2.5 py-2 rounded-lg ${r.bg}`}>
-            <span className={`text-[10px] font-semibold flex-shrink-0 mt-0.5 ${r.color}`}>{r.label}</span>
-            <span className={`text-[11px] leading-relaxed ${r.color}`}>{r.text}</span>
-          </div>
-        ))}
-      </div>
+      {/* Linked patterns + insights as tags */}
+      {(linkedPatterns.length > 0 || linkedInsights.length > 0) && (
+        <div className="space-y-1.5">
+          {linkedPatterns.length > 0 && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Activity className="w-3 h-3 text-gray-400 flex-shrink-0" />
+              <p className="text-[10px] text-gray-400 font-medium">Linked patterns:</p>
+              {linkedPatterns.map((p, i) => (
+                <span key={i} className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${p.color}`}>{p.label}</span>
+              ))}
+            </div>
+          )}
+          {linkedInsights.length > 0 && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Lightbulb className="w-3 h-3 text-gray-400 flex-shrink-0" />
+              <p className="text-[10px] text-gray-400 font-medium">Assessment:</p>
+              {linkedInsights.map((ins, i) => (
+                <span key={i} className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${ins.color}`}>{ins.label}</span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Why this matters now — collapsible */}
+      <button
+        onClick={() => setShowDetail(s => !s)}
+        className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-gray-600 transition-colors"
+      >
+        {showDetail ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+        Why this matters now
+      </button>
+      {showDetail && (
+        <div className="space-y-1.5">
+          {whyNow.map((r, i) => (
+            <div key={i} className={`flex items-start gap-2 px-2.5 py-2 rounded-lg ${r.bg}`}>
+              <span className={`text-[10px] font-semibold flex-shrink-0 mt-0.5 ${r.color}`}>{r.label}</span>
+              <span className={`text-[11px] leading-relaxed ${r.color}`}>{r.text}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Quick actions */}
       <div className="flex gap-2 pt-1">

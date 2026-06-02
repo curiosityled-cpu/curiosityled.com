@@ -3,11 +3,17 @@
  * Pulls from self-report + goals + assessment + activity signals.
  */
 import React, { useState } from "react";
-import { Flame, ChevronDown, ChevronUp, Brain, ArrowRight, Layers } from "lucide-react";
+import { Flame, Brain, ArrowRight, Layers } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import WhatMattersNowDrawer from "@/components/lead/WhatMattersNowDrawer";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 function buildSituation(pulse, trends, goals, insight) {
   const chips = [];
@@ -82,62 +88,94 @@ function buildSituation(pulse, trends, goals, insight) {
 }
 
 export default function WhatMattersNowCard({ pulse, trends, goals, insight, onOpenAtreus }) {
-  const [expanded, setExpanded] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const { headline, body, chips, actionLabel, actionPath } = buildSituation(pulse, trends, goals, insight);
 
   return (
-    <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
-      <div className="px-5 pt-5 pb-1 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center">
-            <Flame className="w-3.5 h-3.5 text-white" />
+    <>
+      <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
+        <div className="px-5 pt-5 pb-1 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center">
+              <Flame className="w-3.5 h-3.5 text-white" />
+            </div>
+            <p className="text-sm font-semibold text-gray-900">What matters now</p>
           </div>
-          <p className="text-sm font-semibold text-gray-900">What matters now</p>
-        </div>
-        <button
-          onClick={() => setExpanded(e => !e)}
-          className="text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        </button>
-      </div>
-
-      <CardContent className="px-5 pt-3 pb-5 space-y-3">
-        <p className="text-base font-semibold text-gray-900 leading-snug">{headline}</p>
-
-        {/* Evidence chips */}
-        {chips.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {chips.map((c, i) => (
-              <span key={i} className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${c.color}`}>{c.label}</span>
-            ))}
-          </div>
-        )}
-
-        <p className={`text-sm text-gray-500 leading-relaxed ${expanded ? '' : 'line-clamp-2'}`}>{body}</p>
-        {!expanded && (
-          <button onClick={() => setExpanded(true)} className="text-xs text-gray-400 hover:text-gray-600 transition-colors -mt-1">
-            See why →
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="flex items-center gap-1 text-xs text-gray-400 hover:text-[#0202ff] transition-colors"
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">See why</span>
           </button>
-        )}
-
-        {/* Evidence drawer — reported / observed / interpreted */}
-        {expanded && <WhatMattersNowDrawer pulse={pulse} trends={trends} goals={goals} insight={insight} />}
-
-        {/* Actions */}
-        <div className="flex gap-2 pt-1">
-          {actionLabel && actionPath && (
-            <Link to={actionPath} className="flex-1">
-              <Button size="sm" className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-8">
-                {actionLabel} <ArrowRight className="w-3 h-3 ml-1.5" />
-              </Button>
-            </Link>
-          )}
-          <Button size="sm" variant="outline" className="text-xs h-8 border-gray-200 text-gray-600 hover:bg-gray-50" onClick={onOpenAtreus}>
-            <Brain className="w-3 h-3 mr-1.5 text-[#0202ff]" /> Talk it through
-          </Button>
         </div>
-      </CardContent>
-    </Card>
+
+        <CardContent className="px-5 pt-3 pb-5 space-y-3">
+          <p className="text-base font-semibold text-gray-900 leading-snug">{headline}</p>
+
+          {/* Evidence chips */}
+          {chips.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {chips.map((c, i) => (
+                <span key={i} className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${c.color}`}>{c.label}</span>
+              ))}
+            </div>
+          )}
+
+          <p className="text-sm text-gray-500 leading-relaxed line-clamp-2">{body}</p>
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="text-xs text-gray-400 hover:text-[#0202ff] transition-colors -mt-1"
+          >
+            See why this matters →
+          </button>
+
+          {/* Actions */}
+          <div className="flex gap-2 pt-1">
+            {actionLabel && actionPath && (
+              <Link to={actionPath} className="flex-1">
+                <Button size="sm" className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-8">
+                  {actionLabel} <ArrowRight className="w-3 h-3 ml-1.5" />
+                </Button>
+              </Link>
+            )}
+            <Button size="sm" variant="outline" className="text-xs h-8 border-gray-200 text-gray-600 hover:bg-gray-50" onClick={onOpenAtreus}>
+              <Brain className="w-3 h-3 mr-1.5 text-[#0202ff]" /> Talk it through
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Detail drawer — 3 separated trust layers */}
+      <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <SheetContent side="bottom" className="rounded-t-2xl max-h-[80vh] overflow-y-auto">
+          <SheetHeader className="pb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center">
+                <Flame className="w-3.5 h-3.5 text-white" />
+              </div>
+              <SheetTitle className="text-sm font-semibold text-gray-900">How this read is built</SheetTitle>
+            </div>
+            <p className="text-xs text-gray-500 leading-relaxed pt-1">{headline}</p>
+          </SheetHeader>
+          <div className="pt-2 pb-6">
+            <WhatMattersNowDrawer pulse={pulse} trends={trends} goals={goals} insight={insight} />
+            <div className="flex gap-2 mt-5">
+              {actionLabel && actionPath && (
+                <Link to={actionPath} className="flex-1" onClick={() => setDrawerOpen(false)}>
+                  <Button size="sm" className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-9">
+                    {actionLabel} <ArrowRight className="w-3 h-3 ml-1.5" />
+                  </Button>
+                </Link>
+              )}
+              <Button size="sm" variant="outline" className="flex-1 text-xs h-9 border-gray-200 text-gray-600"
+                onClick={() => { setDrawerOpen(false); onOpenAtreus?.(); }}>
+                <Brain className="w-3 h-3 mr-1.5 text-[#0202ff]" /> Talk it through
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }
