@@ -44,38 +44,38 @@ function PracticeActionTile({ icon: Icon, iconBg, iconColor, title, description,
   if (to) {
     return (
       <Link to={to}>
-        <div className="flex items-center gap-4 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group cursor-pointer">
-          <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
+        <div className="flex items-center gap-4 p-5 bg-[#1c1f2a] rounded-2xl border border-white/8 hover:border-white/15 transition-all group cursor-pointer">
+          <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg} opacity-80`}>
             <Icon className={`w-5 h-5 ${iconColor}`} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900">{title}</p>
-            <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{description}</p>
+            <p className="text-sm font-semibold text-white/85">{title}</p>
+            <p className="text-xs text-white/40 mt-0.5 leading-relaxed">{description}</p>
           </div>
-          <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-400 flex-shrink-0" />
+          <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/40 flex-shrink-0" />
         </div>
       </Link>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-[#1c1f2a] rounded-2xl border border-white/8 overflow-hidden">
       <button
-        className="w-full flex items-center gap-4 p-5 hover:bg-gray-50 transition-colors text-left"
+        className="w-full flex items-center gap-4 p-5 hover:bg-white/4 transition-colors text-left"
         onClick={() => setExpanded(e => !e)}
       >
-        <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
+        <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg} opacity-80`}>
           <Icon className={`w-5 h-5 ${iconColor}`} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900">{title}</p>
-          <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{description}</p>
+          <p className="text-sm font-semibold text-white/85">{title}</p>
+          <p className="text-xs text-white/40 mt-0.5 leading-relaxed">{description}</p>
         </div>
-        <ChevronRight className={`w-4 h-4 text-gray-300 flex-shrink-0 transition-transform ${expanded ? 'rotate-90' : ''}`} />
+        <ChevronRight className={`w-4 h-4 text-white/20 flex-shrink-0 transition-transform ${expanded ? 'rotate-90' : ''}`} />
       </button>
       {expanded && (
-        <div className="px-5 pb-4 pt-0 border-t border-gray-50 bg-gray-50/60 flex items-center justify-between gap-3">
-          <p className="text-xs text-gray-500 flex-1">
+        <div className="px-5 pb-4 pt-0 border-t border-white/6 bg-white/3 flex items-center justify-between gap-3">
+          <p className="text-xs text-white/40 flex-1">
             {flowKey ? 'A structured guide walks you through this step by step.' : 'Atreus will guide you through this session.'}
           </p>
           <Button size="sm" className="bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs px-4" onClick={handleStart}>
@@ -88,7 +88,7 @@ function PracticeActionTile({ icon: Icon, iconBg, iconColor, title, description,
 }
 
 function SectionLabel({ children }) {
-  return <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-1 pt-2">{children}</p>;
+  return <p className="text-[11px] font-semibold text-white/35 uppercase tracking-wider px-1 pt-2">{children}</p>;
 }
 
 function GrowSection({ goals, assignments, devPlans, pulses, trends, insight, onOpenAtreus }) {
@@ -232,11 +232,12 @@ export default function ManagerPractice() {
   });
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+    <div className="max-w-2xl mx-auto px-4 py-6 space-y-4 min-h-screen bg-[#13151c]">
       {/* Header */}
       <div className="pt-2 pb-1">
-        <h1 className="text-2xl font-bold text-gray-900">Practice</h1>
-        <p className="text-sm text-gray-500 mt-1">Work on your leadership in the moment.</p>
+        <p className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-1">Practice</p>
+        <h1 className="text-2xl font-bold text-white">Work on it.</h1>
+        <p className="text-sm text-white/50 mt-1">Prepare, reflect, and grow your leadership.</p>
       </div>
 
       {/* Active flow overlay */}

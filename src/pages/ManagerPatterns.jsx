@@ -146,15 +146,15 @@ export default function ManagerPatterns() {
 
   const header = (
     <div className="pt-2 pb-1">
-      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Patterns</p>
-      <h1 className="text-2xl font-bold text-gray-900">What we're noticing</h1>
-      <p className="text-sm text-gray-500 mt-1">Longitudinal memory — how you lead over time.</p>
+      <p className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-1">Patterns</p>
+      <h1 className="text-2xl font-bold text-white">What we're noticing</h1>
+      <p className="text-sm text-white/50 mt-1">Longitudinal memory — how you lead over time.</p>
     </div>
   );
 
   if (!hasData) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4 min-h-screen bg-[#13151c]">
         {header}
         <EmptyState />
       </div>
@@ -196,7 +196,7 @@ export default function ManagerPatterns() {
   ];
 
   return (
-    <div className="px-4 py-6">
+    <div className="px-4 py-6 min-h-screen bg-[#13151c]">
       {/* Mobile: swipeable sections */}
       <div className="md:hidden max-w-2xl mx-auto">
         {header}

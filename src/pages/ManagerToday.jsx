@@ -50,9 +50,9 @@ function HeroGreeting({ firstName }) {
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   return (
     <div className="pt-2 pb-1">
-      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Lead</p>
-      <h1 className="text-2xl font-bold text-gray-900">{greeting}, {firstName}.</h1>
-      <p className="text-sm text-gray-500 mt-1">What matters right now.</p>
+      <p className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-1">Lead</p>
+      <h1 className="text-2xl font-bold text-white">{greeting}, {firstName}.</h1>
+      <p className="text-sm text-white/50 mt-1">What matters right now.</p>
     </div>
   );
 }
@@ -69,87 +69,89 @@ function GoalsPulseCard({ goals, openAtreus }) {
     : topGoal ? `Work on "${topGoal.title}" this week` : null;
 
   return (
-    <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
+    <div className="bg-[#1c1f2a] rounded-2xl border border-white/8 overflow-hidden">
       <div className="px-5 pt-5 pb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center">
-            <Target className="w-3.5 h-3.5 text-emerald-600" />
+          <div className="w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center">
+            <Target className="w-3.5 h-3.5 text-emerald-400" />
           </div>
-          <p className="text-sm font-semibold text-gray-900">Active focus</p>
+          <p className="text-sm font-semibold text-white/80">Active focus</p>
         </div>
-        <Link to="/my-goals"><span className="text-xs text-[#0202ff] hover:underline font-medium">View all →</span></Link>
+        <Link to="/my-goals"><span className="text-xs text-blue-400 hover:text-blue-300 font-medium">View all →</span></Link>
       </div>
-      <CardContent className="px-5 pt-2 pb-5">
+      <div className="px-5 pt-2 pb-5">
         {active.length === 0 ? (
           <div className="py-3 space-y-2">
-            <p className="text-sm text-gray-500">No active growth focus yet.</p>
+            <p className="text-sm text-white/40">No active growth focus yet.</p>
             <Link to="/my-goals">
-              <button className="text-xs font-medium text-[#0202ff] hover:underline">Set a growth goal →</button>
+              <button className="text-xs font-medium text-blue-400 hover:text-blue-300">Set a growth goal →</button>
             </Link>
           </div>
         ) : topGoal ? (
           <div className="space-y-3">
             {/* Growth theme */}
             <div>
-              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Growth theme</p>
-              <p className="text-sm font-medium text-gray-800">{topGoal.title}</p>
+              <p className="text-[10px] font-semibold text-white/35 uppercase tracking-wide mb-1">Growth theme</p>
+              <p className="text-sm font-medium text-white/80">{topGoal.title}</p>
               <div className="flex items-center gap-2 mt-1.5">
-                <Progress value={topGoal.progress || 0} className="h-1.5 flex-1" />
-                <span className="text-xs text-gray-500 flex-shrink-0">{topGoal.progress || 0}%</span>
+                <div className="h-1.5 flex-1 bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${topGoal.progress || 0}%` }} />
+                </div>
+                <span className="text-xs text-white/40 flex-shrink-0">{topGoal.progress || 0}%</span>
               </div>
             </div>
             {/* Behavioral commitment */}
             {commitment && (
-              <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-100">
-                <p className="text-[10px] font-semibold text-emerald-700 uppercase tracking-wide mb-0.5">This week's commitment</p>
-                <p className="text-xs text-emerald-800 leading-relaxed">{commitment}</p>
+              <div className="p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                <p className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wide mb-0.5">This week's commitment</p>
+                <p className="text-xs text-emerald-300/80 leading-relaxed">{commitment}</p>
               </div>
             )}
             {/* Practice tie-in */}
             <button
               onClick={() => openAtreus?.(`I want to make progress on my goal: "${topGoal.title}". Help me think through one small step I can take today.`)}
-              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#0202ff]/5 border border-[#0202ff]/15 text-xs font-medium text-[#0202ff] hover:bg-[#0202ff]/10 transition-colors"
+              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-medium text-white/60 hover:bg-white/8 hover:text-white/80 transition-colors"
             >
               <Brain className="w-3.5 h-3.5" /> Work on this with Atreus
             </button>
-            {active.length > 1 && <p className="text-xs text-gray-400">+{active.length - 1} more active goal{active.length > 2 ? 's' : ''}</p>}
+            {active.length > 1 && <p className="text-xs text-white/30">+{active.length - 1} more active goal{active.length > 2 ? 's' : ''}</p>}
           </div>
         ) : null}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
 function ExploreDeeperCard() {
   const links = [
-    { label: 'Patterns', sub: 'What this system is noticing over time', path: '/patterns', icon: BarChart3, color: 'text-[#0202ff]' },
-    { label: 'Practice', sub: 'Prepare, reflect, debrief, work through', path: '/practice', icon: Layers, color: 'text-violet-600' },
-    { label: 'You', sub: 'Profile, assessments, preferences, privacy', path: '/you', icon: SlidersHorizontal, color: 'text-emerald-600' },
+    { label: 'Patterns', sub: 'What this system is noticing over time', path: '/patterns', icon: BarChart3, color: 'text-blue-400' },
+    { label: 'Practice', sub: 'Prepare, reflect, debrief, work through', path: '/practice', icon: Layers, color: 'text-violet-400' },
+    { label: 'You', sub: 'Profile, assessments, preferences, privacy', path: '/you', icon: SlidersHorizontal, color: 'text-emerald-400' },
   ];
   return (
-    <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
+    <div className="bg-[#1c1f2a] rounded-2xl border border-white/8 overflow-hidden">
       <div className="px-5 pt-5 pb-2">
-        <p className="text-sm font-semibold text-gray-900">Explore deeper</p>
-        <p className="text-xs text-gray-400 mt-0.5">When you have more time</p>
+        <p className="text-sm font-semibold text-white/80">Explore deeper</p>
+        <p className="text-xs text-white/35 mt-0.5">When you have more time</p>
       </div>
-      <CardContent className="px-5 pt-2 pb-5 space-y-1">
+      <div className="px-5 pt-2 pb-5 space-y-1">
         {links.map((l) => {
           const Icon = l.icon;
           return (
             <Link key={l.path} to={l.path}>
-              <div className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors group">
+              <div className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white/5 transition-colors group">
                 <Icon className={`w-4 h-4 flex-shrink-0 ${l.color}`} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 group-hover:text-gray-900">{l.label}</p>
-                  <p className="text-xs text-gray-400">{l.sub}</p>
+                  <p className="text-sm font-medium text-white/70 group-hover:text-white/90">{l.label}</p>
+                  <p className="text-xs text-white/35">{l.sub}</p>
                 </div>
-                <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-400" />
+                <ChevronRight className="w-3.5 h-3.5 text-white/20 group-hover:text-white/35" />
               </div>
             </Link>
           );
         })}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -259,7 +261,7 @@ export default function ManagerToday() {
 
       {/* Settings toggle */}
       <div className="flex justify-end">
-        <button onClick={() => setShowSettings(s => !s)} className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors">
+        <button onClick={() => setShowSettings(s => !s)} className="flex items-center gap-1.5 text-xs text-white/30 hover:text-white/60 transition-colors">
           <SlidersHorizontal className="w-3.5 h-3.5" />
           {showSettings ? 'Close settings' : 'Atreus settings'}
         </button>
@@ -268,18 +270,18 @@ export default function ManagerToday() {
 
       {/* Prepare debrief prompt — surfaces when scheduled time has passed */}
       {pendingDebrief && (
-        <div className="bg-gradient-to-br from-[#0202ff]/5 to-white rounded-2xl border border-[#0202ff]/15 px-4 py-4 flex items-start gap-3">
+        <div className="bg-[#1c1f2a] rounded-2xl border border-blue-500/20 px-4 py-4 flex items-start gap-3">
           <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center flex-shrink-0 mt-0.5">
             <MessageSquare className="w-3.5 h-3.5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-[#0202ff] uppercase tracking-wide mb-0.5">Debrief ready</p>
-            <p className="text-sm font-semibold text-gray-900 leading-snug mb-1">
+            <p className="text-xs font-semibold text-blue-400 uppercase tracking-wide mb-0.5">Debrief ready</p>
+            <p className="text-sm font-semibold text-white/85 leading-snug mb-1">
               How did it go? — {pendingDebrief.focus_intention?.replace('Debrief: ', '').slice(0, 60)}
             </p>
-            <p className="text-xs text-gray-500">You prepared for this earlier. Close the loop with a quick debrief.</p>
+            <p className="text-xs text-white/40">You prepared for this earlier. Close the loop with a quick debrief.</p>
             <button
-              className="mt-2 text-xs font-medium text-[#0202ff] hover:underline"
+              className="mt-2 text-xs font-medium text-blue-400 hover:text-blue-300"
               onClick={() => openAtreus(`Earlier I prepared for: "${pendingDebrief.focus_intention?.replace('Debrief: ', '')}". Now I'd like to debrief — how did it go? What surprised me? What would I do differently?`)}
             >
               Debrief with Atreus →
@@ -326,20 +328,20 @@ export default function ManagerToday() {
       <GoalsPulseCard goals={goals} openAtreus={openAtreus} />
 
       {/* 6. Weekly reflection */}
-      <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden cursor-pointer hover:shadow-md transition-shadow" onClick={() => setShowWeeklyReflection(true)}>
-        <CardContent className="px-5 py-4 flex items-center justify-between">
+      <div className="bg-[#1c1f2a] rounded-2xl border border-white/8 overflow-hidden cursor-pointer hover:border-white/15 transition-colors" onClick={() => setShowWeeklyReflection(true)}>
+        <div className="px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-lg bg-green-50 border border-green-100 flex items-center justify-center">
-              <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+            <div className="w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-gray-900">Weekly focus reflection</p>
-              <p className="text-xs text-gray-500">Reflect on this week's wins and learnings</p>
+              <p className="text-sm font-semibold text-white/85">Weekly focus reflection</p>
+              <p className="text-xs text-white/40">Reflect on this week's wins and learnings</p>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-gray-300" />
-        </CardContent>
-      </Card>
+          <ChevronRight className="w-4 h-4 text-white/20" />
+        </div>
+      </div>
 
       {/* 7. Rhythm calendar */}
       {recentPulses.length > 0 && <CheckInHistoryCalendar pulses={recentPulses} />}
@@ -374,19 +376,19 @@ export default function ManagerToday() {
   ) : null;
 
   return (
-    <div className="px-4 py-6">
+    <div className="px-4 py-6 min-h-screen bg-[#13151c]">
       {/* Tone onboarding gate */}
       {needsToneOnboarding && (
         <div className="max-w-2xl mx-auto">
           <HeroGreeting firstName={firstName} />
-          <div className="mt-4 bg-white rounded-2xl border border-[#0202ff]/20 shadow-sm overflow-hidden">
+          <div className="mt-4 bg-[#1c1f2a] rounded-2xl border border-white/10 overflow-hidden">
             <div className="px-5 pt-5 pb-2 flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center">
                 <MessageSquare className="w-3.5 h-3.5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-900">One quick thing before we start</p>
-                <p className="text-xs text-gray-400">Choose how Atreus speaks with you.</p>
+                <p className="text-sm font-semibold text-white/85">One quick thing before we start</p>
+                <p className="text-xs text-white/40">Choose how Atreus speaks with you.</p>
               </div>
             </div>
             <div className="px-5 pb-5">

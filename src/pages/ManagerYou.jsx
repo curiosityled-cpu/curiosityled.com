@@ -24,18 +24,18 @@ function getFirstName(user) {
 
 function YouRow({ icon: Icon, iconBg, iconColor, title, subtitle, to, onClick, badge }) {
   const inner = (
-    <div className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer group">
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
+    <div className="flex items-center gap-4 px-5 py-4 hover:bg-white/5 active:bg-white/8 transition-colors cursor-pointer group">
+      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg} opacity-80`}>
         <Icon className={`w-4 h-4 ${iconColor}`} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="text-sm font-medium text-gray-900">{title}</p>
-          {badge && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{badge}</Badge>}
+          <p className="text-sm font-medium text-white/80">{title}</p>
+          {badge && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-white/20 text-white/50">{badge}</Badge>}
         </div>
-        {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
+        {subtitle && <p className="text-xs text-white/40 mt-0.5">{subtitle}</p>}
       </div>
-      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-400 flex-shrink-0" />
+      <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/40 flex-shrink-0" />
     </div>
   );
   if (to) return <Link to={to}>{inner}</Link>;
@@ -44,14 +44,14 @@ function YouRow({ icon: Icon, iconBg, iconColor, title, subtitle, to, onClick, b
 
 function SectionCard({ children }) {
   return (
-    <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden divide-y divide-gray-50">
+    <div className="bg-[#1c1f2a] rounded-2xl border border-white/8 overflow-hidden divide-y divide-white/6">
       {children}
-    </Card>
+    </div>
   );
 }
 
 function SectionLabel({ children }) {
-  return <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-1 pt-4 pb-1">{children}</p>;
+  return <p className="text-[11px] font-semibold text-white/35 uppercase tracking-wider px-1 pt-4 pb-1">{children}</p>;
 }
 
 export default function ManagerYou() {
@@ -104,18 +104,22 @@ export default function ManagerYou() {
   }[tonePref?.tone_mode] || 'Not set';
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 space-y-2">
+    <div className="max-w-2xl mx-auto px-4 py-6 space-y-2 min-h-screen bg-[#13151c]">
       {/* Profile hero */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-6 flex items-center gap-4">
-        <div className="w-14 h-14 rounded-full bg-[#0202ff]/10 flex items-center justify-center flex-shrink-0">
-          <span className="text-xl font-bold text-[#0202ff]">
+      <div className="pt-2 pb-3">
+        <p className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-1">You</p>
+        <h1 className="text-2xl font-bold text-white">Your baseline</h1>
+      </div>
+      <div className="bg-[#1c1f2a] rounded-2xl border border-white/8 px-5 py-6 flex items-center gap-4">
+        <div className="w-14 h-14 rounded-full bg-[#0202ff]/20 flex items-center justify-center flex-shrink-0">
+          <span className="text-xl font-bold text-[#5f8aff]">
             {displayName?.[0]?.toUpperCase() || '?'}
           </span>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-base font-bold text-gray-900 truncate">{displayName}</p>
-          <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-          <Badge variant="outline" className="text-[10px] mt-1.5">{appRole || 'Manager'}</Badge>
+          <p className="text-base font-bold text-white/90 truncate">{displayName}</p>
+          <p className="text-xs text-white/40 truncate">{user?.email}</p>
+          <Badge variant="outline" className="text-[10px] mt-1.5 border-white/20 text-white/50">{appRole || 'Manager'}</Badge>
         </div>
       </div>
 
@@ -270,12 +274,12 @@ export default function ManagerYou() {
         />
         <div
           onClick={() => base44.auth.logout()}
-          className="flex items-center gap-4 px-5 py-4 hover:bg-red-50 transition-colors cursor-pointer group"
+          className="flex items-center gap-4 px-5 py-4 hover:bg-red-500/10 transition-colors cursor-pointer group"
         >
-          <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
-            <LogOut className="w-4 h-4 text-red-500" />
+          <div className="w-9 h-9 rounded-xl bg-red-500/15 flex items-center justify-center flex-shrink-0">
+            <LogOut className="w-4 h-4 text-red-400" />
           </div>
-          <p className="text-sm font-medium text-red-600 flex-1">Log out</p>
+          <p className="text-sm font-medium text-red-400 flex-1">Log out</p>
         </div>
       </SectionCard>
     </div>
