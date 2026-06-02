@@ -8,7 +8,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { MessageSquare, X, ChevronDown, ChevronUp, HelpCircle, CheckCircle2 } from "lucide-react";
+import { MessageSquare, X, ChevronDown, ChevronUp, HelpCircle, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
@@ -161,6 +161,8 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
   const [optionalText, setOptionalText] = useState("");
   const [showOptional, setShowOptional] = useState(false);
   const [showWhy, setShowWhy] = useState(false);
+  const [avoidanceFlag, setAvoidanceFlag] = useState(null); // null | 'yes' | 'not_sure' | 'no'
+  const [showAvoidance, setShowAvoidance] = useState(false);
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(() => sessionStorage.getItem(getStorageKey()) === '1');
   const [followUp, setFollowUp] = useState(null);
@@ -184,6 +186,9 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
     };
     if (optionalText.trim()) {
       pulseData.biggest_weight_today = optionalText.trim();
+    }
+    if (avoidanceFlag) {
+      pulseData.avoidance_flag = avoidanceFlag;
     }
     await base44.entities.ManagerPulse.create(pulseData);
     setSaving(false);
@@ -319,7 +324,7 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
           ))}
         </div>
 
-        {/* Optional note + confirm (shown after selection) */}
+        {/* Optional note + avoidance cue + confirm (shown after selection) */}
         {selected && (
           <div className="space-y-2">
             <button
@@ -337,6 +342,41 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
                 className="text-sm resize-none h-20 rounded-xl border-gray-200 focus:border-[#0202ff]/40"
               />
             )}
+
+            {/* Optional avoidance/fear cue — not shown for avoidance_check itself */}
+            {promptType !== 'avoidance_check' && (
+              <div className="space-y-1.5">
+                <button
+                  onClick={() => setShowAvoidance(s => !s)}
+                  className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-amber-600 transition-colors"
+                >
+                  <AlertTriangle className="w-3 h-3" />
+                  {showAvoidance ? "Hide avoidance check" : "Anything you're avoiding today? (optional)"}
+                </button>
+                {showAvoidance && (
+                  <div className="flex gap-1.5 flex-wrap">
+                    {[
+                      { value: 'yes', label: 'Yes, definitely' },
+                      { value: 'not_sure', label: 'Maybe' },
+                      { value: 'no', label: 'Not really' },
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => setAvoidanceFlag(f => f === opt.value ? null : opt.value)}
+                        className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-all ${
+                          avoidanceFlag === opt.value
+                            ? 'border-amber-400 bg-amber-50 text-amber-700'
+                            : 'border-gray-200 text-gray-600 hover:border-amber-300 hover:bg-amber-50/50'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <Button
               size="sm"
               onClick={handleDone}

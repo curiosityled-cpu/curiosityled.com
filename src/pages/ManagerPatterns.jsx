@@ -21,6 +21,7 @@ import WatchlistCard from "@/components/patterns/WatchlistCard";
 import TriggerMapCard from "@/components/patterns/TriggerMapCard";
 import LeadingPatternCard from "@/components/patterns/LeadingPatternCard";
 import TrendSignalsChart from "@/components/patterns/TrendSignalsChart";
+import SwipeableSections from "@/components/patterns/SwipeableSections";
 
 function PatternCard({ insight, goals }) {
   const patterns = [];
@@ -189,13 +190,19 @@ export default function ManagerPatterns() {
     </div>
   );
 
+  const mobileSections = [
+    { label: 'Patterns', content: leftColumn },
+    { label: 'Signals', content: rightColumn },
+  ];
+
   return (
     <div className="px-4 py-6">
-      {/* Mobile: single column */}
-      <div className="md:hidden max-w-2xl mx-auto space-y-4">
+      {/* Mobile: swipeable sections */}
+      <div className="md:hidden max-w-2xl mx-auto">
         {header}
-        {leftColumn}
-        {rightColumn}
+        <div className="mt-4">
+          <SwipeableSections sections={mobileSections} />
+        </div>
       </div>
 
       {/* Desktop: two-column */}
