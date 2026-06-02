@@ -5,10 +5,10 @@
  *
  * Used on: MyLeadership (Today zone), and as a standalone modal.
  */
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { MessageSquare, X, ChevronDown, ChevronUp, HelpCircle, CheckCircle2, Sparkles, Clock } from "lucide-react";
+import { MessageSquare, X, ChevronDown, ChevronUp, HelpCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
@@ -157,24 +157,13 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
   // Persist "done today" in sessionStorage so re-mounts don't re-prompt
   // storageKey computed lazily inside the initializer to avoid stale-date closure
   const getStorageKey = () => `cl_checkin_done_${promptType}_${new Date().toISOString().split('T')[0]}`;
-  const [selected, setSelected] = useState(() => sessionStorage.getItem(getStorageKey() + '_val') || null);
+  const [selected, setSelected] = useState(null);
   const [optionalText, setOptionalText] = useState("");
   const [showOptional, setShowOptional] = useState(false);
   const [showWhy, setShowWhy] = useState(false);
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(() => sessionStorage.getItem(getStorageKey()) === '1');
   const [followUp, setFollowUp] = useState(null);
-
-  // Reset state when promptType changes (e.g. day rotation)
-  useEffect(() => {
-    setSelected(sessionStorage.getItem(getStorageKey() + '_val') || null);
-    setOptionalText("");
-    setShowOptional(false);
-    setShowWhy(false);
-    setFollowUp(null);
-    setDone(sessionStorage.getItem(getStorageKey()) === '1');
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [promptType]);
 
   const handleSelect = (option) => {
     if (saving || done) return;
@@ -200,133 +189,10 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
     setSaving(false);
     setDone(true);
     sessionStorage.setItem(getStorageKey(), '1');
-    sessionStorage.setItem(getStorageKey() + '_val', selected);
     setTimeout(() => {
       if (onComplete) onComplete({ selected, optionalText, followUp });
     }, 1800);
   };
-
-  // Find the selected option label for the summary
-  const selectedOption = prompt.options.find(o => o.value === selected);
-
-  // Derive a short contextual insight line from the answer
-  const getInsightLine = () => {
-    const v = selectedOption?.value;
-    if (!v) return null;
-    const map = {
-      // energy / load
-      none: "Heads up: you've got almost no room today. Worth protecting at least one thing.",
-      tight: "Day looks tight — try to catch one thing before it spills.",
-      some: "You've got some breathing room. Use it intentionally.",
-      plenty: "Rare — a light day. Good moment to do strategic work.",
-      // energy level / clarity
-      steady: "Steady is a good place to lead from.",
-      stretched: "Being stretched is normal. Notice where you're reactive vs. deliberate.",
-      drained: "Already behind — what's the one thing that truly has to move today?",
-      // confidence
-      high: "High confidence — a good day to tackle a harder conversation.",
-      uncertain: "Uncertainty is data. Notice what's driving it.",
-      low: "Low days are real. Protect your focus, reduce exposure.",
-      // overload
-      very_much: "You're in 'do it all' mode. One handoff today could shift this.",
-      somewhat: "You're catching it early — that's the skill.",
-      not_really: "Good. Hold that line.",
-      skipped: null,
-      // intent
-      delegation: "Delegation intent set. Who's the person, and what's the ask?",
-      strategic_work: "Protected time is rare. Treat it like a meeting you can't cancel.",
-      team_support: "Team-first days tend to be the most impactful ones.",
-      personal_development: "Investing in yourself is a leadership act, not a luxury.",
-      // weekly reflection
-      strong: "Strong week. Worth noting what made it that way.",
-      // avoidance
-      yes: "Naming it is the first step. What's the smallest move you could make?",
-      not_sure: "Worth sitting with. It often becomes clearer by end of day.",
-      no: "Good — clear conscience is a useful signal too.",
-      // optimism
-      optimistic: "Hopefulness shapes how you lead. Lean into it.",
-      hopeful: "Cautious optimism is grounded — trust it.",
-      pessimistic: "Flat outlook deserves attention. What's underneath it?",
-      // motivation
-      moderate: "Steady motivation — enough to lead well.",
-      flat: "Flat days happen. Pick one thing to get moving and the rest often follows.",
-    };
-    return map[v] || null;
-  };
-
-  const insightLine = getInsightLine();
-  const timeStr = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-
-  if (done) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 6 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-        className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
-      >
-        {/* Top bar — completion signal */}
-        <div className="h-1 w-full bg-gradient-to-r from-emerald-400 to-emerald-300" />
-
-        <div className="px-5 pt-4 pb-4 space-y-3">
-          {/* Header row */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.15, type: "spring", stiffness: 300 }}
-                className="w-6 h-6 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-              </motion.div>
-              <p className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider">Check-in complete</p>
-            </div>
-            <div className="flex items-center gap-1 text-[10px] text-gray-400">
-              <Clock className="w-3 h-3" />
-              {timeStr}
-            </div>
-          </div>
-
-          {/* The answer — visually prominent */}
-          <div className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{prompt.title}</p>
-            <p className="text-sm font-semibold text-gray-900 leading-snug">{selectedOption?.label || 'Checked in'}</p>
-            {optionalText && (
-              <p className="text-xs text-gray-500 mt-1.5 leading-relaxed italic">
-                "{optionalText.slice(0, 120)}{optionalText.length > 120 ? '…' : ''}"
-              </p>
-            )}
-          </div>
-
-          {/* Contextual insight from the answer */}
-          {insightLine && (
-            <motion.div
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
-              className="flex items-start gap-2"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#0202ff]/50 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-gray-500 leading-relaxed">{insightLine}</p>
-            </motion.div>
-          )}
-
-          {/* Follow-up message (overload-specific coaching) */}
-          {followUp && (
-            <motion.div
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35 }}
-              className="bg-[#0202ff]/5 border border-[#0202ff]/15 rounded-xl px-3 py-2.5"
-            >
-              <p className="text-xs text-[#0202ff]/80 leading-relaxed font-medium">{followUp}</p>
-            </motion.div>
-          )}
-        </div>
-      </motion.div>
-    );
-  }
 
   return (
     <motion.div
@@ -358,22 +224,42 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
         <p className="text-sm text-gray-600 leading-relaxed">{prompt.body}</p>
 
         {/* Options */}
-        <div className="grid grid-cols-2 gap-2">
-          {prompt.options.map((option) => (
-            <button
-              key={option.value}
-              onClick={() => handleSelect(option)}
-              disabled={saving}
-              className={`text-left text-sm px-3 py-2.5 rounded-xl border transition-all font-medium leading-snug
-                ${selected === option.value
-                  ? 'border-[#0202ff] bg-[#0202ff]/5 text-[#0202ff]'
-                  : 'border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 active:bg-gray-100'
-                }`}
+        {!done ? (
+          <div className="grid grid-cols-2 gap-2">
+            {prompt.options.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => handleSelect(option)}
+                disabled={saving}
+                className={`text-left text-sm px-3 py-2.5 rounded-xl border transition-all font-medium leading-snug
+                  ${selected === option.value
+                    ? 'border-[#0202ff] bg-[#0202ff]/5 text-[#0202ff]'
+                    : 'border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 active:bg-gray-100'
+                  }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <AnimatePresence>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="space-y-3"
             >
-              {option.label}
-            </button>
-          ))}
-        </div>
+              <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded-xl px-3 py-2.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                <span>Got it — thanks for checking in.</span>
+              </div>
+              {followUp && (
+                <div className="bg-[#0202ff]/5 border border-[#0202ff]/15 rounded-xl px-3 py-3">
+                  <p className="text-sm text-gray-800 leading-relaxed">{followUp}</p>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        )}
 
         {/* Optional note + confirm (shown after selection, before done) */}
         {selected && !done && (
