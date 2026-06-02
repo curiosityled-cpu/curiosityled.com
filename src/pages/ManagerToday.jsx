@@ -320,6 +320,7 @@ export default function ManagerToday() {
       {/* Upcoming friction */}
       <UpcomingFrictionCard
         trends={trends}
+        goals={goals}
         pulses={recentPulses}
         onOpenAtreus={openAtreus}
       />

@@ -64,8 +64,8 @@ function detectFriction(trends, goals, pulses) {
   return frictions[0] || null; // Show only the most urgent
 }
 
-export default function UpcomingFrictionCard({ trends, pulses, onOpenAtreus }) {
-  const friction = detectFriction(trends, null, pulses);
+export default function UpcomingFrictionCard({ trends, goals = [], pulses, onOpenAtreus }) {
+  const friction = detectFriction(trends, goals, pulses);
   if (!friction) return null;
 
   return (
