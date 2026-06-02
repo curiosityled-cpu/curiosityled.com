@@ -102,10 +102,7 @@ export default function WeeklyFocusReflection({ isOpen, onClose, onSuccess, user
             <Button
               onClick={handleSubmit}
               disabled={submitting || !reflection.trim()}
-              className="flex-1"
-              style={{ backgroundColor: '#0202ff' }}
-              onMouseEnter={(e) => !submitting && (e.currentTarget.style.backgroundColor = '#0101dd')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#0202ff')}
+              className="flex-1 bg-[#0202ff] hover:bg-[#0101dd]"
             >
               {submitting ? (
                 <>
