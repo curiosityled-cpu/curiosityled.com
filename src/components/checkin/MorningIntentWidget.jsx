@@ -61,7 +61,7 @@ export default function MorningIntentWidget({ userEmail }) {
       <Button
         onClick={() => setShow(true)}
         variant="outline"
-        className="w-full border-blue-200 text-blue-600 hover:bg-blue-50"
+        className="w-full border-[#0202ff]/20 text-[#0202ff] hover:bg-[#0202ff]/5"
       >
         ☀️ Set Today's Focus
       </Button>
@@ -69,7 +69,7 @@ export default function MorningIntentWidget({ userEmail }) {
   }
 
   return (
-    <Card className="border-blue-200 bg-blue-50">
+    <Card className="border-[#0202ff]/20 bg-[#0202ff]/5">
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <CardTitle className="text-base">What matters most today?</CardTitle>
         <button
@@ -118,7 +118,7 @@ export default function MorningIntentWidget({ userEmail }) {
               <Button
                 onClick={handleSubmit}
                 disabled={loading || !intention.trim()}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                className="flex-1 bg-[#0202ff] hover:bg-[#0101dd]"
               >
                 {loading ? (
                   <>

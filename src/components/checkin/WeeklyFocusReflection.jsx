@@ -21,6 +21,17 @@ export default function WeeklyFocusReflection({ isOpen, onClose, onSuccess, user
   const [keyDecisions, setKeyDecisions] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const handleReset = () => {
+    setReflection("");
+    setSurprises("");
+    setKeyDecisions("");
+  };
+
+  const handleClose = () => {
+    handleReset();
+    onClose();
+  };
+
   const handleSubmit = async () => {
     if (!reflection.trim() || !userEmail) {
       toast.error("Please share your weekly reflection");
@@ -40,6 +51,7 @@ export default function WeeklyFocusReflection({ isOpen, onClose, onSuccess, user
       });
 
       toast.success("Weekly reflection saved. Great work closing the loop!");
+      handleReset();
       if (onSuccess) onSuccess(pulse);
       onClose();
     } catch (error) {
@@ -51,7 +63,7 @@ export default function WeeklyFocusReflection({ isOpen, onClose, onSuccess, user
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -96,7 +108,7 @@ export default function WeeklyFocusReflection({ isOpen, onClose, onSuccess, user
           </div>
 
           <div className="flex gap-2 pt-4">
-            <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={handleClose}>
               Cancel
             </Button>
             <Button

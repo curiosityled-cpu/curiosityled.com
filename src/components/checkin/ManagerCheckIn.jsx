@@ -5,7 +5,7 @@
  *
  * Used on: MyLeadership (Today zone), and as a standalone modal.
  */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { MessageSquare, X, ChevronDown, ChevronUp, HelpCircle, CheckCircle2 } from "lucide-react";
@@ -164,6 +164,17 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(() => sessionStorage.getItem(getStorageKey()) === '1');
   const [followUp, setFollowUp] = useState(null);
+
+  // Reset state when promptType changes (e.g. day rotation)
+  useEffect(() => {
+    setSelected(null);
+    setOptionalText("");
+    setShowOptional(false);
+    setShowWhy(false);
+    setFollowUp(null);
+    setDone(sessionStorage.getItem(getStorageKey()) === '1');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [promptType]);
 
   const handleSelect = (option) => {
     if (saving || done) return;
