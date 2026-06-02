@@ -22,6 +22,7 @@ import GrowExperiencesCard from "@/components/patterns/GrowExperiencesCard";
 import ActiveFocusSection from "@/components/patterns/ActiveFocusSection";
 import PracticeFlow from "@/components/practice/PracticeFlow";
 import WorkoutsSection from "@/components/practice/WorkoutsSection";
+import DecisionJournalOutcomeReview from "@/components/practice/DecisionJournalOutcomeReview";
 
 
 // Flow keys that use the structured PracticeFlow; others open Atreus directly
@@ -315,6 +316,9 @@ export default function ManagerPractice() {
               prompt="I want to think through what I should delegate. Can you help me work through it?"
             />
           </div>
+
+          {/* Decision Journal outcome review */}
+          <DecisionJournalOutcomeReview />
 
           {/* Grow section */}
           <GrowSection goals={goals} assignments={assignments} devPlans={devPlans} pulses={pulses} trends={trends} insight={insight} onOpenAtreus={openAtreus} />

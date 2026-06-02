@@ -4,9 +4,10 @@
  * Brief spec: card #1 in Patterns section.
  */
 import React, { useState } from "react";
-import { Repeat2, ChevronDown, ChevronUp, Brain, ArrowRight, Lightbulb } from "lucide-react";
+import { Repeat2, ChevronDown, ChevronUp, Brain, Lightbulb, ExternalLink } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import PatternEvidenceDrawer from "@/components/patterns/PatternEvidenceDrawer";
 
 const PATTERN_LIBRARY = [
   {
@@ -105,6 +106,7 @@ function deriveWhatHelped(pulses, pattern) {
 
 export default function LeadingPatternCard({ trends, pulses = [], goals = [], onOpenAtreus }) {
   const [expanded, setExpanded] = useState(false);
+  const [showDrawer, setShowDrawer] = useState(false);
   const pattern = detectPattern(trends, pulses, goals);
 
   if (!pattern) return null;
@@ -121,9 +123,14 @@ export default function LeadingPatternCard({ trends, pulses = [], goals = [], on
             <p className="text-[10px] text-gray-400">Most active right now · AI-interpreted</p>
           </div>
         </div>
-        <button onClick={() => setExpanded(e => !e)} className="text-gray-400 hover:text-gray-600 transition-colors">
-          {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        </button>
+        <div className="flex items-center gap-1">
+          <button onClick={() => setShowDrawer(true)} className="p-1 rounded-lg transition-colors text-gray-400 hover:text-gray-600" title="View evidence trail">
+            <ExternalLink className="w-3.5 h-3.5" />
+          </button>
+          <button onClick={() => setExpanded(e => !e)} className="text-gray-400 hover:text-gray-600 transition-colors">
+            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+        </div>
       </div>
 
       <CardContent className="px-5 pt-2 pb-5 space-y-3">
@@ -211,12 +218,20 @@ export default function LeadingPatternCard({ trends, pulses = [], goals = [], on
             size="sm"
             variant="outline"
             className="text-xs h-8 border-gray-200 text-gray-600 hover:bg-gray-50"
-            onClick={() => onOpenAtreus?.(`Help me think through what tends to trigger my ${pattern.title} pattern and what I could try differently.`)}
+            onClick={() => setShowDrawer(true)}
           >
-            Work through it
+            Evidence trail
           </Button>
         </div>
       </CardContent>
+      <PatternEvidenceDrawer
+        isOpen={showDrawer}
+        onClose={() => setShowDrawer(false)}
+        pattern={pattern}
+        trends={trends}
+        pulses={pulses}
+        goals={goals}
+      />
     </Card>
   );
 }

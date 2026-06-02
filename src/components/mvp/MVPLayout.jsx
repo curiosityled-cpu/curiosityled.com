@@ -77,10 +77,10 @@ const NAV_CONFIG = {
 
 const ROLE_LABELS = { manager: 'Manager', buyer: 'Administrator', analyst: 'Analyst', executive: 'Enterprise' };
 const ROLE_COLORS = {
-  manager: 'bg-blue-50 border-blue-100 text-blue-700',
-  buyer: 'bg-purple-50 border-purple-100 text-purple-700',
-  analyst: 'bg-indigo-50 border-indigo-100 text-indigo-700',
-  executive: 'bg-emerald-50 border-emerald-100 text-emerald-700'
+  manager: 'bg-[#0202ff]/10 border-[#0202ff]/20 text-[#6699ff]',
+  buyer: 'bg-violet-500/10 border-violet-500/20 text-violet-400',
+  analyst: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400',
+  executive: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
 };
 
 function MVPLayoutInner({ children }) {
@@ -150,8 +150,10 @@ function MVPLayoutInner({ children }) {
         className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
         isActive ?
         'bg-[#0202ff] text-white shadow-sm' :
-        'text-gray-600 hover:bg-gray-100 hover:text-gray-900'} ${
-        !showLabel ? 'justify-center' : ''}`}>
+        ''} ${!showLabel ? 'justify-center' : ''}`}
+        style={!isActive ? { color: 'hsl(220 10% 55%)' } : {}}
+        onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'hsl(220 10% 14%)'; e.currentTarget.style.color = 'hsl(220 15% 85%)'; }}}
+        onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'hsl(220 10% 55%)'; }}}>
         
         <Icon className="w-4 h-4 flex-shrink-0" />
         {showLabel && <span className="flex-1">{item.label}</span>}
@@ -162,23 +164,32 @@ function MVPLayoutInner({ children }) {
 
   const sidebarWidth = collapsed ? 'w-16' : 'w-64';
 
+  // Sidebar dark surface tokens
+  const sidebarBg = 'hsl(220 13% 7%)';
+  const sidebarBorder = '1px solid hsl(220 10% 13%)';
+  const headerBg = 'hsl(220 12% 10%)';
+
   return (
     <SidebarContext.Provider value={{ collapsed }}>
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="cl-dark min-h-screen flex" style={{ background: 'hsl(220 13% 9%)' }}>
       {/* Desktop Sidebar */}
-      <aside className={`hidden md:flex flex-col ${sidebarWidth} bg-white border-r border-gray-200 fixed inset-y-0 left-0 z-20 transition-all duration-200`}>
+      <aside
+        className={`hidden md:flex flex-col ${sidebarWidth} fixed inset-y-0 left-0 z-20 transition-all duration-200`}
+        style={{ background: sidebarBg, borderRight: sidebarBorder }}
+      >
         {/* Logo + Collapse Toggle */}
-        <div className={`flex items-center border-b border-gray-100 h-16 px-3 ${collapsed ? 'justify-center' : 'justify-between px-4'}`}>
+        <div
+          className={`flex items-center h-16 px-3 ${collapsed ? 'justify-center' : 'justify-between px-4'}`}
+          style={{ borderBottom: sidebarBorder }}
+        >
           {!collapsed &&
           <div className="flex items-center gap-2 min-w-0">
               <img
               src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"
               alt="Curiosity Led"
               className="w-7 h-7 object-contain flex-shrink-0" />
-            
               <div className="min-w-0">
-                <p className="text-sm font-bold text-gray-900 truncate">Curiosity Led</p>
-                
+                <p className="text-sm font-bold truncate" style={{ color: 'hsl(220 15% 88%)' }}>Curiosity Led</p>
               </div>
             </div>
           }
@@ -187,12 +198,15 @@ function MVPLayoutInner({ children }) {
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"
             alt="Curiosity Led"
             className="w-7 h-7 object-contain" />
-
           }
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className={`p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 ${collapsed ? 'absolute right-0 translate-x-1/2 bg-white border border-gray-200 shadow-sm' : ''}`}>
-            
+            className="p-1.5 rounded-lg flex-shrink-0 transition-colors"
+            style={collapsed
+              ? { position: 'absolute', right: 0, transform: 'translateX(50%)', background: sidebarBg, border: sidebarBorder, color: 'hsl(220 8% 48%)' }
+              : { color: 'hsl(220 8% 48%)' }
+            }
+          >
             {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>
         </div>
@@ -212,22 +226,22 @@ function MVPLayoutInner({ children }) {
         </nav>
 
         {/* User footer */}
-        <div className="border-t border-gray-100 p-2">
+        <div className="p-2" style={{ borderTop: sidebarBorder }}>
           {!collapsed ?
           <div className="flex items-center gap-1 px-2 py-2 rounded-lg">
-              <div className="w-7 h-7 rounded-full bg-[#0202ff]/10 flex items-center justify-center flex-shrink-0">
-                <span className="text-xs font-bold text-[#0202ff]">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'hsl(225 70% 20%)' }}>
+                <span className="text-xs font-bold" style={{ color: 'hsl(225 70% 65%)' }}>
                   {(user?.display_name || user?.data?.display_name || user?.full_name)?.[0] || user?.email?.[0] || '?'}
                 </span>
               </div>
               <div className="flex-1 min-w-0 px-1">
-                <p className="text-xs font-medium text-gray-900 truncate">{user?.display_name || user?.data?.display_name || user?.full_name || user?.email}</p>
+                <p className="text-xs font-medium truncate" style={{ color: 'hsl(220 12% 72%)' }}>{user?.display_name || user?.data?.display_name || user?.full_name || user?.email}</p>
               </div>
               {/* Notifications */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 relative">
-                    <Bell className="w-3.5 h-3.5 text-gray-400" />
+                  <Button variant="ghost" size="icon" className="h-7 w-7 relative" style={{ color: 'hsl(220 8% 48%)' }}>
+                    <Bell className="w-3.5 h-3.5" />
                     {unreadCount > 0 &&
                   <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#0202ff] text-white text-[9px] flex items-center justify-center font-bold">
                         {unreadCount > 9 ? '9+' : unreadCount}
@@ -238,16 +252,15 @@ function MVPLayoutInner({ children }) {
                 <DropdownMenuContent side="top" align="end" className="w-72">
                   <div className="px-3 py-2 border-b">
                     <p className="font-semibold text-sm">Notifications</p>
-                    {unreadCount > 0 && <p className="text-xs text-gray-500">{unreadCount} unread</p>}
+                    {unreadCount > 0 && <p className="text-xs text-muted-foreground">{unreadCount} unread</p>}
                   </div>
                   {recentNotifications.length === 0 ?
-                <div className="px-3 py-6 text-center text-gray-400 text-sm">No notifications yet</div> :
-
+                <div className="px-3 py-6 text-center text-muted-foreground text-sm">No notifications yet</div> :
                 recentNotifications.map((n) =>
                 <DropdownMenuItem key={n.id} onClick={() => handleNotificationClick(n.id)} className="px-3 py-2.5 cursor-pointer">
                         <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-medium truncate ${!n.is_read ? 'text-gray-900' : 'text-gray-500'}`}>{n.title}</p>
-                          <p className="text-xs text-gray-400 truncate">{n.message}</p>
+                          <p className={`text-sm font-medium truncate ${!n.is_read ? '' : 'text-muted-foreground'}`}>{n.title}</p>
+                          <p className="text-xs text-muted-foreground truncate">{n.message}</p>
                         </div>
                         {!n.is_read && <span className="w-2 h-2 rounded-full bg-[#0202ff] flex-shrink-0 ml-2" />}
                       </DropdownMenuItem>
@@ -258,39 +271,30 @@ function MVPLayoutInner({ children }) {
               {/* Profile */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7">
-                    <User className="w-3.5 h-3.5 text-gray-400" />
+                  <Button variant="ghost" size="icon" className="h-7 w-7" style={{ color: 'hsl(220 8% 48%)' }}>
+                    <User className="w-3.5 h-3.5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="top" align="end" className="w-56">
                   <div className="px-3 py-2">
                     <p className="text-sm font-semibold">{user?.display_name || user?.data?.display_name || user?.full_name}</p>
-                    <p className="text-xs text-gray-500">{user?.email}</p>
+                    <p className="text-xs text-muted-foreground">{user?.email}</p>
                     <Badge variant="outline" className="text-xs mt-1">{user?.data?.current_role || user?.current_role || getFriendlyRoleLabel(user?.app_role)}</Badge>
                   </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/Profile')} className="cursor-pointer">
-                    <User className="w-4 h-4 mr-2" /> My Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/Settings')} className="cursor-pointer">
-                    <Settings className="w-4 h-4 mr-2" /> Settings
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/PrivacySettings')} className="cursor-pointer">
-                    <Shield className="w-4 h-4 mr-2" /> Privacy & Security
-                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/Profile')} className="cursor-pointer"><User className="w-4 h-4 mr-2" /> My Profile</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/Settings')} className="cursor-pointer"><Settings className="w-4 h-4 mr-2" /> Settings</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/PrivacySettings')} className="cursor-pointer"><Shield className="w-4 h-4 mr-2" /> Privacy & Security</DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
-                    <LogOut className="w-4 h-4 mr-2" /> Log Out
-                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-500"><LogOut className="w-4 h-4 mr-2" /> Log Out</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div> :
-
           <div className="flex flex-col items-center gap-1">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="w-9 h-9 relative">
-                    <Bell className="w-4 h-4 text-gray-400" />
+                  <Button variant="ghost" size="icon" className="w-9 h-9 relative" style={{ color: 'hsl(220 8% 48%)' }}>
+                    <Bell className="w-4 h-4" />
                     {unreadCount > 0 &&
                   <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-[#0202ff] text-white text-[9px] flex items-center justify-center font-bold">
                         {unreadCount > 9 ? '9+' : unreadCount}
@@ -299,12 +303,9 @@ function MVPLayoutInner({ children }) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="right" align="end" className="w-72">
-                  <div className="px-3 py-2 border-b">
-                    <p className="font-semibold text-sm">Notifications</p>
-                  </div>
+                  <div className="px-3 py-2 border-b"><p className="font-semibold text-sm">Notifications</p></div>
                   {recentNotifications.length === 0 ?
-                <div className="px-3 py-4 text-center text-gray-400 text-sm">No notifications yet</div> :
-
+                <div className="px-3 py-4 text-center text-muted-foreground text-sm">No notifications yet</div> :
                 recentNotifications.map((n) =>
                 <DropdownMenuItem key={n.id} onClick={() => handleNotificationClick(n.id)} className="px-3 py-2.5 cursor-pointer">
                         <p className="text-sm truncate">{n.title}</p>
@@ -315,29 +316,21 @@ function MVPLayoutInner({ children }) {
               </DropdownMenu>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="w-9 h-9">
-                    <User className="w-4 h-4 text-gray-400" />
+                  <Button variant="ghost" size="icon" className="w-9 h-9" style={{ color: 'hsl(220 8% 48%)' }}>
+                    <User className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="right" align="end" className="w-56">
                   <div className="px-3 py-2">
                     <p className="text-sm font-semibold">{user?.display_name || user?.full_name}</p>
-                    <p className="text-xs text-gray-500">{user?.email}</p>
+                    <p className="text-xs text-muted-foreground">{user?.email}</p>
                   </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/Profile')} className="cursor-pointer">
-                    <User className="w-4 h-4 mr-2" /> My Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/Settings')} className="cursor-pointer">
-                    <Settings className="w-4 h-4 mr-2" /> Settings
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/PrivacySettings')} className="cursor-pointer">
-                    <Shield className="w-4 h-4 mr-2" /> Privacy & Security
-                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/Profile')} className="cursor-pointer"><User className="w-4 h-4 mr-2" /> My Profile</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/Settings')} className="cursor-pointer"><Settings className="w-4 h-4 mr-2" /> Settings</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/PrivacySettings')} className="cursor-pointer"><Shield className="w-4 h-4 mr-2" /> Privacy & Security</DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
-                    <LogOut className="w-4 h-4 mr-2" /> Log Out
-                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-500"><LogOut className="w-4 h-4 mr-2" /> Log Out</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -346,24 +339,34 @@ function MVPLayoutInner({ children }) {
       </aside>
 
       {/* Mobile Header */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-200 flex items-center justify-between px-4 h-14">
+      <header
+        className="md:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 h-14"
+        style={{ background: headerBg, borderBottom: sidebarBorder }}
+      >
         <div className="flex items-center gap-2">
           <img
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"
             alt="Curiosity Led"
             className="w-7 h-7 object-contain" />
-          
-          <span className="text-sm font-bold text-gray-900">Curiosity Led</span>
+          <span className="text-sm font-bold" style={{ color: 'hsl(220 15% 88%)' }}>Curiosity Led</span>
         </div>
-        <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 rounded-lg hover:bg-gray-100">
+        <button
+          onClick={() => setMobileOpen(!mobileOpen)}
+          className="p-2 rounded-lg transition-colors"
+          style={{ color: 'hsl(220 8% 55%)' }}
+        >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </header>
 
       {/* Mobile Menu */}
       {mobileOpen &&
-      <div className="md:hidden fixed inset-0 z-20 bg-black/40" onClick={() => setMobileOpen(false)}>
-          <div className="absolute top-14 left-0 right-0 bg-white border-b border-gray-200 shadow-lg p-4" onClick={(e) => e.stopPropagation()}>
+      <div className="md:hidden fixed inset-0 z-20 bg-black/60" onClick={() => setMobileOpen(false)}>
+          <div
+            className="absolute top-14 left-0 right-0 shadow-lg p-4"
+            style={{ background: headerBg, borderBottom: sidebarBorder }}
+            onClick={(e) => e.stopPropagation()}
+          >
             {mvpRole &&
           <div className={`mb-3 px-3 py-2 rounded-lg border text-xs font-medium text-center ${ROLE_COLORS[mvpRole]}`}>
                 {ROLE_LABELS[mvpRole]} View
@@ -372,8 +375,8 @@ function MVPLayoutInner({ children }) {
             <nav className="space-y-1">
               {navItems.map((item) => <NavItem key={item.path} item={item} />)}
             </nav>
-            <div className="border-t border-gray-100 pt-3 mt-3">
-              <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-gray-500 px-3 py-2">
+            <div className="pt-3 mt-3" style={{ borderTop: sidebarBorder }}>
+              <button onClick={handleLogout} className="flex items-center gap-2 text-sm px-3 py-2" style={{ color: 'hsl(220 8% 52%)' }}>
                 <LogOut className="w-4 h-4" /> Log out
               </button>
             </div>
@@ -386,12 +389,12 @@ function MVPLayoutInner({ children }) {
         {children}
       </main>
 
-      {/* Floating Atreus Button */}
+      {/* Floating Atreus Button — always accessible */}
       {!showAtreus &&
       <button
         onClick={() => { clearPending(); openAtreusDefault(); }}
-        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
-        style={{ backgroundColor: '#0202ff' }}
+        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full transition-all flex items-center justify-center"
+        style={{ backgroundColor: '#0202ff', boxShadow: '0 4px 20px rgba(2,2,255,0.35)' }}
         title="Ask Atreus - Your AI Coach">
           <Brain className="w-6 h-6 text-white" />
         </button>

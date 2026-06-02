@@ -295,6 +295,9 @@ export default function ManagerToday() {
       <ManagerCheckIn
         promptType={!hasMorningIntent ? 'morning_intent' : todayPromptType}
         onComplete={() => queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] })}
+        trends={trends}
+        goals={goals}
+        pulses={recentPulses}
       />
 
       {/* 2. What matters now */}
