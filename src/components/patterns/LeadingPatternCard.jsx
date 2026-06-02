@@ -72,6 +72,37 @@ function detectPattern(trends, pulses, goals) {
   return null;
 }
 
+// Derive what actually helped this user from their pulse history
+function deriveWhatHelped(pulses, pattern) {
+  const learned = [];
+
+  // Look for follow_up pulses with no gap after heavy weeks → delegation worked
+  const heavyWeeks = pulses.filter(p => p.perceived_load === 'unsustainable' || p.perceived_load === 'heavy');
+  const followUps = pulses.filter(p => p.prompt_type === 'follow_up' && p.intent_actuals_gap === 'no_gap_detected');
+  if (heavyWeeks.length > 0 && followUps.length > 0) {
+    learned.push(`Following through on commitments after heavy weeks has worked ${followUps.length} time${followUps.length > 1 ? 's' : ''} for you.`);
+  }
+
+  // Morning intents that were followed through
+  const morningIntents = pulses.filter(p => p.prompt_type === 'morning_intent' && p.focus_intention);
+  if (morningIntents.length > 0) {
+    const lastIntent = morningIntents[0];
+    learned.push(`Setting a morning intent helped (e.g. "${lastIntent.focus_category?.replace('_', ' ') || 'focus'}" focus on ${new Date(lastIntent.created_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}).`);
+  }
+
+  // Energy trend improving after low period
+  const recentEnergy = pulses.slice(0, 5).map(p => p.energy_level);
+  const hadDrained = pulses.slice(5, 15).some(p => p.energy_level === 'drained');
+  const nowBetter = recentEnergy.some(e => e === 'steady' || e === 'strong');
+  if (hadDrained && nowBetter) {
+    learned.push('Your energy has recovered from a recent low — something you did or didn\'t do shifted it.');
+  }
+
+  // Fall back to library text if nothing dynamic found
+  if (learned.length === 0) return pattern.whatHelped;
+  return learned;
+}
+
 export default function LeadingPatternCard({ trends, pulses = [], goals = [], onOpenAtreus }) {
   const [expanded, setExpanded] = useState(false);
   const pattern = detectPattern(trends, pulses, goals);
@@ -135,17 +166,28 @@ export default function LeadingPatternCard({ trends, pulses = [], goals = [], on
               </div>
             </div>
 
-            {/* What has helped before */}
+            {/* What has helped before — dynamically derived from history */}
             <div>
               <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-2">What has helped before</p>
-              <div className="space-y-1.5">
-                {pattern.whatHelped.map((item, i) => (
-                  <div key={i} className="flex items-start gap-2.5 p-2.5 bg-emerald-50 rounded-lg border border-emerald-100">
-                    <Lightbulb className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-emerald-700 leading-relaxed">{item}</p>
-                  </div>
-                ))}
-              </div>
+              {(() => {
+                const items = deriveWhatHelped(pulses, pattern);
+                const isDynamic = pulses.length > 5 && items !== pattern.whatHelped;
+                return (
+                  <>
+                    {isDynamic && (
+                      <p className="text-[10px] text-[#0202ff] mb-1.5">From your history</p>
+                    )}
+                    <div className="space-y-1.5">
+                      {items.map((item, i) => (
+                        <div key={i} className="flex items-start gap-2.5 p-2.5 bg-emerald-50 rounded-lg border border-emerald-100">
+                          <Lightbulb className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                          <p className="text-xs text-emerald-700 leading-relaxed">{item}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         )}

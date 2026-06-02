@@ -5,7 +5,7 @@
  * Each metric paired with a plain-language explanation.
  */
 import React, { useState } from "react";
-import { BarChart3, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { BarChart3, TrendingUp, TrendingDown, Minus, Flag } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 // Map enum values to numeric score (0-3)
@@ -121,6 +121,57 @@ function MetricRow({ metric, pulses }) {
   );
 }
 
+// Build annotation events from pulse history
+function buildAnnotations(pulses) {
+  const annotations = [];
+  pulses.forEach((p, i) => {
+    const date = new Date(p.created_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    if (p.prompt_type === 'morning_intent' && p.focus_intention) {
+      annotations.push({ date, label: `Intent set: ${p.focus_intention.slice(0, 40)}${p.focus_intention.length > 40 ? '…' : ''}`, color: 'text-blue-600', bg: 'bg-blue-50 border-blue-100' });
+    }
+    if (p.prompt_type === 'overload_check' && p.operator_mode_response === 'very_much') {
+      annotations.push({ date, label: 'High-load week flagged', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-100' });
+    }
+    if (p.prompt_type === 'follow_up') {
+      annotations.push({ date, label: p.intent_actuals_gap === 'no_gap_detected' ? 'Commitment followed through' : 'Commitment gap detected', color: p.intent_actuals_gap === 'no_gap_detected' ? 'text-emerald-700' : 'text-rose-600', bg: p.intent_actuals_gap === 'no_gap_detected' ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100' });
+    }
+    if (p.prompt_type === 'prepare' || (p.focus_category && p.prompt_type === 'morning_intent')) {
+      if (i < 7) annotations.push({ date, label: 'Prepare flow completed', color: 'text-violet-700', bg: 'bg-violet-50 border-violet-100' });
+    }
+  });
+  // Deduplicate by date+label, return most recent 5
+  const seen = new Set();
+  return annotations.filter(a => {
+    const k = a.date + a.label;
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  }).slice(0, 5);
+}
+
+// Pattern recurrence: count how many weeks each pattern was detected
+function buildRecurrence(pulses) {
+  // Group pulses by week number
+  const weekMap = {};
+  pulses.forEach(p => {
+    const d = new Date(p.created_date);
+    const week = `${d.getFullYear()}-W${Math.ceil(d.getDate() / 7)}`;
+    if (!weekMap[week]) weekMap[week] = [];
+    weekMap[week].push(p);
+  });
+
+  const weeks = Object.entries(weekMap).sort((a, b) => a[0].localeCompare(b[0])).slice(-8);
+
+  const patterns = [
+    { label: 'Overload', key: 'overload', check: (ps) => ps.some(p => p.perceived_load === 'unsustainable' || p.perceived_load === 'heavy'), color: '#f59e0b' },
+    { label: 'Low energy', key: 'energy', check: (ps) => ps.some(p => p.energy_level === 'drained' || p.energy_level === 'stretched'), color: '#ef4444' },
+    { label: 'Avoidance', key: 'avoid', check: (ps) => ps.some(p => p.avoidance_flag === 'yes' || p.avoidance_flag === 'not_sure'), color: '#7c3aed' },
+    { label: 'Low confidence', key: 'conf', check: (ps) => ps.some(p => p.confidence_today === 'low' || p.confidence_today === 'uncertain'), color: '#0202ff' },
+  ];
+
+  return { patterns, weeks };
+}
+
 // Commitment follow-through bar
 function FollowThroughBar({ pulses }) {
   const followUps = pulses.filter(p => p.prompt_type === 'follow_up');
@@ -148,9 +199,14 @@ function FollowThroughBar({ pulses }) {
 
 export default function TrendSignalsChart({ trends, pulses = [] }) {
   const [expanded, setExpanded] = useState(false);
+  const [showAnnotations, setShowAnnotations] = useState(false);
+  const [showRecurrence, setShowRecurrence] = useState(false);
   const recent = pulses.slice(0, 14);
 
   if (recent.length < 3) return null;
+
+  const annotations = buildAnnotations(pulses);
+  const { patterns: recurrencePatterns, weeks } = buildRecurrence(pulses);
 
   const plainExplanation = (() => {
     const energyVals = recent.map(p => ENERGY_SCORE[p.energy_level]).filter(v => v !== undefined);
@@ -205,7 +261,6 @@ export default function TrendSignalsChart({ trends, pulses = [] }) {
             <FollowThroughBar pulses={pulses} />
           </div>
         ) : (
-          /* Compact view: just the 4 status pills */
           <div className="grid grid-cols-2 gap-2 pt-1">
             {METRICS.map(metric => {
               const vals = recent.map(p => metric.score(p)).filter(v => v !== null);
@@ -225,7 +280,7 @@ export default function TrendSignalsChart({ trends, pulses = [] }) {
               const trendColor = trendDir === 'up' ? 'text-emerald-500' : trendDir === 'down' ? 'text-rose-500' : 'text-gray-400';
               return (
                 <div key={metric.key} className="flex items-center gap-2.5 p-2.5 bg-gray-50 rounded-xl">
-                  <div className={`w-2 h-2 rounded-full flex-shrink-0`} style={{ backgroundColor: metric.color }} />
+                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: metric.color }} />
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] text-gray-400">{metric.label}</p>
                     <p className="text-xs font-semibold text-gray-700 truncate">— {label}</p>
@@ -234,6 +289,73 @@ export default function TrendSignalsChart({ trends, pulses = [] }) {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Annotation layer — key events */}
+        {annotations.length > 0 && (
+          <div className="pt-2 border-t border-gray-50">
+            <button
+              onClick={() => setShowAnnotations(s => !s)}
+              className="flex items-center gap-1.5 text-[10px] text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <Flag className="w-3 h-3" />
+              {showAnnotations ? 'Hide events' : `${annotations.length} key events`}
+            </button>
+            {showAnnotations && (
+              <div className="mt-2 space-y-1.5">
+                {annotations.map((a, i) => (
+                  <div key={i} className={`flex items-start gap-2 px-2.5 py-1.5 rounded-lg border ${a.bg}`}>
+                    <span className="text-[10px] text-gray-400 flex-shrink-0 mt-0.5">{a.date}</span>
+                    <span className={`text-[10px] font-medium ${a.color}`}>{a.label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Pattern recurrence view */}
+        {weeks.length >= 2 && (
+          <div className="pt-2 border-t border-gray-50">
+            <button
+              onClick={() => setShowRecurrence(s => !s)}
+              className="flex items-center gap-1.5 text-[10px] text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <BarChart3 className="w-3 h-3" />
+              {showRecurrence ? 'Hide recurrence' : 'Pattern recurrence by week'}
+            </button>
+            {showRecurrence && (
+              <div className="mt-2 space-y-2">
+                {recurrencePatterns.map(pat => {
+                  const hits = weeks.filter(([, ps]) => pat.check(ps));
+                  if (hits.length === 0) return null;
+                  const pct = Math.round((hits.length / weeks.length) * 100);
+                  return (
+                    <div key={pat.key} className="space-y-0.5">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-medium text-gray-600">{pat.label}</p>
+                        <p className="text-[10px] text-gray-400">{hits.length}/{weeks.length} weeks ({pct}%)</p>
+                      </div>
+                      <div className="flex gap-0.5">
+                        {weeks.map(([wk, ps]) => {
+                          const active = pat.check(ps);
+                          return (
+                            <div
+                              key={wk}
+                              className="h-3 flex-1 rounded-sm"
+                              style={{ backgroundColor: active ? pat.color : '#f3f4f6', opacity: active ? 0.8 : 1 }}
+                              title={wk}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                }).filter(Boolean)}
+                <p className="text-[10px] text-gray-400">Each bar = one week. Colour = pattern was active that week.</p>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

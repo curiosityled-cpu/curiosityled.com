@@ -152,30 +152,70 @@ function AssessmentCard({ assessment, previousAssessment, isLatest }) {
 }
 
 function OverallTrendView({ assessments }) {
+  const [showDetail, setShowDetail] = useState(false);
   if (assessments.length < 2) return null;
   const sorted = [...assessments].sort((a, b) => new Date(a.created_date || a.submission_ts) - new Date(b.created_date || b.submission_ts));
   const first = sorted[0];
   const last = sorted[sorted.length - 1];
   const diff = (last.overall_pct || 0) - (first.overall_pct || 0);
 
+  // Per-competency deltas
+  const competencyDeltas = Object.entries(COMPETENCY_LABELS).map(([key, label]) => {
+    const firstVal = first[key];
+    const lastVal = last[key];
+    if (firstVal == null || lastVal == null) return null;
+    return { label, delta: Math.round(lastVal - firstVal), first: Math.round(firstVal), last: Math.round(lastVal) };
+  }).filter(Boolean).sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+
   return (
-    <div className="flex items-center gap-3 p-3.5 bg-gray-50 rounded-xl border border-gray-100">
-      <div className="flex-1">
-        <p className="text-xs text-gray-500">Overall change since first assessment</p>
-        <p className="text-sm font-bold text-gray-900 mt-0.5">
-          {Math.round(first.overall_pct || 0)}% → {Math.round(last.overall_pct || 0)}%
-          {diff > 0 ? (
-            <span className="text-emerald-600 ml-2">↑ +{Math.round(diff)}%</span>
-          ) : diff < -1 ? (
-            <span className="text-rose-500 ml-2">↓ {Math.round(diff)}%</span>
-          ) : (
-            <span className="text-gray-400 ml-2">— stable</span>
-          )}
-        </p>
-      </div>
-      {diff > 2 ? <TrendingUp className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-        : diff < -2 ? <TrendingDown className="w-5 h-5 text-rose-500 flex-shrink-0" />
-        : <Minus className="w-5 h-5 text-gray-400 flex-shrink-0" />}
+    <div className="bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
+      <button
+        className="w-full flex items-center gap-3 p-3.5 text-left"
+        onClick={() => setShowDetail(s => !s)}
+      >
+        <div className="flex-1">
+          <p className="text-xs text-gray-500">Change since first assessment · {sorted.length} assessments total</p>
+          <p className="text-sm font-bold text-gray-900 mt-0.5">
+            {Math.round(first.overall_pct || 0)}% → {Math.round(last.overall_pct || 0)}%
+            {diff > 0 ? (
+              <span className="text-emerald-600 ml-2">↑ +{Math.round(diff)}%</span>
+            ) : diff < -1 ? (
+              <span className="text-rose-500 ml-2">↓ {Math.round(diff)}%</span>
+            ) : (
+              <span className="text-gray-400 ml-2">— stable</span>
+            )}
+          </p>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {diff > 2 ? <TrendingUp className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+            : diff < -2 ? <TrendingDown className="w-4 h-4 text-rose-500 flex-shrink-0" />
+            : <Minus className="w-4 h-4 text-gray-400 flex-shrink-0" />}
+          {showDetail ? <ChevronUp className="w-3.5 h-3.5 text-gray-400" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400" />}
+        </div>
+      </button>
+
+      {showDetail && competencyDeltas.length > 0 && (
+        <div className="px-3.5 pb-3.5 space-y-2 border-t border-gray-100">
+          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide pt-2">By competency</p>
+          {competencyDeltas.map(c => (
+            <div key={c.label} className="flex items-center gap-3">
+              <p className="text-xs text-gray-600 flex-1 min-w-0 truncate">{c.label}</p>
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <span className="text-[10px] text-gray-400">{c.first}%</span>
+                <span className="text-[10px] text-gray-400">→</span>
+                <span className="text-[10px] font-semibold text-gray-700">{c.last}%</span>
+                {c.delta > 1 ? (
+                  <span className="text-[10px] font-bold text-emerald-600">+{c.delta}%</span>
+                ) : c.delta < -1 ? (
+                  <span className="text-[10px] font-bold text-rose-500">{c.delta}%</span>
+                ) : (
+                  <span className="text-[10px] text-gray-400">—</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
