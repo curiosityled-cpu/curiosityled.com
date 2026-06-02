@@ -77,7 +77,7 @@ const NAV_CONFIG = {
 
 const ROLE_LABELS = { manager: 'Manager', buyer: 'Administrator', analyst: 'Analyst', executive: 'Enterprise' };
 const ROLE_COLORS = {
-  manager: 'bg-white/10 border-white/20 text-white/80',
+  manager: 'bg-blue-50 border-blue-100 text-blue-700',
   buyer: 'bg-purple-50 border-purple-100 text-purple-700',
   analyst: 'bg-indigo-50 border-indigo-100 text-indigo-700',
   executive: 'bg-emerald-50 border-emerald-100 text-emerald-700'
@@ -142,45 +142,33 @@ function MVPLayoutInner({ children }) {
       (itemPath === '/today' && (location.pathname === '/my-leadership' || location.pathname === '/')) ||
       (itemPath === '/you' && ['/Profile', '/Settings', '/PrivacySettings', '/Notifications', '/teams-settings'].includes(location.pathname));
     const [navPathname, navSearch] = item.path.split('?');
-
-    const activeClass = isManagerRole
-      ? 'bg-white/12 text-white'
-      : 'bg-[#0202ff] text-white shadow-sm';
-    const inactiveClass = isManagerRole
-      ? 'text-white/50 hover:bg-white/8 hover:text-white/80'
-      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900';
-
     return (
       <Link
         to={{ pathname: navPathname, search: navSearch ? `?${navSearch}` : '' }}
         onClick={() => setMobileOpen(false)}
         title={!showLabel ? item.label : undefined}
         className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-          isActive ? activeClass : inactiveClass
-        } ${!showLabel ? 'justify-center' : ''}`}>
+        isActive ?
+        'bg-[#0202ff] text-white shadow-sm' :
+        'text-gray-600 hover:bg-gray-100 hover:text-gray-900'} ${
+        !showLabel ? 'justify-center' : ''}`}>
         
         <Icon className="w-4 h-4 flex-shrink-0" />
         {showLabel && <span className="flex-1">{item.label}</span>}
-        {showLabel && isActive && <ChevronRight className="w-3 h-3 opacity-60" />}
+        {showLabel && isActive && <ChevronRight className="w-3 h-3" />}
       </Link>);
 
   };
 
   const sidebarWidth = collapsed ? 'w-16' : 'w-64';
 
-  // Dark theme for manager role, light for others
-  const isManagerRole = mvpRole === 'manager';
-  const sidebarBg = isManagerRole ? 'bg-[#0f1117]' : 'bg-white';
-  const sidebarBorder = isManagerRole ? 'border-white/8' : 'border-gray-200';
-  const pageBackground = isManagerRole ? 'bg-[#13151c]' : 'bg-gray-50';
-
   return (
     <SidebarContext.Provider value={{ collapsed }}>
-    <div className={`min-h-screen ${pageBackground} flex`}>
+    <div className="min-h-screen bg-gray-50 flex">
       {/* Desktop Sidebar */}
-      <aside className={`hidden md:flex flex-col ${sidebarWidth} ${sidebarBg} border-r ${sidebarBorder} fixed inset-y-0 left-0 z-20 transition-all duration-200`}>
+      <aside className={`hidden md:flex flex-col ${sidebarWidth} bg-white border-r border-gray-200 fixed inset-y-0 left-0 z-20 transition-all duration-200`}>
         {/* Logo + Collapse Toggle */}
-        <div className={`flex items-center border-b ${isManagerRole ? 'border-white/8' : 'border-gray-100'} h-16 px-3 ${collapsed ? 'justify-center' : 'justify-between px-4'}`}>
+        <div className={`flex items-center border-b border-gray-100 h-16 px-3 ${collapsed ? 'justify-center' : 'justify-between px-4'}`}>
           {!collapsed &&
           <div className="flex items-center gap-2 min-w-0">
               <img
@@ -189,7 +177,8 @@ function MVPLayoutInner({ children }) {
               className="w-7 h-7 object-contain flex-shrink-0" />
             
               <div className="min-w-0">
-                <p className={`text-sm font-bold truncate ${isManagerRole ? 'text-white' : 'text-gray-900'}`}>Curiosity Led</p>
+                <p className="text-sm font-bold text-gray-900 truncate">Curiosity Led</p>
+                
               </div>
             </div>
           }
@@ -202,11 +191,7 @@ function MVPLayoutInner({ children }) {
           }
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${
-              isManagerRole
-                ? 'hover:bg-white/10 text-white/40 hover:text-white/70'
-                : 'hover:bg-gray-100 text-gray-400 hover:text-gray-600'
-            } ${collapsed ? `absolute right-0 translate-x-1/2 border shadow-sm ${isManagerRole ? 'bg-[#0f1117] border-white/15' : 'bg-white border-gray-200'}` : ''}`}>
+            className={`p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 ${collapsed ? 'absolute right-0 translate-x-1/2 bg-white border border-gray-200 shadow-sm' : ''}`}>
             
             {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>
@@ -227,22 +212,22 @@ function MVPLayoutInner({ children }) {
         </nav>
 
         {/* User footer */}
-        <div className={`border-t ${isManagerRole ? 'border-white/8' : 'border-gray-100'} p-2`}>
+        <div className="border-t border-gray-100 p-2">
           {!collapsed ?
           <div className="flex items-center gap-1 px-2 py-2 rounded-lg">
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${isManagerRole ? 'bg-white/10' : 'bg-[#0202ff]/10'}`}>
-                <span className={`text-xs font-bold ${isManagerRole ? 'text-white/70' : 'text-[#0202ff]'}`}>
+              <div className="w-7 h-7 rounded-full bg-[#0202ff]/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-xs font-bold text-[#0202ff]">
                   {(user?.display_name || user?.data?.display_name || user?.full_name)?.[0] || user?.email?.[0] || '?'}
                 </span>
               </div>
               <div className="flex-1 min-w-0 px-1">
-                <p className={`text-xs font-medium truncate ${isManagerRole ? 'text-white/70' : 'text-gray-900'}`}>{user?.display_name || user?.data?.display_name || user?.full_name || user?.email}</p>
+                <p className="text-xs font-medium text-gray-900 truncate">{user?.display_name || user?.data?.display_name || user?.full_name || user?.email}</p>
               </div>
               {/* Notifications */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-7 w-7 relative">
-                    <Bell className={`w-3.5 h-3.5 ${isManagerRole ? 'text-white/40' : 'text-gray-400'}`} />
+                    <Bell className="w-3.5 h-3.5 text-gray-400" />
                     {unreadCount > 0 &&
                   <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#0202ff] text-white text-[9px] flex items-center justify-center font-bold">
                         {unreadCount > 9 ? '9+' : unreadCount}
@@ -274,7 +259,7 @@ function MVPLayoutInner({ children }) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-7 w-7">
-                    <User className={`w-3.5 h-3.5 ${isManagerRole ? 'text-white/40' : 'text-gray-400'}`} />
+                    <User className="w-3.5 h-3.5 text-gray-400" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="top" align="end" className="w-56">
@@ -305,7 +290,7 @@ function MVPLayoutInner({ children }) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="w-9 h-9 relative">
-                    <Bell className={`w-4 h-4 ${isManagerRole ? 'text-white/40' : 'text-gray-400'}`} />
+                    <Bell className="w-4 h-4 text-gray-400" />
                     {unreadCount > 0 &&
                   <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-[#0202ff] text-white text-[9px] flex items-center justify-center font-bold">
                         {unreadCount > 9 ? '9+' : unreadCount}
@@ -331,7 +316,7 @@ function MVPLayoutInner({ children }) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="w-9 h-9">
-                    <User className={`w-4 h-4 ${isManagerRole ? 'text-white/40' : 'text-gray-400'}`} />
+                    <User className="w-4 h-4 text-gray-400" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="right" align="end" className="w-56">
@@ -361,28 +346,24 @@ function MVPLayoutInner({ children }) {
       </aside>
 
       {/* Mobile Header */}
-      <header className={`md:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 h-14 ${
-        isManagerRole ? 'bg-[#0f1117] border-b border-white/8' : 'bg-white border-b border-gray-200'
-      }`}>
+      <header className="md:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-200 flex items-center justify-between px-4 h-14">
         <div className="flex items-center gap-2">
           <img
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"
             alt="Curiosity Led"
             className="w-7 h-7 object-contain" />
           
-          <span className={`text-sm font-bold ${isManagerRole ? 'text-white' : 'text-gray-900'}`}>Curiosity Led</span>
+          <span className="text-sm font-bold text-gray-900">Curiosity Led</span>
         </div>
-        <button onClick={() => setMobileOpen(!mobileOpen)} className={`p-2 rounded-lg ${isManagerRole ? 'hover:bg-white/10 text-white/60' : 'hover:bg-gray-100 text-gray-600'}`}>
+        <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 rounded-lg hover:bg-gray-100">
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </header>
 
       {/* Mobile Menu */}
       {mobileOpen &&
-      <div className="md:hidden fixed inset-0 z-20 bg-black/60" onClick={() => setMobileOpen(false)}>
-          <div className={`absolute top-14 left-0 right-0 border-b shadow-lg p-4 ${
-            isManagerRole ? 'bg-[#0f1117] border-white/8' : 'bg-white border-gray-200'
-          }`} onClick={(e) => e.stopPropagation()}>
+      <div className="md:hidden fixed inset-0 z-20 bg-black/40" onClick={() => setMobileOpen(false)}>
+          <div className="absolute top-14 left-0 right-0 bg-white border-b border-gray-200 shadow-lg p-4" onClick={(e) => e.stopPropagation()}>
             {mvpRole &&
           <div className={`mb-3 px-3 py-2 rounded-lg border text-xs font-medium text-center ${ROLE_COLORS[mvpRole]}`}>
                 {ROLE_LABELS[mvpRole]} View
@@ -391,8 +372,8 @@ function MVPLayoutInner({ children }) {
             <nav className="space-y-1">
               {navItems.map((item) => <NavItem key={item.path} item={item} />)}
             </nav>
-            <div className={`border-t pt-3 mt-3 ${isManagerRole ? 'border-white/8' : 'border-gray-100'}`}>
-              <button onClick={handleLogout} className={`flex items-center gap-2 text-sm px-3 py-2 ${isManagerRole ? 'text-white/50' : 'text-gray-500'}`}>
+            <div className="border-t border-gray-100 pt-3 mt-3">
+              <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-gray-500 px-3 py-2">
                 <LogOut className="w-4 h-4" /> Log out
               </button>
             </div>

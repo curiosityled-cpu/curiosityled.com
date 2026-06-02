@@ -9,7 +9,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 import GoalVisibilityToggle from "@/components/privacy/GoalVisibilityToggle";
-import BehavioralArcCard from "@/components/goals/BehavioralArcCard";
 
 function getLinkedPatterns(trends) {
   const patterns = [];
@@ -113,9 +112,6 @@ function GrowthThemeCard({ goal: initialGoal, trends, insight, onOpenAtreus }) {
           ))}
         </div>
       )}
-
-      {/* Behavioral arc — 5-part model */}
-      <BehavioralArcCard goal={goal} onUpdated={setGoal} />
 
       {/* Quick actions */}
       <div className="flex gap-2 pt-1">
