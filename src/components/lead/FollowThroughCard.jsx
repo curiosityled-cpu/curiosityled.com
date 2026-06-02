@@ -51,7 +51,7 @@ export default function FollowThroughCard({ pulses, userEmail, onDone }) {
         prompt_type: 'follow_up',
         source: 'web',
         focus_intention: reflection || `Follow-through: ${selected} on "${commitment.text}"`,
-        intent_actuals_gap: selected === 'did_it' ? 'no_gap_detected' : 'declared_delegation_operator_mode_detected',
+        intent_actuals_gap: selected === 'did_it' ? 'no_gap_detected' : selected === 'partly' ? 'partial_follow_through' : 'no_follow_through_detected',
       });
     } catch {}
     setLoading(false);
