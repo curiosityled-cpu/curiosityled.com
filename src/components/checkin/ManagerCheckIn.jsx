@@ -8,7 +8,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { MessageSquare, X, ChevronDown, ChevronUp, HelpCircle, CheckCircle2 } from "lucide-react";
+import { MessageSquare, X, ChevronDown, ChevronUp, HelpCircle, CheckCircle2, Sparkles, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
@@ -209,34 +209,121 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
   // Find the selected option label for the summary
   const selectedOption = prompt.options.find(o => o.value === selected);
 
+  // Derive a short contextual insight line from the answer
+  const getInsightLine = () => {
+    const v = selectedOption?.value;
+    if (!v) return null;
+    const map = {
+      // energy / load
+      none: "Heads up: you've got almost no room today. Worth protecting at least one thing.",
+      tight: "Day looks tight — try to catch one thing before it spills.",
+      some: "You've got some breathing room. Use it intentionally.",
+      plenty: "Rare — a light day. Good moment to do strategic work.",
+      // energy level / clarity
+      steady: "Steady is a good place to lead from.",
+      stretched: "Being stretched is normal. Notice where you're reactive vs. deliberate.",
+      drained: "Already behind — what's the one thing that truly has to move today?",
+      // confidence
+      high: "High confidence — a good day to tackle a harder conversation.",
+      uncertain: "Uncertainty is data. Notice what's driving it.",
+      low: "Low days are real. Protect your focus, reduce exposure.",
+      // overload
+      very_much: "You're in 'do it all' mode. One handoff today could shift this.",
+      somewhat: "You're catching it early — that's the skill.",
+      not_really: "Good. Hold that line.",
+      skipped: null,
+      // intent
+      delegation: "Delegation intent set. Who's the person, and what's the ask?",
+      strategic_work: "Protected time is rare. Treat it like a meeting you can't cancel.",
+      team_support: "Team-first days tend to be the most impactful ones.",
+      personal_development: "Investing in yourself is a leadership act, not a luxury.",
+      // weekly reflection
+      strong: "Strong week. Worth noting what made it that way.",
+      // avoidance
+      yes: "Naming it is the first step. What's the smallest move you could make?",
+      not_sure: "Worth sitting with. It often becomes clearer by end of day.",
+      no: "Good — clear conscience is a useful signal too.",
+      // optimism
+      optimistic: "Hopefulness shapes how you lead. Lean into it.",
+      hopeful: "Cautious optimism is grounded — trust it.",
+      pessimistic: "Flat outlook deserves attention. What's underneath it?",
+      // motivation
+      moderate: "Steady motivation — enough to lead well.",
+      flat: "Flat days happen. Pick one thing to get moving and the rest often follows.",
+    };
+    return map[v] || null;
+  };
+
+  const insightLine = getInsightLine();
+  const timeStr = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
   if (done) {
-    // Collapsed summary state
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0, scale: 0.95, y: 6 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
       >
-        <div className="px-4 py-3.5 flex items-center gap-3">
-          <div className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Check-in done</p>
-            <p className="text-sm font-medium text-gray-800 leading-snug">
-              {selectedOption?.label || 'Checked in'}
-              {optionalText && <span className="text-gray-500 font-normal"> · "{optionalText.slice(0, 60)}{optionalText.length > 60 ? '…' : ''}"</span>}
-            </p>
-          </div>
-          <span className="text-[10px] text-gray-400 flex-shrink-0">Today</span>
-        </div>
-        {followUp && (
-          <div className="px-4 pb-3.5">
-            <div className="bg-[#0202ff]/5 border border-[#0202ff]/15 rounded-xl px-3 py-2.5">
-              <p className="text-xs text-gray-700 leading-relaxed">{followUp}</p>
+        {/* Top bar — completion signal */}
+        <div className="h-1 w-full bg-gradient-to-r from-emerald-400 to-emerald-300" />
+
+        <div className="px-5 pt-4 pb-4 space-y-3">
+          {/* Header row */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.15, type: "spring", stiffness: 300 }}
+                className="w-6 h-6 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+              </motion.div>
+              <p className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider">Check-in complete</p>
+            </div>
+            <div className="flex items-center gap-1 text-[10px] text-gray-400">
+              <Clock className="w-3 h-3" />
+              {timeStr}
             </div>
           </div>
-        )}
+
+          {/* The answer — visually prominent */}
+          <div className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
+            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{prompt.title}</p>
+            <p className="text-sm font-semibold text-gray-900 leading-snug">{selectedOption?.label || 'Checked in'}</p>
+            {optionalText && (
+              <p className="text-xs text-gray-500 mt-1.5 leading-relaxed italic">
+                "{optionalText.slice(0, 120)}{optionalText.length > 120 ? '…' : ''}"
+              </p>
+            )}
+          </div>
+
+          {/* Contextual insight from the answer */}
+          {insightLine && (
+            <motion.div
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+              className="flex items-start gap-2"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#0202ff]/50 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-gray-500 leading-relaxed">{insightLine}</p>
+            </motion.div>
+          )}
+
+          {/* Follow-up message (overload-specific coaching) */}
+          {followUp && (
+            <motion.div
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+              className="bg-[#0202ff]/5 border border-[#0202ff]/15 rounded-xl px-3 py-2.5"
+            >
+              <p className="text-xs text-[#0202ff]/80 leading-relaxed font-medium">{followUp}</p>
+            </motion.div>
+          )}
+        </div>
       </motion.div>
     );
   }
