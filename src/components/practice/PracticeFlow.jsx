@@ -171,6 +171,8 @@ export default function PracticeFlow({ flowKey, onClose }) {
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
 
+  const [debriefScheduled, setDebriefScheduled] = useState(false);
+
   const flow = FLOWS[flowKey];
   if (!flow) return null;
 
@@ -191,7 +193,6 @@ export default function PracticeFlow({ flowKey, onClose }) {
   const handleComplete = async () => {
     setSaving(true);
     try {
-      // Save flow responses as a ManagerPulse follow-up record
       const notes = Object.entries(responses)
         .map(([k, v]) => `${k}: ${v}`)
         .join('\n\n');
@@ -203,6 +204,20 @@ export default function PracticeFlow({ flowKey, onClose }) {
         focus_intention: `${flow.title} session: ${responses[flow.steps[0].id] || ''}`.slice(0, 500),
         description: notes.slice(0, 1000),
       });
+
+      // For Prepare flows: schedule a debrief prompt for end-of-day (6 hours later)
+      if (flowKey === 'prepare') {
+        const debriefAt = new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString();
+        await base44.entities.ManagerPulse.create({
+          user_email: user?.email,
+          prompt_type: 'prepare_debrief_pending',
+          source: 'web',
+          focus_intention: `Debrief: ${responses[flow.steps[0].id] || ''}`.slice(0, 500),
+          description: notes.slice(0, 500),
+          scheduled_for: debriefAt,
+        });
+        setDebriefScheduled(true);
+      }
     } catch {}
 
     setSaving(false);
@@ -227,6 +242,14 @@ export default function PracticeFlow({ flowKey, onClose }) {
         <p className="text-sm text-gray-500 leading-relaxed">
           Your responses have been saved privately. Atreus has your full context and is ready to go deeper.
         </p>
+        {debriefScheduled && (
+          <div className="flex items-start gap-2 bg-white border border-gray-100 rounded-xl px-3 py-2.5 text-left">
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#0202ff] flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-gray-600 leading-relaxed">
+              A <strong>debrief prompt</strong> has been scheduled for later today — you'll see it when you check in after the moment has passed.
+            </p>
+          </div>
+        )}
         <Button size="sm" variant="outline" className="text-xs border-gray-200" onClick={onClose}>
           Back to Practice
         </Button>

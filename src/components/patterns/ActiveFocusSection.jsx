@@ -8,6 +8,7 @@ import { Target, Brain, ArrowRight, ChevronDown, ChevronUp, Activity, Lightbulb 
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
+import GoalVisibilityToggle from "@/components/privacy/GoalVisibilityToggle";
 
 function getLinkedPatterns(trends) {
   const patterns = [];
@@ -48,7 +49,8 @@ function buildWhyNow(goal, trends, insight) {
   return reasons.slice(0, 2);
 }
 
-function GrowthThemeCard({ goal, trends, insight, onOpenAtreus }) {
+function GrowthThemeCard({ goal: initialGoal, trends, insight, onOpenAtreus }) {
+  const [goal, setGoal] = useState(initialGoal);
   const [showDetail, setShowDetail] = useState(false);
   const whyNow = buildWhyNow(goal, trends, insight);
   const linkedPatterns = getLinkedPatterns(trends);
@@ -56,9 +58,12 @@ function GrowthThemeCard({ goal, trends, insight, onOpenAtreus }) {
 
   return (
     <div className="p-4 bg-white rounded-xl border border-gray-100 space-y-3">
-      {/* Theme title + progress */}
+      {/* Theme title + progress + visibility */}
       <div className="space-y-1.5">
-        <p className="text-sm font-semibold text-gray-900">{goal.title}</p>
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-sm font-semibold text-gray-900 flex-1">{goal.title}</p>
+          <GoalVisibilityToggle goal={goal} onUpdated={setGoal} />
+        </div>
         <div className="flex items-center gap-2">
           <Progress value={goal.progress || 0} className="h-1.5 flex-1" />
           <span className="text-xs text-gray-500 flex-shrink-0">{goal.progress || 0}%</span>

@@ -238,6 +238,14 @@ export default function ManagerToday() {
 
   const todayPulse = recentPulses.find(p => p.created_date?.startsWith(new Date().toISOString().split("T")[0]));
 
+  // Pending debrief from a Prepare flow scheduled earlier today/recently
+  const pendingDebrief = recentPulses.find(p =>
+    p.prompt_type === 'prepare_debrief_pending' &&
+    p.scheduled_for &&
+    new Date(p.scheduled_for) <= new Date() &&
+    !recentPulses.some(q => q.prompt_type === 'follow_up' && q.focus_intention?.startsWith('Debrief:') && q.created_date > p.created_date)
+  );
+
   // Determine if morning intent has been set today
   const todayKey = new Date().toISOString().split('T')[0];
   const hasMorningIntent = recentPulses.some(p => p.prompt_type === 'morning_intent' && p.created_date?.startsWith(todayKey));
@@ -257,6 +265,28 @@ export default function ManagerToday() {
         </button>
       </div>
       {showSettings && <CheckInSettings />}
+
+      {/* Prepare debrief prompt — surfaces when scheduled time has passed */}
+      {pendingDebrief && (
+        <div className="bg-gradient-to-br from-[#0202ff]/5 to-white rounded-2xl border border-[#0202ff]/15 px-4 py-4 flex items-start gap-3">
+          <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center flex-shrink-0 mt-0.5">
+            <MessageSquare className="w-3.5 h-3.5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-[#0202ff] uppercase tracking-wide mb-0.5">Debrief ready</p>
+            <p className="text-sm font-semibold text-gray-900 leading-snug mb-1">
+              How did it go? — {pendingDebrief.focus_intention?.replace('Debrief: ', '').slice(0, 60)}
+            </p>
+            <p className="text-xs text-gray-500">You prepared for this earlier. Close the loop with a quick debrief.</p>
+            <button
+              className="mt-2 text-xs font-medium text-[#0202ff] hover:underline"
+              onClick={() => openAtreus(`Earlier I prepared for: "${pendingDebrief.focus_intention?.replace('Debrief: ', '')}". Now I'd like to debrief — how did it go? What surprised me? What would I do differently?`)}
+            >
+              Debrief with Atreus →
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* PRIMARY HERO CARD: single dominant entry point for the day
           - If morning intent not set → show check-in with morning intent mode

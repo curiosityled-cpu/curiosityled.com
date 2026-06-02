@@ -199,6 +199,50 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
   if (done) {
     const selectedOption = prompt.options.find(o => o.value === selected);
     const savedText = sessionStorage.getItem(getStorageKey() + '_text') || '';
+    const isMorningIntent = promptType === 'morning_intent';
+
+    // "Today's Read" — shown when morning intent is completed
+    if (isMorningIntent) {
+      const categoryLabels = {
+        delegation: 'Delegating something meaningful',
+        strategic_work: 'Protecting time for strategic work',
+        team_support: 'Prioritising your team',
+        personal_development: 'Personal development',
+      };
+      const fieldValue = selectedOption?.field_value || selectedOption?.value;
+      const intentLabel = categoryLabels[fieldValue] || selectedOption?.label || 'Focus set';
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-br from-amber-50 to-white rounded-2xl border border-amber-100 shadow-sm overflow-hidden"
+        >
+          <div className="px-4 pt-4 pb-2 flex items-center gap-2.5">
+            <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+              <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold text-amber-700 uppercase tracking-wide">Today's intent set</p>
+              <p className="text-sm font-semibold text-gray-900">{intentLabel}</p>
+            </div>
+          </div>
+          {savedText && (
+            <div className="px-4 pb-3">
+              <p className="text-xs text-gray-500 leading-relaxed bg-white rounded-xl px-3 py-2 border border-amber-50 italic">
+                "{savedText.slice(0, 120)}{savedText.length > 120 ? '…' : ''}"
+              </p>
+            </div>
+          )}
+          {followUp && (
+            <div className="px-4 pb-4">
+              <p className="text-[10px] text-[#0202ff] font-medium leading-relaxed">{followUp}</p>
+            </div>
+          )}
+        </motion.div>
+      );
+    }
+
+    // Standard check-in done state — compact summary row
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.97 }}
@@ -211,7 +255,7 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs text-gray-400 font-medium">Check-in done</p>
+              <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">{prompt.title}</p>
               <p className="text-sm font-semibold text-gray-800 truncate">
                 {selectedOption?.label || "Logged today"}
                 {savedText && <span className="font-normal text-gray-500"> — {savedText.slice(0, 40)}{savedText.length > 40 ? '…' : ''}</span>}
