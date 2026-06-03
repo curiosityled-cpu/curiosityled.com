@@ -112,22 +112,22 @@ export default function LeadingPatternCard({ trends, pulses = [], goals = [], on
   if (!pattern) return null;
 
   return (
-    <Card className="shadow-sm border border-violet-100 bg-gradient-to-br from-violet-50/40 to-white rounded-2xl overflow-hidden">
+    <Card className="shadow-sm rounded-2xl overflow-hidden" style={{ background: 'hsl(220 12% 12%)', border: '1px solid hsl(220 10% 20%)' }}>
       <div className="px-5 pt-5 pb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center">
-            <Repeat2 className="w-3.5 h-3.5 text-violet-600" />
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'hsl(270 40% 22%)' }}>
+            <Repeat2 className="w-3.5 h-3.5" style={{ color: 'hsl(270 60% 70%)' }} />
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-900">Leading pattern</p>
-            <p className="text-[10px] text-gray-400">Most active right now · AI-interpreted</p>
+            <p className="text-sm font-semibold" style={{ color: 'hsl(220 15% 90%)' }}>Leading pattern</p>
+            <p className="text-[10px]" style={{ color: 'hsl(220 8% 50%)' }}>Most active right now · AI-interpreted</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={() => setShowDrawer(true)} className="p-1 rounded-lg transition-colors text-gray-400 hover:text-gray-600" title="View evidence trail">
+          <button onClick={() => setShowDrawer(true)} className="p-1 rounded-lg transition-colors" style={{ color: 'hsl(220 8% 50%)' }} title="View evidence trail">
             <ExternalLink className="w-3.5 h-3.5" />
           </button>
-          <button onClick={() => setExpanded(e => !e)} className="text-gray-400 hover:text-gray-600 transition-colors">
+          <button onClick={() => setExpanded(e => !e)} className="transition-colors" style={{ color: 'hsl(220 8% 50%)' }}>
             {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
         </div>
@@ -135,13 +135,13 @@ export default function LeadingPatternCard({ trends, pulses = [], goals = [], on
 
       <CardContent className="px-5 pt-2 pb-5 space-y-3">
         {/* Pattern title + tagline */}
-        <div className="p-3.5 bg-white rounded-xl border border-violet-100 space-y-1.5">
-          <p className="text-base font-bold text-gray-900">{pattern.title}</p>
-          <p className="text-sm text-gray-500 leading-relaxed">{pattern.tagline}</p>
+        <div className="p-3.5 rounded-xl space-y-1.5" style={{ background: 'hsl(220 12% 16%)', border: '1px solid hsl(220 10% 22%)' }}>
+          <p className="text-base font-bold" style={{ color: 'hsl(220 15% 92%)' }}>{pattern.title}</p>
+          <p className="text-sm leading-relaxed" style={{ color: 'hsl(220 8% 58%)' }}>{pattern.tagline}</p>
         </div>
 
         {/* Interpretation */}
-        <p className={`text-sm text-gray-600 leading-relaxed ${expanded ? '' : 'line-clamp-3'}`}>
+        <p className={`text-sm leading-relaxed ${expanded ? '' : 'line-clamp-3'}`} style={{ color: 'hsl(220 10% 65%)' }}>
           {pattern.interpretation}
         </p>
 
@@ -150,12 +150,12 @@ export default function LeadingPatternCard({ trends, pulses = [], goals = [], on
           <div className="space-y-3 pt-1">
             {/* What it looks like */}
             <div>
-              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-2">What it tends to look like</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wide mb-2" style={{ color: 'hsl(220 8% 45%)' }}>What it tends to look like</p>
               <div className="space-y-1.5">
                 {pattern.looksLike.map((item, i) => (
-                  <div key={i} className="flex items-start gap-2.5 p-2.5 bg-gray-50 rounded-lg">
-                    <div className="w-1.5 h-1.5 rounded-full bg-violet-400 flex-shrink-0 mt-1.5" />
-                    <p className="text-xs text-gray-600 leading-relaxed">{item}</p>
+                  <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg" style={{ background: 'hsl(220 12% 15%)' }}>
+                    <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5" style={{ background: 'hsl(270 50% 60%)' }} />
+                    <p className="text-xs leading-relaxed" style={{ color: 'hsl(220 10% 65%)' }}>{item}</p>
                   </div>
                 ))}
               </div>
@@ -163,10 +163,10 @@ export default function LeadingPatternCard({ trends, pulses = [], goals = [], on
 
             {/* What triggers it */}
             <div>
-              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-2">What tends to trigger it</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wide mb-2" style={{ color: 'hsl(220 8% 45%)' }}>What tends to trigger it</p>
               <div className="flex flex-wrap gap-1.5">
                 {pattern.triggers.map((t, i) => (
-                  <span key={i} className="text-[10px] font-medium px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100">
+                  <span key={i} className="text-[10px] font-medium px-2.5 py-1 rounded-full" style={{ background: 'hsl(38 30% 15%)', color: 'hsl(38 75% 62%)', border: '1px solid hsl(38 35% 22%)' }}>
                     {t}
                   </span>
                 ))}
@@ -175,20 +175,20 @@ export default function LeadingPatternCard({ trends, pulses = [], goals = [], on
 
             {/* What has helped before — dynamically derived from history */}
             <div>
-              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-2">What has helped before</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wide mb-2" style={{ color: 'hsl(220 8% 45%)' }}>What has helped before</p>
               {(() => {
                 const items = deriveWhatHelped(pulses, pattern);
                 const isDynamic = pulses.length > 5 && items !== pattern.whatHelped;
                 return (
                   <>
                     {isDynamic && (
-                      <p className="text-[10px] text-[#0202ff] mb-1.5">From your history</p>
+                      <p className="text-[10px] mb-1.5" style={{ color: 'hsl(225 70% 62%)' }}>From your history</p>
                     )}
                     <div className="space-y-1.5">
                       {items.map((item, i) => (
-                        <div key={i} className="flex items-start gap-2.5 p-2.5 bg-emerald-50 rounded-lg border border-emerald-100">
-                          <Lightbulb className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                          <p className="text-xs text-emerald-700 leading-relaxed">{item}</p>
+                        <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg" style={{ background: 'hsl(160 25% 12%)', border: '1px solid hsl(160 25% 18%)' }}>
+                          <Lightbulb className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: 'hsl(160 55% 52%)' }} />
+                          <p className="text-xs leading-relaxed" style={{ color: 'hsl(160 30% 65%)' }}>{item}</p>
                         </div>
                       ))}
                     </div>
@@ -200,7 +200,7 @@ export default function LeadingPatternCard({ trends, pulses = [], goals = [], on
         )}
 
         {!expanded && (
-          <button onClick={() => setExpanded(true)} className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+          <button onClick={() => setExpanded(true)} className="text-xs transition-colors" style={{ color: 'hsl(220 8% 48%)' }}>
             See triggers and what has helped →
           </button>
         )}
@@ -209,7 +209,8 @@ export default function LeadingPatternCard({ trends, pulses = [], goals = [], on
         <div className="flex gap-2 pt-1">
           <Button
             size="sm"
-            className="flex-1 bg-violet-600 hover:bg-violet-700 text-white text-xs h-8"
+            className="flex-1 text-white text-xs h-8"
+            style={{ background: 'hsl(270 50% 40%)', border: 'none' }}
             onClick={() => onOpenAtreus?.(`I want to understand my "${pattern.title}" pattern better and explore what's driving it right now.`)}
           >
             <Brain className="w-3 h-3 mr-1.5" /> Explore this pattern
@@ -217,7 +218,8 @@ export default function LeadingPatternCard({ trends, pulses = [], goals = [], on
           <Button
             size="sm"
             variant="outline"
-            className="text-xs h-8 border-gray-200 text-gray-600 hover:bg-gray-50"
+            className="text-xs h-8"
+            style={{ background: 'transparent', border: '1px solid hsl(220 10% 25%)', color: 'hsl(220 10% 65%)' }}
             onClick={() => setShowDrawer(true)}
           >
             Evidence trail

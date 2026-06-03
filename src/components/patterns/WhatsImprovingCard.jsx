@@ -88,32 +88,32 @@ export default function WhatsImprovingCard({ trends, pulses = [], goals = [] }) 
   if (gains.length === 0) return null;
 
   return (
-    <Card className="shadow-sm border border-emerald-100 bg-gradient-to-br from-emerald-50/60 to-white rounded-2xl overflow-hidden">
+    <Card className="shadow-sm rounded-2xl overflow-hidden" style={{ background: 'hsl(220 12% 12%)', border: '1px solid hsl(220 10% 20%)' }}>
       <div className="px-5 pt-5 pb-2 flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center">
-          <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
+        <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'hsl(160 30% 14%)' }}>
+          <TrendingUp className="w-3.5 h-3.5" style={{ color: 'hsl(160 55% 52%)' }} />
         </div>
         <div>
-          <p className="text-sm font-semibold text-gray-900">What's improving</p>
-          <p className="text-[10px] text-gray-400">Observed gains · Private to you</p>
+          <p className="text-sm font-semibold" style={{ color: 'hsl(220 15% 90%)' }}>What's improving</p>
+          <p className="text-[10px]" style={{ color: 'hsl(220 8% 50%)' }}>Observed gains · Private to you</p>
         </div>
       </div>
       <CardContent className="px-5 pt-2 pb-5 space-y-2.5">
         {gains.map((gain, i) => (
-          <div key={i} className="flex items-start gap-3 p-3 bg-white rounded-xl border border-emerald-100">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+          <div key={i} className="flex items-start gap-3 p-3 rounded-xl" style={{ background: 'hsl(220 12% 16%)', border: '1px solid hsl(220 10% 22%)' }}>
+            <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: 'hsl(160 55% 52%)' }} />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-800">{gain.label}</p>
-              <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{gain.evidence}</p>
-              <span className="inline-block text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 mt-1.5">
+              <p className="text-sm font-semibold" style={{ color: 'hsl(220 15% 88%)' }}>{gain.label}</p>
+              <p className="text-xs mt-0.5 leading-relaxed" style={{ color: 'hsl(220 8% 58%)' }}>{gain.evidence}</p>
+              <span className="inline-block text-[10px] font-medium px-2 py-0.5 rounded-full mt-1.5" style={{ background: 'hsl(160 25% 14%)', color: 'hsl(160 55% 55%)', border: '1px solid hsl(160 25% 20%)' }}>
                 {gain.source}
               </span>
             </div>
           </div>
         ))}
         <div className="flex items-center gap-1.5 pt-1">
-          <Star className="w-3 h-3 text-amber-400" />
-          <p className="text-[10px] text-gray-400">Progress is real even when it's hard to see day to day.</p>
+          <Star className="w-3 h-3" style={{ color: 'hsl(38 75% 55%)' }} />
+          <p className="text-[10px]" style={{ color: 'hsl(220 8% 45%)' }}>Progress is real even when it's hard to see day to day.</p>
         </div>
       </CardContent>
     </Card>
