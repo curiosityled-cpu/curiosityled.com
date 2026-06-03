@@ -159,9 +159,9 @@ function MVPLayoutInner({ children }) {
         isActive ?
         'bg-[#0202ff] text-white shadow-sm' :
         ''} ${!showLabel ? 'justify-center' : ''}`}
-        style={!isActive ? { color: 'hsl(220 10% 55%)' } : {}}
-        onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'hsl(220 10% 14%)'; e.currentTarget.style.color = 'hsl(220 15% 85%)'; }}}
-        onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'hsl(220 10% 55%)'; }}}>
+        style={!isActive ? { color: 'hsl(var(--muted-foreground))' } : {}}
+        onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'hsl(var(--muted))'; e.currentTarget.style.color = 'hsl(var(--foreground))'; }}}
+        onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'hsl(var(--muted-foreground))'; }}}>
         
         <Icon className="w-4 h-4 flex-shrink-0" />
         {showLabel && <span className="flex-1">{item.label}</span>}
@@ -179,7 +179,7 @@ function MVPLayoutInner({ children }) {
 
   return (
     <SidebarContext.Provider value={{ collapsed }}>
-    <div className="cl-dark min-h-screen flex bg-background">
+    <div className={`${isDark ? 'cl-dark' : ''} min-h-screen flex bg-background`}>
       {/* Desktop Sidebar */}
       <aside
         className={`hidden md:flex flex-col ${sidebarWidth} fixed inset-y-0 left-0 z-20 transition-all duration-200`}
@@ -197,7 +197,7 @@ function MVPLayoutInner({ children }) {
               alt="Curiosity Led"
               className="w-7 h-7 object-contain flex-shrink-0" />
               <div className="min-w-0">
-                <p className="text-sm font-bold truncate" style={{ color: 'hsl(220 15% 88%)' }}>Curiosity Led</p>
+                <p className="text-sm font-bold truncate text-foreground">Curiosity Led</p>
               </div>
             </div>
           }
@@ -237,19 +237,19 @@ function MVPLayoutInner({ children }) {
         <div className="p-2" style={{ borderTop: sidebarBorder }}>
           {!collapsed ?
           <div className="flex items-center gap-1 px-2 py-2 rounded-lg">
-              <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'hsl(225 70% 20%)' }}>
-                <span className="text-xs font-bold" style={{ color: 'hsl(225 70% 65%)' }}>
+              <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'hsl(var(--primary)/0.15)' }}>
+                <span className="text-xs font-bold" style={{ color: 'hsl(var(--ring))' }}>
                   {(user?.display_name || user?.data?.display_name || user?.full_name)?.[0] || user?.email?.[0] || '?'}
                 </span>
               </div>
               <div className="flex-1 min-w-0 px-1">
-                <p className="text-xs font-medium truncate" style={{ color: 'hsl(220 12% 72%)' }}>{user?.display_name || user?.data?.display_name || user?.full_name || user?.email}</p>
+                <p className="text-xs font-medium truncate" style={{ color: 'hsl(var(--foreground))' }}>{user?.display_name || user?.data?.display_name || user?.full_name || user?.email}</p>
               </div>
               {/* Theme toggle */}
               <button
                 onClick={toggleTheme}
                 className="h-7 w-7 flex items-center justify-center rounded-lg transition-colors flex-shrink-0"
-                style={{ color: 'hsl(220 8% 48%)' }}
+                style={{ color: 'hsl(var(--muted-foreground))' }}
                 title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
               >
                 {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
@@ -257,7 +257,7 @@ function MVPLayoutInner({ children }) {
               {/* Notifications */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 relative" style={{ color: 'hsl(220 8% 48%)' }}>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 relative" style={{ color: 'hsl(var(--muted-foreground))' }}>
                     <Bell className="w-3.5 h-3.5" />
                     {unreadCount > 0 &&
                   <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#0202ff] text-white text-[9px] flex items-center justify-center font-bold">
@@ -288,7 +288,7 @@ function MVPLayoutInner({ children }) {
               {/* Profile */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" style={{ color: 'hsl(220 8% 48%)' }}>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" style={{ color: 'hsl(var(--muted-foreground))' }}>
                     <User className="w-3.5 h-3.5" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -311,14 +311,14 @@ function MVPLayoutInner({ children }) {
               <button
                 onClick={toggleTheme}
                 className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
-                style={{ color: 'hsl(220 8% 48%)' }}
+                style={{ color: 'hsl(var(--muted-foreground))' }}
                 title={isDark ? 'Light mode' : 'Dark mode'}
               >
                 {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="w-9 h-9 relative" style={{ color: 'hsl(220 8% 48%)' }}>
+                  <Button variant="ghost" size="icon" className="w-9 h-9 relative" style={{ color: 'hsl(var(--muted-foreground))' }}>
                     <Bell className="w-4 h-4" />
                     {unreadCount > 0 &&
                   <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-[#0202ff] text-white text-[9px] flex items-center justify-center font-bold">
@@ -341,7 +341,7 @@ function MVPLayoutInner({ children }) {
               </DropdownMenu>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="w-9 h-9" style={{ color: 'hsl(220 8% 48%)' }}>
+                  <Button variant="ghost" size="icon" className="w-9 h-9" style={{ color: 'hsl(var(--muted-foreground))' }}>
                     <User className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -373,7 +373,7 @@ function MVPLayoutInner({ children }) {
             <button
               onClick={() => navigate(-1)}
               className="flex items-center gap-1.5 p-1.5 -ml-1 rounded-lg transition-colors"
-              style={{ color: 'hsl(220 15% 75%)' }}
+              style={{ color: 'hsl(var(--muted-foreground))' }}
             >
               <ArrowLeft className="w-5 h-5" />
               <span className="text-sm font-medium">Back</span>
@@ -384,7 +384,7 @@ function MVPLayoutInner({ children }) {
                 src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"
                 alt="Curiosity Led"
                 className="w-7 h-7 object-contain" />
-              <span className="text-sm font-bold" style={{ color: 'hsl(220 15% 88%)' }}>Curiosity Led</span>
+              <span className="text-sm font-bold" style={{ color: 'hsl(var(--foreground))' }}>Curiosity Led</span>
             </>
           )}
         </div>
@@ -392,7 +392,7 @@ function MVPLayoutInner({ children }) {
           <button
             onClick={toggleTheme}
             className="p-2 rounded-lg transition-colors"
-            style={{ color: 'hsl(220 8% 55%)' }}
+            style={{ color: 'hsl(var(--muted-foreground))' }}
             title={isDark ? 'Light mode' : 'Dark mode'}
           >
             {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
@@ -400,7 +400,7 @@ function MVPLayoutInner({ children }) {
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="p-2 rounded-lg transition-colors"
-            style={{ color: 'hsl(220 8% 55%)' }}
+            style={{ color: 'hsl(var(--muted-foreground))' }}
           >
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -424,7 +424,7 @@ function MVPLayoutInner({ children }) {
               {navItems.map((item) => <NavItem key={item.path} item={item} />)}
             </nav>
             <div className="pt-3 mt-3" style={{ borderTop: sidebarBorder }}>
-              <button onClick={handleLogout} className="flex items-center gap-2 text-sm px-3 py-2" style={{ color: 'hsl(220 8% 52%)' }}>
+              <button onClick={handleLogout} className="flex items-center gap-2 text-sm px-3 py-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
                 <LogOut className="w-4 h-4" /> Log out
               </button>
             </div>
@@ -439,9 +439,9 @@ function MVPLayoutInner({ children }) {
             <button
               onClick={() => navigate(-1)}
               className="flex items-center gap-1.5 text-sm font-medium transition-colors rounded-lg px-2 py-1.5 -ml-2"
-              style={{ color: 'hsl(220 10% 52%)' }}
-              onMouseEnter={e => { e.currentTarget.style.color = 'hsl(220 15% 80%)'; e.currentTarget.style.background = 'hsl(220 10% 14%)'; }}
-              onMouseLeave={e => { e.currentTarget.style.color = 'hsl(220 10% 52%)'; e.currentTarget.style.background = ''; }}
+              style={{ color: 'hsl(var(--muted-foreground))' }}
+              onMouseEnter={e => { e.currentTarget.style.color = 'hsl(var(--foreground))'; e.currentTarget.style.background = 'hsl(var(--muted))'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'hsl(var(--muted-foreground))'; e.currentTarget.style.background = ''; }}
             >
               <ArrowLeft className="w-4 h-4" />
               Back
