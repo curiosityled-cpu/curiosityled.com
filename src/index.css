@@ -3,62 +3,70 @@
 @tailwind utilities;
 
 @layer base {
+  /* ── Light Theme (default) ───────────────────────────────────────────────── */
   :root {
-    /* ── Dark / Low-Glare Premium Theme ──────────────────────────────────────
-       Inspired by Flo's calm, intimate, status-first aesthetic.
-       Base: deep warm charcoal, not pure black.
-       Cards: slightly elevated from base.
-       Accents: restrained — blue brand, warm amber highlights only.
-    ──────────────────────────────────────────────────────────────────────── */
+    --background: 220 20% 97%;
+    --foreground: 220 14% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 14% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 14% 12%;
+    --primary: 220 14% 10%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 10% 93%;
+    --secondary-foreground: 220 14% 20%;
+    --muted: 220 10% 92%;
+    --muted-foreground: 220 8% 46%;
+    --accent: 38 70% 95%;
+    --accent-foreground: 38 70% 25%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 10% 88%;
+    --input: 220 10% 93%;
+    --ring: 225 70% 55%;
+    --chart-1: 225 70% 55%;
+    --chart-2: 38 75% 50%;
+    --chart-3: 160 50% 42%;
+    --chart-4: 280 50% 55%;
+    --chart-5: 0 72% 51%;
+    --radius: 0.75rem;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 12% 38%;
+    --sidebar-primary: 225 70% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 10% 95%;
+    --sidebar-accent-foreground: 220 12% 18%;
+    --sidebar-border: 220 10% 88%;
+    --sidebar-ring: 225 70% 55%;
+  }
 
-    /* Background layers */
-    --background: 220 13% 9%;          /* #131720 — deep warm navy-charcoal */
-    --foreground: 220 15% 92%;         /* #E5E8EF — soft near-white */
-
-    /* Cards — slightly lighter than background */
-    --card: 220 12% 12%;               /* #191D27 */
+  /* ── Dark / Low-Glare Premium Theme ──────────────────────────────────────── */
+  .dark {
+    --background: 220 13% 9%;
+    --foreground: 220 15% 92%;
+    --card: 220 12% 12%;
     --card-foreground: 220 15% 92%;
-
-    /* Popovers / dropdowns */
-    --popover: 220 12% 14%;            /* #1E2330 */
+    --popover: 220 12% 14%;
     --popover-foreground: 220 15% 92%;
-
-    /* Primary — kept as near-white for buttons */
     --primary: 220 15% 90%;
     --primary-foreground: 220 13% 9%;
-
-    /* Secondary — muted surfaces */
-    --secondary: 220 10% 17%;          /* #22273A */
+    --secondary: 220 10% 17%;
     --secondary-foreground: 220 15% 80%;
-
-    /* Muted — very subtle surfaces */
     --muted: 220 10% 15%;
-    --muted-foreground: 220 10% 52%;   /* dimmed label text */
-
-    /* Accent — warm amber touch */
-    --accent: 38 35% 18%;              /* #2E2716 — warm amber tinted surface */
-    --accent-foreground: 38 80% 70%;   /* #E8C06A — warm amber text */
-
-    /* Destructive */
+    --muted-foreground: 220 10% 52%;
+    --accent: 38 35% 18%;
+    --accent-foreground: 38 80% 70%;
     --destructive: 0 55% 45%;
     --destructive-foreground: 0 0% 98%;
-
-    /* Borders & inputs — barely visible lines */
-    --border: 220 10% 20%;             /* #282E3D */
+    --border: 220 10% 20%;
     --input: 220 10% 18%;
-    --ring: 225 70% 60%;               /* brand blue focus ring */
-
-    /* Charts — warm palette for dark backgrounds */
-    --chart-1: 225 70% 58%;            /* brand blue */
-    --chart-2: 38 75% 58%;             /* warm amber */
-    --chart-3: 160 50% 48%;            /* muted emerald */
-    --chart-4: 280 50% 62%;            /* soft violet */
-    --chart-5: 0 55% 55%;              /* muted red */
-
-    --radius: 0.75rem;
-
-    /* Sidebar */
-    --sidebar-background: 220 13% 7%;  /* darker than main bg */
+    --ring: 225 70% 60%;
+    --chart-1: 225 70% 58%;
+    --chart-2: 38 75% 58%;
+    --chart-3: 160 50% 48%;
+    --chart-4: 280 50% 62%;
+    --chart-5: 0 55% 55%;
+    --sidebar-background: 220 13% 7%;
     --sidebar-foreground: 220 12% 75%;
     --sidebar-primary: 225 70% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -67,8 +75,6 @@
     --sidebar-border: 220 10% 13%;
     --sidebar-ring: 225 70% 58%;
   }
-
-  /* No separate .dark class needed — this IS the theme */
 }
 
 @layer base {
@@ -82,7 +88,6 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Scrollbars — dark themed */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -99,171 +104,156 @@
   }
 }
 
-/* ── Manager surface overrides ───────────────────────────────────────────────
-   These apply to the MVP manager shell only.
-   All hardcoded bg-white / bg-gray-* / text-gray-* inside manager pages
-   will be overridden by these CSS variables through the shadcn token system.
-   For components that still use hardcoded Tailwind colors we use a wrapper
-   class .cl-dark applied to the root layout div.
-──────────────────────────────────────────────────────────────────────────── */
+/* ── Manager surface overrides (dark mode only) ──────────────────────────────
+   Applied inside the MVP manager shell (.cl-dark) when dark mode is active.
+   Overrides hardcoded Tailwind color classes used in legacy components.
+────────────────────────────────────────────────────────────────────────── */
 
-/* Hardcoded gray overrides inside manager shell */
-.cl-dark .bg-white {
+.dark .cl-dark .bg-white {
   background-color: hsl(var(--card)) !important;
 }
-.cl-dark .bg-gray-50 {
+.dark .cl-dark .bg-gray-50 {
   background-color: hsl(220 10% 11%) !important;
 }
-.cl-dark .bg-gray-100 {
+.dark .cl-dark .bg-gray-100 {
   background-color: hsl(220 10% 14%) !important;
 }
-.cl-dark .bg-gray-200 {
+.dark .cl-dark .bg-gray-200 {
   background-color: hsl(220 10% 17%) !important;
 }
-.cl-dark .border-gray-100 {
+.dark .cl-dark .border-gray-100 {
   border-color: hsl(var(--border)) !important;
 }
-.cl-dark .border-gray-200 {
+.dark .cl-dark .border-gray-200 {
   border-color: hsl(220 10% 22%) !important;
 }
-.cl-dark .text-gray-900 {
+.dark .cl-dark .text-gray-900 {
   color: hsl(var(--foreground)) !important;
 }
-.cl-dark .text-gray-800 {
+.dark .cl-dark .text-gray-800 {
   color: hsl(220 15% 85%) !important;
 }
-.cl-dark .text-gray-700 {
+.dark .cl-dark .text-gray-700 {
   color: hsl(220 12% 78%) !important;
 }
-.cl-dark .text-gray-600 {
+.dark .cl-dark .text-gray-600 {
   color: hsl(220 10% 65%) !important;
 }
-.cl-dark .text-gray-500 {
+.dark .cl-dark .text-gray-500 {
   color: hsl(220 8% 55%) !important;
 }
-.cl-dark .text-gray-400 {
+.dark .cl-dark .text-gray-400 {
   color: hsl(220 8% 45%) !important;
 }
-.cl-dark .text-gray-300 {
+.dark .cl-dark .text-gray-300 {
   color: hsl(220 8% 38%) !important;
 }
-.cl-dark .text-gray-200 {
+.dark .cl-dark .text-gray-200 {
   color: hsl(220 8% 30%) !important;
 }
 
-/* Hover states */
-.cl-dark .hover\:bg-gray-50:hover {
+.dark .cl-dark .hover\:bg-gray-50:hover {
   background-color: hsl(220 10% 13%) !important;
 }
-.cl-dark .hover\:bg-gray-100:hover {
+.dark .cl-dark .hover\:bg-gray-100:hover {
   background-color: hsl(220 10% 15%) !important;
 }
 
-/* Dividers */
-.cl-dark .divide-gray-50 > * + * {
+.dark .cl-dark .divide-gray-50 > * + * {
   border-color: hsl(var(--border)) !important;
 }
-.cl-dark .divide-gray-100 > * + * {
+.dark .cl-dark .divide-gray-100 > * + * {
   border-color: hsl(var(--border)) !important;
 }
-.cl-dark .border-t {
+.dark .cl-dark .border-t {
   border-color: hsl(var(--border));
 }
-.cl-dark .border-b {
+.dark .cl-dark .border-b {
   border-color: hsl(var(--border));
 }
 
-/* Input / Textarea dark */
-.cl-dark input,
-.cl-dark textarea,
-.cl-dark select {
+.dark .cl-dark input,
+.dark .cl-dark textarea,
+.dark .cl-dark select {
   background-color: hsl(220 10% 14%) !important;
   color: hsl(var(--foreground)) !important;
   border-color: hsl(var(--border)) !important;
 }
-.cl-dark input::placeholder,
-.cl-dark textarea::placeholder {
+.dark .cl-dark input::placeholder,
+.dark .cl-dark textarea::placeholder {
   color: hsl(220 8% 45%) !important;
 }
 
-/* Shadcn Card in manager context */
-.cl-dark [class*="rounded-"] {
+.dark .cl-dark [class*="rounded-"] {
   background-color: hsl(var(--card));
 }
 
-/* Gradient overrides — warm tinted on dark */
-.cl-dark .from-blue-50\/40 {
+.dark .cl-dark .from-blue-50\/40 {
   --tw-gradient-from: hsl(225 30% 13% / 0.5) !important;
 }
-.cl-dark .from-slate-50 {
+.dark .cl-dark .from-slate-50 {
   --tw-gradient-from: hsl(220 13% 9%) !important;
 }
-.cl-dark .to-blue-50 {
+.dark .cl-dark .to-blue-50 {
   --tw-gradient-to: hsl(225 25% 11%) !important;
 }
-.cl-dark .bg-gradient-to-br {
+.dark .cl-dark .bg-gradient-to-br {
   /* keep as-is — specific gradient classes above handle overrides */
 }
 
-/* Tone palette chips — keep colored but darkened */
-.cl-dark .bg-emerald-50 { background-color: hsl(160 30% 11%) !important; }
-.cl-dark .bg-amber-50 { background-color: hsl(38 30% 11%) !important; }
-.cl-dark .bg-blue-50 { background-color: hsl(225 30% 12%) !important; }
-.cl-dark .bg-violet-50 { background-color: hsl(270 25% 12%) !important; }
-.cl-dark .bg-purple-50 { background-color: hsl(280 25% 12%) !important; }
-.cl-dark .bg-indigo-50 { background-color: hsl(240 28% 13%) !important; }
-.cl-dark .bg-rose-50 { background-color: hsl(350 25% 11%) !important; }
-.cl-dark .bg-sky-50 { background-color: hsl(200 30% 11%) !important; }
-.cl-dark .bg-green-50 { background-color: hsl(140 25% 10%) !important; }
-.cl-dark .bg-orange-50 { background-color: hsl(25 30% 11%) !important; }
-.cl-dark .bg-slate-50 { background-color: hsl(220 12% 12%) !important; }
-.cl-dark .bg-red-50 { background-color: hsl(0 25% 11%) !important; }
+.dark .cl-dark .bg-emerald-50 { background-color: hsl(160 30% 11%) !important; }
+.dark .cl-dark .bg-amber-50 { background-color: hsl(38 30% 11%) !important; }
+.dark .cl-dark .bg-blue-50 { background-color: hsl(225 30% 12%) !important; }
+.dark .cl-dark .bg-violet-50 { background-color: hsl(270 25% 12%) !important; }
+.dark .cl-dark .bg-purple-50 { background-color: hsl(280 25% 12%) !important; }
+.dark .cl-dark .bg-indigo-50 { background-color: hsl(240 28% 13%) !important; }
+.dark .cl-dark .bg-rose-50 { background-color: hsl(350 25% 11%) !important; }
+.dark .cl-dark .bg-sky-50 { background-color: hsl(200 30% 11%) !important; }
+.dark .cl-dark .bg-green-50 { background-color: hsl(140 25% 10%) !important; }
+.dark .cl-dark .bg-orange-50 { background-color: hsl(25 30% 11%) !important; }
+.dark .cl-dark .bg-slate-50 { background-color: hsl(220 12% 12%) !important; }
+.dark .cl-dark .bg-red-50 { background-color: hsl(0 25% 11%) !important; }
 
-/* Border chip colors — darken slightly */
-.cl-dark .border-emerald-100 { border-color: hsl(160 30% 18%) !important; }
-.cl-dark .border-amber-100 { border-color: hsl(38 35% 20%) !important; }
-.cl-dark .border-blue-100 { border-color: hsl(225 30% 18%) !important; }
-.cl-dark .border-violet-100 { border-color: hsl(270 25% 20%) !important; }
-.cl-dark .border-purple-100 { border-color: hsl(280 25% 18%) !important; }
-.cl-dark .border-indigo-100 { border-color: hsl(240 28% 20%) !important; }
-.cl-dark .border-rose-100 { border-color: hsl(350 25% 18%) !important; }
-.cl-dark .border-sky-100 { border-color: hsl(200 30% 18%) !important; }
-.cl-dark .border-green-100 { border-color: hsl(140 25% 16%) !important; }
-.cl-dark .border-orange-100 { border-color: hsl(25 30% 18%) !important; }
-.cl-dark .border-slate-100 { border-color: hsl(220 12% 18%) !important; }
-.cl-dark .border-red-50 { border-color: hsl(0 20% 16%) !important; }
-.cl-dark .border-dashed { border-color: hsl(220 10% 22%) !important; }
+.dark .cl-dark .border-emerald-100 { border-color: hsl(160 30% 18%) !important; }
+.dark .cl-dark .border-amber-100 { border-color: hsl(38 35% 20%) !important; }
+.dark .cl-dark .border-blue-100 { border-color: hsl(225 30% 18%) !important; }
+.dark .cl-dark .border-violet-100 { border-color: hsl(270 25% 20%) !important; }
+.dark .cl-dark .border-purple-100 { border-color: hsl(280 25% 18%) !important; }
+.dark .cl-dark .border-indigo-100 { border-color: hsl(240 28% 20%) !important; }
+.dark .cl-dark .border-rose-100 { border-color: hsl(350 25% 18%) !important; }
+.dark .cl-dark .border-sky-100 { border-color: hsl(200 30% 18%) !important; }
+.dark .cl-dark .border-green-100 { border-color: hsl(140 25% 16%) !important; }
+.dark .cl-dark .border-orange-100 { border-color: hsl(25 30% 18%) !important; }
+.dark .cl-dark .border-slate-100 { border-color: hsl(220 12% 18%) !important; }
+.dark .cl-dark .border-red-50 { border-color: hsl(0 20% 16%) !important; }
+.dark .cl-dark .border-dashed { border-color: hsl(220 10% 22%) !important; }
 
-/* Keep colored text readable on dark backgrounds */
-.cl-dark .text-emerald-600 { color: hsl(160 55% 55%) !important; }
-.cl-dark .text-emerald-700 { color: hsl(160 50% 50%) !important; }
-.cl-dark .text-emerald-800 { color: hsl(160 45% 65%) !important; }
-.cl-dark .text-amber-600 { color: hsl(38 80% 62%) !important; }
-.cl-dark .text-amber-700 { color: hsl(38 75% 58%) !important; }
-.cl-dark .text-amber-800 { color: hsl(38 70% 65%) !important; }
-.cl-dark .text-blue-600 { color: hsl(218 75% 65%) !important; }
-.cl-dark .text-blue-700 { color: hsl(218 70% 60%) !important; }
-.cl-dark .text-violet-600 { color: hsl(270 60% 70%) !important; }
-.cl-dark .text-violet-700 { color: hsl(270 55% 65%) !important; }
-.cl-dark .text-purple-600 { color: hsl(280 55% 70%) !important; }
-.cl-dark .text-purple-700 { color: hsl(280 50% 65%) !important; }
-.cl-dark .text-indigo-600 { color: hsl(240 60% 70%) !important; }
-.cl-dark .text-rose-600 { color: hsl(350 65% 65%) !important; }
-.cl-dark .text-sky-500 { color: hsl(200 75% 62%) !important; }
-.cl-dark .text-sky-600 { color: hsl(200 70% 58%) !important; }
-.cl-dark .text-green-600 { color: hsl(140 55% 55%) !important; }
-.cl-dark .text-red-500 { color: hsl(0 65% 62%) !important; }
-.cl-dark .text-red-600 { color: hsl(0 60% 58%) !important; }
+.dark .cl-dark .text-emerald-600 { color: hsl(160 55% 55%) !important; }
+.dark .cl-dark .text-emerald-700 { color: hsl(160 50% 50%) !important; }
+.dark .cl-dark .text-emerald-800 { color: hsl(160 45% 65%) !important; }
+.dark .cl-dark .text-amber-600 { color: hsl(38 80% 62%) !important; }
+.dark .cl-dark .text-amber-700 { color: hsl(38 75% 58%) !important; }
+.dark .cl-dark .text-amber-800 { color: hsl(38 70% 65%) !important; }
+.dark .cl-dark .text-blue-600 { color: hsl(218 75% 65%) !important; }
+.dark .cl-dark .text-blue-700 { color: hsl(218 70% 60%) !important; }
+.dark .cl-dark .text-violet-600 { color: hsl(270 60% 70%) !important; }
+.dark .cl-dark .text-violet-700 { color: hsl(270 55% 65%) !important; }
+.dark .cl-dark .text-purple-600 { color: hsl(280 55% 70%) !important; }
+.dark .cl-dark .text-purple-700 { color: hsl(280 50% 65%) !important; }
+.dark .cl-dark .text-indigo-600 { color: hsl(240 60% 70%) !important; }
+.dark .cl-dark .text-rose-600 { color: hsl(350 65% 65%) !important; }
+.dark .cl-dark .text-sky-500 { color: hsl(200 75% 62%) !important; }
+.dark .cl-dark .text-sky-600 { color: hsl(200 70% 58%) !important; }
+.dark .cl-dark .text-green-600 { color: hsl(140 55% 55%) !important; }
+.dark .cl-dark .text-red-500 { color: hsl(0 65% 62%) !important; }
+.dark .cl-dark .text-red-600 { color: hsl(0 60% 58%) !important; }
 
-/* Gradient brand surfaces */
-.cl-dark .from-\[\#0202ff\]\/5 { --tw-gradient-from: rgb(2 2 255 / 0.08) !important; }
-.cl-dark .from-amber-50 { --tw-gradient-from: hsl(38 30% 11%) !important; }
-.cl-dark .to-white { --tw-gradient-to: hsl(var(--card)) !important; }
-.cl-dark .from-\[\#0202ff\]\/5.to-white { background: linear-gradient(135deg, rgb(2 2 255 / 0.1), hsl(var(--card))) !important; }
+.dark .cl-dark .from-\[\#0202ff\]\/5 { --tw-gradient-from: rgb(2 2 255 / 0.08) !important; }
+.dark .cl-dark .from-amber-50 { --tw-gradient-from: hsl(38 30% 11%) !important; }
+.dark .cl-dark .to-white { --tw-gradient-to: hsl(var(--card)) !important; }
+.dark .cl-dark .from-\[\#0202ff\]\/5.to-white { background: linear-gradient(135deg, rgb(2 2 255 / 0.1), hsl(var(--card))) !important; }
 
-/* Shadow in dark mode — more glow-like */
-.cl-dark .shadow-sm { box-shadow: 0 1px 4px rgba(0,0,0,0.4) !important; }
-.cl-dark .shadow-lg { box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important; }
+.dark .cl-dark .shadow-sm { box-shadow: 0 1px 4px rgba(0,0,0,0.4) !important; }
+.dark .cl-dark .shadow-lg { box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important; }
 
-/* Active/hover states on buttons inside cl-dark */
-.cl-dark .active\:bg-gray-100:active { background-color: hsl(220 10% 15%) !important; }
+.dark .cl-dark .active\:bg-gray-100:active { background-color: hsl(220 10% 15%) !important; }

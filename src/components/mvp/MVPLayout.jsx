@@ -8,7 +8,8 @@ import { base44 } from "@/api/base44Client";
 import {
   Brain, Target, Home, BarChart2, Users, LogOut, Menu, X,
   ChevronRight, ChevronLeft, Bell, User, ArrowLeft,
-  Settings, Shield, UserCog, TrendingUp, Dumbbell } from "lucide-react";
+  Settings, Shield, UserCog, TrendingUp, Dumbbell, Sun, Moon } from "lucide-react";
+import { useTheme } from "@/lib/ThemeContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import AtreusCoach from "@/components/ai/AtreusCoach";
@@ -85,6 +86,7 @@ const ROLE_COLORS = {
 
 function MVPLayoutInner({ children }) {
   const { user } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -170,14 +172,14 @@ function MVPLayoutInner({ children }) {
 
   const sidebarWidth = collapsed ? 'w-16' : 'w-64';
 
-  // Sidebar dark surface tokens
-  const sidebarBg = 'hsl(220 13% 7%)';
-  const sidebarBorder = '1px solid hsl(220 10% 13%)';
-  const headerBg = 'hsl(220 12% 10%)';
+  // Sidebar surface tokens (CSS vars adapt to theme)
+  const sidebarBg = 'hsl(var(--sidebar-background))';
+  const sidebarBorder = '1px solid hsl(var(--sidebar-border))';
+  const headerBg = 'hsl(var(--card))';
 
   return (
     <SidebarContext.Provider value={{ collapsed }}>
-    <div className="cl-dark min-h-screen flex" style={{ background: 'hsl(220 13% 9%)' }}>
+    <div className="cl-dark min-h-screen flex bg-background">
       {/* Desktop Sidebar */}
       <aside
         className={`hidden md:flex flex-col ${sidebarWidth} fixed inset-y-0 left-0 z-20 transition-all duration-200`}
@@ -243,6 +245,15 @@ function MVPLayoutInner({ children }) {
               <div className="flex-1 min-w-0 px-1">
                 <p className="text-xs font-medium truncate" style={{ color: 'hsl(220 12% 72%)' }}>{user?.display_name || user?.data?.display_name || user?.full_name || user?.email}</p>
               </div>
+              {/* Theme toggle */}
+              <button
+                onClick={toggleTheme}
+                className="h-7 w-7 flex items-center justify-center rounded-lg transition-colors flex-shrink-0"
+                style={{ color: 'hsl(220 8% 48%)' }}
+                title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+              </button>
               {/* Notifications */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -297,6 +308,14 @@ function MVPLayoutInner({ children }) {
               </DropdownMenu>
             </div> :
           <div className="flex flex-col items-center gap-1">
+              <button
+                onClick={toggleTheme}
+                className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
+                style={{ color: 'hsl(220 8% 48%)' }}
+                title={isDark ? 'Light mode' : 'Dark mode'}
+              >
+                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="w-9 h-9 relative" style={{ color: 'hsl(220 8% 48%)' }}>
@@ -369,13 +388,23 @@ function MVPLayoutInner({ children }) {
             </>
           )}
         </div>
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="p-2 rounded-lg transition-colors"
-          style={{ color: 'hsl(220 8% 55%)' }}
-        >
-          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg transition-colors"
+            style={{ color: 'hsl(220 8% 55%)' }}
+            title={isDark ? 'Light mode' : 'Dark mode'}
+          >
+            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="p-2 rounded-lg transition-colors"
+            style={{ color: 'hsl(220 8% 55%)' }}
+          >
+            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </header>
 
       {/* Mobile Menu */}
