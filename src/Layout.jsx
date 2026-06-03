@@ -569,7 +569,12 @@ function LayoutContent({ children }) {
                     <img
                       src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/7f8bef2bf_CuriosityLedLogoBBW1.png"
                       alt="Curiosity Led Logo"
-                      className="w-10 h-10 object-contain"
+                      className="w-10 h-10 object-contain dark:hidden"
+                    />
+                    <img
+                      src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/46e2410c8_Untitleddesign.png"
+                      alt="Curiosity Led Logo"
+                      className="w-10 h-10 object-contain hidden dark:block"
                     />
                   </div>
                   <div className="hidden sm:block">
