@@ -77,10 +77,10 @@ export default function EnergyTimeline({ pulses = [] }) {
   const hasLoad = loadValues.length >= 2;
 
   return (
-    <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
+    <Card className="shadow-sm border border-border bg-card rounded-2xl overflow-hidden">
       <div className="px-5 pt-5 pb-2">
-        <p className="text-sm font-semibold text-gray-900">Energy & load trend</p>
-        <p className="text-xs text-gray-400 mt-0.5">Last {last14.length} check-ins</p>
+        <p className="text-sm font-semibold text-card-foreground">Energy & load trend</p>
+        <p className="text-xs text-muted-foreground mt-0.5">Last {last14.length} check-ins</p>
       </div>
       <CardContent className="px-5 pt-2 pb-5">
         <div className="flex gap-4">
@@ -91,13 +91,13 @@ export default function EnergyTimeline({ pulses = [] }) {
           {hasEnergy && (
             <div className="flex items-center gap-1.5">
               <div className="w-6 h-0.5 bg-[#0202ff] rounded" />
-              <span className="text-[10px] text-gray-400">Energy</span>
+              <span className="text-[10px] text-muted-foreground">Energy</span>
             </div>
           )}
           {hasLoad && (
             <div className="flex items-center gap-1.5">
               <div className="w-6 h-0.5 bg-amber-400 rounded" />
-              <span className="text-[10px] text-gray-400">Load (inverted)</span>
+              <span className="text-[10px] text-muted-foreground">Load (inverted)</span>
             </div>
           )}
         </div>

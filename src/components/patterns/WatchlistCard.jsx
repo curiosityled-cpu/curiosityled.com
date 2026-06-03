@@ -102,35 +102,35 @@ export default function WatchlistCard({ trends, pulses = [], goals = [], onOpenA
   if (items.length === 0) return null;
 
   return (
-    <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
+    <Card className="shadow-sm border border-border bg-card rounded-2xl overflow-hidden">
       <div className="px-5 pt-5 pb-2 flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center">
-          <Eye className="w-3.5 h-3.5 text-gray-500" />
+        <div className="w-7 h-7 rounded-lg bg-muted border border-border flex items-center justify-center">
+          <Eye className="w-3.5 h-3.5 text-muted-foreground" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-gray-900">Watchlist</p>
-          <p className="text-[10px] text-gray-400">Calibrated predictions · Keep an eye on these</p>
+          <p className="text-sm font-semibold text-card-foreground">Watchlist</p>
+          <p className="text-[10px] text-muted-foreground">Calibrated predictions · Keep an eye on these</p>
         </div>
       </div>
       <CardContent className="px-5 pt-2 pb-5 space-y-3">
         {items.map((item, i) => {
           const style = CONFIDENCE_STYLES[item.confidence];
           return (
-            <div key={i} className="p-3.5 bg-gray-50 rounded-xl border border-gray-100 space-y-2">
+            <div key={i} className="p-3.5 bg-muted/50 rounded-xl border border-border space-y-2">
               <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-semibold text-gray-800">{item.signal}</p>
+                <p className="text-sm font-semibold text-card-foreground">{item.signal}</p>
                 <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${style.color}`}>
                   {style.label}
                 </span>
               </div>
-              <p className="text-xs text-gray-500 leading-relaxed">{item.read}</p>
-              <div className="bg-white rounded-lg px-3 py-2 border border-gray-100">
-                <p className="text-xs text-gray-600">
-                  <span className="font-medium text-gray-700">Nudge: </span>{item.nudge}
+              <p className="text-xs text-muted-foreground leading-relaxed">{item.read}</p>
+              <div className="bg-card rounded-lg px-3 py-2 border border-border">
+                <p className="text-xs text-foreground">
+                  <span className="font-medium">Nudge: </span>{item.nudge}
                 </p>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-gray-400">{item.horizon}</span>
+                <span className="text-[10px] text-muted-foreground">{item.horizon}</span>
                 {item.atreusMsg ? (
                   <button
                     onClick={() => onOpenAtreus?.(item.atreusMsg)}

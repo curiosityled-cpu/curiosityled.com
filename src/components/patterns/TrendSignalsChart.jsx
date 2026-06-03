@@ -106,10 +106,10 @@ function MetricRow({ metric, pulses }) {
   const recent = dataPoints.slice(0, 7);
 
   return (
-    <div className="flex items-center gap-3 py-3 border-b border-gray-50 last:border-0">
+    <div className="flex items-center gap-3 py-3 border-b border-border last:border-0">
       <div className="w-20 flex-shrink-0">
-        <p className="text-xs font-semibold text-gray-700">{metric.label}</p>
-        <p className="text-[10px] text-gray-400">{avgLabel}</p>
+        <p className="text-xs font-semibold text-foreground">{metric.label}</p>
+        <p className="text-[10px] text-muted-foreground">{avgLabel}</p>
       </div>
       <div className="flex-1 min-w-0 overflow-hidden">
         <MiniBarChart values={[...dataPoints].reverse().slice(0, 14)} color={metric.color} />
@@ -181,18 +181,18 @@ function FollowThroughBar({ pulses }) {
   const pct = Math.round((completed / total) * 100);
 
   return (
-    <div className="pt-3 border-t border-gray-100 space-y-1.5">
+    <div className="pt-3 border-t border-border space-y-1.5">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold text-gray-700">Commitment follow-through</p>
-        <p className="text-xs font-bold text-gray-800">{pct}%</p>
+        <p className="text-xs font-semibold text-foreground">Commitment follow-through</p>
+        <p className="text-xs font-bold text-foreground">{pct}%</p>
       </div>
-      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+      <div className="h-2 bg-muted rounded-full overflow-hidden">
         <div
           className="h-full rounded-full transition-all"
           style={{ width: `${pct}%`, backgroundColor: pct >= 70 ? '#10b981' : pct >= 40 ? '#f59e0b' : '#ef4444' }}
         />
       </div>
-      <p className="text-[10px] text-gray-400">{completed} of {total} commitments followed through · Private</p>
+      <p className="text-[10px] text-muted-foreground">{completed} of {total} commitments followed through · Private</p>
     </div>
   );
 }
@@ -228,20 +228,20 @@ export default function TrendSignalsChart({ trends, pulses = [] }) {
   })();
 
   return (
-    <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
+    <Card className="shadow-sm border border-border bg-card rounded-2xl overflow-hidden">
       <div className="px-5 pt-5 pb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center">
-            <BarChart3 className="w-3.5 h-3.5 text-gray-500" />
+          <div className="w-7 h-7 rounded-lg bg-muted border border-border flex items-center justify-center">
+            <BarChart3 className="w-3.5 h-3.5 text-muted-foreground" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-900">Trend signals</p>
-            <p className="text-[10px] text-gray-400">Last {recent.length} check-ins · Private</p>
+            <p className="text-sm font-semibold text-card-foreground">Trend signals</p>
+            <p className="text-[10px] text-muted-foreground">Last {recent.length} check-ins · Private</p>
           </div>
         </div>
         <button
           onClick={() => setExpanded(e => !e)}
-          className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           {expanded ? 'Less' : 'Detail'}
         </button>
@@ -249,7 +249,7 @@ export default function TrendSignalsChart({ trends, pulses = [] }) {
       <CardContent className="px-5 pt-2 pb-5 space-y-1">
         {/* Plain language summary */}
         {plainExplanation && (
-          <p className="text-xs text-gray-500 leading-relaxed pb-2">{plainExplanation}</p>
+          <p className="text-xs text-muted-foreground leading-relaxed pb-2">{plainExplanation}</p>
         )}
 
         {/* Bar charts per metric */}
@@ -279,11 +279,11 @@ export default function TrendSignalsChart({ trends, pulses = [] }) {
               const TrendIcon = trendDir === 'up' ? TrendingUp : trendDir === 'down' ? TrendingDown : Minus;
               const trendColor = trendDir === 'up' ? 'text-emerald-500' : trendDir === 'down' ? 'text-rose-500' : 'text-gray-400';
               return (
-                <div key={metric.key} className="flex items-center gap-2.5 p-2.5 bg-gray-50 rounded-xl">
+                <div key={metric.key} className="flex items-center gap-2.5 p-2.5 bg-muted/50 rounded-xl">
                   <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: metric.color }} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] text-gray-400">{metric.label}</p>
-                    <p className="text-xs font-semibold text-gray-700 truncate">— {label}</p>
+                    <p className="text-[10px] text-muted-foreground">{metric.label}</p>
+                    <p className="text-xs font-semibold text-foreground truncate">— {label}</p>
                   </div>
                   <TrendIcon className={`w-3 h-3 flex-shrink-0 ${trendColor}`} />
                 </div>
@@ -294,10 +294,10 @@ export default function TrendSignalsChart({ trends, pulses = [] }) {
 
         {/* Annotation layer — key events */}
         {annotations.length > 0 && (
-          <div className="pt-2 border-t border-gray-50">
+          <div className="pt-2 border-t border-border">
             <button
               onClick={() => setShowAnnotations(s => !s)}
-              className="flex items-center gap-1.5 text-[10px] text-gray-400 hover:text-gray-600 transition-colors"
+              className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
             >
               <Flag className="w-3 h-3" />
               {showAnnotations ? 'Hide events' : `${annotations.length} key events`}
@@ -317,10 +317,10 @@ export default function TrendSignalsChart({ trends, pulses = [] }) {
 
         {/* Pattern recurrence view */}
         {weeks.length >= 2 && (
-          <div className="pt-2 border-t border-gray-50">
+          <div className="pt-2 border-t border-border">
             <button
               onClick={() => setShowRecurrence(s => !s)}
-              className="flex items-center gap-1.5 text-[10px] text-gray-400 hover:text-gray-600 transition-colors"
+              className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
             >
               <BarChart3 className="w-3 h-3" />
               {showRecurrence ? 'Hide recurrence' : 'Pattern recurrence by week'}
@@ -334,8 +334,8 @@ export default function TrendSignalsChart({ trends, pulses = [] }) {
                   return (
                     <div key={pat.key} className="space-y-0.5">
                       <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-medium text-gray-600">{pat.label}</p>
-                        <p className="text-[10px] text-gray-400">{hits.length}/{weeks.length} weeks ({pct}%)</p>
+                        <p className="text-[10px] font-medium text-foreground">{pat.label}</p>
+                        <p className="text-[10px] text-muted-foreground">{hits.length}/{weeks.length} weeks ({pct}%)</p>
                       </div>
                       <div className="flex gap-0.5">
                         {weeks.map(([wk, ps]) => {
@@ -353,7 +353,7 @@ export default function TrendSignalsChart({ trends, pulses = [] }) {
                     </div>
                   );
                 }).filter(Boolean)}
-                <p className="text-[10px] text-gray-400">Each bar = one week. Colour = pattern was active that week.</p>
+                <p className="text-[10px] text-muted-foreground">Each bar = one week. Colour = pattern was active that week.</p>
               </div>
             )}
           </div>

@@ -51,15 +51,15 @@ function TrendPill({ trend }) {
 export default function TrendSummaryCard({ trends, onOpenAtreus }) {
   if (!trends || trends.data_points_14d < 3) {
     return (
-      <Card className="shadow-sm border border-dashed border-gray-200 bg-white rounded-2xl">
+      <Card className="shadow-sm border border-dashed border-border bg-card rounded-2xl">
         <CardContent className="px-5 py-5">
           <div className="flex items-start gap-3">
-            <div className="w-7 h-7 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0">
-              <Brain className="w-3.5 h-3.5 text-gray-400" />
+            <div className="w-7 h-7 rounded-lg bg-muted border border-border flex items-center justify-center flex-shrink-0">
+              <Brain className="w-3.5 h-3.5 text-muted-foreground" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-700 mb-0.5">Your rhythm is building</p>
-              <p className="text-xs text-gray-400 leading-relaxed">
+              <p className="text-sm font-semibold text-card-foreground mb-0.5">Your rhythm is building</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 Pattern memory develops with regular check-ins. After 3 or more check-ins, Atreus will begin surfacing observations about your leadership rhythm here.
               </p>
             </div>
@@ -74,27 +74,27 @@ export default function TrendSummaryCard({ trends, onOpenAtreus }) {
   const stretchHeavy = (trends.stretch_frequency_14d || 0) >= 5;
 
   return (
-    <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
+    <Card className="shadow-sm border border-border bg-card rounded-2xl overflow-hidden">
       {/* Header */}
       <div className="px-5 pt-5 pb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[#0202ff]/8 border border-[#0202ff]/12 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-lg bg-[#0202ff]/10 border border-[#0202ff]/15 flex items-center justify-center">
             <Brain className="w-3.5 h-3.5 text-[#0202ff]" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-900">What Atreus is noticing</p>
-            <p className="text-[10px] text-gray-400">Recent check-ins · Private to you</p>
+            <p className="text-sm font-semibold text-card-foreground">What Atreus is noticing</p>
+            <p className="text-[10px] text-muted-foreground">Recent check-ins · Private to you</p>
           </div>
         </div>
-        <Badge variant="outline" className="text-[9px] border-gray-200 text-gray-400">Private</Badge>
+        <Badge variant="outline" className="text-[9px]">Private</Badge>
       </div>
 
       <CardContent className="px-5 pt-2 pb-5 space-y-3">
 
         {/* Trend narrative — LLM-generated */}
         {trends.trend_narrative && (
-          <div className="bg-[#0202ff]/4 border border-[#0202ff]/10 rounded-xl p-3.5 space-y-1.5">
-            <p className="text-sm text-gray-700 leading-relaxed italic">
+          <div className="bg-[#0202ff]/5 border border-[#0202ff]/10 rounded-xl p-3.5 space-y-1.5">
+            <p className="text-sm text-foreground leading-relaxed italic">
               "{trends.trend_narrative}"
             </p>
             <EvidenceTag type="atreus" />
@@ -103,8 +103,8 @@ export default function TrendSummaryCard({ trends, onOpenAtreus }) {
 
         {/* 7-day summary */}
         {trends.summary_7d && trends.summary_7d !== 'Not enough signal for a 7-day summary yet.' && (
-          <div className="bg-gray-50 rounded-xl p-3 space-y-1.5">
-            <p className="text-xs text-gray-500 leading-relaxed">{trends.summary_7d}</p>
+          <div className="bg-muted/50 rounded-xl p-3 space-y-1.5">
+            <p className="text-xs text-muted-foreground leading-relaxed">{trends.summary_7d}</p>
             <EvidenceTag type="checkin" />
           </div>
         )}
@@ -113,15 +113,15 @@ export default function TrendSummaryCard({ trends, onOpenAtreus }) {
         {(energyOk || confidenceOk) && (
           <div className="grid grid-cols-2 gap-2">
             {energyOk && (
-              <div className="bg-gray-50 rounded-xl p-3 space-y-1">
-                <p className="text-[10px] text-gray-400 font-medium">Energy (14 days)</p>
+              <div className="bg-muted/50 rounded-xl p-3 space-y-1">
+                <p className="text-[10px] text-muted-foreground font-medium">Energy (14 days)</p>
                 <TrendPill trend={trends.energy_trend} />
                 <EvidenceTag type="checkin" />
               </div>
             )}
             {confidenceOk && (
-              <div className="bg-gray-50 rounded-xl p-3 space-y-1">
-                <p className="text-[10px] text-gray-400 font-medium">Confidence (14 days)</p>
+              <div className="bg-muted/50 rounded-xl p-3 space-y-1">
+                <p className="text-[10px] text-muted-foreground font-medium">Confidence (14 days)</p>
                 <TrendPill trend={trends.confidence_trend} />
                 <EvidenceTag type="checkin" />
               </div>

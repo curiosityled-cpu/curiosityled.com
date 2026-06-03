@@ -56,13 +56,13 @@ export default function CheckInHistoryCalendar({ pulses = [] }) {
   }, [grid]);
 
   return (
-    <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
+    <Card className="shadow-sm border border-border bg-card rounded-2xl overflow-hidden">
       <div className="px-5 pt-5 pb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center">
             <Calendar className="w-3.5 h-3.5 text-indigo-600" />
           </div>
-          <p className="text-sm font-semibold text-gray-900">Check-in rhythm</p>
+          <p className="text-sm font-semibold text-card-foreground">Check-in rhythm</p>
         </div>
         <div className="flex items-center gap-3">
           {streak > 0 && (
@@ -70,14 +70,14 @@ export default function CheckInHistoryCalendar({ pulses = [] }) {
               🔥 {streak}-day streak
             </span>
           )}
-          <span className="text-xs text-gray-400">{checkedInDays}/28 days</span>
+          <span className="text-xs text-muted-foreground">{checkedInDays}/28 days</span>
         </div>
       </div>
       <CardContent className="px-5 pt-3 pb-5">
         {/* Grid: day headers + aligned day cells */}
         <div className="grid grid-cols-7 gap-1.5 mb-3">
           {["Mo","Tu","We","Th","Fr","Sa","Su"].map((d) => (
-            <div key={d} className="text-center text-[9px] text-gray-300 font-medium pb-0.5">{d}</div>
+            <div key={d} className="text-center text-[9px] text-muted-foreground font-medium pb-0.5">{d}</div>
           ))}
           {/* Leading empty cells to align first day to correct column */}
           {Array.from({ length: leadingEmpties }).map((_, i) => (
@@ -104,12 +104,12 @@ export default function CheckInHistoryCalendar({ pulses = [] }) {
           {["strong","steady","stretched","drained"].map(key => (
             <div key={key} className="flex items-center gap-1">
               <div className={`w-2.5 h-2.5 rounded-sm ${ENERGY_CONFIG[key].bg}`} />
-              <span className="text-[10px] text-gray-400">{ENERGY_CONFIG[key].label}</span>
+              <span className="text-[10px] text-muted-foreground">{ENERGY_CONFIG[key].label}</span>
             </div>
           ))}
           <div className="flex items-center gap-1">
-            <div className="w-2.5 h-2.5 rounded-sm bg-gray-100 border border-gray-200" />
-            <span className="text-[10px] text-gray-400">No check-in</span>
+            <div className="w-2.5 h-2.5 rounded-sm bg-muted border border-border" />
+            <span className="text-[10px] text-muted-foreground">No check-in</span>
           </div>
         </div>
       </CardContent>

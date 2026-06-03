@@ -112,15 +112,15 @@ export default function IntentLoopCard({ pulses, trends, onOpenAtreus }) {
 
   if (!hasAnyData && !showDelegationPattern) {
     return (
-      <Card className="shadow-sm border border-dashed border-gray-200 bg-white rounded-2xl">
+      <Card className="shadow-sm border border-dashed border-border bg-card rounded-2xl">
         <CardContent className="px-5 py-5">
           <div className="flex items-start gap-3">
             <div className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0">
               <Target className="w-3.5 h-3.5 text-emerald-600" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-700 mb-0.5">Your intentions loop</p>
-              <p className="text-xs text-gray-400 leading-relaxed">
+              <p className="text-sm font-semibold text-card-foreground mb-0.5">Your intentions loop</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 When you start setting morning intentions via your daily check-in, this space will show how your planned focus compares to how your day actually unfolds.
               </p>
             </div>
@@ -133,7 +133,7 @@ export default function IntentLoopCard({ pulses, trends, onOpenAtreus }) {
   const visibleDays = expanded ? weekDays : weekDays.slice(-3);
 
   return (
-    <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
+    <Card className="shadow-sm border border-border bg-card rounded-2xl overflow-hidden">
       {/* Header */}
       <div className="px-5 pt-5 pb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -141,14 +141,14 @@ export default function IntentLoopCard({ pulses, trends, onOpenAtreus }) {
             <Target className="w-3.5 h-3.5 text-emerald-600" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-900">This week's intentions</p>
-            <p className="text-[10px] text-gray-400">Intentions vs what actually happened · Private</p>
+            <p className="text-sm font-semibold text-card-foreground">This week's intentions</p>
+            <p className="text-[10px] text-muted-foreground">Intentions vs what actually happened · Private</p>
           </div>
         </div>
         {weekDays.length > 3 && (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-gray-600"
+            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
           >
             {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             {expanded ? 'Less' : 'All days'}
@@ -192,7 +192,7 @@ export default function IntentLoopCard({ pulses, trends, onOpenAtreus }) {
         {onOpenAtreus && (
           <button
             onClick={() => onOpenAtreus("I want to look at this week's leadership intentions and what actually happened.")}
-            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-border text-xs font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
           >
             <Brain className="w-3.5 h-3.5 text-[#0202ff]" />
             Reflect on this with Atreus

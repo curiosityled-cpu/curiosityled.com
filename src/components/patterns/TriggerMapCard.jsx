@@ -64,30 +64,30 @@ export default function TriggerMapCard({ trends, pulses = [], activities = [], o
   if (triggers.length === 0) return null;
 
   return (
-    <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
+    <Card className="shadow-sm border border-border bg-card rounded-2xl overflow-hidden">
       <div className="px-5 pt-5 pb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-violet-50 border border-violet-100 flex items-center justify-center">
             <Map className="w-3.5 h-3.5 text-violet-500" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-900">Trigger map</p>
-            <p className="text-[10px] text-gray-400">What tends to set patterns in motion</p>
+            <p className="text-sm font-semibold text-card-foreground">Trigger map</p>
+            <p className="text-[10px] text-muted-foreground">What tends to set patterns in motion</p>
           </div>
         </div>
-        <button onClick={() => setExpanded(e => !e)} className="text-gray-400 hover:text-gray-600">
+        <button onClick={() => setExpanded(e => !e)} className="text-muted-foreground hover:text-foreground">
           {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
       </div>
       <CardContent className="px-5 pt-2 pb-5 space-y-2.5">
         {/* Top triggers */}
-        <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Top triggers</p>
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Top triggers</p>
         {triggers.map((t, i) => (
-          <div key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+          <div key={i} className="flex items-start gap-3 p-3 bg-muted/50 rounded-xl border border-border">
             <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-1.5" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-800">{t.label}</p>
-              <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{t.sub}</p>
+              <p className="text-sm font-medium text-card-foreground">{t.label}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{t.sub}</p>
               <span className="inline-block text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 mt-1.5">{t.tag}</span>
             </div>
           </div>
@@ -110,7 +110,7 @@ export default function TriggerMapCard({ trends, pulses = [], activities = [], o
             {!expanded && (
               <button
                 onClick={() => setExpanded(true)}
-                className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 Show when patterns are less likely →
               </button>
@@ -121,7 +121,7 @@ export default function TriggerMapCard({ trends, pulses = [], activities = [], o
         {onOpenAtreus && (
           <button
             onClick={() => onOpenAtreus("I want to understand what tends to trigger my leadership patterns and what conditions make them less likely.")}
-            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors mt-1"
+            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-border text-xs font-medium text-muted-foreground hover:bg-muted/50 transition-colors mt-1"
           >
             <Brain className="w-3.5 h-3.5 text-[#0202ff]" />
             Explore triggers with Atreus
