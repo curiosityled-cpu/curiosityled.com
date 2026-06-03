@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
 import {
   Brain, Target, Home, BarChart2, Users, LogOut, Menu, X,
-  ChevronRight, ChevronLeft, Bell, User,
+  ChevronRight, ChevronLeft, Bell, User, ArrowLeft,
   Settings, Shield, UserCog, TrendingUp, Dumbbell } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -122,6 +122,12 @@ function MVPLayoutInner({ children }) {
 
   const mvpRole = getMVPRole(user?.app_role || user?.data?.app_role);
   const navItems = NAV_CONFIG[mvpRole] || [];
+
+  // Determine if current page is a "sub-page" (not a core nav root)
+  const coreNavPaths = navItems.map(i => i.path.split('?')[0]);
+  const isSubPage = !coreNavPaths.includes(location.pathname) &&
+    location.pathname !== '/' &&
+    location.pathname !== '/my-leadership';
 
   const handleLogout = () => base44.auth.logout();
 
@@ -344,11 +350,24 @@ function MVPLayoutInner({ children }) {
         style={{ background: headerBg, borderBottom: sidebarBorder }}
       >
         <div className="flex items-center gap-2">
-          <img
-            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"
-            alt="Curiosity Led"
-            className="w-7 h-7 object-contain" />
-          <span className="text-sm font-bold" style={{ color: 'hsl(220 15% 88%)' }}>Curiosity Led</span>
+          {isSubPage ? (
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-1.5 p-1.5 -ml-1 rounded-lg transition-colors"
+              style={{ color: 'hsl(220 15% 75%)' }}
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="text-sm font-medium">Back</span>
+            </button>
+          ) : (
+            <>
+              <img
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"
+                alt="Curiosity Led"
+                className="w-7 h-7 object-contain" />
+              <span className="text-sm font-bold" style={{ color: 'hsl(220 15% 88%)' }}>Curiosity Led</span>
+            </>
+          )}
         </div>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
@@ -386,6 +405,20 @@ function MVPLayoutInner({ children }) {
 
       {/* Main content */}
       <main className={`flex-1 ${collapsed ? 'md:ml-16' : 'md:ml-64'} pt-14 md:pt-0 min-h-screen transition-all duration-200`}>
+        {isSubPage && (
+          <div className="hidden md:flex items-center px-6 pt-5 pb-1">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-1.5 text-sm font-medium transition-colors rounded-lg px-2 py-1.5 -ml-2"
+              style={{ color: 'hsl(220 10% 52%)' }}
+              onMouseEnter={e => { e.currentTarget.style.color = 'hsl(220 15% 80%)'; e.currentTarget.style.background = 'hsl(220 10% 14%)'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'hsl(220 10% 52%)'; e.currentTarget.style.background = ''; }}
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </button>
+          </div>
+        )}
         {children}
       </main>
 
