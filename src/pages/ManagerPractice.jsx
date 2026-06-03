@@ -45,41 +45,38 @@ function PracticeActionTile({ icon: Icon, iconBg, iconColor, title, description,
   if (to) {
     return (
       <Link to={to}>
-        <div className="flex items-center gap-4 p-5 rounded-2xl border shadow-sm hover:shadow-md transition-all group cursor-pointer" style={{ background: 'hsl(220 12% 12%)', borderColor: 'hsl(220 10% 20%)' }}>
+        <div className="flex items-center gap-4 p-5 rounded-2xl border border-border bg-card shadow-sm hover:shadow-md transition-all group cursor-pointer">
           <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
             <Icon className={`w-5 h-5 ${iconColor}`} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold" style={{ color: 'hsl(220 15% 92%)' }}>{title}</p>
-            <p className="text-xs mt-0.5 leading-relaxed" style={{ color: 'hsl(220 10% 52%)' }}>{description}</p>
+            <p className="text-sm font-semibold text-card-foreground">{title}</p>
+            <p className="text-xs mt-0.5 leading-relaxed text-muted-foreground">{description}</p>
           </div>
-          <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: 'hsl(220 8% 35%)' }} />
+          <ChevronRight className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
         </div>
       </Link>
     );
   }
 
   return (
-    <div className="rounded-2xl border shadow-sm overflow-hidden" style={{ background: 'hsl(220 12% 12%)', borderColor: 'hsl(220 10% 20%)' }}>
+    <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       <button
-        className="w-full flex items-center gap-4 p-5 transition-colors text-left"
+        className="w-full flex items-center gap-4 p-5 transition-colors text-left hover:bg-muted/50"
         onClick={() => setExpanded(e => !e)}
-        style={{ color: 'hsl(220 15% 92%)' }}
-        onMouseEnter={e => { e.currentTarget.style.background = 'hsl(220 10% 14%)'; }}
-        onMouseLeave={e => { e.currentTarget.style.background = ''; }}
       >
         <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
           <Icon className={`w-5 h-5 ${iconColor}`} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold" style={{ color: 'hsl(220 15% 92%)' }}>{title}</p>
-          <p className="text-xs mt-0.5 leading-relaxed" style={{ color: 'hsl(220 10% 52%)' }}>{description}</p>
+          <p className="text-sm font-semibold text-card-foreground">{title}</p>
+          <p className="text-xs mt-0.5 leading-relaxed text-muted-foreground">{description}</p>
         </div>
-        <ChevronRight className={`w-4 h-4 flex-shrink-0 transition-transform ${expanded ? 'rotate-90' : ''}`} style={{ color: 'hsl(220 8% 35%)' }} />
+        <ChevronRight className={`w-4 h-4 flex-shrink-0 text-muted-foreground transition-transform ${expanded ? 'rotate-90' : ''}`} />
       </button>
       {expanded && (
-        <div className="px-5 pb-4 pt-0 border-t flex items-center justify-between gap-3" style={{ background: 'hsl(225 30% 13%)', borderTopColor: 'hsl(225 30% 18%)' }}>
-          <p className="text-xs flex-1" style={{ color: 'hsl(220 12% 72%)' }}>
+        <div className="px-5 pb-4 pt-0 border-t border-border bg-muted/30 flex items-center justify-between gap-3">
+          <p className="text-xs flex-1 text-muted-foreground">
             {flowKey ? 'A structured guide walks you through this step by step.' : 'Atreus will guide you through this session.'}
           </p>
           <Button size="sm" className="bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs px-4" onClick={handleStart}>
@@ -239,8 +236,8 @@ export default function ManagerPractice() {
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
       {/* Header */}
       <div className="pt-2 pb-1">
-        <h1 className="text-2xl font-bold text-gray-900">Practice</h1>
-        <p className="text-sm text-gray-500 mt-1">Work on your leadership in the moment.</p>
+        <h1 className="text-2xl font-bold text-foreground">Practice</h1>
+        <p className="text-sm text-muted-foreground mt-1">Work on your leadership in the moment.</p>
       </div>
 
       {/* Active flow overlay */}

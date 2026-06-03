@@ -32,19 +32,19 @@ function PatternCard({ insight, goals }) {
   if (patterns.length === 0) patterns.push({ type: 'neutral', text: 'Patterns build as you engage — check-ins, goals, and assessment results all contribute to what appears here.', tag: 'How this works', tagColor: 'bg-gray-100 text-gray-500', icon: <Info className="w-3.5 h-3.5 text-gray-400" /> });
 
   return (
-    <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
+    <Card className="shadow-sm border border-border bg-card rounded-2xl overflow-hidden">
       <div className="px-5 pt-5 pb-2 flex items-center gap-2">
         <div className="w-7 h-7 rounded-lg bg-purple-50 border border-purple-100 flex items-center justify-center">
           <Eye className="w-3.5 h-3.5 text-purple-500" />
         </div>
-        <p className="text-sm font-semibold text-gray-900">What we're noticing</p>
+        <p className="text-sm font-semibold text-card-foreground">What we're noticing</p>
       </div>
       <CardContent className="px-5 pt-2 pb-5 space-y-3">
         {patterns.map((p, i) => (
-          <div key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
+          <div key={i} className="flex items-start gap-3 p-3 bg-muted/50 rounded-xl">
             <div className="mt-0.5 flex-shrink-0">{p.icon}</div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-gray-700 leading-relaxed">{p.text}</p>
+              <p className="text-sm text-foreground leading-relaxed">{p.text}</p>
               <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full mt-1.5 ${p.tagColor}`}>{p.tag}</span>
             </div>
           </div>
@@ -66,20 +66,20 @@ function MemoryNarrativeCard({ trends }) {
     : null;
 
   return (
-    <Card className="shadow-sm border border-[#0202ff]/15 bg-gradient-to-br from-[#0202ff]/5 to-white rounded-2xl overflow-hidden">
+    <Card className="shadow-sm border border-[#0202ff]/15 bg-card rounded-2xl overflow-hidden">
       <div className="px-5 pt-5 pb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center">
             <Brain className="w-3.5 h-3.5 text-white" />
           </div>
-          <p className="text-sm font-semibold text-gray-900">What we've noticed — last 28 days</p>
+          <p className="text-sm font-semibold text-card-foreground">What we've noticed — last 28 days</p>
         </div>
-        {timeLabel && <span className="text-[10px] text-gray-400">Updated {timeLabel}</span>}
+        {timeLabel && <span className="text-[10px] text-muted-foreground">Updated {timeLabel}</span>}
       </div>
       <CardContent className="px-5 pt-2 pb-5">
-        <p className="text-sm text-gray-700 leading-relaxed">{narrative}</p>
+        <p className="text-sm text-foreground leading-relaxed">{narrative}</p>
         {dataPoints > 0 && (
-          <p className="text-[10px] text-gray-400 mt-2">Based on {dataPoints} check-in{dataPoints !== 1 ? 's' : ''} · Private to you</p>
+          <p className="text-[10px] text-muted-foreground mt-2">Based on {dataPoints} check-in{dataPoints !== 1 ? 's' : ''} · Private to you</p>
         )}
       </CardContent>
     </Card>
@@ -88,11 +88,11 @@ function MemoryNarrativeCard({ trends }) {
 
 function EmptyState() {
   return (
-    <Card className="shadow-sm border border-dashed border-gray-200 bg-white rounded-2xl">
+    <Card className="shadow-sm border border-dashed border-border bg-card rounded-2xl">
       <CardContent className="py-12 px-6 text-center">
-        <Brain className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-        <p className="text-sm font-semibold text-gray-700 mb-1">Patterns appear over time</p>
-        <p className="text-xs text-gray-400 max-w-xs mx-auto mb-4 leading-relaxed">
+        <Brain className="w-10 h-10 text-muted mx-auto mb-3" />
+        <p className="text-sm font-semibold text-card-foreground mb-1">Patterns appear over time</p>
+        <p className="text-xs text-muted-foreground max-w-xs mx-auto mb-4 leading-relaxed">
           Daily check-ins, your Leadership Index, and goal activity all feed into what you'll see here. Come back after a few days of use.
         </p>
         <Link to="/today">
@@ -146,9 +146,9 @@ export default function ManagerPatterns() {
 
   const header = (
     <div className="pt-2 pb-1">
-      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Patterns</p>
-      <h1 className="text-2xl font-bold text-gray-900">What we're noticing</h1>
-      <p className="text-sm text-gray-500 mt-1">Longitudinal memory — how you lead over time.</p>
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Patterns</p>
+      <h1 className="text-2xl font-bold text-foreground">What we're noticing</h1>
+      <p className="text-sm text-muted-foreground mt-1">Longitudinal memory — how you lead over time.</p>
     </div>
   );
 

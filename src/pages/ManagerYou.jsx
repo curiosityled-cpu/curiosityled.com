@@ -120,13 +120,11 @@ export default function ManagerYou() {
         <button
           key={s.id}
           onClick={() => setActiveSection(s.id)}
-          className="text-left px-3 py-2.5 rounded-xl text-sm font-medium transition-all"
-          style={activeSection === s.id
-            ? { background: 'hsl(225 70% 18%)', color: 'hsl(225 70% 70%)' }
-            : { color: 'hsl(220 10% 55%)' }
-          }
-          onMouseEnter={e => { if (activeSection !== s.id) e.currentTarget.style.background = 'hsl(220 10% 14%)'; }}
-          onMouseLeave={e => { if (activeSection !== s.id) e.currentTarget.style.background = ''; }}
+          className={`text-left px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+            activeSection === s.id
+              ? 'bg-primary/10 text-primary'
+              : 'text-muted-foreground hover:bg-muted'
+          }`}
         >
           {s.label}
         </button>
@@ -301,16 +299,16 @@ export default function ManagerYou() {
       <DesktopNav />
       <div className="flex-1 min-w-0 space-y-2">
         {/* Profile hero always shown */}
-        <div className="rounded-2xl overflow-hidden mb-4" style={{ background: 'hsl(220 12% 12%)', border: '1px solid hsl(220 10% 18%)' }}>
+        <div className="rounded-2xl overflow-hidden mb-4 bg-card border border-border">
           <div className="px-5 py-5 flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'hsl(225 70% 18%)' }}>
-              <span className="text-xl font-bold" style={{ color: 'hsl(225 70% 68%)' }}>
+            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <span className="text-xl font-bold text-primary">
                 {displayName?.[0]?.toUpperCase() || '?'}
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-base font-bold truncate" style={{ color: 'hsl(220 15% 90%)' }}>{displayName}</p>
-              <p className="text-xs truncate" style={{ color: 'hsl(220 8% 50%)' }}>{user?.email}</p>
+              <p className="text-base font-bold truncate text-card-foreground">{displayName}</p>
+              <p className="text-xs truncate text-muted-foreground">{user?.email}</p>
             </div>
           </div>
         </div>
