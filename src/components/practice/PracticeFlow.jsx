@@ -234,23 +234,23 @@ export default function PracticeFlow({ flowKey, onClose }) {
 
   if (done) {
     return (
-      <div className={`bg-gradient-to-br ${flow.bg} to-white rounded-2xl border ${flow.border} p-6 text-center space-y-3`}>
-        <div className="w-12 h-12 rounded-full bg-white border border-gray-100 flex items-center justify-center mx-auto shadow-sm">
-          <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+      <div className="rounded-2xl border p-6 text-center space-y-3" style={{ background: 'hsl(220 12% 12%)', borderColor: 'hsl(220 10% 20%)' }}>
+        <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto" style={{ background: 'hsl(220 10% 17%)', border: '1px solid hsl(220 10% 22%)' }}>
+          <CheckCircle2 className="w-6 h-6 text-emerald-400" />
         </div>
-        <p className="text-base font-semibold text-gray-900">Saved — Atreus is ready</p>
-        <p className="text-sm text-gray-500 leading-relaxed">
+        <p className="text-base font-semibold" style={{ color: 'hsl(220 15% 92%)' }}>Saved — Atreus is ready</p>
+        <p className="text-sm leading-relaxed" style={{ color: 'hsl(220 10% 58%)' }}>
           Your responses have been saved privately. Atreus has your full context and is ready to go deeper.
         </p>
         {debriefScheduled && (
-          <div className="flex items-start gap-2 bg-white border border-gray-100 rounded-xl px-3 py-2.5 text-left">
-            <CheckCircle2 className="w-3.5 h-3.5 text-[#0202ff] flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-gray-600 leading-relaxed">
-              A <strong>debrief prompt</strong> has been scheduled for later today — you'll see it when you check in after the moment has passed.
+          <div className="flex items-start gap-2 rounded-xl px-3 py-2.5 text-left" style={{ background: 'hsl(225 30% 13%)', border: '1px solid hsl(225 30% 20%)' }}>
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#6b8fff] flex-shrink-0 mt-0.5" />
+            <p className="text-xs leading-relaxed" style={{ color: 'hsl(220 12% 72%)' }}>
+              A <strong style={{ color: 'hsl(220 15% 88%)' }}>debrief prompt</strong> has been scheduled for later today — you'll see it when you check in after the moment has passed.
             </p>
           </div>
         )}
-        <Button size="sm" variant="outline" className="text-xs border-gray-200" onClick={onClose}>
+        <Button size="sm" variant="outline" className="text-xs" style={{ borderColor: 'hsl(220 10% 24%)', color: 'hsl(220 12% 72%)', background: 'transparent' }} onClick={onClose}>
           Back to Practice
         </Button>
       </div>
@@ -258,14 +258,14 @@ export default function PracticeFlow({ flowKey, onClose }) {
   }
 
   return (
-    <div className={`bg-gradient-to-br ${flow.bg} to-white rounded-2xl border ${flow.border} overflow-hidden`}>
+    <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(220 12% 12%)', border: '1px solid hsl(220 10% 20%)' }}>
       {/* Header */}
-      <div className="px-5 pt-5 pb-3 flex items-center justify-between border-b border-gray-100">
+      <div className="px-5 pt-5 pb-3 flex items-center justify-between" style={{ borderBottom: '1px solid hsl(220 10% 18%)' }}>
         <div>
-          <p className="text-sm font-bold text-gray-900">{flow.title}</p>
-          <p className="text-xs text-gray-500">{flow.subtitle}</p>
+          <p className="text-sm font-bold" style={{ color: 'hsl(220 15% 92%)' }}>{flow.title}</p>
+          <p className="text-xs mt-0.5" style={{ color: 'hsl(220 10% 52%)' }}>{flow.subtitle}</p>
         </div>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-white transition-colors">
+        <button onClick={onClose} className="p-1 rounded-lg transition-colors" style={{ color: 'hsl(220 8% 45%)' }} onMouseEnter={e => e.currentTarget.style.color='hsl(220 15% 70%)'} onMouseLeave={e => e.currentTarget.style.color='hsl(220 8% 45%)'}>
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -276,24 +276,30 @@ export default function PracticeFlow({ flowKey, onClose }) {
           {flow.steps.map((_, i) => (
             <div
               key={i}
-              className={`h-1 flex-1 rounded-full transition-all ${i <= step ? flow.color : 'bg-gray-200'}`}
+              className={`h-1 flex-1 rounded-full transition-all ${i <= step ? flow.color : ''}`}
+              style={i > step ? { background: 'hsl(220 10% 22%)' } : {}}
             />
           ))}
         </div>
-        <p className="text-[10px] text-gray-400 mt-1.5">Step {step + 1} of {totalSteps}</p>
+        <p className="text-[10px] mt-1.5" style={{ color: 'hsl(220 8% 40%)' }}>Step {step + 1} of {totalSteps}</p>
       </div>
 
       {/* Question */}
       <div className="px-5 pt-4 pb-5 space-y-3">
-        <p className="text-sm font-semibold text-gray-900 leading-snug">{currentStep.question}</p>
+        <p className="text-sm font-semibold leading-snug" style={{ color: 'hsl(220 15% 92%)' }}>{currentStep.question}</p>
         {currentStep.hint && (
-          <p className="text-[11px] text-gray-400 italic">{currentStep.hint}</p>
+          <p className="text-[11px] italic" style={{ color: 'hsl(220 10% 50%)' }}>{currentStep.hint}</p>
         )}
         <textarea
           placeholder={currentStep.placeholder}
           value={currentValue}
           onChange={e => setResponses(r => ({ ...r, [currentStep.id]: e.target.value }))}
-          className="w-full text-sm text-gray-800 placeholder:text-gray-400 bg-white border border-gray-200 rounded-xl px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/20 leading-relaxed"
+          className="w-full text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 leading-relaxed rounded-xl px-4 py-3"
+          style={{
+            background: 'hsl(220 13% 9%)',
+            color: 'hsl(220 15% 88%)',
+            border: '1px solid hsl(220 10% 22%)',
+          }}
           rows={4}
           autoFocus
         />
@@ -303,7 +309,8 @@ export default function PracticeFlow({ flowKey, onClose }) {
           <Button
             size="sm"
             variant="ghost"
-            className="text-xs text-gray-400 hover:text-gray-600 gap-1.5 px-2"
+            className="text-xs gap-1.5 px-2"
+            style={{ color: 'hsl(220 8% 45%)' }}
             onClick={() => setStep(s => Math.max(0, s - 1))}
             disabled={step === 0}
           >
@@ -327,7 +334,10 @@ export default function PracticeFlow({ flowKey, onClose }) {
         {!isLast && (
           <div className="text-center">
             <button
-              className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-[10px] transition-colors"
+              style={{ color: 'hsl(220 8% 40%)' }}
+              onMouseEnter={e => e.currentTarget.style.color = 'hsl(220 12% 65%)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'hsl(220 8% 40%)'}
               onClick={() => setStep(s => s + 1)}
             >
               Skip this question →
