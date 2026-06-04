@@ -195,7 +195,7 @@ function MVPLayoutInner({ children }) {
               <img
               src={isDark ? "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/46e2410c8_Untitleddesign.png" : "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"}
               alt="Curiosity Led"
-              className="w-10 h-10 object-contain flex-shrink-0" />
+              className={`object-contain flex-shrink-0 ${isDark ? 'w-16 h-16' : 'w-10 h-10'}`} />
               <div className="min-w-0">
                 <p className="text-sm font-bold truncate text-foreground">Curiosity Led</p>
               </div>
@@ -205,7 +205,7 @@ function MVPLayoutInner({ children }) {
           <img
             src={isDark ? "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/46e2410c8_Untitleddesign.png" : "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"}
             alt="Curiosity Led"
-            className="w-10 h-10 object-contain" />
+            className={`object-contain ${isDark ? 'w-16 h-16' : 'w-10 h-10'}`} />
           }
           <button
             onClick={() => setCollapsed(!collapsed)}
@@ -383,7 +383,7 @@ function MVPLayoutInner({ children }) {
               <img
                 src={isDark ? "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/46e2410c8_Untitleddesign.png" : "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"}
                 alt="Curiosity Led"
-                className="w-10 h-10 object-contain" />
+                className={`object-contain ${isDark ? 'w-16 h-16' : 'w-10 h-10'}`} />
               <span className="text-sm font-bold" style={{ color: 'hsl(var(--foreground))' }}>Curiosity Led</span>
             </>
           )}
