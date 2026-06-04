@@ -193,7 +193,7 @@ function MVPLayoutInner({ children }) {
           {!collapsed &&
           <div className="flex items-center gap-2 min-w-0">
               <img
-              src={isDark ? "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/46e2410c8_Untitleddesign.png" : "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"}
+              src={isDark ? "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/329f40d48_Untitleddesign.png" : "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"}
               alt="Curiosity Led"
               className="w-7 h-7 object-contain flex-shrink-0" />
               <div className="min-w-0">
@@ -203,7 +203,7 @@ function MVPLayoutInner({ children }) {
           }
           {collapsed &&
           <img
-            src={isDark ? "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/46e2410c8_Untitleddesign.png" : "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"}
+            src={isDark ? "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/329f40d48_Untitleddesign.png" : "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"}
             alt="Curiosity Led"
             className="w-7 h-7 object-contain" />
           }
@@ -381,7 +381,7 @@ function MVPLayoutInner({ children }) {
           ) : (
             <>
               <img
-                src={isDark ? "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/46e2410c8_Untitleddesign.png" : "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"}
+                src={isDark ? "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/329f40d48_Untitleddesign.png" : "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/be036d547_CuriosityLedIcon_20241030_085533_0000.png"}
                 alt="Curiosity Led"
                 className="w-7 h-7 object-contain" />
               <span className="text-sm font-bold" style={{ color: 'hsl(var(--foreground))' }}>Curiosity Led</span>
