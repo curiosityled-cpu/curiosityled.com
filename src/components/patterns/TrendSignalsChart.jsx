@@ -150,12 +150,21 @@ function buildAnnotations(pulses) {
 }
 
 // Pattern recurrence: count how many weeks each pattern was detected
+function getISOWeekKey(d) {
+  const date = new Date(d.getTime());
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + 4 - (date.getDay() || 7));
+  const yearStart = new Date(date.getFullYear(), 0, 1);
+  const week = Math.ceil(((date - yearStart) / 86400000 + 1) / 7);
+  return `${date.getFullYear()}-W${String(week).padStart(2, '0')}`;
+}
+
 function buildRecurrence(pulses) {
-  // Group pulses by week number
+  // Group pulses by ISO week number
   const weekMap = {};
   pulses.forEach(p => {
-    const d = new Date(p.created_date);
-    const week = `${d.getFullYear()}-W${Math.ceil(d.getDate() / 7)}`;
+    if (!p.created_date) return;
+    const week = getISOWeekKey(new Date(p.created_date));
     if (!weekMap[week]) weekMap[week] = [];
     weekMap[week].push(p);
   });
