@@ -14,13 +14,17 @@ const STATUS_OPTIONS = [
   { value: 'not_yet', label: 'Not yet', icon: Circle, color: 'text-gray-400', bg: 'bg-gray-50 border-gray-200' },
 ];
 
+function localDateKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function getMostRecentCommitment(pulses) {
   // Look for delegation commitment or focus_intention from yesterday or earlier
-  const today = new Date();
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const todayStr = localDateKey(new Date());
 
   for (const p of pulses) {
-    const pulseDate = p.created_date?.split('T')[0];
+    // Use local date of the pulse to avoid UTC midnight offset issues
+    const pulseDate = p.created_date ? localDateKey(new Date(p.created_date)) : null;
     if (pulseDate === todayStr) continue; // skip today
     if (p.delegation_commitment && p.delegation_commitment.trim()) {
       return { text: p.delegation_commitment, type: 'delegation', pulseId: p.id, pulseDate };
@@ -57,7 +61,13 @@ export default function FollowThroughCard({ pulses, userEmail, onDone }) {
 
   const dateLabel = (() => {
     if (!commitment.pulseDate) return 'recently';
-    const days = Math.floor((Date.now() - new Date(commitment.pulseDate)) / 86400000);
+    // Compare local date strings to get accurate day difference
+    const todayKey = localDateKey(new Date());
+    const [ty, tm, td] = todayKey.split('-').map(Number);
+    const [py, pm, pd] = commitment.pulseDate.split('-').map(Number);
+    const todayMs = new Date(ty, tm - 1, td).getTime();
+    const pulseMs = new Date(py, pm - 1, pd).getTime();
+    const days = Math.round((todayMs - pulseMs) / 86400000);
     if (days === 1) return 'yesterday';
     if (days < 7) return `${days} days ago`;
     return 'last week';
