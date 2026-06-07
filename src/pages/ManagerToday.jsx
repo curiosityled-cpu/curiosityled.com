@@ -241,7 +241,13 @@ export default function ManagerToday() {
     return rotation[day % rotation.length];
   })();
 
-  const todayPulse = recentPulses.find(p => p.created_date?.startsWith(new Date().toISOString().split("T")[0]));
+  // Build local-date "today" key (YYYY-MM-DD) to avoid UTC midnight offset bugs
+  const localToday = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  })();
+
+  const todayPulse = recentPulses.find(p => p.created_date?.startsWith(localToday));
 
   // Pending debrief from a Prepare flow scheduled earlier today/recently
   const pendingDebrief = recentPulses.find(p =>
@@ -252,8 +258,7 @@ export default function ManagerToday() {
   );
 
   // Determine if morning intent has been set today
-  const todayKey = new Date().toISOString().split('T')[0];
-  const hasMorningIntent = recentPulses.some(p => p.prompt_type === 'morning_intent' && p.created_date?.startsWith(todayKey));
+  const hasMorningIntent = recentPulses.some(p => p.prompt_type === 'morning_intent' && p.created_date?.startsWith(localToday));
   const hasCheckedInToday = !!todayPulse;
 
   // Main column content (shared between mobile and desktop left column)
