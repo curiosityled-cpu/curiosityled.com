@@ -151,8 +151,8 @@ function buildAnnotations(pulses) {
 
 // Pattern recurrence: count how many weeks each pattern was detected
 function getISOWeekKey(d) {
-  const date = new Date(d.getTime());
-  date.setHours(0, 0, 0, 0);
+  // Use local date components to avoid UTC midnight offset for non-UTC timezones
+  const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   date.setDate(date.getDate() + 4 - (date.getDay() || 7));
   const yearStart = new Date(date.getFullYear(), 0, 1);
   const week = Math.ceil(((date - yearStart) / 86400000 + 1) / 7);
