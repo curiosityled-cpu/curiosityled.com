@@ -32,7 +32,9 @@ const GAP_LABELS = {
 };
 
 function IntentDayRow({ date, intent, actuals }) {
-  const isT = isToday(new Date(date));
+  // Parse YYYY-MM-DD without timezone shift to avoid UTC-offset day mismatch
+  const [y, m, d] = date.split('-').map(Number);
+  const isT = isToday(new Date(y, m - 1, d));
   const gap = actuals?.intent_actuals_gap;
   const gapInfo = gap ? (GAP_LABELS[gap] || GAP_LABELS.insufficient_data) : null;
 

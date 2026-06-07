@@ -132,7 +132,7 @@ function MVPLayoutInner({ children }) {
     location.pathname !== '/' &&
     location.pathname !== '/my-leadership';
 
-  const handleLogout = () => base44.auth.logout();
+  const handleLogout = () => base44.auth.logout().catch(() => {});
 
   const atreusContext = {
     pageType: location.pathname.replace('/', '') || 'dashboard',
