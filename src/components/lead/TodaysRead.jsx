@@ -5,7 +5,8 @@
  */
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, ChevronDown, ChevronUp, Brain } from "lucide-react";
+import { ChevronDown, ChevronUp, Brain } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 
 function getSynthesis(selectedValue, promptType, trends, goals, pulses) {
@@ -57,8 +58,9 @@ function getAccentColor(selectedValue, promptType) {
   return { border: 'border-[#0202ff]/20', dot: 'bg-[#0202ff]', label: 'text-[#6699ff]', header: 'bg-[#0202ff]/8' };
 }
 
-export default function TodaysRead({ selectedValue, promptType, optionalText, followUp, trends, goals = [], pulses = [] }) {
+export default function TodaysRead({ selectedValue, promptType, optionalText, followUp, trends, goals = [], pulses = [], onReset }) {
   const { openWithContext } = useAtreusChat();
+  const [expanded, setExpanded] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
   const { headline, body, signal } = getSynthesis(selectedValue, promptType, trends, goals, pulses);
   const accent = getAccentColor(selectedValue, promptType);
@@ -70,89 +72,132 @@ export default function TodaysRead({ selectedValue, promptType, optionalText, fo
     });
   };
 
+  // Collapsed summary label — what was selected
+  const PROMPT_LABELS = {
+    morning_intent: { delegation: "Delegate something", strategic_work: "Strategic work", team_support: "Team support", personal_development: "Personal development" },
+    baseline_energy: { none: "No room at all", tight: "Pretty tight", some: "Enough to breathe", plenty: "Lots of space" },
+    clarity_check: { steady: "Feeling clear", stretched: "Feeling stretched", drained: "Already behind" },
+    confidence_check: { high: "Solid", steady: "Okay, mostly", uncertain: "A bit shaky", low: "Not great" },
+    overload_check: { very_much: "Very much", somewhat: "Somewhat", not_really: "Not really", skipped: "Skipped" },
+    weekly_reflection: { strong: "Mostly yes", steady: "Mixed", stretched: "Survival mode", drained: "Not at all" },
+    motivation_check: { high: "Genuinely fired up", moderate: "Getting on with it", low: "Running on fumes", flat: "Flat today" },
+    avoidance_check: { yes: "Yes, definitely", not_sure: "Maybe", no: "Not really" },
+    optimism_check: { optimistic: "Genuinely hopeful", hopeful: "Cautiously okay", uncertain: "Uncertain", pessimistic: "Flat or bleak" },
+  };
+  const selectedLabel = PROMPT_LABELS[promptType]?.[selectedValue] || selectedValue || "Checked in";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       className={`rounded-2xl border ${accent.border} overflow-hidden bg-card`}
     >
-      {/* Header bar */}
-      <div className={`px-4 py-3 flex items-center justify-between border-b border-border ${accent.header}`}>
+      {/* Header bar — always visible, acts as the tap target to expand */}
+      <button
+        onClick={() => setExpanded(s => !s)}
+        className={`w-full px-4 py-3 flex items-center justify-between border-b border-border ${accent.header} hover:opacity-80 transition-opacity`}
+      >
         <div className="flex items-center gap-2">
           <div className={`w-1.5 h-1.5 rounded-full ${accent.dot}`} />
           <p className={`text-[10px] font-semibold uppercase tracking-widest ${accent.label}`}>Today's read</p>
+          {!expanded && (
+            <span className="text-[10px] text-muted-foreground font-normal ml-1">· {selectedLabel}</span>
+          )}
         </div>
-        {signal && (
-          <span className={`text-[10px] px-2 py-0.5 rounded-full border ${accent.border} ${accent.label} font-medium`}>
-            {signal}
-          </span>
-        )}
-      </div>
-
-      {/* Main synthesis */}
-      <div className="px-4 pt-4 pb-3 space-y-2">
-        <p className="text-base font-bold leading-snug text-foreground">{headline}</p>
-        <p className="text-sm leading-relaxed text-muted-foreground">{body}</p>
-
-        {/* Optional note */}
-        {optionalText && (
-          <div className="mt-2 px-3 py-2 rounded-lg italic text-xs bg-muted text-muted-foreground border border-border">
-            "{optionalText.slice(0, 100)}{optionalText.length > 100 ? '…' : ''}"
-          </div>
-        )}
-      </div>
-
-      {/* Follow-up message */}
-      {followUp && (
-        <div className="px-4 pb-3">
-          <p className={`text-[11px] font-medium leading-relaxed ${accent.label}`}>{followUp}</p>
+        <div className="flex items-center gap-2">
+          {signal && expanded && (
+            <span className={`text-[10px] px-2 py-0.5 rounded-full border ${accent.border} ${accent.label} font-medium`}>
+              {signal}
+            </span>
+          )}
+          {expanded ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />}
         </div>
-      )}
+      </button>
 
-      {/* Context signals — collapsible */}
-      {(goals.length > 0 || trends) && (
-        <div className="px-4 py-2 border-t border-border">
-          <button
-            onClick={() => setShowDetail(s => !s)}
-            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+      {/* Expanded content */}
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
           >
-            {showDetail ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-            What's feeding this read
-          </button>
-          {showDetail && (
-            <div className="mt-2 space-y-1.5">
-              {goals.filter(g => g.status === 'active').slice(0, 2).map(g => (
-                <div key={g.id} className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${accent.dot}`} />
-                  Active goal: {g.title}
-                </div>
-              ))}
-              {signal && (
-                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${accent.dot}`} />
-                  Self-reported signal: {signal}
-                </div>
-              )}
-              {trends?.overload_pattern_strength > 40 && (
-                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
-                  Pattern: overload tendency active
+            {/* Main synthesis */}
+            <div className="px-4 pt-4 pb-3 space-y-2">
+              <p className="text-base font-bold leading-snug text-foreground">{headline}</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">{body}</p>
+
+              {/* Optional note */}
+              {optionalText && (
+                <div className="mt-2 px-3 py-2 rounded-lg italic text-xs bg-muted text-muted-foreground border border-border">
+                  "{optionalText.slice(0, 100)}{optionalText.length > 100 ? '…' : ''}"
                 </div>
               )}
             </div>
-          )}
-        </div>
-      )}
 
-      {/* Action */}
-      <div className="px-4 pb-4 pt-1">
-        <button
-          onClick={handleTalkThrough}
-          className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-medium transition-colors bg-muted hover:bg-muted/80 text-[#0202ff] border border-border"
-        >
-          <Brain className="w-3.5 h-3.5" /> Talk this through with Atreus
-        </button>
-      </div>
+            {/* Follow-up message */}
+            {followUp && (
+              <div className="px-4 pb-3">
+                <p className={`text-[11px] font-medium leading-relaxed ${accent.label}`}>{followUp}</p>
+              </div>
+            )}
+
+            {/* Context signals — collapsible */}
+            {(goals.length > 0 || trends) && (
+              <div className="px-4 py-2 border-t border-border">
+                <button
+                  onClick={() => setShowDetail(s => !s)}
+                  className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showDetail ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  What's feeding this read
+                </button>
+                {showDetail && (
+                  <div className="mt-2 space-y-1.5">
+                    {goals.filter(g => g.status === 'active').slice(0, 2).map(g => (
+                      <div key={g.id} className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${accent.dot}`} />
+                        Active goal: {g.title}
+                      </div>
+                    ))}
+                    {signal && (
+                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${accent.dot}`} />
+                        Self-reported signal: {signal}
+                      </div>
+                    )}
+                    {trends?.overload_pattern_strength > 40 && (
+                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+                        Pattern: overload tendency active
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="px-4 pb-4 pt-1 space-y-2">
+              <button
+                onClick={handleTalkThrough}
+                className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-medium transition-colors bg-muted hover:bg-muted/80 text-[#0202ff] border border-border"
+              >
+                <Brain className="w-3.5 h-3.5" /> Talk this through with Atreus
+              </button>
+              {onReset && (
+                <button
+                  onClick={onReset}
+                  className="w-full flex items-center justify-center gap-2 py-1.5 rounded-xl text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Change my response
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

@@ -201,10 +201,23 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
     }, 1800);
   };
 
-  // Done state — show full "Today's Read" card
+  // Done state — show collapsible "Today's Read" card with option to change response
   if (done) {
     const savedSelected = sessionStorage.getItem(getStorageKey() + '_selected') || selected;
     const savedText = sessionStorage.getItem(getStorageKey() + '_text') || '';
+
+    const handleReset = () => {
+      // Clear session state so the user can re-submit
+      sessionStorage.removeItem(getStorageKey());
+      sessionStorage.removeItem(getStorageKey() + '_selected');
+      sessionStorage.removeItem(getStorageKey() + '_text');
+      setDone(false);
+      setSelected(null);
+      setOptionalText('');
+      setFollowUp(null);
+      setShowOptional(false);
+    };
+
     return (
       <TodaysRead
         selectedValue={savedSelected}
@@ -214,6 +227,7 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
         trends={trends}
         goals={goals || []}
         pulses={pulses || []}
+        onReset={handleReset}
       />
     );
   }
