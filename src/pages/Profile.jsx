@@ -27,6 +27,7 @@ import { createPageUrl } from "@/utils";
 import { format } from "date-fns";
 import { usePageContext } from "../Layout";
 import ExternalQualificationsSection from "@/components/profile/ExternalQualificationsSection";
+import ManagerProfileCard from "@/components/you/ManagerProfileCard";
 import { Switch } from "@/components/ui/switch";
 
 export default function Profile() {
@@ -464,6 +465,18 @@ export default function Profile() {
                   disabled={!isEditing}
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Leadership Context</CardTitle>
+              <p className="text-sm text-gray-600">
+                Help Atreus understand your leadership situation and style
+              </p>
+            </CardHeader>
+            <CardContent>
+              <ManagerProfileCard />
             </CardContent>
           </Card>
 
