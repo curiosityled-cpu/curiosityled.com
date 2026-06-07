@@ -12,12 +12,12 @@ import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TrendingUp, TrendingDown, Zap, Brain, Heart, AlertCircle, CheckCircle2, Target, Calendar } from "lucide-react";
+import { TrendingUp, TrendingDown, Zap, Brain, AlertCircle, CheckCircle2, Target, Calendar } from "lucide-react";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import BurnoutRiskCard from "@/components/intelligence/BurnoutRiskCard";
 import ResilienceRecoveryChart from "@/components/intelligence/ResilienceRecoveryChart";
@@ -49,12 +49,15 @@ function EnergyTrendCard({ trends, pulses }) {
   const energyData = pulses
     .filter(p => p.energy_level)
     .slice(-28)
-    .map((p, i) => ({
+    .map((p, i) => {
+      const d = new Date(p.created_date);
+      const local = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      return {
       day: i + 1,
-      date: new Date(p.created_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      date: local.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       energy: p.energy_level === 'drained' ? 1 : p.energy_level === 'stretched' ? 2 : p.energy_level === 'steady' ? 3 : 4,
       raw: p.energy_level,
-    }));
+    };});
 
   return (
     <Card className="shadow-sm border border-gray-100">
@@ -101,12 +104,15 @@ function ConfidenceTrendCard({ trends, pulses }) {
   const confidenceData = pulses
     .filter(p => p.confidence_today)
     .slice(-28)
-    .map((p, i) => ({
+    .map((p, i) => {
+      const d = new Date(p.created_date);
+      const local = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      return {
       day: i + 1,
-      date: new Date(p.created_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      date: local.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       confidence: p.confidence_today === 'low' ? 1 : p.confidence_today === 'uncertain' ? 2 : p.confidence_today === 'steady' ? 3 : 4,
       raw: p.confidence_today,
-    }));
+    };});
 
   return (
     <Card className="shadow-sm border border-gray-100">
@@ -144,50 +150,6 @@ function ConfidenceTrendCard({ trends, pulses }) {
   );
 }
 
-function ResilienceTrendCard({ trends, pulses }) {
-  const resilienceData = pulses
-    .filter(p => p.resilience_signal)
-    .slice(-28)
-    .map((p, i) => ({
-      day: i + 1,
-      date: new Date(p.created_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      resilience: p.resilience_signal === 'depleted' ? 1 : p.resilience_signal === 'fragile' ? 2 : p.resilience_signal === 'holding' ? 3 : 4,
-      raw: p.resilience_signal,
-    }));
-
-  return (
-    <Card className="shadow-sm border border-gray-100">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Heart className="w-5 h-5 text-red-500" />
-          Resilience & Recovery
-        </CardTitle>
-        {trends && <TrendIndicator trend={trends.resilience_trend} label="Resilience" />}
-      </CardHeader>
-      <CardContent>
-        {resilienceData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={resilienceData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-              <YAxis domain={[0, 4]} ticks={[1, 2, 3, 4]} label={{ value: 'Level', angle: -90, position: 'insideLeft' }} />
-              <Tooltip 
-                formatter={(value) => ['Depleted', 'Fragile', 'Holding', 'Bouncing Back'][value - 1]}
-              />
-              <Bar dataKey="resilience" fill="#ef4444" name="Resilience Level" />
-            </BarChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="h-64 flex items-center justify-center text-gray-400">Not enough data yet</div>
-        )}
-        <div className="mt-4 p-3 bg-red-50 rounded-lg text-sm text-gray-700">
-          <p className="font-medium mb-1">Recovery patterns:</p>
-          <p>How quickly you bounce back after setbacks is a key indicator of your leadership sustainability. Watch for recovery time.</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 function DailyCheckInLog({ pulses }) {
   const recentPulses = pulses.slice(0, 20);
