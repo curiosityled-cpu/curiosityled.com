@@ -215,7 +215,7 @@ function DailyCheckInLog({ pulses }) {
                   {!['baseline_energy', 'weekly_reflection', 'morning_intent', 'contextual', 'overload_check', 'evening_actuals'].includes(pulse.prompt_type) && `${pulse.prompt_type}`}
                 </p>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  {new Date(pulse.created_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  {new Date(pulse.created_date).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
               {pulse.energy_level && (
