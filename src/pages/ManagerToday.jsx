@@ -12,7 +12,8 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { Link } from "react-router-dom";
-import { Brain, ChevronRight, MessageSquare, SlidersHorizontal, BarChart3, Layers, CheckCircle2 } from "lucide-react";
+import { Brain, ChevronRight, MessageSquare, SlidersHorizontal, BarChart3, Layers, CheckCircle2, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import ManagerCheckIn from "@/components/checkin/ManagerCheckIn";
 import IntentLoopCard from "@/components/checkin/IntentLoopCard";
 import ToneOnboarding from "@/components/checkin/ToneOnboarding";
@@ -215,8 +216,7 @@ export default function ManagerToday() {
         onIntentUpdated={() => queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] })}
       />
 
-      {/* Settings panel — toggled from upper-right settings button */}
-      {showSettings && <CheckInSettings />}
+      {/* Settings panel removed from inline — now in modal */}
 
       {/* Pending debrief prompt */}
       {pendingDebrief && (
@@ -352,6 +352,46 @@ export default function ManagerToday() {
         onSuccess={() => queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] })}
         userEmail={user?.email}
       />
+
+      {/* Atreus Settings Modal */}
+      <AnimatePresence>
+        {showSettings && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/30 z-40"
+              onClick={() => setShowSettings(false)}
+            />
+            {/* Panel */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-background z-50 overflow-y-auto shadow-2xl"
+            >
+              <div className="sticky top-0 bg-background border-b border-border px-5 py-4 flex items-center justify-between z-10">
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="w-4 h-4 text-[#0202ff]" />
+                  <p className="text-sm font-semibold text-foreground">Atreus settings</p>
+                </div>
+                <button
+                  onClick={() => setShowSettings(false)}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-5">
+                <CheckInSettings />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
