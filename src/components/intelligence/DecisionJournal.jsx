@@ -54,8 +54,8 @@ export default function DecisionJournal() {
       }
     };
 
-    if (user) fetchDecisions();
-  }, [user]);
+    if (user?.email) fetchDecisions();
+  }, [user?.email]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -137,8 +137,8 @@ export default function DecisionJournal() {
             </div>
           ) : (
             <div className="space-y-3">
-              {decisions.slice(0, 10).map((decision, i) => (
-                <div key={i} className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              {decisions.slice(0, 10).map((decision) => (
+                <div key={decision.id} className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <p className="text-sm font-medium text-gray-900">
                       {decision.biggest_weight_today}
