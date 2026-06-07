@@ -27,20 +27,30 @@ export default function DecisionJournalOutcomeReview() {
   const [outcomes, setOutcomes] = useState({}); // id → text
   const [saved, setSaved] = useState({}); // id → bool
 
-  // Load decision journal entries (follow_up pulses with "Decision" in focus_intention)
+  // Load decision journal entries — both new format (prompt_type='decision_journal')
+  // and legacy format (follow_up pulses with "Decision" in focus_intention)
   const { data: decisions = [] } = useQuery({
     queryKey: ['decision-journal', user?.email],
     queryFn: async () => {
-      const all = await base44.entities.ManagerPulse.filter(
-        { user_email: user.email, prompt_type: 'follow_up' },
-        '-created_date',
-        50
-      );
-      // Filter to decision journal entries (captured with "Decision journal session:" prefix)
-      return all.filter(p =>
-        p.focus_intention?.toLowerCase().includes('decision') &&
-        !p.description?.includes('outcome_review:')
-      );
+      const [newEntries, legacyEntries] = await Promise.all([
+        base44.entities.ManagerPulse.filter(
+          { user_email: user.email, prompt_type: 'decision_journal' },
+          '-created_date',
+          30
+        ).catch(() => []),
+        base44.entities.ManagerPulse.filter(
+          { user_email: user.email, prompt_type: 'follow_up' },
+          '-created_date',
+          50
+        ).then(all => all.filter(p =>
+          p.focus_intention?.toLowerCase().includes('decision') &&
+          !p.description?.includes('outcome_review:')
+        )).catch(() => []),
+      ]);
+      // Merge and deduplicate by id, newest first
+      const merged = [...newEntries, ...legacyEntries];
+      const seen = new Set();
+      return merged.filter(p => { if (seen.has(p.id)) return false; seen.add(p.id); return true; });
     },
     enabled: !!user?.email,
     staleTime: 5 * 60 * 1000,
