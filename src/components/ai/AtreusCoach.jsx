@@ -1166,10 +1166,10 @@ export default function AtreusCoach({
                 {exportingText ? <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin" /> : <FileText className="w-3 h-3 md:w-4 md:h-4" />}
               </Button>
               <Button variant="ghost" size="icon" onClick={handleExportAsPDF} disabled={exportingPDF} className="text-white hover:bg-white/20 h-8 w-8 md:h-9 md:w-9 hidden md:flex" title="Export as PDF">
-                {exportingPDF ? <Loader2 className="w-3 h-3 md:w-4 h-4 animate-spin" /> : <Download className="w-3 h-3 md:w-4 h-4" />}
+                {exportingPDF ? <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin" /> : <Download className="w-3 h-3 md:w-4 md:h-4" />}
               </Button>
               <Button variant="ghost" size="icon" onClick={onMinimize} className="text-white hover:bg-white/20 h-8 w-8 md:h-9 md:w-9" title="Minimize">
-                <Minimize2 className="w-3 h-3 md:w-4 h-4" />
+                <Minimize2 className="w-3 h-3 md:w-4 md:h-4" />
               </Button>
             </div>
           </div>
