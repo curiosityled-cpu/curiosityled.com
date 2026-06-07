@@ -7,7 +7,7 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   User, Shield, Settings, Brain, TrendingUp, Bell,
   ChevronRight, LogOut, Calendar, Sliders, Eye, Archive
@@ -56,7 +56,6 @@ function SectionLabel({ children }) {
 
 export default function ManagerYou() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [showArchive, setShowArchive] = useState(false);
   const [activeSection, setActiveSection] = useState('profile');
   const firstName = getFirstName(user);

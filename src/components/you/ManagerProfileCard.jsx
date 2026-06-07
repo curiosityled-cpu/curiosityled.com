@@ -94,9 +94,7 @@ export default function ManagerProfileCard() {
 
   const handleSave = async () => {
     setSaving(true);
-    try {
-      await base44.auth.updateMe({ data: { ...user?.data, ...profile } });
-    } catch {}
+    await base44.auth.updateMe({ data: { ...user?.data, ...profile } }).catch(() => {});
     setSaving(false);
     setEditing(false);
   };
