@@ -88,7 +88,9 @@ function deriveWhatHelped(pulses, pattern) {
   const morningIntents = pulses.filter(p => p.prompt_type === 'morning_intent' && p.focus_intention);
   if (morningIntents.length > 0) {
     const lastIntent = morningIntents[0];
-    learned.push(`Setting a morning intent helped (e.g. "${lastIntent.focus_category?.replace('_', ' ') || 'focus'}" focus on ${new Date(lastIntent.created_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}).`);
+    const d = new Date(lastIntent.created_date);
+    const intentDateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    learned.push(`Setting a morning intent helped (e.g. "${lastIntent.focus_category?.replace('_', ' ') || 'focus'}" focus on ${intentDateLabel}).`);
   }
 
   // Energy trend improving after low period
