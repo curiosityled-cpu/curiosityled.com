@@ -28,6 +28,7 @@ import { format } from "date-fns";
 import { usePageContext } from "../Layout";
 import ExternalQualificationsSection from "@/components/profile/ExternalQualificationsSection";
 import { Switch } from "@/components/ui/switch";
+import ManagerProfileCard from "@/components/you/ManagerProfileCard";
 
 export default function Profile() {
   const { user, roleDisplayName, displayName, loading: authLoading, reloadUser, impersonation } = useAuth();
@@ -464,6 +465,17 @@ export default function Profile() {
                   disabled={!isEditing}
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Leadership context — coaching baseline */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Leadership Context</CardTitle>
+              <p className="text-sm text-gray-600">Your coaching baseline — helps personalise Atreus coaching</p>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ManagerProfileCard />
             </CardContent>
           </Card>
 
