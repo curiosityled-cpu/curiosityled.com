@@ -202,8 +202,8 @@ function DailyCheckInLog({ pulses }) {
       </CardHeader>
       <CardContent>
         <div className="space-y-2 max-h-[400px] overflow-y-auto">
-          {recentPulses.map((pulse, i) => (
-            <div key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+          {recentPulses.map((pulse) => (
+            <div key={pulse.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900">
                   {pulse.prompt_type === 'baseline_energy' && '⚡ Energy Check'}
