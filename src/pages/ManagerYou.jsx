@@ -284,7 +284,7 @@ export default function ManagerYou() {
       <SectionCard>
         <YouRow icon={User} iconBg="bg-gray-50" iconColor="text-gray-600" title="My profile" subtitle="Name, role, and personal context" to="/Profile" />
         <YouRow icon={Bell} iconBg="bg-gray-50" iconColor="text-gray-500" title="Notifications" subtitle="Inbox and notification history" to="/Notifications" />
-        <div onClick={() => base44.auth.logout()} className="flex items-center gap-4 px-5 py-4 hover:bg-red-50 transition-colors cursor-pointer group">
+        <div onClick={() => base44.auth.logout().catch(() => {})} className="flex items-center gap-4 px-5 py-4 hover:bg-red-50 transition-colors cursor-pointer group">
           <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
             <LogOut className="w-4 h-4 text-red-500" />
           </div>
@@ -348,7 +348,7 @@ export default function ManagerYou() {
           <SectionCard>
             <YouRow icon={User} iconBg="bg-gray-50" iconColor="text-gray-600" title="My profile" subtitle="Name, role, and personal context" to="/Profile" />
             <YouRow icon={Bell} iconBg="bg-gray-50" iconColor="text-gray-500" title="Notifications" to="/Notifications" />
-            <div onClick={() => base44.auth.logout()} className="flex items-center gap-4 px-5 py-4 hover:bg-red-50 transition-colors cursor-pointer">
+            <div onClick={() => base44.auth.logout().catch(() => {})} className="flex items-center gap-4 px-5 py-4 hover:bg-red-50 transition-colors cursor-pointer">
               <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0"><LogOut className="w-4 h-4 text-red-500" /></div>
               <p className="text-sm font-medium text-red-600 flex-1">Log out</p>
             </div>

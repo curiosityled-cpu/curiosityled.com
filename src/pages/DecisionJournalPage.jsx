@@ -289,11 +289,13 @@ export default function DecisionJournalPage() {
   const { data: decisions = [], isLoading } = useQuery({
     queryKey: ['decision-journal-full', user?.email],
     queryFn: async () => {
-      return base44.entities.ManagerPulse.filter(
-        { user_email: user.email, prompt_type: 'decision_journal' },
-        '-created_date',
-        50
-      );
+      try {
+        return await base44.entities.ManagerPulse.filter(
+          { user_email: user.email, prompt_type: 'decision_journal' },
+          '-created_date',
+          50
+        );
+      } catch { return []; }
     },
     enabled: !!user?.email,
     staleTime: 2 * 60 * 1000,
@@ -325,7 +327,7 @@ export default function DecisionJournalPage() {
       source: 'web',
       focus_intention: `Decision outcome: ${decision.biggest_weight_today?.slice(0, 200)}`,
       description: `outcome_review: ${outcomeText}`.slice(0, 1000),
-    });
+    }).catch(() => {});
     queryClient.invalidateQueries({ queryKey: ['decision-journal-full', user?.email] });
   };
 

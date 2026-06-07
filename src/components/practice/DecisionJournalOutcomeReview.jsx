@@ -45,7 +45,7 @@ export default function DecisionJournalOutcomeReview() {
         ).then(all => all.filter(p =>
           p.focus_intention?.toLowerCase().includes('decision') &&
           !p.description?.includes('outcome_review:')
-        )).catch(() => []),
+        ), () => []),
       ]);
       // Merge and deduplicate by id, newest first
       const merged = [...newEntries, ...legacyEntries];
