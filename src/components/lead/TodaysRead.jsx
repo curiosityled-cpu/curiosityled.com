@@ -74,11 +74,10 @@ export default function TodaysRead({ selectedValue, promptType, optionalText, fo
     <motion.div
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`rounded-2xl border ${accent.border} overflow-hidden`}
-      style={{ background: 'hsl(220 12% 12%)' }}
+      className={`rounded-2xl border ${accent.border} overflow-hidden bg-card`}
     >
       {/* Header bar */}
-      <div className={`px-4 py-3 flex items-center justify-between ${accent.header}`} style={{ borderBottom: '1px solid hsl(220 10% 20%)' }}>
+      <div className={`px-4 py-3 flex items-center justify-between border-b border-border ${accent.header}`}>
         <div className="flex items-center gap-2">
           <div className={`w-1.5 h-1.5 rounded-full ${accent.dot}`} />
           <p className={`text-[10px] font-semibold uppercase tracking-widest ${accent.label}`}>Today's read</p>
@@ -92,12 +91,12 @@ export default function TodaysRead({ selectedValue, promptType, optionalText, fo
 
       {/* Main synthesis */}
       <div className="px-4 pt-4 pb-3 space-y-2">
-        <p className="text-base font-bold leading-snug" style={{ color: 'hsl(220 15% 92%)' }}>{headline}</p>
-        <p className="text-sm leading-relaxed" style={{ color: 'hsl(220 10% 60%)' }}>{body}</p>
+        <p className="text-base font-bold leading-snug text-foreground">{headline}</p>
+        <p className="text-sm leading-relaxed text-muted-foreground">{body}</p>
 
         {/* Optional note */}
         {optionalText && (
-          <div className="mt-2 px-3 py-2 rounded-lg italic text-xs" style={{ background: 'hsl(220 10% 15%)', color: 'hsl(220 8% 55%)' }}>
+          <div className="mt-2 px-3 py-2 rounded-lg italic text-xs bg-muted text-muted-foreground border border-border">
             "{optionalText.slice(0, 100)}{optionalText.length > 100 ? '…' : ''}"
           </div>
         )}
@@ -112,11 +111,10 @@ export default function TodaysRead({ selectedValue, promptType, optionalText, fo
 
       {/* Context signals — collapsible */}
       {(goals.length > 0 || trends) && (
-        <div style={{ borderTop: '1px solid hsl(220 10% 18%)' }} className="px-4 py-2">
+        <div className="px-4 py-2 border-t border-border">
           <button
             onClick={() => setShowDetail(s => !s)}
-            className="flex items-center gap-1 text-[10px] transition-colors"
-            style={{ color: 'hsl(220 8% 45%)' }}
+            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
           >
             {showDetail ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             What's feeding this read
@@ -124,19 +122,19 @@ export default function TodaysRead({ selectedValue, promptType, optionalText, fo
           {showDetail && (
             <div className="mt-2 space-y-1.5">
               {goals.filter(g => g.status === 'active').slice(0, 2).map(g => (
-                <div key={g.id} className="flex items-center gap-2 text-[10px]" style={{ color: 'hsl(220 8% 50%)' }}>
+                <div key={g.id} className="flex items-center gap-2 text-[10px] text-muted-foreground">
                   <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${accent.dot}`} />
                   Active goal: {g.title}
                 </div>
               ))}
               {signal && (
-                <div className="flex items-center gap-2 text-[10px]" style={{ color: 'hsl(220 8% 50%)' }}>
+                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                   <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${accent.dot}`} />
                   Self-reported signal: {signal}
                 </div>
               )}
               {trends?.overload_pattern_strength > 40 && (
-                <div className="flex items-center gap-2 text-[10px]" style={{ color: 'hsl(220 8% 50%)' }}>
+                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
                   Pattern: overload tendency active
                 </div>
@@ -150,10 +148,7 @@ export default function TodaysRead({ selectedValue, promptType, optionalText, fo
       <div className="px-4 pb-4 pt-1">
         <button
           onClick={handleTalkThrough}
-          className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-medium transition-all"
-          style={{ background: 'hsl(220 10% 16%)', color: 'hsl(225 70% 70%)', border: '1px solid hsl(220 10% 22%)' }}
-          onMouseEnter={e => e.currentTarget.style.background = 'hsl(220 10% 19%)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'hsl(220 10% 16%)'}
+          className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-medium transition-colors bg-muted hover:bg-muted/80 text-[#0202ff] border border-border"
         >
           <Brain className="w-3.5 h-3.5" /> Talk this through with Atreus
         </button>

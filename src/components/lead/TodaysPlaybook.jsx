@@ -145,7 +145,7 @@ export default function TodaysPlaybook({ pulse, trends, goals, assignments, puls
 
       {/* ── SECTION 1: Situation read ─────────────────────────────────── */}
       <div className="px-5 pt-5 pb-4 border-b border-border">
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Situation</p>
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">What the system sees</p>
         <p className="text-base font-bold text-foreground leading-snug">{situation.headline}</p>
         <p className="text-sm text-muted-foreground leading-relaxed mt-1">{situation.body}</p>
         {situation.chips.length > 0 && (
@@ -159,7 +159,7 @@ export default function TodaysPlaybook({ pulse, trends, goals, assignments, puls
 
       {/* ── SECTION 2: Today's Move ───────────────────────────────────── */}
       <div className="px-5 py-4 border-b border-border">
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Your move today</p>
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">One move</p>
         {moveDone ? (
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
