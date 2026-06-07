@@ -1,0 +1,64 @@
+{
+  "name": "ManagerMemory",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the manager this memory belongs to"
+    },
+    "recurring_triggers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Identified recurring pattern triggers (e.g. 'High meeting load tends to trigger overload')"
+    },
+    "what_has_helped": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Interventions and strategies that have worked before"
+    },
+    "stuck_points": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Where this manager gets stuck repeatedly"
+    },
+    "pressure_responses": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "How this manager tends to respond under pressure"
+    },
+    "development_continuity": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Cross-session development context: active themes, unfinished practices, etc."
+    },
+    "last_synthesized_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When memory was last synthesized from pulse data"
+    },
+    "synthesis_count": {
+      "type": "number",
+      "default": 0,
+      "description": "How many times memory has been synthesized"
+    }
+  },
+  "required": [
+    "user_email"
+  ],
+  "rls": {
+    "read": {
+      "user_email": "{{user.email}}"
+    },
+    "write": {
+      "user_email": "{{user.email}}"
+    }
+  }
+}

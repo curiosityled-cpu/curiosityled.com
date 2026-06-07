@@ -8,6 +8,8 @@ import { Compass, CheckCircle2, Brain, RefreshCw, PlayCircle, MessageSquare } fr
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 
 // Deliberate practice experiments keyed to goal/pattern context
 const EXPERIENCE_LIBRARY = [
@@ -116,6 +118,7 @@ function selectExperiences(goals, trends, shuffleKey) {
 
 // State per experience: null | 'attempted' | 'completed'
 export default function GrowExperiencesCard({ goals = [], trends = null, onOpenAtreus }) {
+  const { user } = useAuth();
   const [states, setStates] = useState({}); // id → 'attempted' | 'completed'
   const [reflections, setReflections] = useState({}); // id → string
   const [showReflection, setShowReflection] = useState({}); // id → bool
@@ -128,10 +131,28 @@ export default function GrowExperiencesCard({ goals = [], trends = null, onOpenA
 
   const markAttempted = (id) => {
     setStates(prev => ({ ...prev, [id]: 'attempted' }));
+    // Persist attempt to DB
+    try {
+      base44.entities.ManagerPulse.create({
+        user_email: user?.email,
+        prompt_type: 'follow_up',
+        source: 'web',
+        focus_intention: `Experience attempted: ${experiences.find(e => e.id === id)?.title || id}`.slice(0, 500),
+      });
+    } catch {}
   };
 
   const markCompleted = (id, reflectionPrompt) => {
     setStates(prev => ({ ...prev, [id]: 'completed' }));
+    // Persist completion to DB
+    try {
+      base44.entities.ManagerPulse.create({
+        user_email: user?.email,
+        prompt_type: 'follow_up',
+        source: 'web',
+        focus_intention: `Experience completed: ${experiences.find(e => e.id === id)?.title || id}`.slice(0, 500),
+      });
+    } catch {}
     // Show the inline reflection prompt instead of immediately opening Atreus
     setShowReflection(prev => ({ ...prev, [id]: true }));
   };

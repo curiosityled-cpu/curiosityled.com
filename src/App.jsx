@@ -38,6 +38,7 @@ import ManagerGrowth from './pages/ManagerGrowth';
 import ManagerTeam from './pages/ManagerTeam';
 import ManagerAtreus from './pages/ManagerAtreus';
 import ManagerPractice from './pages/ManagerPractice';
+import DecisionJournalPage from './pages/DecisionJournalPage';
 import ManagerYou from './pages/ManagerYou';
 import Insights from './pages/Insights';
 import ReportBuilder from './pages/ReportBuilder';
@@ -124,6 +125,7 @@ const AuthenticatedApp = () => {
       <Route path="/team" element={<MVPLayout><ManagerTeam /></MVPLayout>} />
       <Route path="/atreus-guide" element={<MVPLayout><ManagerAtreus /></MVPLayout>} />
       <Route path="/practice" element={<MVPLayout><ManagerPractice /></MVPLayout>} />
+      <Route path="/decision-journal" element={<MVPLayout><DecisionJournalPage /></MVPLayout>} />
       <Route path="/you" element={<MVPLayout><ManagerYou /></MVPLayout>} />
 
       {/* MVP-specific routes */}

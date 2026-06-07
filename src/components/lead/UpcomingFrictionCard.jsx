@@ -1,12 +1,14 @@
 /**
  * UpcomingFrictionCard — Warn without alarming.
  * Surfaces calendar/pattern-based friction before it emerges.
+ * Uses real calendar events when available via getUpcomingMeetings.
  */
-import React from "react";
-import { AlertCircle, ArrowRight, Brain } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { AlertCircle, ArrowRight, Brain, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
 
 function detectFriction(trends, goals, pulses) {
   const frictions = [];
@@ -64,8 +66,61 @@ function detectFriction(trends, goals, pulses) {
   return frictions[0] || null; // Show only the most urgent
 }
 
+function detectCalendarFriction(events, trends) {
+  if (!events || events.length === 0) return null;
+  const now = Date.now();
+
+  // Large meeting (5+ attendees) in next 48h + low confidence pattern
+  const bigMeetings = events.filter(e => {
+    const start = new Date(e.start).getTime();
+    return e.attendees >= 5 && start > now && start < now + 2 * 86400000;
+  });
+  if (bigMeetings.length > 0 && trends?.confidence_trend === 'declining') {
+    const m = bigMeetings[0];
+    const when = new Date(m.start).toLocaleDateString('en-US', { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+    return {
+      signal: "High-stakes meeting ahead",
+      prediction: `"${m.title}" (${when}, ${m.attendees} attendees) is coming up. Your confidence has been declining — this is worth a brief prep.`,
+      suggestion: "Use the Prepare flow before this meeting.",
+      cta: "Prep for it",
+      link: "/practice",
+      calendarBased: true,
+    };
+  }
+
+  // Many back-to-back meetings today
+  const today = events.filter(e => {
+    const start = new Date(e.start).getTime();
+    return start > now && start < now + 86400000;
+  });
+  if (today.length >= 5 && (trends?.overload_pattern_strength || 0) > 30) {
+    return {
+      signal: "Dense meeting day ahead",
+      prediction: `You have ${today.length} meetings today. Your overload pattern tends to activate on days like this.`,
+      suggestion: "Identify one meeting you can decline or shorten.",
+      cta: "Plan around it",
+      link: "/practice",
+      calendarBased: true,
+    };
+  }
+
+  return null;
+}
+
 export default function UpcomingFrictionCard({ trends, goals = [], pulses, onOpenAtreus }) {
-  const friction = detectFriction(trends, goals, pulses);
+  const [calendarEvents, setCalendarEvents] = useState(null);
+
+  useEffect(() => {
+    base44.functions.invoke('getUpcomingMeetings', {})
+      .then(res => setCalendarEvents(res?.data?.events || []))
+      .catch(() => setCalendarEvents([]));
+  }, []);
+
+  // Prefer calendar-based friction if available
+  const calFriction = calendarEvents?.length > 0 ? detectCalendarFriction(calendarEvents, trends) : null;
+  const patternFriction = detectFriction(trends, goals, pulses);
+  const friction = calFriction || patternFriction;
+
   if (!friction) return null;
 
   return (
@@ -73,10 +128,10 @@ export default function UpcomingFrictionCard({ trends, goals = [], pulses, onOpe
       <CardContent className="px-5 py-5 space-y-3">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
-            <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+            {friction.calendarBased ? <Calendar className="w-3.5 h-3.5 text-amber-600" /> : <AlertCircle className="w-3.5 h-3.5 text-amber-600" />}
           </div>
           <div>
-            <p className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider">Watch this</p>
+            <p className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider">{friction.calendarBased ? 'Calendar signal' : 'Watch this'}</p>
             <p className="text-xs text-gray-500">{friction.signal}</p>
           </div>
         </div>

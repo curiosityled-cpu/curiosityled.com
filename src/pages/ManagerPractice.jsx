@@ -104,46 +104,65 @@ function GrowSection({ goals, assignments, devPlans, pulses, trends, insight, on
       {/* Workouts — recommended exercises */}
       <WorkoutsSection goals={goals} trends={trends} insight={insight} />
 
-      {/* Learning */}
-      {(active.length > 0 || activePlan) && (
-        <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
-          <div className="px-5 pt-5 pb-2 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
-                <BookOpen className="w-3.5 h-3.5 text-blue-600" />
-              </div>
-              <p className="text-sm font-semibold text-gray-900">Learning</p>
+      {/* Learning — always shown with intelligence-linked "because of" copy */}
+      <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
+        <div className="px-5 pt-5 pb-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
+              <BookOpen className="w-3.5 h-3.5 text-blue-600" />
             </div>
-            <Link to="/my-development"><span className="text-xs text-[#0202ff] font-medium">View all →</span></Link>
+            <div>
+              <p className="text-sm font-semibold text-gray-900">Learning</p>
+              {(trends || insight || goals.some(g => g.status === 'active')) && (
+                <p className="text-[10px] text-[#0202ff]/70 font-medium">
+                  {trends?.overload_pattern_strength > 40
+                    ? 'Curated for your overload pattern'
+                    : trends?.identity_friction_active
+                    ? 'Linked to your role clarity signals'
+                    : insight?.development_areas?.[0]
+                    ? `For your ${insight.development_areas[0].split(' (')[0]} development`
+                    : 'Supports your active growth focus'}
+                </p>
+              )}
+            </div>
           </div>
-          <CardContent className="px-5 pt-2 pb-5 space-y-2">
-            {activePlan && (
-              <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
-                <p className="text-[10px] text-blue-600 font-semibold uppercase tracking-wide mb-0.5">Active journey</p>
-                <p className="text-sm font-medium text-gray-800">{activePlan.title}</p>
-              </div>
-            )}
-            {active.map(a => {
-              // Build "because of" reason
-              let because = null;
-              if (trends?.overload_pattern_strength > 40) because = "Because of your overload pattern";
-              else if (trends?.identity_friction_active) because = "Linked to your current role clarity signals";
-              else if (insight?.development_areas?.[0]) because = `Linked to your ${insight.development_areas[0].split(' (')[0]} development area`;
-              else if (goals.filter(g => g.status === 'active').length > 0) because = `Supports your active growth focus`;
-              return (
-                <div key={a.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
-                  <Zap className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-800 truncate">{a.title}</p>
-                    {because && <p className="text-[10px] text-[#0202ff]/70 font-medium mt-0.5">{because}</p>}
-                    {a.due_date && <p className="text-[10px] text-gray-400">Due {new Date(a.due_date).toLocaleDateString()}</p>}
-                  </div>
+          <Link to="/my-development"><span className="text-xs text-[#0202ff] font-medium">View all →</span></Link>
+        </div>
+        <CardContent className="px-5 pt-2 pb-5 space-y-2">
+          {activePlan && (
+            <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
+              <p className="text-[10px] text-blue-600 font-semibold uppercase tracking-wide mb-0.5">Active journey</p>
+              <p className="text-sm font-medium text-gray-800">{activePlan.title}</p>
+            </div>
+          )}
+          {active.length > 0 ? active.map(a => {
+            let because = null;
+            if (trends?.overload_pattern_strength > 40) because = "Because of your overload pattern";
+            else if (trends?.identity_friction_active) because = "Linked to your current role clarity signals";
+            else if (insight?.development_areas?.[0]) because = `Linked to your ${insight.development_areas[0].split(' (')[0]} development area`;
+            else if (goals.filter(g => g.status === 'active').length > 0) because = `Supports your active growth focus`;
+            return (
+              <div key={a.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
+                <Zap className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-800 truncate">{a.title}</p>
+                  {because && <p className="text-[10px] text-[#0202ff]/70 font-medium mt-0.5">{because}</p>}
+                  {a.due_date && <p className="text-[10px] text-gray-400">Due {new Date(a.due_date).toLocaleDateString()}</p>}
                 </div>
-              );
-            })}
-          </CardContent>
-        </Card>
-      )}
+              </div>
+            );
+          }) : (
+            <div className="py-3 space-y-2 text-center">
+              <p className="text-xs text-gray-500 leading-relaxed">
+                No assigned learning yet. Your development library and curated content will appear here — tied to your active patterns and goals.
+              </p>
+              <Link to="/my-development">
+                <button className="text-xs font-medium text-[#0202ff] hover:underline">Browse development library →</button>
+              </Link>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Assessment entry */}
       <Link to="/LeadershipAssessment">
@@ -291,8 +310,8 @@ export default function ManagerPractice() {
               iconBg="bg-rose-50"
               iconColor="text-rose-600"
               title="Decision journal"
-              description="Capture a high-stakes decision — context, risks, and outcome review later."
-              prompt="I want to log a decision I'm working through. Can you help me capture the context and key considerations?"
+              description="Capture a high-stakes decision — context, confidence level, risks, and outcome review later."
+              to="/decision-journal"
             />
           </div>
 
