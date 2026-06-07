@@ -102,7 +102,7 @@ export default function NextMoveCard({ pulse, trends, goals, assignments, onOpen
         progress: 0,
       });
       setCommitted(true);
-    } catch (e) {
+    } catch {
       // non-blocking — commitment save is best-effort
     }
   };

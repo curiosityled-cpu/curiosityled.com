@@ -209,7 +209,12 @@ export default function ManagerToday() {
 
   const { data: tonePref = null } = useQuery({
     queryKey: ['ml-tone', user?.email],
-    queryFn: async () => { const rows = await base44.entities.TonePreference.filter({ user_email: user.email }, null, 1); return rows[0] || null; },
+    queryFn: async () => {
+      try {
+        const rows = await base44.entities.TonePreference.filter({ user_email: user.email }, null, 1);
+        return rows[0] || null;
+      } catch { return null; }
+    },
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 

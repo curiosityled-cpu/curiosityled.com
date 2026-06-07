@@ -186,7 +186,7 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
     if (optionalText.trim()) {
       pulseData.biggest_weight_today = optionalText.trim();
     }
-    await base44.entities.ManagerPulse.create(pulseData);
+    await base44.entities.ManagerPulse.create(pulseData).catch(() => {});
     setSaving(false);
     setDone(true);
     sessionStorage.setItem(getStorageKey(), '1');

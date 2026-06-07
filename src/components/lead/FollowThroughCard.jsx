@@ -45,15 +45,13 @@ export default function FollowThroughCard({ pulses, userEmail, onDone }) {
 
   const handleSubmit = async () => {
     setLoading(true);
-    try {
-      await base44.entities.ManagerPulse.create({
-        user_email: userEmail,
-        prompt_type: 'follow_up',
-        source: 'web',
-        focus_intention: reflection || `Follow-through: ${selected} on "${commitment.text}"`,
-        intent_actuals_gap: selected === 'did_it' ? 'no_gap_detected' : selected === 'partly' ? 'partial_follow_through' : 'no_follow_through_detected',
-      });
-    } catch {}
+    await base44.entities.ManagerPulse.create({
+      user_email: userEmail,
+      prompt_type: 'follow_up',
+      source: 'web',
+      focus_intention: reflection || `Follow-through: ${selected} on "${commitment.text}"`,
+      intent_actuals_gap: selected === 'did_it' ? 'no_gap_detected' : selected === 'partly' ? 'partial_follow_through' : 'no_follow_through_detected',
+    }).catch(() => {});
     setLoading(false);
     setSubmitted(true);
     onDone?.();
