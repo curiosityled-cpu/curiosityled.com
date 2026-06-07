@@ -54,8 +54,7 @@ const NAV_CONFIG = {
   manager: [
   { label: 'Lead', path: '/today', icon: Home },
   { label: 'Patterns', path: '/patterns', icon: TrendingUp },
-  { label: 'Practice', path: '/practice', icon: Dumbbell },
-  { label: 'You', path: '/you', icon: User }],
+  { label: 'Practice', path: '/practice', icon: Dumbbell }],
 
   buyer: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
@@ -148,8 +147,7 @@ function MVPLayoutInner({ children }) {
     const Icon = item.icon;
     const itemPath = item.path.split('?')[0].split('#')[0];
     const isActive = location.pathname === itemPath ||
-      (itemPath === '/today' && (location.pathname === '/my-leadership' || location.pathname === '/')) ||
-      (itemPath === '/you' && ['/Profile', '/Settings', '/PrivacySettings', '/Notifications', '/teams-settings'].includes(location.pathname));
+      (itemPath === '/today' && (location.pathname === '/my-leadership' || location.pathname === '/'));
     const [navPathname, navSearch] = item.path.split('?');
     return (
       <Link
