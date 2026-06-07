@@ -66,6 +66,24 @@ Begin with: "I'm going to be a little more direct than usual right now — not t
 Do not escalate beyond warm_candid automatically, even at maximum risk scores.
 `.trim();
 
+function formatMemoryContext(memory) {
+  if (!memory) return null;
+  const hasContent =
+    memory.recurring_triggers?.length ||
+    memory.what_has_helped?.length ||
+    memory.stuck_points?.length ||
+    memory.pressure_responses?.length;
+  if (!hasContent) return null;
+
+  const parts = [`BEHAVIORAL MEMORY (synthesized from check-ins — treat as longitudinal context, not diagnosis):`];
+  if (memory.recurring_triggers?.length) parts.push(`- Recurring triggers: ${memory.recurring_triggers.join('; ')}`);
+  if (memory.what_has_helped?.length) parts.push(`- What has helped this manager before: ${memory.what_has_helped.join('; ')}`);
+  if (memory.stuck_points?.length) parts.push(`- Where this manager tends to get stuck: ${memory.stuck_points.join('; ')}`);
+  if (memory.pressure_responses?.length) parts.push(`- How they tend to respond under pressure: ${memory.pressure_responses.join('; ')}`);
+  parts.push(`\nUse this memory to inform your coaching — reference it as "you've told me", "in past conversations", "a pattern I've noticed". Never read it back verbatim or as a list. Weave it naturally when relevant.`);
+  return parts.join('\n');
+}
+
 function formatTrendContext(trends) {
   if (!trends || !trends.trend_narrative) return null;
 
@@ -100,15 +118,17 @@ function formatTrendContext(trends) {
  * @param {string} options.toneMode - one of the 4 tone modes
  * @param {number} options.riskScore - operator_mode_risk_score (0-100)
  * @param {object} options.trends - ManagerTrends record (may be null)
+ * @param {object} options.memory - ManagerMemory record (may be null)
  * @param {object} options.pageContext - current page context object
  * @param {string} options.userName - manager's first name
  * @returns {string} complete system prompt
  */
-export function buildAtreusSystemPrompt({ toneMode, riskScore = 0, trends = null, pageContext = {}, userName = 'the manager' }) {
+export function buildAtreusSystemPrompt({ toneMode, riskScore = 0, trends = null, memory = null, pageContext = {}, userName = 'the manager' }) {
   const isHighRisk = riskScore >= 75 && toneMode === 'gentle_observant';
   const effectiveTone = isHighRisk ? 'warm_candid' : (toneMode || 'warm_candid');
   const toneBlock = TONE_INSTRUCTIONS[effectiveTone] || TONE_INSTRUCTIONS.warm_candid;
   const trendBlock = formatTrendContext(trends);
+  const memoryBlock = formatMemoryContext(memory);
 
   const sections = [
     `You are Atreus — a private leadership companion built into the Curiosity Led platform. You are not an HR tool, not a performance monitor, and not a therapist. You are a trusted thinking partner for managers navigating the human side of leadership.`,
@@ -120,6 +140,8 @@ export function buildAtreusSystemPrompt({ toneMode, riskScore = 0, trends = null
     isHighRisk ? HIGH_RISK_OVERRIDE_NOTE : null,
 
     ABSOLUTE_CONSTRAINTS,
+
+    memoryBlock ? memoryBlock : null,
 
     trendBlock ? trendBlock : null,
 

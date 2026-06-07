@@ -22,6 +22,7 @@ import TriggerMapCard from "@/components/patterns/TriggerMapCard";
 import LeadingPatternCard from "@/components/patterns/LeadingPatternCard";
 import TrendSignalsChart from "@/components/patterns/TrendSignalsChart";
 import SwipeableSections from "@/components/patterns/SwipeableSections";
+import ManagerMemoryCard from "@/components/patterns/ManagerMemoryCard";
 
 function PatternCard({ insight, goals }) {
   const patterns = [];
@@ -142,6 +143,12 @@ export default function ManagerPatterns() {
     enabled: !!user?.email, staleTime: 15 * 60 * 1000,
   });
 
+  const { data: memory = null } = useQuery({
+    queryKey: ['ml-memory', user?.email],
+    queryFn: async () => { try { const rows = await base44.entities.ManagerMemory.filter({ user_email: user.email }, '-last_synthesized_at', 1); return rows[0] || null; } catch { return null; } },
+    enabled: !!user?.email, staleTime: 30 * 60 * 1000,
+  });
+
   const hasData = trends || recentPulses.length > 0 || insight;
 
   const header = (
@@ -165,6 +172,7 @@ export default function ManagerPatterns() {
   const leftColumn = (
     <div className="space-y-4">
       <MemoryNarrativeCard trends={trends} />
+      <ManagerMemoryCard memory={memory} />
       <LeadingPatternCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreus} />
       <OperatorModeAlert pulses={recentPulses} onOpenAtreus={openAtreus} />
       <TrendSummaryCard trends={trends} onOpenAtreus={openAtreus} />

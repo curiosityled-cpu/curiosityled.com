@@ -630,19 +630,22 @@ export default function AtreusCoach({
     const userName = context?.user_name || user?.full_name || 'the user';
     const crossSessionData = await getCrossSessionContext(base44, user?.email);
 
-    // Load tone preference and trend memory for this manager
+    // Load tone preference, trend memory, and behavioral memory for this manager
     let toneMode = 'warm_candid';
     let riskScore = context?.operator_mode_risk_score || 0;
     let trends = null;
+    let memory = null;
 
     try {
       if (user?.email) {
-        const [tonePrefs, trendRecords] = await Promise.all([
+        const [tonePrefs, trendRecords, memoryRecords] = await Promise.all([
           base44.entities.TonePreference.filter({ user_email: user.email }, '-created_date', 1),
           base44.entities.ManagerTrends.filter({ user_email: user.email }, '-last_trend_computed_at', 1),
+          base44.entities.ManagerMemory.filter({ user_email: user.email }, '-last_synthesized_at', 1),
         ]);
         toneMode = tonePrefs[0]?.tone_mode || 'warm_candid';
         trends = trendRecords[0] || null;
+        memory = memoryRecords[0] || null;
 
         // Check for adaptive tone shift based on current state
         try {
@@ -666,7 +669,7 @@ export default function AtreusCoach({
       cross_session: crossSessionData,
     };
 
-    return buildAtreusSystemPrompt({ toneMode, riskScore, trends, pageContext, userName });
+    return buildAtreusSystemPrompt({ toneMode, riskScore, trends, memory, pageContext, userName });
   };
 
   const handleSendMessage = async (messageText = null) => {
