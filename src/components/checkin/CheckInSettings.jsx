@@ -36,8 +36,11 @@ export default function CheckInSettings() {
     base44.entities.TonePreference.filter({ user_email: user.email }, null, 1)
       .then(rows => {
         setTonePref(rows[0] || { tone_mode: 'warm_candid', cadence_preference: 'every_other_day' });
-        setLoading(false);
-      });
+      })
+      .catch(() => {
+        setTonePref({ tone_mode: 'warm_candid', cadence_preference: 'every_other_day' });
+      })
+      .finally(() => setLoading(false));
   }, [user?.email]);
 
   const handleCadenceChange = async (value) => {

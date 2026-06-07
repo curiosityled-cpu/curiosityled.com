@@ -58,24 +58,27 @@ export default function ToneOnboarding({ existingTone, onComplete }) {
 
   const handleSave = async () => {
     setSaving(true);
-    const existing = await base44.entities.TonePreference.filter({ user_email: user.email }, null, 1);
-    if (existing[0]) {
-      await base44.entities.TonePreference.update(existing[0].id, {
-        tone_mode: selected,
-        user_understanding_ack: true,
-        teams_onboarding_complete: true
-      });
-    } else {
-      await base44.entities.TonePreference.create({
-        user_email: user.email,
-        tone_mode: selected,
-        cadence_preference: "every_other_day",
-        user_understanding_ack: true,
-        teams_onboarding_complete: true
-      });
+    try {
+      const existing = await base44.entities.TonePreference.filter({ user_email: user.email }, null, 1);
+      if (existing[0]) {
+        await base44.entities.TonePreference.update(existing[0].id, {
+          tone_mode: selected,
+          user_understanding_ack: true,
+          teams_onboarding_complete: true
+        });
+      } else {
+        await base44.entities.TonePreference.create({
+          user_email: user.email,
+          tone_mode: selected,
+          cadence_preference: "every_other_day",
+          user_understanding_ack: true,
+          teams_onboarding_complete: true
+        });
+      }
+      if (onComplete) onComplete(selected);
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    if (onComplete) onComplete(selected);
   };
 
   return (
