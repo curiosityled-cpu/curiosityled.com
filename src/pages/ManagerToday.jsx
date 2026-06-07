@@ -291,7 +291,12 @@ export default function ManagerToday() {
       />
 
       {/* Intent loop — closes today's intention arc */}
-      <IntentLoopCard pulses={recentPulses} trends={trends} onOpenAtreus={openAtreus} />
+      <IntentLoopCard
+        pulses={recentPulses}
+        trends={trends}
+        onOpenAtreus={openAtreus}
+        onPulseUpdated={() => queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] })}
+      />
 
       {/* Go deeper navigation */}
       <ExploreDeeperCard />
