@@ -157,7 +157,11 @@ export default function ManagerCheckIn({ promptType = "baseline_energy", onCompl
 
   // Persist "done today" in sessionStorage so re-mounts don't re-prompt
   // storageKey computed lazily inside the initializer to avoid stale-date closure
-  const getStorageKey = () => `cl_checkin_done_${promptType}_${new Date().toISOString().split('T')[0]}`;
+  const getStorageKey = () => {
+    const d = new Date();
+    const localDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return `cl_checkin_done_${promptType}_${localDate}`;
+  };
   const [selected, setSelected] = useState(null);
   const [optionalText, setOptionalText] = useState("");
   const [showOptional, setShowOptional] = useState(false);

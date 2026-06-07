@@ -16,10 +16,8 @@ const STATUS_OPTIONS = [
 
 function getMostRecentCommitment(pulses) {
   // Look for delegation commitment or focus_intention from yesterday or earlier
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
-  const todayStr = new Date().toISOString().split('T')[0];
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
   for (const p of pulses) {
     const pulseDate = p.created_date?.split('T')[0];
