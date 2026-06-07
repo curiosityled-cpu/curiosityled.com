@@ -33,7 +33,7 @@ function localDateKey() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function HeroGreeting({ firstName, hasCheckedIn, todayPulse }) {
+function HeroGreeting({ firstName, hasCheckedIn, todayPulse, onSettingsToggle }) {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   const day = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
@@ -50,9 +50,22 @@ function HeroGreeting({ firstName, hasCheckedIn, todayPulse }) {
 
   return (
     <div className="pt-2 pb-3">
-      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">{day}</p>
-      <h1 className="text-2xl font-bold text-foreground tracking-tight">{greeting}, {firstName}.</h1>
-      <p className="text-sm text-muted-foreground mt-0.5">{sub}</p>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">{day}</p>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">{greeting}, {firstName}.</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{sub}</p>
+        </div>
+        {onSettingsToggle && hasCheckedIn && (
+          <button
+            onClick={onSettingsToggle}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 mt-1"
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Atreus settings</span>
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -202,21 +215,8 @@ export default function ManagerToday() {
         onIntentUpdated={() => queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] })}
       />
 
-      {/* Settings toggle — only shown after first check-in, not as a first impression */}
-      {todayPulse && (
-        <>
-          <div className="flex justify-end">
-            <button
-              onClick={() => setShowSettings(s => !s)}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <SlidersHorizontal className="w-3.5 h-3.5" />
-              {showSettings ? 'Close settings' : 'Atreus settings'}
-            </button>
-          </div>
-          {showSettings && <CheckInSettings />}
-        </>
-      )}
+      {/* Settings panel — toggled from upper-right settings button */}
+      {showSettings && <CheckInSettings />}
 
       {/* Pending debrief prompt */}
       {pendingDebrief && (
@@ -331,13 +331,13 @@ export default function ManagerToday() {
         <>
           {/* Mobile: single column */}
           <div className="md:hidden max-w-2xl mx-auto space-y-4">
-            <HeroGreeting firstName={firstName} hasCheckedIn={!!todayPulse} todayPulse={todayPulse} />
+            <HeroGreeting firstName={firstName} hasCheckedIn={!!todayPulse} todayPulse={todayPulse} onSettingsToggle={todayPulse ? () => setShowSettings(s => !s) : null} />
             {mainContent}
           </div>
 
           {/* Desktop: two column */}
           <div className="hidden md:block max-w-6xl mx-auto">
-            <HeroGreeting firstName={firstName} hasCheckedIn={!!todayPulse} todayPulse={todayPulse} />
+            <HeroGreeting firstName={firstName} hasCheckedIn={!!todayPulse} todayPulse={todayPulse} onSettingsToggle={todayPulse ? () => setShowSettings(s => !s) : null} />
             <div className="mt-4 grid grid-cols-[1fr_340px] gap-6 items-start">
               <div className="space-y-4">{mainContent}</div>
               <div className="sticky top-4">{companionColumn}</div>
