@@ -195,7 +195,12 @@ export default function ManagerToday() {
       {todayPulse && <MoodRingIndicator todayPulse={todayPulse} />}
 
       {/* Daily HUD scorecard */}
-      <DailyHUD pulse={todayPulse} trends={trends} goals={goals} />
+      <DailyHUD
+        pulse={todayPulse}
+        trends={trends}
+        goals={goals}
+        onIntentUpdated={() => queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] })}
+      />
 
       {/* Settings toggle — only shown after first check-in, not as a first impression */}
       {todayPulse && (
