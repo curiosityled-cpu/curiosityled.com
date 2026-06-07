@@ -1,7 +1,10 @@
 /**
- * ManagerToday — The Daily Companion (Phase 1 shell → Phase 2 full build)
+ * ManagerToday — The Daily Companion (Redesigned Lead page)
  * Route: /today
- * This is the new home for managers: what matters right now.
+ *
+ * Layout: Daily HUD strip → Check-in hero → Today's Playbook (merged card)
+ * Companion column (desktop): Upcoming Friction + Intent Loop
+ * Removed from Lead: TrendSummaryCard, CheckInHistoryCalendar (→ Patterns)
  */
 import React, { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -9,40 +12,28 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { Link } from "react-router-dom";
-import {
-  Brain, Target, ArrowRight, ChevronRight,
-  MessageSquare, CheckCircle2, SlidersHorizontal, BarChart3, Layers
-} from "lucide-react";
+import { Brain, ChevronRight, MessageSquare, SlidersHorizontal, BarChart3, Layers, CheckCircle2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import ManagerCheckIn from "@/components/checkin/ManagerCheckIn";
-import TrendSummaryCard from "@/components/checkin/TrendSummaryCard";
 import IntentLoopCard from "@/components/checkin/IntentLoopCard";
 import ToneOnboarding from "@/components/checkin/ToneOnboarding";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
 import WeeklyFocusReflection from "@/components/checkin/WeeklyFocusReflection";
 import MoodRingIndicator from "@/components/rhythm/MoodRingIndicator";
-import CheckInHistoryCalendar from "@/components/rhythm/CheckInHistoryCalendar";
-import WhatMattersNowCard from "@/components/lead/WhatMattersNowCard";
-import NextMoveCard from "@/components/lead/NextMoveCard";
 import UpcomingFrictionCard from "@/components/lead/UpcomingFrictionCard";
-import FollowThroughCard from "@/components/lead/FollowThroughCard";
-import LeadMicroAnalytics from "@/components/lead/LeadMicroAnalytics";
+import DailyHUD from "@/components/lead/DailyHUD";
+import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
 
 function getFirstName(user) {
   const raw = user?.display_name || user?.data?.display_name || user?.full_name;
   return raw && raw.trim() && !raw.includes('@') ? raw.split(' ')[0] : 'there';
 }
 
-function timeAgo(dateStr) {
-  if (!dateStr) return null;
-  const days = Math.floor((Date.now() - new Date(dateStr)) / 86400000);
-  if (days === 0) return 'today';
-  if (days === 1) return 'yesterday';
-  if (days < 7) return `${days} days ago`;
-  return `${Math.floor(days / 7)} weeks ago`;
+function localDateKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 function HeroGreeting({ firstName }) {
@@ -50,100 +41,36 @@ function HeroGreeting({ firstName }) {
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   return (
     <div className="pt-2 pb-1">
-      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Lead</p>
-      <h1 className="text-2xl font-bold text-gray-900">{greeting}, {firstName}.</h1>
-      <p className="text-sm text-gray-500 mt-1">What matters right now.</p>
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Lead</p>
+      <h1 className="text-2xl font-bold text-foreground">{greeting}, {firstName}.</h1>
+      <p className="text-sm text-muted-foreground mt-1">What matters right now.</p>
     </div>
-  );
-}
-
-
-
-function GoalsPulseCard({ goals, openAtreus }) {
-  const active = goals.filter(g => g.status === 'active');
-  const topGoal = [...active].sort((a, b) => (b.progress || 0) - (a.progress || 0))[0];
-
-  // Derive a behavioral commitment from the goal (the brief's model)
-  const commitment = topGoal?.description
-    ? topGoal.description.split('.')[0]
-    : topGoal ? `Work on "${topGoal.title}" this week` : null;
-
-  return (
-    <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
-      <div className="px-5 pt-5 pb-2 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center">
-            <Target className="w-3.5 h-3.5 text-emerald-600" />
-          </div>
-          <p className="text-sm font-semibold text-gray-900">Active focus</p>
-        </div>
-        <Link to="/my-goals"><span className="text-xs text-[#0202ff] hover:underline font-medium">View all →</span></Link>
-      </div>
-      <CardContent className="px-5 pt-2 pb-5">
-        {active.length === 0 ? (
-          <div className="py-3 space-y-2">
-            <p className="text-sm text-gray-500">No active growth focus yet.</p>
-            <Link to="/my-goals">
-              <button className="text-xs font-medium text-[#0202ff] hover:underline">Set a growth goal →</button>
-            </Link>
-          </div>
-        ) : topGoal ? (
-          <div className="space-y-3">
-            {/* Growth theme */}
-            <div>
-              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Growth theme</p>
-              <p className="text-sm font-medium text-gray-800">{topGoal.title}</p>
-              <div className="flex items-center gap-2 mt-1.5">
-                <Progress value={topGoal.progress || 0} className="h-1.5 flex-1" />
-                <span className="text-xs text-gray-500 flex-shrink-0">{topGoal.progress || 0}%</span>
-              </div>
-            </div>
-            {/* Behavioral commitment */}
-            {commitment && (
-              <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-100">
-                <p className="text-[10px] font-semibold text-emerald-700 uppercase tracking-wide mb-0.5">This week's commitment</p>
-                <p className="text-xs text-emerald-800 leading-relaxed">{commitment}</p>
-              </div>
-            )}
-            {/* Practice tie-in */}
-            <button
-              onClick={() => openAtreus?.(`I want to make progress on my goal: "${topGoal.title}". Help me think through one small step I can take today.`)}
-              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#0202ff]/5 border border-[#0202ff]/15 text-xs font-medium text-[#0202ff] hover:bg-[#0202ff]/10 transition-colors"
-            >
-              <Brain className="w-3.5 h-3.5" /> Work on this with Atreus
-            </button>
-            {active.length > 1 && <p className="text-xs text-gray-400">+{active.length - 1} more active goal{active.length > 2 ? 's' : ''}</p>}
-          </div>
-        ) : null}
-      </CardContent>
-    </Card>
   );
 }
 
 function ExploreDeeperCard() {
   const links = [
-    { label: 'Patterns', sub: 'What this system is noticing over time', path: '/patterns', icon: BarChart3, color: 'text-[#0202ff]' },
+    { label: 'Patterns', sub: 'Trends, memory & blind spots over time', path: '/patterns', icon: BarChart3, color: 'text-[#0202ff]' },
     { label: 'Practice', sub: 'Prepare, reflect, debrief, work through', path: '/practice', icon: Layers, color: 'text-violet-600' },
-    { label: 'You', sub: 'Profile, assessments, preferences, privacy', path: '/you', icon: SlidersHorizontal, color: 'text-emerald-600' },
   ];
   return (
-    <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
-      <div className="px-5 pt-5 pb-2">
-        <p className="text-sm font-semibold text-gray-900">Explore deeper</p>
-        <p className="text-xs text-gray-400 mt-0.5">When you have more time</p>
+    <Card className="shadow-sm border border-border bg-card rounded-2xl overflow-hidden">
+      <div className="px-5 pt-4 pb-2">
+        <p className="text-xs font-semibold text-foreground">Go deeper</p>
+        <p className="text-[10px] text-muted-foreground mt-0.5">When you have more time</p>
       </div>
-      <CardContent className="px-5 pt-2 pb-5 space-y-1">
+      <CardContent className="px-5 pt-1 pb-4 space-y-0.5">
         {links.map((l) => {
           const Icon = l.icon;
           return (
             <Link key={l.path} to={l.path}>
-              <div className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors group">
+              <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/50 transition-colors group">
                 <Icon className={`w-4 h-4 flex-shrink-0 ${l.color}`} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 group-hover:text-gray-900">{l.label}</p>
-                  <p className="text-xs text-gray-400">{l.sub}</p>
+                  <p className="text-sm font-medium text-foreground group-hover:text-foreground">{l.label}</p>
+                  <p className="text-[10px] text-muted-foreground">{l.sub}</p>
                 </div>
-                <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-400" />
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50" />
               </div>
             </Link>
           );
@@ -160,7 +87,10 @@ export default function ManagerToday() {
   const [showSettings, setShowSettings] = useState(false);
   const [showWeeklyReflection, setShowWeeklyReflection] = useState(false);
 
-  const openAtreus = (msg) => openWithContext({ context: { pageType: 'today', user_name: getFirstName(user) }, starterMessage: msg || "I'd like to reflect on my leadership this week." });
+  const openAtreus = (msg) => openWithContext({
+    context: { pageType: 'today', user_name: getFirstName(user) },
+    starterMessage: msg || "I'd like to reflect on my leadership this week."
+  });
 
   const { data: insight } = useQuery({
     queryKey: ['ml-insight', user?.email],
@@ -181,12 +111,15 @@ export default function ManagerToday() {
           { key: 'Stakeholder Management', pct: a.sm_pct },
           { key: 'Performance Management', pct: a.pm_pct },
         ].filter(c => c.pct != null).sort((a, b) => b.pct - a.pct);
-        return { id: a.id, created_date: a.created_date, archetype: a.archetype_label, top_strengths: competencies.slice(0, 2).map(c => `${c.key} (${c.pct}%)`), development_areas: competencies.slice(-2).reverse().map(c => `${c.key} (${c.pct}%)`) };
+        return {
+          id: a.id, created_date: a.created_date, archetype: a.archetype_label,
+          top_strengths: competencies.slice(0, 2).map(c => `${c.key} (${c.pct}%)`),
+          development_areas: competencies.slice(-2).reverse().map(c => `${c.key} (${c.pct}%)`)
+        };
       } catch {}
       return null;
     },
-    enabled: !!user?.email,
-    staleTime: 0,
+    enabled: !!user?.email, staleTime: 0,
   });
 
   const { data: goals = [] } = useQuery({
@@ -234,6 +167,7 @@ export default function ManagerToday() {
   const firstName = getFirstName(user);
   const day = new Date().getDay();
   const hour = new Date().getHours();
+
   const todayPromptType = (() => {
     if (day === 5) return 'weekly_reflection';
     if ((day === 1 || day === 2) && hour < 11) return 'morning_intent';
@@ -241,15 +175,10 @@ export default function ManagerToday() {
     return rotation[day % rotation.length];
   })();
 
-  // Build local-date "today" key (YYYY-MM-DD) to avoid UTC midnight offset bugs
-  const localToday = (() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  })();
+  const todayKey = localDateKey();
+  const todayPulse = recentPulses.find(p => p.created_date?.startsWith(todayKey));
+  const hasMorningIntent = recentPulses.some(p => p.prompt_type === 'morning_intent' && p.created_date?.startsWith(todayKey));
 
-  const todayPulse = recentPulses.find(p => p.created_date?.startsWith(localToday));
-
-  // Pending debrief from a Prepare flow scheduled earlier today/recently
   const pendingDebrief = recentPulses.find(p =>
     p.prompt_type === 'prepare_debrief_pending' &&
     p.scheduled_for &&
@@ -257,37 +186,39 @@ export default function ManagerToday() {
     !recentPulses.some(q => q.prompt_type === 'follow_up' && q.focus_intention?.startsWith('Debrief:') && q.created_date > p.created_date)
   );
 
-  // Determine if morning intent has been set today
-  const hasMorningIntent = recentPulses.some(p => p.prompt_type === 'morning_intent' && p.created_date?.startsWith(localToday));
-  const hasCheckedInToday = !!todayPulse;
-
-  // Main column content (shared between mobile and desktop left column)
+  // ── Main column ─────────────────────────────────────────────────────────────
   const mainContent = !needsToneOnboarding ? (
     <div className="space-y-4">
+      {/* Mood ring if checked in */}
       {todayPulse && <MoodRingIndicator todayPulse={todayPulse} />}
-      <LeadMicroAnalytics pulse={todayPulse} trends={trends} goals={goals} />
+
+      {/* Daily HUD scorecard */}
+      <DailyHUD pulse={todayPulse} trends={trends} goals={goals} />
 
       {/* Settings toggle */}
       <div className="flex justify-end">
-        <button onClick={() => setShowSettings(s => !s)} className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors">
+        <button
+          onClick={() => setShowSettings(s => !s)}
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
           <SlidersHorizontal className="w-3.5 h-3.5" />
           {showSettings ? 'Close settings' : 'Atreus settings'}
         </button>
       </div>
       {showSettings && <CheckInSettings />}
 
-      {/* Prepare debrief prompt — surfaces when scheduled time has passed */}
+      {/* Pending debrief prompt */}
       {pendingDebrief && (
-        <div className="bg-gradient-to-br from-[#0202ff]/5 to-white rounded-2xl border border-[#0202ff]/15 px-4 py-4 flex items-start gap-3">
+        <div className="bg-gradient-to-br from-[#0202ff]/5 to-transparent rounded-2xl border border-[#0202ff]/15 px-4 py-4 flex items-start gap-3">
           <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center flex-shrink-0 mt-0.5">
             <MessageSquare className="w-3.5 h-3.5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold text-[#0202ff] uppercase tracking-wide mb-0.5">Debrief ready</p>
-            <p className="text-sm font-semibold text-gray-900 leading-snug mb-1">
+            <p className="text-sm font-semibold text-foreground leading-snug mb-1">
               How did it go? — {pendingDebrief.focus_intention?.replace('Debrief: ', '').slice(0, 60)}
             </p>
-            <p className="text-xs text-gray-500">You prepared for this earlier. Close the loop with a quick debrief.</p>
+            <p className="text-xs text-muted-foreground">You prepared for this earlier. Close the loop with a quick debrief.</p>
             <button
               className="mt-2 text-xs font-medium text-[#0202ff] hover:underline"
               onClick={() => openAtreus(`Earlier I prepared for: "${pendingDebrief.focus_intention?.replace('Debrief: ', '')}". Now I'd like to debrief — how did it go? What surprised me? What would I do differently?`)}
@@ -298,10 +229,7 @@ export default function ManagerToday() {
         </div>
       )}
 
-      {/* PRIMARY HERO CARD: single dominant entry point for the day
-          - If morning intent not set → show check-in with morning intent mode
-          - If check-in not done today → show check-in
-          - If both done → collapsed summary (handled inside ManagerCheckIn) */}
+      {/* Hero check-in */}
       <ManagerCheckIn
         promptType={!hasMorningIntent ? 'morning_intent' : todayPromptType}
         onComplete={() => queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] })}
@@ -310,64 +238,46 @@ export default function ManagerToday() {
         pulses={recentPulses}
       />
 
-      {/* 2. What matters now */}
-      <WhatMattersNowCard
-        pulse={todayPulse}
-        trends={trends}
-        goals={goals}
-        insight={insight}
-        onOpenAtreus={openAtreus}
-      />
-
-      {/* 3. Next move */}
-      <NextMoveCard
+      {/* Today's Playbook — the unified narrative card */}
+      <TodaysPlaybook
         pulse={todayPulse}
         trends={trends}
         goals={goals}
         assignments={assignments}
+        pulses={recentPulses}
         onOpenAtreus={openAtreus}
       />
 
-      {/* 4. Follow-through */}
-      <FollowThroughCard
-        pulses={recentPulses}
-        userEmail={user?.email}
-        onDone={() => queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] })}
-      />
-
-      {/* 5. Goals pulse */}
-      <GoalsPulseCard goals={goals} openAtreus={openAtreus} />
-
-      {/* 6. Weekly reflection */}
-      <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden cursor-pointer hover:shadow-md transition-shadow" onClick={() => setShowWeeklyReflection(true)}>
+      {/* Weekly reflection shortcut */}
+      <Card
+        className="shadow-sm border border-border bg-card rounded-2xl overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+        onClick={() => setShowWeeklyReflection(true)}
+      >
         <CardContent className="px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-7 h-7 rounded-lg bg-green-50 border border-green-100 flex items-center justify-center">
               <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-gray-900">Weekly focus reflection</p>
-              <p className="text-xs text-gray-500">Reflect on this week's wins and learnings</p>
+              <p className="text-sm font-semibold text-foreground">Weekly focus reflection</p>
+              <p className="text-xs text-muted-foreground">Reflect on this week's wins and learnings</p>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-gray-300" />
+          <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
         </CardContent>
       </Card>
 
-      {/* 7. Rhythm calendar */}
-      {recentPulses.length > 0 && <CheckInHistoryCalendar pulses={recentPulses} />}
-
-      {/* 8. Explore deeper (mobile only — desktop has companion column) */}
+      {/* Mobile: Go deeper links */}
       <div className="md:hidden">
         <ExploreDeeperCard />
       </div>
     </div>
   ) : null;
 
-  // Desktop right companion column
+  // ── Desktop companion column ─────────────────────────────────────────────────
   const companionColumn = !needsToneOnboarding ? (
     <div className="space-y-4">
-      {/* Upcoming friction */}
+      {/* Upcoming friction — the ONE pattern-aware signal allowed on Lead */}
       <UpcomingFrictionCard
         trends={trends}
         goals={goals}
@@ -375,13 +285,10 @@ export default function ManagerToday() {
         onOpenAtreus={openAtreus}
       />
 
-      {/* Trend memory — compact */}
-      <TrendSummaryCard trends={trends} onOpenAtreus={openAtreus} />
-
-      {/* Intent loop */}
+      {/* Intent loop — closes today's intention arc */}
       <IntentLoopCard pulses={recentPulses} trends={trends} onOpenAtreus={openAtreus} />
 
-      {/* Explore deeper */}
+      {/* Go deeper navigation */}
       <ExploreDeeperCard />
     </div>
   ) : null;
@@ -392,14 +299,14 @@ export default function ManagerToday() {
       {needsToneOnboarding && (
         <div className="max-w-2xl mx-auto">
           <HeroGreeting firstName={firstName} />
-          <div className="mt-4 bg-white rounded-2xl border border-[#0202ff]/20 shadow-sm overflow-hidden">
+          <div className="mt-4 bg-card rounded-2xl border border-[#0202ff]/20 shadow-sm overflow-hidden">
             <div className="px-5 pt-5 pb-2 flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center">
                 <MessageSquare className="w-3.5 h-3.5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-900">One quick thing before we start</p>
-                <p className="text-xs text-gray-400">Choose how Atreus speaks with you.</p>
+                <p className="text-sm font-semibold text-foreground">One quick thing before we start</p>
+                <p className="text-xs text-muted-foreground">Choose how Atreus speaks with you.</p>
               </div>
             </div>
             <div className="px-5 pb-5">
@@ -409,7 +316,7 @@ export default function ManagerToday() {
         </div>
       )}
 
-      {/* Main layout: single col mobile, two col desktop */}
+      {/* Main layout */}
       {!needsToneOnboarding && (
         <>
           {/* Mobile: single column */}
@@ -421,7 +328,7 @@ export default function ManagerToday() {
           {/* Desktop: two column */}
           <div className="hidden md:block max-w-6xl mx-auto">
             <HeroGreeting firstName={firstName} />
-            <div className="mt-4 grid grid-cols-[1fr_360px] gap-6 items-start">
+            <div className="mt-4 grid grid-cols-[1fr_340px] gap-6 items-start">
               <div className="space-y-4">{mainContent}</div>
               <div className="sticky top-4">{companionColumn}</div>
             </div>
