@@ -42,10 +42,10 @@ function IntentDayRow({ date, intent, actuals }) {
     <div className={`flex items-start gap-3 p-3 rounded-xl border ${isT ? 'bg-[#0202ff]/4 border-[#0202ff]/15' : 'bg-gray-50 border-gray-100'}`}>
       <div className="flex-shrink-0 w-14 text-center">
         <p className="text-[10px] text-gray-400 font-medium">
-          {format(new Date(date), 'EEE')}
+          {format(new Date(y, m - 1, d), 'EEE')}
         </p>
         <p className={`text-xs font-semibold ${isT ? 'text-[#0202ff]' : 'text-gray-600'}`}>
-          {format(new Date(date), 'd MMM')}
+          {format(new Date(y, m - 1, d), 'd MMM')}
         </p>
       </div>
 
