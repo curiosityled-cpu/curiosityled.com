@@ -15,23 +15,29 @@ const ENERGY_CONFIG = {
   none:      { bg: "bg-gray-100",     label: "No data",   order: 0 },
 };
 
+function localDateKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function buildGrid(pulses) {
   const today = new Date();
   const map = {};
   pulses.forEach(p => {
     if (!p.created_date) return;
-    const key = p.created_date.split("T")[0];
+    // Use local date of the pulse (convert UTC ISO string to local Date, then extract local date)
+    const pLocal = new Date(p.created_date);
+    const key = localDateKey(pLocal);
     if (!map[key] || (ENERGY_CONFIG[p.energy_level]?.order || 0) > (ENERGY_CONFIG[map[key].energy_level]?.order || 0)) {
       map[key] = p;
     }
   });
 
-  // Build last 28 real days
+  // Build last 28 real days using local dates
   const days = [];
   for (let i = 27; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
-    const key = d.toISOString().split("T")[0];
+    const key = localDateKey(d);
     days.push({ key, date: d, pulse: map[key] || null });
   }
 
@@ -47,10 +53,10 @@ export default function CheckInHistoryCalendar({ pulses = [] }) {
   const checkedInDays = grid.filter(d => d.pulse).length;
   const streak = useMemo(() => {
     let s = 0;
-    const today = new Date().toISOString().split("T")[0];
+    const todayKey = localDateKey(new Date());
     for (let i = grid.length - 1; i >= 0; i--) {
       if (grid[i].pulse) s++;
-      else if (grid[i].key !== today) break;
+      else if (grid[i].key !== todayKey) break;
     }
     return s;
   }, [grid]);
@@ -88,7 +94,7 @@ export default function CheckInHistoryCalendar({ pulses = [] }) {
             const LOAD_TO_ENERGY = { light: 'strong', manageable: 'steady', heavy: 'stretched', unsustainable: 'drained' };
             const energy = pulse?.energy_level || (pulse?.perceived_load ? LOAD_TO_ENERGY[pulse.perceived_load] : null);
             const config = energy ? ENERGY_CONFIG[energy] : ENERGY_CONFIG.none;
-            const isToday = key === new Date().toISOString().split("T")[0];
+            const isToday = key === localDateKey(new Date());
             return (
               <div
                 key={key}
