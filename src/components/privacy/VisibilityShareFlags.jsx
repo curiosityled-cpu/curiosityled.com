@@ -89,8 +89,16 @@ export default function VisibilityShareFlags({ userEmail: userEmailProp }) {
           share_goals_progress_with_manager: true,
           share_learning_with_hr: true,
         });
-        setLoading(false);
-      });
+      })
+      .catch(() => {
+        setPrefs({
+          share_energy_with_manager: false,
+          share_energy_with_hr: false,
+          share_goals_progress_with_manager: true,
+          share_learning_with_hr: true,
+        });
+      })
+      .finally(() => setLoading(false));
   }, [userEmail]);
 
   const handleToggle = async (key) => {

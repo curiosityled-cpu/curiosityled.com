@@ -57,7 +57,7 @@ function GoalsView({ user }) {
   const [showCreate, setShowCreate] = useState(false);
   const [editingGoal, setEditingGoal] = useState(null);
 
-  useEffect(() => { loadGoals(); }, [user]);
+  useEffect(() => { loadGoals(); }, [user?.email]);
 
   const loadGoals = async () => {
     setLoading(true);
@@ -228,7 +228,7 @@ function OKRsView({ user }) {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [bulkAssigning, setBulkAssigning] = useState(false);
 
-  useEffect(() => { loadOKRs(); }, [user, selectedQuarter, selectedYear]);
+  useEffect(() => { loadOKRs(); }, [user?.email, selectedQuarter, selectedYear]);
 
   const loadOKRs = async () => {
     setLoading(true);
