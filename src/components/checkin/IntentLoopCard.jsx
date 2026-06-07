@@ -92,8 +92,9 @@ export default function IntentLoopCard({ pulses, trends, onOpenAtreus }) {
   const weekDays = Array.from({ length: 5 }, (_, i) => {
     const d = new Date(weekStart);
     d.setDate(d.getDate() + i);
-    return d.toISOString().split('T')[0];
-  }).filter(d => new Date(d) <= new Date());
+    // Use local date components to avoid UTC midnight offset for non-UTC timezones
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }).filter(d => d <= `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`);
 
   const intentsByDate = {};
   const actualsByDate = {};
