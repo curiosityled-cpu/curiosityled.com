@@ -308,13 +308,13 @@ export default function DecisionJournalPage() {
       source: 'web',
       biggest_weight_today: form.title.slice(0, 500),
       description: JSON.stringify({
-        context: form.context,
-        options_considered: form.options_considered,
-        decision_made: form.decision_made,
-        assumptions: form.assumptions,
-        risks: form.risks,
+        context: form.context.slice(0, 200),
+        options_considered: form.options_considered.slice(0, 200),
+        decision_made: form.decision_made.slice(0, 200),
+        assumptions: form.assumptions.slice(0, 150),
+        risks: form.risks.slice(0, 150),
         confidence: form.confidence,
-      }).slice(0, 1000),
+      }),
     });
     queryClient.invalidateQueries({ queryKey: ['decision-journal-full', user?.email] });
     setShowForm(false);

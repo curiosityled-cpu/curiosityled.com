@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import AtreusCoach from "@/components/ai/AtreusCoach";
 import { AuthProvider as FullAuthProvider } from "@/components/useAuth";
 import { AtreusProvider, useAtreusChat } from "@/components/ai/AtreusContext";
-import { createPageUrl } from "@/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
