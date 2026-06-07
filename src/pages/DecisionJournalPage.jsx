@@ -289,13 +289,11 @@ export default function DecisionJournalPage() {
   const { data: decisions = [], isLoading } = useQuery({
     queryKey: ['decision-journal-full', user?.email],
     queryFn: async () => {
-      const pulses = await base44.entities.ManagerPulse.filter(
-        { user_email: user.email },
+      return base44.entities.ManagerPulse.filter(
+        { user_email: user.email, prompt_type: 'decision_journal' },
         '-created_date',
         50
       );
-      // Decision journal entries are tagged with prompt_type 'decision_journal'
-      return pulses.filter(p => p.prompt_type === 'decision_journal');
     },
     enabled: !!user?.email,
     staleTime: 2 * 60 * 1000,

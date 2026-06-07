@@ -68,17 +68,15 @@ export default function DecisionJournalOutcomeReview() {
     const text = outcomes[decision.id]?.trim();
     if (!text) return;
 
-    try {
-      await base44.entities.ManagerPulse.create({
-        user_email: user?.email,
-        prompt_type: 'follow_up',
-        source: 'web',
-        focus_intention: `Decision outcome: ${decision.focus_intention?.slice(0, 200)}`,
-        description: `outcome_review: ${text}`.slice(0, 1000),
-      });
-      setSaved(prev => ({ ...prev, [decision.id]: true }));
-      queryClient.invalidateQueries({ queryKey: ['decision-journal', user?.email] });
-    } catch {}
+    await base44.entities.ManagerPulse.create({
+      user_email: user?.email,
+      prompt_type: 'follow_up',
+      source: 'web',
+      focus_intention: `Decision outcome: ${(decision.focus_intention || decision.biggest_weight_today || '').slice(0, 200)}`,
+      description: `outcome_review: ${text}`.slice(0, 1000),
+    }).catch(() => {});
+    setSaved(prev => ({ ...prev, [decision.id]: true }));
+    queryClient.invalidateQueries({ queryKey: ['decision-journal', user?.email] });
   };
 
   const handleReflect = (decision) => {
@@ -123,7 +121,7 @@ export default function DecisionJournalOutcomeReview() {
                   Decision · {timeAgo(decision.created_date)}
                 </p>
                 <p className="text-sm font-medium leading-snug" style={{ color: 'hsl(220 15% 85%)' }}>
-                  {decision.focus_intention?.replace('Decision journal session: ', '').slice(0, 100)}
+                  {(decision.biggest_weight_today || decision.focus_intention?.replace('Decision journal session: ', '') || '').slice(0, 100)}
                 </p>
               </div>
 

@@ -135,14 +135,12 @@ export default function WorkoutsSection({ goals = [], trends = null, insight = n
     const next = [...completed, ex.id];
     setCompleted(next);
     sessionStorage.setItem('cl_workouts_done', JSON.stringify(next));
-    try {
-      await base44.entities.ManagerPulse.create({
-        user_email: user?.email,
-        prompt_type: 'follow_up',
-        source: 'web',
-        focus_intention: `Workout completed: ${ex.title}`.slice(0, 500),
-      });
-    } catch {}
+    await base44.entities.ManagerPulse.create({
+      user_email: user?.email,
+      prompt_type: 'follow_up',
+      source: 'web',
+      focus_intention: `Workout completed: ${ex.title}`.slice(0, 500),
+    }).catch(() => {});
   };
 
   const isDone = (id) => completed.includes(id);
