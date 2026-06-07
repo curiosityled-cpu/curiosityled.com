@@ -131,28 +131,22 @@ export default function GrowExperiencesCard({ goals = [], trends = null, onOpenA
 
   const markAttempted = (id) => {
     setStates(prev => ({ ...prev, [id]: 'attempted' }));
-    // Persist attempt to DB
-    try {
-      base44.entities.ManagerPulse.create({
-        user_email: user?.email,
-        prompt_type: 'follow_up',
-        source: 'web',
-        focus_intention: `Experience attempted: ${experiences.find(e => e.id === id)?.title || id}`.slice(0, 500),
-      });
-    } catch {}
+    base44.entities.ManagerPulse.create({
+      user_email: user?.email,
+      prompt_type: 'follow_up',
+      source: 'web',
+      focus_intention: `Experience attempted: ${experiences.find(e => e.id === id)?.title || id}`.slice(0, 500),
+    }).catch(() => {});
   };
 
-  const markCompleted = (id, reflectionPrompt) => {
+  const markCompleted = (id) => {
     setStates(prev => ({ ...prev, [id]: 'completed' }));
-    // Persist completion to DB
-    try {
-      base44.entities.ManagerPulse.create({
-        user_email: user?.email,
-        prompt_type: 'follow_up',
-        source: 'web',
-        focus_intention: `Experience completed: ${experiences.find(e => e.id === id)?.title || id}`.slice(0, 500),
-      });
-    } catch {}
+    base44.entities.ManagerPulse.create({
+      user_email: user?.email,
+      prompt_type: 'follow_up',
+      source: 'web',
+      focus_intention: `Experience completed: ${experiences.find(e => e.id === id)?.title || id}`.slice(0, 500),
+    }).catch(() => {});
     // Show the inline reflection prompt instead of immediately opening Atreus
     setShowReflection(prev => ({ ...prev, [id]: true }));
   };
@@ -266,7 +260,7 @@ export default function GrowExperiencesCard({ goals = [], trends = null, onOpenA
                   <Button
                     size="sm"
                     className="flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-7"
-                    onClick={() => markCompleted(exp.id, exp.reflectionPrompt)}
+                    onClick={() => markCompleted(exp.id)}
                   >
                     <CheckCircle2 className="w-3 h-3 mr-1.5" /> Done
                   </Button>

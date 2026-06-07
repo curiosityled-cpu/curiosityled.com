@@ -192,33 +192,32 @@ export default function PracticeFlow({ flowKey, onClose }) {
 
   const handleComplete = async () => {
     setSaving(true);
-    try {
-      const notes = Object.entries(responses)
-        .map(([k, v]) => `${k}: ${v}`)
-        .join('\n\n');
+    const notes = Object.entries(responses)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join('\n\n');
 
+    // Best-effort save — don't block UX on failure
+    await base44.entities.ManagerPulse.create({
+      user_email: user?.email,
+      prompt_type: 'follow_up',
+      source: 'web',
+      focus_intention: `${flow.title} session: ${responses[flow.steps[0].id] || ''}`.slice(0, 500),
+      description: notes.slice(0, 1000),
+    }).catch(() => {});
+
+    // For Prepare flows: schedule a debrief prompt for end-of-day (6 hours later)
+    if (flowKey === 'prepare') {
+      const debriefAt = new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString();
       await base44.entities.ManagerPulse.create({
         user_email: user?.email,
-        prompt_type: 'follow_up',
+        prompt_type: 'prepare_debrief_pending',
         source: 'web',
-        focus_intention: `${flow.title} session: ${responses[flow.steps[0].id] || ''}`.slice(0, 500),
-        description: notes.slice(0, 1000),
-      });
-
-      // For Prepare flows: schedule a debrief prompt for end-of-day (6 hours later)
-      if (flowKey === 'prepare') {
-        const debriefAt = new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString();
-        await base44.entities.ManagerPulse.create({
-          user_email: user?.email,
-          prompt_type: 'prepare_debrief_pending',
-          source: 'web',
-          focus_intention: `Debrief: ${responses[flow.steps[0].id] || ''}`.slice(0, 500),
-          description: notes.slice(0, 500),
-          scheduled_for: debriefAt,
-        });
-        setDebriefScheduled(true);
-      }
-    } catch {}
+        focus_intention: `Debrief: ${responses[flow.steps[0].id] || ''}`.slice(0, 500),
+        description: notes.slice(0, 500),
+        scheduled_for: debriefAt,
+      }).catch(() => {});
+      setDebriefScheduled(true);
+    }
 
     setSaving(false);
     setDone(true);
