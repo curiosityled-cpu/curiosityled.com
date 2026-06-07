@@ -77,7 +77,7 @@ function detectCalendarFriction(events, trends) {
   });
   if (bigMeetings.length > 0 && trends?.confidence_trend === 'declining') {
     const m = bigMeetings[0];
-    const when = new Date(m.start).toLocaleDateString('en-US', { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+    const when = new Date(m.start).toLocaleString('en-US', { weekday: 'short', hour: '2-digit', minute: '2-digit' });
     return {
       signal: "High-stakes meeting ahead",
       prediction: `"${m.title}" (${when}, ${m.attendees} attendees) is coming up. Your confidence has been declining — this is worth a brief prep.`,
