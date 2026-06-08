@@ -407,8 +407,6 @@ export default function Settings() {
 
                   {/* Fine-grained sharing flags */}
                   <div className="space-y-3">
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Fine-Grained Sharing</h3>
-                    <p className="text-sm text-gray-500">Control exactly what is shared more broadly.</p>
                     <VisibilityShareFlags userEmail={user?.email} />
                   </div>
                 </CardContent>
