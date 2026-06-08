@@ -123,18 +123,11 @@ export default function CheckInSettings() {
             <MessageSquare className="w-4 h-4 text-[#0202ff]" />
             <p className="text-sm font-semibold text-gray-900">Atreus tone</p>
           </div>
-          <div className="flex items-center gap-3">
-            {editingTone && (
-              <button onClick={() => setEditingTone(false)} className="text-xs text-gray-400 hover:text-gray-600">
-                Cancel
-              </button>
-            )}
-            {!editingTone && (
-              <button onClick={() => setEditingTone(true)} className="flex items-center gap-1 text-xs text-[#0202ff] hover:underline">
-                <Pencil className="w-3 h-3" /> Change
-              </button>
-            )}
-          </div>
+          {!editingTone && (
+            <button onClick={() => setEditingTone(true)} className="flex items-center gap-1 text-xs text-[#0202ff] hover:underline">
+              <Pencil className="w-3 h-3" /> Change
+            </button>
+          )}
         </div>
         <div className="px-5 pb-5">
           {editingTone ? (
@@ -191,11 +184,11 @@ export default function CheckInSettings() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="px-5 pt-5 pb-2 flex items-center gap-2">
           <Zap className="w-4 h-4 text-amber-500" />
-          <p className="text-sm font-semibold text-gray-900">Proactivity level <span className="font-normal text-gray-500">(recommended)</span></p>
+          <p className="text-sm font-semibold text-gray-900">Proactivity level</p>
         </div>
         <div className="px-5 pb-5 space-y-2">
           {PROACTIVITY_OPTIONS.map((opt) => {
-            const isSelected = (tonePref?.proactivity_level || 'proactive') === opt.value;
+            const isSelected = (tonePref?.proactivity_level || 'suggestive') === opt.value;
             return (
               <button
                 key={opt.value}
