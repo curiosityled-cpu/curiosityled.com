@@ -128,7 +128,14 @@ export default function CheckInSettings() {
             <ToneOnboarding existingTone={tonePref?.tone_mode} onComplete={handleToneComplete} onCancel={() => setEditingTone(false)} />
           ) : (
             <div className="bg-gray-50 rounded-xl px-4 py-3">
-              <p className="text-sm font-semibold text-gray-800">{TONE_LABELS[tonePref?.tone_mode] || 'Warm but candid'}</p>
+              <div className="flex items-center gap-2 mb-0.5">
+                <p className="text-sm font-semibold text-gray-800">{TONE_LABELS[tonePref?.tone_mode] || 'Warm but candid'}</p>
+                {(tonePref?.tone_mode === 'warm_candid' || !tonePref?.tone_mode) && (
+                  <span className="text-[10px] font-medium bg-[#0202ff] text-white px-1.5 py-0.5 rounded-full">
+                    Recommended
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-gray-500 mt-0.5">
                 {tonePref?.tone_mode === 'gentle_observant' && "Atreus will mostly observe and ask questions, rarely push."}
                 {tonePref?.tone_mode === 'warm_candid' && "Supportive, but will point out patterns when it sees them."}
