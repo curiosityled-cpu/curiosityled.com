@@ -6,7 +6,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { CheckCircle2, ArrowRight } from "lucide-react";
+import { CheckCircle2, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
@@ -50,7 +50,7 @@ const TONE_OPTIONS = [
   }
 ];
 
-export default function ToneOnboarding({ existingTone, onComplete }) {
+export default function ToneOnboarding({ existingTone, onComplete, onCancel }) {
   const { user } = useAuth();
   const [selected, setSelected] = useState(existingTone || "warm_candid");
   const [acknowledged, setAcknowledged] = useState(false);
@@ -138,14 +138,24 @@ export default function ToneOnboarding({ existingTone, onComplete }) {
         </p>
       </label>
 
-      <Button
-        onClick={handleSave}
-        disabled={!acknowledged || saving}
-        className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white text-sm h-10"
-      >
-        {saving ? "Saving…" : "Save my choice"}
-        {!saving && <ArrowRight className="w-4 h-4 ml-2" />}
-      </Button>
+      <div className="flex gap-2">
+        <Button
+          onClick={handleSave}
+          disabled={!acknowledged || saving}
+          className="flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-white text-sm h-10"
+        >
+          {saving ? "Saving…" : "Save my choice"}
+          {!saving && <ArrowRight className="w-4 h-4 ml-2" />}
+        </Button>
+        <Button
+          onClick={onCancel}
+          variant="ghost"
+          className="px-3 text-gray-400 hover:text-gray-600"
+          title="Cancel"
+        >
+          <X className="w-4 h-4" />
+        </Button>
+      </div>
     </div>
   );
 }

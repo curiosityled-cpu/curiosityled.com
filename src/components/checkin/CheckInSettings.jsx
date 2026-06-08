@@ -125,7 +125,7 @@ export default function CheckInSettings() {
         </div>
         <div className="px-5 pb-5">
           {editingTone ? (
-            <ToneOnboarding existingTone={tonePref?.tone_mode} onComplete={handleToneComplete} />
+            <ToneOnboarding existingTone={tonePref?.tone_mode} onComplete={handleToneComplete} onCancel={() => setEditingTone(false)} />
           ) : (
             <div className="bg-gray-50 rounded-xl px-4 py-3">
               <p className="text-sm font-semibold text-gray-800">{TONE_LABELS[tonePref?.tone_mode] || 'Warm but candid'}</p>
