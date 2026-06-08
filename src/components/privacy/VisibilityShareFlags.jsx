@@ -61,15 +61,6 @@ const TOGGLE_ITEMS = [
     category: "Category C preference",
   },
   {
-    key: "share_badges_leaderboard",
-    label: "Show Earned Badges & Achievements on leaderboards",
-    sub: "Choose whether to display your earned gamification badges, levels, and progress on public team leaderboards.",
-    icon: Trophy,
-    iconColor: "text-yellow-500",
-    defaultOn: true,
-    category: "Category C preference",
-  },
-  {
     key: "share_practices_with_manager",
     label: "Share Active Practices & Workouts with my manager",
     sub: "Opt-in to sharing your active developmental practices (e.g., active listening exercises) with your manager for targeted coaching support.",
