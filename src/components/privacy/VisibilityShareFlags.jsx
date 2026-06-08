@@ -30,7 +30,7 @@ const TOGGLE_ITEMS = [
     sub: "Directional signals only (e.g. 'trending stretched'). Never raw check-in text.",
     icon: Users,
     iconColor: "text-blue-500",
-    defaultOn: false,
+    defaultOn: true,
     category: "Category B signal",
   },
   {
@@ -39,7 +39,7 @@ const TOGGLE_ITEMS = [
     sub: "Aggregated with other managers, anonymised below group thresholds. No individual identification.",
     icon: BarChart3,
     iconColor: "text-purple-500",
-    defaultOn: false,
+    defaultOn: true,
     category: "Category B signal",
   },
   {
@@ -93,21 +93,19 @@ export default function VisibilityShareFlags({ userEmail: userEmailProp }) {
     base44.entities.TonePreference.filter({ user_email: userEmail }, null, 1)
       .then(rows => {
         setPrefs(rows[0] || {
-          share_energy_with_manager: false,
-          share_energy_with_hr: false,
+          share_energy_with_manager: true,
+          share_energy_with_hr: true,
           share_weekly_focus: false,
           share_decision_lessons: false,
-          share_badges_leaderboard: true,
           share_practices_with_manager: false,
         });
       })
       .catch(() => {
         setPrefs({
-          share_energy_with_manager: false,
-          share_energy_with_hr: false,
+          share_energy_with_manager: true,
+          share_energy_with_hr: true,
           share_weekly_focus: false,
           share_decision_lessons: false,
-          share_badges_leaderboard: true,
           share_practices_with_manager: false,
         });
       })
