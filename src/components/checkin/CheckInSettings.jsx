@@ -154,11 +154,10 @@ export default function CheckInSettings() {
             {openSection === 'uses' ? <ChevronUp className="w-3.5 h-3.5 text-gray-400" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400" />}
           </button>
           {openSection === 'uses' && (
-            <div className="px-5 py-3">
+            <div className="px-5 py-3 space-y-3">
               <ul className="space-y-1.5">
                 {[
                   "What you tell it in quick check-ins",
-                  "Outlook & Google Calendar — how packed your days are",
                   "Your goals and learning activity in Curiosity Led",
                   "Themes from past Atreus conversations"
                 ].map((item, i) => (
@@ -168,6 +167,38 @@ export default function CheckInSettings() {
                   </li>
                 ))}
               </ul>
+              <div className="border-t border-gray-100 pt-3">
+                <p className="text-xs font-semibold text-gray-600 mb-1.5">From your calendar (if connected):</p>
+                <ul className="space-y-1">
+                  {[
+                    "Meeting titles and subject lines",
+                    "Start and end times",
+                    "Number of attendees (not who they are)",
+                    "Whether a meeting is recurring",
+                    "Whether a meeting was accepted, tentative, or cancelled"
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-center gap-2 text-xs text-gray-500">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-xs font-semibold text-gray-500 mt-2 mb-1">Never from your calendar:</p>
+                <ul className="space-y-1">
+                  {[
+                    "Meeting notes or agenda content",
+                    "Email messages of any kind",
+                    "Who specifically is in your meetings",
+                    "Any content outside your calendar",
+                    "Attachments or linked files"
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-center gap-2 text-xs text-gray-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-gray-300 flex-shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           )}
 

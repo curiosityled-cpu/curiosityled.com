@@ -235,35 +235,7 @@ export default function CalendarConsentCard({ tonePrefs, onConsent, onDisconnect
           ))}
         </div>
 
-        <button
-          onClick={() => setShowDetails(!showDetails)}
-          className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          {showDetails ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-          What exactly will Atreus read?
-        </button>
 
-        {showDetails && (
-          <div className="space-y-2 pt-1 border-t border-gray-50">
-            <ul className="space-y-1">
-              {WHAT_IS_READ.map((item, i) => (
-                <li key={i} className="flex items-center gap-2 text-xs text-gray-500">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-500 flex-shrink-0" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <p className="text-xs text-gray-400 font-medium mt-2">Never:</p>
-            <ul className="space-y-1">
-              {WHAT_IS_NEVER_READ.map((item, i) => (
-                <li key={i} className="flex items-center gap-2 text-xs text-gray-400">
-                  <Lock className="w-3 h-3 text-gray-300 flex-shrink-0" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
