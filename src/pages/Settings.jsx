@@ -343,42 +343,6 @@ export default function Settings() {
                 loading={calendarLoading}
               />
 
-              {/* Agent Capabilities */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Agent Capabilities</CardTitle>
-                  <p className="text-sm text-gray-600">Control what actions Atreus can perform on your behalf</p>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <Alert>
-                    <Sparkles className="w-4 h-4" />
-                    <AlertDescription>Atreus can execute tasks for you! Enable agent capabilities to let Atreus create reminders, assign learning, generate reports, and more.</AlertDescription>
-                  </Alert>
-                  <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <div>
-                      <p className="font-semibold text-gray-900">Enable Agent Actions</p>
-                      <p className="text-sm text-gray-600">Allow Atreus to execute tasks on your behalf</p>
-                    </div>
-                    <Switch checked={preferences.atreus_agent_enabled !== false} onCheckedChange={(v) => setPreferences(prev => ({ ...prev, atreus_agent_enabled: v }))} />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Available Agent Capabilities</h3>
-                    <div className="space-y-2 text-sm">
-                      {['Generate and export reports (PDF/CSV)', 'Create reminders and notifications', 'Assign learning resources to users', 'Create and cascade goals', 'Schedule calendar events', 'Send emails to team members', 'Invite new users (with permission)', 'Bulk operations (assign to team, division, etc.)'].map(cap => (
-                        <div key={cap} className="flex items-center gap-2 text-gray-700">
-                          <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
-                          <span>{cap}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <Alert className="bg-amber-50 border-amber-200">
-                    <Shield className="w-4 h-4 text-amber-600" />
-                    <AlertDescription className="text-amber-900"><strong>Security Note:</strong> All agent actions require your explicit confirmation before execution.</AlertDescription>
-                  </Alert>
-                </CardContent>
-              </Card>
-
               <Card>
                 <CardHeader><CardTitle>Account</CardTitle></CardHeader>
                 <CardContent>
