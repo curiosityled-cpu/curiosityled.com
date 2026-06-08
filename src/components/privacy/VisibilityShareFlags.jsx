@@ -84,7 +84,7 @@ const TOGGLE_ITEMS = [
     sub: "Helps the organisation plan development pathways and succession. Aggregated and anonymised — no individual profiling.",
     icon: BarChart3,
     iconColor: "text-indigo-500",
-    defaultOn: false,
+    defaultOn: true,
     category: "Category C preference",
   },
 ];
@@ -117,7 +117,7 @@ export default function VisibilityShareFlags({ userEmail: userEmailProp }) {
           share_decision_lessons: false,
           share_practices_with_manager: false,
           share_career_interests_with_manager: false,
-          share_career_interests_with_hr: false,
+          share_career_interests_with_hr: true,
         });
       })
       .catch(() => {
@@ -128,7 +128,7 @@ export default function VisibilityShareFlags({ userEmail: userEmailProp }) {
           share_decision_lessons: false,
           share_practices_with_manager: false,
           share_career_interests_with_manager: false,
-          share_career_interests_with_hr: false,
+          share_career_interests_with_hr: true,
         });
       })
       .finally(() => setLoading(false));
