@@ -140,30 +140,6 @@ export default function VisibilityShareFlags({ userEmail: userEmailProp }) {
   return (
     <div className="space-y-5">
 
-      {/* Always-private block */}
-      <div className="bg-gray-50 border border-gray-100 rounded-2xl overflow-hidden">
-        <div className="px-5 pt-5 pb-3 flex items-center gap-2">
-          <Shield className="w-4 h-4 text-emerald-500" />
-          <p className="text-sm font-semibold text-gray-900">Always private — no option to share</p>
-        </div>
-        <div className="px-5 pb-5 space-y-1.5">
-          {CATEGORY_A_FIELDS.map((f, i) => (
-            <div key={i} className="flex items-start gap-2">
-              <div className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              </div>
-              <p className="text-xs text-gray-600">{f}</p>
-            </div>
-          ))}
-          <div className="mt-3 flex items-start gap-2 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2.5">
-            <Info className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-emerald-700 leading-relaxed">
-              These fields are protected at the database level and cannot be accessed even by platform administrators.
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Controllable sharing */}
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
         <div className="px-5 pt-5 pb-3 flex items-center gap-2">
