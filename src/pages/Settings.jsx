@@ -398,34 +398,6 @@ export default function Settings() {
                   <p className="text-sm text-gray-600">Control how your data is used and what is shared with your organisation</p>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* Atreus data usage */}
-                  <div className="space-y-4">
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Atreus Data Usage</h3>
-                    <div className="flex items-center justify-between">
-                      <div><Label>Allow Activity Tracking</Label><p className="text-xs text-gray-500 mt-1">Let Atreus track your platform usage to provide better recommendations</p></div>
-                      <Switch checked={preferences.privacy_settings?.allow_activity_tracking !== false} onCheckedChange={(v) => setPreferences(prev => ({ ...prev, privacy_settings: { ...prev.privacy_settings, allow_activity_tracking: v } }))} />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div><Label>Proactive Suggestions</Label><p className="text-xs text-gray-500 mt-1">Allow Atreus to proactively suggest actions based on your data</p></div>
-                      <Switch checked={preferences.privacy_settings?.allow_proactive_suggestions !== false} onCheckedChange={(v) => setPreferences(prev => ({ ...prev, privacy_settings: { ...prev.privacy_settings, allow_proactive_suggestions: v } }))} />
-                    </div>
-                    <div>
-                      <Label>Data Retention Period</Label>
-                      <Select value={String(preferences.privacy_settings?.data_retention_days || 90)} onValueChange={(v) => setPreferences(prev => ({ ...prev, privacy_settings: { ...prev.privacy_settings, data_retention_days: parseInt(v) } }))}>
-                        <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="30">30 days</SelectItem>
-                          <SelectItem value="60">60 days</SelectItem>
-                          <SelectItem value="90">90 days (Recommended)</SelectItem>
-                          <SelectItem value="180">180 days</SelectItem>
-                          <SelectItem value="365">1 year</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-gray-100" />
-
                   {/* What org sees */}
                   <div className="space-y-3">
                     <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">What Your Org Sees</h3>
