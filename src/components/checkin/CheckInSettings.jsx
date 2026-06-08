@@ -135,17 +135,6 @@ export default function CheckInSettings() {
         </div>
       </div>
 
-      {/* Visibility sharing controls */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="px-5 pt-5 pb-2 flex items-center gap-2">
-          <Eye className="w-4 h-4 text-[#0202ff]" />
-          <p className="text-sm font-semibold text-gray-900">Sharing controls</p>
-        </div>
-        <div className="px-5 pb-5">
-          <VisibilityShareFlags userEmail={user?.email} />
-        </div>
-      </div>
-
       {/* Privacy */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="px-5 pt-5 pb-2 flex items-center gap-2">
