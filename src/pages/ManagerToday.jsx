@@ -12,14 +12,14 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { Link } from "react-router-dom";
-import { Brain, ChevronRight, MessageSquare, SlidersHorizontal, BarChart3, Layers, CheckCircle2, X } from "lucide-react";
+import { Brain, ChevronRight, MessageSquare, SlidersHorizontal, BarChart3, Layers, CheckCircle2, X, Sun, Moon, Repeat } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import ManagerCheckIn from "@/components/checkin/ManagerCheckIn";
-import IntentLoopCard from "@/components/checkin/IntentLoopCard";
 import ToneOnboarding from "@/components/checkin/ToneOnboarding";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
-import WeeklyFocusReflection from "@/components/checkin/WeeklyFocusReflection";
-import MoodRingIndicator from "@/components/rhythm/MoodRingIndicator";
+import MorningCheckIn from "@/components/checkin/MorningCheckIn";
+import EveningCheckIn from "@/components/checkin/EveningCheckIn";
+import MiddayPriorityLoop from "@/components/checkin/MiddayPriorityLoop";
+import WeeklyRhythmReflection from "@/components/checkin/WeeklyRhythmReflection";
 import UpcomingFrictionCard from "@/components/lead/UpcomingFrictionCard";
 import DailyHUD from "@/components/lead/DailyHUD";
 import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
@@ -102,6 +102,25 @@ export default function ManagerToday() {
   const { openWithContext } = useAtreusChat();
   const [showSettings, setShowSettings] = useState(false);
   const [showWeeklyReflection, setShowWeeklyReflection] = useState(false);
+  const [todayCheckIn, setTodayCheckIn] = useState(null);
+
+  // Load today's DailyCheckIn record
+  const { data: todayRecord, refetch: refetchToday } = useQuery({
+    queryKey: ['daily-checkin-today', user?.email],
+    queryFn: async () => {
+      try {
+        const res = await base44.functions.invoke("saveDailyCheckIn", { action: "get_today" });
+        return res.data?.record || null;
+      } catch { return null; }
+    },
+    enabled: !!user?.email,
+    staleTime: 60 * 1000,
+  });
+
+  const handleCheckInComplete = () => {
+    refetchToday();
+    queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
+  };
 
   const openAtreus = (msg) => openWithContext({
     context: { pageType: 'today', user_name: getFirstName(user) },
@@ -184,16 +203,17 @@ export default function ManagerToday() {
   const day = new Date().getDay();
   const hour = new Date().getHours();
 
-  const todayPromptType = (() => {
-    if (day === 5) return 'weekly_reflection';
-    if ((day === 1 || day === 2) && hour < 11) return 'morning_intent';
-    const rotation = ['baseline_energy', 'confidence_check', 'motivation_check', 'overload_check', 'avoidance_check', 'clarity_check', 'optimism_check'];
-    return rotation[day % rotation.length];
-  })();
-
   const todayKey = localDateKey();
   const todayPulse = recentPulses.find(p => p.created_date?.startsWith(todayKey));
-  const hasMorningIntent = recentPulses.some(p => p.prompt_type === 'morning_intent' && p.created_date?.startsWith(todayKey));
+
+  // Determine which check-in flow to surface based on time of day
+  const isMorningWindow = hour >= 5 && hour < 12;
+  const isMiddayWindow = hour >= 11 && hour < 14;
+  const isEveningWindow = hour >= 15;
+
+  const showMorningCheckIn = isMorningWindow && !todayRecord?.morning_completed;
+  const showMiddayLoop = isMiddayWindow && todayRecord?.big3_priorities?.length > 0 && !todayRecord?.midday_loop_completed;
+  const showEveningCheckIn = isEveningWindow && !todayRecord?.evening_completed;
 
   const pendingDebrief = recentPulses.find(p =>
     p.prompt_type === 'prepare_debrief_pending' &&
@@ -205,18 +225,13 @@ export default function ManagerToday() {
   // ── Main column ─────────────────────────────────────────────────────────────
   const mainContent = !needsToneOnboarding ? (
     <div className="space-y-4">
-      {/* Mood ring if checked in */}
-      {todayPulse && <MoodRingIndicator todayPulse={todayPulse} />}
-
-      {/* Daily HUD scorecard */}
+      {/* Daily HUD scorecard — legacy pulse signal */}
       <DailyHUD
         pulse={todayPulse}
         trends={trends}
         goals={goals}
         onIntentUpdated={() => queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] })}
       />
-
-      {/* Settings panel removed from inline — now in modal */}
 
       {/* Pending debrief prompt */}
       {pendingDebrief && (
@@ -240,17 +255,48 @@ export default function ManagerToday() {
         </div>
       )}
 
-      {/* Hero check-in */}
-      <ManagerCheckIn
-        promptType={!hasMorningIntent ? 'morning_intent' : todayPromptType}
-        onComplete={() => queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] })}
-        trends={trends}
-        goals={goals}
-        pulses={recentPulses}
-      />
+      {/* ── RHYTHM CHECK-IN FLOWS ────────────────────────────────────────── */}
+      {/* Morning check-in (5am–noon, not yet done) */}
+      {(showMorningCheckIn || todayRecord?.morning_completed) && (
+        <MorningCheckIn
+          todayRecord={todayRecord}
+          onComplete={handleCheckInComplete}
+        />
+      )}
 
-      {/* Today's Playbook — only surfaces after check-in, so the intelligence
-          feels reactive to what the manager just shared, not pre-populated */}
+      {/* Midday priority loop (11am–2pm, Big 3 set, not yet done) */}
+      {(showMiddayLoop || todayRecord?.midday_loop_completed) && (
+        <MiddayPriorityLoop
+          todayRecord={todayRecord}
+          onComplete={handleCheckInComplete}
+        />
+      )}
+
+      {/* Evening check-in (3pm+, not yet done) */}
+      {(showEveningCheckIn || todayRecord?.evening_completed) && (
+        <EveningCheckIn
+          todayRecord={todayRecord}
+          goals={goals}
+          onComplete={handleCheckInComplete}
+        />
+      )}
+
+      {/* Big 3 display — when set from evening, show tomorrow's plan in the morning */}
+      {isMorningWindow && todayRecord?.big3_priorities?.length > 0 && (
+        <div className="bg-card rounded-2xl border border-border px-4 py-3">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Your Big 3 today</p>
+          <div className="space-y-1.5">
+            {todayRecord.big3_priorities.map((p, i) => (
+              <div key={p.id} className="flex items-start gap-2">
+                <span className="w-4 h-4 rounded-full bg-[#0202ff] text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                <p className="text-sm text-foreground leading-snug">{p.title}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Today's Playbook */}
       {todayPulse && (
         <TodaysPlaybook
           pulse={todayPulse}
@@ -262,7 +308,7 @@ export default function ManagerToday() {
         />
       )}
 
-      {/* Weekly reflection shortcut — subtle tap target, not a competing card */}
+      {/* Weekly reflection shortcut */}
       <button
         onClick={() => setShowWeeklyReflection(true)}
         className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-card border border-border hover:bg-muted/50 transition-colors group"
@@ -271,7 +317,7 @@ export default function ManagerToday() {
           <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
           <div className="text-left">
             <p className="text-sm font-semibold text-foreground">Weekly reflection</p>
-            <p className="text-[10px] text-muted-foreground">Wins, learnings, and what you'd do differently</p>
+            <p className="text-[10px] text-muted-foreground">Wins, patterns, and what you'd do differently</p>
           </div>
         </div>
         <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50" />
@@ -287,18 +333,12 @@ export default function ManagerToday() {
   // ── Desktop companion column ─────────────────────────────────────────────────
   const companionColumn = !needsToneOnboarding ? (
     <div className="space-y-4">
-      {/* Upcoming friction — the ONE pattern-aware signal allowed on Lead */}
       <UpcomingFrictionCard
         trends={trends}
         goals={goals}
         pulses={recentPulses}
         onOpenAtreus={openAtreus}
       />
-
-      {/* Intent loop — closes today's intention arc */}
-      <IntentLoopCard pulses={recentPulses} trends={trends} onOpenAtreus={openAtreus} />
-
-      {/* Go deeper navigation */}
       <ExploreDeeperCard />
     </div>
   ) : null;
@@ -346,7 +386,7 @@ export default function ManagerToday() {
         </>
       )}
 
-      <WeeklyFocusReflection
+      <WeeklyRhythmReflection
         isOpen={showWeeklyReflection}
         onClose={() => setShowWeeklyReflection(false)}
         onSuccess={() => queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] })}
