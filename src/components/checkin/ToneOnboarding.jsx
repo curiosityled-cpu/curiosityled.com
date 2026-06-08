@@ -6,7 +6,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { CheckCircle2, ArrowRight, X } from "lucide-react";
+import { CheckCircle2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
@@ -138,24 +138,22 @@ export default function ToneOnboarding({ existingTone, onComplete, onCancel }) {
         </p>
       </label>
 
-      <div className="flex gap-2">
-        <Button
-          onClick={handleSave}
-          disabled={!acknowledged || saving}
-          className="flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-white text-sm h-10"
-        >
-          {saving ? "Saving…" : "Save my choice"}
-          {!saving && <ArrowRight className="w-4 h-4 ml-2" />}
-        </Button>
-        <Button
+      <Button
+        onClick={handleSave}
+        disabled={!acknowledged || saving}
+        className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white text-sm h-10"
+      >
+        {saving ? "Saving…" : "Save my choice"}
+        {!saving && <ArrowRight className="w-4 h-4 ml-2" />}
+      </Button>
+      {onCancel && (
+        <button
           onClick={onCancel}
-          variant="ghost"
-          className="px-3 text-gray-400 hover:text-gray-600"
-          title="Cancel"
+          className="w-full text-center text-sm text-gray-400 hover:text-gray-600 py-2 transition-colors"
         >
-          <X className="w-4 h-4" />
-        </Button>
-      </div>
+          Cancel
+        </button>
+      )}
     </div>
   );
 }
