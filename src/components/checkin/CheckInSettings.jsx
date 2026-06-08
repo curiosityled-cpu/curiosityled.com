@@ -19,8 +19,8 @@ const TONE_LABELS = {
 };
 
 const CADENCE_OPTIONS = [
-  { value: "daily", label: "Daily", sub: "Check in every day to stay close to your patterns" },
-  { value: "every_other_day", label: "Every other day", sub: "A light rhythm without feeling constant", recommended: true },
+  { value: "daily", label: "Daily", sub: "Check in every day to stay close to your patterns", recommended: true },
+  { value: "every_other_day", label: "Every other day", sub: "A light rhythm without feeling constant" },
   { value: "important_only", label: "Only when it really matters", sub: "Contextual only — when patterns or load signals are significant" },
   { value: "paused", label: "Pause for now", sub: "No check-ins until I turn this back on" }
 ];
