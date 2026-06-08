@@ -191,11 +191,11 @@ export default function CheckInSettings() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="px-5 pt-5 pb-2 flex items-center gap-2">
           <Zap className="w-4 h-4 text-amber-500" />
-          <p className="text-sm font-semibold text-gray-900">Proactivity level</p>
+          <p className="text-sm font-semibold text-gray-900">Proactivity level <span className="font-normal text-gray-500">(recommended)</span></p>
         </div>
         <div className="px-5 pb-5 space-y-2">
           {PROACTIVITY_OPTIONS.map((opt) => {
-            const isSelected = (tonePref?.proactivity_level || 'suggestive') === opt.value;
+            const isSelected = (tonePref?.proactivity_level || 'proactive') === opt.value;
             return (
               <button
                 key={opt.value}
