@@ -176,20 +176,6 @@ export default function VisibilityShareFlags({ userEmail: userEmailProp }) {
         </div>
       </div>
 
-      {/* What aggregated looks like */}
-      <div className="bg-blue-50 border border-blue-100 rounded-2xl px-5 py-4">
-        <div className="flex items-start gap-2">
-          <Info className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <p className="text-xs font-semibold text-blue-800">What "aggregated" means in practice</p>
-            <p className="text-xs text-blue-700 leading-relaxed">
-              When sharing is on, HR sees things like <em>"managers in this team averaged 'stretched' energy 60% of days last month"</em> — never your name attached to a specific check-in answer.
-              Groups below 5 people are never broken out individually.
-            </p>
-          </div>
-        </div>
-      </div>
-
       {prefs?.visibility_last_reviewed_at && (
         <p className="text-[10px] text-gray-400 text-center">
           Last reviewed: {new Date(prefs.visibility_last_reviewed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
