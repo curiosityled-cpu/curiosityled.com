@@ -42,24 +42,6 @@ const TOGGLE_ITEMS = [
     defaultOn: false,
     category: "Category B signal",
   },
-  {
-    key: "share_goals_progress_with_manager",
-    label: "Goal progress visible to my manager",
-    sub: "Standard professional transparency — your manager can see your goal titles and progress.",
-    icon: Target,
-    iconColor: "text-emerald-500",
-    defaultOn: true,
-    category: "Standard development data",
-  },
-  {
-    key: "share_learning_with_hr",
-    label: "Learning & development activity in HR analytics",
-    sub: "Programme participation, learning completions, and journey progress — standard L&D data.",
-    icon: BookOpen,
-    iconColor: "text-amber-500",
-    defaultOn: true,
-    category: "Standard development data",
-  },
 ];
 
 /**
