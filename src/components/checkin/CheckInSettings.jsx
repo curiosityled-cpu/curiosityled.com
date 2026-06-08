@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { Shield, Clock, MessageSquare, Pencil, ChevronDown, ChevronUp, Zap, BookOpen, BellOff } from "lucide-react";
+import { Shield, Clock, MessageSquare, Pencil, ChevronDown, ChevronUp, Zap, BellOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import ToneOnboarding from "./ToneOnboarding";
@@ -29,12 +29,6 @@ const PROACTIVITY_OPTIONS = [
   { value: "reactive", label: "Reactive", sub: "Atreus only responds when you reach out" },
   { value: "suggestive", label: "Suggestive", sub: "Occasionally surfaces patterns or nudges — recommended" },
   { value: "proactive", label: "Proactive", sub: "Atreus actively checks in, flags risks, and prompts reflection" }
-];
-
-const STYLE_OPTIONS = [
-  { value: "brief", label: "Brief check-ins", sub: "Quick pulse — a few questions, in and out" },
-  { value: "balanced", label: "Balanced", sub: "Mix of quick check-ins and occasional deeper dives — recommended" },
-  { value: "deep", label: "Deeper coaching", sub: "Atreus leans into reflection and works through things with you" }
 ];
 
 const DND_DAYS = [
@@ -184,11 +178,11 @@ export default function CheckInSettings() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="px-5 pt-5 pb-2 flex items-center gap-2">
           <Zap className="w-4 h-4 text-amber-500" />
-          <p className="text-sm font-semibold text-gray-900">Proactivity level</p>
+          <p className="text-sm font-semibold text-gray-900">Proactivity level <span className="font-normal text-gray-500">(recommended)</span></p>
         </div>
         <div className="px-5 pb-5 space-y-2">
           {PROACTIVITY_OPTIONS.map((opt) => {
-            const isSelected = (tonePref?.proactivity_level || 'suggestive') === opt.value;
+            const isSelected = (tonePref?.proactivity_level || 'proactive') === opt.value;
             return (
               <button
                 key={opt.value}
@@ -212,39 +206,7 @@ export default function CheckInSettings() {
         </div>
       </div>
 
-      {/* Conversation style */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="px-5 pt-5 pb-2 flex items-center gap-2">
-          <BookOpen className="w-4 h-4 text-indigo-500" />
-          <p className="text-sm font-semibold text-gray-900">Conversation style</p>
-        </div>
-        <div className="px-5 pb-5 space-y-2">
-          {STYLE_OPTIONS.map((opt) => {
-            const isSelected = (tonePref?.conversation_style || 'balanced') === opt.value;
-            return (
-              <button
-                key={opt.value}
-                onClick={() => saveField({ conversation_style: opt.value })}
-                className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all ${
-                  isSelected ? 'border-[#0202ff] bg-[#0202ff]/5' : 'border-gray-200 hover:border-gray-300 bg-gray-50'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${isSelected ? 'border-[#0202ff] bg-[#0202ff]' : 'border-gray-300'}`}>
-                    {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                  </div>
-                  <div>
-                    <p className={`text-sm font-medium ${isSelected ? 'text-[#0202ff]' : 'text-gray-800'}`}>{opt.label}</p>
-                    <p className="text-xs text-gray-500">{opt.sub}</p>
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Do Not Disturb */}
+{/* Do Not Disturb */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="px-5 pt-5 pb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
