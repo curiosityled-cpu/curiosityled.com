@@ -111,7 +111,6 @@ import OrgPerformance from './pages/OrgPerformance';
 import PartnerPortal from './pages/PartnerPortal';
 import Performance from './pages/Performance';
 import PrivacyPolicy from './pages/PrivacyPolicy';
-import PrivacySettings from './pages/PrivacySettings';
 import Profile from './pages/Profile';
 import ProvisioningBatchDetail from './pages/ProvisioningBatchDetail';
 import ProvisioningBatches from './pages/ProvisioningBatches';
@@ -209,7 +208,6 @@ export const PAGES = {
     "PartnerPortal": PartnerPortal,
     "Performance": Performance,
     "PrivacyPolicy": PrivacyPolicy,
-    "PrivacySettings": PrivacySettings,
     "Profile": Profile,
     "ProvisioningBatchDetail": ProvisioningBatchDetail,
     "ProvisioningBatches": ProvisioningBatches,

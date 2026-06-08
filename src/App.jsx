@@ -23,7 +23,6 @@ import LeadershipIntelligenceHub from './pages/LeadershipIntelligenceHub';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import Notifications from './pages/Notifications';
-import PrivacySettings from './pages/PrivacySettings';
 import AdminDataRestore from './pages/AdminDataRestore';
 import PendingRole from './pages/PendingRole';
 import SeedLinkedInCourses from './pages/SeedLinkedInCourses';
@@ -31,7 +30,6 @@ import OrgBusinessGoals from './pages/OrgBusinessGoals';
 import PerformanceManager from './pages/PerformanceManager';
 import MyPerformance from './pages/MyPerformance';
 import MyRhythm from './pages/MyRhythm';
-import TeamsSettings from './pages/TeamsSettings';
 import ManagerToday from './pages/ManagerToday';
 import ManagerPatterns from './pages/ManagerPatterns';
 import ManagerGrowth from './pages/ManagerGrowth';
@@ -140,7 +138,7 @@ const AuthenticatedApp = () => {
       <Route path="/Profile" element={mvpRole ? <MVPPage><Profile /></MVPPage> : <LayoutWrapper currentPageName="Profile"><Profile /></LayoutWrapper>} />
       <Route path="/Settings" element={mvpRole ? <MVPPage><Settings /></MVPPage> : <LayoutWrapper currentPageName="Settings"><Settings /></LayoutWrapper>} />
       <Route path="/Notifications" element={mvpRole ? <MVPPage><Notifications /></MVPPage> : <LayoutWrapper currentPageName="Notifications"><Notifications /></LayoutWrapper>} />
-      <Route path="/PrivacySettings" element={mvpRole ? <MVPPage><PrivacySettings /></MVPPage> : <LayoutWrapper currentPageName="PrivacySettings"><PrivacySettings /></LayoutWrapper>} />
+      <Route path="/PrivacySettings" element={<Navigate to="/Settings" replace />} />
       <Route path="/AdminDataRestore" element={<AdminDataRestore />} />
       <Route path="/SeedLinkedInCourses" element={<SeedLinkedInCourses />} />
       <Route path="/OrgBusinessGoals" element={mvpRole ? <MVPPage><OrgBusinessGoals /></MVPPage> : <LayoutWrapper currentPageName="OrgBusinessGoals"><OrgBusinessGoals /></LayoutWrapper>} />
@@ -149,7 +147,7 @@ const AuthenticatedApp = () => {
       <Route path="/my-performance" element={<Navigate to="/my-goals" replace />} />
       <Route path="/my-goals" element={<MVPPage><MyPerformance /></MVPPage>} />
       <Route path="/my-rhythm" element={<MVPPage><MyRhythm /></MVPPage>} />
-      <Route path="/teams-settings" element={<TeamsSettings />} />
+      <Route path="/teams-settings" element={<Navigate to="/Settings" replace />} />
       {/* Redirect /Performance to My Goals */}
       <Route path="/Performance" element={<Navigate to="/my-goals" replace />} />
 
