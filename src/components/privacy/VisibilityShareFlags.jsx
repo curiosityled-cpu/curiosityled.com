@@ -44,7 +44,7 @@ const TOGGLE_ITEMS = [
   },
   {
     key: "share_weekly_focus",
-    label: "Share Weekly Focus & Intentions",
+    label: "Share Weekly Focus & Intentions with my manager",
     sub: "Opt-in to sharing your active weekly leadership theme or morning intentions with my manager for coaching alignment.",
     icon: Target,
     iconColor: "text-green-500",
@@ -53,7 +53,7 @@ const TOGGLE_ITEMS = [
   },
   {
     key: "share_decision_lessons",
-    label: "Share Decision Journal Lessons",
+    label: "Share Decision Journal Lessons with my manager",
     sub: "Share completed post-mortems or outcomes of critical choices from your Decision Journal with my manager for coaching insights.",
     icon: BookOpen,
     iconColor: "text-amber-500",
