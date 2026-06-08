@@ -6,8 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { Shield, Clock, MessageSquare, Pencil, Eye } from "lucide-react";
-import VisibilityShareFlags from "@/components/privacy/VisibilityShareFlags";
+import { Shield, Clock, MessageSquare, Pencil, Eye, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ToneOnboarding from "./ToneOnboarding";
 
@@ -31,6 +30,9 @@ export default function CheckInSettings() {
   const [loading, setLoading] = useState(true);
   const [editingTone, setEditingTone] = useState(false);
   const [savingCadence, setSavingCadence] = useState(false);
+  const [openSection, setOpenSection] = useState(null);
+
+  const toggleSection = (key) => setOpenSection(prev => prev === key ? null : key);
 
   useEffect(() => {
     if (!user?.email) return;
@@ -141,40 +143,67 @@ export default function CheckInSettings() {
           <Shield className="w-4 h-4 text-emerald-500" />
           <p className="text-sm font-semibold text-gray-900">What Atreus uses & what stays private</p>
         </div>
-        <div className="px-5 pb-5 space-y-4">
+        <div className="divide-y divide-gray-100">
 
-          <div>
-            <p className="text-xs font-semibold text-gray-700 mb-1.5">What Atreus uses</p>
-            <ul className="space-y-1.5">
-              {[
-                "What you tell it in quick check-ins",
-                "Outlook & Google Calendar — how packed your days are",
-                "Your goals and learning activity in Curiosity Led",
-                "Themes from past Atreus conversations"
-              ].map((item, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs text-gray-600">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* What Atreus uses */}
+          <button
+            onClick={() => toggleSection('uses')}
+            className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-gray-50 transition-colors"
+          >
+            <p className="text-xs font-semibold text-gray-700">What Atreus uses</p>
+            {openSection === 'uses' ? <ChevronUp className="w-3.5 h-3.5 text-gray-400" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400" />}
+          </button>
+          {openSection === 'uses' && (
+            <div className="px-5 py-3">
+              <ul className="space-y-1.5">
+                {[
+                  "What you tell it in quick check-ins",
+                  "Outlook & Google Calendar — how packed your days are",
+                  "Your goals and learning activity in Curiosity Led",
+                  "Themes from past Atreus conversations"
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-2 text-xs text-gray-600">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-          <div className="border-t border-gray-100 pt-4">
-            <p className="text-xs font-semibold text-gray-700 mb-1.5">What stays private</p>
-            <p className="text-xs text-gray-500 leading-relaxed">
-              Your check-ins, reflections, and conversations with Atreus are private to you.
-              They are not shared with HR or your manager and are not used in performance reviews.
-            </p>
-          </div>
+          {/* What stays private */}
+          <button
+            onClick={() => toggleSection('private')}
+            className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-gray-50 transition-colors"
+          >
+            <p className="text-xs font-semibold text-gray-700">What stays private</p>
+            {openSection === 'private' ? <ChevronUp className="w-3.5 h-3.5 text-gray-400" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400" />}
+          </button>
+          {openSection === 'private' && (
+            <div className="px-5 py-3">
+              <p className="text-xs text-gray-500 leading-relaxed">
+                Your check-ins, reflections, and conversations with Atreus are private to you.
+                They are not shared with HR or your manager and are not used in performance reviews.
+              </p>
+            </div>
+          )}
 
-          <div className="border-t border-gray-100 pt-4">
-            <p className="text-xs font-semibold text-gray-700 mb-1.5">What HR sees</p>
-            <p className="text-xs text-gray-500 leading-relaxed">
-              HR can only see aggregated, anonymous patterns across groups — for example, "managers in this unit report high load frequently" — and standard development data like program participation and Leadership Index results.
-              Not your private conversations or check-ins.
-            </p>
-          </div>
+          {/* What HR sees */}
+          <button
+            onClick={() => toggleSection('hr')}
+            className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-gray-50 transition-colors"
+          >
+            <p className="text-xs font-semibold text-gray-700">What HR sees</p>
+            {openSection === 'hr' ? <ChevronUp className="w-3.5 h-3.5 text-gray-400" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400" />}
+          </button>
+          {openSection === 'hr' && (
+            <div className="px-5 py-3">
+              <p className="text-xs text-gray-500 leading-relaxed">
+                HR can only see aggregated, anonymous patterns across groups — for example, "managers in this unit report high load frequently" — and standard development data like program participation and Leadership Index results.
+                Not your private conversations or check-ins.
+              </p>
+            </div>
+          )}
 
         </div>
       </div>
