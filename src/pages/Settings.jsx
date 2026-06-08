@@ -14,7 +14,7 @@ import DeleteAccountDialog from "@/components/mobile/DeleteAccountDialog";
 import {
   Bell, Mail, MessageSquare, Loader2, Settings as SettingsIcon,
   Sparkles, CheckCircle2, Info, ArrowLeft, Zap, Shield, Paintbrush,
-  Users, Download, Eye, AlertTriangle, Clock, FileText, Lock
+  Users, Eye
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
@@ -198,7 +198,6 @@ export default function Settings() {
             <TabsTrigger value="notifications"><Bell className="w-4 h-4 mr-2" />Notifications</TabsTrigger>
             <TabsTrigger value="checkin"><MessageSquare className="w-4 h-4 mr-2" />Atreus</TabsTrigger>
             <TabsTrigger value="privacy-visibility"><Shield className="w-4 h-4 mr-2" />Privacy & Data</TabsTrigger>
-            <TabsTrigger value="atreus-control"><Zap className="w-4 h-4 mr-2" />Agent Control</TabsTrigger>
           </TabsList>
 
           {/* ── Platform (admin only) ── */}
@@ -343,6 +342,80 @@ export default function Settings() {
                 onDisconnect={handleCalendarDisconnect}
                 loading={calendarLoading}
               />
+
+              {/* Agent Capabilities */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Agent Capabilities</CardTitle>
+                  <p className="text-sm text-gray-600">Control what actions Atreus can perform on your behalf</p>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <Alert>
+                    <Sparkles className="w-4 h-4" />
+                    <AlertDescription>Atreus can execute tasks for you! Enable agent capabilities to let Atreus create reminders, assign learning, generate reports, and more.</AlertDescription>
+                  </Alert>
+                  <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div>
+                      <p className="font-semibold text-gray-900">Enable Agent Actions</p>
+                      <p className="text-sm text-gray-600">Allow Atreus to execute tasks on your behalf</p>
+                    </div>
+                    <Switch checked={preferences.atreus_agent_enabled !== false} onCheckedChange={(v) => setPreferences(prev => ({ ...prev, atreus_agent_enabled: v }))} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Available Agent Capabilities</h3>
+                    <div className="space-y-2 text-sm">
+                      {['Generate and export reports (PDF/CSV)', 'Create reminders and notifications', 'Assign learning resources to users', 'Create and cascade goals', 'Schedule calendar events', 'Send emails to team members', 'Invite new users (with permission)', 'Bulk operations (assign to team, division, etc.)'].map(cap => (
+                        <div key={cap} className="flex items-center gap-2 text-gray-700">
+                          <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                          <span>{cap}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <Alert className="bg-amber-50 border-amber-200">
+                    <Shield className="w-4 h-4 text-amber-600" />
+                    <AlertDescription className="text-amber-900"><strong>Security Note:</strong> All agent actions require your explicit confirmation before execution.</AlertDescription>
+                  </Alert>
+                </CardContent>
+              </Card>
+
+              {/* Privacy & Data Control (Atreus-specific) */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Privacy & Data Control</CardTitle>
+                  <p className="text-sm text-gray-600">Manage how Atreus uses your data for personalization</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div><Label>Allow Activity Tracking</Label><p className="text-xs text-gray-500 mt-1">Let Atreus track your platform usage to provide better recommendations</p></div>
+                    <Switch checked={preferences.privacy_settings?.allow_activity_tracking !== false} onCheckedChange={(v) => setPreferences(prev => ({ ...prev, privacy_settings: { ...prev.privacy_settings, allow_activity_tracking: v } }))} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div><Label>Proactive Suggestions</Label><p className="text-xs text-gray-500 mt-1">Allow Atreus to proactively suggest actions based on your data</p></div>
+                    <Switch checked={preferences.privacy_settings?.allow_proactive_suggestions !== false} onCheckedChange={(v) => setPreferences(prev => ({ ...prev, privacy_settings: { ...prev.privacy_settings, allow_proactive_suggestions: v } }))} />
+                  </div>
+                  <div>
+                    <Label>Data Retention Period</Label>
+                    <Select value={String(preferences.privacy_settings?.data_retention_days || 90)} onValueChange={(v) => setPreferences(prev => ({ ...prev, privacy_settings: { ...prev.privacy_settings, data_retention_days: parseInt(v) } }))}>
+                      <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="30">30 days</SelectItem>
+                        <SelectItem value="60">60 days</SelectItem>
+                        <SelectItem value="90">90 days (Recommended)</SelectItem>
+                        <SelectItem value="180">180 days</SelectItem>
+                        <SelectItem value="365">1 year</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader><CardTitle>Account</CardTitle></CardHeader>
+                <CardContent>
+                  <DeleteAccountDialog userEmail={user?.email} />
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
@@ -435,82 +508,6 @@ export default function Settings() {
             </div>
           </TabsContent>
 
-          {/* ── Atreus Agent Control ── */}
-          <TabsContent value="atreus-control">
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Atreus Agent Capabilities</CardTitle>
-                  <p className="text-sm text-gray-600">Control what actions Atreus can perform on your behalf</p>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <Alert>
-                    <Sparkles className="w-4 h-4" />
-                    <AlertDescription>Atreus can execute tasks for you! Enable agent capabilities to let Atreus create reminders, assign learning, generate reports, and more.</AlertDescription>
-                  </Alert>
-                  <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <div>
-                      <p className="font-semibold text-gray-900">Enable Agent Actions</p>
-                      <p className="text-sm text-gray-600">Allow Atreus to execute tasks on your behalf</p>
-                    </div>
-                    <Switch checked={preferences.atreus_agent_enabled !== false} onCheckedChange={(v) => setPreferences(prev => ({ ...prev, atreus_agent_enabled: v }))} />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Available Agent Capabilities</h3>
-                    <div className="space-y-2 text-sm">
-                      {['Generate and export reports (PDF/CSV)', 'Create reminders and notifications', 'Assign learning resources to users', 'Create and cascade goals', 'Schedule calendar events', 'Send emails to team members', 'Invite new users (with permission)', 'Bulk operations (assign to team, division, etc.)'].map(cap => (
-                        <div key={cap} className="flex items-center gap-2 text-gray-700">
-                          <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
-                          <span>{cap}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <Alert className="bg-amber-50 border-amber-200">
-                    <Shield className="w-4 h-4 text-amber-600" />
-                    <AlertDescription className="text-amber-900"><strong>Security Note:</strong> All agent actions require your explicit confirmation before execution.</AlertDescription>
-                  </Alert>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Privacy & Data Control</CardTitle>
-                  <p className="text-sm text-gray-600">Manage how Atreus uses your data for personalization</p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div><Label>Allow Activity Tracking</Label><p className="text-xs text-gray-500 mt-1">Let Atreus track your platform usage to provide better recommendations</p></div>
-                    <Switch checked={preferences.privacy_settings?.allow_activity_tracking !== false} onCheckedChange={(v) => setPreferences(prev => ({ ...prev, privacy_settings: { ...prev.privacy_settings, allow_activity_tracking: v } }))} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div><Label>Proactive Suggestions</Label><p className="text-xs text-gray-500 mt-1">Allow Atreus to proactively suggest actions based on your data</p></div>
-                    <Switch checked={preferences.privacy_settings?.allow_proactive_suggestions !== false} onCheckedChange={(v) => setPreferences(prev => ({ ...prev, privacy_settings: { ...prev.privacy_settings, allow_proactive_suggestions: v } }))} />
-                  </div>
-                  <div>
-                    <Label>Data Retention Period</Label>
-                    <Select value={String(preferences.privacy_settings?.data_retention_days || 90)} onValueChange={(v) => setPreferences(prev => ({ ...prev, privacy_settings: { ...prev.privacy_settings, data_retention_days: parseInt(v) } }))}>
-                      <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="30">30 days</SelectItem>
-                        <SelectItem value="60">60 days</SelectItem>
-                        <SelectItem value="90">90 days (Recommended)</SelectItem>
-                        <SelectItem value="180">180 days</SelectItem>
-                        <SelectItem value="365">1 year</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader><CardTitle>Account</CardTitle></CardHeader>
-                <CardContent>
-                  <DeleteAccountDialog userEmail={user?.email} />
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
         </Tabs>
       </div>
     </div>
