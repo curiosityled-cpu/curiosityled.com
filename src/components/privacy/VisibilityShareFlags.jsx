@@ -69,6 +69,24 @@ const TOGGLE_ITEMS = [
     defaultOn: false,
     category: "Category B signal",
   },
+  {
+    key: "share_career_interests_with_manager",
+    label: "Share my career path interests with my manager",
+    sub: "Lets your manager support your growth direction and tailor coaching conversations — without exposing personal development concerns.",
+    icon: Target,
+    iconColor: "text-emerald-500",
+    defaultOn: false,
+    category: "Category C preference",
+  },
+  {
+    key: "share_career_interests_with_hr",
+    label: "Include my career path interests in HR workforce planning",
+    sub: "Helps the organisation plan development pathways and succession. Aggregated and anonymised — no individual profiling.",
+    icon: BarChart3,
+    iconColor: "text-indigo-500",
+    defaultOn: false,
+    category: "Category C preference",
+  },
 ];
 
 /**
@@ -98,6 +116,8 @@ export default function VisibilityShareFlags({ userEmail: userEmailProp }) {
           share_weekly_focus: false,
           share_decision_lessons: false,
           share_practices_with_manager: false,
+          share_career_interests_with_manager: false,
+          share_career_interests_with_hr: false,
         });
       })
       .catch(() => {
@@ -107,6 +127,8 @@ export default function VisibilityShareFlags({ userEmail: userEmailProp }) {
           share_weekly_focus: false,
           share_decision_lessons: false,
           share_practices_with_manager: false,
+          share_career_interests_with_manager: false,
+          share_career_interests_with_hr: false,
         });
       })
       .finally(() => setLoading(false));
