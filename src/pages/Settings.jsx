@@ -398,13 +398,6 @@ export default function Settings() {
                   <p className="text-sm text-gray-600">Control how your data is used and what is shared with your organisation</p>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* What org sees */}
-                  <div className="space-y-3">
-                    <OrgVisibilityPanel userEmail={user?.email} />
-                  </div>
-
-                  <div className="border-t border-gray-100" />
-
                   {/* Fine-grained sharing flags */}
                   <div className="space-y-3">
                     <VisibilityShareFlags userEmail={user?.email} />
