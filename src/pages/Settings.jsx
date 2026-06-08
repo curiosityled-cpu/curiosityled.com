@@ -331,8 +331,8 @@ export default function Settings() {
           <TabsContent value="checkin">
             <div className="space-y-6">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Atreus Check-in Settings</h2>
-                <p className="text-sm text-gray-500">Control how Atreus reaches out to you, what tone it uses, and what data it draws on.</p>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Atreus Settings</h2>
+                <p className="text-sm text-gray-500">Manage how Atreus works for you — your tone, check-in style, calendar access, and more.</p>
               </div>
               <CheckInSettings />
               <CalendarConsentCard
