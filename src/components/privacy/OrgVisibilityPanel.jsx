@@ -119,21 +119,6 @@ export default function OrgVisibilityPanel({ userEmail }) {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <Card className="border border-[#0202ff]/15 bg-[#0202ff]/3 rounded-2xl">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#0202ff] flex items-center justify-center flex-shrink-0">
-              <Shield className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <CardTitle className="text-base font-semibold text-gray-900">What does my organisation see?</CardTitle>
-              <p className="text-xs text-gray-500 mt-0.5">Curiosity Led is built around a clear privacy boundary. Here's exactly what that means.</p>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
-
       {/* Private to you */}
       <Card className="border border-gray-100 rounded-2xl">
         <CardContent className="pt-5 pb-3 px-5">

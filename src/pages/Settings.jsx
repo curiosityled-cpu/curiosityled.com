@@ -400,8 +400,6 @@ export default function Settings() {
                 <CardContent className="space-y-6">
                   {/* What org sees */}
                   <div className="space-y-3">
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">What Your Org Sees</h3>
-                    <p className="text-sm text-gray-500">Choose what aggregated signals — if any — are shared beyond your private view.</p>
                     <OrgVisibilityPanel userEmail={user?.email} />
                   </div>
 
