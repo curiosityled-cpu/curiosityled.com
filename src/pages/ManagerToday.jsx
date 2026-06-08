@@ -12,7 +12,7 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { Link } from "react-router-dom";
-import { Brain, ChevronRight, SlidersHorizontal, BarChart3, Layers, CheckCircle2, X, MessageSquare } from "lucide-react";
+import { Brain, ChevronRight, MessageSquare, SlidersHorizontal, BarChart3, Layers, CheckCircle2, X, Sun, Moon, Repeat } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ToneOnboarding from "@/components/checkin/ToneOnboarding";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
@@ -44,6 +44,8 @@ function HeroGreeting({ firstName, hasCheckedIn, todayPulse, onSettingsToggle })
   if (hasCheckedIn && todayPulse) {
     if (todayPulse.energy_level === 'drained' || todayPulse.perceived_load === 'unsustainable') sub = "It's a heavy one. Let's make it count.";
     else if (todayPulse.energy_level === 'strong') sub = "You're in a good place. Use it well.";
+    else if (todayPulse.focus_category) sub = "Intent is set. Let's hold the shape.";
+    else if (todayPulse.avoidance_flag === 'yes') sub = "Something's circling. Let's name it.";
     else sub = "Here's what the system sees right now.";
   }
 
@@ -213,7 +215,12 @@ export default function ManagerToday() {
   const showMiddayLoop = isMiddayWindow && todayRecord?.big3_priorities?.length > 0 && !todayRecord?.midday_loop_completed;
   const showEveningCheckIn = isEveningWindow && !todayRecord?.evening_completed;
 
-
+  const pendingDebrief = recentPulses.find(p =>
+    p.prompt_type === 'prepare_debrief_pending' &&
+    p.scheduled_for &&
+    new Date(p.scheduled_for) <= new Date() &&
+    !recentPulses.some(q => q.prompt_type === 'follow_up' && q.focus_intention?.startsWith('Debrief:') && q.created_date > p.created_date)
+  );
 
   // ── Main column ─────────────────────────────────────────────────────────────
   const mainContent = !needsToneOnboarding ? (
@@ -225,6 +232,28 @@ export default function ManagerToday() {
         goals={goals}
         onIntentUpdated={() => queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] })}
       />
+
+      {/* Pending debrief prompt */}
+      {pendingDebrief && (
+        <div className="bg-gradient-to-br from-[#0202ff]/5 to-transparent rounded-2xl border border-[#0202ff]/15 px-4 py-4 flex items-start gap-3">
+          <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center flex-shrink-0 mt-0.5">
+            <MessageSquare className="w-3.5 h-3.5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-[#0202ff] uppercase tracking-wide mb-0.5">Debrief ready</p>
+            <p className="text-sm font-semibold text-foreground leading-snug mb-1">
+              How did it go? — {pendingDebrief.focus_intention?.replace('Debrief: ', '').slice(0, 60)}
+            </p>
+            <p className="text-xs text-muted-foreground">You prepared for this earlier. Close the loop with a quick debrief.</p>
+            <button
+              className="mt-2 text-xs font-medium text-[#0202ff] hover:underline"
+              onClick={() => openAtreus(`Earlier I prepared for: "${pendingDebrief.focus_intention?.replace('Debrief: ', '')}". Now I'd like to debrief — how did it go? What surprised me? What would I do differently?`)}
+            >
+              Debrief with Atreus →
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── RHYTHM CHECK-IN FLOWS ────────────────────────────────────────── */}
       {/* Morning check-in (5am–noon, not yet done) */}
