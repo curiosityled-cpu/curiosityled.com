@@ -20,15 +20,15 @@ const TONE_LABELS = {
 
 const CADENCE_OPTIONS = [
   { value: "daily", label: "Daily", sub: "Check in every day to stay close to your patterns" },
-  { value: "every_other_day", label: "Every other day", sub: "Recommended — a light rhythm without feeling constant" },
+  { value: "every_other_day", label: "Every other day", sub: "A light rhythm without feeling constant", recommended: true },
   { value: "important_only", label: "Only when it really matters", sub: "Contextual only — when patterns or load signals are significant" },
   { value: "paused", label: "Pause for now", sub: "No check-ins until I turn this back on" }
 ];
 
 const PROACTIVITY_OPTIONS = [
   { value: "reactive", label: "Reactive", sub: "Atreus only responds when you reach out" },
-  { value: "suggestive", label: "Suggestive", sub: "Occasionally surfaces patterns or nudges — recommended" },
-  { value: "proactive", label: "Proactive", sub: "Atreus actively checks in, flags risks, and prompts reflection" }
+  { value: "suggestive", label: "Suggestive", sub: "Occasionally surfaces patterns or nudges" },
+  { value: "proactive", label: "Proactive", sub: "Atreus actively checks in, flags risks, and prompts reflection", recommended: true }
 ];
 
 const DND_DAYS = [
@@ -163,8 +163,15 @@ export default function CheckInSettings() {
                   <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${isSelected ? 'border-[#0202ff] bg-[#0202ff]' : 'border-gray-300'}`}>
                     {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                   </div>
-                  <div>
-                    <p className={`text-sm font-medium ${isSelected ? 'text-[#0202ff]' : 'text-gray-800'}`}>{opt.label}</p>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className={`text-sm font-medium ${isSelected ? 'text-[#0202ff]' : 'text-gray-800'}`}>{opt.label}</p>
+                      {opt.recommended && (
+                        <span className="text-[10px] font-medium bg-[#0202ff] text-white px-1.5 py-0.5 rounded-full">
+                          Recommended
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-gray-500">{opt.sub}</p>
                   </div>
                 </div>
@@ -178,7 +185,7 @@ export default function CheckInSettings() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="px-5 pt-5 pb-2 flex items-center gap-2">
           <Zap className="w-4 h-4 text-amber-500" />
-          <p className="text-sm font-semibold text-gray-900">Proactivity level <span className="font-normal text-gray-500">(recommended)</span></p>
+          <p className="text-sm font-semibold text-gray-900">Proactivity level</p>
         </div>
         <div className="px-5 pb-5 space-y-2">
           {PROACTIVITY_OPTIONS.map((opt) => {
@@ -195,8 +202,15 @@ export default function CheckInSettings() {
                   <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${isSelected ? 'border-[#0202ff] bg-[#0202ff]' : 'border-gray-300'}`}>
                     {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                   </div>
-                  <div>
-                    <p className={`text-sm font-medium ${isSelected ? 'text-[#0202ff]' : 'text-gray-800'}`}>{opt.label}</p>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className={`text-sm font-medium ${isSelected ? 'text-[#0202ff]' : 'text-gray-800'}`}>{opt.label}</p>
+                      {opt.recommended && (
+                        <span className="text-[10px] font-medium bg-[#0202ff] text-white px-1.5 py-0.5 rounded-full">
+                          Recommended
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-gray-500">{opt.sub}</p>
                   </div>
                 </div>
