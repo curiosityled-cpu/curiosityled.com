@@ -198,7 +198,6 @@ export default function Settings() {
             <TabsTrigger value="notifications"><Bell className="w-4 h-4 mr-2" />Notifications</TabsTrigger>
             <TabsTrigger value="checkin"><MessageSquare className="w-4 h-4 mr-2" />Atreus</TabsTrigger>
             <TabsTrigger value="privacy-visibility"><Shield className="w-4 h-4 mr-2" />Privacy & Data</TabsTrigger>
-            <TabsTrigger value="ai-coach"><Sparkles className="w-4 h-4 mr-2" />AI Coach</TabsTrigger>
             <TabsTrigger value="atreus-control"><Zap className="w-4 h-4 mr-2" />Agent Control</TabsTrigger>
           </TabsList>
 
@@ -434,45 +433,6 @@ export default function Settings() {
                 </>
               )}
             </div>
-          </TabsContent>
-
-          {/* ── AI Coach ── */}
-          <TabsContent value="ai-coach">
-            <Card>
-              <CardHeader>
-                <CardTitle>AI Coach Preferences</CardTitle>
-                <p className="text-sm text-gray-600">Customize how Atreus Coach interacts with you</p>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <Label htmlFor="ai_tone">Communication Tone</Label>
-                  <Select value={preferences.ai_coach_preferences.tone} onValueChange={(v) => updateAIPreference('tone', v)}>
-                    <SelectTrigger id="ai_tone" className="mt-2"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="formal">Formal</SelectItem>
-                      <SelectItem value="professional">Professional</SelectItem>
-                      <SelectItem value="friendly">Friendly</SelectItem>
-                      <SelectItem value="encouraging">Encouraging</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="ai_proactivity">Proactivity Level</Label>
-                  <Select value={preferences.ai_coach_preferences.proactivity_level} onValueChange={(v) => updateAIPreference('proactivity_level', v)}>
-                    <SelectTrigger id="ai_proactivity" className="mt-2"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="on_demand">On-Demand Only</SelectItem>
-                      <SelectItem value="suggestive">Suggestive Nudges (Recommended)</SelectItem>
-                      <SelectItem value="proactive">Proactive Guidance</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Alert>
-                  <Sparkles className="w-4 h-4" />
-                  <AlertDescription>Your AI Coach preferences help Atreus tailor its communication style and frequency to match your learning preferences.</AlertDescription>
-                </Alert>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           {/* ── Atreus Agent Control ── */}
