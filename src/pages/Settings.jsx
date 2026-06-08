@@ -422,14 +422,6 @@ export default function Settings() {
                 </CardContent>
               </Card>
 
-              {/* Access logs */}
-              <Card>
-                <CardHeader><CardTitle>Access Logs</CardTitle></CardHeader>
-                <CardContent>
-                  <AccessLogsViewer user={user} canViewOthers={isOrgLeader || isSuperAdmin || isPlatformAdmin} />
-                </CardContent>
-              </Card>
-
               {/* Privacy training */}
               <Card>
                 <CardHeader><CardTitle>Privacy Training</CardTitle></CardHeader>
