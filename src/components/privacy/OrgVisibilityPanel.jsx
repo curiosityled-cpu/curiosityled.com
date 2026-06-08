@@ -203,56 +203,7 @@ export default function OrgVisibilityPanel({ userEmail }) {
         </CardContent>
       </Card>
 
-      {/* Data controls */}
-      <Card className="border border-gray-100 rounded-2xl">
-        <CardContent className="pt-5 pb-5 px-5">
-          <p className="text-sm font-semibold text-gray-900 mb-1">Your data controls</p>
-          <p className="text-xs text-gray-400 mb-4">Download or delete your private check-in and pattern data at any time.</p>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs border-gray-200 text-gray-700 hover:bg-gray-50 flex-1"
-              onClick={handleDownload}
-              disabled={downloadLoading}
-            >
-              <Download className="w-3.5 h-3.5 mr-1.5" />
-              {downloadLoading ? 'Preparing...' : 'Download my data'}
-            </Button>
 
-            {!showDeleteConfirm ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs border-red-200 text-red-600 hover:bg-red-50 flex-1"
-                onClick={() => setShowDeleteConfirm(true)}
-              >
-                <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                Delete my check-in history
-              </Button>
-            ) : (
-              <div className="flex gap-2 flex-1">
-                <Button
-                  size="sm"
-                  className="text-xs bg-red-600 hover:bg-red-700 text-white flex-1"
-                  onClick={handleDeleteCheckins}
-                  disabled={deleteLoading}
-                >
-                  {deleteLoading ? 'Deleting...' : 'Confirm delete'}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs border-gray-200"
-                  onClick={() => setShowDeleteConfirm(false)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
