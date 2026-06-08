@@ -48,7 +48,7 @@ const TOGGLE_ITEMS = [
     sub: "Opt-in to sharing your active weekly leadership theme or morning intentions with my manager for coaching alignment.",
     icon: Target,
     iconColor: "text-green-500",
-    defaultOn: true,
+    defaultOn: false,
     category: "Category B signal",
   },
   {
@@ -57,7 +57,7 @@ const TOGGLE_ITEMS = [
     sub: "Share completed post-mortems or outcomes of critical choices from your Decision Journal with my manager for coaching insights.",
     icon: BookOpen,
     iconColor: "text-amber-500",
-    defaultOn: true,
+    defaultOn: false,
     category: "Category C preference",
   },
   {
@@ -95,8 +95,8 @@ export default function VisibilityShareFlags({ userEmail: userEmailProp }) {
         setPrefs(rows[0] || {
           share_energy_with_manager: true,
           share_energy_with_hr: true,
-          share_weekly_focus: true,
-          share_decision_lessons: true,
+          share_weekly_focus: false,
+          share_decision_lessons: false,
           share_practices_with_manager: false,
         });
       })
@@ -104,8 +104,8 @@ export default function VisibilityShareFlags({ userEmail: userEmailProp }) {
         setPrefs({
           share_energy_with_manager: true,
           share_energy_with_hr: true,
-          share_weekly_focus: true,
-          share_decision_lessons: true,
+          share_weekly_focus: false,
+          share_decision_lessons: false,
           share_practices_with_manager: false,
         });
       })
