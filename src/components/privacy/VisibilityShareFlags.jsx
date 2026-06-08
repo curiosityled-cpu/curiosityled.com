@@ -12,7 +12,7 @@
  */
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Shield, Users, BarChart3, BookOpen, Target, Info } from "lucide-react";
+import { Shield, Users, BarChart3, BookOpen, Target, Info, Trophy, Brain } from "lucide-react";
 import { toast } from "sonner";
 
 const CATEGORY_A_FIELDS = [
@@ -42,6 +42,42 @@ const TOGGLE_ITEMS = [
     defaultOn: false,
     category: "Category B signal",
   },
+  {
+    key: "share_weekly_focus",
+    label: "Share Weekly Focus & Intentions",
+    sub: "Opt-in to sharing your active weekly leadership theme or morning intentions to align focus with your team.",
+    icon: Target,
+    iconColor: "text-green-500",
+    defaultOn: false,
+    category: "Category B signal",
+  },
+  {
+    key: "share_decision_lessons",
+    label: "Share Decision Journal Lessons",
+    sub: "Share completed post-mortems or outcomes of critical choices from your Decision Journal with peers for shared learning.",
+    icon: BookOpen,
+    iconColor: "text-amber-500",
+    defaultOn: false,
+    category: "Category C preference",
+  },
+  {
+    key: "share_badges_leaderboard",
+    label: "Show Earned Badges & Achievements on leaderboards",
+    sub: "Choose whether to display your earned gamification badges, levels, and progress on public team leaderboards.",
+    icon: Trophy,
+    iconColor: "text-yellow-500",
+    defaultOn: true,
+    category: "Category C preference",
+  },
+  {
+    key: "share_practices_with_manager",
+    label: "Share Active Practices & Workouts with my manager",
+    sub: "Opt-in to sharing your active developmental practices (e.g., active listening exercises) with your manager for targeted coaching support.",
+    icon: Brain,
+    iconColor: "text-blue-500",
+    defaultOn: false,
+    category: "Category B signal",
+  },
 ];
 
 /**
@@ -68,16 +104,20 @@ export default function VisibilityShareFlags({ userEmail: userEmailProp }) {
         setPrefs(rows[0] || {
           share_energy_with_manager: false,
           share_energy_with_hr: false,
-          share_goals_progress_with_manager: true,
-          share_learning_with_hr: true,
+          share_weekly_focus: false,
+          share_decision_lessons: false,
+          share_badges_leaderboard: true,
+          share_practices_with_manager: false,
         });
       })
       .catch(() => {
         setPrefs({
           share_energy_with_manager: false,
           share_energy_with_hr: false,
-          share_goals_progress_with_manager: true,
-          share_learning_with_hr: true,
+          share_weekly_focus: false,
+          share_decision_lessons: false,
+          share_badges_leaderboard: true,
+          share_practices_with_manager: false,
         });
       })
       .finally(() => setLoading(false));
