@@ -6,8 +6,9 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { Shield, Clock, MessageSquare, Pencil, Eye, ChevronDown, ChevronUp } from "lucide-react";
+import { Shield, Clock, MessageSquare, Pencil, ChevronDown, ChevronUp, Zap, BookOpen, BellOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import ToneOnboarding from "./ToneOnboarding";
 
 const TONE_LABELS = {
@@ -24,6 +25,28 @@ const CADENCE_OPTIONS = [
   { value: "paused", label: "Pause for now", sub: "No check-ins until I turn this back on" }
 ];
 
+const PROACTIVITY_OPTIONS = [
+  { value: "reactive", label: "Reactive", sub: "Atreus only responds when you reach out" },
+  { value: "suggestive", label: "Suggestive", sub: "Occasionally surfaces patterns or nudges — recommended" },
+  { value: "proactive", label: "Proactive", sub: "Atreus actively checks in, flags risks, and prompts reflection" }
+];
+
+const STYLE_OPTIONS = [
+  { value: "brief", label: "Brief check-ins", sub: "Quick pulse — a few questions, in and out" },
+  { value: "balanced", label: "Balanced", sub: "Mix of quick check-ins and occasional deeper dives — recommended" },
+  { value: "deep", label: "Deeper coaching", sub: "Atreus leans into reflection and works through things with you" }
+];
+
+const DND_DAYS = [
+  { value: "mon", label: "M" },
+  { value: "tue", label: "T" },
+  { value: "wed", label: "W" },
+  { value: "thu", label: "T" },
+  { value: "fri", label: "F" },
+  { value: "sat", label: "S" },
+  { value: "sun", label: "S" },
+];
+
 export default function CheckInSettings() {
   const { user } = useAuth();
   const [tonePref, setTonePref] = useState(null);
@@ -31,6 +54,10 @@ export default function CheckInSettings() {
   const [editingTone, setEditingTone] = useState(false);
   const [savingCadence, setSavingCadence] = useState(false);
   const [openSection, setOpenSection] = useState(null);
+  const [dndEnabled, setDndEnabled] = useState(false);
+  const [dndDays, setDndDays] = useState([]);
+  const [dndStart, setDndStart] = useState("18:00");
+  const [dndEnd, setDndEnd] = useState("09:00");
 
   const toggleSection = (key) => setOpenSection(prev => prev === key ? null : key);
 
@@ -38,7 +65,12 @@ export default function CheckInSettings() {
     if (!user?.email) return;
     base44.entities.TonePreference.filter({ user_email: user.email }, null, 1)
       .then(rows => {
-        setTonePref(rows[0] || { tone_mode: 'warm_candid', cadence_preference: 'daily' });
+        const row = rows[0] || { tone_mode: 'warm_candid', cadence_preference: 'daily' };
+        setTonePref(row);
+        if (row.dnd_enabled !== undefined) setDndEnabled(row.dnd_enabled);
+        if (row.dnd_days) setDndDays(row.dnd_days);
+        if (row.dnd_start) setDndStart(row.dnd_start);
+        if (row.dnd_end) setDndEnd(row.dnd_end);
       })
       .catch(() => {
         setTonePref({ tone_mode: 'warm_candid', cadence_preference: 'daily' });
@@ -61,6 +93,17 @@ export default function CheckInSettings() {
     }
     setTonePref(updated);
     setSavingCadence(false);
+  };
+
+  const saveField = async (fields) => {
+    const updated = { ...tonePref, ...fields };
+    if (tonePref?.id) {
+      await base44.entities.TonePreference.update(tonePref.id, fields);
+    } else {
+      const created = await base44.entities.TonePreference.create({ user_email: user.email, tone_mode: 'warm_candid', cadence_preference: 'daily', ...fields });
+      updated.id = created.id;
+    }
+    setTonePref(updated);
   };
 
   const handleToneComplete = (newTone) => {
@@ -135,6 +178,135 @@ export default function CheckInSettings() {
             );
           })}
         </div>
+      </div>
+
+      {/* Proactivity */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-5 pt-5 pb-2 flex items-center gap-2">
+          <Zap className="w-4 h-4 text-amber-500" />
+          <p className="text-sm font-semibold text-gray-900">Proactivity level</p>
+        </div>
+        <div className="px-5 pb-5 space-y-2">
+          {PROACTIVITY_OPTIONS.map((opt) => {
+            const isSelected = (tonePref?.proactivity_level || 'suggestive') === opt.value;
+            return (
+              <button
+                key={opt.value}
+                onClick={() => saveField({ proactivity_level: opt.value })}
+                className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all ${
+                  isSelected ? 'border-[#0202ff] bg-[#0202ff]/5' : 'border-gray-200 hover:border-gray-300 bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${isSelected ? 'border-[#0202ff] bg-[#0202ff]' : 'border-gray-300'}`}>
+                    {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  </div>
+                  <div>
+                    <p className={`text-sm font-medium ${isSelected ? 'text-[#0202ff]' : 'text-gray-800'}`}>{opt.label}</p>
+                    <p className="text-xs text-gray-500">{opt.sub}</p>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Conversation style */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-5 pt-5 pb-2 flex items-center gap-2">
+          <BookOpen className="w-4 h-4 text-indigo-500" />
+          <p className="text-sm font-semibold text-gray-900">Conversation style</p>
+        </div>
+        <div className="px-5 pb-5 space-y-2">
+          {STYLE_OPTIONS.map((opt) => {
+            const isSelected = (tonePref?.conversation_style || 'balanced') === opt.value;
+            return (
+              <button
+                key={opt.value}
+                onClick={() => saveField({ conversation_style: opt.value })}
+                className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all ${
+                  isSelected ? 'border-[#0202ff] bg-[#0202ff]/5' : 'border-gray-200 hover:border-gray-300 bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${isSelected ? 'border-[#0202ff] bg-[#0202ff]' : 'border-gray-300'}`}>
+                    {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  </div>
+                  <div>
+                    <p className={`text-sm font-medium ${isSelected ? 'text-[#0202ff]' : 'text-gray-800'}`}>{opt.label}</p>
+                    <p className="text-xs text-gray-500">{opt.sub}</p>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Do Not Disturb */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-5 pt-5 pb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <BellOff className="w-4 h-4 text-rose-500" />
+            <p className="text-sm font-semibold text-gray-900">Do Not Disturb</p>
+          </div>
+          <Switch
+            checked={dndEnabled}
+            onCheckedChange={(v) => {
+              setDndEnabled(v);
+              saveField({ dnd_enabled: v });
+            }}
+          />
+        </div>
+        {dndEnabled && (
+          <div className="px-5 pb-5 space-y-4 border-t border-gray-100 pt-4">
+            <div>
+              <p className="text-xs font-semibold text-gray-600 mb-2">Block check-ins on these days</p>
+              <div className="flex gap-2">
+                {DND_DAYS.map((d) => {
+                  const active = dndDays.includes(d.value);
+                  return (
+                    <button
+                      key={d.value}
+                      onClick={() => {
+                        const next = active ? dndDays.filter(x => x !== d.value) : [...dndDays, d.value];
+                        setDndDays(next);
+                        saveField({ dnd_days: next });
+                      }}
+                      className={`w-9 h-9 rounded-full text-xs font-semibold transition-all ${
+                        active ? 'bg-[#0202ff] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                      }`}
+                    >
+                      {d.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <p className="text-xs text-gray-500 mb-1">From</p>
+                <input
+                  type="time"
+                  value={dndStart}
+                  onChange={(e) => { setDndStart(e.target.value); saveField({ dnd_start: e.target.value }); }}
+                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30"
+                />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-gray-500 mb-1">Until</p>
+                <input
+                  type="time"
+                  value={dndEnd}
+                  onChange={(e) => { setDndEnd(e.target.value); saveField({ dnd_end: e.target.value }); }}
+                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-gray-400">Atreus won't initiate check-ins during these windows.</p>
+          </div>
+        )}
       </div>
 
       {/* Privacy */}
