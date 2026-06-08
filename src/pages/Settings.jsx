@@ -342,13 +342,6 @@ export default function Settings() {
                 onDisconnect={handleCalendarDisconnect}
                 loading={calendarLoading}
               />
-
-              <Card>
-                <CardHeader><CardTitle>Account</CardTitle></CardHeader>
-                <CardContent>
-                  <DeleteAccountDialog userEmail={user?.email} />
-                </CardContent>
-              </Card>
             </div>
           </TabsContent>
 
@@ -402,6 +395,14 @@ export default function Settings() {
                   </Card>
                 </>
               )}
+
+              {/* Account deletion — always at the bottom */}
+              <Card>
+                <CardHeader><CardTitle>Account</CardTitle></CardHeader>
+                <CardContent>
+                  <DeleteAccountDialog userEmail={user?.email} />
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
