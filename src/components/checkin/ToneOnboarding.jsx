@@ -111,10 +111,10 @@ export default function ToneOnboarding({ existingTone, onComplete, onCancel }) {
                       {opt.label}
                     </span>
                     {opt.recommended && (
-                      <span className="text-[10px] font-medium bg-[#0202ff] text-white px-1.5 py-0.5 rounded-full">
-                        Default
-                      </span>
-                    )}
+                       <span className="text-[10px] font-medium bg-[#0202ff] text-white px-1.5 py-0.5 rounded-full">
+                         Recommended
+                       </span>
+                     )}
                   </div>
                   <p className="text-xs text-gray-500 mb-1.5">{opt.description}</p>
                   <p className="text-xs text-gray-600 italic leading-snug">{opt.example}</p>
