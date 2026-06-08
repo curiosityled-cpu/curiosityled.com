@@ -4,12 +4,42 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Download, FileText } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Download, FileText, Lock, Users, Info, Eye, EyeOff, ChevronDown, ChevronUp } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
+const PRIVATE_TO_YOU = [
+  "How you described your energy level",
+  "Your confidence responses",
+  "Your overload and avoidance reflections",
+  "Your morning intentions and evening comparisons",
+  "Your delegation commitments",
+  "Atreus's pattern narrative about your recent weeks",
+  "Any free-text notes you've added",
+  "Your motivation and room-today responses",
+  "Trend summaries and longitudinal pattern data",
+];
+
+const VISIBLE_TO_ORG = [
+  { label: "Aggregate meeting load signals", note: "Group average, ≥5 managers minimum" },
+  { label: "Overall learning engagement patterns", note: "No individual attribution" },
+  { label: "Goal completion rates", note: "Group level only, ≥5 managers minimum" },
+];
+
+const NEVER_READ = [
+  "Meeting content, agendas, or notes",
+  "Email content or attachments",
+  "Attendee identities from calendar",
+  "Any individual's name tied to an overload or risk signal",
+  "Your check-in responses in any HR report",
+];
+
 export default function DataDownloadPanel({ user, lastDownloadDate, onDownloadComplete }) {
   const [downloading, setDownloading] = useState(false);
+  const [showPrivate, setShowPrivate] = useState(false);
+  const [showOrgVisible, setShowOrgVisible] = useState(false);
+  const [showNeverRead, setShowNeverRead] = useState(false);
   const [selectedData, setSelectedData] = useState({
     profile: true,
     assessments: true,
@@ -184,6 +214,84 @@ export default function DataDownloadPanel({ user, lastDownloadDate, onDownloadCo
           <p className="text-xs text-gray-500 text-center">
             Your data will be downloaded in JSON format. This process is secure and logged for audit purposes.
           </p>
+
+          {/* Privacy transparency cards */}
+          <div className="space-y-3 pt-2">
+            {/* Private to you */}
+            <Card className="border border-gray-100 rounded-2xl">
+              <CardContent className="pt-5 pb-3 px-5">
+                <button className="w-full flex items-center justify-between" onClick={() => setShowPrivate(v => !v)}>
+                  <div className="flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-emerald-600" />
+                    <p className="text-sm font-semibold text-gray-900">Private to you — never shared</p>
+                  </div>
+                  {showPrivate ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                </button>
+                {showPrivate && (
+                  <ul className="space-y-2 mt-4">
+                    {PRIVATE_TO_YOU.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <EyeOff className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-sm text-gray-600">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* What org can see */}
+            <Card className="border border-gray-100 rounded-2xl">
+              <CardContent className="pt-5 pb-3 px-5">
+                <button className="w-full flex items-center justify-between" onClick={() => setShowOrgVisible(v => !v)}>
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-gray-500" />
+                    <p className="text-sm font-semibold text-gray-900">What your organisation can see</p>
+                  </div>
+                  {showOrgVisible ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                </button>
+                {showOrgVisible && (
+                  <>
+                    <p className="text-xs text-gray-400 mt-3 mb-3 ml-6">Only aggregate patterns, never individual attribution. Minimum group size: 5 managers.</p>
+                    <ul className="space-y-3">
+                      {VISIBLE_TO_ORG.map((item, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <Eye className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <span className="text-sm text-gray-700">{item.label}</span>
+                            <Badge variant="outline" className="ml-2 text-[10px] text-gray-400 border-gray-200 px-1.5 py-0">{item.note}</Badge>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* What is never read */}
+            <Card className="border border-gray-100 rounded-2xl">
+              <CardContent className="pt-5 pb-3 px-5">
+                <button className="w-full flex items-center justify-between" onClick={() => setShowNeverRead(v => !v)}>
+                  <div className="flex items-center gap-2">
+                    <Info className="w-4 h-4 text-gray-400" />
+                    <p className="text-sm font-semibold text-gray-900">What is never read or stored</p>
+                  </div>
+                  {showNeverRead ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                </button>
+                {showNeverRead && (
+                  <ul className="space-y-2 mt-4">
+                    {NEVER_READ.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <EyeOff className="w-3.5 h-3.5 text-red-400 flex-shrink-0 mt-0.5" />
+                        <span className="text-sm text-gray-600">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </CardContent>
       </Card>
     </div>
