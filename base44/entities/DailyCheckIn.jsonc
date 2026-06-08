@@ -1,0 +1,187 @@
+{
+  "name": "DailyCheckIn",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user who completed this check-in"
+    },
+    "check_in_type": {
+      "type": "string",
+      "enum": [
+        "morning",
+        "evening"
+      ],
+      "description": "Whether this is a morning or evening check-in"
+    },
+    "check_in_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of this check-in (YYYY-MM-DD)"
+    },
+    "energy_score": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Energy / Steadiness score (1\u20135)"
+    },
+    "energy_note": {
+      "type": "string",
+      "description": "Optional free-text note for energy measure"
+    },
+    "confidence_score": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Confidence / Clarity score (1\u20135)"
+    },
+    "confidence_note": {
+      "type": "string",
+      "description": "Optional free-text note for confidence measure"
+    },
+    "focus_score": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Focus / Momentum score (1\u20135)"
+    },
+    "focus_note": {
+      "type": "string",
+      "description": "Optional free-text note for focus measure"
+    },
+    "load_score": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Load / Pressure score (1\u20135)"
+    },
+    "load_note": {
+      "type": "string",
+      "description": "Optional free-text note for load measure"
+    },
+    "growth_score": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Growth Follow-through score (1\u20135)"
+    },
+    "growth_note": {
+      "type": "string",
+      "description": "Optional free-text note for growth measure"
+    },
+    "questions_used": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "The exact question phrasings used in this check-in, keyed by measure name \u2014 enables variation tracking"
+    },
+    "big3_priorities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "context": {
+            "type": "string"
+          },
+          "goal_id": {
+            "type": "string",
+            "description": "Linked Goal entity ID if pulled from goals module"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "planned",
+              "confirmed",
+              "on_track",
+              "shifted",
+              "blocked",
+              "completed"
+            ],
+            "default": "planned"
+          },
+          "midday_status": {
+            "type": "string",
+            "enum": [
+              "on_track",
+              "shifted",
+              "blocked"
+            ],
+            "description": "Status reported during midday priority loop"
+          },
+          "midday_note": {
+            "type": "string"
+          },
+          "calendar_blocked": {
+            "type": "boolean",
+            "default": false
+          },
+          "task_created": {
+            "type": "boolean",
+            "default": false
+          },
+          "reminder_set": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "description": "Big 3 priorities set in evening for next day, confirmed in morning"
+    },
+    "morning_completed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the morning check-in was completed"
+    },
+    "morning_completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "evening_completed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the evening check-in was completed"
+    },
+    "evening_completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "midday_loop_completed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the midday priority loop was completed"
+    },
+    "midday_loop_completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "atreus_observation": {
+      "type": "string",
+      "description": "Atreus-generated contextual observation for this check-in (system-generated, not user-entered)"
+    },
+    "atreus_flags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Pattern Watch flags detected by Atreus (system-only layer)"
+    }
+  },
+  "required": [
+    "user_email",
+    "check_in_date",
+    "check_in_type"
+  ],
+  "rls": {
+    "read": {
+      "user_email": "{{user.email}}"
+    },
+    "write": {
+      "user_email": "{{user.email}}"
+    }
+  }
+}

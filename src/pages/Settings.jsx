@@ -43,7 +43,7 @@ export default function Settings() {
   const [preferences, setPreferences] = useState({
     notification_preferences: {
       channels: { in_app: true, email: true, teams: false, slack: false },
-      types: { goal_reminders: true, learning_assignments: true, assessment_due: true, ai_coach_nudges: true, meeting_requests: true },
+      types: { goal_reminders: true, learning_assignments: true, assessment_due: true, ai_coach_nudges: true, meeting_requests: true, morning_checkin_reminder: true, evening_checkin_reminder: true, midday_loop_reminder: true, weekly_reflection_reminder: true },
       frequency: 'instant'
     },
     ai_coach_preferences: { tone: 'professional', proactivity_level: 'suggestive' },
@@ -296,6 +296,7 @@ export default function Settings() {
                   <CardTitle>Notification Types</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">General</p>
                   {[
                     { key: 'goal_reminders', label: 'Goal Reminders' },
                     { key: 'learning_assignments', label: 'Learning Assignments' },
@@ -308,6 +309,29 @@ export default function Settings() {
                       <Switch checked={preferences.notification_preferences.types[key]} onCheckedChange={(v) => updateNotificationType(key, v)} />
                     </div>
                   ))}
+
+                  <div className="border-t pt-4 mt-2">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Daily Rhythm Reminders</p>
+                    <div className="space-y-3">
+                      {[
+                        { key: 'morning_checkin_reminder', label: 'Morning Check-in Reminder', sub: 'Prompt to start your day with a self-check' },
+                        { key: 'evening_checkin_reminder', label: 'Evening Check-in Reminder', sub: 'Prompt to reflect and plan tomorrow\'s Big 3' },
+                        { key: 'midday_loop_reminder', label: 'Midday Priority Loop', sub: 'Nudge to check how your Big 3 is tracking' },
+                        { key: 'weekly_reflection_reminder', label: 'Weekly Rhythm Reflection', sub: 'Friday summary of your week\'s patterns and insights' },
+                      ].map(({ key, label, sub }) => (
+                        <div key={key} className="flex items-center justify-between">
+                          <div>
+                            <Label>{label}</Label>
+                            <p className="text-xs text-gray-500 mt-0.5">{sub}</p>
+                          </div>
+                          <Switch
+                            checked={preferences.notification_preferences.types[key] ?? true}
+                            onCheckedChange={(v) => updateNotificationType(key, v)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -355,8 +379,28 @@ export default function Settings() {
                   <p className="text-sm text-gray-600">Control how your data is used and what is shared with your organisation</p>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  {/* DailyCheckIn privacy statement */}
+                  <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 space-y-1">
+                    <p className="text-xs font-semibold text-blue-800">Daily Check-in Data — Private to You</p>
+                    <p className="text-xs text-blue-700 leading-relaxed">
+                      Your morning and evening check-in responses, Big 3 priorities, and all self-reported scores are stored privately and are only accessible to you and Atreus (to generate your personal insights). They are never shared with HR, your manager, or anyone else.
+                    </p>
+                  </div>
+
+                  {/* Pattern Watch opt-out */}
+                  <div className="flex items-center justify-between pt-2">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Allow Atreus to observe behavioral patterns</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Atreus learns from your check-in history to detect recurring patterns and surface them as insights. Disabling this turns off the Pattern Watch layer.</p>
+                    </div>
+                    <Switch
+                      checked={preferences.privacy_settings?.allow_activity_tracking ?? true}
+                      onCheckedChange={(v) => setPreferences(prev => ({ ...prev, privacy_settings: { ...prev.privacy_settings, allow_activity_tracking: v } }))}
+                    />
+                  </div>
+
                   {/* Fine-grained sharing flags */}
-                  <div className="space-y-3">
+                  <div className="space-y-3 border-t pt-4">
                     <VisibilityShareFlags userEmail={user?.email} />
                   </div>
                 </CardContent>

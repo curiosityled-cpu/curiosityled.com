@@ -6,7 +6,8 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { Shield, Clock, MessageSquare, Pencil, ChevronDown, ChevronUp, Zap, BellOff } from "lucide-react";
+import { Shield, Clock, MessageSquare, Pencil, ChevronDown, ChevronUp, Zap, BellOff, Sun, Moon, Repeat } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import ToneOnboarding from "./ToneOnboarding";
@@ -52,6 +53,13 @@ export default function CheckInSettings() {
   const [dndDays, setDndDays] = useState([]);
   const [dndStart, setDndStart] = useState("18:00");
   const [dndEnd, setDndEnd] = useState("09:00");
+  const [morningWindowStart, setMorningWindowStart] = useState("05:00");
+  const [morningWindowEnd, setMorningWindowEnd] = useState("12:00");
+  const [eveningWindowStart, setEveningWindowStart] = useState("15:00");
+  const [eveningWindowEnd, setEveningWindowEnd] = useState("21:00");
+  const [middayLoopTime, setMiddayLoopTime] = useState("12:00");
+  const [weeklyReflectionDay, setWeeklyReflectionDay] = useState("friday");
+  const [weeklyReflectionTime, setWeeklyReflectionTime] = useState("15:00");
 
   const toggleSection = (key) => setOpenSection(prev => prev === key ? null : key);
 
@@ -65,6 +73,13 @@ export default function CheckInSettings() {
         if (row.dnd_days) setDndDays(row.dnd_days);
         if (row.dnd_start) setDndStart(row.dnd_start);
         if (row.dnd_end) setDndEnd(row.dnd_end);
+        if (row.morning_window_start) setMorningWindowStart(row.morning_window_start);
+        if (row.morning_window_end) setMorningWindowEnd(row.morning_window_end);
+        if (row.evening_window_start) setEveningWindowStart(row.evening_window_start);
+        if (row.evening_window_end) setEveningWindowEnd(row.evening_window_end);
+        if (row.midday_loop_time) setMiddayLoopTime(row.midday_loop_time);
+        if (row.weekly_reflection_day) setWeeklyReflectionDay(row.weekly_reflection_day);
+        if (row.weekly_reflection_time) setWeeklyReflectionTime(row.weekly_reflection_time);
       })
       .catch(() => {
         setTonePref({ tone_mode: 'warm_candid', cadence_preference: 'daily' });
@@ -290,6 +305,98 @@ export default function CheckInSettings() {
             <p className="text-xs text-gray-400">Atreus won't initiate check-ins during these windows.</p>
           </div>
         )}
+      </div>
+
+      {/* Rhythm Windows */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-5 pt-5 pb-2 flex items-center gap-2">
+          <Sun className="w-4 h-4 text-amber-400" />
+          <p className="text-sm font-semibold text-gray-900">Check-in windows</p>
+        </div>
+        <div className="px-5 pb-5 space-y-5">
+
+          {/* Morning */}
+          <div>
+            <p className="text-xs font-semibold text-gray-600 mb-2 flex items-center gap-1.5">
+              <Sun className="w-3 h-3 text-amber-400" /> Morning check-in window
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <p className="text-xs text-gray-500 mb-1">From</p>
+                <input type="time" value={morningWindowStart}
+                  onChange={(e) => { setMorningWindowStart(e.target.value); saveField({ morning_window_start: e.target.value }); }}
+                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-gray-500 mb-1">Until</p>
+                <input type="time" value={morningWindowEnd}
+                  onChange={(e) => { setMorningWindowEnd(e.target.value); saveField({ morning_window_end: e.target.value }); }}
+                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30" />
+              </div>
+            </div>
+          </div>
+
+          {/* Midday */}
+          <div>
+            <p className="text-xs font-semibold text-gray-600 mb-2 flex items-center gap-1.5">
+              <Repeat className="w-3 h-3 text-blue-400" /> Midday priority loop time
+            </p>
+            <input type="time" value={middayLoopTime}
+              onChange={(e) => { setMiddayLoopTime(e.target.value); saveField({ midday_loop_time: e.target.value }); }}
+              className="w-48 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30" />
+          </div>
+
+          {/* Evening */}
+          <div>
+            <p className="text-xs font-semibold text-gray-600 mb-2 flex items-center gap-1.5">
+              <Moon className="w-3 h-3 text-indigo-400" /> Evening check-in window
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <p className="text-xs text-gray-500 mb-1">From</p>
+                <input type="time" value={eveningWindowStart}
+                  onChange={(e) => { setEveningWindowStart(e.target.value); saveField({ evening_window_start: e.target.value }); }}
+                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-gray-500 mb-1">Until</p>
+                <input type="time" value={eveningWindowEnd}
+                  onChange={(e) => { setEveningWindowEnd(e.target.value); saveField({ evening_window_end: e.target.value }); }}
+                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30" />
+              </div>
+            </div>
+          </div>
+
+          {/* Weekly Reflection */}
+          <div>
+            <p className="text-xs font-semibold text-gray-600 mb-2 flex items-center gap-1.5">
+              <Repeat className="w-3 h-3 text-emerald-400" /> Weekly Rhythm Reflection
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <p className="text-xs text-gray-500 mb-1">Day</p>
+                <Select value={weeklyReflectionDay} onValueChange={(v) => { setWeeklyReflectionDay(v); saveField({ weekly_reflection_day: v }); }}>
+                  <SelectTrigger className="text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].map(d => (
+                      <SelectItem key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-gray-500 mb-1">Time</p>
+                <input type="time" value={weeklyReflectionTime}
+                  onChange={(e) => { setWeeklyReflectionTime(e.target.value); saveField({ weekly_reflection_time: e.target.value }); }}
+                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30" />
+              </div>
+            </div>
+            <p className="text-xs text-gray-400 mt-2">Default: Friday at 3:00 PM</p>
+          </div>
+
+        </div>
       </div>
 
       {/* Privacy */}
