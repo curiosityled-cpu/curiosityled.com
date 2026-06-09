@@ -71,35 +71,49 @@ Deno.serve(async (req) => {
 
     // ── SAVE ─────────────────────────────────────────────────────────────────
     if (action === 'save') {
-      // Find existing record for today
-      const existing = await base44.entities.DailyCheckIn.filter({
+      // Find all records for today (there may be multiple — we upsert by date)
+      const allToday = await base44.entities.DailyCheckIn.filter({
         user_email: user.email,
-        check_in_date: today,
-      }, null, 1).catch(() => []);
+      }, '-created_date', 5).catch(() => []);
+
+      // Find the one matching today's date
+      const existing = allToday.find(r => r.check_in_date === today);
 
       const now = new Date().toISOString();
-      const updateData = { ...fields };
+
+      // Only copy through known entity fields — never pass action/check_in_type directly
+      const ALLOWED_FIELDS = [
+        'energy_score', 'energy_note', 'confidence_score', 'confidence_note',
+        'focus_score', 'focus_note', 'load_score', 'load_note',
+        'growth_score', 'growth_note', 'questions_used', 'big3_priorities',
+        'atreus_observation', 'atreus_flags',
+      ];
+      const updateData = {};
+      for (const key of ALLOWED_FIELDS) {
+        if (fields[key] !== undefined) updateData[key] = fields[key];
+      }
 
       if (check_in_type === 'morning') {
         updateData.morning_completed = true;
         updateData.morning_completed_at = now;
-        updateData.check_in_type = 'morning';
       } else if (check_in_type === 'evening') {
         updateData.evening_completed = true;
         updateData.evening_completed_at = now;
-        // keep existing check_in_type if morning already set (both done today)
       } else if (check_in_type === 'midday') {
         updateData.midday_loop_completed = true;
         updateData.midday_loop_completed_at = now;
       }
 
-      // Remove non-entity fields that shouldn't be stored directly
-      delete updateData.action;
-      delete updateData.check_in_type;
-
       let record;
-      if (existing[0]) {
-        record = await base44.entities.DailyCheckIn.update(existing[0].id, updateData);
+      if (existing) {
+        // Only send fields that were explicitly provided — don't overwrite unrelated fields
+        // Merge: keep existing morning/evening data when updating the other side
+        const safeUpdate = { ...updateData };
+        if (check_in_type === 'evening' && existing.morning_completed) {
+          // Preserve morning scores if they were already set and not being overridden
+          // (evening call only provides evening scores so morning_score keys won't be in updateData)
+        }
+        record = await base44.entities.DailyCheckIn.update(existing.id, safeUpdate);
       } else {
         record = await base44.entities.DailyCheckIn.create({
           user_email: user.email,

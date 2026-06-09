@@ -48,7 +48,7 @@ function TrendBadge({ trend }) {
   return <span className="flex items-center gap-0.5 text-muted-foreground text-[10px]"><Minus className="w-3 h-3" /> Stable</span>;
 }
 
-export default function WeeklyRhythmReflection({ isOpen, onClose, onSuccess, userEmail }) {
+export default function WeeklyRhythmReflection({ isOpen, onClose, onSuccess, userEmail, assessmentInsight }) {
   const [activeTab, setActiveTab] = useState("summary");
   const [weekRecords, setWeekRecords] = useState([]);
   const [goals, setGoals] = useState([]);
@@ -81,11 +81,13 @@ export default function WeeklyRhythmReflection({ isOpen, onClose, onSuccess, use
       const filtered = records.filter(r => r.check_in_date >= weekAgoStr);
       setWeekRecords(filtered);
       setGoals(goalsData);
-      setAssessment(insightsData[0] || null);
+      // Prefer passed-in insight prop, fall back to fetched
+      const resolvedInsight = assessmentInsight || insightsData[0] || null;
+      setAssessment(resolvedInsight);
       setLoading(false);
-      if (filtered.length > 0) generateAISummary(filtered, goalsData, insightsData[0]);
+      if (filtered.length > 0) generateAISummary(filtered, goalsData, resolvedInsight);
     }).catch(() => setLoading(false));
-  }, [isOpen, userEmail]);
+  }, [isOpen, userEmail]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const generateAISummary = async (records, goalsData, insight) => {
     setAiLoading(true);
@@ -248,7 +250,7 @@ Generate a leadership rhythm analysis. Return JSON with:
                   <div className="bg-muted/30 rounded-xl p-4">
                     <p className="text-xs font-semibold text-foreground uppercase tracking-wide mb-1">Leadership state this week</p>
                     <p className="text-[10px] text-muted-foreground mb-3">1 = low · 3 = baseline · 5 = strong</p>
-                    {chartData.length >= 2 ? (
+                    {chartData.length >= 1 ? (
                       <ResponsiveContainer width="100%" height={160}>
                         <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                           <XAxis dataKey="date" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
@@ -367,6 +369,42 @@ Generate a leadership rhythm analysis. Return JSON with:
                             ))}
                           </ul>
                         </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Leadership Index baseline cross-reference */}
+                  {assessment && (assessment.archetype || assessment.top_strengths?.length > 0 || assessment.development_areas?.length > 0) && (
+                    <div className="bg-card border border-border rounded-xl px-4 py-4">
+                      <div className="flex items-center gap-1.5 mb-3">
+                        <Zap className="w-3.5 h-3.5 text-violet-500" />
+                        <p className="text-[10px] font-semibold text-violet-600 uppercase tracking-wide">Leadership Index baseline</p>
+                      </div>
+                      {assessment.archetype && (
+                        <p className="text-xs text-muted-foreground mb-2">Archetype: <span className="font-semibold text-foreground">{assessment.archetype}</span></p>
+                      )}
+                      <div className="grid grid-cols-2 gap-3">
+                        {assessment.top_strengths?.length > 0 && (
+                          <div>
+                            <p className="text-[10px] text-emerald-600 font-semibold uppercase tracking-wide mb-1">Assessed strengths</p>
+                            {assessment.top_strengths.slice(0, 3).map((s, i) => (
+                              <p key={i} className="text-xs text-foreground leading-snug">· {s}</p>
+                            ))}
+                          </div>
+                        )}
+                        {assessment.development_areas?.length > 0 && (
+                          <div>
+                            <p className="text-[10px] text-amber-600 font-semibold uppercase tracking-wide mb-1">Development focus</p>
+                            {assessment.development_areas.slice(0, 3).map((d, i) => (
+                              <p key={i} className="text-xs text-foreground leading-snug">· {d}</p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {aiData?.competency_signals?.length > 0 && (
+                        <p className="text-[10px] text-muted-foreground mt-2 pt-2 border-t border-border/50">
+                          This week's patterns are cross-referenced against your Leadership Index baseline above.
+                        </p>
                       )}
                     </div>
                   )}

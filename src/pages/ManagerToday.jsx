@@ -238,10 +238,14 @@ export default function ManagerToday() {
   // ── Main column ─────────────────────────────────────────────────────────────
   const mainContent = !needsToneOnboarding ? (
     <div className="space-y-4">
-      {/* Rhythm trend chart — shows last 7 days if history exists */}
-      {checkInHistory.length >= 2 && (
-        <RhythmPulseChart checkIns={checkInHistory} />
-      )}
+      {/* Rhythm trend chart — merges history + today's record for immediate feedback */}
+      {(() => {
+        const historyIds = new Set(checkInHistory.map(r => r.id));
+        const merged = todayRecord && !historyIds.has(todayRecord.id)
+          ? [todayRecord, ...checkInHistory]
+          : checkInHistory;
+        return merged.length >= 1 ? <RhythmPulseChart checkIns={merged} /> : null;
+      })()}
 
       {/* Pending debrief prompt */}
       {pendingDebrief && (
@@ -401,6 +405,7 @@ export default function ManagerToday() {
         onClose={() => setShowWeeklyReflection(false)}
         onSuccess={() => queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] })}
         userEmail={user?.email}
+        assessmentInsight={insight}
       />
 
       {/* Atreus Settings Modal */}

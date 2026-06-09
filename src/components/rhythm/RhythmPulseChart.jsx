@@ -23,7 +23,7 @@ function avg(arr) {
 }
 
 export default function RhythmPulseChart({ checkIns = [] }) {
-  if (!checkIns || checkIns.length < 2) return null;
+  if (!checkIns || checkIns.length === 0) return null;
 
   // Group by date, average scores across morning + evening entries
   const days = {};
@@ -50,7 +50,7 @@ export default function RhythmPulseChart({ checkIns = [] }) {
       return point;
     });
 
-  if (chartData.length < 2) return null;
+  if (chartData.length === 0) return null;
 
   // Compute current averages for the mini stat strip
   const statStrip = MEASURES.map(m => {
