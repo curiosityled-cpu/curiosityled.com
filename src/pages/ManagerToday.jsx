@@ -315,6 +315,18 @@ export default function ManagerToday() {
         />
       )}
 
+      {/* Today's Playbook (Goal signal) — shown once check-in exists, directly under check-ins */}
+      {todayRecord && (
+        <TodaysPlaybook
+          todayRecord={todayRecord}
+          trends={trends}
+          goals={goals}
+          assignments={assignments}
+          pulses={recentPulses}
+          onOpenAtreus={openAtreus}
+        />
+      )}
+
       {/* Big 3 display — set last evening, surfaced in morning before check-in */}
       {isMorningWindow && !todayRecord?.morning_completed && (() => {
         const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
@@ -337,18 +349,6 @@ export default function ManagerToday() {
           </div>
         );
       })()}
-
-      {/* Today's Playbook — shown once check-in exists */}
-      {todayRecord && (
-        <TodaysPlaybook
-          todayRecord={todayRecord}
-          trends={trends}
-          goals={goals}
-          assignments={assignments}
-          pulses={recentPulses}
-          onOpenAtreus={openAtreus}
-        />
-      )}
 
       {/* ── [5] Day complete celebration ─────────────────────────────────── */}
       {allDone && (
@@ -404,13 +404,14 @@ export default function ManagerToday() {
           </p>
         </div>
       )}
+      {/* Leadership rhythm trends — above Watch this */}
+      <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
       <UpcomingFrictionCard
         trends={trends}
         goals={goals}
         pulses={recentPulses}
         onOpenAtreus={openAtreus}
       />
-      <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
       <ExploreDeeperCard />
     </div>
   ) : null;
