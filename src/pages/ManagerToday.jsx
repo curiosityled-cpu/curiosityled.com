@@ -264,20 +264,7 @@ export default function ManagerToday() {
         </div>
       )}
 
-      {/* ── [4] Playbook even without check-in (goals/assignments available) */}
-      {!todayRecord && !isQuietZone && (goals.length > 0 || assignments.length > 0) && (
-        <TodaysPlaybook
-          todayRecord={null}
-          trends={trends}
-          goals={goals}
-          assignments={assignments}
-          pulses={recentPulses}
-          onOpenAtreus={openAtreus}
-        />
-      )}
-
-      {/* ── RHYTHM CHECK-IN FLOWS ────────────────────────────────────────── */}
-      {/* Morning check-in (5am–noon, not yet done) */}
+      {/* ── RHYTHM CHECK-IN FLOWS (above Playbook) ──────────────────────── */}
       {(showMorningCheckIn || todayRecord?.morning_completed) && (
         <MorningCheckIn
           todayRecord={todayRecord}
@@ -285,7 +272,6 @@ export default function ManagerToday() {
         />
       )}
 
-      {/* Midday priority loop (11am–2pm, not yet done) */}
       {(showMiddayLoop || todayRecord?.midday_loop_completed) && (
         <MiddayPriorityLoop
           todayRecord={todayRecord}
@@ -293,7 +279,6 @@ export default function ManagerToday() {
         />
       )}
 
-      {/* [2] Midday fallback — window open but no Big 3 set */}
       {isMiddayWindow && !todayRecord?.midday_loop_completed && !todayRecord?.big3_priorities?.length && (
         <div className="bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3.5 flex items-start gap-3">
           <span className="text-lg flex-shrink-0">📋</span>
@@ -306,7 +291,6 @@ export default function ManagerToday() {
         </div>
       )}
 
-      {/* Evening check-in (3pm+, not yet done) */}
       {(showEveningCheckIn || todayRecord?.evening_completed) && (
         <EveningCheckIn
           todayRecord={todayRecord}
@@ -315,10 +299,11 @@ export default function ManagerToday() {
         />
       )}
 
-      {/* Today's Playbook (Goal signal) — shown once check-in exists, directly under check-ins */}
-      {todayRecord && (
+      {/* Today's Playbook — check-ins are above, playbook is below */}
+      {(todayRecord || goals.length > 0 || assignments.length > 0) && !isQuietZone && (
         <TodaysPlaybook
           todayRecord={todayRecord}
+          pulse={recentPulses[0] || null}
           trends={trends}
           goals={goals}
           assignments={assignments}
@@ -326,29 +311,6 @@ export default function ManagerToday() {
           onOpenAtreus={openAtreus}
         />
       )}
-
-      {/* Big 3 display — set last evening, surfaced in morning before check-in */}
-      {isMorningWindow && !todayRecord?.morning_completed && (() => {
-        const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-        const yk = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
-        const src = todayRecord?.big3_priorities?.length > 0
-          ? todayRecord
-          : checkInHistory.find(r => r.check_in_date === yk && r.big3_priorities?.length > 0);
-        if (!src?.big3_priorities?.length) return null;
-        return (
-          <div className="bg-card rounded-2xl border border-border px-4 py-3">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Your Big 3 today</p>
-            <div className="space-y-1.5">
-              {src.big3_priorities.map((p, i) => (
-                <div key={p.id || i} className="flex items-start gap-2">
-                  <span className="w-4 h-4 rounded-full bg-[#0202ff] text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
-                  <p className="text-sm text-foreground leading-snug">{p.title}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      })()}
 
       {/* ── [5] Day complete celebration ─────────────────────────────────── */}
       {allDone && (

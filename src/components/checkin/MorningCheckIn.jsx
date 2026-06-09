@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Sun, ChevronRight, CheckCircle2 } from "lucide-react";
+import { Loader2, Sun, ChevronRight, CheckCircle2, ChevronDown, ChevronUp, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const MEASURES = [
@@ -53,17 +53,35 @@ export default function MorningCheckIn({ onComplete, todayRecord }) {
   const [scores, setScores] = useState({ energy: 3, confidence: 3, focus: 3, load: 3, growth: 3 });
   const [notes, setNotes] = useState({ energy: "", confidence: "", focus: "", load: "", growth: "" });
   const [saving, setSaving] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editStep, setEditStep] = useState(1);
 
   const alreadyDone = todayRecord?.morning_completed;
+  // Lock morning editing once evening has been completed (next window has started)
+  const isLocked = !!todayRecord?.evening_completed;
 
   useEffect(() => {
-    if (alreadyDone) { setStep(6); return; }
-    // Load AI questions
+    if (alreadyDone) {
+      setStep(6);
+      setScores({
+        energy:     todayRecord.energy_score     || 3,
+        confidence: todayRecord.confidence_score || 3,
+        focus:      todayRecord.focus_score      || 3,
+        load:       todayRecord.load_score       || 3,
+        growth:     todayRecord.growth_score     || 3,
+      });
+      setNotes({
+        energy:     todayRecord.energy_note     || "",
+        confidence: todayRecord.confidence_note || "",
+        focus:      todayRecord.focus_note      || "",
+        load:       todayRecord.load_note       || "",
+        growth:     todayRecord.growth_note     || "",
+      });
+      return;
+    }
     base44.functions.invoke("saveDailyCheckIn", { action: "get_questions", check_in_type: "morning" })
-      .then(res => {
-        setQuestions(res.data?.questions || null);
-        setStep(1);
-      })
+      .then(res => { setQuestions(res.data?.questions || null); setStep(1); })
       .catch(() => setStep(1));
   }, [alreadyDone]);
 
@@ -113,34 +131,99 @@ export default function MorningCheckIn({ onComplete, todayRecord }) {
     );
   }
 
-  // Done state
-  if (step === 6) {
-    if (alreadyDone && todayRecord) {
-      return (
-        <div className="bg-card rounded-2xl border border-emerald-200/60 px-4 py-4 flex items-start gap-3">
+  const handleEditSave = async () => {
+    setSaving(true);
+    try {
+      await base44.functions.invoke("saveDailyCheckIn", {
+        action: "save", check_in_type: "morning",
+        energy_score: scores.energy, energy_note: notes.energy,
+        confidence_score: scores.confidence, confidence_note: notes.confidence,
+        focus_score: scores.focus, focus_note: notes.focus,
+        load_score: scores.load, load_note: notes.load,
+        growth_score: scores.growth, growth_note: notes.growth,
+        questions_used: questions || {},
+      });
+      setEditMode(false); setExpanded(false);
+      onComplete?.();
+    } catch (err) { console.error(err); }
+    finally { setSaving(false); }
+  };
+
+  // Done state — collapsible
+  if (step === 6 && !editMode) {
+    return (
+      <div className="bg-card rounded-2xl border border-emerald-200/60 overflow-hidden">
+        <button
+          className="w-full px-4 py-3.5 flex items-center gap-3 text-left"
+          onClick={() => !isLocked && setExpanded(v => !v)}
+          disabled={isLocked}
+        >
           <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            {isLocked ? <Lock className="w-4 h-4 text-emerald-400" /> : <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground">Morning check-in done</p>
-            <div className="flex gap-3 mt-2 flex-wrap">
+            <div className="flex gap-3 mt-1 flex-wrap">
               {MEASURES.map(m => (
                 <div key={m.key} className="flex items-center gap-1">
                   <span className="text-xs">{m.emoji}</span>
-                  <span className="text-xs text-muted-foreground">{m.label}</span>
-                  <span className="text-xs font-semibold text-foreground">{todayRecord[`${m.key}_score`] ?? "–"}</span>
+                  <span className="text-xs font-semibold text-foreground">{scores[m.key]}</span>
                 </div>
               ))}
             </div>
           </div>
-        </div>
-      );
-    }
+          {!isLocked && (expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />)}
+          {isLocked && <span className="text-[10px] text-muted-foreground flex-shrink-0">Locked</span>}
+        </button>
+        {expanded && !isLocked && (
+          <div className="border-t border-border px-4 py-3 space-y-2">
+            {MEASURES.map(m => (
+              <div key={m.key} className="flex items-start gap-2">
+                <span className="text-sm">{m.emoji}</span>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs font-semibold text-foreground">{m.label}</p>
+                    <span className="text-xs font-bold text-[#0202ff]">{scores[m.key]}/5</span>
+                  </div>
+                  {notes[m.key] && <p className="text-[10px] text-muted-foreground mt-0.5">{notes[m.key]}</p>}
+                </div>
+              </div>
+            ))}
+            <button onClick={() => { setEditMode(true); setEditStep(1); }} className="text-xs text-[#0202ff] font-medium hover:underline mt-1">
+              Edit answers
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Edit mode
+  if (editMode) {
+    const measure = MEASURES[editStep - 1];
+    const question = questions?.[measure.key] || `How's your ${measure.label.toLowerCase()} right now?`;
     return (
-      <div className="bg-card rounded-2xl border border-emerald-200/60 px-4 py-5 text-center">
-        <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-        <p className="text-sm font-semibold text-foreground">Morning check-in complete</p>
-        <p className="text-xs text-muted-foreground mt-1">Atreus will use this to shape your day.</p>
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+        <div className="px-4 pt-4 pb-3 border-b border-border flex items-center gap-2">
+          <Sun className="w-4 h-4 text-amber-400" />
+          <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Edit morning check-in</p>
+          <span className="ml-auto text-xs text-muted-foreground">{editStep}/5</span>
+        </div>
+        <div className="h-1 bg-muted"><div className="h-1 bg-[#0202ff] transition-all" style={{ width: `${(editStep/5)*100}%` }} /></div>
+        <AnimatePresence mode="wait">
+          <motion.div key={editStep} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="px-4 py-5 space-y-4">
+            <div className="flex items-center gap-2"><span className="text-xl">{measure.emoji}</span><p className="text-xs font-semibold text-[#0202ff] uppercase tracking-wide">{measure.label} · {measure.desc}</p></div>
+            <p className="text-sm font-medium text-foreground leading-snug">{question}</p>
+            <ScorePicker value={scores[measure.key]} onChange={(v) => setScores(s => ({ ...s, [measure.key]: v }))} />
+            <textarea value={notes[measure.key]} onChange={(e) => setNotes(n => ({ ...n, [measure.key]: e.target.value }))} placeholder="Add a note (optional)" rows={2} className="w-full text-sm bg-muted/40 rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/60" />
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="text-xs" onClick={() => { setEditMode(false); setExpanded(false); }}>Cancel</Button>
+              <Button onClick={() => editStep < 5 ? setEditStep(s => s+1) : handleEditSave()} disabled={saving} className="flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-sm">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : editStep < 5 ? <><span>Next</span><ChevronRight className="w-3.5 h-3.5" /></> : "Save changes"}
+              </Button>
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
     );
   }

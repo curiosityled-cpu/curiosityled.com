@@ -91,7 +91,7 @@ const STATUS_OPTS = [
 ];
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function TodaysPlaybook({ pulse, trends, goals, assignments, pulses, onOpenAtreus }) {
+export default function TodaysPlaybook({ pulse, todayRecord, trends, goals, assignments, pulses, onOpenAtreus }) {
   const { user } = useAuth();
 
   // Move state
@@ -140,16 +140,41 @@ export default function TodaysPlaybook({ pulse, trends, goals, assignments, puls
     setFtSubmitted(true);
   };
 
+  const big3 = todayRecord?.big3_priorities?.filter(p => p?.title) || [];
+
   return (
     <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
 
+      {/* ── Card header ───────────────────────────────────────────────── */}
+      <div className="px-5 pt-4 pb-3 border-b border-border">
+        <p className="text-xs font-bold text-foreground uppercase tracking-widest">Today's Playbook</p>
+      </div>
+
+      {/* ── Big 3 priorities ──────────────────────────────────────────── */}
+      {big3.length > 0 && (
+        <div className="px-5 py-4 border-b border-border">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Big 3</p>
+          <div className="space-y-2">
+            {big3.map((p, i) => (
+              <div key={p.id || i} className="flex items-start gap-2">
+                <span className="w-4 h-4 rounded-full bg-[#0202ff] text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                <div className="min-w-0">
+                  <p className="text-sm text-foreground leading-snug">{p.title}</p>
+                  {p.context && <p className="text-[10px] text-muted-foreground mt-0.5">{p.context}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── SECTION 1: Situation read ─────────────────────────────────── */}
-      <div className="px-5 pt-5 pb-4 border-b border-border">
+      <div className="px-5 pt-4 pb-4 border-b border-border">
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
           {situation.signals.includes("overload") ? "Load signal" :
            situation.signals.includes("avoidance") ? "Attention signal" :
            situation.signals.includes("low_energy") || situation.signals.includes("declining_energy") ? "Energy signal" :
-           situation.signals.includes("stalled_goals") ? "Goal signal" :
+           situation.signals.includes("stalled_goals") ? "Situation read" :
            situation.signals.includes("friction") ? "Friction signal" :
            "Today's read"}
         </p>

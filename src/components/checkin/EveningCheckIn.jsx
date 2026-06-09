@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Moon, ChevronRight, CheckCircle2 } from "lucide-react";
+import { Loader2, Moon, ChevronRight, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const MEASURES = [
@@ -128,11 +128,31 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
   const [scores, setScores] = useState({ energy: 3, confidence: 3, focus: 3, load: 3, growth: 3 });
   const [notes, setNotes] = useState({ energy: "", confidence: "", focus: "", load: "", growth: "" });
   const [saving, setSaving] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editStep, setEditStep] = useState(1);
 
   const alreadyDone = todayRecord?.evening_completed;
 
   useEffect(() => {
-    if (alreadyDone) { setStep(7); return; }
+    if (alreadyDone) {
+      setStep(7);
+      setScores({
+        energy:     todayRecord.energy_score     || 3,
+        confidence: todayRecord.confidence_score || 3,
+        focus:      todayRecord.focus_score      || 3,
+        load:       todayRecord.load_score       || 3,
+        growth:     todayRecord.growth_score     || 3,
+      });
+      setNotes({
+        energy:     todayRecord.energy_note     || "",
+        confidence: todayRecord.confidence_note || "",
+        focus:      todayRecord.focus_note      || "",
+        load:       todayRecord.load_note       || "",
+        growth:     todayRecord.growth_note     || "",
+      });
+      return;
+    }
     base44.functions.invoke("saveDailyCheckIn", { action: "get_questions", check_in_type: "evening" })
       .then(res => { setQuestions(res.data?.questions || null); setStep(1); })
       .catch(() => setStep(1));
@@ -172,25 +192,113 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
     </div>
   );
 
-  if (step === 7) {
+  const handleEditSave = async (big3Priorities) => {
+    setSaving(true);
+    try {
+      await base44.functions.invoke("saveDailyCheckIn", {
+        action: "save", check_in_type: "evening",
+        energy_score: scores.energy, energy_note: notes.energy,
+        confidence_score: scores.confidence, confidence_note: notes.confidence,
+        focus_score: scores.focus, focus_note: notes.focus,
+        load_score: scores.load, load_note: notes.load,
+        growth_score: scores.growth, growth_note: notes.growth,
+        big3_priorities: big3Priorities,
+        questions_used: questions || {},
+      });
+      setEditMode(false); setExpanded(false);
+      onComplete?.();
+    } catch (err) { console.error(err); }
+    finally { setSaving(false); }
+  };
+
+  if (step === 7 && !editMode) {
     const big3 = todayRecord?.big3_priorities || [];
     return (
-      <div className="bg-card rounded-2xl border border-indigo-200/60 px-4 py-4 flex items-start gap-3">
-        <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
-          <CheckCircle2 className="w-4 h-4 text-indigo-600" />
+      <div className="bg-card rounded-2xl border border-indigo-200/60 overflow-hidden">
+        <button className="w-full px-4 py-3.5 flex items-center gap-3 text-left" onClick={() => setExpanded(v => !v)}>
+          <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
+            <CheckCircle2 className="w-4 h-4 text-indigo-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground">Evening check-in done</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{big3.length > 0 ? `Big 3 set for tomorrow` : "No Big 3 set"}</p>
+          </div>
+          {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
+        </button>
+        {expanded && (
+          <div className="border-t border-border px-4 py-3 space-y-2">
+            {MEASURES.map(m => (
+              <div key={m.key} className="flex items-start gap-2">
+                <span className="text-sm">{m.emoji}</span>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs font-semibold text-foreground">{m.label}</p>
+                    <span className="text-xs font-bold text-indigo-500">{scores[m.key]}/5</span>
+                  </div>
+                  {notes[m.key] && <p className="text-[10px] text-muted-foreground mt-0.5">{notes[m.key]}</p>}
+                </div>
+              </div>
+            ))}
+            {big3.length > 0 && (
+              <div className="pt-2 border-t border-border space-y-1">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Big 3 tomorrow</p>
+                {big3.map((p, i) => (
+                  <div key={i} className="flex items-start gap-1.5">
+                    <span className="w-3.5 h-3.5 rounded-full bg-[#0202ff] text-white text-[8px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i+1}</span>
+                    <p className="text-xs text-foreground">{p.title}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button onClick={() => { setEditMode(true); setEditStep(1); }} className="text-xs text-[#0202ff] font-medium hover:underline mt-1">
+              Edit answers
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Edit mode — re-steps through measures then Big 3
+  if (editMode) {
+    if (editStep === 6) {
+      return (
+        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+          <div className="px-4 pt-4 pb-3 border-b border-border flex items-center gap-2">
+            <Moon className="w-4 h-4 text-indigo-400" />
+            <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Edit Big 3</p>
+          </div>
+          <div className="px-4 py-5">
+            <Big3Step goals={goals} onSave={handleEditSave} />
+            <button onClick={() => { setEditMode(false); setExpanded(false); }} className="mt-2 text-xs text-muted-foreground hover:text-foreground w-full text-center">Cancel</button>
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground">Evening check-in done</p>
-          {big3.length > 0 && (
-            <div className="mt-2 space-y-0.5">
-              {big3.map((p, i) => (
-                <p key={i} className="text-xs text-muted-foreground">
-                  <span className="font-semibold text-foreground">{i + 1}.</span> {p.title}
-                </p>
-              ))}
+      );
+    }
+    const measure = MEASURES[editStep - 1];
+    const question = questions?.[measure.key] || `How did your ${measure.label.toLowerCase()} hold up today?`;
+    return (
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+        <div className="px-4 pt-4 pb-3 border-b border-border flex items-center gap-2">
+          <Moon className="w-4 h-4 text-indigo-400" />
+          <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Edit evening check-in</p>
+          <span className="ml-auto text-xs text-muted-foreground">{editStep}/5</span>
+        </div>
+        <div className="h-1 bg-muted"><div className="h-1 bg-indigo-500 transition-all" style={{ width: `${(editStep/5)*100}%` }} /></div>
+        <AnimatePresence mode="wait">
+          <motion.div key={editStep} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="px-4 py-5 space-y-4">
+            <div className="flex items-center gap-2"><span className="text-xl">{measure.emoji}</span><p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide">{measure.label} · {measure.desc}</p></div>
+            <p className="text-sm font-medium text-foreground leading-snug">{question}</p>
+            <ScorePicker value={scores[measure.key]} onChange={(v) => setScores(s => ({ ...s, [measure.key]: v }))} />
+            <textarea value={notes[measure.key]} onChange={(e) => setNotes(n => ({ ...n, [measure.key]: e.target.value }))} placeholder="Add a note (optional)" rows={2} className="w-full text-sm bg-muted/40 rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/60" />
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="text-xs" onClick={() => { setEditMode(false); setExpanded(false); }}>Cancel</Button>
+              <Button onClick={() => editStep < 5 ? setEditStep(s => s+1) : setEditStep(6)} disabled={saving} className="flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-sm">
+                {editStep < 5 ? <><span>Next</span><ChevronRight className="w-3.5 h-3.5" /></> : "Edit Big 3 →"}
+              </Button>
             </div>
-          )}
-        </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
     );
   }
