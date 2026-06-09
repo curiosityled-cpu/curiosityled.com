@@ -3,8 +3,8 @@
  * Calibrated, not clinical. "Keep an eye on this" rather than alarm language.
  * Lives on Patterns (distinct from UpcomingFrictionCard which lives on Lead).
  */
-import React from "react";
-import { Eye, ArrowRight, Brain } from "lucide-react";
+import React, { useState } from "react";
+import { Eye, ArrowRight, Brain, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -99,20 +99,31 @@ const CONFIDENCE_STYLES = {
 
 export default function WatchlistCard({ trends, pulses = [], goals = [], onOpenAtreus }) {
   const items = buildWatchlist(trends, pulses, goals);
+  const [expanded, setExpanded] = useState(true);
   if (items.length === 0) return null;
 
   return (
     <Card className="shadow-sm border border-border bg-card rounded-2xl overflow-hidden">
-      <div className="px-5 pt-5 pb-2 flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-muted border border-border flex items-center justify-center">
-          <Eye className="w-3.5 h-3.5 text-muted-foreground" />
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full px-5 pt-5 pb-2 flex items-center justify-between gap-2 hover:bg-muted/20 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-muted border border-border flex items-center justify-center">
+            <Eye className="w-3.5 h-3.5 text-muted-foreground" />
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-semibold text-card-foreground">Watchlist</p>
+            <p className="text-[10px] text-muted-foreground">Calibrated predictions · Keep an eye on these</p>
+          </div>
         </div>
-        <div>
-          <p className="text-sm font-semibold text-card-foreground">Watchlist</p>
-          <p className="text-[10px] text-muted-foreground">Calibrated predictions · Keep an eye on these</p>
-        </div>
-      </div>
-      <CardContent className="px-5 pt-2 pb-5 space-y-3">
+        {expanded ? (
+          <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+        ) : (
+          <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+        )}
+      </button>
+      {expanded && <CardContent className="px-5 pt-2 pb-5 space-y-3">
         {items.map((item, i) => {
           const style = CONFIDENCE_STYLES[item.confidence];
           return (
@@ -147,7 +158,7 @@ export default function WatchlistCard({ trends, pulses = [], goals = [], onOpenA
             </div>
           );
         })}
-      </CardContent>
+      </CardContent>}
     </Card>
   );
 }
