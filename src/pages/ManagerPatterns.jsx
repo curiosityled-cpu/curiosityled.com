@@ -23,6 +23,7 @@ import LeadingPatternCard from "@/components/patterns/LeadingPatternCard";
 import TrendSignalsChart from "@/components/patterns/TrendSignalsChart";
 import SwipeableSections from "@/components/patterns/SwipeableSections";
 import ManagerMemoryCard from "@/components/patterns/ManagerMemoryCard";
+import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
 
 function PatternCard({ insight, goals }) {
   const patterns = [];
@@ -143,6 +144,18 @@ export default function ManagerPatterns() {
     enabled: !!user?.email, staleTime: 15 * 60 * 1000,
   });
 
+  const { data: checkInHistory = [] } = useQuery({
+    queryKey: ['daily-checkin-history', user?.email],
+    queryFn: async () => { try { return await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-check_in_date', 60); } catch { return []; } },
+    enabled: !!user?.email, staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: latestAssessment = null } = useQuery({
+    queryKey: ['ml-assessment-latest', user?.email],
+    queryFn: async () => { try { const rows = await base44.entities.Assessment.filter({ email: user.email }, '-created_date', 1); return rows[0] || null; } catch { return null; } },
+    enabled: !!user?.email, staleTime: 0,
+  });
+
   const { data: memory = null } = useQuery({
     queryKey: ['ml-memory', user?.email],
     queryFn: async () => { try { const rows = await base44.entities.ManagerMemory.filter({ user_email: user.email }, '-last_synthesized_at', 1); return rows[0] || null; } catch { return null; } },
@@ -190,6 +203,7 @@ export default function ManagerPatterns() {
   // Right column — trend data + trigger modules
   const rightColumn = (
     <div className="space-y-4">
+      <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
       <CheckInHistoryCalendar pulses={recentPulses} />
       <TrendSignalsChart trends={trends} pulses={recentPulses} />
       <EnergyTimeline pulses={recentPulses} />
