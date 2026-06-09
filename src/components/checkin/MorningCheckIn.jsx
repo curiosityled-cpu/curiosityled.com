@@ -98,7 +98,7 @@ export default function MorningCheckIn({ onComplete, todayRecord }) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const saveResponse = await base44.functions.invoke("saveDailyCheckIn", {
+      await base44.functions.invoke("saveDailyCheckIn", {
         action: "save",
         check_in_type: "morning",
         energy_score: scores.energy,
@@ -113,12 +113,9 @@ export default function MorningCheckIn({ onComplete, todayRecord }) {
         growth_note: notes.growth,
         questions_used: questions || {},
       });
-      // Ensure response was successful before marking complete
-      if (saveResponse?.data?.record?.id) {
-        setStep(6);
-        // Call onComplete immediately to trigger parent refetch
-        onComplete?.();
-      }
+      // If no error thrown, save succeeded
+      setStep(6);
+      onComplete?.();
     } catch (err) {
       console.error('Save error:', err);
     } finally {
@@ -138,7 +135,7 @@ export default function MorningCheckIn({ onComplete, todayRecord }) {
   const handleEditSave = async () => {
     setSaving(true);
     try {
-      const saveResponse = await base44.functions.invoke("saveDailyCheckIn", {
+      await base44.functions.invoke("saveDailyCheckIn", {
         action: "save", check_in_type: "morning",
         energy_score: scores.energy, energy_note: notes.energy,
         confidence_score: scores.confidence, confidence_note: notes.confidence,
@@ -147,10 +144,8 @@ export default function MorningCheckIn({ onComplete, todayRecord }) {
         growth_score: scores.growth, growth_note: notes.growth,
         questions_used: questions || {},
       });
-      if (saveResponse?.data?.record?.id) {
-        setEditMode(false); setExpanded(false);
-        onComplete?.();
-      }
+      setEditMode(false); setExpanded(false);
+      onComplete?.();
     } catch (err) { console.error('Edit save error:', err); }
     finally { setSaving(false); }
   };

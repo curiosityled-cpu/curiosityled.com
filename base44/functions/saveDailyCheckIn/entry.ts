@@ -16,8 +16,10 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { action, check_in_type, ...fields } = body;
 
-    // Get today's date in UTC ISO format for consistent filtering
-    const today = new Date().toISOString().split('T')[0];
+    // Get today's date in the user's local time (Eastern), not UTC
+    // This prevents midnight boundary issues where UTC date != local date
+    const todayLocal = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+    const today = todayLocal; // YYYY-MM-DD format
     console.log('[saveDailyCheckIn] Today:', today, 'User:', user.email);
 
     // ── GET QUESTIONS ────────────────────────────────────────────────────────
@@ -182,12 +184,10 @@ Deno.serve(async (req) => {
           await new Promise(resolve => setTimeout(resolve, 200));
         }
       }
-      const yesterdayDate = new Date();
-      yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-      const yesterday = yesterdayDate.toISOString().split('T')[0];
       const todayRec = allRecords.find(r => r.check_in_date === today) || null;
-      const yesterdayRec = allRecords.find(r => r.check_in_date === yesterday) || null;
-      const yesterday_big3 = yesterdayRec?.big3_priorities || [];
+      // Find the most recent non-today record that has Big 3 set (timezone-agnostic)
+      const prevWithBig3 = allRecords.find(r => r.check_in_date !== today && r.big3_priorities?.length > 0);
+      const yesterday_big3 = prevWithBig3?.big3_priorities || [];
       return Response.json({ record: todayRec, yesterday_big3 });
     }
 
