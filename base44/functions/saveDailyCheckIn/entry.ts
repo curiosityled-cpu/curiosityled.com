@@ -83,13 +83,19 @@ Deno.serve(async (req) => {
       if (check_in_type === 'morning') {
         updateData.morning_completed = true;
         updateData.morning_completed_at = now;
+        updateData.check_in_type = 'morning';
       } else if (check_in_type === 'evening') {
         updateData.evening_completed = true;
         updateData.evening_completed_at = now;
+        // keep existing check_in_type if morning already set (both done today)
       } else if (check_in_type === 'midday') {
         updateData.midday_loop_completed = true;
         updateData.midday_loop_completed_at = now;
       }
+
+      // Remove non-entity fields that shouldn't be stored directly
+      delete updateData.action;
+      delete updateData.check_in_type;
 
       let record;
       if (existing[0]) {

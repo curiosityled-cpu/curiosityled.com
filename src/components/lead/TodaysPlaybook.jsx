@@ -145,7 +145,14 @@ export default function TodaysPlaybook({ pulse, trends, goals, assignments, puls
 
       {/* ── SECTION 1: Situation read ─────────────────────────────────── */}
       <div className="px-5 pt-5 pb-4 border-b border-border">
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">What the system sees</p>
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
+          {situation.signals.includes("overload") ? "Load signal" :
+           situation.signals.includes("avoidance") ? "Attention signal" :
+           situation.signals.includes("low_energy") || situation.signals.includes("declining_energy") ? "Energy signal" :
+           situation.signals.includes("stalled_goals") ? "Goal signal" :
+           situation.signals.includes("friction") ? "Friction signal" :
+           "Today's read"}
+        </p>
         <p className="text-base font-bold text-foreground leading-snug">{situation.headline}</p>
         <p className="text-sm text-muted-foreground leading-relaxed mt-1">{situation.body}</p>
         {situation.chips.length > 0 && (

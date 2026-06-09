@@ -21,7 +21,7 @@ import EveningCheckIn from "@/components/checkin/EveningCheckIn";
 import MiddayPriorityLoop from "@/components/checkin/MiddayPriorityLoop";
 import WeeklyRhythmReflection from "@/components/checkin/WeeklyRhythmReflection";
 import UpcomingFrictionCard from "@/components/lead/UpcomingFrictionCard";
-import DailyHUD from "@/components/lead/DailyHUD";
+import RhythmPulseChart from "@/components/rhythm/RhythmPulseChart";
 import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
 
 function getFirstName(user) {
@@ -117,9 +117,22 @@ export default function ManagerToday() {
     staleTime: 60 * 1000,
   });
 
+  // Load recent DailyCheckIn history for the trend chart
+  const { data: checkInHistory = [] } = useQuery({
+    queryKey: ['daily-checkin-history', user?.email],
+    queryFn: async () => {
+      try {
+        return await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-check_in_date', 14);
+      } catch { return []; }
+    },
+    enabled: !!user?.email,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const handleCheckInComplete = () => {
     refetchToday();
     queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
+    queryClient.invalidateQueries({ queryKey: ['daily-checkin-history', user?.email] });
   };
 
   const openAtreus = (msg) => openWithContext({
@@ -225,13 +238,10 @@ export default function ManagerToday() {
   // ── Main column ─────────────────────────────────────────────────────────────
   const mainContent = !needsToneOnboarding ? (
     <div className="space-y-4">
-      {/* Daily HUD scorecard — legacy pulse signal */}
-      <DailyHUD
-        pulse={todayPulse}
-        trends={trends}
-        goals={goals}
-        onIntentUpdated={() => queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] })}
-      />
+      {/* Rhythm trend chart — shows last 7 days if history exists */}
+      {checkInHistory.length >= 2 && (
+        <RhythmPulseChart checkIns={checkInHistory} />
+      )}
 
       {/* Pending debrief prompt */}
       {pendingDebrief && (
@@ -308,16 +318,16 @@ export default function ManagerToday() {
         />
       )}
 
-      {/* Weekly reflection shortcut */}
+      {/* Weekly rhythm summary shortcut */}
       <button
         onClick={() => setShowWeeklyReflection(true)}
         className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-card border border-border hover:bg-muted/50 transition-colors group"
       >
         <div className="flex items-center gap-3">
-          <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+          <Brain className="w-4 h-4 text-[#0202ff] flex-shrink-0" />
           <div className="text-left">
-            <p className="text-sm font-semibold text-foreground">Weekly reflection</p>
-            <p className="text-[10px] text-muted-foreground">Wins, patterns, and what you'd do differently</p>
+            <p className="text-sm font-semibold text-foreground">Weekly rhythm summary</p>
+            <p className="text-[10px] text-muted-foreground">Charts, AI narrative, risks, recognition & next steps</p>
           </div>
         </div>
         <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50" />
