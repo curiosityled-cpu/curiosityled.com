@@ -183,29 +183,13 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
     <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       {/* Header */}
       <div className="px-5 pt-5 pb-3 border-b border-border">
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center flex-shrink-0">
-              <Activity className="w-3.5 h-3.5 text-white" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">Leadership rhythm trends</p>
-              <p className="text-[10px] text-muted-foreground">Daily check-in signals · private to you</p>
-            </div>
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center flex-shrink-0">
+            <Activity className="w-3.5 h-3.5 text-white" />
           </div>
-          {/* Range selector */}
-          <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
-            {RANGE_OPTIONS.map(r => (
-              <button
-                key={r.label}
-                onClick={() => setRangeDays(r.days)}
-                className={`text-[10px] font-semibold px-2.5 py-1 rounded-md transition-colors ${
-                  rangeDays === r.days ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {r.label}
-              </button>
-            ))}
+          <div>
+            <p className="text-sm font-semibold text-foreground">Leadership rhythm trends</p>
+            <p className="text-[10px] text-muted-foreground">Daily check-in signals · private to you</p>
           </div>
         </div>
 
@@ -237,6 +221,21 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
         {/* ── RHYTHM TAB ── */}
         {tab === "rhythm" && (
           <>
+            {/* Range selector */}
+            <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5 w-fit">
+              {RANGE_OPTIONS.map(r => (
+                <button
+                  key={r.label}
+                  onClick={() => setRangeDays(r.days)}
+                  className={`text-[10px] font-semibold px-2.5 py-1 rounded-md transition-colors ${
+                    rangeDays === r.days ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+
             {/* Stat strip */}
             <div className="grid grid-cols-5 gap-2">
               {stats.map(m => (
