@@ -98,8 +98,8 @@ const CONFIDENCE_STYLES = {
 };
 
 export default function WatchlistCard({ trends, pulses = [], goals = [], onOpenAtreus }) {
-  const items = buildWatchlist(trends, pulses, goals);
   const [expanded, setExpanded] = useState(true);
+  const items = buildWatchlist(trends, pulses, goals);
   if (items.length === 0) return null;
 
   return (
