@@ -105,18 +105,20 @@ export default function ManagerToday() {
   const [showSettings, setShowSettings] = useState(false);
   const [showWeeklyReflection, setShowWeeklyReflection] = useState(false);
 
-  // Load today's DailyCheckIn record
-   const { data: todayRecord, refetch: refetchToday } = useQuery({
-     queryKey: ['daily-checkin-today', user?.email],
-     queryFn: async () => {
-       try {
-         const res = await base44.functions.invoke("saveDailyCheckIn", { action: "get_today" });
-         return res.data?.record || null;
-       } catch { return null; }
-     },
-     enabled: !!user?.email,
-     staleTime: 0, // Always refetch on invalidation, don't use cached data
-   });
+  // Load today's DailyCheckIn record + yesterday's Big 3
+  const { data: todayData, refetch: refetchToday } = useQuery({
+    queryKey: ['daily-checkin-today', user?.email],
+    queryFn: async () => {
+      try {
+        const res = await base44.functions.invoke("saveDailyCheckIn", { action: "get_today" });
+        return { record: res.data?.record || null, yesterday_big3: res.data?.yesterday_big3 || [] };
+      } catch { return { record: null, yesterday_big3: [] }; }
+    },
+    enabled: !!user?.email,
+    staleTime: 0,
+  });
+  const todayRecord = todayData?.record || null;
+  const yesterdayBig3 = todayData?.yesterday_big3 || [];
 
   // Load recent DailyCheckIn history for the trend chart
   const { data: checkInHistory = [] } = useQuery({
@@ -255,6 +257,28 @@ export default function ManagerToday() {
           : checkInHistory;
         return merged.length >= 1 ? <RhythmPulseChart checkIns={merged} /> : null;
       })()}
+
+      {/* ── Yesterday's Big 3 carry-forward ─────────────────────────────── */}
+      {yesterdayBig3.length > 0 && !todayRecord?.morning_completed && (
+        <div className="bg-card rounded-2xl border border-[#0202ff]/20 overflow-hidden">
+          <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+            <span className="text-sm">📋</span>
+            <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Your Big 3 for today</p>
+            <p className="text-[10px] text-muted-foreground ml-1">Set last night</p>
+          </div>
+          <div className="px-4 py-3 space-y-2">
+            {yesterdayBig3.map((p, i) => (
+              <div key={p.id || i} className="flex items-start gap-2">
+                <span className="w-5 h-5 rounded-full bg-[#0202ff] text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground leading-snug">{p.title}</p>
+                  {p.context && <p className="text-[10px] text-muted-foreground mt-0.5">{p.context}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── [3] Quiet zone / nothing yet state ───────────────────────────── */}
       {isQuietZone && (

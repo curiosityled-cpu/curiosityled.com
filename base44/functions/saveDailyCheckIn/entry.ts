@@ -170,13 +170,11 @@ Deno.serve(async (req) => {
 
     // ── GET TODAY ────────────────────────────────────────────────────────────
     if (action === 'get_today') {
-      let existing = [];
+      let allRecords = [];
       let retries = 3;
       while (retries > 0) {
         try {
-          // Query by user_email only and filter to today client-side (date format issues with server-side)
-          const allRecords = await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 10);
-          existing = allRecords.filter(r => r.check_in_date === today);
+          allRecords = await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 14);
           break;
         } catch (e) {
           retries--;
@@ -184,7 +182,13 @@ Deno.serve(async (req) => {
           await new Promise(resolve => setTimeout(resolve, 200));
         }
       }
-      return Response.json({ record: existing[0] || null });
+      const yesterdayDate = new Date();
+      yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+      const yesterday = yesterdayDate.toISOString().split('T')[0];
+      const todayRec = allRecords.find(r => r.check_in_date === today) || null;
+      const yesterdayRec = allRecords.find(r => r.check_in_date === yesterday) || null;
+      const yesterday_big3 = yesterdayRec?.big3_priorities || [];
+      return Response.json({ record: todayRec, yesterday_big3 });
     }
 
     return Response.json({ error: 'Unknown action' }, { status: 400 });
