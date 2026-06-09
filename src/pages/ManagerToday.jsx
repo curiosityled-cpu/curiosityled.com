@@ -258,28 +258,6 @@ export default function ManagerToday() {
         return merged.length >= 1 ? <RhythmPulseChart checkIns={merged} /> : null;
       })()}
 
-      {/* ── Yesterday's Big 3 carry-forward ─────────────────────────────── */}
-      {yesterdayBig3.length > 0 && !todayRecord?.morning_completed && (
-        <div className="bg-card rounded-2xl border border-[#0202ff]/20 overflow-hidden">
-          <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-            <span className="text-sm">📋</span>
-            <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Your Big 3 for today</p>
-            <p className="text-[10px] text-muted-foreground ml-1">Set last night</p>
-          </div>
-          <div className="px-4 py-3 space-y-2">
-            {yesterdayBig3.map((p, i) => (
-              <div key={p.id || i} className="flex items-start gap-2">
-                <span className="w-5 h-5 rounded-full bg-[#0202ff] text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground leading-snug">{p.title}</p>
-                  {p.context && <p className="text-[10px] text-muted-foreground mt-0.5">{p.context}</p>}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* ── [3] Quiet zone / nothing yet state ───────────────────────────── */}
       {isQuietZone && (
         <div className="bg-card rounded-2xl border border-dashed border-border px-5 py-8 text-center">
@@ -327,9 +305,10 @@ export default function ManagerToday() {
       )}
 
       {/* Today's Playbook — check-ins are above, playbook is below */}
-      {(todayRecord || goals.length > 0 || assignments.length > 0) && !isQuietZone && (
+      {(todayRecord || yesterdayBig3.length > 0 || goals.length > 0 || assignments.length > 0) && !isQuietZone && (
         <TodaysPlaybook
           todayRecord={todayRecord}
+          yesterdayBig3={yesterdayBig3}
           pulse={recentPulses[0] || null}
           trends={trends}
           goals={goals}
