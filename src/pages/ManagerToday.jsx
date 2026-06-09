@@ -131,9 +131,12 @@ export default function ManagerToday() {
   });
 
   const handleCheckInComplete = () => {
+    // Force immediate refetch, don't just invalidate
     queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
     queryClient.invalidateQueries({ queryKey: ['daily-checkin-history', user?.email] });
     queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
+    // Ensure queries refetch now, not after staleTime
+    refetchToday();
   };
 
   const openAtreus = (msg) => openWithContext({

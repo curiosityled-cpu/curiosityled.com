@@ -98,7 +98,7 @@ export default function MorningCheckIn({ onComplete, todayRecord }) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await base44.functions.invoke("saveDailyCheckIn", {
+      const saveResponse = await base44.functions.invoke("saveDailyCheckIn", {
         action: "save",
         check_in_type: "morning",
         energy_score: scores.energy,
@@ -113,10 +113,15 @@ export default function MorningCheckIn({ onComplete, todayRecord }) {
         growth_note: notes.growth,
         questions_used: questions || {},
       });
-      setStep(6);
-      onComplete?.();
+      // Ensure response was successful before marking complete
+      if (saveResponse?.data?.record?.id) {
+        setStep(6);
+        // Wait a tick to ensure state updates, then call onComplete
+        await new Promise(resolve => setTimeout(resolve, 50));
+        onComplete?.();
+      }
     } catch (err) {
-      console.error(err);
+      console.error('Save error:', err);
     } finally {
       setSaving(false);
     }
@@ -134,7 +139,7 @@ export default function MorningCheckIn({ onComplete, todayRecord }) {
   const handleEditSave = async () => {
     setSaving(true);
     try {
-      await base44.functions.invoke("saveDailyCheckIn", {
+      const saveResponse = await base44.functions.invoke("saveDailyCheckIn", {
         action: "save", check_in_type: "morning",
         energy_score: scores.energy, energy_note: notes.energy,
         confidence_score: scores.confidence, confidence_note: notes.confidence,
@@ -143,9 +148,12 @@ export default function MorningCheckIn({ onComplete, todayRecord }) {
         growth_score: scores.growth, growth_note: notes.growth,
         questions_used: questions || {},
       });
-      setEditMode(false); setExpanded(false);
-      onComplete?.();
-    } catch (err) { console.error(err); }
+      if (saveResponse?.data?.record?.id) {
+        setEditMode(false); setExpanded(false);
+        await new Promise(resolve => setTimeout(resolve, 50));
+        onComplete?.();
+      }
+    } catch (err) { console.error('Edit save error:', err); }
     finally { setSaving(false); }
   };
 
