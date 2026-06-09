@@ -23,6 +23,7 @@ import WeeklyRhythmReflection from "@/components/checkin/WeeklyRhythmReflection"
 import UpcomingFrictionCard from "@/components/lead/UpcomingFrictionCard";
 import RhythmPulseChart from "@/components/rhythm/RhythmPulseChart";
 import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
+import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
 
 function getFirstName(user) {
   const raw = user?.display_name || user?.data?.display_name || user?.full_name;
@@ -211,6 +212,12 @@ export default function ManagerToday() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
+  const { data: latestAssessment = null } = useQuery({
+    queryKey: ['ml-assessment-latest', user?.email],
+    queryFn: async () => { try { const rows = await base44.entities.Assessment.filter({ email: user.email }, '-created_date', 1); return rows[0] || null; } catch { return null; } },
+    enabled: !!user?.email, staleTime: 0,
+  });
+
   const needsToneOnboarding = tonePref === null;
   const firstName = getFirstName(user);
   const day = new Date().getDay();
@@ -316,6 +323,11 @@ export default function ManagerToday() {
         <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50" />
       </button>
 
+      {/* Trend dashboard — mobile only (desktop gets it in companion column) */}
+      <div className="md:hidden">
+        <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
+      </div>
+
       {/* Mobile: Go deeper links */}
       <div className="md:hidden">
         <ExploreDeeperCard />
@@ -332,6 +344,7 @@ export default function ManagerToday() {
         pulses={recentPulses}
         onOpenAtreus={openAtreus}
       />
+      <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
       <ExploreDeeperCard />
     </div>
   ) : null;
