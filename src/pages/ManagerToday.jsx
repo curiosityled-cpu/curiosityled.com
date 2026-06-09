@@ -220,7 +220,6 @@ export default function ManagerToday() {
 
   const needsToneOnboarding = tonePref === null;
   const firstName = getFirstName(user);
-  const day = new Date().getDay();
   const hour = new Date().getHours();
 
   // Determine which check-in flow to surface based on time of day
@@ -229,8 +228,17 @@ export default function ManagerToday() {
   const isEveningWindow = hour >= 15;
 
   const showMorningCheckIn = isMorningWindow && !todayRecord?.morning_completed;
-  const showMiddayLoop = isMiddayWindow && todayRecord?.big3_priorities?.length > 0 && !todayRecord?.midday_loop_completed;
+  const showMiddayLoop = isMiddayWindow && !todayRecord?.midday_loop_completed;
   const showEveningCheckIn = isEveningWindow && !todayRecord?.evening_completed;
+
+  // Day complete: all relevant windows done
+  const allDone = todayRecord?.morning_completed && todayRecord?.evening_completed;
+
+  // Has any check-in data at all (for gating weekly reflection)
+  const hasHistoricalData = checkInHistory.length >= 2;
+
+  // Nothing actionable right now (outside all windows, no record yet)
+  const isQuietZone = !isMorningWindow && !isMiddayWindow && !isEveningWindow && !todayRecord;
 
 
   // ── Main column ─────────────────────────────────────────────────────────────
@@ -245,7 +253,28 @@ export default function ManagerToday() {
         return merged.length >= 1 ? <RhythmPulseChart checkIns={merged} /> : null;
       })()}
 
+      {/* ── [3] Quiet zone / nothing yet state ───────────────────────────── */}
+      {isQuietZone && (
+        <div className="bg-card rounded-2xl border border-dashed border-border px-5 py-8 text-center">
+          <Brain className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+          <p className="text-sm font-semibold text-foreground mb-1">Check back this morning</p>
+          <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
+            Your morning check-in opens at 5 am. Come back then to set your intent for the day.
+          </p>
+        </div>
+      )}
 
+      {/* ── [4] Playbook even without check-in (goals/assignments available) */}
+      {!todayRecord && !isQuietZone && (goals.length > 0 || assignments.length > 0) && (
+        <TodaysPlaybook
+          todayRecord={null}
+          trends={trends}
+          goals={goals}
+          assignments={assignments}
+          pulses={recentPulses}
+          onOpenAtreus={openAtreus}
+        />
+      )}
 
       {/* ── RHYTHM CHECK-IN FLOWS ────────────────────────────────────────── */}
       {/* Morning check-in (5am–noon, not yet done) */}
@@ -256,12 +285,25 @@ export default function ManagerToday() {
         />
       )}
 
-      {/* Midday priority loop (11am–2pm, Big 3 set, not yet done) */}
+      {/* Midday priority loop (11am–2pm, not yet done) */}
       {(showMiddayLoop || todayRecord?.midday_loop_completed) && (
         <MiddayPriorityLoop
           todayRecord={todayRecord}
           onComplete={handleCheckInComplete}
         />
+      )}
+
+      {/* [2] Midday fallback — window open but no Big 3 set */}
+      {isMiddayWindow && !todayRecord?.midday_loop_completed && !todayRecord?.big3_priorities?.length && (
+        <div className="bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3.5 flex items-start gap-3">
+          <span className="text-lg flex-shrink-0">📋</span>
+          <div>
+            <p className="text-sm font-semibold text-amber-800">No priorities set for today</p>
+            <p className="text-xs text-amber-700 leading-relaxed mt-0.5">
+              Set your Big 3 tonight in the evening check-in so tomorrow's midday loop has something to track.
+            </p>
+          </div>
+        </div>
       )}
 
       {/* Evening check-in (3pm+, not yet done) */}
@@ -296,7 +338,7 @@ export default function ManagerToday() {
         );
       })()}
 
-      {/* Today's Playbook — shown once at least one check-in is done today */}
+      {/* Today's Playbook — shown once check-in exists */}
       {todayRecord && (
         <TodaysPlaybook
           todayRecord={todayRecord}
@@ -308,20 +350,35 @@ export default function ManagerToday() {
         />
       )}
 
-      {/* Weekly rhythm summary shortcut */}
-      <button
-        onClick={() => setShowWeeklyReflection(true)}
-        className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-card border border-border hover:bg-muted/50 transition-colors group"
-      >
-        <div className="flex items-center gap-3">
-          <Brain className="w-4 h-4 text-[#0202ff] flex-shrink-0" />
-          <div className="text-left">
-            <p className="text-sm font-semibold text-foreground">Weekly rhythm summary</p>
-            <p className="text-[10px] text-muted-foreground">Charts, AI narrative, risks, recognition & next steps</p>
+      {/* ── [5] Day complete celebration ─────────────────────────────────── */}
+      {allDone && (
+        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl px-5 py-4 flex items-start gap-3">
+          <span className="text-xl flex-shrink-0">✅</span>
+          <div>
+            <p className="text-sm font-semibold text-emerald-800">You've completed today's rhythm</p>
+            <p className="text-xs text-emerald-700 leading-relaxed mt-0.5">
+              Morning intent, midday check, and evening reflection — all done. See you tomorrow.
+            </p>
           </div>
         </div>
-        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50" />
-      </button>
+      )}
+
+      {/* Weekly rhythm summary shortcut — [6] only shown when enough history exists */}
+      {hasHistoricalData && (
+        <button
+          onClick={() => setShowWeeklyReflection(true)}
+          className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-card border border-border hover:bg-muted/50 transition-colors group"
+        >
+          <div className="flex items-center gap-3">
+            <Brain className="w-4 h-4 text-[#0202ff] flex-shrink-0" />
+            <div className="text-left">
+              <p className="text-sm font-semibold text-foreground">Weekly rhythm summary</p>
+              <p className="text-[10px] text-muted-foreground">Charts, AI narrative, risks, recognition & next steps</p>
+            </div>
+          </div>
+          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50" />
+        </button>
+      )}
 
       {/* Trend dashboard — mobile only (desktop gets it in companion column) */}
       <div className="md:hidden">
@@ -338,6 +395,15 @@ export default function ManagerToday() {
   // ── Desktop companion column ─────────────────────────────────────────────────
   const companionColumn = !needsToneOnboarding ? (
     <div className="space-y-4">
+      {/* [1] Pre-check-in nudge when nothing done yet */}
+      {!todayRecord && !isQuietZone && (
+        <div className="bg-[#0202ff]/5 border border-[#0202ff]/15 rounded-2xl px-4 py-4">
+          <p className="text-xs font-semibold text-[#0202ff] mb-1">Before you dive in</p>
+          <p className="text-xs text-foreground leading-relaxed">
+            A quick check-in takes 60 seconds and helps the system give you sharper signals throughout the day.
+          </p>
+        </div>
+      )}
       <UpcomingFrictionCard
         trends={trends}
         goals={goals}
