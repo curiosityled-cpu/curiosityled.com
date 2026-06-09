@@ -106,17 +106,17 @@ export default function ManagerToday() {
   const [showWeeklyReflection, setShowWeeklyReflection] = useState(false);
 
   // Load today's DailyCheckIn record
-  const { data: todayRecord, refetch: refetchToday } = useQuery({
-    queryKey: ['daily-checkin-today', user?.email],
-    queryFn: async () => {
-      try {
-        const res = await base44.functions.invoke("saveDailyCheckIn", { action: "get_today" });
-        return res.data?.record || null;
-      } catch { return null; }
-    },
-    enabled: !!user?.email,
-    staleTime: 60 * 1000,
-  });
+   const { data: todayRecord, refetch: refetchToday } = useQuery({
+     queryKey: ['daily-checkin-today', user?.email],
+     queryFn: async () => {
+       try {
+         const res = await base44.functions.invoke("saveDailyCheckIn", { action: "get_today" });
+         return res.data?.record || null;
+       } catch { return null; }
+     },
+     enabled: !!user?.email,
+     staleTime: 0, // Always refetch on invalidation, don't use cached data
+   });
 
   // Load recent DailyCheckIn history for the trend chart
   const { data: checkInHistory = [] } = useQuery({

@@ -116,8 +116,7 @@ export default function MorningCheckIn({ onComplete, todayRecord }) {
       // Ensure response was successful before marking complete
       if (saveResponse?.data?.record?.id) {
         setStep(6);
-        // Wait a tick to ensure state updates, then call onComplete
-        await new Promise(resolve => setTimeout(resolve, 50));
+        // Call onComplete immediately to trigger parent refetch
         onComplete?.();
       }
     } catch (err) {
@@ -150,7 +149,6 @@ export default function MorningCheckIn({ onComplete, todayRecord }) {
       });
       if (saveResponse?.data?.record?.id) {
         setEditMode(false); setExpanded(false);
-        await new Promise(resolve => setTimeout(resolve, 50));
         onComplete?.();
       }
     } catch (err) { console.error('Edit save error:', err); }
