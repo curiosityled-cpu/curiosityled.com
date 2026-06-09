@@ -106,15 +106,13 @@ Deno.serve(async (req) => {
 
     // ── SAVE ─────────────────────────────────────────────────────────────────
      if (action === 'save') {
-        // Query today's record directly by date with retry
-        let todayRecords = [];
+        // Query by user_email only, filter to today client-side (compound date queries unreliable)
+        let records = [];
         let retries = 3;
         while (retries > 0) {
           try {
-            todayRecords = await base44.entities.DailyCheckIn.filter({
-              user_email: user.email,
-              check_in_date: today,
-            }, '-created_date', 1);
+            const allRecords = await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 10);
+            records = allRecords.filter(r => r.check_in_date === today);
             break;
           } catch (e) {
             retries--;
@@ -123,7 +121,7 @@ Deno.serve(async (req) => {
           }
         }
 
-        const existing = todayRecords[0] || null;
+        const existing = records[0] || null;
 
       const now = new Date().toISOString();
 
