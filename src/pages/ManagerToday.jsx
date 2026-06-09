@@ -34,18 +34,19 @@ function localDateKey() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function HeroGreeting({ firstName, hasCheckedIn, todayPulse, onSettingsToggle }) {
+function HeroGreeting({ firstName, hasCheckedIn, todayRecord, onSettingsToggle }) {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   const day = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-  // After check-in, the greeting reacts to the signal
+  // After check-in, the greeting reacts to the DailyCheckIn signal
   let sub = "Let's see what matters right now.";
-  if (hasCheckedIn && todayPulse) {
-    if (todayPulse.energy_level === 'drained' || todayPulse.perceived_load === 'unsustainable') sub = "It's a heavy one. Let's make it count.";
-    else if (todayPulse.energy_level === 'strong') sub = "You're in a good place. Use it well.";
-    else if (todayPulse.focus_category) sub = "Intent is set. Let's hold the shape.";
-    else if (todayPulse.avoidance_flag === 'yes') sub = "Something's circling. Let's name it.";
+  if (hasCheckedIn && todayRecord) {
+    const energy = todayRecord.energy_score;
+    const load = todayRecord.load_score;
+    if (energy <= 2 || load >= 4) sub = "It's a heavy one. Let's make it count.";
+    else if (energy >= 4 && load <= 2) sub = "You're in a good place. Use it well.";
+    else if (todayRecord.big3_priorities?.length > 0) sub = "Intent is set. Let's hold the shape.";
     else sub = "Here's what the system sees right now.";
   }
 
@@ -102,7 +103,6 @@ export default function ManagerToday() {
   const { openWithContext } = useAtreusChat();
   const [showSettings, setShowSettings] = useState(false);
   const [showWeeklyReflection, setShowWeeklyReflection] = useState(false);
-  const [todayCheckIn, setTodayCheckIn] = useState(null);
 
   // Load today's DailyCheckIn record
   const { data: todayRecord, refetch: refetchToday } = useQuery({
@@ -216,9 +216,6 @@ export default function ManagerToday() {
   const day = new Date().getDay();
   const hour = new Date().getHours();
 
-  const todayKey = localDateKey();
-  const todayPulse = recentPulses.find(p => p.created_date?.startsWith(todayKey));
-
   // Determine which check-in flow to surface based on time of day
   const isMorningWindow = hour >= 5 && hour < 12;
   const isMiddayWindow = hour >= 11 && hour < 14;
@@ -228,12 +225,7 @@ export default function ManagerToday() {
   const showMiddayLoop = isMiddayWindow && todayRecord?.big3_priorities?.length > 0 && !todayRecord?.midday_loop_completed;
   const showEveningCheckIn = isEveningWindow && !todayRecord?.evening_completed;
 
-  const pendingDebrief = recentPulses.find(p =>
-    p.prompt_type === 'prepare_debrief_pending' &&
-    p.scheduled_for &&
-    new Date(p.scheduled_for) <= new Date() &&
-    !recentPulses.some(q => q.prompt_type === 'follow_up' && q.focus_intention?.startsWith('Debrief:') && q.created_date > p.created_date)
-  );
+  const pendingDebrief = null; // legacy ManagerPulse debrief — replaced by DailyCheckIn system
 
   // ── Main column ─────────────────────────────────────────────────────────────
   const mainContent = !needsToneOnboarding ? (
@@ -295,25 +287,34 @@ export default function ManagerToday() {
         />
       )}
 
-      {/* Big 3 display — when set from evening, show tomorrow's plan in the morning */}
-      {isMorningWindow && todayRecord?.big3_priorities?.length > 0 && (
-        <div className="bg-card rounded-2xl border border-border px-4 py-3">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Your Big 3 today</p>
-          <div className="space-y-1.5">
-            {todayRecord.big3_priorities.map((p, i) => (
-              <div key={p.id} className="flex items-start gap-2">
-                <span className="w-4 h-4 rounded-full bg-[#0202ff] text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
-                <p className="text-sm text-foreground leading-snug">{p.title}</p>
-              </div>
-            ))}
+      {/* Big 3 display — set last evening, surfaced in morning before check-in */}
+      {isMorningWindow && !todayRecord?.morning_completed && (() => {
+        const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+        const yk = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
+        const src = todayRecord?.big3_priorities?.length > 0
+          ? todayRecord
+          : checkInHistory.find(r => r.check_in_date === yk && r.big3_priorities?.length > 0);
+        if (!src?.big3_priorities?.length) return null;
+        return (
+          <div className="bg-card rounded-2xl border border-border px-4 py-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Your Big 3 today</p>
+            <div className="space-y-1.5">
+              {src.big3_priorities.map((p, i) => (
+                <div key={p.id || i} className="flex items-start gap-2">
+                  <span className="w-4 h-4 rounded-full bg-[#0202ff] text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                  <p className="text-sm text-foreground leading-snug">{p.title}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
-      {/* Today's Playbook */}
-      {todayPulse && (
+      {/* Today's Playbook — shown once at least one check-in is done today */}
+      {todayRecord && (
         <TodaysPlaybook
-          pulse={todayPulse}
+          pulse={recentPulses.find(p => p.created_date?.startsWith(localDateKey()))}
+          todayRecord={todayRecord}
           trends={trends}
           goals={goals}
           assignments={assignments}
@@ -385,13 +386,13 @@ export default function ManagerToday() {
         <>
           {/* Mobile: single column */}
           <div className="md:hidden max-w-2xl mx-auto space-y-4">
-            <HeroGreeting firstName={firstName} hasCheckedIn={!!todayPulse} todayPulse={todayPulse} onSettingsToggle={todayPulse ? () => setShowSettings(s => !s) : null} />
+            <HeroGreeting firstName={firstName} hasCheckedIn={!!todayRecord} todayRecord={todayRecord} onSettingsToggle={todayRecord ? () => setShowSettings(s => !s) : null} />
             {mainContent}
           </div>
 
           {/* Desktop: two column */}
           <div className="hidden md:block max-w-6xl mx-auto">
-            <HeroGreeting firstName={firstName} hasCheckedIn={!!todayPulse} todayPulse={todayPulse} onSettingsToggle={todayPulse ? () => setShowSettings(s => !s) : null} />
+            <HeroGreeting firstName={firstName} hasCheckedIn={!!todayRecord} todayRecord={todayRecord} onSettingsToggle={todayRecord ? () => setShowSettings(s => !s) : null} />
             <div className="mt-4 grid grid-cols-[1fr_340px] gap-6 items-start">
               <div className="space-y-4">{mainContent}</div>
               <div className="sticky top-4">{companionColumn}</div>
