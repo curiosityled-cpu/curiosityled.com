@@ -193,6 +193,20 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
               <p className="text-[10px] text-muted-foreground">Daily check-in signals · private to you</p>
             </div>
           </div>
+          {/* Range selector */}
+          <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+            {RANGE_OPTIONS.map(r => (
+              <button
+                key={r.label}
+                onClick={() => setRangeDays(r.days)}
+                className={`text-[10px] font-semibold px-2.5 py-1 rounded-md transition-colors ${
+                  rangeDays === r.days ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Tab switcher */}
@@ -223,21 +237,6 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
         {/* ── RHYTHM TAB ── */}
         {tab === "rhythm" && (
           <>
-            {/* Range selector */}
-            <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5 self-start">
-              {RANGE_OPTIONS.map(r => (
-                <button
-                  key={r.label}
-                  onClick={() => setRangeDays(r.days)}
-                  className={`text-[10px] font-semibold px-2.5 py-1 rounded-md transition-colors ${
-                    rangeDays === r.days ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {r.label}
-                </button>
-              ))}
-            </div>
-
             {/* Stat strip */}
             <div className="grid grid-cols-5 gap-2">
               {stats.map(m => (
