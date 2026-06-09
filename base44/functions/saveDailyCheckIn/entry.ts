@@ -16,9 +16,9 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { action, check_in_type, ...fields } = body;
 
-    // Get today's date in local timezone (not UTC)
-    const now = new Date();
-    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    // Get today's date in UTC ISO format for consistent filtering
+    const today = new Date().toISOString().split('T')[0];
+    console.log('[saveDailyCheckIn] Today:', today, 'User:', user.email);
 
     // ── GET QUESTIONS ────────────────────────────────────────────────────────
     if (action === 'get_questions') {
@@ -152,24 +152,22 @@ Deno.serve(async (req) => {
 
       let record;
       if (existing) {
-        // Only send fields that were explicitly provided — don't overwrite unrelated fields
-        // Merge: keep existing morning/evening data when updating the other side
+        // Update existing record
         const safeUpdate = { ...updateData };
-        if (check_in_type === 'evening' && existing.morning_completed) {
-          // Preserve morning scores if they were already set and not being overridden
-          // (evening call only provides evening scores so morning_score keys won't be in updateData)
-        }
-        record = await base44.entities.DailyCheckIn.update(existing.id, safeUpdate);
+        await base44.entities.DailyCheckIn.update(existing.id, safeUpdate);
+        record = { ...existing, ...safeUpdate };
       } else {
-        record = await base44.entities.DailyCheckIn.create({
+        // Create new record
+        const newRecord = await base44.entities.DailyCheckIn.create({
           user_email: user.email,
           check_in_date: today,
           check_in_type: check_in_type || 'morning',
           ...updateData,
         });
+        record = newRecord;
       }
 
-      return Response.json({ record });
+      return Response.json({ record, success: true, timestamp: new Date().toISOString() });
     }
 
     // ── GET TODAY ────────────────────────────────────────────────────────────
@@ -178,10 +176,9 @@ Deno.serve(async (req) => {
       let retries = 3;
       while (retries > 0) {
         try {
-          existing = await base44.entities.DailyCheckIn.filter({
-            user_email: user.email,
-            check_in_date: today,
-          }, null, 1);
+          // Query by user_email only and filter to today client-side (date format issues with server-side)
+          const allRecords = await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 10);
+          existing = allRecords.filter(r => r.check_in_date === today);
           break;
         } catch (e) {
           retries--;
