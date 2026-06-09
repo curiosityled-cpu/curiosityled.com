@@ -16,7 +16,9 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { action, check_in_type, ...fields } = body;
 
-    const today = new Date().toISOString().split('T')[0];
+    // Get today's date in local timezone (not UTC)
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
     // ── GET QUESTIONS ────────────────────────────────────────────────────────
     if (action === 'get_questions') {
