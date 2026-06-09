@@ -131,9 +131,9 @@ export default function ManagerToday() {
   });
 
   const handleCheckInComplete = () => {
-    refetchToday();
-    queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
+    queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
     queryClient.invalidateQueries({ queryKey: ['daily-checkin-history', user?.email] });
+    queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
   };
 
   const openAtreus = (msg) => openWithContext({

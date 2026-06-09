@@ -71,13 +71,13 @@ Deno.serve(async (req) => {
 
     // ── SAVE ─────────────────────────────────────────────────────────────────
     if (action === 'save') {
-      // Find all records for today (there may be multiple — we upsert by date)
-      const allToday = await base44.entities.DailyCheckIn.filter({
-        user_email: user.email,
-      }, '-created_date', 5).catch(() => []);
+       // Query today's record directly by date
+       const todayRecords = await base44.entities.DailyCheckIn.filter({
+         user_email: user.email,
+         check_in_date: today,
+       }, '-created_date', 1).catch(() => []);
 
-      // Find the one matching today's date
-      const existing = allToday.find(r => r.check_in_date === today);
+       const existing = todayRecords[0] || null;
 
       const now = new Date().toISOString();
 
