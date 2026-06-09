@@ -20,11 +20,44 @@ Deno.serve(async (req) => {
 
     // ── GET QUESTIONS ────────────────────────────────────────────────────────
     if (action === 'get_questions') {
-      // Fetch recent check-ins and trends for context
+      // Fetch recent check-ins and trends for context with retries
       const [recentCheckIns, trends, memory] = await Promise.all([
-        base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 7).catch(() => []),
-        base44.entities.ManagerTrends.filter({ user_email: user.email }, '-last_trend_computed_at', 1).catch(() => []),
-        base44.entities.ManagerMemory.filter({ user_email: user.email }, null, 1).catch(() => []),
+        (async () => {
+          let retries = 3;
+          while (retries > 0) {
+            try {
+              return await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 7);
+            } catch (e) {
+              retries--;
+              if (retries === 0) return [];
+              await new Promise(resolve => setTimeout(resolve, 200));
+            }
+          }
+        })(),
+        (async () => {
+          let retries = 3;
+          while (retries > 0) {
+            try {
+              return await base44.entities.ManagerTrends.filter({ user_email: user.email }, '-last_trend_computed_at', 1);
+            } catch (e) {
+              retries--;
+              if (retries === 0) return [];
+              await new Promise(resolve => setTimeout(resolve, 200));
+            }
+          }
+        })(),
+        (async () => {
+          let retries = 3;
+          while (retries > 0) {
+            try {
+              return await base44.entities.ManagerMemory.filter({ user_email: user.email }, null, 1);
+            } catch (e) {
+              retries--;
+              if (retries === 0) return [];
+              await new Promise(resolve => setTimeout(resolve, 200));
+            }
+          }
+        })(),
       ]);
 
       const trendData = trends[0] || {};
@@ -70,14 +103,25 @@ Deno.serve(async (req) => {
     }
 
     // ── SAVE ─────────────────────────────────────────────────────────────────
-    if (action === 'save') {
-       // Query today's record directly by date
-       const todayRecords = await base44.entities.DailyCheckIn.filter({
-         user_email: user.email,
-         check_in_date: today,
-       }, '-created_date', 1).catch(() => []);
+     if (action === 'save') {
+        // Query today's record directly by date with retry
+        let todayRecords = [];
+        let retries = 3;
+        while (retries > 0) {
+          try {
+            todayRecords = await base44.entities.DailyCheckIn.filter({
+              user_email: user.email,
+              check_in_date: today,
+            }, '-created_date', 1);
+            break;
+          } catch (e) {
+            retries--;
+            if (retries === 0) throw e;
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
+        }
 
-       const existing = todayRecords[0] || null;
+        const existing = todayRecords[0] || null;
 
       const now = new Date().toISOString();
 
@@ -128,10 +172,21 @@ Deno.serve(async (req) => {
 
     // ── GET TODAY ────────────────────────────────────────────────────────────
     if (action === 'get_today') {
-      const existing = await base44.entities.DailyCheckIn.filter({
-        user_email: user.email,
-        check_in_date: today,
-      }, null, 1).catch(() => []);
+      let existing = [];
+      let retries = 3;
+      while (retries > 0) {
+        try {
+          existing = await base44.entities.DailyCheckIn.filter({
+            user_email: user.email,
+            check_in_date: today,
+          }, null, 1);
+          break;
+        } catch (e) {
+          retries--;
+          if (retries === 0) throw e;
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+      }
       return Response.json({ record: existing[0] || null });
     }
 
