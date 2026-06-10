@@ -81,8 +81,8 @@ function Big3Step({ goals, onSave }) {
               className="flex-1 text-sm bg-muted/40 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
             />
           </div>
-          {/* Always render optional fields to keep DOM stable — just hide when empty */}
-          <div className="ml-7 space-y-1.5" style={{ display: p.title ? 'block' : 'none' }}>
+          {p.title.trim() && (
+          <div className="ml-7 space-y-1.5">
             {activeGoals.length > 0 && (
               <select
                 value={p.goal_id}
@@ -101,10 +101,10 @@ function Big3Step({ goals, onSave }) {
               onChange={e => update(i, 'context', e.target.value)}
               placeholder="Any context or intention? (optional)"
               rows={1}
-              tabIndex={p.title ? 0 : -1}
               className="w-full text-xs bg-muted/40 rounded-lg px-2 py-1.5 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
             />
           </div>
+          )}
         </div>
       ))}
 
@@ -113,10 +113,7 @@ function Big3Step({ goals, onSave }) {
         disabled={saving || !priorities.some(p => p.title.trim())}
         className="w-full bg-[#0202ff] hover:bg-[#0101dd]"
       >
-        {saving
-          ? <Loader2 className="w-4 h-4 animate-spin" />
-          : `Save ${priorities.filter(p => p.title.trim()).length > 0 ? priorities.filter(p => p.title.trim()).length : ''} ${priorities.filter(p => p.title.trim()).length === 1 ? 'priority' : 'priorities'} & complete`
-        }
+        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save & complete evening check-in"}
       </Button>
       <button
         onClick={() => onSave([])}
