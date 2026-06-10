@@ -94,7 +94,16 @@ export default function ManagerToday() {
   const { openWithContext } = useAtreusChat();
   const [showSettings, setShowSettings] = useState(false);
   const [showWeeklyReflection, setShowWeeklyReflection] = useState(false);
-  const [localBig3Override, setLocalBig3Override] = useState(null);
+  const [localBig3Override, setLocalBig3Override] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('today_big3_override');
+      if (!saved) return null;
+      const { date, data } = JSON.parse(saved);
+      if (date === new Date().toISOString().slice(0, 10)) return data;
+      sessionStorage.removeItem('today_big3_override');
+    } catch {}
+    return null;
+  });
 
   const { data: todayData, refetch: refetchToday } = useQuery({
     queryKey: ['daily-checkin-today', user?.email],
@@ -122,11 +131,22 @@ export default function ManagerToday() {
   });
 
   const handleCheckInComplete = (big3Priorities) => {
-    if (big3Priorities?.length > 0) setLocalBig3Override(big3Priorities);
-    queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
+    if (big3Priorities?.length > 0) {
+      setLocalBig3Override(big3Priorities);
+      try {
+        sessionStorage.setItem('today_big3_override', JSON.stringify({
+          date: new Date().toISOString().slice(0, 10),
+          data: big3Priorities,
+        }));
+      } catch {}
+    }
     queryClient.invalidateQueries({ queryKey: ['daily-checkin-history', user?.email] });
     queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
-    refetchToday();
+    // Small delay before re-fetching today's record to allow the DB write to propagate
+    setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
+      refetchToday();
+    }, 800);
   };
 
   const openAtreus = (msg) => openWithContext({
