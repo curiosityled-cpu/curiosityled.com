@@ -57,8 +57,11 @@ function Big3Step({ goals, onSave }) {
     const filled = priorities.filter(p => p.title.trim());
     if (!filled.length) { onSave([]); return; }
     setSaving(true);
-    await onSave(filled.map(p => ({ ...p, status: "planned" })));
-    setSaving(false);
+    try {
+      await onSave(filled.map(p => ({ ...p, status: "planned" })));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
