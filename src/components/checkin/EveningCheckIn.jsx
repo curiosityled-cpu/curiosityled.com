@@ -201,13 +201,12 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
         big3_priorities: big3Priorities,
         questions_used: questions || {},
       });
-      // Show success confirmation for 2s before transitioning
+      // Notify parent immediately so cache is invalidated and data is fresh on any navigation
+      onComplete?.(big3Priorities);
+      // Show success confirmation for 2s before transitioning the step
       setSavedBig3(big3Priorities);
       setLocalBig3(big3Priorities);
-      setTimeout(() => {
-        setStep(7);
-        onComplete?.(big3Priorities);
-      }, 2000);
+      setTimeout(() => setStep(7), 2000);
     } catch (err) {
       console.error(err);
     } finally {
