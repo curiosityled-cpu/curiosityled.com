@@ -26,12 +26,13 @@ import { Badge } from "@/components/ui/badge";
 
 // Role detection helpers
 export const getMVPRole = (appRole) => {
-  if (!appRole) return null;
+  if (!appRole) return 'manager';
   if (appRole === 'User Level 1' || appRole === 'User Level 2' || appRole === 'user') return 'manager';
   if (appRole === 'Admin Level 1' || appRole === 'Admin Level 2' || appRole === 'Super Administrator' || appRole === 'Platform Admin' || appRole === 'Partner Business Administrator' || appRole === 'admin') return 'buyer';
   if (appRole === 'Analyst') return 'analyst';
   if (appRole === 'Executive') return 'executive';
-  return null;
+  // Default unknown roles to 'manager' so they always reach the /today experience
+  return 'manager';
 };
 
 // Friendly display labels for app roles (shown to end users)
