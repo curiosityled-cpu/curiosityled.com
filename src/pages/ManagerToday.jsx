@@ -117,6 +117,7 @@ export default function ManagerToday() {
     },
     enabled: !!user?.email,
     staleTime: 0,
+    gcTime: 0,
   });
   const todayRecord = todayData?.record || null;
   const yesterdayBig3 = todayData?.yesterday_big3 || [];
