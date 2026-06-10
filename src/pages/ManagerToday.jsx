@@ -320,6 +320,10 @@ export default function ManagerToday() {
           assignments={assignments}
           pulses={recentPulses}
           onOpenAtreus={openAtreus}
+          onRefresh={() => {
+            queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
+            refetchToday();
+          }}
         />
       )}
 

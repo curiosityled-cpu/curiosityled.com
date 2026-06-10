@@ -6,7 +6,7 @@
 import React, { useState } from "react";
 import {
   Brain, ArrowRight, CheckCircle2, Circle, MinusCircle,
-  BookmarkCheck, ChevronDown, ChevronUp, Flame, AlertTriangle, Target
+  BookmarkCheck, ChevronDown, ChevronUp, Flame, AlertTriangle, Target, Pencil, Loader2, X, Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -113,11 +113,14 @@ function Big3Item({ item, index, fromYesterday }) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [], trends, goals, assignments, pulses, onOpenAtreus }) {
+export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [], trends, goals, assignments, pulses, onOpenAtreus, onRefresh }) {
   const { user } = useAuth();
 
   const [moveDone, setMoveDone]       = useState(false);
   const [committed, setCommitted]     = useState(false);
+  const [editingBig3, setEditingBig3] = useState(false);
+  const [editItems, setEditItems]     = useState([]);
+  const [savingBig3, setSavingBig3]   = useState(false);
   const commitment = getMostRecentCommitment(pulses);
   const [ftSelected, setFtSelected]   = useState(null);
   const [ftReflection, setFtReflection] = useState("");
@@ -134,6 +137,31 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
   const todayBig3     = (todayRecord?.big3_priorities || []).filter(p => p?.title);
   const big3          = todayBig3.length > 0 ? todayBig3 : yesterdayBig3.filter(p => p?.title);
   const big3FromYesterday = todayBig3.length === 0 && big3.length > 0;
+
+  const openEditBig3 = () => {
+    setEditItems(big3.map(p => ({ ...p, title: p.title || "", context: p.context || "" })));
+    setEditingBig3(true);
+  };
+
+  const handleSaveBig3 = async () => {
+    if (!todayRecord?.id) return;
+    setSavingBig3(true);
+    try {
+      const updated = editItems.filter(p => p.title.trim()).map((p, i) => ({
+        ...(big3[i] || {}),
+        ...p,
+        id: p.id || `p${i + 1}`,
+        status: p.status || "planned",
+      }));
+      await base44.entities.DailyCheckIn.update(todayRecord.id, { big3_priorities: updated });
+      setEditingBig3(false);
+      onRefresh?.();
+    } catch (err) {
+      console.error("Failed to save Big 3:", err);
+    } finally {
+      setSavingBig3(false);
+    }
+  };
 
   const saveCommitment = async () => {
     if (committed) return;
@@ -174,21 +202,67 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
       </div>
 
       {/* ── BIG 3: Hero section ──────────────────────────────────────── */}
-      {big3.length > 0 ? (
-        <div className="px-5 py-4 border-b border-border">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Your Big 3</p>
+      <div className="px-5 py-4 border-b border-border">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Your Big 3</p>
+          {todayRecord?.id && !editingBig3 && (
+            <button onClick={openEditBig3} className="flex items-center gap-1 text-[10px] text-[#0202ff] hover:underline font-medium">
+              <Pencil className="w-3 h-3" /> Edit
+            </button>
+          )}
+        </div>
+
+        {editingBig3 ? (
+          <div className="space-y-3">
+            {editItems.map((item, i) => (
+              <div key={i} className="space-y-1.5">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-semibold text-muted-foreground w-4">{i + 1}.</span>
+                  <input
+                    value={item.title}
+                    onChange={e => setEditItems(prev => prev.map((p, idx) => idx === i ? { ...p, title: e.target.value } : p))}
+                    placeholder={`Priority ${i + 1}`}
+                    className="flex-1 text-sm bg-muted/40 border border-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 text-foreground placeholder:text-muted-foreground/60"
+                  />
+                  {editItems.length > 1 && (
+                    <button onClick={() => setEditItems(prev => prev.filter((_, idx) => idx !== i))} className="text-muted-foreground hover:text-destructive transition-colors">
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+                <input
+                  value={item.context}
+                  onChange={e => setEditItems(prev => prev.map((p, idx) => idx === i ? { ...p, context: e.target.value } : p))}
+                  placeholder="Context (optional)"
+                  className="w-full text-xs bg-muted/30 border border-border/60 rounded-lg px-2.5 py-1.5 ml-5 focus:outline-none focus:ring-1 focus:ring-[#0202ff]/20 text-foreground placeholder:text-muted-foreground/50"
+                />
+              </div>
+            ))}
+            {editItems.length < 3 && (
+              <button
+                onClick={() => setEditItems(prev => [...prev, { title: "", context: "", status: "planned" }])}
+                className="flex items-center gap-1.5 text-xs text-[#0202ff] hover:underline font-medium ml-5"
+              >
+                <Plus className="w-3 h-3" /> Add priority
+              </button>
+            )}
+            <div className="flex gap-2 pt-1">
+              <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => setEditingBig3(false)}>Cancel</Button>
+              <Button size="sm" className="flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-xs h-7" onClick={handleSaveBig3} disabled={savingBig3}>
+                {savingBig3 ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Save"}
+              </Button>
+            </div>
+          </div>
+        ) : big3.length > 0 ? (
           <div>
             {big3.map((p, i) => (
               <Big3Item key={p.id || i} item={p} index={i} fromYesterday={false} />
             ))}
           </div>
-        </div>
-      ) : (
-        <div className="px-5 py-4 border-b border-border">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Your Big 3</p>
-          <p className="text-xs text-muted-foreground italic">No priorities set yet — set your Big 3 in tonight's check-in to start tomorrow focused.</p>
-        </div>
-      )}
+        ) : (
+          <p className="text-xs text-muted-foreground italic">No priorities set yet — tap <span className="font-medium not-italic">Edit</span> to add your Big 3 for today.</p>
+        )}
+      </div>
 
       {/* ── Situation signal ─────────────────────────────────────────── */}
       <div className="px-5 py-4 border-b border-border">
