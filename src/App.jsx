@@ -112,8 +112,12 @@ const AuthenticatedApp = () => {
       {/* Redirect old ExperienceManagement URL to new DevelopmentManager */}
       <Route path="/ExperienceManagement" element={<Navigate to="/DevelopmentManager" replace />} />
 
-      {/* Legacy Dashboard — always accessible with full layout */}
-      <Route path="/Dashboard" element={<LayoutWrapper currentPageName="Dashboard"><Pages.Dashboard /></LayoutWrapper>} />
+      {/* Legacy Dashboard — redirect manager-role users to /today */}
+      <Route path="/Dashboard" element={
+        mvpRole === 'manager' 
+          ? <Navigate to="/today" replace />
+          : <LayoutWrapper currentPageName="Dashboard"><Pages.Dashboard /></LayoutWrapper>
+      } />
 
       {/* New manager nav routes (Phase 1) */}
       <Route path="/today" element={<MVPLayout><ManagerToday /></MVPLayout>} />
