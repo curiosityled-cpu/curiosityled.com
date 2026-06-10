@@ -114,8 +114,8 @@ export default function ManagerToday() {
       } catch { return { record: null, yesterday_big3: [] }; }
     },
     enabled: !!user?.email,
-    staleTime: 0,
-    gcTime: 0,
+    staleTime: 30 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
   const todayRecord = todayData?.record || null;
   const yesterdayBig3 = todayData?.yesterday_big3 || [];
@@ -181,7 +181,7 @@ export default function ManagerToday() {
       } catch {}
       return null;
     },
-    enabled: !!user?.email, staleTime: 0,
+    enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
   const { data: goals = [] } = useQuery({
