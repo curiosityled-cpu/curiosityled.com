@@ -1,10 +1,6 @@
 /**
  * ManagerToday — The Daily Companion (Redesigned Lead page)
  * Route: /today
- *
- * Layout: Daily HUD strip → Check-in hero → Today's Playbook (merged card)
- * Companion column (desktop): Upcoming Friction + Intent Loop
- * Removed from Lead: TrendSummaryCard, CheckInHistoryCalendar (→ Patterns)
  */
 import React, { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -30,17 +26,11 @@ function getFirstName(user) {
   return raw && raw.trim() && !raw.includes('@') ? raw.split(' ')[0] : 'there';
 }
 
-function localDateKey() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
 function HeroGreeting({ firstName, hasCheckedIn, todayRecord, onSettingsToggle }) {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   const day = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-  // After check-in, the greeting reacts to the DailyCheckIn signal
   let sub = "Let's see what matters right now.";
   if (hasCheckedIn && todayRecord) {
     const energy = todayRecord.energy_score;
@@ -106,7 +96,6 @@ export default function ManagerToday() {
   const [showWeeklyReflection, setShowWeeklyReflection] = useState(false);
   const [localBig3Override, setLocalBig3Override] = useState(null);
 
-  // Load today's DailyCheckIn record + yesterday's Big 3
   const { data: todayData, refetch: refetchToday } = useQuery({
     queryKey: ['daily-checkin-today', user?.email],
     queryFn: async () => {
@@ -122,24 +111,18 @@ export default function ManagerToday() {
   const todayRecord = todayData?.record || null;
   const yesterdayBig3 = todayData?.yesterday_big3 || [];
 
-  // Load recent DailyCheckIn history for the trend chart
   const { data: checkInHistory = [] } = useQuery({
     queryKey: ['daily-checkin-history', user?.email],
     queryFn: async () => {
-      try {
-        return await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-check_in_date', 14);
-      } catch { return []; }
+      try { return await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-check_in_date', 14); }
+      catch { return []; }
     },
     enabled: !!user?.email,
     staleTime: 5 * 60 * 1000,
   });
 
   const handleCheckInComplete = (big3Priorities) => {
-    // If evening check-in completed with Big 3, override immediately so Playbook updates without waiting for refetch
-    if (big3Priorities?.length > 0) {
-      setLocalBig3Override(big3Priorities);
-    }
-    // Force immediate refetch
+    if (big3Priorities?.length > 0) setLocalBig3Override(big3Priorities);
     queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
     queryClient.invalidateQueries({ queryKey: ['daily-checkin-history', user?.email] });
     queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
@@ -232,7 +215,6 @@ export default function ManagerToday() {
   const firstName = getFirstName(user);
   const hour = new Date().getHours();
 
-  // Determine which check-in flow to surface based on time of day
   const isMorningWindow = hour >= 5 && hour < 12;
   const isMiddayWindow = hour >= 11 && hour < 14;
   const isEveningWindow = hour >= 15;
@@ -241,20 +223,14 @@ export default function ManagerToday() {
   const showMiddayLoop = isMiddayWindow && !todayRecord?.midday_loop_completed;
   const showEveningCheckIn = isEveningWindow && !todayRecord?.evening_completed;
 
-  // Day complete: all relevant windows done
   const allDone = todayRecord?.morning_completed && todayRecord?.evening_completed;
-
-  // Has any check-in data at all (for gating weekly reflection)
   const hasHistoricalData = checkInHistory.length >= 2;
-
-  // Nothing actionable right now (outside all windows, no record yet)
   const isQuietZone = !isMorningWindow && !isMiddayWindow && !isEveningWindow && !todayRecord;
 
-
-  // ── Main column ─────────────────────────────────────────────────────────────
-  const mainContent = !needsToneOnboarding ? (
+  // ── Main column — always rendered (tone onboarding is a banner, not a gate)
+  const mainContent = (
     <div className="space-y-4">
-      {/* Rhythm trend chart — merges history + today's record for immediate feedback */}
+      {/* Rhythm trend chart */}
       {(() => {
         const historyIds = new Set(checkInHistory.map(r => r.id));
         const merged = todayRecord && !historyIds.has(todayRecord.id)
@@ -263,7 +239,7 @@ export default function ManagerToday() {
         return merged.length >= 1 ? <RhythmPulseChart checkIns={merged} /> : null;
       })()}
 
-      {/* ── [3] Quiet zone / nothing yet state ───────────────────────────── */}
+      {/* Quiet zone */}
       {isQuietZone && (
         <div className="bg-card rounded-2xl border border-dashed border-border px-5 py-8 text-center">
           <Brain className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
@@ -274,7 +250,7 @@ export default function ManagerToday() {
         </div>
       )}
 
-      {/* ── RHYTHM CHECK-IN FLOWS (above Playbook) ──────────────────────── */}
+      {/* Check-in flows */}
       {(showMorningCheckIn || todayRecord?.morning_completed) && (
         <MorningCheckIn
           todayRecord={todayRecord}
@@ -310,7 +286,7 @@ export default function ManagerToday() {
         />
       )}
 
-      {/* Today's Playbook — check-ins are above, playbook is below */}
+      {/* Today's Playbook */}
       {(todayRecord || yesterdayBig3.length > 0 || goals.length > 0 || assignments.length > 0) && !isQuietZone && (
         <TodaysPlaybook
           todayRecord={localBig3Override ? { ...todayRecord, big3_priorities: localBig3Override } : todayRecord}
@@ -328,7 +304,7 @@ export default function ManagerToday() {
         />
       )}
 
-      {/* ── [5] Day complete celebration ─────────────────────────────────── */}
+      {/* Day complete */}
       {allDone && (
         <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl px-5 py-4 flex items-start gap-3">
           <span className="text-xl flex-shrink-0">✅</span>
@@ -341,7 +317,7 @@ export default function ManagerToday() {
         </div>
       )}
 
-      {/* Weekly rhythm summary shortcut — [6] only shown when enough history exists */}
+      {/* Weekly reflection shortcut */}
       {hasHistoricalData && (
         <button
           onClick={() => setShowWeeklyReflection(true)}
@@ -358,7 +334,7 @@ export default function ManagerToday() {
         </button>
       )}
 
-      {/* Trend dashboard — mobile only (desktop gets it in companion column) */}
+      {/* Mobile: trend dashboard */}
       <div className="md:hidden">
         <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
       </div>
@@ -368,13 +344,26 @@ export default function ManagerToday() {
         <ExploreDeeperCard />
       </div>
     </div>
-  ) : null;
+  );
 
-  // ── Desktop companion column ─────────────────────────────────────────────────
-  const companionColumn = !needsToneOnboarding ? (
+  // ── Desktop companion column
+  const companionColumn = (
     <div className="space-y-4">
-      {/* [1] Pre-check-in nudge when nothing done yet */}
-      {!todayRecord && !isQuietZone && (
+      {/* Tone onboarding — shown as a sidebar card, not a full-page gate */}
+      {needsToneOnboarding && (
+        <div className="bg-card rounded-2xl border border-[#0202ff]/20 shadow-sm overflow-hidden">
+          <div className="px-4 pt-4 pb-2 flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-[#0202ff] flex items-center justify-center flex-shrink-0">
+              <MessageSquare className="w-3 h-3 text-white" />
+            </div>
+            <p className="text-xs font-semibold text-foreground">How should Atreus talk to you?</p>
+          </div>
+          <div className="px-4 pb-4">
+            <ToneOnboarding existingTone={null} onComplete={() => queryClient.invalidateQueries({ queryKey: ['ml-tone', user?.email] })} />
+          </div>
+        </div>
+      )}
+      {!todayRecord && !isQuietZone && !needsToneOnboarding && (
         <div className="bg-[#0202ff]/5 border border-[#0202ff]/15 rounded-2xl px-4 py-4">
           <p className="text-xs font-semibold text-[#0202ff] mb-1">Before you dive in</p>
           <p className="text-xs text-foreground leading-relaxed">
@@ -382,7 +371,6 @@ export default function ManagerToday() {
           </p>
         </div>
       )}
-      {/* Leadership rhythm trends — above Watch this */}
       <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
       <UpcomingFrictionCard
         trends={trends}
@@ -392,50 +380,39 @@ export default function ManagerToday() {
       />
       <ExploreDeeperCard />
     </div>
-  ) : null;
+  );
 
   return (
     <div className="px-4 py-6">
-      {/* Tone onboarding gate */}
+      {/* Mobile: tone onboarding banner (above content, not blocking it) */}
       {needsToneOnboarding && (
-        <div className="max-w-2xl mx-auto">
-          <HeroGreeting firstName={firstName} />
-          <div className="mt-4 bg-card rounded-2xl border border-[#0202ff]/20 shadow-sm overflow-hidden">
-            <div className="px-5 pt-5 pb-2 flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center">
-                <MessageSquare className="w-3.5 h-3.5 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-foreground">One quick thing before we start</p>
-                <p className="text-xs text-muted-foreground">Choose how Atreus speaks with you.</p>
-              </div>
+        <div className="md:hidden max-w-2xl mx-auto mb-4 bg-card rounded-2xl border border-[#0202ff]/20 shadow-sm overflow-hidden">
+          <div className="px-4 pt-4 pb-2 flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-[#0202ff] flex items-center justify-center flex-shrink-0">
+              <MessageSquare className="w-3 h-3 text-white" />
             </div>
-            <div className="px-5 pb-5">
-              <ToneOnboarding existingTone={null} onComplete={() => queryClient.invalidateQueries({ queryKey: ['ml-tone', user?.email] })} />
-            </div>
+            <p className="text-xs font-semibold text-foreground">How should Atreus talk to you?</p>
+          </div>
+          <div className="px-4 pb-4">
+            <ToneOnboarding existingTone={null} onComplete={() => queryClient.invalidateQueries({ queryKey: ['ml-tone', user?.email] })} />
           </div>
         </div>
       )}
 
-      {/* Main layout */}
-      {!needsToneOnboarding && (
-        <>
-          {/* Mobile: single column */}
-          <div className="md:hidden max-w-2xl mx-auto space-y-4">
-            <HeroGreeting firstName={firstName} hasCheckedIn={!!todayRecord} todayRecord={todayRecord} onSettingsToggle={todayRecord ? () => setShowSettings(s => !s) : null} />
-            {mainContent}
-          </div>
+      {/* Mobile: single column */}
+      <div className="md:hidden max-w-2xl mx-auto space-y-4">
+        <HeroGreeting firstName={firstName} hasCheckedIn={!!todayRecord} todayRecord={todayRecord} onSettingsToggle={todayRecord ? () => setShowSettings(s => !s) : null} />
+        {mainContent}
+      </div>
 
-          {/* Desktop: two column */}
-          <div className="hidden md:block max-w-6xl mx-auto">
-            <HeroGreeting firstName={firstName} hasCheckedIn={!!todayRecord} todayRecord={todayRecord} onSettingsToggle={todayRecord ? () => setShowSettings(s => !s) : null} />
-            <div className="mt-4 grid grid-cols-[1fr_340px] gap-6 items-start">
-              <div className="space-y-4">{mainContent}</div>
-              <div className="sticky top-4">{companionColumn}</div>
-            </div>
-          </div>
-        </>
-      )}
+      {/* Desktop: two column */}
+      <div className="hidden md:block max-w-6xl mx-auto">
+        <HeroGreeting firstName={firstName} hasCheckedIn={!!todayRecord} todayRecord={todayRecord} onSettingsToggle={todayRecord ? () => setShowSettings(s => !s) : null} />
+        <div className="mt-4 grid grid-cols-[1fr_340px] gap-6 items-start">
+          <div className="space-y-4">{mainContent}</div>
+          <div className="sticky top-4">{companionColumn}</div>
+        </div>
+      </div>
 
       <WeeklyRhythmReflection
         isOpen={showWeeklyReflection}
@@ -452,7 +429,6 @@ export default function ManagerToday() {
       <AnimatePresence>
         {showSettings && (
           <>
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -460,7 +436,6 @@ export default function ManagerToday() {
               className="fixed inset-0 bg-black/30 z-40"
               onClick={() => setShowSettings(false)}
             />
-            {/* Panel */}
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
@@ -473,10 +448,7 @@ export default function ManagerToday() {
                   <SlidersHorizontal className="w-4 h-4 text-[#0202ff]" />
                   <p className="text-sm font-semibold text-foreground">Atreus settings</p>
                 </div>
-                <button
-                  onClick={() => setShowSettings(false)}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
+                <button onClick={() => setShowSettings(false)} className="text-muted-foreground hover:text-foreground transition-colors">
                   <X className="w-5 h-5" />
                 </button>
               </div>
