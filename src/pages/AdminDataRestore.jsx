@@ -10,7 +10,14 @@ export default function AdminDataRestore() {
   const [status, setStatus] = useState(null); // null | 'loading' | 'success' | 'error'
   const [result, setResult] = useState(null);
 
-  if (!user || user.app_role !== 'Platform Admin') {
+  const isAdmin = user && (
+    user.app_role === 'Platform Admin' ||
+    user.app_role === 'Super Administrator' ||
+    user.app_role === 'Admin Level 2' ||
+    user.role === 'admin'
+  );
+
+  if (!isAdmin) {
     return <div className="p-8 text-center text-gray-500">Access denied.</div>;
   }
 
