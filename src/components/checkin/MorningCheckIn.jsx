@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Sun, ChevronRight, CheckCircle2, ChevronDown, ChevronUp, Lock } from "lucide-react";
+import { Loader2, Sun, ChevronRight, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const MEASURES = [
@@ -58,8 +58,8 @@ export default function MorningCheckIn({ onComplete, todayRecord }) {
   const [editStep, setEditStep] = useState(1);
 
   const alreadyDone = todayRecord?.morning_completed;
-  // Lock morning editing once evening has been completed (next window has started)
-  const isLocked = !!todayRecord?.evening_completed;
+  // Never lock — user can edit morning responses any time during the day
+  const isLocked = false;
 
   useEffect(() => {
     if (alreadyDone) {
@@ -154,29 +154,35 @@ export default function MorningCheckIn({ onComplete, todayRecord }) {
   if (step === 6 && !editMode) {
     return (
       <div className="bg-card rounded-2xl border border-emerald-200/60 overflow-hidden">
-        <button
-          className="w-full px-4 py-3.5 flex items-center gap-3 text-left"
-          onClick={() => !isLocked && setExpanded(v => !v)}
-          disabled={isLocked}
-        >
-          <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
-            {isLocked ? <Lock className="w-4 h-4 text-emerald-400" /> : <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground">Morning check-in done</p>
-            <div className="flex gap-3 mt-1 flex-wrap">
-              {MEASURES.map(m => (
-                <div key={m.key} className="flex items-center gap-1">
-                  <span className="text-xs">{m.emoji}</span>
-                  <span className="text-xs font-semibold text-foreground">{scores[m.key]}</span>
-                </div>
-              ))}
+        <div className="px-4 py-3.5 flex items-center gap-3">
+          <button
+            className="flex items-center gap-3 flex-1 min-w-0 text-left"
+            onClick={() => setExpanded(v => !v)}
+          >
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             </div>
-          </div>
-          {!isLocked && (expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />)}
-          {isLocked && <span className="text-[10px] text-muted-foreground flex-shrink-0">Locked</span>}
-        </button>
-        {expanded && !isLocked && (
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">Morning check-in done</p>
+              <div className="flex gap-3 mt-1 flex-wrap">
+                {MEASURES.map(m => (
+                  <div key={m.key} className="flex items-center gap-1">
+                    <span className="text-xs">{m.emoji}</span>
+                    <span className="text-xs font-semibold text-foreground">{scores[m.key]}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
+          </button>
+          <button
+            onClick={() => { setEditMode(true); setEditStep(1); }}
+            className="text-xs text-[#0202ff] font-medium hover:underline flex-shrink-0 ml-1"
+          >
+            Edit
+          </button>
+        </div>
+        {expanded && (
           <div className="border-t border-border px-4 py-3 space-y-2">
             {MEASURES.map(m => (
               <div key={m.key} className="flex items-start gap-2">
@@ -190,9 +196,6 @@ export default function MorningCheckIn({ onComplete, todayRecord }) {
                 </div>
               </div>
             ))}
-            <button onClick={() => { setEditMode(true); setEditStep(1); }} className="text-xs text-[#0202ff] font-medium hover:underline mt-1">
-              Edit answers
-            </button>
           </div>
         )}
       </div>

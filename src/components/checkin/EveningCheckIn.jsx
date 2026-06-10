@@ -243,16 +243,27 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
     const big3 = localBig3 ?? todayRecord?.big3_priorities ?? [];
     return (
       <div className="bg-card rounded-2xl border border-indigo-200/60 overflow-hidden">
-        <button className="w-full px-4 py-3.5 flex items-center gap-3 text-left" onClick={() => setExpanded(v => !v)}>
-          <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
-            <CheckCircle2 className="w-4 h-4 text-indigo-600" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground">Evening check-in done</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{big3.length > 0 ? `Big 3 set for tomorrow` : "No Big 3 set"}</p>
-          </div>
-          {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
-        </button>
+        <div className="px-4 py-3.5 flex items-center gap-3">
+          <button
+            className="flex items-center gap-3 flex-1 min-w-0 text-left"
+            onClick={() => setExpanded(v => !v)}
+          >
+            <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
+              <CheckCircle2 className="w-4 h-4 text-indigo-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">Evening check-in done</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{big3.length > 0 ? `Big 3 set for tomorrow` : "No Big 3 set"}</p>
+            </div>
+            {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
+          </button>
+          <button
+            onClick={() => { setEditMode(true); setEditStep(1); }}
+            className="text-xs text-[#0202ff] font-medium hover:underline flex-shrink-0 ml-1"
+          >
+            Edit
+          </button>
+        </div>
         {expanded && (
           <div className="border-t border-border px-4 py-3 space-y-2">
             {MEASURES.map(m => (
@@ -278,9 +289,6 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
                 ))}
               </div>
             )}
-            <button onClick={() => { setEditMode(true); setEditStep(1); }} className="text-xs text-[#0202ff] font-medium hover:underline mt-1">
-              Edit answers
-            </button>
           </div>
         )}
       </div>
