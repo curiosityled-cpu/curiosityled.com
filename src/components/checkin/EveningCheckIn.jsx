@@ -74,6 +74,8 @@ function Big3Step({ goals, onSave }) {
             <span className="w-5 h-5 rounded-full bg-[#0202ff] text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
             <input
               type="text"
+              id={`big3-priority-${i}`}
+              name={`big3-priority-${i}`}
               value={p.title}
               onChange={e => update(i, 'title', e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') e.preventDefault(); }}
@@ -201,7 +203,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
       setLocalBig3(big3Priorities);
       setTimeout(() => {
         setStep(7);
-        onComplete?.();
+        onComplete?.(big3Priorities);
       }, 2000);
     } catch (err) {
       console.error(err);

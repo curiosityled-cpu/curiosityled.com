@@ -104,6 +104,7 @@ export default function ManagerToday() {
   const { openWithContext } = useAtreusChat();
   const [showSettings, setShowSettings] = useState(false);
   const [showWeeklyReflection, setShowWeeklyReflection] = useState(false);
+  const [localBig3Override, setLocalBig3Override] = useState(null);
 
   // Load today's DailyCheckIn record + yesterday's Big 3
   const { data: todayData, refetch: refetchToday } = useQuery({
@@ -132,12 +133,15 @@ export default function ManagerToday() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const handleCheckInComplete = () => {
-    // Force immediate refetch, don't just invalidate
+  const handleCheckInComplete = (big3Priorities) => {
+    // If evening check-in completed with Big 3, override immediately so Playbook updates without waiting for refetch
+    if (big3Priorities?.length > 0) {
+      setLocalBig3Override(big3Priorities);
+    }
+    // Force immediate refetch
     queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
     queryClient.invalidateQueries({ queryKey: ['daily-checkin-history', user?.email] });
     queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
-    // Ensure queries refetch now, not after staleTime
     refetchToday();
   };
 
@@ -307,7 +311,7 @@ export default function ManagerToday() {
       {/* Today's Playbook — check-ins are above, playbook is below */}
       {(todayRecord || yesterdayBig3.length > 0 || goals.length > 0 || assignments.length > 0) && !isQuietZone && (
         <TodaysPlaybook
-          todayRecord={todayRecord}
+          todayRecord={localBig3Override ? { ...todayRecord, big3_priorities: localBig3Override } : todayRecord}
           yesterdayBig3={yesterdayBig3}
           pulse={recentPulses[0] || null}
           trends={trends}
