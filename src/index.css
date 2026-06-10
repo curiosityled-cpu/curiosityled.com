@@ -41,39 +41,46 @@
   }
 
   /* ── Dark / Low-Glare Premium Theme ──────────────────────────────────────── */
+  /* Following Material Design dark theme principles:
+     - Base surface #121212 (not pure black) — ~8% lightness
+     - Cards/surfaces lighter than background to express elevation (+4-6% steps)
+     - Accent desaturated ~25% so it's readable but not harsh
+     - Text hierarchy: primary 92%, secondary 70%, tertiary 48%
+     - Borders visible enough to define surfaces (24-26% lightness)
+  */
   .dark {
-    --background: 220 13% 9%;
-    --foreground: 220 15% 92%;
-    --card: 220 12% 12%;
-    --card-foreground: 220 15% 92%;
-    --popover: 220 12% 14%;
-    --popover-foreground: 220 15% 92%;
-    --primary: 220 15% 90%;
-    --primary-foreground: 220 13% 9%;
-    --secondary: 220 10% 17%;
-    --secondary-foreground: 220 15% 80%;
-    --muted: 220 10% 15%;
-    --muted-foreground: 220 10% 52%;
-    --accent: 38 35% 18%;
-    --accent-foreground: 38 80% 70%;
-    --destructive: 0 55% 45%;
+    --background: 222 14% 8%;          /* ~#111318 — near #121212 with blue tint */
+    --foreground: 220 16% 93%;         /* near-white, slightly warm — primary text */
+    --card: 222 13% 13%;               /* cards sit ~5% above background */
+    --card-foreground: 220 16% 93%;
+    --popover: 222 13% 16%;            /* popovers slightly lighter (higher elevation) */
+    --popover-foreground: 220 16% 93%;
+    --primary: 220 16% 91%;
+    --primary-foreground: 222 14% 8%;
+    --secondary: 222 11% 20%;          /* subtle interactive surfaces */
+    --secondary-foreground: 220 14% 82%;
+    --muted: 222 11% 17%;              /* muted input/bg areas */
+    --muted-foreground: 220 10% 56%;   /* secondary text — readable but recessed */
+    --accent: 38 40% 20%;
+    --accent-foreground: 38 85% 72%;
+    --destructive: 0 58% 52%;
     --destructive-foreground: 0 0% 98%;
-    --border: 220 10% 20%;
-    --input: 220 10% 18%;
-    --ring: 225 70% 60%;
-    --chart-1: 225 70% 58%;
-    --chart-2: 38 75% 58%;
-    --chart-3: 160 50% 48%;
-    --chart-4: 280 50% 62%;
-    --chart-5: 0 55% 55%;
-    --sidebar-background: 220 13% 7%;
-    --sidebar-foreground: 220 12% 75%;
-    --sidebar-primary: 225 70% 58%;
+    --border: 222 11% 24%;             /* clearly visible borders — up from 20% */
+    --input: 222 11% 19%;
+    --ring: 225 55% 62%;               /* desaturated accent ring */
+    --chart-1: 225 55% 62%;
+    --chart-2: 38 70% 60%;
+    --chart-3: 160 48% 52%;
+    --chart-4: 280 45% 65%;
+    --chart-5: 0 58% 58%;
+    --sidebar-background: 222 14% 6%;  /* sidebar darker than main bg */
+    --sidebar-foreground: 220 12% 78%;
+    --sidebar-primary: 225 55% 62%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 10% 14%;
-    --sidebar-accent-foreground: 220 12% 85%;
-    --sidebar-border: 220 10% 13%;
-    --sidebar-ring: 225 70% 58%;
+    --sidebar-accent: 222 11% 15%;
+    --sidebar-accent-foreground: 220 12% 88%;
+    --sidebar-border: 222 11% 16%;
+    --sidebar-ring: 225 55% 62%;
   }
 }
 
@@ -107,153 +114,208 @@
 /* ── Manager surface overrides (dark mode only) ──────────────────────────────
    Applied inside the MVP manager shell (.cl-dark) when dark mode is active.
    Overrides hardcoded Tailwind color classes used in legacy components.
+   Elevation system: bg (8%) → gray-50 (11%) → white/card (13%) → popover (16%)
+   Text hierarchy:   gray-900 (93%) → gray-700 (78%) → gray-500 (56%) → gray-400 (44%)
 ────────────────────────────────────────────────────────────────────────── */
 
+/* ── Surface elevation layers ────────────────────────────────────────────── */
 .dark .cl-dark .bg-white {
-  background-color: hsl(var(--card)) !important;
+  background-color: hsl(222 13% 13%) !important;   /* card level */
 }
 .dark .cl-dark .bg-gray-50 {
-  background-color: hsl(220 10% 11%) !important;
+  background-color: hsl(222 12% 11%) !important;   /* slightly above bg */
 }
 .dark .cl-dark .bg-gray-100 {
-  background-color: hsl(220 10% 14%) !important;
+  background-color: hsl(222 12% 15%) !important;   /* interactive hover target */
 }
 .dark .cl-dark .bg-gray-200 {
-  background-color: hsl(220 10% 17%) !important;
+  background-color: hsl(222 11% 19%) !important;
 }
+.dark .cl-dark .bg-slate-100 {
+  background-color: hsl(222 12% 16%) !important;
+}
+.dark .cl-dark .bg-slate-200 {
+  background-color: hsl(222 11% 20%) !important;
+}
+
+/* ── Borders — visible enough to define surfaces ─────────────────────────── */
 .dark .cl-dark .border-gray-100 {
-  border-color: hsl(var(--border)) !important;
+  border-color: hsl(222 11% 22%) !important;
 }
 .dark .cl-dark .border-gray-200 {
-  border-color: hsl(220 10% 22%) !important;
+  border-color: hsl(222 11% 26%) !important;
 }
+.dark .cl-dark .border-slate-100 {
+  border-color: hsl(222 11% 22%) !important;
+}
+.dark .cl-dark .border-slate-200 {
+  border-color: hsl(222 11% 26%) !important;
+}
+.dark .cl-dark .border-t,
+.dark .cl-dark .border-b {
+  border-color: hsl(222 11% 24%);
+}
+.dark .cl-dark .divide-gray-50 > * + *,
+.dark .cl-dark .divide-gray-100 > * + * {
+  border-color: hsl(222 11% 22%) !important;
+}
+.dark .cl-dark .border-dashed {
+  border-color: hsl(222 11% 26%) !important;
+}
+
+/* ── Text hierarchy — 3-level legibility system ──────────────────────────── */
 .dark .cl-dark .text-gray-900 {
-  color: hsl(var(--foreground)) !important;
+  color: hsl(220 16% 93%) !important;   /* primary — near-white */
 }
 .dark .cl-dark .text-gray-800 {
-  color: hsl(220 15% 85%) !important;
+  color: hsl(220 14% 86%) !important;   /* strong secondary */
 }
 .dark .cl-dark .text-gray-700 {
-  color: hsl(220 12% 78%) !important;
+  color: hsl(220 12% 78%) !important;   /* secondary */
 }
 .dark .cl-dark .text-gray-600 {
-  color: hsl(220 10% 65%) !important;
+  color: hsl(220 10% 68%) !important;   /* mid — body text on cards */
 }
 .dark .cl-dark .text-gray-500 {
-  color: hsl(220 8% 55%) !important;
+  color: hsl(220 9% 58%) !important;    /* tertiary / labels */
 }
 .dark .cl-dark .text-gray-400 {
-  color: hsl(220 8% 45%) !important;
+  color: hsl(220 8% 48%) !important;    /* de-emphasised */
 }
 .dark .cl-dark .text-gray-300 {
-  color: hsl(220 8% 38%) !important;
+  color: hsl(220 8% 40%) !important;
 }
 .dark .cl-dark .text-gray-200 {
-  color: hsl(220 8% 30%) !important;
+  color: hsl(220 8% 32%) !important;
+}
+.dark .cl-dark .text-slate-900 {
+  color: hsl(220 16% 93%) !important;
+}
+.dark .cl-dark .text-slate-800 {
+  color: hsl(220 14% 86%) !important;
+}
+.dark .cl-dark .text-slate-700 {
+  color: hsl(220 12% 78%) !important;
+}
+.dark .cl-dark .text-slate-600 {
+  color: hsl(220 10% 68%) !important;
+}
+.dark .cl-dark .text-slate-500 {
+  color: hsl(220 9% 58%) !important;
+}
+.dark .cl-dark .text-slate-400 {
+  color: hsl(220 8% 48%) !important;
 }
 
+/* ── Hover states ─────────────────────────────────────────────────────────── */
 .dark .cl-dark .hover\:bg-gray-50:hover {
-  background-color: hsl(220 10% 13%) !important;
+  background-color: hsl(222 12% 14%) !important;
 }
 .dark .cl-dark .hover\:bg-gray-100:hover {
-  background-color: hsl(220 10% 15%) !important;
+  background-color: hsl(222 12% 17%) !important;
+}
+.dark .cl-dark .active\:bg-gray-100:active {
+  background-color: hsl(222 12% 17%) !important;
 }
 
-.dark .cl-dark .divide-gray-50 > * + * {
-  border-color: hsl(var(--border)) !important;
-}
-.dark .cl-dark .divide-gray-100 > * + * {
-  border-color: hsl(var(--border)) !important;
-}
-.dark .cl-dark .border-t {
-  border-color: hsl(var(--border));
-}
-.dark .cl-dark .border-b {
-  border-color: hsl(var(--border));
-}
-
+/* ── Form inputs ──────────────────────────────────────────────────────────── */
 .dark .cl-dark input,
 .dark .cl-dark textarea,
 .dark .cl-dark select {
-  background-color: hsl(220 10% 14%) !important;
-  color: hsl(var(--foreground)) !important;
-  border-color: hsl(var(--border)) !important;
+  background-color: hsl(222 11% 16%) !important;
+  color: hsl(220 16% 93%) !important;
+  border-color: hsl(222 11% 26%) !important;
 }
 .dark .cl-dark input::placeholder,
 .dark .cl-dark textarea::placeholder {
-  color: hsl(220 8% 45%) !important;
+  color: hsl(220 8% 48%) !important;
 }
 
-.dark .cl-dark [class*="rounded-"] {
-  background-color: hsl(var(--card));
-}
-
+/* ── Gradients ────────────────────────────────────────────────────────────── */
 .dark .cl-dark .from-blue-50\/40 {
-  --tw-gradient-from: hsl(225 30% 13% / 0.5) !important;
+  --tw-gradient-from: hsl(225 30% 14% / 0.6) !important;
 }
 .dark .cl-dark .from-slate-50 {
-  --tw-gradient-from: hsl(220 13% 9%) !important;
+  --tw-gradient-from: hsl(222 14% 8%) !important;
 }
 .dark .cl-dark .to-blue-50 {
-  --tw-gradient-to: hsl(225 25% 11%) !important;
+  --tw-gradient-to: hsl(225 25% 12%) !important;
 }
-.dark .cl-dark .bg-gradient-to-br {
-  /* keep as-is — specific gradient classes above handle overrides */
+.dark .cl-dark .from-\[\#0202ff\]\/5 {
+  --tw-gradient-from: rgb(100 120 255 / 0.1) !important;  /* desaturated blue tint */
+}
+.dark .cl-dark .from-amber-50 {
+  --tw-gradient-from: hsl(38 30% 12%) !important;
+}
+.dark .cl-dark .to-white {
+  --tw-gradient-to: hsl(222 13% 13%) !important;
 }
 
-.dark .cl-dark .bg-emerald-50 { background-color: hsl(160 30% 11%) !important; }
-.dark .cl-dark .bg-amber-50 { background-color: hsl(38 30% 11%) !important; }
-.dark .cl-dark .bg-blue-50 { background-color: hsl(225 30% 12%) !important; }
-.dark .cl-dark .bg-violet-50 { background-color: hsl(270 25% 12%) !important; }
-.dark .cl-dark .bg-purple-50 { background-color: hsl(280 25% 12%) !important; }
-.dark .cl-dark .bg-indigo-50 { background-color: hsl(240 28% 13%) !important; }
-.dark .cl-dark .bg-rose-50 { background-color: hsl(350 25% 11%) !important; }
-.dark .cl-dark .bg-sky-50 { background-color: hsl(200 30% 11%) !important; }
-.dark .cl-dark .bg-green-50 { background-color: hsl(140 25% 10%) !important; }
-.dark .cl-dark .bg-orange-50 { background-color: hsl(25 30% 11%) !important; }
-.dark .cl-dark .bg-slate-50 { background-color: hsl(220 12% 12%) !important; }
-.dark .cl-dark .bg-red-50 { background-color: hsl(0 25% 11%) !important; }
+/* ── Shadows — deeper to compensate for dark bg ──────────────────────────── */
+.dark .cl-dark .shadow-sm {
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5), 0 0 0 1px hsl(222 11% 22% / 0.5) !important;
+}
+.dark .cl-dark .shadow-md {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.55) !important;
+}
+.dark .cl-dark .shadow-lg {
+  box-shadow: 0 8px 28px rgba(0,0,0,0.65) !important;
+}
 
-.dark .cl-dark .border-emerald-100 { border-color: hsl(160 30% 18%) !important; }
-.dark .cl-dark .border-amber-100 { border-color: hsl(38 35% 20%) !important; }
-.dark .cl-dark .border-blue-100 { border-color: hsl(225 30% 18%) !important; }
-.dark .cl-dark .border-violet-100 { border-color: hsl(270 25% 20%) !important; }
-.dark .cl-dark .border-purple-100 { border-color: hsl(280 25% 18%) !important; }
-.dark .cl-dark .border-indigo-100 { border-color: hsl(240 28% 20%) !important; }
-.dark .cl-dark .border-rose-100 { border-color: hsl(350 25% 18%) !important; }
-.dark .cl-dark .border-sky-100 { border-color: hsl(200 30% 18%) !important; }
-.dark .cl-dark .border-green-100 { border-color: hsl(140 25% 16%) !important; }
-.dark .cl-dark .border-orange-100 { border-color: hsl(25 30% 18%) !important; }
-.dark .cl-dark .border-slate-100 { border-color: hsl(220 12% 18%) !important; }
-.dark .cl-dark .border-red-50 { border-color: hsl(0 20% 16%) !important; }
-.dark .cl-dark .border-dashed { border-color: hsl(220 10% 22%) !important; }
+/* ── Semantic color surfaces — retain color signal, not just dark blobs ───── */
+/* Backgrounds: enough color to signal meaning, dark enough for dark mode */
+.dark .cl-dark .bg-emerald-50  { background-color: hsl(160 28% 14%) !important; }
+.dark .cl-dark .bg-green-50    { background-color: hsl(140 24% 13%) !important; }
+.dark .cl-dark .bg-teal-50     { background-color: hsl(175 28% 13%) !important; }
+.dark .cl-dark .bg-amber-50    { background-color: hsl(38 32% 14%) !important; }
+.dark .cl-dark .bg-orange-50   { background-color: hsl(25 32% 14%) !important; }
+.dark .cl-dark .bg-blue-50     { background-color: hsl(222 32% 15%) !important; }
+.dark .cl-dark .bg-indigo-50   { background-color: hsl(240 28% 15%) !important; }
+.dark .cl-dark .bg-violet-50   { background-color: hsl(270 26% 15%) !important; }
+.dark .cl-dark .bg-purple-50   { background-color: hsl(280 26% 15%) !important; }
+.dark .cl-dark .bg-rose-50     { background-color: hsl(350 26% 14%) !important; }
+.dark .cl-dark .bg-red-50      { background-color: hsl(0 26% 14%) !important; }
+.dark .cl-dark .bg-sky-50      { background-color: hsl(200 30% 14%) !important; }
+.dark .cl-dark .bg-slate-50    { background-color: hsl(222 12% 12%) !important; }
 
-.dark .cl-dark .text-emerald-600 { color: hsl(160 55% 55%) !important; }
-.dark .cl-dark .text-emerald-700 { color: hsl(160 50% 50%) !important; }
-.dark .cl-dark .text-emerald-800 { color: hsl(160 45% 65%) !important; }
-.dark .cl-dark .text-amber-600 { color: hsl(38 80% 62%) !important; }
-.dark .cl-dark .text-amber-700 { color: hsl(38 75% 58%) !important; }
-.dark .cl-dark .text-amber-800 { color: hsl(38 70% 65%) !important; }
-.dark .cl-dark .text-blue-600 { color: hsl(218 75% 65%) !important; }
-.dark .cl-dark .text-blue-700 { color: hsl(218 70% 60%) !important; }
-.dark .cl-dark .text-violet-600 { color: hsl(270 60% 70%) !important; }
-.dark .cl-dark .text-violet-700 { color: hsl(270 55% 65%) !important; }
-.dark .cl-dark .text-purple-600 { color: hsl(280 55% 70%) !important; }
-.dark .cl-dark .text-purple-700 { color: hsl(280 50% 65%) !important; }
-.dark .cl-dark .text-indigo-600 { color: hsl(240 60% 70%) !important; }
-.dark .cl-dark .text-rose-600 { color: hsl(350 65% 65%) !important; }
-.dark .cl-dark .text-sky-500 { color: hsl(200 75% 62%) !important; }
-.dark .cl-dark .text-sky-600 { color: hsl(200 70% 58%) !important; }
-.dark .cl-dark .text-green-600 { color: hsl(140 55% 55%) !important; }
-.dark .cl-dark .text-red-500 { color: hsl(0 65% 62%) !important; }
-.dark .cl-dark .text-red-600 { color: hsl(0 60% 58%) !important; }
+/* Borders for semantic surfaces — visible ring of color */
+.dark .cl-dark .border-emerald-100  { border-color: hsl(160 35% 22%) !important; }
+.dark .cl-dark .border-green-100    { border-color: hsl(140 30% 20%) !important; }
+.dark .cl-dark .border-teal-100     { border-color: hsl(175 30% 20%) !important; }
+.dark .cl-dark .border-amber-100    { border-color: hsl(38 40% 24%) !important; }
+.dark .cl-dark .border-orange-100   { border-color: hsl(25 35% 22%) !important; }
+.dark .cl-dark .border-blue-100     { border-color: hsl(222 38% 24%) !important; }
+.dark .cl-dark .border-indigo-100   { border-color: hsl(240 32% 24%) !important; }
+.dark .cl-dark .border-violet-100   { border-color: hsl(270 30% 24%) !important; }
+.dark .cl-dark .border-purple-100   { border-color: hsl(280 30% 24%) !important; }
+.dark .cl-dark .border-rose-100     { border-color: hsl(350 30% 22%) !important; }
+.dark .cl-dark .border-red-50       { border-color: hsl(0 28% 20%) !important; }
+.dark .cl-dark .border-sky-100      { border-color: hsl(200 34% 22%) !important; }
 
-.dark .cl-dark .from-\[\#0202ff\]\/5 { --tw-gradient-from: rgb(2 2 255 / 0.08) !important; }
-.dark .cl-dark .from-amber-50 { --tw-gradient-from: hsl(38 30% 11%) !important; }
-.dark .cl-dark .to-white { --tw-gradient-to: hsl(var(--card)) !important; }
-.dark .cl-dark .from-\[\#0202ff\]\/5.to-white { background: linear-gradient(135deg, rgb(2 2 255 / 0.1), hsl(var(--card))) !important; }
-
-.dark .cl-dark .shadow-sm { box-shadow: 0 1px 4px rgba(0,0,0,0.4) !important; }
-.dark .cl-dark .shadow-lg { box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important; }
-
-.dark .cl-dark .active\:bg-gray-100:active { background-color: hsl(220 10% 15%) !important; }
+/* Semantic text colors — desaturated from light-mode values for readability */
+.dark .cl-dark .text-emerald-600 { color: hsl(160 52% 58%) !important; }
+.dark .cl-dark .text-emerald-700 { color: hsl(160 48% 53%) !important; }
+.dark .cl-dark .text-emerald-800 { color: hsl(160 44% 68%) !important; }
+.dark .cl-dark .text-green-600   { color: hsl(140 50% 58%) !important; }
+.dark .cl-dark .text-green-700   { color: hsl(140 46% 53%) !important; }
+.dark .cl-dark .text-teal-600    { color: hsl(175 52% 56%) !important; }
+.dark .cl-dark .text-amber-600   { color: hsl(38 78% 64%) !important; }
+.dark .cl-dark .text-amber-700   { color: hsl(38 72% 60%) !important; }
+.dark .cl-dark .text-amber-800   { color: hsl(38 68% 68%) !important; }
+.dark .cl-dark .text-orange-600  { color: hsl(25 75% 62%) !important; }
+.dark .cl-dark .text-orange-700  { color: hsl(25 70% 58%) !important; }
+.dark .cl-dark .text-blue-600    { color: hsl(218 72% 68%) !important; }
+.dark .cl-dark .text-blue-700    { color: hsl(218 68% 63%) !important; }
+.dark .cl-dark .text-indigo-600  { color: hsl(240 58% 72%) !important; }
+.dark .cl-dark .text-indigo-700  { color: hsl(240 54% 67%) !important; }
+.dark .cl-dark .text-violet-600  { color: hsl(270 58% 72%) !important; }
+.dark .cl-dark .text-violet-700  { color: hsl(270 54% 67%) !important; }
+.dark .cl-dark .text-purple-600  { color: hsl(280 54% 72%) !important; }
+.dark .cl-dark .text-purple-700  { color: hsl(280 50% 67%) !important; }
+.dark .cl-dark .text-rose-600    { color: hsl(350 62% 67%) !important; }
+.dark .cl-dark .text-rose-700    { color: hsl(350 58% 62%) !important; }
+.dark .cl-dark .text-sky-500     { color: hsl(200 72% 64%) !important; }
+.dark .cl-dark .text-sky-600     { color: hsl(200 68% 60%) !important; }
+.dark .cl-dark .text-red-500     { color: hsl(0 62% 65%) !important; }
+.dark .cl-dark .text-red-600     { color: hsl(0 58% 60%) !important; }
+.dark .cl-dark .text-red-700     { color: hsl(0 54% 55%) !important; }
