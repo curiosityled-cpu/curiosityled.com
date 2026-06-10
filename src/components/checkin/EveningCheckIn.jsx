@@ -65,7 +65,7 @@ function Big3Step({ goals, onSave }) {
     <div className="space-y-4">
       <div>
         <p className="text-sm font-semibold text-foreground">Big 3 for tomorrow</p>
-        <p className="text-xs text-muted-foreground mt-0.5">What are the three things that will make tomorrow count?</p>
+        <p className="text-xs text-muted-foreground mt-0.5">What will make tomorrow count? Add at least 1 — all 3 are optional.</p>
       </div>
 
       {priorities.map((p, i) => (
@@ -113,7 +113,10 @@ function Big3Step({ goals, onSave }) {
         disabled={saving || !priorities.some(p => p.title.trim())}
         className="w-full bg-[#0202ff] hover:bg-[#0101dd]"
       >
-        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Big 3 & complete"}
+        {saving
+          ? <Loader2 className="w-4 h-4 animate-spin" />
+          : `Save ${priorities.filter(p => p.title.trim()).length > 0 ? priorities.filter(p => p.title.trim()).length : ''} ${priorities.filter(p => p.title.trim()).length === 1 ? 'priority' : 'priorities'} & complete`
+        }
       </Button>
       <button
         onClick={() => onSave([])}
