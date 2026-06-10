@@ -132,6 +132,35 @@ function Big3Step({ goals, onSave }) {
   );
 }
 
+const DRAFT_KEY = "evening_checkin_draft";
+
+function loadDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const draft = JSON.parse(raw);
+    // Only restore if it's from today
+    if (draft.date !== new Date().toISOString().slice(0, 10)) {
+      localStorage.removeItem(DRAFT_KEY);
+      return null;
+    }
+    return draft;
+  } catch { return null; }
+}
+
+function saveDraft(step, scores, notes, questions) {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({
+      date: new Date().toISOString().slice(0, 10),
+      step, scores, notes, questions,
+    }));
+  } catch {}
+}
+
+function clearDraft() {
+  try { localStorage.removeItem(DRAFT_KEY); } catch {}
+}
+
 export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) {
   const [step, setStep] = useState(0);
   const [questions, setQuestions] = useState(null);
@@ -148,6 +177,13 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
 
   // Track whether we've already initiated the check-in flow (questions fetched)
   const flowInitiatedRef = useRef(false);
+
+  // Persist draft to localStorage whenever in-progress state changes
+  useEffect(() => {
+    if (step >= 1 && step <= 6 && !alreadyDone) {
+      saveDraft(step, scores, notes, questions);
+    }
+  }, [step, scores, notes, questions, alreadyDone]);
 
   useEffect(() => {
     if (alreadyDone) {
@@ -172,11 +208,23 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
         load:       todayRecord.load_note       || "",
         growth:     todayRecord.growth_note     || "",
       });
+      clearDraft();
       return;
     }
     // Only fetch questions once to avoid resetting the flow on re-renders
     if (flowInitiatedRef.current) return;
     flowInitiatedRef.current = true;
+
+    // Restore from draft if available
+    const draft = loadDraft();
+    if (draft) {
+      setScores(draft.scores);
+      setNotes(draft.notes);
+      if (draft.questions) setQuestions(draft.questions);
+      setStep(draft.step);
+      return;
+    }
+
     base44.functions.invoke("saveDailyCheckIn", { action: "get_questions", check_in_type: "evening" })
       .then(res => { setQuestions(res.data?.questions || null); setStep(1); })
       .catch(() => setStep(1));
@@ -201,6 +249,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
         big3_priorities: big3Priorities,
         questions_used: questions || {},
       });
+      clearDraft();
       // Notify parent immediately so cache is invalidated and data is fresh on any navigation
       onComplete?.(big3Priorities);
       // Show success confirmation for 2s before transitioning the step
