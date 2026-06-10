@@ -132,6 +132,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
   const [notes, setNotes] = useState({ energy: "", confidence: "", focus: "", load: "", growth: "" });
   const [saving, setSaving] = useState(false);
   const [savedBig3, setSavedBig3] = useState(null); // success confirmation state
+  const [localBig3, setLocalBig3] = useState(null); // persisted after save for step 7 display
   const [expanded, setExpanded] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editStep, setEditStep] = useState(1);
@@ -183,6 +184,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
       });
       // Show success confirmation for 2s before transitioning
       setSavedBig3(big3Priorities);
+      setLocalBig3(big3Priorities);
       setTimeout(() => {
         setStep(7);
         onComplete?.();
@@ -220,7 +222,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
   };
 
   if (step === 7 && !editMode) {
-    const big3 = todayRecord?.big3_priorities || [];
+    const big3 = localBig3 ?? todayRecord?.big3_priorities ?? [];
     return (
       <div className="bg-card rounded-2xl border border-indigo-200/60 overflow-hidden">
         <button className="w-full px-4 py-3.5 flex items-center gap-3 text-left" onClick={() => setExpanded(v => !v)}>
