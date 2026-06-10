@@ -108,12 +108,12 @@ Deno.serve(async (req) => {
 
     // ── SAVE ─────────────────────────────────────────────────────────────────
      if (action === 'save') {
-        // Query by user_email only, filter to today client-side (compound date queries unreliable)
+        // Fetch enough records to always find today's — 30 covers any reasonable case
         let records = [];
         let retries = 3;
         while (retries > 0) {
           try {
-            const allRecords = await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 10);
+            const allRecords = await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 30);
             records = allRecords.filter(r => r.check_in_date === today);
             break;
           } catch (e) {
@@ -123,7 +123,14 @@ Deno.serve(async (req) => {
           }
         }
 
-        const existing = records[0] || null;
+        // Use the first today record regardless of check_in_type — we merge all check-in data
+        // into a single record per day. If multiple exist (shouldn't happen), prefer one that
+        // already has the most data.
+        const existing = records.sort((a, b) => {
+          const aScore = (a.morning_completed ? 1 : 0) + (a.evening_completed ? 1 : 0) + (a.midday_loop_completed ? 1 : 0);
+          const bScore = (b.morning_completed ? 1 : 0) + (b.evening_completed ? 1 : 0) + (b.midday_loop_completed ? 1 : 0);
+          return bScore - aScore;
+        })[0] || null;
 
       const now = new Date().toISOString();
 
@@ -176,7 +183,7 @@ Deno.serve(async (req) => {
       let retries = 3;
       while (retries > 0) {
         try {
-          allRecords = await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 14);
+          allRecords = await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 30);
           break;
         } catch (e) {
           retries--;
@@ -184,8 +191,43 @@ Deno.serve(async (req) => {
           await new Promise(resolve => setTimeout(resolve, 200));
         }
       }
-      const todayRec = allRecords.find(r => r.check_in_date === today) || null;
-      // Find the most recent non-today record that has Big 3 set (timezone-agnostic)
+
+      // Merge all today records into one (handles edge case of duplicate records from type splits)
+      const todayRecords = allRecords.filter(r => r.check_in_date === today);
+      let todayRec = null;
+      if (todayRecords.length > 0) {
+        // Merge all today records: pick the one with most completions as base, overlay the rest
+        const sorted = todayRecords.sort((a, b) => {
+          const aScore = (a.morning_completed ? 1 : 0) + (a.evening_completed ? 1 : 0) + (a.midday_loop_completed ? 1 : 0);
+          const bScore = (b.morning_completed ? 1 : 0) + (b.evening_completed ? 1 : 0) + (b.midday_loop_completed ? 1 : 0);
+          return bScore - aScore;
+        });
+        todayRec = { ...sorted[0] };
+        // Overlay any fields from secondary records that primary is missing
+        for (let i = 1; i < sorted.length; i++) {
+          const r = sorted[i];
+          if (r.morning_completed && !todayRec.morning_completed) {
+            todayRec.morning_completed = true;
+            todayRec.morning_completed_at = r.morning_completed_at;
+            todayRec.energy_score = todayRec.energy_score || r.energy_score;
+            todayRec.confidence_score = todayRec.confidence_score || r.confidence_score;
+            todayRec.focus_score = todayRec.focus_score || r.focus_score;
+            todayRec.load_score = todayRec.load_score || r.load_score;
+            todayRec.growth_score = todayRec.growth_score || r.growth_score;
+          }
+          if (r.evening_completed && !todayRec.evening_completed) {
+            todayRec.evening_completed = true;
+            todayRec.evening_completed_at = r.evening_completed_at;
+            todayRec.big3_priorities = todayRec.big3_priorities?.length ? todayRec.big3_priorities : r.big3_priorities;
+          }
+          if (r.midday_loop_completed && !todayRec.midday_loop_completed) {
+            todayRec.midday_loop_completed = true;
+            todayRec.midday_loop_completed_at = r.midday_loop_completed_at;
+          }
+        }
+      }
+
+      // Find the most recent non-today record that has Big 3 set
       const prevWithBig3 = allRecords.find(r => r.check_in_date !== today && r.big3_priorities?.length > 0);
       const yesterday_big3 = prevWithBig3?.big3_priorities || [];
       return Response.json({ record: todayRec, yesterday_big3 });
