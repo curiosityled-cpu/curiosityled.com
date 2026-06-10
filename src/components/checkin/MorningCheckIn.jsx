@@ -47,7 +47,13 @@ function ScorePicker({ value, onChange }) {
   );
 }
 
-export default function MorningCheckIn({ onComplete, todayRecord }) {
+const TODAY = new Date().toISOString().slice(0, 10);
+
+function getDraftKey(userEmail) {
+  return `morning_draft_${userEmail}_${TODAY}`;
+}
+
+export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
   const [step, setStep] = useState(0); // 0=loading, 1-5=measures, 6=done
   const [questions, setQuestions] = useState(null);
   const [scores, setScores] = useState({ energy: 3, confidence: 3, focus: 3, load: 3, growth: 3 });
@@ -58,8 +64,13 @@ export default function MorningCheckIn({ onComplete, todayRecord }) {
   const [editStep, setEditStep] = useState(1);
 
   const alreadyDone = todayRecord?.morning_completed;
-  // Never lock — user can edit morning responses any time during the day
-  const isLocked = false;
+
+  // Persist in-progress draft to localStorage on every step/score/note change
+  useEffect(() => {
+    if (!userEmail || alreadyDone || step === 0 || step === 6) return;
+    const draft = { step, scores, notes, questions };
+    localStorage.setItem(getDraftKey(userEmail), JSON.stringify(draft));
+  }, [step, scores, notes, questions, userEmail, alreadyDone]);
 
   useEffect(() => {
     if (alreadyDone) {
@@ -78,12 +89,32 @@ export default function MorningCheckIn({ onComplete, todayRecord }) {
         load:       todayRecord.load_note       || "",
         growth:     todayRecord.growth_note     || "",
       });
+      // Clear any stale draft
+      if (userEmail) localStorage.removeItem(getDraftKey(userEmail));
       return;
     }
+
+    // Try to rehydrate an in-progress draft first
+    if (userEmail) {
+      try {
+        const raw = localStorage.getItem(getDraftKey(userEmail));
+        if (raw) {
+          const draft = JSON.parse(raw);
+          if (draft.step >= 1 && draft.step <= 5) {
+            setStep(draft.step);
+            setScores(draft.scores);
+            setNotes(draft.notes);
+            if (draft.questions) setQuestions(draft.questions);
+            return; // skip fresh fetch — questions already cached in draft
+          }
+        }
+      } catch { /* ignore parse errors */ }
+    }
+
     base44.functions.invoke("saveDailyCheckIn", { action: "get_questions", check_in_type: "morning" })
       .then(res => { setQuestions(res.data?.questions || null); setStep(1); })
       .catch(() => setStep(1));
-  }, [alreadyDone]);
+  }, [alreadyDone, userEmail]);
 
   const currentMeasure = MEASURES[step - 1];
 
@@ -113,8 +144,8 @@ export default function MorningCheckIn({ onComplete, todayRecord }) {
         growth_note: notes.growth,
         questions_used: questions || {},
       });
-      // If no error thrown, save succeeded
       setStep(6);
+      if (userEmail) localStorage.removeItem(getDraftKey(userEmail));
       onComplete?.();
     } catch (err) {
       console.error('Save error:', err);

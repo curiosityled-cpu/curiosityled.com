@@ -278,6 +278,7 @@ export default function ManagerToday() {
       {(showMorningCheckIn || todayRecord?.morning_completed) && (
         <MorningCheckIn
           todayRecord={todayRecord}
+          userEmail={user?.email}
           onComplete={handleCheckInComplete}
         />
       )}
