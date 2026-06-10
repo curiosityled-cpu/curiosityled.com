@@ -218,6 +218,64 @@
   background-color: hsl(222 12% 17%) !important;
 }
 
+/* ── Sidebar active nav item — desaturate the pure #0202ff on dark bg ─────── */
+/* The sidebar nav active state uses inline bg-[#0202ff]; we override via the
+   cl-dark wrapper so the button is still clearly "selected" but not harsh */
+.dark .cl-dark a[style*="background"][style*="rgb(2, 2, 255)"],
+.dark .cl-dark a.bg-\[\#0202ff\] {
+  background-color: hsl(225 55% 38%) !important;
+  box-shadow: 0 1px 6px hsl(225 55% 20% / 0.5) !important;
+}
+
+/* ── bg-muted/40 inputs on dark — need visible distinction from card ─────── */
+.dark .cl-dark .bg-muted\/40 {
+  background-color: hsl(222 11% 17%) !important;
+}
+.dark .cl-dark .bg-muted\/50 {
+  background-color: hsl(222 11% 18%) !important;
+}
+.dark .cl-dark .bg-muted\/60 {
+  background-color: hsl(222 11% 19%) !important;
+}
+
+/* ── Progress bar track needs to stand out from card background ──────────── */
+.dark .cl-dark [role="progressbar"] > div:first-child {
+  background-color: hsl(222 11% 22%) !important;
+}
+
+/* ── Dashed empty-state borders more visible ─────────────────────────────── */
+.dark .cl-dark .border-dashed.border-border {
+  border-color: hsl(222 11% 28%) !important;
+}
+
+/* ── bg-[#0202ff]/5 "before you dive in" panel — too faint on dark ──────── */
+.dark .cl-dark .bg-\[\#0202ff\]\/5 {
+  background-color: hsl(225 35% 16%) !important;
+}
+.dark .cl-dark .border-\[\#0202ff\]\/15 {
+  border-color: hsl(225 40% 26%) !important;
+}
+
+/* ── Badge / tag elements using bg-[#0202ff]/10 ─────────────────────────── */
+.dark .cl-dark .bg-\[\#0202ff\]\/10 {
+  background-color: hsl(225 40% 18%) !important;
+}
+.dark .cl-dark .text-\[\#0202ff\] {
+  color: hsl(225 70% 72%) !important;
+}
+
+/* ── "All goals →" link and similar inline [#0202ff] text ───────────────── */
+.dark .cl-dark a .text-\[\#0202ff\],
+.dark .cl-dark span.text-\[\#0202ff\] {
+  color: hsl(225 70% 72%) !important;
+}
+
+/* ── Card section dividers inside bg-card — slightly more visible ────────── */
+.dark .cl-dark .border-b.border-border,
+.dark .cl-dark .border-t.border-border {
+  border-color: hsl(222 11% 22%) !important;
+}
+
 /* ── Form inputs ──────────────────────────────────────────────────────────── */
 .dark .cl-dark input,
 .dark .cl-dark textarea,

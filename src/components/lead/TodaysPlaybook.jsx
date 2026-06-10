@@ -169,7 +169,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
       <div className="px-5 pt-4 pb-3 border-b border-border flex items-center justify-between">
         <p className="text-xs font-bold text-foreground uppercase tracking-widest">Today's Playbook</p>
         {big3FromYesterday && (
-          <span className="text-[10px] text-[#0202ff] font-medium bg-[#0202ff]/8 px-2 py-0.5 rounded-full">From last night</span>
+          <span className="text-[10px] text-[#6c84e8] font-medium bg-[#0202ff]/10 dark:bg-[#0202ff]/15 dark:text-[#8fa4f0] px-2 py-0.5 rounded-full">From last night</span>
         )}
       </div>
 
@@ -284,7 +284,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
                   <button
                     key={value}
                     onClick={() => setFtSelected(value)}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border text-xs font-medium transition-all ${ftSelected === value ? ring + " " + color : "bg-background border-border text-muted-foreground hover:bg-muted/50"}`}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border text-xs font-medium transition-all ${ftSelected === value ? ring + " " + color : "bg-muted/60 border-border text-muted-foreground hover:bg-muted"}`}
                   >
                     <Icon className="w-3.5 h-3.5" /> {label}
                   </button>

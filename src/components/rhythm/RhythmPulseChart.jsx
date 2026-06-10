@@ -9,12 +9,22 @@ import {
 } from "recharts";
 import { format, parseISO } from "date-fns";
 
-const MEASURES = [
+// Using CSS custom properties via inline style is not possible on SVG stroke,
+// so we define two palettes and pick based on document dark class at render time.
+const MEASURES_LIGHT = [
   { key: "energy",     label: "Energy",     color: "#f59e0b" },
   { key: "confidence", label: "Confidence", color: "#0202ff" },
   { key: "focus",      label: "Focus",      color: "#10b981" },
   { key: "load",       label: "Load",       color: "#ef4444" },
   { key: "growth",     label: "Growth",     color: "#8b5cf6" },
+];
+// Desaturated ~25% versions for dark mode — softer on dark bg but still distinct
+const MEASURES_DARK = [
+  { key: "energy",     label: "Energy",     color: "#d97706" },
+  { key: "confidence", label: "Confidence", color: "#6c84e8" },
+  { key: "focus",      label: "Focus",      color: "#34c48a" },
+  { key: "load",       label: "Load",       color: "#f07070" },
+  { key: "growth",     label: "Growth",     color: "#a78bfa" },
 ];
 
 function avg(arr) {
@@ -24,6 +34,8 @@ function avg(arr) {
 
 export default function RhythmPulseChart({ checkIns = [] }) {
   if (!checkIns || checkIns.length === 0) return null;
+  const isDark = document.documentElement.classList.contains('dark');
+  const MEASURES = isDark ? MEASURES_DARK : MEASURES_LIGHT;
 
   // Group by date, average scores across morning + evening entries
   const days = {};
@@ -85,8 +97,10 @@ export default function RhythmPulseChart({ checkIns = [] }) {
             contentStyle={{
               fontSize: 11,
               borderRadius: 8,
-              border: "1px solid hsl(var(--border))",
-              backgroundColor: "hsl(var(--card))",
+              border: `1px solid ${isDark ? 'hsl(222 11% 28%)' : 'hsl(var(--border))'}`,
+              backgroundColor: isDark ? 'hsl(222 13% 17%)' : 'hsl(var(--card))',
+              color: isDark ? 'hsl(220 16% 93%)' : 'hsl(var(--foreground))',
+              boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.5)' : undefined,
             }}
             formatter={(val, name) => [val, MEASURES.find(m => m.key === name)?.label || name]}
           />
