@@ -2,7 +2,7 @@
  * EveningCheckIn — End-of-day reflection check (5 measures) + Big 3 planning for tomorrow.
  * Prompts user to reflect on today and set tomorrow's Big 3 priorities.
  */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Moon, ChevronRight, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
@@ -76,8 +76,10 @@ function Big3Step({ goals, onSave }) {
               type="text"
               value={p.title}
               onChange={e => update(i, 'title', e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') e.preventDefault(); }}
               placeholder={`Priority ${i + 1}`}
               autoComplete="off"
+              data-priority-index={i}
               className="flex-1 text-sm bg-muted/40 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
             />
           </div>
@@ -139,9 +141,18 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
 
   const alreadyDone = todayRecord?.evening_completed;
 
+  // Track whether we've already initiated the check-in flow (questions fetched)
+  const flowInitiatedRef = useRef(false);
+
   useEffect(() => {
     if (alreadyDone) {
-      setStep(7);
+      // Only reset to step 7 if we're not currently in an active save flow
+      // (savedBig3 !== null means we just saved and are showing the confirmation)
+      setStep(prev => {
+        // Don't interrupt an active save flow (step 6 with savedBig3 set)
+        if (prev === 6) return prev;
+        return 7;
+      });
       setScores({
         energy:     todayRecord.energy_score     || 3,
         confidence: todayRecord.confidence_score || 3,
@@ -158,6 +169,9 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
       });
       return;
     }
+    // Only fetch questions once to avoid resetting the flow on re-renders
+    if (flowInitiatedRef.current) return;
+    flowInitiatedRef.current = true;
     base44.functions.invoke("saveDailyCheckIn", { action: "get_questions", check_in_type: "evening" })
       .then(res => { setQuestions(res.data?.questions || null); setStep(1); })
       .catch(() => setStep(1));
