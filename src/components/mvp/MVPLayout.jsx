@@ -125,7 +125,7 @@ function MVPLayoutInner({ children }) {
     navigate('/Notifications');
   };
 
-  const mvpRole = getMVPRole(user?.app_role || user?.data?.app_role);
+  const mvpRole = getMVPRole(user?.app_role || user?.data?.app_role || user?.role || 'user');
   const navItems = NAV_CONFIG[mvpRole] || [];
 
   // Determine if current page is a "sub-page" (not a core nav root)
