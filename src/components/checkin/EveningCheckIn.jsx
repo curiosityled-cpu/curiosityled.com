@@ -79,29 +79,30 @@ function Big3Step({ goals, onSave }) {
               className="flex-1 text-sm bg-muted/40 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
             />
           </div>
-          {p.title && (
-            <div className="ml-7 space-y-1.5">
-              {activeGoals.length > 0 && (
-                <select
-                  value={p.goal_id}
-                  onChange={e => update(i, 'goal_id', e.target.value)}
-                  className="w-full text-xs bg-muted/40 rounded-lg px-2 py-1.5 focus:outline-none text-muted-foreground"
-                >
-                  <option value="">Link to a goal (optional)</option>
-                  {activeGoals.map(g => (
-                    <option key={g.id} value={g.id}>{g.title?.slice(0, 60)}</option>
-                  ))}
-                </select>
-              )}
-              <textarea
-                value={p.context}
-                onChange={e => update(i, 'context', e.target.value)}
-                placeholder="Any context or intention? (optional)"
-                rows={1}
-                className="w-full text-xs bg-muted/40 rounded-lg px-2 py-1.5 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
-              />
-            </div>
-          )}
+          {/* Always render optional fields to keep DOM stable — just hide when empty */}
+          <div className="ml-7 space-y-1.5" style={{ display: p.title ? 'block' : 'none' }}>
+            {activeGoals.length > 0 && (
+              <select
+                value={p.goal_id}
+                onChange={e => update(i, 'goal_id', e.target.value)}
+                tabIndex={p.title ? 0 : -1}
+                className="w-full text-xs bg-muted/40 rounded-lg px-2 py-1.5 focus:outline-none text-muted-foreground"
+              >
+                <option value="">Link to a goal (optional)</option>
+                {activeGoals.map(g => (
+                  <option key={g.id} value={g.id}>{g.title?.slice(0, 60)}</option>
+                ))}
+              </select>
+            )}
+            <textarea
+              value={p.context}
+              onChange={e => update(i, 'context', e.target.value)}
+              placeholder="Any context or intention? (optional)"
+              rows={1}
+              tabIndex={p.title ? 0 : -1}
+              className="w-full text-xs bg-muted/40 rounded-lg px-2 py-1.5 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
+            />
+          </div>
         </div>
       ))}
 
