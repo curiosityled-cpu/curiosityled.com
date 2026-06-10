@@ -187,10 +187,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
 
   useEffect(() => {
     if (alreadyDone) {
-      // Only reset to step 7 if we're not currently in an active save flow
-      // (savedBig3 !== null means we just saved and are showing the confirmation)
       setStep(prev => {
-        // Don't interrupt an active save flow (step 6 with savedBig3 set)
         if (prev === 6) return prev;
         return 7;
       });
@@ -208,6 +205,10 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
         load:       todayRecord.load_note       || "",
         growth:     todayRecord.growth_note     || "",
       });
+      // Populate localBig3 from the saved record so the step-7 display works after remount
+      if (todayRecord.big3_priorities?.length > 0) {
+        setLocalBig3(todayRecord.big3_priorities);
+      }
       clearDraft();
       return;
     }
