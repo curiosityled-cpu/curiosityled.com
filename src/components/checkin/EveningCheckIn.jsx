@@ -190,7 +190,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
 
   // Persist draft to localStorage whenever in-progress state changes
   useEffect(() => {
-    if (step >= 1 && step <= 6 && !alreadyDone) {
+    if (step >= 1 && step <= 5 && !alreadyDone) {
       saveDraft(step, scores, notes, questions);
     }
   }, [step, scores, notes, questions, alreadyDone]);

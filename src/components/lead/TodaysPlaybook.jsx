@@ -168,7 +168,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
   const saveCommitment = async () => {
     if (committed) return;
     try {
-      await base44.entities.Goal.create({ user_email: user?.email, title: move.move, description: move.reason, status: "active", goal_type: "behavioral_commitment", source: "next_move", progress: 0 });
+      await base44.entities.Goal.create({ user_email: user?.email, created_by: user?.email, title: move.move, description: move.reason, status: "active", goal_type: "behavioral_commitment", source: "next_move", progress: 0 });
       setCommitted(true);
     } catch {}
   };

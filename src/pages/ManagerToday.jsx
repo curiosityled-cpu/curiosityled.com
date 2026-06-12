@@ -27,9 +27,11 @@ function getFirstName(user) {
 }
 
 function HeroGreeting({ firstName, hasCheckedIn, todayRecord, onSettingsToggle }) {
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-  const day = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const etHour = parseInt(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', hour: 'numeric', hour12: false
+  }).format(new Date()), 10);
+  const greeting = etHour < 12 ? 'Good morning' : etHour < 17 ? 'Good afternoon' : 'Good evening';
+  const day = new Date().toLocaleDateString('en-US', { timeZone: 'America/New_York', weekday: 'long', month: 'long', day: 'numeric' });
 
   let sub = "Let's see what matters right now.";
   if (hasCheckedIn && todayRecord) {
@@ -234,12 +236,15 @@ export default function ManagerToday() {
   const { data: latestAssessment = null } = useQuery({
     queryKey: ['ml-assessment-latest', user?.email],
     queryFn: async () => { try { const rows = await base44.entities.Assessment.filter({ email: user.email }, '-created_date', 1); return rows[0] || null; } catch { return null; } },
-    enabled: !!user?.email, staleTime: 0,
+    enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
   const needsToneOnboarding = tonePref === null;
   const firstName = getFirstName(user);
-  const hour = new Date().getHours();
+  // Always use ET hour to match check_in_date storage and window logic
+  const hour = parseInt(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', hour: 'numeric', hour12: false
+  }).format(new Date()), 10);
 
   // Morning: 5:00am – 2:59pm (hours 5–14)
   // Evening: 3:00pm – 4:59am (hours 15–23 OR hours 0–4, wraps past midnight)
