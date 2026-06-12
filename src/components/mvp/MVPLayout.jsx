@@ -8,7 +8,7 @@ import { base44 } from "@/api/base44Client";
 import {
   Brain, Target, Home, BarChart2, Users, LogOut, Menu, X,
   ChevronRight, ChevronLeft, Bell, User, ArrowLeft,
-  Settings, Shield, UserCog, TrendingUp, Dumbbell, Sun, Moon } from "lucide-react";
+  Settings, Shield, UserCog, TrendingUp, Dumbbell, Sun, Moon, ChevronDown, FolderOpen } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -62,11 +62,13 @@ const NAV_CONFIG = {
    { label: 'Patterns', path: '/patterns', icon: TrendingUp },
    { label: 'Practice', path: '/practice', icon: Dumbbell },
    { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
-   { label: 'Development Manager', path: '/DevelopmentManager', icon: Users },
-   { label: 'Goal Manager', path: '/GoalManager', icon: Target },
-   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 },
-   { label: 'User Management', path: '/UserManagement', icon: UserCog },
-   { label: 'Data Restore', path: '/AdminDataRestore', icon: Shield }],
+   { label: 'Administration', icon: FolderOpen, group: true, children: [
+     { label: 'Development Manager', path: '/DevelopmentManager', icon: Users },
+     { label: 'Goal Manager', path: '/GoalManager', icon: Target },
+     { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 },
+     { label: 'User Management', path: '/UserManagement', icon: UserCog },
+     { label: 'Data Restore', path: '/AdminDataRestore', icon: Shield },
+   ]}],
 
   analyst: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
@@ -93,6 +95,7 @@ function MVPLayoutInner({ children }) {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [openGroups, setOpenGroups] = useState({});
   const [unreadCount, setUnreadCount] = useState(0);
   const { isOpen: showAtreus, pendingContext, draftMessage, close: closeAtreus, clearPending, openWithContext } = useAtreusChat();
   const openAtreusDefault = () => openWithContext({});
@@ -148,8 +151,46 @@ function MVPLayoutInner({ children }) {
     path: location.pathname
   };
 
-  const NavItem = ({ item, showLabel = true }) => {
+  const toggleGroup = (label) => setOpenGroups(prev => ({ ...prev, [label]: !prev[label] }));
+
+  const NavItem = ({ item, showLabel = true, indent = false }) => {
     const Icon = item.icon;
+
+    // Group/drawer item
+    if (item.group) {
+      const isGroupOpen = openGroups[item.label] ?? false;
+      const anyChildActive = item.children?.some(child => location.pathname === child.path.split('?')[0]);
+      if (!showLabel) {
+        // Collapsed sidebar: show children directly as icons
+        return (
+          <>
+            {item.children?.map(child => <NavItem key={child.path} item={child} showLabel={false} />)}
+          </>
+        );
+      }
+      return (
+        <div>
+          <button
+            onClick={() => toggleGroup(item.label)}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${anyChildActive ? 'text-[#0202ff]' : ''}`}
+            style={{ color: anyChildActive ? undefined : 'hsl(var(--muted-foreground))' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'hsl(var(--muted))'; if (!anyChildActive) e.currentTarget.style.color = 'hsl(var(--foreground))'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = ''; if (!anyChildActive) e.currentTarget.style.color = 'hsl(var(--muted-foreground))'; }}
+          >
+            <Icon className="w-4 h-4 flex-shrink-0" />
+            <span className="flex-1">{item.label}</span>
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isGroupOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {isGroupOpen && (
+            <div className="mt-0.5 ml-3 pl-3 border-l border-border space-y-0.5">
+              {item.children?.map(child => <NavItem key={child.path} item={child} showLabel={true} indent={true} />)}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Regular nav item
     const itemPath = item.path.split('?')[0].split('#')[0];
     const isActive = location.pathname === itemPath ||
       (itemPath === '/today' && (location.pathname === '/my-leadership' || location.pathname === '/'));
@@ -160,18 +201,16 @@ function MVPLayoutInner({ children }) {
         onClick={() => setMobileOpen(false)}
         title={!showLabel ? item.label : undefined}
         className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-        isActive ?
-        'bg-[#0202ff] text-white shadow-sm' :
-        ''} ${!showLabel ? 'justify-center' : ''}`}
+          isActive ? 'bg-[#0202ff] text-white shadow-sm' : ''
+        } ${!showLabel ? 'justify-center' : ''}`}
         style={!isActive ? { color: 'hsl(var(--muted-foreground))' } : {}}
         onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'hsl(var(--muted))'; e.currentTarget.style.color = 'hsl(var(--foreground))'; }}}
         onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'hsl(var(--muted-foreground))'; }}}>
-        
         <Icon className="w-4 h-4 flex-shrink-0" />
         {showLabel && <span className="flex-1">{item.label}</span>}
         {showLabel && isActive && <ChevronRight className="w-3 h-3" />}
-      </Link>);
-
+      </Link>
+    );
   };
 
   const sidebarWidth = collapsed ? 'w-16' : 'w-64';
