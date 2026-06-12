@@ -47,10 +47,14 @@ function ScorePicker({ value, onChange }) {
   );
 }
 
-const TODAY = new Date().toISOString().slice(0, 10);
+function getTodayET() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(new Date());
+}
 
 function getDraftKey(userEmail) {
-  return `morning_draft_${userEmail}_${TODAY}`;
+  return `morning_draft_${userEmail}_${getTodayET()}`;
 }
 
 export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {

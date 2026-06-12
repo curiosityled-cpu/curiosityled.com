@@ -138,13 +138,19 @@ function Big3Step({ goals, onSave }) {
 
 const DRAFT_KEY = "evening_checkin_draft";
 
+function getTodayET() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(new Date());
+}
+
 function loadDraft() {
   try {
     const raw = localStorage.getItem(DRAFT_KEY);
     if (!raw) return null;
     const draft = JSON.parse(raw);
-    // Only restore if it's from today
-    if (draft.date !== new Date().toISOString().slice(0, 10)) {
+    // Only restore if it's from today (ET)
+    if (draft.date !== getTodayET()) {
       localStorage.removeItem(DRAFT_KEY);
       return null;
     }
@@ -155,7 +161,7 @@ function loadDraft() {
 function saveDraft(step, scores, notes, questions) {
   try {
     localStorage.setItem(DRAFT_KEY, JSON.stringify({
-      date: new Date().toISOString().slice(0, 10),
+      date: getTodayET(),
       step, scores, notes, questions,
     }));
   } catch {}
@@ -230,9 +236,12 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
       return;
     }
 
+    let cancelled = false;
+    const timeout = setTimeout(() => { if (!cancelled) setStep(1); }, 12000);
     base44.functions.invoke("saveDailyCheckIn", { action: "get_questions", check_in_type: "evening" })
-      .then(res => { setQuestions(res.data?.questions || null); setStep(1); })
-      .catch(() => setStep(1));
+      .then(res => { clearTimeout(timeout); if (!cancelled) { setQuestions(res.data?.questions || null); setStep(1); } })
+      .catch(() => { clearTimeout(timeout); if (!cancelled) setStep(1); });
+    return () => { cancelled = true; clearTimeout(timeout); };
   }, [alreadyDone]);
 
   const handleMeasureNext = () => {
