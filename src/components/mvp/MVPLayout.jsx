@@ -271,7 +271,7 @@ function MVPLayoutInner({ children }) {
         {/* Nav */}
         <nav className="flex-1 px-2 py-4 space-y-1">
           {navItems.map((item) =>
-          <NavItem key={item.path} item={item} showLabel={!collapsed} />
+          <NavItem key={item.path || item.label} item={item} showLabel={!collapsed} />
           )}
         </nav>
 
@@ -463,7 +463,7 @@ function MVPLayoutInner({ children }) {
               </div>
           }
             <nav className="space-y-1">
-              {navItems.map((item) => <NavItem key={item.path} item={item} />)}
+              {navItems.map((item) => <NavItem key={item.path || item.label} item={item} />)}
             </nav>
             <div className="pt-3 mt-3" style={{ borderTop: sidebarBorder }}>
               <button onClick={handleLogout} className="flex items-center gap-2 text-sm px-3 py-2" style={{ color: 'hsl(var(--muted-foreground))' }}>

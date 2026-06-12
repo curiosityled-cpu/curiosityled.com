@@ -94,13 +94,13 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
   };
 
   // Filter check-ins to selected range
-  const cutoff = subDays(new Date(), rangeDays);
   const filtered = useMemo(() => {
-    const all = rangeDays >= 999 ? checkIns : checkIns.filter(r => {
+    if (rangeDays >= 999) return checkIns;
+    const cutoff = subDays(new Date(), rangeDays);
+    return checkIns.filter(r => {
       if (!r.check_in_date) return false;
       return parseISO(r.check_in_date) >= cutoff;
     });
-    return all;
   }, [checkIns, rangeDays]);
 
   // Group by date, average morning + evening

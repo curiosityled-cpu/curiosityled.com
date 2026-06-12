@@ -77,7 +77,7 @@ function detectCalendarFriction(events, trends) {
   });
   if (bigMeetings.length > 0 && trends?.confidence_trend === 'declining') {
     const m = bigMeetings[0];
-    const when = new Date(m.start).toLocaleString('en-US', { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+    const when = new Date(m.start).toLocaleString('en-US', { timeZone: 'America/New_York', weekday: 'short', hour: '2-digit', minute: '2-digit' });
     return {
       signal: "High-stakes meeting ahead",
       prediction: `"${m.title}" (${when}, ${m.attendees} attendees) is coming up. Your confidence has been declining — this is worth a brief prep.`,
@@ -111,9 +111,11 @@ export default function UpcomingFrictionCard({ trends, goals = [], pulses, onOpe
   const [calendarEvents, setCalendarEvents] = useState(null);
 
   useEffect(() => {
+    let cancelled = false;
     base44.functions.invoke('getUpcomingMeetings', {})
-      .then(res => setCalendarEvents(res?.data?.events || []))
-      .catch(() => setCalendarEvents([]));
+      .then(res => { if (!cancelled) setCalendarEvents(res?.data?.events || []); })
+      .catch(() => { if (!cancelled) setCalendarEvents([]); });
+    return () => { cancelled = true; };
   }, []);
 
   // Prefer calendar-based friction if available
