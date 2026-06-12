@@ -69,7 +69,7 @@ export default function ManagerPractice() {
     queryFn: async () => {
       try { const rows = await base44.entities.AssessmentInsights.filter({ user_email: user.email }, '-created_date', 1); return rows[0] || null; } catch { return null; }
     },
-    enabled: !!user?.email, staleTime: 0,
+    enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
   const handleStartFlow = (flowKey) => {

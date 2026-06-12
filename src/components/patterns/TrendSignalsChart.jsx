@@ -125,7 +125,7 @@ function MetricRow({ metric, pulses }) {
 function buildAnnotations(pulses) {
   const annotations = [];
   pulses.forEach((p, i) => {
-    const date = new Date(p.created_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const date = new Date(p.created_date).toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' });
     if (p.prompt_type === 'morning_intent' && p.focus_intention) {
       annotations.push({ date, label: `Intent set: ${p.focus_intention.slice(0, 40)}${p.focus_intention.length > 40 ? '…' : ''}`, color: 'text-blue-600', bg: 'bg-blue-50 border-blue-100' });
     }

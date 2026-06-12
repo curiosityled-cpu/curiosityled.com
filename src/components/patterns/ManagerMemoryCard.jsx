@@ -34,7 +34,7 @@ export default function ManagerMemoryCard({ memory }) {
   if (!hasContent) return null;
 
   const synthesizedDate = memory.last_synthesized_at
-    ? new Date(memory.last_synthesized_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    ? new Date(memory.last_synthesized_at).toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' })
     : null;
 
   return (

@@ -16,7 +16,10 @@ const ENERGY_CONFIG = {
 };
 
 function localDateKey(d) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  // Use ET to match how check_in_date is stored server-side
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(d);
 }
 
 function buildGrid(pulses) {
