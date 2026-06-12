@@ -134,7 +134,7 @@ function MVPLayoutInner({ children }) {
   const navItems = NAV_CONFIG[mvpRole] || [];
 
   // Determine if current page is a "sub-page" (not a core nav root)
-  const coreNavPaths = navItems.map(i => i.path.split('?')[0]);
+  const coreNavPaths = navItems.flatMap(i => i.group ? i.children.map(c => c.path.split('?')[0]) : [i.path.split('?')[0]]);
   const isSubPage = !coreNavPaths.includes(location.pathname) &&
     location.pathname !== '/' &&
     location.pathname !== '/my-leadership';
