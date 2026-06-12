@@ -89,7 +89,7 @@ function deriveWhatHelped(pulses, pattern) {
   if (morningIntents.length > 0) {
     const lastIntent = morningIntents[0];
     const d = new Date(lastIntent.created_date);
-    const intentDateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const intentDateLabel = d.toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' });
     learned.push(`Setting a morning intent helped (e.g. "${lastIntent.focus_category?.replace('_', ' ') || 'focus'}" focus on ${intentDateLabel}).`);
   }
 

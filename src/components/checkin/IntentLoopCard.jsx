@@ -13,7 +13,7 @@ import { Target, CheckCircle2, AlertCircle, Circle, ChevronDown, ChevronUp, Cale
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { format, startOfWeek, isToday } from "date-fns";
+import { format, isToday } from "date-fns";
 
 const FOCUS_LABELS = {
   delegation: "Delegate something",
@@ -87,20 +87,29 @@ function IntentDayRow({ date, intent, actuals }) {
 export default function IntentLoopCard({ pulses, trends, onOpenAtreus }) {
   const [expanded, setExpanded] = useState(false);
 
-  // Build this week's intent/actuals map
-  const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+  // Build this week's intent/actuals map — all dates in ET to match stored data
+  const etDateStr = (d) => new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(d);
+  const todayET = etDateStr(new Date());
+  // Compute Mon-start week anchor in ET
+  const nowET = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const dow = nowET.getDay(); // 0=Sun..6=Sat
+  const daysFromMon = dow === 0 ? 6 : dow - 1;
   const weekDays = Array.from({ length: 5 }, (_, i) => {
-    const d = new Date(weekStart);
-    d.setDate(d.getDate() + i);
-    // Use local date components to avoid UTC midnight offset for non-UTC timezones
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  }).filter(d => d <= `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`);
+    const d = new Date();
+    d.setDate(d.getDate() - daysFromMon + i);
+    return etDateStr(d);
+  }).filter(d => d <= todayET);
 
   const intentsByDate = {};
   const actualsByDate = {};
   for (const p of (pulses || [])) {
-    const dateStr = p.created_date?.toString().split('T')[0];
-    if (!dateStr) continue;
+    if (!p.created_date) continue;
+    // Convert to ET date to match how check_in_date / intent dates are stored
+    const dateStr = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).format(new Date(p.created_date));
     if (p.prompt_type === 'morning_intent') intentsByDate[dateStr] = p;
     if (p.prompt_type === 'evening_actuals') actualsByDate[dateStr] = p;
   }
