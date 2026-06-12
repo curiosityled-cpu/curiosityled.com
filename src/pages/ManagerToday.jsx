@@ -94,12 +94,17 @@ export default function ManagerToday() {
   const { openWithContext } = useAtreusChat();
   const [showSettings, setShowSettings] = useState(false);
   const [showWeeklyReflection, setShowWeeklyReflection] = useState(false);
+  // Get today's date in ET (matching server-side) to avoid UTC midnight boundary issues
+  const todayET = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(new Date());
+
   const [localBig3Override, setLocalBig3Override] = useState(() => {
     try {
       const saved = sessionStorage.getItem('today_big3_override');
       if (!saved) return null;
       const { date, data } = JSON.parse(saved);
-      if (date === new Date().toISOString().slice(0, 10)) return data;
+      if (date === todayET) return data;
       sessionStorage.removeItem('today_big3_override');
     } catch {}
     return null;
@@ -136,7 +141,7 @@ export default function ManagerToday() {
       setLocalBig3Override(big3Priorities);
       try {
         sessionStorage.setItem('today_big3_override', JSON.stringify({
-          date: new Date().toISOString().slice(0, 10),
+          date: todayET,
           data: big3Priorities,
         }));
       } catch {}
@@ -236,9 +241,13 @@ export default function ManagerToday() {
   const firstName = getFirstName(user);
   const hour = new Date().getHours();
 
-  const isMorningWindow = hour >= 5 && hour < 12;
+  // Morning: 5:00am – 2:59pm (hours 5–14)
+  // Evening: 3:00pm – 4:59am (hours 15–23 OR hours 0–4, wraps past midnight)
+  // Midday: 11:00am – 1:59pm (overlap inside morning window)
+  // Together morning + evening cover all 24 hours — no quiet zone exists
+  const isMorningWindow = hour >= 5 && hour < 15;
   const isMiddayWindow = hour >= 11 && hour < 14;
-  const isEveningWindow = hour >= 15;
+  const isEveningWindow = hour >= 15 || hour < 5;
 
   const showMorningCheckIn = isMorningWindow && !todayRecord?.morning_completed;
   const showMiddayLoop = isMiddayWindow && !todayRecord?.midday_loop_completed;
@@ -246,7 +255,8 @@ export default function ManagerToday() {
 
   const allDone = todayRecord?.morning_completed && todayRecord?.evening_completed;
   const hasHistoricalData = checkInHistory.length >= 2;
-  const isQuietZone = !isMorningWindow && !isMiddayWindow && !isEveningWindow && !todayRecord;
+  // No true quiet zone anymore — windows cover 24h. Only show placeholder if no record AND no active window (shouldn't happen, but defensive).
+  const isQuietZone = false;
 
   // ── Main column — always rendered (tone onboarding is a banner, not a gate)
   const mainContent = (
@@ -260,16 +270,7 @@ export default function ManagerToday() {
         return merged.length >= 1 ? <RhythmPulseChart checkIns={merged} /> : null;
       })()}
 
-      {/* Quiet zone */}
-      {isQuietZone && (
-        <div className="bg-card rounded-2xl border border-dashed border-border px-5 py-8 text-center">
-          <Brain className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-          <p className="text-sm font-semibold text-foreground mb-1">Check back this morning</p>
-          <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
-            Your morning check-in opens at 5 am. Come back then to set your intent for the day.
-          </p>
-        </div>
-      )}
+
 
       {/* Check-in flows */}
       {(showMorningCheckIn || todayRecord?.morning_completed) && (
@@ -308,7 +309,7 @@ export default function ManagerToday() {
       )}
 
       {/* Today's Playbook */}
-      {(todayRecord || yesterdayBig3.length > 0 || goals.length > 0 || assignments.length > 0) && !isQuietZone && (
+      {(todayRecord || yesterdayBig3.length > 0 || goals.length > 0 || assignments.length > 0) && (
         <TodaysPlaybook
           todayRecord={localBig3Override ? { ...todayRecord, big3_priorities: localBig3Override } : todayRecord}
           yesterdayBig3={yesterdayBig3}
@@ -384,7 +385,7 @@ export default function ManagerToday() {
           </div>
         </div>
       )}
-      {!todayRecord && !isQuietZone && !needsToneOnboarding && (
+      {!todayRecord && !needsToneOnboarding && (
         <div className="bg-[#0202ff]/5 border border-[#0202ff]/15 rounded-2xl px-4 py-4">
           <p className="text-xs font-semibold text-[#0202ff] mb-1">Before you dive in</p>
           <p className="text-xs text-foreground leading-relaxed">
