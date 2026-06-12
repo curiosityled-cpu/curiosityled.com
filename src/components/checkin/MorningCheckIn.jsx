@@ -111,9 +111,21 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
       } catch { /* ignore parse errors */ }
     }
 
+    let cancelled = false;
+    // Fallback: if the fetch takes >6s, unblock the UI anyway
+    const timeout = setTimeout(() => { if (!cancelled) setStep(1); }, 6000);
+
     base44.functions.invoke("saveDailyCheckIn", { action: "get_questions", check_in_type: "morning" })
-      .then(res => { setQuestions(res.data?.questions || null); setStep(1); })
-      .catch(() => setStep(1));
+      .then(res => {
+        clearTimeout(timeout);
+        if (!cancelled) { setQuestions(res.data?.questions || null); setStep(1); }
+      })
+      .catch(() => {
+        clearTimeout(timeout);
+        if (!cancelled) setStep(1);
+      });
+
+    return () => { cancelled = true; clearTimeout(timeout); };
   }, [alreadyDone, userEmail]);
 
   const currentMeasure = MEASURES[step - 1];
