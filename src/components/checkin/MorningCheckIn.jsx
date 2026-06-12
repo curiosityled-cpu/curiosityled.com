@@ -112,8 +112,8 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
     }
 
     let cancelled = false;
-    // Fallback: if the fetch takes >6s, unblock the UI anyway
-    const timeout = setTimeout(() => { if (!cancelled) setStep(1); }, 6000);
+    // Fallback: if the fetch takes >12s, unblock the UI anyway with default questions
+    const timeout = setTimeout(() => { if (!cancelled) setStep(1); }, 12000);
 
     base44.functions.invoke("saveDailyCheckIn", { action: "get_questions", check_in_type: "morning" })
       .then(res => {

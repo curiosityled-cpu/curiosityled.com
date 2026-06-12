@@ -114,8 +114,9 @@ export default function ManagerToday() {
       } catch { return { record: null, yesterday_big3: [] }; }
     },
     enabled: !!user?.email,
-    staleTime: 30 * 1000,
-    gcTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000,       // 1 min — don't re-fetch too aggressively and disrupt active check-in
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false, // Prevent refetch (and potential remount) when user switches tabs
   });
   const todayRecord = todayData?.record || null;
   const yesterdayBig3 = todayData?.yesterday_big3 || [];

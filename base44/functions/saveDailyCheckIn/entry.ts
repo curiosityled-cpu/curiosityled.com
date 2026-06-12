@@ -16,11 +16,14 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { action, check_in_type, ...fields } = body;
 
-    // Get today's date in the user's local time (Eastern), not UTC
-    // This prevents midnight boundary issues where UTC date != local date
-    const todayLocal = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-    const today = todayLocal; // YYYY-MM-DD format
-    console.log('[saveDailyCheckIn] Today:', today, 'User:', user.email);
+    // Get today's date in Eastern time (YYYY-MM-DD)
+    // Use Intl.DateTimeFormat for reliable cross-platform timezone handling
+    const nowET = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/New_York',
+      year: 'numeric', month: '2-digit', day: '2-digit'
+    }).format(new Date());
+    const today = nowET; // YYYY-MM-DD
+    console.log('[saveDailyCheckIn] Today (ET):', today, 'UTC now:', new Date().toISOString(), 'User:', user.email);
 
     // ── GET QUESTIONS ────────────────────────────────────────────────────────
     if (action === 'get_questions') {
