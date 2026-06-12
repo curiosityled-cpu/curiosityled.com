@@ -67,7 +67,6 @@ const NAV_CONFIG = {
      { label: 'Goal Manager', path: '/GoalManager', icon: Target },
      { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 },
      { label: 'User Management', path: '/UserManagement', icon: UserCog },
-     { label: 'Data Restore', path: '/AdminDataRestore', icon: Shield },
    ]}],
 
   analyst: [
