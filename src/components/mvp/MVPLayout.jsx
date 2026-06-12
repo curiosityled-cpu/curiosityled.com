@@ -58,13 +58,15 @@ const NAV_CONFIG = {
   { label: 'Practice', path: '/practice', icon: Dumbbell }],
 
   buyer: [
-  { label: 'Lead (Today)', path: '/today', icon: Home },
-  { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
-  { label: 'Development Manager', path: '/DevelopmentManager', icon: Users },
-  { label: 'Goal Manager', path: '/GoalManager', icon: Target },
-  { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 },
-  { label: 'User Management', path: '/UserManagement', icon: UserCog },
-  { label: 'Data Restore', path: '/AdminDataRestore', icon: Shield }],
+   { label: 'Lead', path: '/today', icon: Home },
+   { label: 'Patterns', path: '/patterns', icon: TrendingUp },
+   { label: 'Practice', path: '/practice', icon: Dumbbell },
+   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
+   { label: 'Development Manager', path: '/DevelopmentManager', icon: Users },
+   { label: 'Goal Manager', path: '/GoalManager', icon: Target },
+   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 },
+   { label: 'User Management', path: '/UserManagement', icon: UserCog },
+   { label: 'Data Restore', path: '/AdminDataRestore', icon: Shield }],
 
   analyst: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
