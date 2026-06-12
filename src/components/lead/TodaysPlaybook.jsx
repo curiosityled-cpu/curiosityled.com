@@ -63,13 +63,15 @@ function buildMove(pulse, trends, goals, assignments) {
 }
 
 // ─── Follow-through helpers ───────────────────────────────────────────────────
-function localDateKey(d) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+function getTodayET() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(new Date());
 }
 function getMostRecentCommitment(pulses) {
-  const todayStr = localDateKey(new Date());
+  const todayStr = getTodayET();
   for (const p of (pulses || [])) {
-    const pulseDate = p.created_date ? localDateKey(new Date(p.created_date)) : null;
+    const pulseDate = p.created_date ? new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(p.created_date)) : null;
     if (pulseDate === todayStr) continue;
     if (p.delegation_commitment?.trim()) return { text: p.delegation_commitment, type: "delegation", pulseId: p.id };
     if (p.focus_intention?.trim())       return { text: p.focus_intention,       type: "intention",  pulseId: p.id };

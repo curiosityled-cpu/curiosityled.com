@@ -71,7 +71,10 @@ export default function WeeklyRhythmReflection({ isOpen, onClose, onSuccess, use
 
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
-    const weekAgoStr = weekAgo.toISOString().split("T")[0];
+    // Use ET date to match how check_in_date is stored (America/New_York)
+    const weekAgoStr = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).format(weekAgo);
 
     Promise.all([
       base44.entities.DailyCheckIn.filter({ user_email: userEmail }, "-check_in_date", 14).catch(() => []),
@@ -87,7 +90,7 @@ export default function WeeklyRhythmReflection({ isOpen, onClose, onSuccess, use
       setLoading(false);
       if (filtered.length > 0) generateAISummary(filtered, goalsData, resolvedInsight);
     }).catch(() => setLoading(false));
-  }, [isOpen, userEmail]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isOpen, userEmail, assessmentInsight]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const generateAISummary = async (records, goalsData, insight) => {
     setAiLoading(true);

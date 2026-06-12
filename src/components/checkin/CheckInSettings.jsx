@@ -56,7 +56,7 @@ export default function CheckInSettings() {
   const [morningWindowStart, setMorningWindowStart] = useState("05:00");
   const [morningWindowEnd, setMorningWindowEnd] = useState("12:00");
   const [eveningWindowStart, setEveningWindowStart] = useState("15:00");
-  const [eveningWindowEnd, setEveningWindowEnd] = useState("21:00");
+  const [eveningWindowEnd, setEveningWindowEnd] = useState("04:59");
   const [middayLoopTime, setMiddayLoopTime] = useState("12:00");
   const [weeklyReflectionDay, setWeeklyReflectionDay] = useState("friday");
   const [weeklyReflectionTime, setWeeklyReflectionTime] = useState("15:00");
