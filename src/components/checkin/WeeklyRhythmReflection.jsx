@@ -76,20 +76,23 @@ export default function WeeklyRhythmReflection({ isOpen, onClose, onSuccess, use
       timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
     }).format(weekAgo);
 
+    let cancelled = false;
     Promise.all([
       base44.entities.DailyCheckIn.filter({ user_email: userEmail }, "-check_in_date", 14).catch(() => []),
       base44.entities.Goal.filter({ user_email: userEmail }, "-created_date", 15).catch(() => []),
       base44.entities.AssessmentInsights.filter({ user_email: userEmail }, "-created_date", 1).catch(() => []),
     ]).then(([records, goalsData, insightsData]) => {
-      const filtered = records.filter(r => r.check_in_date >= weekAgoStr);
-      setWeekRecords(filtered);
+      if (cancelled) return;
+      const filteredRecords = records.filter(r => r.check_in_date >= weekAgoStr);
+      setWeekRecords(filteredRecords);
       setGoals(goalsData);
       // Prefer passed-in insight prop, fall back to fetched
       const resolvedInsight = assessmentInsight || insightsData[0] || null;
       setAssessment(resolvedInsight);
       setLoading(false);
-      if (filtered.length > 0) generateAISummary(filtered, goalsData, resolvedInsight);
-    }).catch(() => setLoading(false));
+      if (filteredRecords.length > 0) generateAISummary(filteredRecords, goalsData, resolvedInsight);
+    }).catch(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [isOpen, userEmail, assessmentInsight]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const generateAISummary = async (records, goalsData, insight) => {

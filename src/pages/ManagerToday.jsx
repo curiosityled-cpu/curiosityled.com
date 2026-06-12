@@ -153,7 +153,6 @@ export default function ManagerToday() {
     // Small delay before re-fetching today's record to allow the DB write to propagate
     setTimeout(() => {
       queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
-      refetchToday();
     }, 800);
   };
 

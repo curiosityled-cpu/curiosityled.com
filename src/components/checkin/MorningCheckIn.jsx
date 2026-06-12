@@ -71,7 +71,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
 
   // Persist in-progress draft to localStorage on every step/score/note change
   useEffect(() => {
-    if (!userEmail || alreadyDone || step === 0 || step === 6) return;
+    if (!userEmail || alreadyDone || step < 1 || step > 5) return;
     const draft = { step, scores, notes, questions };
     localStorage.setItem(getDraftKey(userEmail), JSON.stringify(draft));
   }, [step, scores, notes, questions, userEmail, alreadyDone]);

@@ -54,7 +54,8 @@ function buildMove(pulse, trends, goals, assignments) {
   const stalledGoal = (goals || []).find(g => g.status === "active" && (g.progress || 0) < 25);
   if (stalledGoal)
     return { move: `Make one move on "${stalledGoal.title}"`, reason: "Small, specific actions compound. What's the next 20-minute step?", atreus: false, link: "/my-goals" };
-  const overdue = (assignments || []).find(a => a.status === "assigned" && a.due_date && new Date(a.due_date) < new Date());
+  const nowET = new Date(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()));
+  const overdue = (assignments || []).find(a => a.status === "assigned" && a.due_date && new Date(a.due_date) < nowET);
   if (overdue)
     return { move: `Complete: ${overdue.title}`, reason: "This learning is overdue. Even a partial session helps close the loop.", atreus: false, link: "/my-development" };
   if (trends?.identity_friction_active)
