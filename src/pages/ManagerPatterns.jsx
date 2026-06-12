@@ -64,7 +64,7 @@ function MemoryNarrativeCard({ trends }) {
   if (!narrative) return null;
 
   const timeLabel = computedAt
-    ? (() => { const d = new Date(computedAt); return new Date(d.getFullYear(), d.getMonth(), d.getDate()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); })()
+    ? new Date(computedAt).toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' })
     : null;
 
   return (
