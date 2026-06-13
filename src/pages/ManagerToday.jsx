@@ -150,10 +150,10 @@ export default function ManagerToday() {
     }
     queryClient.invalidateQueries({ queryKey: ['daily-checkin-history', user?.email] });
     queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
-    // Small delay before re-fetching today's record to allow the DB write to propagate
+    // Delay before re-fetching today's record to allow the DB write to propagate
     setTimeout(() => {
       queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
-    }, 800);
+    }, 1500);
   };
 
   const openAtreus = (msg) => openWithContext({

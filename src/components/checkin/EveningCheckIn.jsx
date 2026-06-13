@@ -186,7 +186,11 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
   const alreadyDone = todayRecord?.evening_completed;
 
   // Track whether we've already initiated the check-in flow (questions fetched)
-  const flowInitiatedRef = useRef(false);
+  // Use sessionStorage so remounts (e.g. after query refetch) don't restart the flow
+  const FLOW_KEY = `evening_flow_initiated_${getTodayET()}`;
+  const flowInitiatedRef = useRef(
+    typeof sessionStorage !== 'undefined' && !!sessionStorage.getItem(FLOW_KEY)
+  );
 
   // Persist draft to localStorage whenever in-progress state changes
   useEffect(() => {
@@ -222,9 +226,10 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
       clearDraft();
       return;
     }
-    // Only fetch questions once to avoid resetting the flow on re-renders
+    // Only fetch questions once per day — persisted in sessionStorage across remounts
     if (flowInitiatedRef.current) return;
     flowInitiatedRef.current = true;
+    try { sessionStorage.setItem(FLOW_KEY, '1'); } catch {}
 
     // Restore from draft if available
     const draft = loadDraft();
