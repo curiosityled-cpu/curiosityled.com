@@ -149,19 +149,21 @@ function Big3Step({ goals, onSave, onSkip, isActiveWindow = true, initialPriorit
 const DRAFT_KEY = "evening_checkin_draft";
 const EVENING_COMPLETED_KEY = "evening_checkin_completed";
 
-function wasEveningCompletedToday() {
+function wasEveningCompletedToday(userEmail) {
   try {
-    const raw = localStorage.getItem(EVENING_COMPLETED_KEY);
+    const key = userEmail ? `${EVENING_COMPLETED_KEY}_${userEmail}` : EVENING_COMPLETED_KEY;
+    const raw = localStorage.getItem(key);
     if (!raw) return null; // null = not found
     const saved = JSON.parse(raw);
-    if (saved.date !== getTodayET()) { localStorage.removeItem(EVENING_COMPLETED_KEY); return null; }
+    if (saved.date !== getTodayET()) { localStorage.removeItem(key); return null; }
     return saved; // { date, big3, scores, notes }
   } catch { return null; }
 }
 
-function markEveningCompletedToday(big3Priorities, scores, notes) {
+function markEveningCompletedToday(big3Priorities, scores, notes, userEmail) {
   try {
-    localStorage.setItem(EVENING_COMPLETED_KEY, JSON.stringify({
+    const key = userEmail ? `${EVENING_COMPLETED_KEY}_${userEmail}` : EVENING_COMPLETED_KEY;
+    localStorage.setItem(key, JSON.stringify({
       date: getTodayET(),
       big3: big3Priorities,
       scores,
@@ -176,35 +178,39 @@ function getTodayET() {
   }).format(new Date());
 }
 
-function loadDraft() {
+function getDraftKey(userEmail) {
+  return userEmail ? `${DRAFT_KEY}_${userEmail}` : DRAFT_KEY;
+}
+
+function loadDraft(userEmail) {
   try {
-    const raw = localStorage.getItem(DRAFT_KEY);
+    const raw = localStorage.getItem(getDraftKey(userEmail));
     if (!raw) return null;
     const draft = JSON.parse(raw);
     // Only restore if it's from today (ET)
     if (draft.date !== getTodayET()) {
-      localStorage.removeItem(DRAFT_KEY);
+      localStorage.removeItem(getDraftKey(userEmail));
       return null;
     }
     return draft;
   } catch { return null; }
 }
 
-function saveDraft(step, scores, notes, questions) {
+function saveDraft(step, scores, notes, questions, userEmail) {
   try {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify({
+    localStorage.setItem(getDraftKey(userEmail), JSON.stringify({
       date: getTodayET(),
       step, scores, notes, questions,
     }));
   } catch {}
 }
 
-function clearDraft() {
-  try { localStorage.removeItem(DRAFT_KEY); } catch {}
+function clearDraft(userEmail) {
+  try { localStorage.removeItem(getDraftKey(userEmail)); } catch {}
 }
 
-export default function EveningCheckIn({ onComplete, todayRecord, goals = [], isActiveWindow = true }) {
-  const completedCache = wasEveningCompletedToday();
+export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goals = [], isActiveWindow = true }) {
+  const completedCache = wasEveningCompletedToday(userEmail);
   const alreadyDoneFromCache = !!completedCache;
 
   // DB truth takes priority: once todayRecord is loaded (not undefined), trust it over localStorage.
@@ -244,9 +250,9 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
   // Persist draft to localStorage whenever in-progress state changes
   useEffect(() => {
     if (step >= 1 && step <= 5 && !alreadyDone) {
-      saveDraft(step, scores, notes, questions);
+      saveDraft(step, scores, notes, questions, userEmail);
     }
-  }, [step, scores, notes, questions, alreadyDone]);
+  }, [step, scores, notes, questions, alreadyDone, userEmail]);
 
   useEffect(() => {
     if (alreadyDone) {
@@ -272,7 +278,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
           setLocalBig3(prev => prev && prev.length > 0 ? prev : todayRecord.big3_priorities);
         }
       }
-      clearDraft();
+      clearDraft(userEmail);
       return;
     }
 
@@ -280,7 +286,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
     if (stepRef.current >= 6) return;
 
     // Restore from draft if available
-    const draft = loadDraft();
+    const draft = loadDraft(userEmail);
     if (draft) {
       setScores(draft.scores);
       setNotes(draft.notes);
@@ -307,7 +313,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
       .then(res => { clearTimeout(timeout); if (!cancelled) { setQuestions(res.data?.questions || null); setStep(1); } })
       .catch(() => { clearTimeout(timeout); if (!cancelled) setStep(1); });
     return () => { cancelled = true; clearTimeout(timeout); };
-  }, [alreadyDone, isActiveWindow, editMode]);
+  }, [alreadyDone, isActiveWindow, editMode, userEmail]);
 
   const handleMeasureNext = () => {
     if (step < 5) setStep(s => s + 1);
@@ -318,8 +324,8 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
     // Immediately update UI and notify parent — don't wait for the API round-trip
     setLocalBig3(big3Priorities);
     setStep(7);
-    clearDraft();
-    markEveningCompletedToday(big3Priorities, scores, notes); // Persist so remounts after navigation show "done"
+    clearDraft(userEmail);
+    markEveningCompletedToday(big3Priorities, scores, notes, userEmail); // Persist so remounts after navigation show "done"
     onComplete?.(big3Priorities, 'evening');
 
     // When outside the evening window we only have Big 3 (no measure scores were collected),

@@ -125,7 +125,10 @@ export default function ManagerToday() {
     gcTime: 15 * 60 * 1000,
     refetchOnWindowFocus: false, // Prevent refetch (and potential remount) when user switches tabs
   });
-  const todayRecord = todayData?.record || null;
+  // Pass `undefined` while the query is still loading so child components can distinguish
+  // "loading" (undefined) from "loaded but no record" (null). Using `|| null` would collapse
+  // both states to null, breaking the localStorage fallback guard in MorningCheckIn/EveningCheckIn.
+  const todayRecord = todayData === undefined ? undefined : (todayData?.record ?? null);
   const yesterdayBig3 = todayData?.yesterday_big3 || [];
 
   const { data: checkInHistory = [] } = useQuery({
@@ -320,6 +323,7 @@ export default function ManagerToday() {
 
       <EveningCheckIn
         todayRecord={todayRecord}
+        userEmail={user?.email}
         goals={goals}
         onComplete={handleCheckInComplete}
         isActiveWindow={isEveningWindow}
