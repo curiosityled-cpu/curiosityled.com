@@ -80,30 +80,14 @@ Deno.serve(async (req) => {
 
     // ── SAVE ─────────────────────────────────────────────────────────────────
     if (action === 'save') {
-      // Idempotency guard: reject duplicate in-flight saves for the same user+date+type
-      // by checking if this exact combination was recently saved (within 10 seconds).
-      // This prevents double-create from rapid test-agent clicks or React StrictMode double-invocations.
-      const idempotencyKey = `${user.email}:${today}:${check_in_type}`;
-      let idempotencyRecords = [];
-      try {
-        idempotencyRecords = await base44.entities.IdempotencyKey.filter({ key: idempotencyKey }, '-created_date', 1);
-      } catch { /* IdempotencyKey entity may not exist — skip guard */ }
-      if (idempotencyRecords.length > 0) {
-        const lastSavedAt = new Date(idempotencyRecords[0].created_date).getTime();
-        if (Date.now() - lastSavedAt < 10000) {
-          console.log('[saveDailyCheckIn] Idempotency guard: duplicate save ignored for', idempotencyKey);
-          // Return a success-like response so the frontend doesn't error
-          const allExisting = await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 30).catch(() => []);
-          const existing = allExisting.filter(r => r.check_in_date === today)[0] || null;
-          return Response.json({ record: existing, success: true, idempotent: true, timestamp: new Date().toISOString() });
-        }
-      }
-      // Record this save attempt
-      try { await base44.entities.IdempotencyKey.create({ key: idempotencyKey }); } catch { /* non-fatal */ }
-
-      // Fetch the last 30 records to find any existing record for today
-      const allRecords = await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 30).catch(() => []);
-      const todayRecords = allRecords.filter(r => r.check_in_date === today);
+      // Fetch ALL records for today directly — filter by both user_email AND check_in_date
+      // to avoid missing the existing record when the user has many historical entries.
+      const allRecords = await base44.entities.DailyCheckIn.filter(
+        { user_email: user.email, check_in_date: today },
+        '-created_date',
+        10
+      ).catch(() => []);
+      const todayRecords = allRecords; // already filtered to today only
 
       // Pick the most complete existing record for today, if any
       const completionScore = r => (r.morning_completed ? 1 : 0) + (r.evening_completed ? 1 : 0) + (r.midday_loop_completed ? 1 : 0);
@@ -151,9 +135,15 @@ Deno.serve(async (req) => {
 
     // ── GET TODAY ────────────────────────────────────────────────────────────
     if (action === 'get_today') {
+      // Fetch today's records directly — filter by both user_email AND check_in_date
+      // This is reliable regardless of how many historical records exist.
+      const todayRecords = await base44.entities.DailyCheckIn.filter(
+        { user_email: user.email, check_in_date: today },
+        '-created_date',
+        10
+      ).catch(() => []);
+      // Also fetch recent records for yesterday_big3 lookup (exclude today)
       const allRecords = await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 30).catch(() => []);
-
-      const todayRecords = allRecords.filter(r => r.check_in_date === today);
       let todayRec = null;
 
       if (todayRecords.length > 0) {
