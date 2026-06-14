@@ -253,7 +253,6 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
   };
 
   const handleBig3Save = async (big3Priorities) => {
-    setSaving(true);
     try {
       await base44.functions.invoke("saveDailyCheckIn", {
         action: "save",
@@ -268,16 +267,13 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
         questions_used: questions || {},
       });
       clearDraft();
-      // Notify parent immediately so cache is invalidated and data is fresh on any navigation
-      onComplete?.(big3Priorities, 'evening');
-      // Show success confirmation for 2s before transitioning the step
       setSavedBig3(big3Priorities);
       setLocalBig3(big3Priorities);
+      // Notify parent so cache is invalidated — after local state is set to avoid unmount race
+      onComplete?.(big3Priorities, 'evening');
       setTimeout(() => setStep(7), 2000);
     } catch (err) {
       console.error(err);
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -458,6 +454,11 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
   }
 
   const measure = MEASURES[step - 1];
+  if (!measure) return (
+    <div className="flex items-center justify-center py-12">
+      <Loader2 className="w-5 h-5 animate-spin text-[#0202ff]" />
+    </div>
+  );
   const question = questions?.[measure.key] || `How did your ${measure.label.toLowerCase()} hold up today?`;
 
   return (
