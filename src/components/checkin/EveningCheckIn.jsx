@@ -197,6 +197,14 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
 
   // Track whether we've already initiated the fetch this mount
   const fetchInitiatedRef = useRef(false);
+  const isMountedRef = useRef(true);
+
+  // Track component mount/unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Persist draft to localStorage whenever in-progress state changes
   useEffect(() => {
@@ -268,8 +276,10 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
     if (saving) return; // Prevent double-submit
     setSaving(true);
     // Set completion state immediately to render the card before any async callbacks
-    setLocalBig3(big3Priorities);
-    setStep(7);
+    if (isMountedRef.current) {
+      setLocalBig3(big3Priorities);
+      setStep(7);
+    }
     
     try {
       await base44.functions.invoke("saveDailyCheckIn", {
@@ -288,12 +298,14 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
     } catch (err) {
       console.error("Failed to save evening check-in:", err);
     } finally {
-      setSaving(false);
-      // Trigger callback after UI is rendered
-      try {
-        onComplete?.(big3Priorities, 'evening');
-      } catch (cbErr) {
-        console.error("onComplete callback error:", cbErr);
+      if (isMountedRef.current) {
+        setSaving(false);
+        // Trigger callback after UI is rendered, safely handling unmount
+        try {
+          onComplete?.(big3Priorities, 'evening');
+        } catch (cbErr) {
+          console.error("onComplete callback error:", cbErr);
+        }
       }
     }
   };
@@ -318,11 +330,13 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
         big3_priorities: big3Priorities,
         questions_used: questions || {},
       });
-      setLocalBig3(big3Priorities);
-      setEditMode(false); setExpanded(false);
-      onComplete?.(big3Priorities, 'evening');
+      if (isMountedRef.current) {
+        setLocalBig3(big3Priorities);
+        setEditMode(false); setExpanded(false);
+        onComplete?.(big3Priorities, 'evening');
+      }
     } catch (err) { console.error(err); }
-    finally { setSaving(false); }
+    finally { if (isMountedRef.current) setSaving(false); }
   };
 
   if (step === 7 && !editMode) {
