@@ -247,7 +247,8 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
   useEffect(() => {
     if (alreadyDone) {
       setStep(prev => (prev >= 6) ? prev : 7);
-      if (todayRecord) {
+      // Don't overwrite scores/notes while the user is actively editing them
+      if (todayRecord && !editMode) {
         setScores({
           energy:     todayRecord.energy_score     || 3,
           confidence: todayRecord.confidence_score || 3,
@@ -302,7 +303,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
       .then(res => { clearTimeout(timeout); if (!cancelled) { setQuestions(res.data?.questions || null); setStep(1); } })
       .catch(() => { clearTimeout(timeout); if (!cancelled) setStep(1); });
     return () => { cancelled = true; clearTimeout(timeout); };
-  }, [alreadyDone, isActiveWindow]);
+  }, [alreadyDone, isActiveWindow, editMode]);
 
   const handleMeasureNext = () => {
     if (step < 5) setStep(s => s + 1);
