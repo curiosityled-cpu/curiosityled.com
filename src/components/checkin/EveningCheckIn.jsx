@@ -258,6 +258,8 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
   };
 
   const handleBig3Save = async (big3Priorities) => {
+    if (saving) return; // Prevent double-submit
+    setSaving(true);
     try {
       await base44.functions.invoke("saveDailyCheckIn", {
         action: "save",
@@ -275,9 +277,15 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
       setLocalBig3(big3Priorities);
     } catch (err) {
       console.error("Failed to save evening check-in:", err);
+      setLocalBig3(big3Priorities); // Still set local state on error
     } finally {
+      setSaving(false);
       setStep(7);
-      onComplete?.(big3Priorities, 'evening');
+      try {
+        onComplete?.(big3Priorities, 'evening');
+      } catch (cbErr) {
+        console.error("onComplete callback error:", cbErr);
+      }
     }
   };
 
