@@ -185,12 +185,8 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
 
   const alreadyDone = todayRecord?.evening_completed;
 
-  // Track whether we've already initiated the check-in flow (questions fetched)
-  // Use sessionStorage so remounts (e.g. after query refetch) don't restart the flow
-  const FLOW_KEY = `evening_flow_initiated_${getTodayET()}`;
-  const flowInitiatedRef = useRef(
-    typeof sessionStorage !== 'undefined' && !!sessionStorage.getItem(FLOW_KEY)
-  );
+  // Track whether we've already initiated the fetch this mount
+  const fetchInitiatedRef = useRef(false);
 
   // Persist draft to localStorage whenever in-progress state changes
   useEffect(() => {
@@ -223,26 +219,20 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
       return;
     }
 
-    // Restore from draft if available (always check first, even on remount)
+    // Restore from draft if available
     const draft = loadDraft();
     if (draft) {
       setScores(draft.scores);
       setNotes(draft.notes);
       if (draft.questions) setQuestions(draft.questions);
       setStep(draft.step);
-      flowInitiatedRef.current = true;
-      try { sessionStorage.setItem(FLOW_KEY, '1'); } catch {}
+      fetchInitiatedRef.current = true;
       return;
     }
 
-    // If session flag is set but no draft exists, it's a stale flag — clear it and re-fetch
-    if (flowInitiatedRef.current) {
-      try { sessionStorage.removeItem(FLOW_KEY); } catch {}
-      flowInitiatedRef.current = false;
-    }
-
-    flowInitiatedRef.current = true;
-    try { sessionStorage.setItem(FLOW_KEY, '1'); } catch {}
+    // Only fetch once per mount
+    if (fetchInitiatedRef.current) return;
+    fetchInitiatedRef.current = true;
 
     let cancelled = false;
     const timeout = setTimeout(() => { if (!cancelled) setStep(1); }, 8000);
@@ -250,7 +240,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
       .then(res => { clearTimeout(timeout); if (!cancelled) { setQuestions(res.data?.questions || null); setStep(1); } })
       .catch(() => { clearTimeout(timeout); if (!cancelled) setStep(1); });
     return () => { cancelled = true; clearTimeout(timeout); };
-  }, [alreadyDone, todayRecord]);
+  }, [alreadyDone]);
 
   const handleMeasureNext = () => {
     if (step < 5) setStep(s => s + 1);
