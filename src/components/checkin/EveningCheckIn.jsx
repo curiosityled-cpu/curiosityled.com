@@ -186,7 +186,6 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
   const [questions, setQuestions] = useState(null);
   const [scores, setScores] = useState({ energy: 3, confidence: 3, focus: 3, load: 3, growth: 3 });
   const [notes, setNotes] = useState({ energy: "", confidence: "", focus: "", load: "", growth: "" });
-  const [saving, setSaving] = useState(false);
   const [localBig3, setLocalBig3] = useState(null); // persisted after save for step 7 display
   const [expanded, setExpanded] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -277,21 +276,15 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
 
   const handleMeasureNext = () => {
     if (step < 5) setStep(s => s + 1);
-    else { setSaving(false); setStep(6); } // → Big 3, ensure saving is clear
+    else setStep(6); // → Big 3
   };
 
-  const handleBig3Save = async (big3Priorities) => {
-    if (saving) return; // Prevent double-submit
-    setSaving(true);
+  const handleBig3Save = (big3Priorities) => {
     // Immediately update UI and notify parent — don't wait for the API round-trip
     setLocalBig3(big3Priorities);
     setStep(7);
     clearDraft();
-    try {
-      onComplete?.(big3Priorities, 'evening');
-    } catch (cbErr) {
-      console.error("onComplete callback error:", cbErr);
-    }
+    onComplete?.(big3Priorities, 'evening');
     // Fire-and-forget the API save (UI is already updated)
     base44.functions.invoke("saveDailyCheckIn", {
       action: "save",
@@ -306,13 +299,10 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
       questions_used: questions || {},
     }).catch(err => {
       console.error("Failed to save evening check-in:", err);
-    }).finally(() => {
-      if (isMountedRef.current) setSaving(false);
     });
   };
 
   const handleEditSave = async (big3Priorities) => {
-    setSaving(true);
     try {
       await base44.functions.invoke("saveDailyCheckIn", {
         action: "save", check_in_type: "evening",
@@ -331,7 +321,6 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
         onComplete?.(big3Priorities, 'evening');
       }
     } catch (err) { console.error(err); }
-    finally { if (isMountedRef.current) setSaving(false); }
   };
 
   if (step === 0 && !editMode) return (
@@ -430,7 +419,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
             <textarea value={notes[measure.key]} onChange={(e) => setNotes(n => ({ ...n, [measure.key]: e.target.value }))} placeholder="Add a note (optional)" rows={2} className="w-full text-sm bg-muted/40 rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/60" />
             <div className="flex gap-2">
               <Button variant="outline" size="sm" className="text-xs" onClick={() => { setEditMode(false); setExpanded(false); }}>Cancel</Button>
-              <Button onClick={() => editStep < 5 ? setEditStep(s => s+1) : setEditStep(6)} disabled={saving} className="flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-sm">
+              <Button onClick={() => editStep < 5 ? setEditStep(s => s+1) : setEditStep(6)} className="flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-sm">
                 {editStep < 5 ? <><span>Next</span><ChevronRight className="w-3.5 h-3.5" /></> : "Edit Big 3 →"}
               </Button>
             </div>
