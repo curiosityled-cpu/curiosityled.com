@@ -80,14 +80,14 @@ Deno.serve(async (req) => {
 
     // ── SAVE ─────────────────────────────────────────────────────────────────
     if (action === 'save') {
-      // Fetch ALL records for today directly — filter by both user_email AND check_in_date
-      // to avoid missing the existing record when the user has many historical entries.
+      // NOTE: check_in_date (format: "date") is not reliably filterable via compound query.
+      // Fetch recent records by user_email only, then filter in code.
       const allRecords = await base44.entities.DailyCheckIn.filter(
-        { user_email: user.email, check_in_date: today },
+        { user_email: user.email },
         '-created_date',
-        10
+        60
       ).catch(() => []);
-      const todayRecords = allRecords; // already filtered to today only
+      const todayRecords = allRecords.filter(r => r.check_in_date === today);
 
       // Pick the most complete existing record for today, if any
       const completionScore = r => (r.morning_completed ? 1 : 0) + (r.evening_completed ? 1 : 0) + (r.midday_loop_completed ? 1 : 0);
@@ -135,15 +135,10 @@ Deno.serve(async (req) => {
 
     // ── GET TODAY ────────────────────────────────────────────────────────────
     if (action === 'get_today') {
-      // Fetch today's records directly — filter by both user_email AND check_in_date
-      // This is reliable regardless of how many historical records exist.
-      const todayRecords = await base44.entities.DailyCheckIn.filter(
-        { user_email: user.email, check_in_date: today },
-        '-created_date',
-        10
-      ).catch(() => []);
-      // Also fetch recent records for yesterday_big3 lookup (exclude today)
-      const allRecords = await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 30).catch(() => []);
+      // NOTE: check_in_date (format: "date") is not reliably filterable as compound query.
+      // Fetch recent records by user_email only, then filter in code.
+      const allRecords = await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 60).catch(() => []);
+      const todayRecords = allRecords.filter(r => r.check_in_date === today);
       let todayRec = null;
 
       if (todayRecords.length > 0) {
