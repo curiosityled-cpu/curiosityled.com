@@ -209,6 +209,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
       action: "save",
       check_in_type: "morning",
       client_date: getTodayET(),
+      existing_record_id: todayRecord?.id || null,
       energy_score: scores.energy,
       energy_note: notes.energy,
       confidence_score: scores.confidence,
@@ -240,6 +241,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
       await base44.functions.invoke("saveDailyCheckIn", {
         action: "save", check_in_type: "morning",
         client_date: getTodayET(),
+        existing_record_id: todayRecord?.id || null,
         energy_score: scores.energy, energy_note: notes.energy,
         confidence_score: scores.confidence, confidence_note: notes.confidence,
         focus_score: scores.focus, focus_note: notes.focus,

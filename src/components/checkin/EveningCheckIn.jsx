@@ -338,6 +338,8 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
       payload.load_score = scores.load; payload.load_note = notes.load;
       payload.growth_score = scores.growth; payload.growth_note = notes.growth;
     }
+    // Pass existing record ID so backend can update in-place rather than create new
+    payload.existing_record_id = todayRecord?.id || null;
     // Fire-and-forget the API save (UI is already updated)
     base44.functions.invoke("saveDailyCheckIn", payload).catch(err => {
       console.error("Failed to save evening check-in:", err);
@@ -349,6 +351,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
       await base44.functions.invoke("saveDailyCheckIn", {
         action: "save", check_in_type: "evening",
         client_date: getTodayET(),
+        existing_record_id: todayRecord?.id || null,
         energy_score: scores.energy, energy_note: notes.energy,
         confidence_score: scores.confidence, confidence_note: notes.confidence,
         focus_score: scores.focus, focus_note: notes.focus,

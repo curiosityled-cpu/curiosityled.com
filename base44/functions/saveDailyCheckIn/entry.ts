@@ -7,6 +7,9 @@
  *
  * IMPORTANT: We rely on client_date sent from the browser (computed in the user's local timezone)
  * rather than server-side timezone computation, which is unreliable across Deno container instances.
+ *
+ * KEY DESIGN: Uses asServiceRole for reads (bypasses RLS filter inconsistencies) but always
+ * validates user ownership. Writes use user-scoped client.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
@@ -19,21 +22,29 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { action, check_in_type, client_date, ...fields } = body;
 
-    // Use client-provided date if valid (YYYY-MM-DD), otherwise fall back to server UTC date.
-    // The frontend always sends client_date computed via Intl.DateTimeFormat in the user's timezone.
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     const today = (client_date && dateRegex.test(client_date))
       ? client_date
-      : new Date().toISOString().slice(0, 10); // UTC fallback
+      : new Date().toISOString().slice(0, 10);
 
-    console.log('[saveDailyCheckIn] action:', action, 'today:', today, 'client_date:', client_date, 'UTC:', new Date().toISOString(), 'user:', user.email);
+    console.log('[saveDailyCheckIn] action:', action, 'today:', today, 'user:', user.email);
+
+    // Helper: fetch today's records for this user using service role to bypass RLS quirks
+    const getTodayRecords = async () => {
+      const all = await base44.asServiceRole.entities.DailyCheckIn.filter(
+        { user_email: user.email },
+        '-created_date',
+        60
+      ).catch(() => []);
+      return all.filter(r => r.check_in_date === today);
+    };
 
     // ── GET QUESTIONS ────────────────────────────────────────────────────────
     if (action === 'get_questions') {
       const [recentCheckIns, trends, memory] = await Promise.all([
-        base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 7).catch(() => []),
-        base44.entities.ManagerTrends.filter({ user_email: user.email }, '-last_trend_computed_at', 1).catch(() => []),
-        base44.entities.ManagerMemory.filter({ user_email: user.email }, null, 1).catch(() => []),
+        base44.asServiceRole.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 7).catch(() => []),
+        base44.asServiceRole.entities.ManagerTrends.filter({ user_email: user.email }, '-last_trend_computed_at', 1).catch(() => []),
+        base44.asServiceRole.entities.ManagerMemory.filter({ user_email: user.email }, null, 1).catch(() => []),
       ]);
 
       const trendData = trends[0] || {};
@@ -80,24 +91,10 @@ Deno.serve(async (req) => {
 
     // ── SAVE ─────────────────────────────────────────────────────────────────
     if (action === 'save') {
-      // If the frontend passes back an existing_record_id (from the morning save response),
-      // use it directly to avoid any DB read-after-write consistency issues.
-      const existingId = fields.existing_record_id || body.existing_record_id || null;
+      const todayRecords = await getTodayRecords();
+      console.log('[saveDailyCheckIn] save - todayRecords found:', todayRecords.length);
 
-      // Fetch recent records; also support direct ID lookup for reliability
-      let todayRecords = [];
-      if (existingId) {
-        try {
-          const rec = await base44.entities.DailyCheckIn.get(existingId);
-          if (rec && rec.check_in_date === today) todayRecords = [rec];
-        } catch { /* fall through to filter */ }
-      }
-      if (todayRecords.length === 0) {
-        const allRecords = await base44.entities.DailyCheckIn.list('-created_date', 60).catch(() => []);
-        todayRecords = allRecords.filter(r => r.user_email === user.email && r.check_in_date === today);
-      }
-
-      // Pick the most complete existing record for today, if any
+      // Pick the most complete existing record for today
       const completionScore = r => (r.morning_completed ? 1 : 0) + (r.evening_completed ? 1 : 0) + (r.midday_loop_completed ? 1 : 0);
       const existing = todayRecords.sort((a, b) => completionScore(b) - completionScore(a))[0] || null;
 
@@ -127,9 +124,11 @@ Deno.serve(async (req) => {
 
       let record;
       if (existing) {
+        console.log('[saveDailyCheckIn] updating existing record:', existing.id);
         await base44.entities.DailyCheckIn.update(existing.id, updateData);
         record = { ...existing, ...updateData };
       } else {
+        console.log('[saveDailyCheckIn] creating new record for date:', today);
         record = await base44.entities.DailyCheckIn.create({
           user_email: user.email,
           check_in_date: today,
@@ -143,9 +142,13 @@ Deno.serve(async (req) => {
 
     // ── GET TODAY ────────────────────────────────────────────────────────────
     if (action === 'get_today') {
-      // Use list() (service role, no RLS filter param) to avoid filter inconsistency issues.
-      const allRecords = await base44.entities.DailyCheckIn.list('-created_date', 60).catch(() => []);
-      const todayRecords = allRecords.filter(r => r.user_email === user.email && r.check_in_date === today);
+      const allRecords = await base44.asServiceRole.entities.DailyCheckIn.filter(
+        { user_email: user.email },
+        '-created_date',
+        60
+      ).catch(() => []);
+
+      const todayRecords = allRecords.filter(r => r.check_in_date === today);
       let todayRec = null;
 
       if (todayRecords.length > 0) {
@@ -154,7 +157,7 @@ Deno.serve(async (req) => {
           return score(b) - score(a);
         });
         todayRec = { ...sorted[0] };
-        // Overlay fields from any secondary records
+        // Merge fields from any secondary records
         for (let i = 1; i < sorted.length; i++) {
           const r = sorted[i];
           if (r.morning_completed && !todayRec.morning_completed) {
@@ -178,8 +181,8 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Most recent prior-day record with Big 3 set (filtered to this user)
-      const prevWithBig3 = allRecords.find(r => r.user_email === user.email && r.check_in_date !== today && r.big3_priorities?.length > 0);
+      // Most recent prior-day record with Big 3 set
+      const prevWithBig3 = allRecords.find(r => r.check_in_date !== today && r.big3_priorities?.length > 0);
       const yesterday_big3 = prevWithBig3?.big3_priorities || [];
 
       return Response.json({ record: todayRec, yesterday_big3, today });
@@ -188,6 +191,7 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'Unknown action' }, { status: 400 });
 
   } catch (error) {
+    console.error('[saveDailyCheckIn] error:', error.message);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
