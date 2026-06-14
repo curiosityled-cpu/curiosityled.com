@@ -142,10 +142,14 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
   const big3FromYesterday = todayBig3.length === 0 && big3.length > 0;
 
   const openEditBig3 = () => {
-    const seed = big3.length > 0
+    const items = big3.length > 0
       ? big3.map(p => ({ ...p, title: p.title || "", context: p.context || "" }))
-      : [{ title: "", context: "", status: "planned" }, { title: "", context: "", status: "planned" }, { title: "", context: "", status: "planned" }];
-    setEditItems(seed);
+      : [
+          { id: "1", title: "", context: "", status: "planned" },
+          { id: "2", title: "", context: "", status: "planned" },
+          { id: "3", title: "", context: "", status: "planned" },
+        ];
+    setEditItems(items);
     setEditingBig3(true);
   };
 
@@ -211,7 +215,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
       <div className="px-5 py-4 border-b border-border">
         <div className="flex items-center justify-between mb-2">
           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Your Big 3</p>
-          {todayRecord?.id && !editingBig3 && big3.length > 0 && (
+          {!editingBig3 && (
             <button onClick={openEditBig3} className="flex items-center gap-1 text-[10px] text-[#0202ff] hover:underline font-medium">
               <Pencil className="w-3 h-3" /> Edit
             </button>
@@ -268,14 +272,13 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
         ) : (
           <p className="text-xs text-muted-foreground italic">
             No priorities set yet —{" "}
-            {todayRecord?.id ? (
-              <button onClick={openEditBig3} className="font-medium not-italic text-[#0202ff] hover:underline">
-                tap here to add your Big 3 for today
-              </button>
-            ) : (
-              <span className="font-medium not-italic">complete a check-in to set your Big 3</span>
-            )}
-            .
+            <button
+              onClick={openEditBig3}
+              className="font-medium not-italic text-[#0202ff] hover:underline"
+            >
+              tap here to add your Big 3
+            </button>
+            {" "}for today.
           </p>
         )}
       </div>
