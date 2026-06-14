@@ -59,6 +59,8 @@ function Big3Step({ goals, onSave, isActiveWindow = true }) {
     setSaving(true);
     try {
       await onSave(filled.map(p => ({ ...p, status: "planned" })));
+    } catch (err) {
+      console.error("Big3 save error:", err);
     } finally {
       setSaving(false);
     }
@@ -250,27 +252,22 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
   };
 
   const handleBig3Save = async (big3Priorities) => {
-    try {
-      await base44.functions.invoke("saveDailyCheckIn", {
-        action: "save",
-        check_in_type: "evening",
-        client_date: getTodayET(),
-        energy_score: scores.energy, energy_note: notes.energy,
-        confidence_score: scores.confidence, confidence_note: notes.confidence,
-        focus_score: scores.focus, focus_note: notes.focus,
-        load_score: scores.load, load_note: notes.load,
-        growth_score: scores.growth, growth_note: notes.growth,
-        big3_priorities: big3Priorities,
-        questions_used: questions || {},
-      });
-      clearDraft();
-      setLocalBig3(big3Priorities);
-      setStep(7);
-      // Notify parent after local state transitions to avoid unmount race
-      setTimeout(() => onComplete?.(big3Priorities, 'evening'), 100);
-    } catch (err) {
-      console.error(err);
-    }
+    await base44.functions.invoke("saveDailyCheckIn", {
+      action: "save",
+      check_in_type: "evening",
+      client_date: getTodayET(),
+      energy_score: scores.energy, energy_note: notes.energy,
+      confidence_score: scores.confidence, confidence_note: notes.confidence,
+      focus_score: scores.focus, focus_note: notes.focus,
+      load_score: scores.load, load_note: notes.load,
+      growth_score: scores.growth, growth_note: notes.growth,
+      big3_priorities: big3Priorities,
+      questions_used: questions || {},
+    });
+    clearDraft();
+    setLocalBig3(big3Priorities);
+    setStep(7);
+    onComplete?.(big3Priorities, 'evening');
   };
 
   if (step === 0) return (
