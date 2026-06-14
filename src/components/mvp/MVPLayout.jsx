@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import AtreusCoach from "@/components/ai/AtreusCoach";
 import { AuthProvider as FullAuthProvider } from "@/components/useAuth";
 import { AtreusProvider, useAtreusChat } from "@/components/ai/AtreusContext";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -490,7 +491,7 @@ function MVPLayoutInner({ children }) {
             </button>
           </div>
         )}
-        {children}
+        <ErrorBoundary>{children}</ErrorBoundary>
       </main>
 
       {/* Floating Atreus Button — always accessible */}
