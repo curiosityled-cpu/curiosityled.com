@@ -310,12 +310,6 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
     }
   };
 
-  if (step === 0) return (
-    <div className="flex items-center justify-center py-12">
-      <Loader2 className="w-5 h-5 animate-spin text-[#0202ff]" />
-    </div>
-  );
-
   const handleEditSave = async (big3Priorities) => {
     setSaving(true);
     try {
@@ -338,6 +332,12 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
     } catch (err) { console.error(err); }
     finally { if (isMountedRef.current) setSaving(false); }
   };
+
+  if (step === 0 && !editMode) return (
+    <div className="flex items-center justify-center py-12">
+      <Loader2 className="w-5 h-5 animate-spin text-[#0202ff]" />
+    </div>
+  );
 
   if (step === 7 && !editMode) {
     const big3 = localBig3 ?? todayRecord?.big3_priorities ?? [];
