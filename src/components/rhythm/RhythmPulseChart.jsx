@@ -49,6 +49,7 @@ export default function RhythmPulseChart({ checkIns = [] }) {
   // Group by date, average scores across morning + evening entries
   const days = {};
   checkIns.forEach(r => {
+    if (!r.check_in_date) return;
     if (!days[r.check_in_date]) days[r.check_in_date] = {};
     MEASURES.forEach(m => {
       const score = r[`${m.key}_score`];

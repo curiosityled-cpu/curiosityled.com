@@ -155,7 +155,7 @@ export default function ManagerToday() {
     if (type === 'evening') { update.evening_completed = true; update.evening_completed_at = new Date().toISOString(); update.big3_priorities = big3Priorities || []; }
     queryClient.setQueryData(['daily-checkin-today', user?.email], (old) => {
       const existing = old || { record: null, yesterday_big3: [] };
-      return { ...existing, record: { ...(existing.record || {}), ...update } };
+      return { ...existing, record: { check_in_date: todayET, ...(existing.record || {}), ...update } };
     });
     queryClient.invalidateQueries({ queryKey: ['daily-checkin-history', user?.email] });
     queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
