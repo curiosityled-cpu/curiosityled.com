@@ -175,7 +175,6 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
   const [scores, setScores] = useState({ energy: 3, confidence: 3, focus: 3, load: 3, growth: 3 });
   const [notes, setNotes] = useState({ energy: "", confidence: "", focus: "", load: "", growth: "" });
   const [saving, setSaving] = useState(false);
-  const [savedBig3, setSavedBig3] = useState(null); // success confirmation state
   const [localBig3, setLocalBig3] = useState(null); // persisted after save for step 7 display
   const [expanded, setExpanded] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -267,13 +266,10 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
         questions_used: questions || {},
       });
       clearDraft();
-      setSavedBig3(big3Priorities);
       setLocalBig3(big3Priorities);
-      // Transition to completion card first, then notify parent to avoid unmount race
-      setTimeout(() => {
-        setStep(7);
-        onComplete?.(big3Priorities, 'evening');
-      }, 1800);
+      setStep(7);
+      // Notify parent after local state transitions to avoid unmount race
+      setTimeout(() => onComplete?.(big3Priorities, 'evening'), 100);
     } catch (err) {
       console.error(err);
     }
@@ -407,39 +403,6 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
 
   // Big 3 planning step
   if (step === 6) {
-    // Success confirmation state
-    if (savedBig3 !== null) {
-      return (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-card rounded-2xl border border-indigo-200/60 shadow-sm overflow-hidden"
-        >
-          <div className="px-4 py-6 flex flex-col items-center gap-3 text-center">
-            <div className="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center">
-              <CheckCircle2 className="w-6 h-6 text-indigo-500" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">Evening check-in saved!</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {savedBig3.length > 0 ? `${savedBig3.length} priorit${savedBig3.length === 1 ? 'y' : 'ies'} set for tomorrow` : "Check-in complete"}
-              </p>
-            </div>
-            {savedBig3.length > 0 && (
-              <div className="w-full text-left space-y-1.5 pt-1">
-                {savedBig3.map((p, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <span className="w-4 h-4 rounded-full bg-[#0202ff] text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
-                    <p className="text-xs text-foreground">{p.title}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </motion.div>
-      );
-    }
-
     return (
       <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
         <div className="px-4 pt-4 pb-3 border-b border-border flex items-center gap-2">
