@@ -226,23 +226,25 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
       clearDraft();
       return;
     }
-    // Only fetch questions once per day — persisted in sessionStorage across remounts
-    if (flowInitiatedRef.current) return;
-    flowInitiatedRef.current = true;
-    try { sessionStorage.setItem(FLOW_KEY, '1'); } catch {}
-
-    // Restore from draft if available
+    // Restore from draft if available (always check first, even on remount)
     const draft = loadDraft();
     if (draft) {
       setScores(draft.scores);
       setNotes(draft.notes);
       if (draft.questions) setQuestions(draft.questions);
       setStep(draft.step);
+      flowInitiatedRef.current = true;
+      try { sessionStorage.setItem(FLOW_KEY, '1'); } catch {}
       return;
     }
 
+    // Only fetch questions once per day — persisted in sessionStorage across remounts
+    if (flowInitiatedRef.current) return;
+    flowInitiatedRef.current = true;
+    try { sessionStorage.setItem(FLOW_KEY, '1'); } catch {}
+
     let cancelled = false;
-    const timeout = setTimeout(() => { if (!cancelled) setStep(1); }, 12000);
+    const timeout = setTimeout(() => { if (!cancelled) setStep(1); }, 8000);
     base44.functions.invoke("saveDailyCheckIn", { action: "get_questions", check_in_type: "evening", client_date: getTodayET() })
       .then(res => { clearTimeout(timeout); if (!cancelled) { setQuestions(res.data?.questions || null); setStep(1); } })
       .catch(() => { clearTimeout(timeout); if (!cancelled) setStep(1); });
