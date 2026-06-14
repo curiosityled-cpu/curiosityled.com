@@ -85,10 +85,8 @@ Deno.serve(async (req) => {
       const todayRecords = allRecords.filter(r => r.check_in_date === today);
 
       // Pick the most complete existing record for today, if any
-      const existing = todayRecords.sort((a, b) => {
-        const score = r => (r.morning_completed ? 1 : 0) + (r.evening_completed ? 1 : 0) + (r.midday_loop_completed ? 1 : 0);
-        return score(b) - score(a);
-      })[0] || null;
+      const completionScore = r => (r.morning_completed ? 1 : 0) + (r.evening_completed ? 1 : 0) + (r.midday_loop_completed ? 1 : 0);
+      const existing = todayRecords.sort((a, b) => completionScore(b) - completionScore(a))[0] || null;
 
       const now = new Date().toISOString();
 
