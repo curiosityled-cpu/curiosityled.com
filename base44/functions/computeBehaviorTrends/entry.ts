@@ -13,7 +13,7 @@
  *
  * Admin-only. Invoked by scheduled automation nightly.
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const ENERGY_ORDER = { drained: 0, stretched: 1, steady: 2, strong: 3 };
 const CONFIDENCE_ORDER = { low: 0, uncertain: 1, steady: 2, high: 3 };

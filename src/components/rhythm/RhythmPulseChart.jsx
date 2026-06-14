@@ -2,7 +2,7 @@
  * RhythmPulseChart — 5-measure leadership rhythm sparkline from DailyCheckIn history.
  * Shows last 7 days of energy, confidence, focus, load, growth trends.
  */
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip,
   ResponsiveContainer, ReferenceLine
@@ -33,8 +33,17 @@ function avg(arr) {
 }
 
 export default function RhythmPulseChart({ checkIns = [] }) {
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    });
+    observer.observe(document.documentElement, { attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
   if (!checkIns || checkIns.length === 0) return null;
-  const isDark = document.documentElement.classList.contains('dark');
   const MEASURES = isDark ? MEASURES_DARK : MEASURES_LIGHT;
 
   // Group by date, average scores across morning + evening entries
