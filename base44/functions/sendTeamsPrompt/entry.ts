@@ -8,7 +8,7 @@
  * Phase 1: Baseline energy/overload prompts (web notification fallback for POC)
  * Phase 2+: Real Teams Adaptive Card delivery via Graph API
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // ─── Inlined tone engine (mirror of applyTone — avoids inter-function auth issues) ───
 

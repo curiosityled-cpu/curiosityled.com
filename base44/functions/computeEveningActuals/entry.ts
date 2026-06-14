@@ -15,7 +15,7 @@
  * Respects user timezone. Does not fire when insufficient same-day context exists.
  * Admin-only. Invoked by scheduled automation at 17:00 UTC (adjust per tenant TZ).
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 function detectGap(focusCategory, activity, morningPulse) {
   if (!activity) return 'insufficient_data';

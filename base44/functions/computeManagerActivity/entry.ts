@@ -8,7 +8,7 @@
  * Designed to run as a scheduled automation (nightly, e.g. 9pm local)
  * Can also be called directly with a user_email payload.
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
   try {

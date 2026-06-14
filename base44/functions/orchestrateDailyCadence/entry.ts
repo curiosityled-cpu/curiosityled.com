@@ -21,7 +21,7 @@
  *
  * Admin-only. Invoked by scheduled automation Mon–Fri 8:30am ET.
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // ─── Day-of-week base schedule ────────────────────────────────────────────────
 
