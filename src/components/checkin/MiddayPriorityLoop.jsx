@@ -54,6 +54,7 @@ export default function MiddayPriorityLoop({ todayRecord, onComplete }) {
       action: "save",
       check_in_type: "midday",
       client_date: todayET,
+      existing_record_id: todayRecord?.id || null,
       big3_priorities: updatedBig3,
     }).catch(console.error);
     setSaving(false);
