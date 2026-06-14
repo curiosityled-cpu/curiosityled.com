@@ -91,27 +91,17 @@ Deno.serve(async (req) => {
 
     // ── SAVE ─────────────────────────────────────────────────────────────────
     if (action === 'save') {
-      // If frontend passes back the record ID from a prior save, use it directly
-      // to avoid read-after-write consistency lag when morning + evening are saved close together
-      let todayRecords = [];
+      // If frontend passes back the record ID, use it directly — skip DB lookup entirely
+      // to avoid read-after-write lag and RLS inconsistencies between requests
       const existingId = body.existing_record_id || fields.existing_record_id || null;
+      let existing = null;
       if (existingId) {
-        try {
-          const rec = await base44.asServiceRole.entities.DailyCheckIn.get(existingId);
-          if (rec && rec.user_email === user.email && rec.check_in_date === today) {
-            todayRecords = [rec];
-            console.log('[saveDailyCheckIn] found record via existing_record_id:', existingId);
-          }
-        } catch { /* fall through to filter */ }
+        existing = { id: existingId }; // trust the frontend — update directly
+      } else {
+        const todayRecords = await getTodayRecords();
+        const completionScore = r => (r.morning_completed ? 1 : 0) + (r.evening_completed ? 1 : 0) + (r.midday_loop_completed ? 1 : 0);
+        existing = todayRecords.sort((a, b) => completionScore(b) - completionScore(a))[0] || null;
       }
-      if (todayRecords.length === 0) {
-        todayRecords = await getTodayRecords();
-      }
-      console.log('[saveDailyCheckIn] save - todayRecords found:', todayRecords.length);
-
-      // Pick the most complete existing record for today
-      const completionScore = r => (r.morning_completed ? 1 : 0) + (r.evening_completed ? 1 : 0) + (r.midday_loop_completed ? 1 : 0);
-      const existing = todayRecords.sort((a, b) => completionScore(b) - completionScore(a))[0] || null;
 
       const now = new Date().toISOString();
 
