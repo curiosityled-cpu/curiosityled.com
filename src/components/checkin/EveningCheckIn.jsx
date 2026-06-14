@@ -50,7 +50,9 @@ function Big3Step({ goals, onSave, isActiveWindow = true }) {
   const activeGoals = (goals || []).filter(g => g.status === "active").slice(0, 15);
 
   const update = (idx, field, val) => {
+    if (idx < 0 || idx >= priorities.length) return;
     setPriorities(prev => {
+      if (!Array.isArray(prev) || idx < 0 || idx >= prev.length) return prev;
       const updated = [...prev];
       updated[idx] = { ...updated[idx], [field]: val };
       return updated;
