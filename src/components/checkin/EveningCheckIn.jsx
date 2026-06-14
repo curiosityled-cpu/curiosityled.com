@@ -77,13 +77,11 @@ function Big3Step({ goals, onSave, isActiveWindow = true }) {
             <span className="w-5 h-5 rounded-full bg-[#0202ff] text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
             <input
               type="text"
-              id={`big3-priority-${i}`}
-              name={`big3-priority-${i}`}
               value={p.title}
               onChange={e => update(i, 'title', e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') e.preventDefault(); }}
               placeholder={`Priority ${i + 1}`}
-              autoComplete="off"
+              autoComplete="new-password"
               autoCorrect="off"
               autoCapitalize="sentences"
               spellCheck="true"
@@ -295,8 +293,9 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
         big3_priorities: big3Priorities,
         questions_used: questions || {},
       });
+      setLocalBig3(big3Priorities);
       setEditMode(false); setExpanded(false);
-      onComplete?.([], 'evening');
+      onComplete?.(big3Priorities, 'evening');
     } catch (err) { console.error(err); }
     finally { setSaving(false); }
   };
