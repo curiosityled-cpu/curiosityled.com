@@ -198,6 +198,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
   // Track whether we've already initiated the fetch this mount
   const fetchInitiatedRef = useRef(false);
   const isMountedRef = useRef(true);
+  const stepRef = useRef(0);
 
   // Track component mount/unmount
   useEffect(() => {
@@ -205,6 +206,9 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
       isMountedRef.current = false;
     };
   }, []);
+
+  // Keep stepRef in sync so the alreadyDone effect can read current step without a dep
+  useEffect(() => { stepRef.current = step; }, [step]);
 
   // Persist draft to localStorage whenever in-progress state changes
   useEffect(() => {
@@ -215,7 +219,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
 
   useEffect(() => {
     if (alreadyDone) {
-      setStep(prev => (prev === 6 || prev === 7) ? prev : 7);
+      setStep(prev => (prev >= 6) ? prev : 7);
       setScores({
         energy:     todayRecord.energy_score     || 3,
         confidence: todayRecord.confidence_score || 3,
@@ -236,6 +240,9 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
       clearDraft();
       return;
     }
+
+    // Don't reset step if we're already in the completion/Big3 phase
+    if (stepRef.current >= 6) return;
 
     // Restore from draft if available
     const draft = loadDraft();
@@ -275,39 +282,32 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
   const handleBig3Save = async (big3Priorities) => {
     if (saving) return; // Prevent double-submit
     setSaving(true);
-    // Set completion state immediately to render the card before any async callbacks
-    if (isMountedRef.current) {
-      setLocalBig3(big3Priorities);
-      setStep(7);
-    }
-    
+    // Immediately update UI and notify parent — don't wait for the API round-trip
+    setLocalBig3(big3Priorities);
+    setStep(7);
+    clearDraft();
     try {
-      await base44.functions.invoke("saveDailyCheckIn", {
-        action: "save",
-        check_in_type: "evening",
-        client_date: getTodayET(),
-        energy_score: scores.energy, energy_note: notes.energy,
-        confidence_score: scores.confidence, confidence_note: notes.confidence,
-        focus_score: scores.focus, focus_note: notes.focus,
-        load_score: scores.load, load_note: notes.load,
-        growth_score: scores.growth, growth_note: notes.growth,
-        big3_priorities: big3Priorities,
-        questions_used: questions || {},
-      });
-      clearDraft();
-    } catch (err) {
-      console.error("Failed to save evening check-in:", err);
-    } finally {
-      if (isMountedRef.current) {
-        setSaving(false);
-        // Trigger callback after UI is rendered, safely handling unmount
-        try {
-          onComplete?.(big3Priorities, 'evening');
-        } catch (cbErr) {
-          console.error("onComplete callback error:", cbErr);
-        }
-      }
+      onComplete?.(big3Priorities, 'evening');
+    } catch (cbErr) {
+      console.error("onComplete callback error:", cbErr);
     }
+    // Fire-and-forget the API save (UI is already updated)
+    base44.functions.invoke("saveDailyCheckIn", {
+      action: "save",
+      check_in_type: "evening",
+      client_date: getTodayET(),
+      energy_score: scores.energy, energy_note: notes.energy,
+      confidence_score: scores.confidence, confidence_note: notes.confidence,
+      focus_score: scores.focus, focus_note: notes.focus,
+      load_score: scores.load, load_note: notes.load,
+      growth_score: scores.growth, growth_note: notes.growth,
+      big3_priorities: big3Priorities,
+      questions_used: questions || {},
+    }).catch(err => {
+      console.error("Failed to save evening check-in:", err);
+    }).finally(() => {
+      if (isMountedRef.current) setSaving(false);
+    });
   };
 
   const handleEditSave = async (big3Priorities) => {
