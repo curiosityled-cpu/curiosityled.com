@@ -39,7 +39,7 @@ function ScorePicker({ value, onChange }) {
   );
 }
 
-function Big3Step({ goals, onSave }) {
+function Big3Step({ goals, onSave, isActiveWindow = true }) {
   const [priorities, setPriorities] = useState([
     { id: "1", title: "", context: "", goal_id: "" },
     { id: "2", title: "", context: "", goal_id: "" },
@@ -122,7 +122,7 @@ function Big3Step({ goals, onSave }) {
         disabled={saving || !priorities.some(p => p.title.trim())}
         className="w-full bg-[#0202ff] hover:bg-[#0101dd]"
       >
-        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save & complete evening check-in"}
+        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : isActiveWindow ? "Save & complete evening check-in" : "Save Big 3 for tomorrow"}
       </Button>
       <button
         onClick={() => onSave([])}
@@ -169,7 +169,7 @@ function clearDraft() {
   try { localStorage.removeItem(DRAFT_KEY); } catch {}
 }
 
-export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) {
+export default function EveningCheckIn({ onComplete, todayRecord, goals = [], isActiveWindow = true }) {
   const [step, setStep] = useState(0);
   const [questions, setQuestions] = useState(null);
   const [scores, setScores] = useState({ energy: 3, confidence: 3, focus: 3, load: 3, growth: 3 });
@@ -228,6 +228,13 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
       return;
     }
 
+    // Outside the evening window — skip reflection questions and go straight to Big 3 planning
+    if (!isActiveWindow) {
+      fetchInitiatedRef.current = true;
+      setStep(6);
+      return;
+    }
+
     // Only fetch once per mount
     if (fetchInitiatedRef.current) return;
     fetchInitiatedRef.current = true;
@@ -238,7 +245,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
       .then(res => { clearTimeout(timeout); if (!cancelled) { setQuestions(res.data?.questions || null); setStep(1); } })
       .catch(() => { clearTimeout(timeout); if (!cancelled) setStep(1); });
     return () => { cancelled = true; clearTimeout(timeout); };
-  }, [alreadyDone]);
+  }, [alreadyDone, isActiveWindow]);
 
   const handleMeasureNext = () => {
     if (step < 5) setStep(s => s + 1);
@@ -439,10 +446,12 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
       <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
         <div className="px-4 pt-4 pb-3 border-b border-border flex items-center gap-2">
           <Moon className="w-4 h-4 text-indigo-400" />
-          <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Plan Tomorrow Today</p>
+          <p className="text-xs font-semibold text-foreground uppercase tracking-wide">
+            {isActiveWindow ? "Plan Tomorrow Today" : "Big 3 for Tomorrow"}
+          </p>
         </div>
         <div className="px-4 py-5">
-          <Big3Step goals={goals} onSave={handleBig3Save} />
+          <Big3Step goals={goals} onSave={handleBig3Save} isActiveWindow={isActiveWindow} />
         </div>
       </div>
     );

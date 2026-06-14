@@ -313,13 +313,12 @@ export default function ManagerToday() {
         </div>
       )}
 
-      {(showEveningCheckIn || todayRecord?.evening_completed) && (
-        <EveningCheckIn
-          todayRecord={todayRecord}
-          goals={goals}
-          onComplete={handleCheckInComplete}
-        />
-      )}
+      <EveningCheckIn
+        todayRecord={todayRecord}
+        goals={goals}
+        onComplete={handleCheckInComplete}
+        isActiveWindow={isEveningWindow}
+      />
 
       {/* Today's Playbook */}
       {(todayRecord || yesterdayBig3.length > 0 || goals.length > 0 || assignments.length > 0) && (
