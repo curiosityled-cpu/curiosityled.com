@@ -213,13 +213,12 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
   const completedCache = wasEveningCompletedToday(userEmail);
   const alreadyDoneFromCache = !!completedCache;
 
-  // DB truth takes priority: once todayRecord is loaded (not undefined), trust it over localStorage.
-  // Only fall back to localStorage while todayRecord is still loading (undefined).
-  const alreadyDone = todayRecord !== undefined
-    ? !!todayRecord?.evening_completed
-    : alreadyDoneFromCache;
+  // DB truth takes priority once loaded, but localStorage completion is a floor:
+  // if the user just completed (localStorage says done) but the DB hasn't persisted yet
+  // (fire-and-forget save still in-flight), we trust localStorage to prevent a reset.
+  const alreadyDone = !!todayRecord?.evening_completed || alreadyDoneFromCache;
 
-  const [step, setStep] = useState(() => (todayRecord?.evening_completed || alreadyDoneFromCache) ? 7 : 0);
+  const [step, setStep] = useState(() => alreadyDone ? 7 : 0);
   const [questions, setQuestions] = useState(null);
   const [scores, setScores] = useState(() =>
     completedCache?.scores || { energy: 3, confidence: 3, focus: 3, load: 3, growth: 3 }

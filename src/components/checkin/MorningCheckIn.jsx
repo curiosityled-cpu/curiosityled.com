@@ -75,11 +75,10 @@ function markCompletedToday(userEmail) {
 }
 
 export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
-  // DB truth takes priority: once todayRecord is loaded (not undefined), trust it over localStorage.
-  // Only fall back to localStorage while todayRecord is still loading (undefined).
-  const alreadyDone = todayRecord !== undefined
-    ? !!todayRecord?.morning_completed
-    : wasCompletedToday(userEmail);
+  // DB truth takes priority once loaded, but localStorage completion is a floor:
+  // if the user just completed (localStorage says done) but the DB hasn't persisted yet
+  // (fire-and-forget save still in-flight), we trust localStorage to prevent a reset.
+  const alreadyDone = !!todayRecord?.morning_completed || wasCompletedToday(userEmail);
 
   // Initialize step to 6 immediately if we already know it's done — prevents flash of step 1
   const [step, setStep] = useState(() => alreadyDone ? 6 : 0);
@@ -143,8 +142,8 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
       return;
     }
 
-    // todayRecord is still loading (undefined) — don't start the fetch yet
-    if (todayRecord === undefined) return;
+    // todayRecord is still loading (undefined) and localStorage says not done — don't start the fetch yet
+    if (todayRecord === undefined && !wasCompletedToday(userEmail)) return;
 
     // Don't reset step if we're already in the done state
     if (stepRef.current >= 6) return;
