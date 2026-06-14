@@ -132,7 +132,7 @@ function Big3Step({ goals, onSave, isActiveWindow = true, initialPriorities = nu
 
       <Button
         onClick={handleSave}
-        disabled={saving || !priorities.some(p => p.title.trim())}
+        disabled={saving}
         className="w-full bg-[#0202ff] hover:bg-[#0101dd]"
       >
         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : isActiveWindow ? "Save & complete evening check-in" : "Save Big 3 for tomorrow"}
