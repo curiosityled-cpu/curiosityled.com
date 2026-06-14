@@ -80,21 +80,22 @@ function Big3Step({ goals, onSave, isActiveWindow = true }) {
       </div>
 
       {priorities.map((p, i) => (
-        <div key={i} className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="w-5 h-5 rounded-full bg-[#0202ff] text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
-            <input
-              type="text"
-              value={p.title}
-              onChange={e => update(i, 'title', e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') e.preventDefault(); }}
-              placeholder={`Priority ${i + 1}`}
-              autoComplete="new-password"
-              autoCorrect="off"
-              autoCapitalize="sentences"
-              spellCheck="true"
-              className="flex-1 text-sm bg-muted/40 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
-            />
+        <div key={`priority-${i}-${p.title || 'empty'}`} className="space-y-2">
+           <div className="flex items-center gap-2">
+             <span className="w-5 h-5 rounded-full bg-[#0202ff] text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
+             <input
+               key={`title-${i}`}
+               type="text"
+               value={p.title}
+               onChange={e => update(i, 'title', e.target.value)}
+               onKeyDown={e => { if (e.key === 'Enter') e.preventDefault(); }}
+               placeholder={`Priority ${i + 1}`}
+               autoComplete="off"
+               autoCorrect="off"
+               autoCapitalize="sentences"
+               spellCheck="true"
+               className="flex-1 text-sm bg-muted/40 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
+             />
           </div>
           {p.title.trim() && (
           <div className="ml-7 space-y-1.5">
@@ -112,12 +113,13 @@ function Big3Step({ goals, onSave, isActiveWindow = true }) {
               </select>
             )}
             <textarea
-              value={p.context}
-              onChange={e => update(i, 'context', e.target.value)}
-              placeholder="Any context or intention? (optional)"
-              rows={1}
-              className="w-full text-xs bg-muted/40 rounded-lg px-2 py-1.5 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
-            />
+               key={`context-${i}`}
+               value={p.context}
+               onChange={e => update(i, 'context', e.target.value)}
+               placeholder="Any context or intention? (optional)"
+               rows={1}
+               className="w-full text-xs bg-muted/40 rounded-lg px-2 py-1.5 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
+             />
           </div>
           )}
         </div>
