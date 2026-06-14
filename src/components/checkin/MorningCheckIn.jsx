@@ -57,8 +57,25 @@ function getDraftKey(userEmail) {
   return `morning_draft_${userEmail}_${getTodayET()}`;
 }
 
+const COMPLETED_KEY = "morning_checkin_completed";
+
+function wasCompletedToday(userEmail) {
+  try {
+    const raw = localStorage.getItem(COMPLETED_KEY);
+    if (!raw) return false;
+    const { date, email } = JSON.parse(raw);
+    return date === getTodayET() && email === userEmail;
+  } catch { return false; }
+}
+
+function markCompletedToday(userEmail) {
+  try {
+    localStorage.setItem(COMPLETED_KEY, JSON.stringify({ date: getTodayET(), email: userEmail }));
+  } catch {}
+}
+
 export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
-  const alreadyDone = todayRecord?.morning_completed;
+  const alreadyDone = todayRecord?.morning_completed || wasCompletedToday(userEmail);
 
   // Initialize step to 6 immediately if we already know it's done — prevents flash of step 1
   const [step, setStep] = useState(() => alreadyDone ? 6 : 0);
@@ -176,7 +193,10 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
     setSaving(true);
     // Immediately update UI and notify parent — don't wait for the API round-trip
     setStep(6);
-    if (userEmail) localStorage.removeItem(getDraftKey(userEmail));
+    if (userEmail) {
+      localStorage.removeItem(getDraftKey(userEmail));
+      markCompletedToday(userEmail); // Persist completion so remounts after navigation show "done"
+    }
     try { onComplete?.([], 'morning'); } catch (cbErr) { console.error('onComplete error:', cbErr); }
 
     base44.functions.invoke("saveDailyCheckIn", {

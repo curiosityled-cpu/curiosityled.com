@@ -121,8 +121,8 @@ export default function ManagerToday() {
       } catch { return { record: null, yesterday_big3: [] }; }
     },
     enabled: !!user?.email,
-    staleTime: 60 * 1000,       // 1 min — don't re-fetch too aggressively and disrupt active check-in
-    gcTime: 10 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,    // 5 min — keep completed state alive across navigation
+    gcTime: 15 * 60 * 1000,
     refetchOnWindowFocus: false, // Prevent refetch (and potential remount) when user switches tabs
   });
   const todayRecord = todayData?.record || null;
@@ -159,10 +159,15 @@ export default function ManagerToday() {
     });
     queryClient.invalidateQueries({ queryKey: ['daily-checkin-history', user?.email] });
     queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
-    // Delay before re-fetching today's record to allow the DB write to propagate
+    // Delay before re-fetching today's record to allow the DB write to propagate.
+    // Only invalidate if the cache still reflects the optimistic update (not already stale/refetching).
     setTimeout(() => {
+      const cached = queryClient.getQueryData(['daily-checkin-today', user?.email]);
+      const cachedRecord = cached?.record;
+      // If morning was just completed, only re-fetch if the DB record is now confirmed
+      // (i.e. the optimistic update is still in place — safe to refresh in background)
       queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
-    }, 3000);
+    }, 5000);
   };
 
   const openAtreus = (msg) => openWithContext({

@@ -147,6 +147,28 @@ function Big3Step({ goals, onSave, onSkip, isActiveWindow = true, initialPriorit
 }
 
 const DRAFT_KEY = "evening_checkin_draft";
+const EVENING_COMPLETED_KEY = "evening_checkin_completed";
+
+function wasEveningCompletedToday() {
+  try {
+    const raw = localStorage.getItem(EVENING_COMPLETED_KEY);
+    if (!raw) return null; // null = not found
+    const saved = JSON.parse(raw);
+    if (saved.date !== getTodayET()) { localStorage.removeItem(EVENING_COMPLETED_KEY); return null; }
+    return saved; // { date, big3, scores, notes }
+  } catch { return null; }
+}
+
+function markEveningCompletedToday(big3Priorities, scores, notes) {
+  try {
+    localStorage.setItem(EVENING_COMPLETED_KEY, JSON.stringify({
+      date: getTodayET(),
+      big3: big3Priorities,
+      scores,
+      notes,
+    }));
+  } catch {}
+}
 
 function getTodayET() {
   return new Intl.DateTimeFormat('en-CA', {
@@ -182,16 +204,23 @@ function clearDraft() {
 }
 
 export default function EveningCheckIn({ onComplete, todayRecord, goals = [], isActiveWindow = true }) {
-  const [step, setStep] = useState(0);
+  const completedCache = wasEveningCompletedToday();
+  const alreadyDoneFromCache = !!completedCache;
+
+  const [step, setStep] = useState(() => (todayRecord?.evening_completed || alreadyDoneFromCache) ? 7 : 0);
   const [questions, setQuestions] = useState(null);
-  const [scores, setScores] = useState({ energy: 3, confidence: 3, focus: 3, load: 3, growth: 3 });
-  const [notes, setNotes] = useState({ energy: "", confidence: "", focus: "", load: "", growth: "" });
-  const [localBig3, setLocalBig3] = useState(null); // persisted after save for step 7 display
+  const [scores, setScores] = useState(() =>
+    completedCache?.scores || { energy: 3, confidence: 3, focus: 3, load: 3, growth: 3 }
+  );
+  const [notes, setNotes] = useState(() =>
+    completedCache?.notes || { energy: "", confidence: "", focus: "", load: "", growth: "" }
+  );
+  const [localBig3, setLocalBig3] = useState(() => completedCache?.big3 || null); // persisted after save for step 7 display
   const [expanded, setExpanded] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editStep, setEditStep] = useState(1);
 
-  const alreadyDone = todayRecord?.evening_completed;
+  const alreadyDone = todayRecord?.evening_completed || alreadyDoneFromCache;
 
   // Track whether we've already initiated the fetch this mount
   const fetchInitiatedRef = useRef(false);
@@ -284,6 +313,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
     setLocalBig3(big3Priorities);
     setStep(7);
     clearDraft();
+    markEveningCompletedToday(big3Priorities, scores, notes); // Persist so remounts after navigation show "done"
     onComplete?.(big3Priorities, 'evening');
     // Fire-and-forget the API save (UI is already updated)
     base44.functions.invoke("saveDailyCheckIn", {
