@@ -170,7 +170,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
       });
       setStep(6);
       if (userEmail) localStorage.removeItem(getDraftKey(userEmail));
-      onComplete?.();
+      onComplete?.([], 'morning');
     } catch (err) {
       console.error('Save error:', err);
     } finally {
@@ -201,7 +201,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
         questions_used: questions || {},
       });
       setEditMode(false); setExpanded(false);
-      onComplete?.();
+      onComplete?.([], 'morning');
     } catch (err) { console.error('Edit save error:', err); }
     finally { setSaving(false); }
   };

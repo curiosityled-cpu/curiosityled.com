@@ -138,7 +138,7 @@ export default function ManagerToday() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const handleCheckInComplete = (big3Priorities) => {
+  const handleCheckInComplete = (big3Priorities, type) => {
     if (big3Priorities?.length > 0) {
       setLocalBig3Override(big3Priorities);
       try {
@@ -148,12 +148,21 @@ export default function ManagerToday() {
         }));
       } catch {}
     }
+    // Optimistically update the cache so the "done" card renders immediately
+    // without waiting for a round-trip refetch (prevents flash back to step 1)
+    queryClient.setQueryData(['daily-checkin-today', user?.email], (old) => {
+      if (!old) return old;
+      const update = {};
+      if (type === 'morning') { update.morning_completed = true; update.morning_completed_at = new Date().toISOString(); }
+      if (type === 'evening') { update.evening_completed = true; update.evening_completed_at = new Date().toISOString(); update.big3_priorities = big3Priorities || []; }
+      return { ...old, record: { ...(old.record || {}), ...update } };
+    });
     queryClient.invalidateQueries({ queryKey: ['daily-checkin-history', user?.email] });
     queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
     // Delay before re-fetching today's record to allow the DB write to propagate
     setTimeout(() => {
       queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
-    }, 1500);
+    }, 2000);
   };
 
   const openAtreus = (msg) => openWithContext({

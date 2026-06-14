@@ -264,7 +264,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
       });
       clearDraft();
       // Notify parent immediately so cache is invalidated and data is fresh on any navigation
-      onComplete?.(big3Priorities);
+      onComplete?.(big3Priorities, 'evening');
       // Show success confirmation for 2s before transitioning the step
       setSavedBig3(big3Priorities);
       setLocalBig3(big3Priorities);
@@ -297,7 +297,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
         questions_used: questions || {},
       });
       setEditMode(false); setExpanded(false);
-      onComplete?.();
+      onComplete?.([], 'evening');
     } catch (err) { console.error(err); }
     finally { setSaving(false); }
   };
