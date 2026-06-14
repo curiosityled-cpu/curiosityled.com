@@ -77,6 +77,9 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
   }, [step, scores, notes, questions, userEmail, alreadyDone]);
 
   useEffect(() => {
+    // Wait until we know the user and today's record status
+    if (!userEmail) return;
+
     if (alreadyDone) {
       setStep(6);
       setScores({
@@ -93,30 +96,26 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
         load:       todayRecord.load_note       || "",
         growth:     todayRecord.growth_note     || "",
       });
-      // Clear any stale draft
-      if (userEmail) localStorage.removeItem(getDraftKey(userEmail));
+      localStorage.removeItem(getDraftKey(userEmail));
       return;
     }
 
     // Try to rehydrate an in-progress draft first
-    if (userEmail) {
-      try {
-        const raw = localStorage.getItem(getDraftKey(userEmail));
-        if (raw) {
-          const draft = JSON.parse(raw);
-          if (draft.step >= 1 && draft.step <= 5) {
-            setStep(draft.step);
-            setScores(draft.scores);
-            setNotes(draft.notes);
-            if (draft.questions) setQuestions(draft.questions);
-            return; // skip fresh fetch — questions already cached in draft
-          }
+    try {
+      const raw = localStorage.getItem(getDraftKey(userEmail));
+      if (raw) {
+        const draft = JSON.parse(raw);
+        if (draft.step >= 1 && draft.step <= 5) {
+          setStep(draft.step);
+          setScores(draft.scores);
+          setNotes(draft.notes);
+          if (draft.questions) setQuestions(draft.questions);
+          return;
         }
-      } catch { /* ignore parse errors */ }
-    }
+      }
+    } catch { /* ignore parse errors */ }
 
     let cancelled = false;
-    // Fallback: if the fetch takes >8s, unblock the UI anyway with default questions
     const timeout = setTimeout(() => { if (!cancelled) setStep(1); }, 8000);
 
     base44.functions.invoke("saveDailyCheckIn", { action: "get_questions", check_in_type: "morning", client_date: getTodayET() })
