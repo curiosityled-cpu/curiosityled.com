@@ -80,6 +80,9 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
     localStorage.setItem(getDraftKey(userEmail), JSON.stringify(draft));
   }, [step, scores, notes, questions, userEmail, alreadyDone]);
 
+  // Keep stepRef in sync so the effect can read current step without being a dependency
+  useEffect(() => { stepRef.current = step; }, [step]);
+
   useEffect(() => {
     // Wait until we know the user and today's record status
     if (!userEmail) return;
@@ -103,6 +106,9 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
       localStorage.removeItem(getDraftKey(userEmail));
       return;
     }
+
+    // Don't reset step if we're already in the done state
+    if (stepRef.current >= 6) return;
 
     // Try to rehydrate an in-progress draft first
     try {
