@@ -80,7 +80,7 @@ function Big3Step({ goals, onSave, isActiveWindow = true }) {
       </div>
 
       {priorities.map((p, i) => (
-        <div key={`priority-${i}-${p.title || 'empty'}`} className="space-y-2">
+        <div key={`priority-${i}`} className="space-y-2">
            <div className="flex items-center gap-2">
              <span className="w-5 h-5 rounded-full bg-[#0202ff] text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
              <input
