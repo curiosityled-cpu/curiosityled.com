@@ -6,11 +6,12 @@
 import React, { useState } from "react";
 import {
   Brain, ArrowRight, CheckCircle2, Circle, MinusCircle,
-  BookmarkCheck, ChevronDown, ChevronUp, Flame, AlertTriangle, Target, Loader2
+  BookmarkCheck, ChevronDown, ChevronUp, Flame, AlertTriangle, Target, Pencil, Loader2, X, Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 
 // ─── Situation builder ────────────────────────────────────────────────────────
@@ -180,16 +181,16 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Your Big 3</p>
 
         {big3.length > 0 ? (
-           <div>
-             {big3.map((p, i) => (
-               <Big3Item key={p.id || i} item={p} index={i} fromYesterday={false} />
-             ))}
-           </div>
-         ) : (
-           <p className="text-xs text-muted-foreground italic">
-             Set your Big 3 tonight in the Evening Check-in.
-           </p>
-         )}
+          <div>
+            {big3.map((p, i) => (
+              <Big3Item key={p.id || i} item={p} index={i} fromYesterday={false} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground italic">
+            Set your Big 3 tonight in the Evening Check-in.
+          </p>
+        )}
       </div>
 
       {/* ── Situation signal ─────────────────────────────────────────── */}
