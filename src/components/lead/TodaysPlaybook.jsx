@@ -241,6 +241,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
                     value={item.title}
                     onChange={e => setEditItems(prev => prev.map((p, idx) => idx === i ? { ...p, title: e.target.value } : p))}
                     placeholder={`Priority ${i + 1}`}
+                    autoComplete="off"
                     className="flex-1 text-sm bg-muted/40 border border-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 text-foreground placeholder:text-muted-foreground/60"
                   />
                   {editItems.length > 1 && (
@@ -253,6 +254,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
                   value={item.context}
                   onChange={e => setEditItems(prev => prev.map((p, idx) => idx === i ? { ...p, context: e.target.value } : p))}
                   placeholder="Context (optional)"
+                  autoComplete="off"
                   className="w-full text-xs bg-muted/30 border border-border/60 rounded-lg px-2.5 py-1.5 ml-5 focus:outline-none focus:ring-1 focus:ring-[#0202ff]/20 text-foreground placeholder:text-muted-foreground/50"
                 />
               </div>
