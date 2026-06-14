@@ -233,8 +233,10 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
         load:       todayRecord.load_note       || "",
         growth:     todayRecord.growth_note     || "",
       });
+      // Only pull Big 3 from the record if we haven't already captured it locally
+      // (avoids overwriting the locally-saved value before the DB write propagates)
       if (todayRecord.big3_priorities?.length > 0) {
-        setLocalBig3(todayRecord.big3_priorities);
+        setLocalBig3(prev => prev && prev.length > 0 ? prev : todayRecord.big3_priorities);
       }
       clearDraft();
       return;
@@ -275,7 +277,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
 
   const handleMeasureNext = () => {
     if (step < 5) setStep(s => s + 1);
-    else setStep(6); // → Big 3
+    else { setSaving(false); setStep(6); } // → Big 3, ensure saving is clear
   };
 
   const handleBig3Save = async (big3Priorities) => {
