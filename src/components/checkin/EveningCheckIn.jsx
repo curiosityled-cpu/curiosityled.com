@@ -201,10 +201,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
 
   useEffect(() => {
     if (alreadyDone) {
-      setStep(prev => {
-        if (prev === 6) return prev;
-        return 7;
-      });
+      setStep(prev => prev === 6 ? prev : 7);
       setScores({
         energy:     todayRecord.energy_score     || 3,
         confidence: todayRecord.confidence_score || 3,
@@ -219,13 +216,13 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
         load:       todayRecord.load_note       || "",
         growth:     todayRecord.growth_note     || "",
       });
-      // Populate localBig3 from the saved record so the step-7 display works after remount
       if (todayRecord.big3_priorities?.length > 0) {
         setLocalBig3(todayRecord.big3_priorities);
       }
       clearDraft();
       return;
     }
+
     // Restore from draft if available (always check first, even on remount)
     const draft = loadDraft();
     if (draft) {
@@ -238,8 +235,12 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
       return;
     }
 
-    // Only fetch questions once per day — persisted in sessionStorage across remounts
-    if (flowInitiatedRef.current) return;
+    // If session flag is set but no draft exists, it's a stale flag — clear it and re-fetch
+    if (flowInitiatedRef.current) {
+      try { sessionStorage.removeItem(FLOW_KEY); } catch {}
+      flowInitiatedRef.current = false;
+    }
+
     flowInitiatedRef.current = true;
     try { sessionStorage.setItem(FLOW_KEY, '1'); } catch {}
 
@@ -249,7 +250,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
       .then(res => { clearTimeout(timeout); if (!cancelled) { setQuestions(res.data?.questions || null); setStep(1); } })
       .catch(() => { clearTimeout(timeout); if (!cancelled) setStep(1); });
     return () => { cancelled = true; clearTimeout(timeout); };
-  }, [alreadyDone]);
+  }, [alreadyDone, todayRecord]);
 
   const handleMeasureNext = () => {
     if (step < 5) setStep(s => s + 1);
