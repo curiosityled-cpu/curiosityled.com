@@ -317,19 +317,25 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
     clearDraft();
     markEveningCompletedToday(big3Priorities, scores, notes); // Persist so remounts after navigation show "done"
     onComplete?.(big3Priorities, 'evening');
-    // Fire-and-forget the API save (UI is already updated)
-    base44.functions.invoke("saveDailyCheckIn", {
+
+    // When outside the evening window we only have Big 3 (no measure scores were collected),
+    // so only save big3_priorities to avoid overwriting real scores with defaults.
+    const payload = {
       action: "save",
       check_in_type: "evening",
       client_date: getTodayET(),
-      energy_score: scores.energy, energy_note: notes.energy,
-      confidence_score: scores.confidence, confidence_note: notes.confidence,
-      focus_score: scores.focus, focus_note: notes.focus,
-      load_score: scores.load, load_note: notes.load,
-      growth_score: scores.growth, growth_note: notes.growth,
       big3_priorities: big3Priorities,
       questions_used: questions || {},
-    }).catch(err => {
+    };
+    if (isActiveWindow) {
+      payload.energy_score = scores.energy; payload.energy_note = notes.energy;
+      payload.confidence_score = scores.confidence; payload.confidence_note = notes.confidence;
+      payload.focus_score = scores.focus; payload.focus_note = notes.focus;
+      payload.load_score = scores.load; payload.load_note = notes.load;
+      payload.growth_score = scores.growth; payload.growth_note = notes.growth;
+    }
+    // Fire-and-forget the API save (UI is already updated)
+    base44.functions.invoke("saveDailyCheckIn", payload).catch(err => {
       console.error("Failed to save evening check-in:", err);
     });
   };
