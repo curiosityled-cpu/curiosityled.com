@@ -405,7 +405,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
             <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Edit Big 3</p>
           </div>
           <div className="px-4 py-5">
-            <Big3Step goals={goals} onSave={handleEditSave} initialPriorities={localBig3 ?? todayRecord?.big3_priorities} />
+            <Big3Step key={`edit-big3-${editStep}`} goals={goals} onSave={handleEditSave} initialPriorities={localBig3 ?? todayRecord?.big3_priorities} />
               <button onClick={() => { setEditMode(false); setExpanded(false); }} className="mt-2 text-xs text-muted-foreground hover:text-foreground w-full text-center">Cancel</button>
           </div>
         </div>
@@ -450,7 +450,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
           </p>
         </div>
         <div className="px-4 py-5">
-          <Big3Step goals={goals} onSave={handleBig3Save} isActiveWindow={isActiveWindow} />
+          <Big3Step goals={goals} onSave={handleBig3Save} isActiveWindow={isActiveWindow} initialPriorities={localBig3 ?? todayRecord?.big3_priorities} />
         </div>
       </div>
     );

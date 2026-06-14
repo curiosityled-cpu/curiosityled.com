@@ -71,6 +71,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
 
   // Guard against re-fetching questions on every re-render
   const fetchInitiatedRef = useRef(false);
+  const stepRef = useRef(0);
 
   // Persist in-progress draft to localStorage on every step/score/note change
   useEffect(() => {
@@ -149,33 +150,31 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setSaving(true);
-    try {
-      await base44.functions.invoke("saveDailyCheckIn", {
-        action: "save",
-        check_in_type: "morning",
-        client_date: getTodayET(),
-        energy_score: scores.energy,
-        energy_note: notes.energy,
-        confidence_score: scores.confidence,
-        confidence_note: notes.confidence,
-        focus_score: scores.focus,
-        focus_note: notes.focus,
-        load_score: scores.load,
-        load_note: notes.load,
-        growth_score: scores.growth,
-        growth_note: notes.growth,
-        questions_used: questions || {},
-      });
-      setStep(6);
-      if (userEmail) localStorage.removeItem(getDraftKey(userEmail));
-      onComplete?.([], 'morning');
-    } catch (err) {
+    // Immediately update UI and notify parent — don't wait for the API round-trip
+    setStep(6);
+    if (userEmail) localStorage.removeItem(getDraftKey(userEmail));
+    try { onComplete?.([], 'morning'); } catch (cbErr) { console.error('onComplete error:', cbErr); }
+
+    base44.functions.invoke("saveDailyCheckIn", {
+      action: "save",
+      check_in_type: "morning",
+      client_date: getTodayET(),
+      energy_score: scores.energy,
+      energy_note: notes.energy,
+      confidence_score: scores.confidence,
+      confidence_note: notes.confidence,
+      focus_score: scores.focus,
+      focus_note: notes.focus,
+      load_score: scores.load,
+      load_note: notes.load,
+      growth_score: scores.growth,
+      growth_note: notes.growth,
+      questions_used: questions || {},
+    }).catch(err => {
       console.error('Save error:', err);
-    } finally {
-      setSaving(false);
-    }
+    }).finally(() => setSaving(false));
   };
 
   // Loading
