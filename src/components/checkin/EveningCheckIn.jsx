@@ -39,12 +39,17 @@ function ScorePicker({ value, onChange }) {
   );
 }
 
-function Big3Step({ goals, onSave, isActiveWindow = true }) {
-  const [priorities, setPriorities] = useState([
+function Big3Step({ goals, onSave, isActiveWindow = true, initialPriorities = null }) {
+  const defaultPriorities = [
     { title: "", context: "", goal_id: "" },
     { title: "", context: "", goal_id: "" },
     { title: "", context: "", goal_id: "" },
-  ]);
+  ];
+  const [priorities, setPriorities] = useState(
+    initialPriorities && initialPriorities.length > 0
+      ? initialPriorities.map(p => ({ title: p.title || "", context: p.context || "", goal_id: p.goal_id || "" }))
+      : defaultPriorities
+  );
   const [saving, setSaving] = useState(false);
 
   const activeGoals = (goals || []).filter(g => g.status === "active").slice(0, 15);
@@ -386,8 +391,8 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
             <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Edit Big 3</p>
           </div>
           <div className="px-4 py-5">
-            <Big3Step goals={goals} onSave={handleEditSave} />
-            <button onClick={() => { setEditMode(false); setExpanded(false); }} className="mt-2 text-xs text-muted-foreground hover:text-foreground w-full text-center">Cancel</button>
+            <Big3Step goals={goals} onSave={handleEditSave} initialPriorities={localBig3 ?? todayRecord?.big3_priorities} />
+              <button onClick={() => { setEditMode(false); setExpanded(false); }} className="mt-2 text-xs text-muted-foreground hover:text-foreground w-full text-center">Cancel</button>
           </div>
         </div>
       );
