@@ -2,8 +2,11 @@
  * saveDailyCheckIn — Save or update today's DailyCheckIn record.
  * Also generates contextual AI questions for morning/evening prompts.
  *
- * POST body: { check_in_type, action, ...fields }
- *   action = "get_questions" | "save"
+ * POST body: { check_in_type, action, client_date (YYYY-MM-DD, from frontend), ...fields }
+ *   action = "get_questions" | "save" | "get_today"
+ *
+ * IMPORTANT: We rely on client_date sent from the browser (computed in the user's local timezone)
+ * rather than server-side timezone computation, which is unreliable across Deno container instances.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
@@ -14,57 +17,23 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { action, check_in_type, ...fields } = body;
+    const { action, check_in_type, client_date, ...fields } = body;
 
-    // Get today's date in Eastern time (YYYY-MM-DD)
-    // Use Intl.DateTimeFormat for reliable cross-platform timezone handling
-    const nowET = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'America/New_York',
-      year: 'numeric', month: '2-digit', day: '2-digit'
-    }).format(new Date());
-    const today = nowET; // YYYY-MM-DD
-    console.log('[saveDailyCheckIn] Today (ET):', today, 'UTC now:', new Date().toISOString(), 'User:', user.email);
+    // Use client-provided date if valid (YYYY-MM-DD), otherwise fall back to server UTC date.
+    // The frontend always sends client_date computed via Intl.DateTimeFormat in the user's timezone.
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    const today = (client_date && dateRegex.test(client_date))
+      ? client_date
+      : new Date().toISOString().slice(0, 10); // UTC fallback
+
+    console.log('[saveDailyCheckIn] action:', action, 'today:', today, 'client_date:', client_date, 'UTC:', new Date().toISOString(), 'user:', user.email);
 
     // ── GET QUESTIONS ────────────────────────────────────────────────────────
     if (action === 'get_questions') {
-      // Fetch recent check-ins and trends for context with retries
       const [recentCheckIns, trends, memory] = await Promise.all([
-        (async () => {
-          let retries = 3;
-          while (retries > 0) {
-            try {
-              return await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 7);
-            } catch (e) {
-              retries--;
-              if (retries === 0) return [];
-              await new Promise(resolve => setTimeout(resolve, 200));
-            }
-          }
-        })(),
-        (async () => {
-          let retries = 3;
-          while (retries > 0) {
-            try {
-              return await base44.entities.ManagerTrends.filter({ user_email: user.email }, '-last_trend_computed_at', 1);
-            } catch (e) {
-              retries--;
-              if (retries === 0) return [];
-              await new Promise(resolve => setTimeout(resolve, 200));
-            }
-          }
-        })(),
-        (async () => {
-          let retries = 3;
-          while (retries > 0) {
-            try {
-              return await base44.entities.ManagerMemory.filter({ user_email: user.email }, null, 1);
-            } catch (e) {
-              retries--;
-              if (retries === 0) return [];
-              await new Promise(resolve => setTimeout(resolve, 200));
-            }
-          }
-        })(),
+        base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 7).catch(() => []),
+        base44.entities.ManagerTrends.filter({ user_email: user.email }, '-last_trend_computed_at', 1).catch(() => []),
+        base44.entities.ManagerMemory.filter({ user_email: user.email }, null, 1).catch(() => []),
       ]);
 
       const trendData = trends[0] || {};
@@ -110,34 +79,19 @@ Deno.serve(async (req) => {
     }
 
     // ── SAVE ─────────────────────────────────────────────────────────────────
-     if (action === 'save') {
-        // Fetch enough records to always find today's — 30 covers any reasonable case
-        let records = [];
-        let retries = 3;
-        while (retries > 0) {
-          try {
-            const allRecords = await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 30);
-            records = allRecords.filter(r => r.check_in_date === today);
-            break;
-          } catch (e) {
-            retries--;
-            if (retries === 0) throw e;
-            await new Promise(resolve => setTimeout(resolve, 200));
-          }
-        }
+    if (action === 'save') {
+      // Fetch the last 30 records to find any existing record for today
+      const allRecords = await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 30).catch(() => []);
+      const todayRecords = allRecords.filter(r => r.check_in_date === today);
 
-        // Use the first today record regardless of check_in_type — we merge all check-in data
-        // into a single record per day. If multiple exist (shouldn't happen), prefer one that
-        // already has the most data.
-        const existing = records.sort((a, b) => {
-          const aScore = (a.morning_completed ? 1 : 0) + (a.evening_completed ? 1 : 0) + (a.midday_loop_completed ? 1 : 0);
-          const bScore = (b.morning_completed ? 1 : 0) + (b.evening_completed ? 1 : 0) + (b.midday_loop_completed ? 1 : 0);
-          return bScore - aScore;
-        })[0] || null;
+      // Pick the most complete existing record for today, if any
+      const existing = todayRecords.sort((a, b) => {
+        const score = r => (r.morning_completed ? 1 : 0) + (r.evening_completed ? 1 : 0) + (r.midday_loop_completed ? 1 : 0);
+        return score(b) - score(a);
+      })[0] || null;
 
       const now = new Date().toISOString();
 
-      // Only copy through known entity fields — never pass action/check_in_type directly
       const ALLOWED_FIELDS = [
         'energy_score', 'energy_note', 'confidence_score', 'confidence_note',
         'focus_score', 'focus_note', 'load_score', 'load_note',
@@ -162,19 +116,15 @@ Deno.serve(async (req) => {
 
       let record;
       if (existing) {
-        // Update existing record
-        const safeUpdate = { ...updateData };
-        await base44.entities.DailyCheckIn.update(existing.id, safeUpdate);
-        record = { ...existing, ...safeUpdate };
+        await base44.entities.DailyCheckIn.update(existing.id, updateData);
+        record = { ...existing, ...updateData };
       } else {
-        // Create new record
-        const newRecord = await base44.entities.DailyCheckIn.create({
+        record = await base44.entities.DailyCheckIn.create({
           user_email: user.email,
           check_in_date: today,
           check_in_type: check_in_type || 'morning',
           ...updateData,
         });
-        record = newRecord;
       }
 
       return Response.json({ record, success: true, timestamp: new Date().toISOString() });
@@ -182,31 +132,18 @@ Deno.serve(async (req) => {
 
     // ── GET TODAY ────────────────────────────────────────────────────────────
     if (action === 'get_today') {
-      let allRecords = [];
-      let retries = 3;
-      while (retries > 0) {
-        try {
-          allRecords = await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 30);
-          break;
-        } catch (e) {
-          retries--;
-          if (retries === 0) throw e;
-          await new Promise(resolve => setTimeout(resolve, 200));
-        }
-      }
+      const allRecords = await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-created_date', 30).catch(() => []);
 
-      // Merge all today records into one (handles edge case of duplicate records from type splits)
       const todayRecords = allRecords.filter(r => r.check_in_date === today);
       let todayRec = null;
+
       if (todayRecords.length > 0) {
-        // Merge all today records: pick the one with most completions as base, overlay the rest
         const sorted = todayRecords.sort((a, b) => {
-          const aScore = (a.morning_completed ? 1 : 0) + (a.evening_completed ? 1 : 0) + (a.midday_loop_completed ? 1 : 0);
-          const bScore = (b.morning_completed ? 1 : 0) + (b.evening_completed ? 1 : 0) + (b.midday_loop_completed ? 1 : 0);
-          return bScore - aScore;
+          const score = r => (r.morning_completed ? 1 : 0) + (r.evening_completed ? 1 : 0) + (r.midday_loop_completed ? 1 : 0);
+          return score(b) - score(a);
         });
         todayRec = { ...sorted[0] };
-        // Overlay any fields from secondary records that primary is missing
+        // Overlay fields from any secondary records
         for (let i = 1; i < sorted.length; i++) {
           const r = sorted[i];
           if (r.morning_completed && !todayRec.morning_completed) {
@@ -230,10 +167,11 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Find the most recent non-today record that has Big 3 set
+      // Most recent prior-day record with Big 3 set
       const prevWithBig3 = allRecords.find(r => r.check_in_date !== today && r.big3_priorities?.length > 0);
       const yesterday_big3 = prevWithBig3?.big3_priorities || [];
-      return Response.json({ record: todayRec, yesterday_big3 });
+
+      return Response.json({ record: todayRec, yesterday_big3, today });
     }
 
     return Response.json({ error: 'Unknown action' }, { status: 400 });

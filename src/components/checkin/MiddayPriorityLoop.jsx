@@ -47,9 +47,13 @@ export default function MiddayPriorityLoop({ todayRecord, onComplete }) {
       midday_status: statuses[p.id] || "",
       midday_note: midNotes[p.id] || "",
     }));
+    const todayET = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).format(new Date());
     await base44.functions.invoke("saveDailyCheckIn", {
       action: "save",
       check_in_type: "midday",
+      client_date: todayET,
       big3_priorities: updatedBig3,
     }).catch(console.error);
     setSaving(false);

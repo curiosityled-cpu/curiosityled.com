@@ -243,7 +243,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
 
     let cancelled = false;
     const timeout = setTimeout(() => { if (!cancelled) setStep(1); }, 12000);
-    base44.functions.invoke("saveDailyCheckIn", { action: "get_questions", check_in_type: "evening" })
+    base44.functions.invoke("saveDailyCheckIn", { action: "get_questions", check_in_type: "evening", client_date: getTodayET() })
       .then(res => { clearTimeout(timeout); if (!cancelled) { setQuestions(res.data?.questions || null); setStep(1); } })
       .catch(() => { clearTimeout(timeout); if (!cancelled) setStep(1); });
     return () => { cancelled = true; clearTimeout(timeout); };
@@ -260,6 +260,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
       await base44.functions.invoke("saveDailyCheckIn", {
         action: "save",
         check_in_type: "evening",
+        client_date: getTodayET(),
         energy_score: scores.energy, energy_note: notes.energy,
         confidence_score: scores.confidence, confidence_note: notes.confidence,
         focus_score: scores.focus, focus_note: notes.focus,
@@ -293,6 +294,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [] }) 
     try {
       await base44.functions.invoke("saveDailyCheckIn", {
         action: "save", check_in_type: "evening",
+        client_date: getTodayET(),
         energy_score: scores.energy, energy_note: notes.energy,
         confidence_score: scores.confidence, confidence_note: notes.confidence,
         focus_score: scores.focus, focus_note: notes.focus,

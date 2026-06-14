@@ -116,7 +116,7 @@ export default function ManagerToday() {
     queryKey: ['daily-checkin-today', user?.email],
     queryFn: async () => {
       try {
-        const res = await base44.functions.invoke("saveDailyCheckIn", { action: "get_today" });
+        const res = await base44.functions.invoke("saveDailyCheckIn", { action: "get_today", client_date: todayET });
         return { record: res.data?.record || null, yesterday_big3: res.data?.yesterday_big3 || [] };
       } catch { return { record: null, yesterday_big3: [] }; }
     },

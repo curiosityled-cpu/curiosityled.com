@@ -119,7 +119,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
     // Fallback: if the fetch takes >12s, unblock the UI anyway with default questions
     const timeout = setTimeout(() => { if (!cancelled) setStep(1); }, 12000);
 
-    base44.functions.invoke("saveDailyCheckIn", { action: "get_questions", check_in_type: "morning" })
+    base44.functions.invoke("saveDailyCheckIn", { action: "get_questions", check_in_type: "morning", client_date: getTodayET() })
       .then(res => {
         clearTimeout(timeout);
         if (!cancelled) { setQuestions(res.data?.questions || null); setStep(1); }
@@ -148,6 +148,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
       await base44.functions.invoke("saveDailyCheckIn", {
         action: "save",
         check_in_type: "morning",
+        client_date: getTodayET(),
         energy_score: scores.energy,
         energy_note: notes.energy,
         confidence_score: scores.confidence,
@@ -184,6 +185,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
     try {
       await base44.functions.invoke("saveDailyCheckIn", {
         action: "save", check_in_type: "morning",
+        client_date: getTodayET(),
         energy_score: scores.energy, energy_note: notes.energy,
         confidence_score: scores.confidence, confidence_note: notes.confidence,
         focus_score: scores.focus, focus_note: notes.focus,
