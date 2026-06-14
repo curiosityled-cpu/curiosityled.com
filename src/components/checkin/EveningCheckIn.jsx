@@ -41,16 +41,18 @@ function ScorePicker({ value, onChange }) {
 
 function Big3Step({ goals, onSave, isActiveWindow = true }) {
   const [priorities, setPriorities] = useState([
-    { id: "1", title: "", context: "", goal_id: "" },
-    { id: "2", title: "", context: "", goal_id: "" },
-    { id: "3", title: "", context: "", goal_id: "" },
+    { title: "", context: "", goal_id: "" },
+    { title: "", context: "", goal_id: "" },
+    { title: "", context: "", goal_id: "" },
   ]);
   const [saving, setSaving] = useState(false);
 
   const activeGoals = (goals || []).filter(g => g.status === "active").slice(0, 15);
 
   const update = (idx, field, val) => {
-    setPriorities(prev => prev.map((p, i) => i === idx ? { ...p, [field]: val } : p));
+    const updated = [...priorities];
+    updated[idx] = { ...updated[idx], [field]: val };
+    setPriorities(updated);
   };
 
   const handleSave = async () => {
@@ -74,7 +76,7 @@ function Big3Step({ goals, onSave, isActiveWindow = true }) {
       </div>
 
       {priorities.map((p, i) => (
-        <div key={p.id} className="space-y-2">
+        <div key={i} className="space-y-2">
           <div className="flex items-center gap-2">
             <span className="w-5 h-5 rounded-full bg-[#0202ff] text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
             <input
