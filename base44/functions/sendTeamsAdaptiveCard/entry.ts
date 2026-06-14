@@ -11,7 +11,7 @@
  *
  * Falls back gracefully to in-app notification if Teams delivery fails.
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // ─── Get Graph API access token via client credentials ────────────────────────
 

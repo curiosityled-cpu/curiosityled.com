@@ -5,7 +5,7 @@
  * Sends a notification to prompt weekly reflection
  * Also captures intent/actuals gap analysis
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
   try {

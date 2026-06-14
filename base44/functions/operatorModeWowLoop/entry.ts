@@ -4,7 +4,7 @@
  * Orchestrates the "operator mode" closed loop:
  * Detect overload + overcontrol, schedule Friday check-in and Monday debrief.
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
   try {

@@ -6,7 +6,7 @@
  * Integrates with evaluatePredictiveTriggers (called when identity_friction trigger fires)
  */
 
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // Coaching pathways based on identity friction + resilience combo
 const IDENTITY_COACHING_PATHS = {

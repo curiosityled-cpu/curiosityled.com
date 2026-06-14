@@ -4,7 +4,7 @@
  * Triggered on Friday 5pm. If manager committed to delegation but didn't follow through,
  * schedule a gentle follow-up reflection.
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
   try {

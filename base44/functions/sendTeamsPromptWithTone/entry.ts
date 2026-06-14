@@ -3,7 +3,7 @@
  * sendTeamsPromptWithTone
  * Wraps sendTeamsPrompt to vary directness/language based on manager's tone preference.
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
   try {

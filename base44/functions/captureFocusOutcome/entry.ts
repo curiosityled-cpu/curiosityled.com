@@ -9,7 +9,7 @@
  *
  * Creates a narrative summary for the week + flags recurring gaps.
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
   try {

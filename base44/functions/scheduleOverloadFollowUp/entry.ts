@@ -8,7 +8,7 @@
  * creates a follow-up ManagerPulse marker, and logs it so the
  * in-product ManagerCheckIn surfaces the closing question.
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
   try {
