@@ -119,20 +119,22 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
 
     if (alreadyDone) {
       setStep(6);
-      setScores({
-        energy:     todayRecord.energy_score     || 3,
-        confidence: todayRecord.confidence_score || 3,
-        focus:      todayRecord.focus_score      || 3,
-        load:       todayRecord.load_score       || 3,
-        growth:     todayRecord.growth_score     || 3,
-      });
-      setNotes({
-        energy:     todayRecord.energy_note     || "",
-        confidence: todayRecord.confidence_note || "",
-        focus:      todayRecord.focus_note      || "",
-        load:       todayRecord.load_note       || "",
-        growth:     todayRecord.growth_note     || "",
-      });
+      if (todayRecord && !editMode) {
+        setScores({
+          energy:     todayRecord.energy_score     || 3,
+          confidence: todayRecord.confidence_score || 3,
+          focus:      todayRecord.focus_score      || 3,
+          load:       todayRecord.load_score       || 3,
+          growth:     todayRecord.growth_score     || 3,
+        });
+        setNotes({
+          energy:     todayRecord.energy_note     || "",
+          confidence: todayRecord.confidence_note || "",
+          focus:      todayRecord.focus_note      || "",
+          load:       todayRecord.load_note       || "",
+          growth:     todayRecord.growth_note     || "",
+        });
+      }
       localStorage.removeItem(getDraftKey(userEmail));
       return;
     }
@@ -177,7 +179,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
       });
 
     return () => { cancelled = true; clearTimeout(timeout); };
-  }, [alreadyDone, userEmail, todayRecord]);
+  }, [alreadyDone, userEmail, todayRecord, editMode]);
 
   const currentMeasure = MEASURES[step - 1];
 
