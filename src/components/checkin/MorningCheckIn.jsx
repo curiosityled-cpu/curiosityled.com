@@ -75,7 +75,11 @@ function markCompletedToday(userEmail) {
 }
 
 export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
-  const alreadyDone = todayRecord?.morning_completed || wasCompletedToday(userEmail);
+  // DB truth takes priority: once todayRecord is loaded (not undefined), trust it over localStorage.
+  // Only fall back to localStorage while todayRecord is still loading (undefined).
+  const alreadyDone = todayRecord !== undefined
+    ? !!todayRecord?.morning_completed
+    : wasCompletedToday(userEmail);
 
   // Initialize step to 6 immediately if we already know it's done — prevents flash of step 1
   const [step, setStep] = useState(() => alreadyDone ? 6 : 0);

@@ -207,6 +207,12 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
   const completedCache = wasEveningCompletedToday();
   const alreadyDoneFromCache = !!completedCache;
 
+  // DB truth takes priority: once todayRecord is loaded (not undefined), trust it over localStorage.
+  // Only fall back to localStorage while todayRecord is still loading (undefined).
+  const alreadyDone = todayRecord !== undefined
+    ? !!todayRecord?.evening_completed
+    : alreadyDoneFromCache;
+
   const [step, setStep] = useState(() => (todayRecord?.evening_completed || alreadyDoneFromCache) ? 7 : 0);
   const [questions, setQuestions] = useState(null);
   const [scores, setScores] = useState(() =>
@@ -219,8 +225,6 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
   const [expanded, setExpanded] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editStep, setEditStep] = useState(1);
-
-  const alreadyDone = todayRecord?.evening_completed || alreadyDoneFromCache;
 
   // Track whether we've already initiated the fetch this mount
   const fetchInitiatedRef = useRef(false);
