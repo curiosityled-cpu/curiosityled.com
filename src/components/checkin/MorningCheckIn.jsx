@@ -2,7 +2,7 @@
  * MorningCheckIn — 5-measure morning self-check (Energy, Confidence, Focus, Load, Growth)
  * Uses AI-generated conversational questions from saveDailyCheckIn backend.
  */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sun, ChevronRight, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
@@ -69,6 +69,9 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
 
   const alreadyDone = todayRecord?.morning_completed;
 
+  // Guard against re-fetching questions on every re-render
+  const fetchInitiatedRef = useRef(false);
+
   // Persist in-progress draft to localStorage on every step/score/note change
   useEffect(() => {
     if (!userEmail || alreadyDone || step < 1 || step > 5) return;
@@ -110,10 +113,15 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
           setScores(draft.scores);
           setNotes(draft.notes);
           if (draft.questions) setQuestions(draft.questions);
+          fetchInitiatedRef.current = true;
           return;
         }
       }
     } catch { /* ignore parse errors */ }
+
+    // Only fetch once per mount
+    if (fetchInitiatedRef.current) return;
+    fetchInitiatedRef.current = true;
 
     let cancelled = false;
     const timeout = setTimeout(() => { if (!cancelled) setStep(1); }, 8000);
