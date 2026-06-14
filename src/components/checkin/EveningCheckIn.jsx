@@ -78,17 +78,15 @@ function Big3Step({ goals, onSave }) {
             <input
               type="text"
               id={`big3-priority-${i}`}
-              name={`big3-priority-${i}-${Date.now()}`}
+              name={`big3-priority-${i}`}
               value={p.title}
               onChange={e => update(i, 'title', e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') e.preventDefault(); }}
               placeholder={`Priority ${i + 1}`}
-              autoComplete="new-password"
+              autoComplete="off"
               autoCorrect="off"
-              autoCapitalize="off"
-              spellCheck="false"
-              data-priority-index={i}
-              data-form-type="other"
+              autoCapitalize="sentences"
+              spellCheck="true"
               className="flex-1 text-sm bg-muted/40 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
             />
           </div>
