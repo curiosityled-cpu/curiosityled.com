@@ -39,7 +39,7 @@ function ScorePicker({ value, onChange }) {
   );
 }
 
-function Big3Step({ goals, onSave, isActiveWindow = true, initialPriorities = null }) {
+function Big3Step({ goals, onSave, onSkip, isActiveWindow = true, initialPriorities = null }) {
   const defaultPriorities = [
     { title: "", context: "", goal_id: "" },
     { title: "", context: "", goal_id: "" },
@@ -66,9 +66,9 @@ function Big3Step({ goals, onSave, isActiveWindow = true, initialPriorities = nu
 
   const handleSave = async () => {
     const filled = priorities.filter(p => p.title.trim());
-    if (!filled.length) { onSave([]); return; }
     setSaving(true);
     try {
+      // Always pass filled priorities (may be empty if user cleared all fields)
       await onSave(filled.map(p => ({ ...p, status: "planned" })));
     } catch (err) {
       console.error("Big3 save error:", err);
@@ -89,7 +89,6 @@ function Big3Step({ goals, onSave, isActiveWindow = true, initialPriorities = nu
            <div className="flex items-center gap-2">
              <span className="w-5 h-5 rounded-full bg-[#0202ff] text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
              <input
-               key={`title-${i}`}
                type="text"
                value={p.title}
                onChange={e => update(i, 'title', e.target.value)}
@@ -99,6 +98,7 @@ function Big3Step({ goals, onSave, isActiveWindow = true, initialPriorities = nu
                autoCorrect="off"
                autoCapitalize="sentences"
                spellCheck="true"
+               data-priority-index={i}
                className="flex-1 text-sm bg-muted/40 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
              />
           </div>
@@ -118,7 +118,6 @@ function Big3Step({ goals, onSave, isActiveWindow = true, initialPriorities = nu
               </select>
             )}
             <textarea
-               key={`context-${i}`}
                value={p.context}
                onChange={e => update(i, 'context', e.target.value)}
                placeholder="Any context or intention? (optional)"
@@ -138,7 +137,7 @@ function Big3Step({ goals, onSave, isActiveWindow = true, initialPriorities = nu
         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : isActiveWindow ? "Save & complete evening check-in" : "Save Big 3 for tomorrow"}
       </Button>
       <button
-        onClick={() => onSave([])}
+        onClick={onSkip}
         className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
       >
         Skip for tonight
@@ -276,10 +275,11 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
 
   const handleMeasureNext = () => {
     if (step < 5) setStep(s => s + 1);
-    else { setSaving(false); setStep(6); } // → Big 3, reset saving so Big3Step isn't blocked
+    else setStep(6); // → Big 3
   };
 
   const handleBig3Save = async (big3Priorities) => {
+    if (saving) return; // Prevent double-submit
     setSaving(true);
     // Immediately update UI and notify parent — don't wait for the API round-trip
     setLocalBig3(big3Priorities);
@@ -404,7 +404,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
             <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Edit Big 3</p>
           </div>
           <div className="px-4 py-5">
-            <Big3Step key={`edit-big3-${editStep}`} goals={goals} onSave={handleEditSave} initialPriorities={localBig3 ?? todayRecord?.big3_priorities} />
+            <Big3Step key={`edit-big3-${editStep}`} goals={goals} onSave={handleEditSave} onSkip={() => { setEditMode(false); setExpanded(false); }} initialPriorities={localBig3 ?? todayRecord?.big3_priorities} />
               <button onClick={() => { setEditMode(false); setExpanded(false); }} className="mt-2 text-xs text-muted-foreground hover:text-foreground w-full text-center">Cancel</button>
           </div>
         </div>
@@ -449,7 +449,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
           </p>
         </div>
         <div className="px-4 py-5">
-          <Big3Step goals={goals} onSave={handleBig3Save} isActiveWindow={isActiveWindow} initialPriorities={localBig3 ?? todayRecord?.big3_priorities} />
+          <Big3Step goals={goals} onSave={handleBig3Save} onSkip={() => handleBig3Save([])} isActiveWindow={isActiveWindow} initialPriorities={localBig3 ?? todayRecord?.big3_priorities} />
         </div>
       </div>
     );
