@@ -101,7 +101,7 @@ export default function GrowthPlanTab({ goals, assignments, pulses, trends, onOp
 
           {/* View results — only if taken */}
           {latestAssessment && (
-            <Link to="/AssessmentResults">
+            <Link to="/Insights">
               <div className="flex items-center gap-4 p-4 hover:bg-muted/40 transition-colors group">
                 <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900 flex items-center justify-center flex-shrink-0">
                   <Eye className="w-4 h-4 text-indigo-600" />
