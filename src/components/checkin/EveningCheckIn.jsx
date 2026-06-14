@@ -276,11 +276,10 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
 
   const handleMeasureNext = () => {
     if (step < 5) setStep(s => s + 1);
-    else setStep(6); // → Big 3
+    else { setSaving(false); setStep(6); } // → Big 3, reset saving so Big3Step isn't blocked
   };
 
   const handleBig3Save = async (big3Priorities) => {
-    if (saving) return; // Prevent double-submit
     setSaving(true);
     // Immediately update UI and notify parent — don't wait for the API round-trip
     setLocalBig3(big3Priorities);
