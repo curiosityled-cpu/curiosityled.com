@@ -58,20 +58,33 @@ function getDraftKey(userEmail) {
 }
 
 export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
-  const [step, setStep] = useState(0); // 0=loading, 1-5=measures, 6=done
+  const alreadyDone = todayRecord?.morning_completed;
+
+  // Initialize step to 6 immediately if we already know it's done — prevents flash of step 1
+  const [step, setStep] = useState(() => alreadyDone ? 6 : 0);
   const [questions, setQuestions] = useState(null);
-  const [scores, setScores] = useState({ energy: 3, confidence: 3, focus: 3, load: 3, growth: 3 });
-  const [notes, setNotes] = useState({ energy: "", confidence: "", focus: "", load: "", growth: "" });
+  const [scores, setScores] = useState(() => alreadyDone ? {
+    energy:     todayRecord.energy_score     || 3,
+    confidence: todayRecord.confidence_score || 3,
+    focus:      todayRecord.focus_score      || 3,
+    load:       todayRecord.load_score       || 3,
+    growth:     todayRecord.growth_score     || 3,
+  } : { energy: 3, confidence: 3, focus: 3, load: 3, growth: 3 });
+  const [notes, setNotes] = useState(() => alreadyDone ? {
+    energy:     todayRecord.energy_note     || "",
+    confidence: todayRecord.confidence_note || "",
+    focus:      todayRecord.focus_note      || "",
+    load:       todayRecord.load_note       || "",
+    growth:     todayRecord.growth_note     || "",
+  } : { energy: "", confidence: "", focus: "", load: "", growth: "" });
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editStep, setEditStep] = useState(1);
 
-  const alreadyDone = todayRecord?.morning_completed;
-
   // Guard against re-fetching questions on every re-render
   const fetchInitiatedRef = useRef(false);
-  const stepRef = useRef(0);
+  const stepRef = useRef(alreadyDone ? 6 : 0);
 
   // Persist in-progress draft to localStorage on every step/score/note change
   useEffect(() => {
@@ -106,6 +119,9 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
       localStorage.removeItem(getDraftKey(userEmail));
       return;
     }
+
+    // todayRecord is still loading (undefined) — don't start the fetch yet
+    if (todayRecord === undefined) return;
 
     // Don't reset step if we're already in the done state
     if (stepRef.current >= 6) return;
@@ -144,7 +160,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
       });
 
     return () => { cancelled = true; clearTimeout(timeout); };
-  }, [alreadyDone, userEmail]);
+  }, [alreadyDone, userEmail, todayRecord]);
 
   const currentMeasure = MEASURES[step - 1];
 
