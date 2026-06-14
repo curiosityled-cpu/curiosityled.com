@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
-import { TrendingUp, AlertCircle, Info, Brain, BarChart3, Eye } from "lucide-react";
+import { TrendingUp, AlertCircle, Info, Brain, BarChart3, Eye, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import TrendSummaryCard from "@/components/checkin/TrendSummaryCard";
@@ -112,19 +112,19 @@ export default function ManagerPatterns() {
   const { openWithContext } = useAtreusChat();
   const openAtreus = (msg) => openWithContext({ context: { pageType: 'patterns', user_name: user?.full_name }, starterMessage: msg || "Help me understand my recent patterns." });
 
-  const { data: trends = null } = useQuery({
+  const { data: trends = null, isLoading: trendsLoading } = useQuery({
     queryKey: ['ml-trends', user?.email],
     queryFn: async () => { try { const rows = await base44.entities.ManagerTrends.filter({ user_email: user.email }, '-last_trend_computed_at', 1); return rows[0] || null; } catch { return null; } },
     enabled: !!user?.email, staleTime: 30 * 60 * 1000,
   });
 
-  const { data: recentPulses = [] } = useQuery({
+  const { data: recentPulses = [], isLoading: pulsesLoading } = useQuery({
     queryKey: ['ml-pulses', user?.email],
     queryFn: async () => { try { return await base44.entities.ManagerPulse.filter({ user_email: user.email }, '-created_date', 50); } catch { return []; } },
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
-  const { data: insight = null } = useQuery({
+  const { data: insight = null, isLoading: insightLoading } = useQuery({
     queryKey: ['ml-insight', user?.email],
     queryFn: async () => {
       try { const rows = await base44.entities.AssessmentInsights.filter({ user_email: user.email }, '-created_date', 1); return rows[0] || null; } catch { return null; }
@@ -162,6 +162,7 @@ export default function ManagerPatterns() {
     enabled: !!user?.email, staleTime: 30 * 60 * 1000,
   });
 
+  const isLoadingInitial = trendsLoading || pulsesLoading || insightLoading;
   const hasData = trends || recentPulses.length > 0 || insight;
 
   const header = (
@@ -171,6 +172,14 @@ export default function ManagerPatterns() {
       <p className="text-sm text-muted-foreground mt-1">Longitudinal memory — how you lead over time.</p>
     </div>
   );
+
+  if (isLoadingInitial) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-6 h-6 animate-spin text-[#0202ff]" />
+      </div>
+    );
+  }
 
   if (!hasData) {
     return (
