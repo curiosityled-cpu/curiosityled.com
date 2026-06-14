@@ -154,7 +154,6 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
   };
 
   const handleSaveBig3 = async () => {
-    if (!todayRecord?.id) return;
     setSavingBig3(true);
     try {
       const updated = editItems.filter(p => p.title.trim()).map((p, i) => ({
@@ -163,7 +162,17 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
         id: p.id || `p${i + 1}`,
         status: p.status || "planned",
       }));
-      await base44.entities.DailyCheckIn.update(todayRecord.id, { big3_priorities: updated });
+      if (todayRecord?.id) {
+        await base44.entities.DailyCheckIn.update(todayRecord.id, { big3_priorities: updated });
+      } else {
+        // No today record yet — create one via the backend function
+        await base44.functions.invoke("saveDailyCheckIn", {
+          action: "save",
+          check_in_type: "evening",
+          client_date: new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()),
+          big3_priorities: updated,
+        });
+      }
       setEditingBig3(false);
       onRefresh?.();
     } catch (err) {
