@@ -195,7 +195,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
 
   useEffect(() => {
     if (alreadyDone) {
-      setStep(prev => prev === 6 ? prev : 7);
+      setStep(prev => (prev === 6 || prev === 7) ? prev : 7);
       setScores({
         energy:     todayRecord.energy_score     || 3,
         confidence: todayRecord.confidence_score || 3,
@@ -269,9 +269,11 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
       clearDraft();
       setSavedBig3(big3Priorities);
       setLocalBig3(big3Priorities);
-      // Notify parent so cache is invalidated — after local state is set to avoid unmount race
-      onComplete?.(big3Priorities, 'evening');
-      setTimeout(() => setStep(7), 2000);
+      // Transition to completion card first, then notify parent to avoid unmount race
+      setTimeout(() => {
+        setStep(7);
+        onComplete?.(big3Priorities, 'evening');
+      }, 1800);
     } catch (err) {
       console.error(err);
     }
