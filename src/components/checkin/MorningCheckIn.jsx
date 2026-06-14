@@ -80,20 +80,20 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
   // Initialize step to 6 immediately if we already know it's done — prevents flash of step 1
   const [step, setStep] = useState(() => alreadyDone ? 6 : 0);
   const [questions, setQuestions] = useState(null);
-  const [scores, setScores] = useState(() => alreadyDone ? {
-    energy:     todayRecord.energy_score     || 3,
-    confidence: todayRecord.confidence_score || 3,
-    focus:      todayRecord.focus_score      || 3,
-    load:       todayRecord.load_score       || 3,
-    growth:     todayRecord.growth_score     || 3,
-  } : { energy: 3, confidence: 3, focus: 3, load: 3, growth: 3 });
-  const [notes, setNotes] = useState(() => alreadyDone ? {
-    energy:     todayRecord.energy_note     || "",
-    confidence: todayRecord.confidence_note || "",
-    focus:      todayRecord.focus_note      || "",
-    load:       todayRecord.load_note       || "",
-    growth:     todayRecord.growth_note     || "",
-  } : { energy: "", confidence: "", focus: "", load: "", growth: "" });
+  const [scores, setScores] = useState(() => ({
+    energy:     todayRecord?.energy_score     || 3,
+    confidence: todayRecord?.confidence_score || 3,
+    focus:      todayRecord?.focus_score      || 3,
+    load:       todayRecord?.load_score       || 3,
+    growth:     todayRecord?.growth_score     || 3,
+  }));
+  const [notes, setNotes] = useState(() => ({
+    energy:     todayRecord?.energy_note     || "",
+    confidence: todayRecord?.confidence_note || "",
+    focus:      todayRecord?.focus_note      || "",
+    load:       todayRecord?.load_note       || "",
+    growth:     todayRecord?.growth_note     || "",
+  }));
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [editMode, setEditMode] = useState(false);

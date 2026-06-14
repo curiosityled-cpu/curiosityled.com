@@ -247,24 +247,25 @@ export default function EveningCheckIn({ onComplete, todayRecord, goals = [], is
   useEffect(() => {
     if (alreadyDone) {
       setStep(prev => (prev >= 6) ? prev : 7);
-      setScores({
-        energy:     todayRecord.energy_score     || 3,
-        confidence: todayRecord.confidence_score || 3,
-        focus:      todayRecord.focus_score      || 3,
-        load:       todayRecord.load_score       || 3,
-        growth:     todayRecord.growth_score     || 3,
-      });
-      setNotes({
-        energy:     todayRecord.energy_note     || "",
-        confidence: todayRecord.confidence_note || "",
-        focus:      todayRecord.focus_note      || "",
-        load:       todayRecord.load_note       || "",
-        growth:     todayRecord.growth_note     || "",
-      });
-      // Only pull Big 3 from the record if we haven't already captured it locally
-      // (avoids overwriting the locally-saved value before the DB write propagates)
-      if (todayRecord.big3_priorities?.length > 0) {
-        setLocalBig3(prev => prev && prev.length > 0 ? prev : todayRecord.big3_priorities);
+      if (todayRecord) {
+        setScores({
+          energy:     todayRecord.energy_score     || 3,
+          confidence: todayRecord.confidence_score || 3,
+          focus:      todayRecord.focus_score      || 3,
+          load:       todayRecord.load_score       || 3,
+          growth:     todayRecord.growth_score     || 3,
+        });
+        setNotes({
+          energy:     todayRecord.energy_note     || "",
+          confidence: todayRecord.confidence_note || "",
+          focus:      todayRecord.focus_note      || "",
+          load:       todayRecord.load_note       || "",
+          growth:     todayRecord.growth_note     || "",
+        });
+        // Only pull Big 3 from the record if we haven't already captured it locally
+        if (todayRecord.big3_priorities?.length > 0) {
+          setLocalBig3(prev => prev && prev.length > 0 ? prev : todayRecord.big3_priorities);
+        }
       }
       clearDraft();
       return;
