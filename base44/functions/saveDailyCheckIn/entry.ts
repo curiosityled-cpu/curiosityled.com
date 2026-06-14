@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
       ? client_date
       : new Date().toISOString().slice(0, 10);
 
-    console.log('[saveDailyCheckIn] action:', action, 'today:', today, 'user:', user.email);
+    console.log('[saveDailyCheckIn v2] action:', action, 'today:', today, 'user:', user.email);
 
     // Helper: fetch today's records for this user using service role to bypass RLS quirks
     const getTodayRecords = async () => {
@@ -91,7 +91,22 @@ Deno.serve(async (req) => {
 
     // ── SAVE ─────────────────────────────────────────────────────────────────
     if (action === 'save') {
-      const todayRecords = await getTodayRecords();
+      // If frontend passes back the record ID from a prior save, use it directly
+      // to avoid read-after-write consistency lag when morning + evening are saved close together
+      let todayRecords = [];
+      const existingId = body.existing_record_id || fields.existing_record_id || null;
+      if (existingId) {
+        try {
+          const rec = await base44.asServiceRole.entities.DailyCheckIn.get(existingId);
+          if (rec && rec.user_email === user.email && rec.check_in_date === today) {
+            todayRecords = [rec];
+            console.log('[saveDailyCheckIn] found record via existing_record_id:', existingId);
+          }
+        } catch { /* fall through to filter */ }
+      }
+      if (todayRecords.length === 0) {
+        todayRecords = await getTodayRecords();
+      }
       console.log('[saveDailyCheckIn] save - todayRecords found:', todayRecords.length);
 
       // Pick the most complete existing record for today
