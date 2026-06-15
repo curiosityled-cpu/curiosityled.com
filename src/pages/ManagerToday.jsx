@@ -338,6 +338,13 @@ export default function ManagerToday() {
           assignments={assignments}
           pulses={recentPulses}
           onOpenAtreus={openAtreus}
+          onBig3Saved={(priorities) => {
+            setLocalBig3Override(priorities);
+            try {
+              sessionStorage.setItem('today_big3_override', JSON.stringify({ date: todayET, data: priorities }));
+            } catch {}
+            setTimeout(() => queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] }), 3000);
+          }}
           onRefresh={() => {
             queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
             refetchToday();

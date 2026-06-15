@@ -13,6 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
+import Big3QuickSet from "@/components/lead/Big3QuickSet";
 
 // ─── Situation builder ────────────────────────────────────────────────────────
 function buildSituation(pulse, trends, goals, insight) {
@@ -116,7 +117,7 @@ function Big3Item({ item, index, fromYesterday }) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [], trends, goals, assignments, pulses, onOpenAtreus, onRefresh }) {
+export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [], trends, goals, assignments, pulses, onOpenAtreus, onRefresh, onBig3Saved }) {
   const { user } = useAuth();
 
   const [moveDone, setMoveDone]       = useState(false);
@@ -187,9 +188,12 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
             ))}
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground italic">
-            Set your Big 3 tonight in the Evening Check-in.
-          </p>
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground italic">
+              No priorities were set last night.
+            </p>
+            <Big3QuickSet todayRecord={todayRecord} onSaved={onBig3Saved} />
+          </div>
         )}
       </div>
 
