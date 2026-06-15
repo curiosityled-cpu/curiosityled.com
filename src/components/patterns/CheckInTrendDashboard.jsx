@@ -179,7 +179,9 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
   }, [filtered]);
 
   // Derive sector from assessment record field or record contract
-  const sector = assessment?.record?.sector || assessment?.sector || null;
+  // Normalize "Not specified" / blank strings to null so we fall back to default benchmarks
+  const rawSector = assessment?.record?.sector || assessment?.sector || null;
+  const sector = (rawSector && rawSector !== "Not specified" && rawSector !== "not specified") ? rawSector : null;
   const COMPETENCIES = useMemo(() => getBenchmarks(sector), [sector]);
 
   // Assessment radar data
