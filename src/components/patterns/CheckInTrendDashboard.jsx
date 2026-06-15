@@ -6,7 +6,7 @@
 import React, { useState, useMemo } from "react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip,
-  ResponsiveContainer, ReferenceLine, Legend, RadarChart,
+  ResponsiveContainer, ReferenceLine, RadarChart,
   PolarGrid, PolarAngleAxis, Radar, CartesianGrid
 } from "recharts";
 import { format, parseISO, subDays } from "date-fns";
@@ -165,7 +165,7 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
     }));
   }, [assessment]);
 
-  const hasCheckInData = chartData.length >= 1;
+  const hasCheckInData = checkIns.length >= 1;
   const hasAssessment = assessment != null;
 
   if (!hasCheckInData && !hasAssessment) {
