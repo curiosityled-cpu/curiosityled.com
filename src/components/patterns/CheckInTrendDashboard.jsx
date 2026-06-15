@@ -124,6 +124,7 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
         const point = {
           date: format(parseISO(date), rangeDays <= 14 ? "EEE d" : "MMM d"),
           rawDate: date,
+          count: Math.max(...MEASURES.map(m => scores[m.key]?.length ?? 0)),
         };
         MEASURES.forEach(m => {
           const sc = scores[m.key];
@@ -259,6 +260,13 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
               ))}
             </div>
 
+            {/* Empty range notice */}
+            {chartData.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-3 bg-muted/40 rounded-xl">
+                No check-ins in the last {rangeDays === 999 ? "recorded period" : `${rangeDays} days`}. Try a wider range or complete a check-in today.
+              </p>
+            )}
+
             {/* Line chart */}
             {chartData.length >= 2 ? (
               <ResponsiveContainer width="100%" height={180}>
@@ -329,10 +337,10 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
                   <BarChart data={chartData} margin={{ top: 0, right: 4, left: -22, bottom: 0 }} barSize={10}>
                     <XAxis dataKey="date" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                     <Bar
-                      dataKey="energy"
-                      name="Check-in"
+                      dataKey="count"
+                      name="Check-ins"
                       fill="#0202ff"
-                      opacity={0.25}
+                      opacity={0.3}
                       radius={[2, 2, 0, 0]}
                     />
                   </BarChart>
