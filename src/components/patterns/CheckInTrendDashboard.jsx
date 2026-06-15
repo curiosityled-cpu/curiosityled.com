@@ -24,14 +24,36 @@ const MEASURES = [
 ];
 
 // Leadership Index competencies from Assessment entity
-const COMPETENCIES = [
-  { key: "si",   label: "Situational Intelligence", pctKey: "si_pct",   color: "#0202ff", benchmark: 62 },
-  { key: "dm",   label: "Decision Making",          pctKey: "dm_pct",   color: "#10b981", benchmark: 60 },
-  { key: "comm", label: "Communication",            pctKey: "comm_pct", color: "#f59e0b", benchmark: 65 },
-  { key: "rm",   label: "Resource Mgmt",            pctKey: "rm_pct",   color: "#8b5cf6", benchmark: 58 },
-  { key: "sm",   label: "Stakeholder Mgmt",         pctKey: "sm_pct",   color: "#ef4444", benchmark: 61 },
-  { key: "pm",   label: "Performance Mgmt",         pctKey: "pm_pct",   color: "#06b6d4", benchmark: 63 },
+// Benchmarks = Target band (50th–75th pct) per sector
+// Source: Press Ganey/ACHE/Korn Ferry (Healthcare, n=12,500),
+//         Korn Ferry/DDI/Fortune 500 (Corporate, n=28,000),
+//         OPM/Partnership for Public Service (Government, n=15,000)
+const COMPETENCY_BASE = [
+  { key: "si",   label: "Situational Intelligence", pctKey: "si_pct",   color: "#0202ff" },
+  { key: "dm",   label: "Decision Making",          pctKey: "dm_pct",   color: "#10b981" },
+  { key: "comm", label: "Communication",            pctKey: "comm_pct", color: "#f59e0b" },
+  { key: "rm",   label: "Resource Mgmt",            pctKey: "rm_pct",   color: "#8b5cf6" },
+  { key: "sm",   label: "Stakeholder Mgmt",         pctKey: "sm_pct",   color: "#ef4444" },
+  { key: "pm",   label: "Performance Mgmt",         pctKey: "pm_pct",   color: "#06b6d4" },
 ];
+
+// Target-band benchmarks by sector (min / target / exceptional)
+// Industry differentiators applied per document:
+//   Healthcare: DM +4, SI +3 (crisis mgmt emphasis)
+//   Government: SM +3, RM -3 (budget constraints)
+//   Corporate:  PM +3, Comm +3 (exec presence, results orientation)
+const SECTOR_BENCHMARKS = {
+  Healthcare: { si: { min: 58, target: 68, exceptional: 85 }, dm: { min: 62, target: 72, exceptional: 88 }, comm: { min: 57, target: 66, exceptional: 83 }, rm: { min: 55, target: 64, exceptional: 81 }, sm: { min: 58, target: 67, exceptional: 84 }, pm: { min: 56, target: 65, exceptional: 82 } },
+  "Corporate/Private": { si: { min: 55, target: 65, exceptional: 82 }, dm: { min: 56, target: 66, exceptional: 83 }, comm: { min: 60, target: 70, exceptional: 87 }, rm: { min: 57, target: 67, exceptional: 84 }, sm: { min: 57, target: 66, exceptional: 83 }, pm: { min: 60, target: 70, exceptional: 87 } },
+  Government: { si: { min: 53, target: 63, exceptional: 80 }, dm: { min: 54, target: 64, exceptional: 81 }, comm: { min: 56, target: 65, exceptional: 82 }, rm: { min: 50, target: 59, exceptional: 76 }, sm: { min: 60, target: 70, exceptional: 86 }, pm: { min: 55, target: 64, exceptional: 81 } },
+  // Cross-industry average (default)
+  default: { si: { min: 55, target: 65, exceptional: 82 }, dm: { min: 57, target: 67, exceptional: 84 }, comm: { min: 58, target: 67, exceptional: 84 }, rm: { min: 54, target: 63, exceptional: 80 }, sm: { min: 58, target: 67, exceptional: 84 }, pm: { min: 57, target: 66, exceptional: 83 } },
+};
+
+function getBenchmarks(sector) {
+  const s = SECTOR_BENCHMARKS[sector] || SECTOR_BENCHMARKS.default;
+  return COMPETENCY_BASE.map(c => ({ ...c, ...s[c.key] }));
+}
 
 const RANGE_OPTIONS = [
   { label: "7d",  days: 7 },
@@ -156,16 +178,20 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
     });
   }, [filtered]);
 
+  // Derive sector from assessment record field or record contract
+  const sector = assessment?.record?.sector || assessment?.sector || null;
+  const COMPETENCIES = useMemo(() => getBenchmarks(sector), [sector]);
+
   // Assessment radar data
   const radarData = useMemo(() => {
     if (!assessment) return [];
     return COMPETENCIES.map(c => ({
       label: c.label,
       score: assessment[c.pctKey] ?? 0,
-      benchmark: c.benchmark,
+      benchmark: c.target,
       fullMark: 100,
     }));
-  }, [assessment]);
+  }, [assessment, COMPETENCIES]);
 
   const hasCheckInData = checkIns.length >= 1;
   const hasAssessment = assessment != null;
@@ -420,11 +446,17 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
                       content={({ active, payload }) => {
                         if (!active || !payload?.length) return null;
                         const d = payload[0]?.payload;
+                        // find full competency data
+                        const comp = COMPETENCIES.find(c => c.label === d.label);
                         return (
                           <div className="bg-card border border-border rounded-xl px-3 py-2 shadow-lg text-xs space-y-1">
                             <p className="font-semibold text-foreground">{d.label}</p>
                             <p className="text-[#0202ff] font-bold">Your score: {d.score}%</p>
-                            <p className="text-amber-500">Benchmark: {d.benchmark}%</p>
+                            {comp && <>
+                              <p className="text-rose-400">Min acceptable: {comp.min}%</p>
+                              <p className="text-amber-500">Target: {comp.target}%</p>
+                              <p className="text-emerald-500">Exceptional: {comp.exceptional}%</p>
+                            </>}
                           </div>
                         );
                       }}
@@ -434,23 +466,31 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
               </>
             )}
 
+            {/* Sector label */}
+            {sector && (
+              <p className="text-[10px] text-muted-foreground">
+                Benchmarks: <span className="font-semibold text-foreground">{sector}</span> industry (50th–75th percentile target band)
+              </p>
+            )}
+            {!sector && (
+              <p className="text-[10px] text-muted-foreground">Benchmarks: cross-industry average (50th–75th percentile target band)</p>
+            )}
+
             {/* Competency bars */}
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               {COMPETENCIES.map(c => {
                 const val = assessment[c.pctKey];
                 if (val == null) return null;
-                const band = val >= 75 ? "Strong" : val >= 50 ? "Developing" : "Needs focus";
-                const bandColor = val >= 75 ? "text-emerald-600" : val >= 50 ? "text-amber-600" : "text-rose-500";
-                const aboveBenchmark = val >= c.benchmark;
+                const aboveTarget = val >= c.target;
+                const aboveMin = val >= c.min;
+                const bandLabel = val >= c.exceptional ? "Exceptional" : val >= c.target ? "On target" : val >= c.min ? "Developing" : "Needs focus";
+                const bandColor = val >= c.exceptional ? "text-emerald-600" : val >= c.target ? "text-[#0202ff]" : val >= c.min ? "text-amber-600" : "text-rose-500";
                 return (
-                  <div key={c.key} className="space-y-0.5">
+                  <div key={c.key} className="space-y-1">
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-foreground font-medium">{c.label}</span>
                       <div className="flex items-center gap-2">
-                        <span className={`text-[10px] font-medium ${aboveBenchmark ? "text-emerald-600" : "text-amber-600"}`}>
-                          {aboveBenchmark ? "▲" : "▼"} benchmark
-                        </span>
-                        <span className={`text-[10px] font-medium ${bandColor}`}>{band}</span>
+                        <span className={`text-[10px] font-medium ${bandColor}`}>{bandLabel}</span>
                         <span className="text-xs font-bold text-foreground">{val}%</span>
                       </div>
                     </div>
@@ -459,17 +499,35 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
                         className="h-full rounded-full transition-all"
                         style={{ width: `${val}%`, backgroundColor: c.color }}
                       />
-                      {/* Benchmark marker */}
+                      {/* Min acceptable marker (25th pct) */}
+                      <div
+                        className="absolute top-1/2 -translate-y-1/2 w-px h-3.5 bg-rose-400 opacity-70 rounded-full"
+                        style={{ left: `${c.min}%` }}
+                        title={`Minimum acceptable: ${c.min}%`}
+                      />
+                      {/* Target marker (50th–75th pct) */}
                       <div
                         className="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 bg-amber-400 rounded-full"
-                        style={{ left: `${c.benchmark}%` }}
-                        title={`Industry benchmark: ${c.benchmark}%`}
+                        style={{ left: `${c.target}%` }}
+                        title={`Industry target: ${c.target}%`}
+                      />
+                      {/* Exceptional marker (90th pct) */}
+                      <div
+                        className="absolute top-1/2 -translate-y-1/2 w-px h-3.5 bg-emerald-400 opacity-70 rounded-full"
+                        style={{ left: `${c.exceptional}%` }}
+                        title={`Exceptional: ${c.exceptional}%`}
                       />
                     </div>
                   </div>
                 );
               }).filter(Boolean)}
-              <p className="text-[9px] text-muted-foreground pt-1">Amber marker = industry benchmark</p>
+
+              {/* Benchmark legend */}
+              <div className="flex items-center gap-4 pt-1 flex-wrap">
+                <span className="flex items-center gap-1.5 text-[9px] text-muted-foreground"><span className="w-px h-3 bg-rose-400 opacity-70 inline-block rounded-full" />Min acceptable</span>
+                <span className="flex items-center gap-1.5 text-[9px] text-muted-foreground"><span className="w-0.5 h-3.5 bg-amber-400 inline-block rounded-full" />Target</span>
+                <span className="flex items-center gap-1.5 text-[9px] text-muted-foreground"><span className="w-px h-3 bg-emerald-400 opacity-70 inline-block rounded-full" />Exceptional</span>
+              </div>
             </div>
 
             {/* Link to full Insights */}
