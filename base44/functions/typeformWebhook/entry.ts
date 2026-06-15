@@ -329,7 +329,7 @@ Deno.serve(async (req) => {
     const sm_pct   = clamp(scores.sm_pct);
     const pm_pct   = clamp(scores.pm_pct);
 
-    const overall_pct = clamp((dm_pct + comm_pct + rm_pct + sm_pct + pm_pct) / 5);
+    const overall_pct = clamp((si_pct + dm_pct + comm_pct + rm_pct + sm_pct + pm_pct) / 6);
     const archetype_label = scores.archetype_label || 'The Emerging Leader';
 
     // ============================================
@@ -376,7 +376,7 @@ Deno.serve(async (req) => {
       pm_pct,
       archetype_label,
       band_overall,
-      status: 'pending',
+      status: 'processed',
       record: {
         // Demographics
         first_name: firstName || null,
