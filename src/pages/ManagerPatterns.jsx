@@ -163,7 +163,7 @@ export default function ManagerPatterns() {
   });
 
   const isLoadingInitial = trendsLoading || pulsesLoading || insightLoading;
-  const hasData = trends || recentPulses.length > 0 || insight;
+  const hasData = trends || recentPulses.length > 0 || insight || checkInHistory.length > 0 || latestAssessment;
 
   const header = (
     <div className="pt-2 pb-1">
