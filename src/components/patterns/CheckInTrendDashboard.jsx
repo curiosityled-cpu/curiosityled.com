@@ -232,16 +232,14 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
           >
             <Activity className="w-3.5 h-3.5" /> Daily rhythm
           </button>
-          {hasAssessment && (
-            <button
-              onClick={() => setTab("assessment")}
-              className={`flex items-center gap-1.5 text-xs font-semibold pb-1.5 border-b-2 transition-colors ${
-                tab === "assessment" ? "border-[#0202ff] text-[#0202ff]" : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Brain className="w-3.5 h-3.5" /> Leadership Index
-            </button>
-          )}
+          <button
+            onClick={() => setTab("assessment")}
+            className={`flex items-center gap-1.5 text-xs font-semibold pb-1.5 border-b-2 transition-colors ${
+              tab === "assessment" ? "border-[#0202ff] text-[#0202ff]" : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Brain className="w-3.5 h-3.5" /> Leadership Index
+          </button>
         </div>
       </div>
 
@@ -387,6 +385,23 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
               </div>
             )}
           </>
+        )}
+
+        {/* ── ASSESSMENT TAB — no assessment yet ── */}
+        {tab === "assessment" && !hasAssessment && (
+          <div className="py-8 text-center space-y-3">
+            <Brain className="w-9 h-9 text-muted mx-auto" />
+            <p className="text-sm font-semibold text-foreground">No Leadership Index assessment yet</p>
+            <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
+              Complete a Leadership Index assessment to see your competency scores benchmarked against industry data.
+            </p>
+            <Link
+              to="/Insights"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0202ff] hover:underline"
+            >
+              Go to Insights <ExternalLink className="w-3 h-3" />
+            </Link>
+          </div>
         )}
 
         {/* ── ASSESSMENT TAB ── */}
