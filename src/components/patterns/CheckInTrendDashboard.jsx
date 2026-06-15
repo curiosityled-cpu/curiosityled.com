@@ -196,7 +196,9 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
   }, [assessment, COMPETENCIES]);
 
   const hasCheckInData = checkIns.length >= 1;
-  const hasAssessment = assessment != null;
+  // Only treat assessment as "ready" if scores are actually present
+  const hasAssessment = assessment != null && assessment.overall_pct != null;
+  const assessmentPending = assessment != null && assessment.overall_pct == null;
 
   if (!hasCheckInData && !hasAssessment) {
     return (
@@ -389,8 +391,19 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
           </>
         )}
 
+        {/* ── ASSESSMENT TAB — pending / processing ── */}
+        {tab === "assessment" && assessmentPending && (
+          <div className="py-8 text-center space-y-3">
+            <Brain className="w-9 h-9 text-amber-400 mx-auto" />
+            <p className="text-sm font-semibold text-foreground">Assessment results processing</p>
+            <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
+              Your Leadership Index submission was received. Scores will appear here once processing is complete — usually within a few minutes.
+            </p>
+          </div>
+        )}
+
         {/* ── ASSESSMENT TAB — no assessment yet ── */}
-        {tab === "assessment" && !hasAssessment && (
+        {tab === "assessment" && !hasAssessment && !assessmentPending && (
           <div className="py-8 text-center space-y-3">
             <Brain className="w-9 h-9 text-muted mx-auto" />
             <p className="text-sm font-semibold text-foreground">No Leadership Index assessment yet</p>
@@ -423,7 +436,7 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
                   <p className="text-xs text-muted-foreground">{assessment.band_overall}</p>
                 )}
                 <p className="text-[10px] text-muted-foreground mt-1">
-                  Leadership Index Assessment · {assessment.submission_ts ? format(parseISO(assessment.submission_ts), "MMM d, yyyy") : "on file"}
+                  Leadership Index Assessment · {(() => { try { return assessment.submission_ts ? format(parseISO(assessment.submission_ts), "MMM d, yyyy") : "on file"; } catch { return "on file"; } })()}
                 </p>
               </div>
             </div>
