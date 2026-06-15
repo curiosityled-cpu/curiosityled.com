@@ -146,8 +146,8 @@ export default function ManagerPatterns() {
 
   const { data: checkInHistory = [] } = useQuery({
     queryKey: ['daily-checkin-history', user?.email],
-    queryFn: async () => { try { return await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-check_in_date', 60); } catch { return []; } },
-    enabled: !!user?.email, staleTime: 5 * 60 * 1000,
+    queryFn: async () => { try { return await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-check_in_date', 120); } catch { return []; } },
+    enabled: !!user?.email, staleTime: 0,
   });
 
   const { data: latestAssessment = null } = useQuery({

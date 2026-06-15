@@ -336,6 +336,17 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
                 <ResponsiveContainer width="100%" height={40}>
                   <BarChart data={chartData} margin={{ top: 0, right: 4, left: -22, bottom: 0 }} barSize={10}>
                     <XAxis dataKey="date" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                    <Tooltip
+                      content={({ active, payload, label }) => {
+                        if (!active || !payload?.length) return null;
+                        return (
+                          <div className="bg-card border border-border rounded-xl px-3 py-2 shadow-lg text-xs">
+                            <p className="font-semibold text-foreground mb-1">{label}</p>
+                            <p className="text-muted-foreground">{payload[0].value} check-in session{payload[0].value !== 1 ? "s" : ""}</p>
+                          </div>
+                        );
+                      }}
+                    />
                     <Bar
                       dataKey="count"
                       name="Check-ins"
