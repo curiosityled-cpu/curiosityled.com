@@ -135,11 +135,11 @@ export default function ManagerToday() {
   const { data: checkInHistory = [] } = useQuery({
     queryKey: ['daily-checkin-history', user?.email],
     queryFn: async () => {
-      try { return await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-check_in_date', 14); }
+      try { return await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-check_in_date', 120); }
       catch { return []; }
     },
     enabled: !!user?.email,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   });
 
   const handleCheckInComplete = (big3Priorities, type) => {
