@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Loader2, Plus, Search, GitBranch, Users, Target, Calendar,
   MoreHorizontal, Trash2, Edit3, TrendingUp, ChevronDown, ChevronRight, UserPlus,
-  Grid3X3, LayoutList
+  Grid3X3, LayoutList, BarChart3, TrendingDown, Minus
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -360,10 +360,331 @@ function OKRsView({ user }) {
   );
 }
 
+// ─── KPIs sub-view ──────────────────────────────────────────────────────────────
+
+const KPI_DIRECTION_CONFIG = {
+  higher_better: { icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-50 border-emerald-100" },
+  lower_better: { icon: TrendingDown, color: "text-blue-600", bg: "bg-blue-50 border-blue-100" },
+  maintain: { icon: Minus, color: "text-amber-600", bg: "bg-amber-50 border-amber-100" },
+};
+
+function KpiCard({ kpi, onEdit, onDelete, goals }) {
+  const direction = KPI_DIRECTION_CONFIG[kpi.direction] || KPI_DIRECTION_CONFIG.higher_better;
+  const DirIcon = direction.icon;
+  const progress = kpi.current_value != null && kpi.target_value != null
+    ? Math.min(100, Math.max(0, Math.round((kpi.current_value / kpi.target_value) * 100)))
+    : 0;
+  const onTrack = kpi.direction === "higher_better"
+    ? (kpi.current_value || 0) >= (kpi.target_value || 0)
+    : kpi.direction === "lower_better"
+      ? (kpi.current_value || 0) <= (kpi.target_value || 0)
+      : Math.abs((kpi.current_value || 0) - (kpi.target_value || 0)) <= ((kpi.target_value || 1) * 0.05);
+  const linkedGoals = (goals || []).filter(g => (kpi.linked_goal_ids || []).includes(g.id));
+
+  return (
+    <Card className="border border-gray-100 shadow-sm rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
+      <div className="p-4">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${direction.bg}`}>
+              <DirIcon className={`w-4 h-4 ${direction.color}`} />
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-semibold text-gray-900 text-sm truncate">{kpi.title}</h3>
+              {kpi.description && (
+                <p className="text-xs text-gray-500 truncate mt-0.5">{kpi.description}</p>
+              )}
+            </div>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0"><MoreHorizontal className="w-4 h-4 text-gray-400" /></Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onEdit(kpi)}><Edit3 className="w-3.5 h-3.5 mr-2" /> Edit</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-red-600" onClick={() => onDelete(kpi)}><Trash2 className="w-3.5 h-3.5 mr-2" /> Delete</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div className="flex items-center gap-4 mb-3">
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] text-gray-400 font-medium">CURRENT</span>
+              <span className="text-[10px] text-gray-400 font-medium">TARGET</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-lg font-bold text-gray-900">{kpi.current_value != null ? kpi.current_value.toLocaleString() : "—"}{kpi.unit ? <span className="text-xs font-normal text-gray-400 ml-0.5">{kpi.unit}</span> : null}</span>
+              <span className="text-sm text-gray-400">{kpi.target_value != null ? kpi.target_value.toLocaleString() : "—"}{kpi.unit ? <span className="text-[10px] ml-0.5">{kpi.unit}</span> : null}</span>
+            </div>
+          </div>
+          <div className={`flex-shrink-0 px-2.5 py-1.5 rounded-full text-xs font-medium ${onTrack ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-amber-50 text-amber-700 border border-amber-100"}`}>
+            {onTrack ? "On track" : "Off track"}
+          </div>
+        </div>
+
+        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-3">
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{ width: `${progress}%`, backgroundColor: onTrack ? "#00C875" : "#FFCB00" }}
+          />
+        </div>
+
+        {kpi.department && (
+          <Badge variant="outline" className="text-[10px] text-gray-500 border-gray-200 mb-2">
+            {kpi.department}
+          </Badge>
+        )}
+
+        {linkedGoals.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-gray-100">
+            <span className="text-[10px] text-gray-400 mr-1">Supports:</span>
+            {linkedGoals.map(g => (
+              <Badge key={g.id} className="text-[10px] bg-blue-50 text-blue-700 border-blue-100">
+                {g.title}
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+function KPIsView({ user }) {
+  const [kpis, setKpis] = useState([]);
+  const [goals, setGoals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
+  const [editingKpi, setEditingKpi] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+
+  useEffect(() => { loadData(); }, [user?.email]);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [kpiData, goalData] = await Promise.all([
+        base44.entities.KPI.filter({ status: "active" }, "-updated_date"),
+        base44.entities.Goal.filter({ status: "active" }, "title")
+      ]);
+      setKpis(kpiData);
+      setGoals(goalData);
+    } catch {
+      toast.error("Failed to load KPIs");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreate = async (data) => {
+    const created = await base44.entities.KPI.create(data);
+    setKpis(prev => [created, ...prev]);
+    setShowCreate(false);
+    toast.success("KPI created");
+  };
+
+  const handleUpdate = async (kpiId, data) => {
+    await base44.entities.KPI.update(kpiId, data);
+    setKpis(prev => prev.map(k => k.id === kpiId ? { ...k, ...data } : k));
+    setEditingKpi(null);
+    toast.success("KPI updated");
+  };
+
+  const handleDelete = async () => {
+    if (!confirmDelete) return;
+    await base44.entities.KPI.delete(confirmDelete.id);
+    setKpis(prev => prev.filter(k => k.id !== confirmDelete.id));
+    setConfirmDelete(null);
+    toast.success("KPI deleted");
+  };
+
+  const filtered = kpis.filter(k => {
+    if (!search) return true;
+    return k.title?.toLowerCase().includes(search.toLowerCase())
+      || k.description?.toLowerCase().includes(search.toLowerCase())
+      || k.department?.toLowerCase().includes(search.toLowerCase());
+  });
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-col md:flex-row gap-3">
+        <Button onClick={() => setShowCreate(true)} className="bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5">
+          <Plus className="w-4 h-4" /> Add KPI
+        </Button>
+        <div className="relative flex-1 max-w-md">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Input placeholder="Search KPIs..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-[#0202ff]" /></div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-16">
+          <BarChart3 className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-500 font-medium">{search ? "No KPIs found" : "No KPIs yet"}</p>
+          <p className="text-sm text-gray-400 mt-1 mb-4">Track operational metrics that support your goals</p>
+          {!search && (
+            <Button onClick={() => setShowCreate(true)} className="mt-2 bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5">
+              <Plus className="w-4 h-4" /> Add Your First KPI
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map(kpi => (
+            <KpiCard key={kpi.id} kpi={kpi} goals={goals} onEdit={setEditingKpi} onDelete={setConfirmDelete} />
+          ))}
+        </div>
+      )}
+
+      <KpiFormModal isOpen={showCreate} onClose={() => setShowCreate(false)} onSubmit={handleCreate} goals={goals} />
+      {editingKpi && (
+        <KpiFormModal isOpen={!!editingKpi} onClose={() => setEditingKpi(null)} onSubmit={(data) => handleUpdate(editingKpi.id, data)} goals={goals} initial={editingKpi} />
+      )}
+      <ConfirmDialog
+        isOpen={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        onConfirm={handleDelete}
+        title="Delete KPI"
+        description={`Delete "${confirmDelete?.title}"? This cannot be undone.`}
+        confirmText="Delete"
+      />
+    </div>
+  );
+}
+
+// ─── KPI Form Modal ───────────────────────────────────────────────────────────
+
+function KpiFormModal({ isOpen, onClose, onSubmit, goals, initial }) {
+  const [form, setForm] = useState({ title: "", description: "", current_value: null, target_value: null, unit: "%", direction: "higher_better", department: "", linked_goal_ids: [] });
+
+  useEffect(() => {
+    if (initial) {
+      setForm({
+        title: initial.title || "",
+        description: initial.description || "",
+        current_value: initial.current_value ?? null,
+        target_value: initial.target_value ?? null,
+        unit: initial.unit || "%",
+        direction: initial.direction || "higher_better",
+        department: initial.department || "",
+        linked_goal_ids: initial.linked_goal_ids || [],
+      });
+    } else {
+      setForm({ title: "", description: "", current_value: null, target_value: null, unit: "%", direction: "higher_better", department: "", linked_goal_ids: [] });
+    }
+  }, [initial, isOpen]);
+
+  if (!isOpen) return null;
+
+  const canSave = form.title.trim();
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/40" onClick={onClose} />
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[85vh] overflow-y-auto">
+        <div className="p-6 space-y-4">
+          <h2 className="text-lg font-bold text-gray-900">{initial ? "Edit KPI" : "Add KPI"}</h2>
+
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">KPI Name</label>
+            <Input placeholder="e.g., SLA Adherence" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Description</label>
+            <Input placeholder="What does this measure?" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Current</label>
+              <Input type="number" placeholder="0" value={form.current_value ?? ""} onChange={e => setForm(f => ({ ...f, current_value: e.target.value ? parseFloat(e.target.value) : null }))} />
+            </div>
+            <div>
+              <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Target</label>
+              <Input type="number" placeholder="0" value={form.target_value ?? ""} onChange={e => setForm(f => ({ ...f, target_value: e.target.value ? parseFloat(e.target.value) : null }))} />
+            </div>
+            <div>
+              <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Unit</label>
+              <Select value={form.unit} onValueChange={v => setForm(f => ({ ...f, unit: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="%">%</SelectItem>
+                  <SelectItem value="hrs">hrs</SelectItem>
+                  <SelectItem value="count">count</SelectItem>
+                  <SelectItem value="$">$</SelectItem>
+                  <SelectItem value="pts">pts</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Direction</label>
+              <Select value={form.direction} onValueChange={v => setForm(f => ({ ...f, direction: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="higher_better">Higher is better</SelectItem>
+                  <SelectItem value="lower_better">Lower is better</SelectItem>
+                  <SelectItem value="maintain">Maintain range</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Department</label>
+              <Input placeholder="e.g., Operations" value={form.department} onChange={e => setForm(f => ({ ...f, department: e.target.value }))} />
+            </div>
+          </div>
+
+          {goals.length > 0 && (
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Linked Goals</label>
+              <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-2 bg-gray-50 rounded-lg">
+                {goals.filter(g => g.goal_type !== "kpi").map(g => (
+                  <button
+                    key={g.id}
+                    onClick={() => setForm(f => ({
+                      ...f,
+                      linked_goal_ids: f.linked_goal_ids.includes(g.id)
+                        ? f.linked_goal_ids.filter(id => id !== g.id)
+                        : [...f.linked_goal_ids, g.id]
+                    }))}
+                    className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
+                      form.linked_goal_ids.includes(g.id)
+                        ? "bg-[#0202ff] text-white border-[#0202ff]"
+                        : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    {g.title}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <Button variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
+            <Button className="flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-white" onClick={() => onSubmit(form)} disabled={!canSave}>
+              {initial ? "Save Changes" : "Create KPI"}
+            </Button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 // ─── Combined tab ──────────────────────────────────────────────────────────────
 
 const SUB_TABS = [
   { id: "goals", label: "Goals", icon: Target },
+  { id: "kpis", label: "KPIs", icon: BarChart3 },
   { id: "okrs", label: "OKRs", icon: TrendingUp },
 ];
 
@@ -372,14 +693,14 @@ export default function GoalsAndOKRsTab({ user }) {
 
   return (
     <div className="space-y-5">
-      <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+      <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit overflow-x-auto">
         {SUB_TABS.map(t => {
           const Icon = t.icon;
           return (
             <button
               key={t.id}
               onClick={() => setSubTab(t.id)}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
                 subTab === t.id ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -391,6 +712,7 @@ export default function GoalsAndOKRsTab({ user }) {
       </div>
 
       {subTab === "goals" && <GoalsView user={user} />}
+      {subTab === "kpis" && <KPIsView user={user} />}
       {subTab === "okrs" && <OKRsView user={user} />}
     </div>
   );

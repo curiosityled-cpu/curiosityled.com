@@ -1,0 +1,158 @@
+{
+  "name": "KPI",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "KPI name (e.g., SLA Adherence, Ticket Resolution Time)"
+    },
+    "description": {
+      "type": "string",
+      "description": "What this KPI measures and why it matters"
+    },
+    "department": {
+      "type": "string",
+      "description": "Department or business unit this KPI belongs to"
+    },
+    "current_value": {
+      "type": "number",
+      "description": "Current actual value of the KPI"
+    },
+    "target_value": {
+      "type": "number",
+      "description": "Target value for the KPI"
+    },
+    "unit": {
+      "type": "string",
+      "description": "Unit of measurement (%, hrs, count, $, etc.)"
+    },
+    "direction": {
+      "type": "string",
+      "enum": [
+        "higher_better",
+        "lower_better",
+        "maintain"
+      ],
+      "default": "higher_better",
+      "description": "Whether higher values are better, lower is better, or maintain"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "archived",
+        "achieved"
+      ],
+      "default": "active",
+      "description": "Current status of this KPI"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "private",
+        "shared"
+      ],
+      "default": "shared",
+      "description": "Visibility setting"
+    },
+    "linked_goal_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs of Goals this KPI supports or aligns with"
+    },
+    "cascaded_from_kpi_id": {
+      "type": "string",
+      "description": "ID of the parent KPI this was cascaded from (for org-level cascading)"
+    },
+    "progress": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 0,
+      "description": "Computed progress percentage towards target"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Client ID for multi-tenant support"
+    },
+    "points_value": {
+      "type": "number",
+      "description": "Gamification points for achieving this KPI"
+    }
+  },
+  "required": [
+    "title"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "visibility": "shared"
+        },
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": {
+              "$in": [
+                "Analyst",
+                "Admin Level 1",
+                "Admin Level 2",
+                "Super Administrator"
+              ]
+            }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          },
+          "client_id": {
+            "$in": "{{user.partner_client_ids}}"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}
