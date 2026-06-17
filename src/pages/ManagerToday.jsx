@@ -445,7 +445,6 @@ export default function ManagerToday() {
         pulses={recentPulses}
         onOpenAtreus={openAtreus}
       />
-      <ExploreDeeperCard />
     </div>
   );
 
