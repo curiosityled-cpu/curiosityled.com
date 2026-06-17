@@ -400,6 +400,21 @@ export default function ManagerToday() {
         </button>
       )}
 
+      {/* Mobile: Performance at a glance */}
+      <div className="md:hidden">
+        <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
+      </div>
+
+      {/* Mobile: upcoming friction */}
+      <div className="md:hidden">
+        <UpcomingFrictionCard
+          trends={trends}
+          goals={goals}
+          pulses={recentPulses}
+          onOpenAtreus={openAtreus}
+        />
+      </div>
+
       {/* Mobile: trend dashboard */}
       <div className="md:hidden">
         <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
