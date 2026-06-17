@@ -221,7 +221,7 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
             <Activity className="w-3.5 h-3.5 text-white" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground">Leadership rhythm trends</p>
+            <p className="text-sm font-semibold text-foreground">Rhythm Trends</p>
             <p className="text-[10px] text-muted-foreground">Daily check-in signals · private to you</p>
           </div>
         </div>

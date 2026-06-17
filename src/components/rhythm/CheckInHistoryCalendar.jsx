@@ -118,7 +118,7 @@ export default function CheckInHistoryCalendar({ pulses = [] }) {
           ))}
           <div className="flex items-center gap-1">
             <div className="w-2.5 h-2.5 rounded-sm bg-muted border border-border" />
-            <span className="text-[10px] text-muted-foreground">No check-in</span>
+            <span className="text-[10px] text-muted-foreground">Missed</span>
           </div>
         </div>
       </CardContent>

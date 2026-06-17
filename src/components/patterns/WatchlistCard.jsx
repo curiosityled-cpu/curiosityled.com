@@ -4,7 +4,7 @@
  * Lives on Patterns (distinct from UpcomingFrictionCard which lives on Lead).
  */
 import React, { useState } from "react";
-import { Eye, ArrowRight, Brain, ChevronDown, ChevronUp } from "lucide-react";
+import { Eye, ArrowRight, Brain, ChevronDown, ChevronUp, BellOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -88,7 +88,29 @@ function buildWatchlist(trends, pulses, goals) {
     });
   }
 
-  return items.slice(0, 3);
+  // Snooze support: check sessionStorage for snoozed signals
+  let snoozed = {};
+  try {
+    snoozed = JSON.parse(sessionStorage.getItem('watchlist_snoozed') || '{}');
+  } catch {}
+
+  const active = items.filter(item => {
+    const snoozedUntil = snoozed[item.signal];
+    if (!snoozedUntil) return true;
+    return new Date(snoozedUntil) < new Date();
+  });
+
+  return active.slice(0, 3);
+}
+
+function snoozeItem(signal, days = 7) {
+  const until = new Date();
+  until.setDate(until.getDate() + days);
+  try {
+    const snoozed = JSON.parse(sessionStorage.getItem('watchlist_snoozed') || '{}');
+    snoozed[signal] = until.toISOString();
+    sessionStorage.setItem('watchlist_snoozed', JSON.stringify(snoozed));
+  } catch {}
 }
 
 const CONFIDENCE_STYLES = {
@@ -99,7 +121,14 @@ const CONFIDENCE_STYLES = {
 
 export default function WatchlistCard({ trends, pulses = [], goals = [], onOpenAtreus }) {
   const [expanded, setExpanded] = useState(true);
+  const [snoozeTick, setSnoozeTick] = useState(0);
   const items = buildWatchlist(trends, pulses, goals);
+  // Re-compute on snooze
+  React.useEffect(() => {
+    const handler = () => setSnoozeTick(t => t + 1);
+    window.addEventListener('watchlist-snoozed', handler);
+    return () => window.removeEventListener('watchlist-snoozed', handler);
+  }, []);
   if (items.length === 0) return null;
 
   return (
@@ -140,9 +169,21 @@ export default function WatchlistCard({ trends, pulses = [], goals = [], onOpenA
                   <span className="font-medium">Nudge: </span>{item.nudge}
                 </p>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-1">
                 <span className="text-[10px] text-muted-foreground">{item.horizon}</span>
-                {item.atreusMsg ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      snoozeItem(item.signal, 7);
+                      // Force re-render by toggling state — we use a key trick via parent
+                      window.dispatchEvent(new CustomEvent('watchlist-snoozed'));
+                    }}
+                    className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                    title="Snooze 7 days"
+                  >
+                    <BellOff className="w-2.5 h-2.5" /> Snooze
+                  </button>
+                  {item.atreusMsg ? (
                   <button
                     onClick={() => onOpenAtreus?.(item.atreusMsg)}
                     className="flex items-center gap-1 text-[10px] text-[#0202ff] font-medium hover:underline"
@@ -154,6 +195,7 @@ export default function WatchlistCard({ trends, pulses = [], goals = [], onOpenA
                     {item.linkLabel} <ArrowRight className="w-2.5 h-2.5" />
                   </Link>
                 ) : null}
+                </div>
               </div>
             </div>
           );

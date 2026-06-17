@@ -79,7 +79,7 @@ function buildImprovements(trends, pulses, goals) {
     }
   }
 
-  return gains.slice(0, 3);
+  return gains.slice(0, 2);
 }
 
 export default function WhatsImprovingCard({ trends, pulses = [], goals = [] }) {

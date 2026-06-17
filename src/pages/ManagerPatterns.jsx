@@ -7,86 +7,20 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
-import { TrendingUp, AlertCircle, Info, Brain, BarChart3, Eye, Loader2 } from "lucide-react";
+import { Brain, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import TrendSummaryCard from "@/components/checkin/TrendSummaryCard";
 import IntentLoopCard from "@/components/checkin/IntentLoopCard";
 import { Link } from "react-router-dom";
 import CheckInHistoryCalendar from "@/components/rhythm/CheckInHistoryCalendar";
-import EnergyTimeline from "@/components/rhythm/EnergyTimeline";
-import OperatorModeAlert from "@/components/rhythm/OperatorModeAlert";
 import WhatsImprovingCard from "@/components/patterns/WhatsImprovingCard";
 import WatchlistCard from "@/components/patterns/WatchlistCard";
-import TriggerMapCard from "@/components/patterns/TriggerMapCard";
 import LeadingPatternCard from "@/components/patterns/LeadingPatternCard";
-import TrendSignalsChart from "@/components/patterns/TrendSignalsChart";
+import LeadershipNarrativeCard from "@/components/patterns/LeadershipNarrativeCard";
 import SwipeableSections from "@/components/patterns/SwipeableSections";
-import ManagerMemoryCard from "@/components/patterns/ManagerMemoryCard";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
 
-function PatternCard({ insight, goals }) {
-  const patterns = [];
-  if (insight?.top_strengths?.[0]) patterns.push({ type: 'supporting', text: `${insight.top_strengths[0].split(' (')[0]} appears to be a current strength you can lean on.`, tag: 'Assessment-based', tagColor: 'bg-emerald-50 text-emerald-700', icon: <TrendingUp className="w-3.5 h-3.5 text-emerald-500" /> });
-  if (insight?.development_areas?.[0]) patterns.push({ type: 'watch', text: `${insight.development_areas[0].split(' (')[0]} may benefit from more intentional focus — this pattern has appeared in recent signals.`, tag: 'AI-interpreted', tagColor: 'bg-amber-50 text-amber-700', icon: <AlertCircle className="w-3.5 h-3.5 text-amber-500" /> });
-  const stalled = goals.filter(g => g.status === 'active' && (g.progress || 0) < 20);
-  if (stalled.length > 0) patterns.push({ type: 'watch', text: `${stalled.length === 1 ? 'One active goal has' : `${stalled.length} active goals have`} made little progress. A momentum check may help.`, tag: 'Goal tracker', tagColor: 'bg-blue-50 text-blue-700', icon: <BarChart3 className="w-3.5 h-3.5 text-blue-400" /> });
-  if (patterns.length === 0) patterns.push({ type: 'neutral', text: 'Patterns build as you engage — check-ins, goals, and assessment results all contribute to what appears here.', tag: 'How this works', tagColor: 'bg-gray-100 text-gray-500', icon: <Info className="w-3.5 h-3.5 text-gray-400" /> });
 
-  return (
-    <Card className="shadow-sm border border-border bg-card rounded-2xl overflow-hidden">
-      <div className="px-5 pt-5 pb-2 flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-purple-50 border border-purple-100 flex items-center justify-center">
-          <Eye className="w-3.5 h-3.5 text-purple-500" />
-        </div>
-        <p className="text-sm font-semibold text-card-foreground">What we're noticing</p>
-      </div>
-      <CardContent className="px-5 pt-2 pb-5 space-y-3">
-        {patterns.map((p, i) => (
-          <div key={i} className="flex items-start gap-3 p-3 bg-muted/50 rounded-xl">
-            <div className="mt-0.5 flex-shrink-0">{p.icon}</div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-foreground leading-relaxed">{p.text}</p>
-              <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full mt-1.5 ${p.tagColor}`}>{p.tag}</span>
-            </div>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-  );
-}
-
-function MemoryNarrativeCard({ trends }) {
-  const narrative = trends?.trend_narrative || trends?.summary_28d;
-  const computedAt = trends?.last_trend_computed_at;
-  const dataPoints = trends?.data_points_28d;
-
-  if (!narrative) return null;
-
-  const timeLabel = computedAt
-    ? new Date(computedAt).toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' })
-    : null;
-
-  return (
-    <Card className="shadow-sm border border-[#0202ff]/15 bg-card rounded-2xl overflow-hidden">
-      <div className="px-5 pt-5 pb-2 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center">
-            <Brain className="w-3.5 h-3.5 text-white" />
-          </div>
-          <p className="text-sm font-semibold text-card-foreground">What we've noticed — last 28 days</p>
-        </div>
-        {timeLabel && <span className="text-[10px] text-muted-foreground">Updated {timeLabel}</span>}
-      </div>
-      <CardContent className="px-5 pt-2 pb-5">
-        <p className="text-sm text-foreground leading-relaxed">{narrative}</p>
-        {dataPoints > 0 && (
-          <p className="text-[10px] text-muted-foreground mt-2">Based on {dataPoints} check-in{dataPoints !== 1 ? 's' : ''} · Private to you</p>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
 
 function EmptyState() {
   return (
@@ -190,33 +124,40 @@ export default function ManagerPatterns() {
     );
   }
 
-  // Left column — story narrative + patterns
+  // Gate: only show Intentions Loop if 5+ days of Big 3 data
+  const big3DaysCount = checkInHistory.filter(c =>
+    c.big3_priorities?.length > 0
+  ).length;
+
+  // Left column — primary pattern + narrative (4 cards max)
   const leftColumn = (
     <div className="space-y-4">
-      <MemoryNarrativeCard trends={trends} />
-      <ManagerMemoryCard memory={memory} />
-      <LeadingPatternCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreus} />
-      <OperatorModeAlert pulses={recentPulses} onOpenAtreus={openAtreus} />
-      <TrendSummaryCard trends={trends} onOpenAtreus={openAtreus} />
-      <IntentLoopCard pulses={recentPulses} trends={trends} onOpenAtreus={openAtreus} />
-      {insight && <PatternCard insight={insight} goals={goals} />}
+      <LeadingPatternCard
+        trends={trends}
+        pulses={recentPulses}
+        goals={goals}
+        recentCheckIns={checkInHistory}
+        recentPulses={recentPulses}
+        onOpenAtreus={openAtreus}
+      />
+      <LeadershipNarrativeCard
+        trends={trends}
+        insight={insight}
+        goals={goals}
+        onOpenAtreus={openAtreus}
+      />
+      {big3DaysCount >= 5 && (
+        <IntentLoopCard pulses={recentPulses} trends={trends} onOpenAtreus={openAtreus} />
+      )}
       <WhatsImprovingCard trends={trends} pulses={recentPulses} goals={goals} />
-      <div className="pt-2">
-        <Button variant="outline" className="w-full text-sm border-gray-200 text-gray-600 hover:bg-gray-50" onClick={() => openAtreus("Help me make sense of my patterns over the past month.")}>
-          <Brain className="w-4 h-4 mr-2 text-[#0202ff]" /> Explore patterns with Atreus
-        </Button>
-      </div>
     </div>
   );
 
-  // Right column — trend data + trigger modules
+  // Right column — signal rail (3 cards)
   const rightColumn = (
     <div className="space-y-4">
       <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
       <CheckInHistoryCalendar pulses={recentPulses} />
-      <TrendSignalsChart trends={trends} pulses={recentPulses} />
-      <EnergyTimeline pulses={recentPulses} />
-      <TriggerMapCard trends={trends} pulses={recentPulses} activities={activities} onOpenAtreus={openAtreus} />
       <WatchlistCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreus} />
     </div>
   );

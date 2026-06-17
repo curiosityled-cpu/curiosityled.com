@@ -4,66 +4,67 @@
   "properties": {
     "user_email": {
       "type": "string",
-      "description": "Email of the manager"
+      "description": "Email of the user this activity record belongs to"
     },
     "date": {
       "type": "string",
       "format": "date",
-      "description": "Date these signals apply to"
+      "description": "Date of this activity snapshot"
     },
     "meeting_count_day": {
       "type": "number",
-      "description": "Total number of calendar meetings that day"
+      "description": "Number of meetings for the day"
     },
     "meeting_minutes_day": {
       "type": "number",
-      "description": "Total minutes in meetings that day"
+      "description": "Total meeting minutes for the day"
     },
     "back_to_back_density": {
       "type": "number",
-      "minimum": 0,
-      "maximum": 1,
-      "description": "Proportion of meetings with less than 15 minutes between them (0-1)"
+      "description": "Back-to-back meeting density score"
     },
     "late_day_load_minutes": {
       "type": "number",
-      "description": "Total meeting minutes ending after configured late threshold (e.g. 5pm)"
+      "description": "Meeting minutes after 4pm"
     },
     "one_to_one_count": {
       "type": "number",
-      "description": "Count of recurring 1:1 meetings that day/week"
-    },
-    "overdue_goals_count": {
-      "type": "number",
-      "default": 0,
-      "description": "Number of overdue active goals"
-    },
-    "learning_inertia_days": {
-      "type": "number",
-      "description": "Days since last meaningful learning action"
-    },
-    "stalled_strategic_goals": {
-      "type": "number",
-      "default": 0,
-      "description": "Number of strategic/delegation-tagged goals with no progress in 7+ days"
+      "description": "Number of 1:1 meetings"
     },
     "operator_mode_risk_score": {
       "type": "number",
-      "minimum": 0,
-      "maximum": 100,
-      "description": "Computed composite risk score for overload\u2192overcontrol pattern (0-100)"
+      "description": "Operator mode risk score (0-100)"
+    },
+    "learning_inertia_days": {
+      "type": "number",
+      "description": "Days since last learning activity"
+    },
+    "stalled_strategic_goals": {
+      "type": "number",
+      "description": "Number of stalled strategic goals"
+    },
+    "overdue_goals_count": {
+      "type": "number",
+      "description": "Number of overdue goals"
+    },
+    "calendar_connected": {
+      "type": "boolean",
+      "description": "Whether a calendar is connected"
     },
     "source_systems": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Which systems contributed to this record"
+      "description": "List of source systems that contributed to this activity record"
     },
-    "calendar_connected": {
-      "type": "boolean",
-      "default": false,
-      "description": "Whether calendar data was available for this record"
+    "practice_flow_last_used_days": {
+      "type": "number",
+      "description": "Days since any Practice coaching flow was last used"
+    },
+    "one_on_one_prep_last_used_days": {
+      "type": "number",
+      "description": "Days since 1:1 prep flow was last used"
     },
     "client_id": {
       "type": "string",
@@ -72,11 +73,17 @@
     "description": {
       "type": "string",
       "maxLength": 1000,
-      "description": "Optional description of this user activity"
+      "description": "Optional description"
     }
   },
   "required": [
     "user_email",
     "date"
-  ]
+  ],
+  "rls": {
+    "read": {
+      "user_email": "{{user.email}}"
+    },
+    "write": {}
+  }
 }
