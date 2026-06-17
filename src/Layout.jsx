@@ -195,6 +195,12 @@ function LayoutContent({ children }) {
         return <CheckCircle className="w-4 h-4 text-emerald-600" />;
       case '1on1_scheduled':
         return <UsersIcon className="w-4 h-4 text-orange-600" />;
+      case 'atreus_checkin':
+      case 'nudge':
+        return <Brain className="w-4 h-4 text-indigo-600" />;
+      case 'reminder':
+      case 'checkin_prework':
+        return <Bell className="w-4 h-4 text-amber-600" />;
       default:
         return <Bell className="w-4 h-4 text-gray-600" />;
     }

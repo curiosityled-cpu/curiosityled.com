@@ -49,7 +49,9 @@ Deno.serve(async (req) => {
         // Notification type validation
         const validTypes = [
             'reminder', 'nudge', 'milestone', 'assessment_due', 
-            'learning_assigned', 'goal_deadline', '1on1_scheduled', 'goal_assignment'
+            'learning_assigned', 'goal_deadline', '1on1_scheduled', 'goal_assignment',
+            'assessment_status', 'certification_status', 'certification_expiring',
+            'atreus_checkin', 'checkin_prework'
         ];
         if (!validTypes.includes(notificationData.type)) {
             return Response.json({

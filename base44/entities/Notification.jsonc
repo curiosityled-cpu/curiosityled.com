@@ -20,7 +20,8 @@
         "assessment_status",
         "certification_status",
         "certification_expiring",
-        "atreus_checkin"
+        "atreus_checkin",
+        "checkin_prework"
       ],
       "description": "Type of notification"
     },
@@ -85,6 +86,11 @@
       "type": "string",
       "maxLength": 1000,
       "description": "Optional description of this notification"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Arbitrary metadata for the notification (e.g., cycle_key for deduplication)"
     }
   },
   "required": [

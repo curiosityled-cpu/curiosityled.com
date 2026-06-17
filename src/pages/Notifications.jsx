@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Bell, CheckCircle, ArrowLeft, Filter, AlertCircle, Calendar as CalendarIcon, Target, BookOpen, BarChart3, Award, FileText } from "lucide-react";
+import { Bell, CheckCircle, ArrowLeft, Filter, AlertCircle, Calendar as CalendarIcon, Target, BookOpen, BarChart3, Award, FileText, MessageSquare } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -116,6 +116,12 @@ export default function Notifications() {
         return <Award className="w-5 h-5 text-yellow-600" />;
       case 'assessment_status':
         return <FileText className="w-5 h-5 text-purple-600" />;
+      case 'atreus_checkin':
+      case 'nudge':
+        return <MessageSquare className="w-5 h-5 text-indigo-600" />;
+      case 'reminder':
+      case 'checkin_prework':
+        return <Bell className="w-5 h-5 text-amber-600" />;
       default:
         return <Bell className="w-5 h-5 text-gray-600" />;
     }
@@ -219,6 +225,9 @@ export default function Notifications() {
                 <SelectItem value="milestone">Milestones</SelectItem>
                 <SelectItem value="1on1_scheduled">1:1 Meetings</SelectItem>
                 <SelectItem value="nudge">AI Coach Nudges</SelectItem>
+                <SelectItem value="atreus_checkin">Atreus Check-Ins</SelectItem>
+                <SelectItem value="reminder">Reminders</SelectItem>
+                <SelectItem value="checkin_prework">Check-In Pre-Work</SelectItem>
                 <SelectItem value="certification_expiring">Certification Expiring</SelectItem>
                 <SelectItem value="certification_status">Certification Status</SelectItem>
                 <SelectItem value="assessment_status">Assessment Status</SelectItem>
