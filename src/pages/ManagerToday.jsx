@@ -20,6 +20,7 @@ import UpcomingFrictionCard from "@/components/lead/UpcomingFrictionCard";
 import RhythmPulseChart from "@/components/rhythm/RhythmPulseChart";
 import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
+import KPIStatusCard from "@/components/intelligence/KPIStatusCard";
 
 function getFirstName(user) {
   const raw = user?.display_name || user?.data?.display_name || user?.full_name;
@@ -172,7 +173,17 @@ export default function ManagerToday() {
   };
 
   const openAtreus = (msg) => openWithContext({
-    context: { pageType: 'today', user_name: getFirstName(user) },
+    context: {
+      pageType: 'today',
+      user_name: getFirstName(user),
+      operational_kpis: operationalKpis.map(k => ({
+        id: k.id, title: k.title, status: k.status,
+        progress: k.progress, kpi_target: k.kpi_target,
+        kpi_current: k.kpi_current, kpi_unit: k.kpi_unit,
+        kpi_direction: k.kpi_direction,
+        cascaded_from_goal_id: k.cascaded_from_goal_id,
+      })),
+    },
     starterMessage: msg || "I'd like to reflect on my leadership this week."
   });
 
@@ -253,6 +264,21 @@ export default function ManagerToday() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
+  // ── Operational KPIs (cascaded org goals with goal_type kpi/cascaded_kpi) ────
+  const { data: operationalKpis = [] } = useQuery({
+    queryKey: ['ml-kpis', user?.email],
+    queryFn: async () => {
+      try {
+        const kpis = await base44.entities.Goal.filter({
+          goal_type: { $in: ["kpi", "cascaded_kpi"] },
+          status: "active",
+        }, '-created_date', 20);
+        return kpis;
+      } catch { return []; }
+    },
+    enabled: !!user?.email, staleTime: 5 * 60 * 1000,
+  });
+
   const needsToneOnboarding = tonePref === null;
   const firstName = getFirstName(user);
   // Always use ET hour to match check_in_date storage and window logic
@@ -327,6 +353,11 @@ export default function ManagerToday() {
         isActiveWindow={isEveningWindow}
       />
 
+      {/* Operational KPIs (mobile) */}
+      <div className="md:hidden">
+        <KPIStatusCard kpis={operationalKpis} />
+      </div>
+
       {/* Today's Playbook */}
       {(todayRecord || yesterdayBig3.length > 0 || goals.length > 0 || assignments.length > 0 || !!localBig3Override) && (
         <TodaysPlaybook
@@ -337,6 +368,7 @@ export default function ManagerToday() {
           goals={goals}
           assignments={assignments}
           pulses={recentPulses}
+          operationalKpis={operationalKpis}
           onOpenAtreus={openAtreus}
           onBig3Saved={(priorities) => {
             setLocalBig3Override(priorities);
@@ -420,6 +452,7 @@ export default function ManagerToday() {
         </div>
       )}
       <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
+      <KPIStatusCard kpis={operationalKpis} />
       <UpcomingFrictionCard
         trends={trends}
         goals={goals}

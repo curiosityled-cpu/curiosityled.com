@@ -16,9 +16,18 @@ import { useAuth } from "@/lib/AuthContext";
 import Big3QuickSet from "@/components/lead/Big3QuickSet";
 
 // ─── Situation builder ────────────────────────────────────────────────────────
-function buildSituation(pulse, trends, goals, insight) {
+function buildSituation(pulse, trends, goals, insight, kpis) {
   const activeGoals  = (goals || []).filter(g => g.status === "active");
   const stalledGoals = activeGoals.filter(g => (g.progress || 0) < 25);
+
+  // Check KPI health
+  const atRiskKpis = (kpis || []).filter(k => {
+    if (k.kpi_target == null || k.kpi_current == null) return false;
+    const pct = k.kpi_target !== 0 ? (k.kpi_current / k.kpi_target) * 100 : 0;
+    return k.kpi_direction === "higher_better" ? pct < 75 : pct > 125;
+  });
+  const hasKpiPressure = atRiskKpis.length > 0;
+
   const signals = [];
   if (pulse?.energy_level === "drained" || pulse?.energy_level === "stretched") signals.push("low_energy");
   if (pulse?.perceived_load === "heavy" || pulse?.perceived_load === "unsustainable") signals.push("overload");
@@ -27,6 +36,7 @@ function buildSituation(pulse, trends, goals, insight) {
   if (trends?.overload_pattern_strength > 60) signals.push("overload");
   if (trends?.identity_friction_active) signals.push("friction");
   if (stalledGoals.length > 0) signals.push("stalled_goals");
+  if (hasKpiPressure) signals.push("kpi_pressure");
 
   let headline = "You're in a steady state today.";
   let body = "No major friction signals. Good conditions to make progress on your Big 3.";
@@ -36,14 +46,15 @@ function buildSituation(pulse, trends, goals, insight) {
   else if (signals.includes("avoidance")) { headline = "Something feels avoided.";           body = "Naming it often reduces half its weight. Take 5 minutes before the day runs."; icon = "🟡"; }
   else if (signals.includes("low_energy") || signals.includes("declining_energy")) {
     headline = "Energy is lower than usual."; body = "Protect thinking time. Defer non-urgent decisions where possible."; icon = "🟡";
-  } else if (stalledGoals.length > 0)    { headline = `"${stalledGoals[0].title}" hasn't moved.`; body = "A small committed action today is worth more than waiting."; icon = "🟡"; }
+  } else if (hasKpiPressure)            { headline = `${atRiskKpis.length} KPI${atRiskKpis.length > 1 ? "s are" : " is"} under pressure.`; body = "Team metrics need attention — but treat them as operational signals, not personal ones."; icon = "🟡"; }
+  else if (stalledGoals.length > 0)    { headline = `"${stalledGoals[0].title}" hasn't moved.`; body = "A small committed action today is worth more than waiting."; icon = "🟡"; }
   else if (insight?.development_areas?.[0]) {
     const a = insight.development_areas[0].split(" (")[0];
     headline = `${a} is your growth edge.`;
     body = "Your Leadership Index points here as highest-leverage.";
   }
 
-  return { headline, body, icon, signals, stalledGoals, activeGoals };
+  return { headline, body, icon, signals, stalledGoals, activeGoals, atRiskKpis };
 }
 
 // ─── Next move builder ────────────────────────────────────────────────────────
@@ -117,7 +128,7 @@ function Big3Item({ item, index, fromYesterday }) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [], trends, goals, assignments, pulses, onOpenAtreus, onRefresh, onBig3Saved }) {
+export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [], trends, goals, assignments, pulses, onOpenAtreus, onRefresh, onBig3Saved, operationalKpis = [] }) {
   const { user } = useAuth();
 
   const [moveDone, setMoveDone]       = useState(false);
@@ -131,7 +142,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
 
   const activeGoals = (goals || []).filter(g => g.status === "active");
   const topGoal     = [...activeGoals].sort((a, b) => (b.progress || 0) - (a.progress || 0))[0];
-  const situation   = buildSituation(pulse, trends, goals, null);
+  const situation   = buildSituation(pulse, trends, goals, null, operationalKpis);
   const move        = buildMove(pulse, trends, goals, assignments);
 
   // Determine the Big 3 to show: today's record first, then fall back to yesterday's
@@ -203,6 +214,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
           {situation.signals.includes("overload") ? "Load signal" :
            situation.signals.includes("avoidance") ? "Attention signal" :
            situation.signals.includes("low_energy") || situation.signals.includes("declining_energy") ? "Energy signal" :
+           situation.signals.includes("kpi_pressure") ? "KPI signal" :
            situation.signals.includes("stalled_goals") ? "Situation read" :
            "Today's read"}
         </p>

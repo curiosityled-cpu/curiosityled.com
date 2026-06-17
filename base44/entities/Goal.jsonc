@@ -16,10 +16,12 @@
         "standard",
         "okr_objective",
         "coaching_goal",
-        "action_item"
+        "action_item",
+        "kpi",
+        "cascaded_kpi"
       ],
       "default": "standard",
-      "description": "Type of goal: standard goal, OKR objective, coaching goal, or action item"
+      "description": "Type of goal: standard goal, OKR objective, coaching goal, action item, KPI, or cascaded KPI"
     },
     "timeframe_start": {
       "type": "string",
@@ -111,6 +113,27 @@
     "cascaded_from_goal_id": {
       "type": "string",
       "description": "ID of the parent goal this was cascaded from. Used to build parent-child goal trees and auto-rollup progress."
+    },
+    "kpi_target": {
+      "type": "number",
+      "description": "Target value for KPI-type goals (e.g., 95 for 95% SLA adherence)"
+    },
+    "kpi_current": {
+      "type": "number",
+      "description": "Current actual value for KPI-type goals"
+    },
+    "kpi_unit": {
+      "type": "string",
+      "description": "Unit of measurement for KPI (e.g., '%', 'tickets/hr', 'NPS points')"
+    },
+    "kpi_direction": {
+      "type": "string",
+      "enum": [
+        "higher_better",
+        "lower_better"
+      ],
+      "default": "higher_better",
+      "description": "Whether higher or lower values represent success for this KPI"
     },
     "members": {
       "type": "array",
