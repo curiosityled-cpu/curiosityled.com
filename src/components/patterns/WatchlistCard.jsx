@@ -3,7 +3,7 @@
  * Calibrated, not clinical. "Keep an eye on this" rather than alarm language.
  * Lives on Patterns (distinct from UpcomingFrictionCard which lives on Lead).
  */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Eye, ArrowRight, Brain, ChevronDown, ChevronUp, BellOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

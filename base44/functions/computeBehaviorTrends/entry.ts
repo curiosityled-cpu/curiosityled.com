@@ -249,6 +249,65 @@ Deno.serve(async (req) => {
         const identity_friction_signals = pulses7d.filter(p => p.identity_friction === true).length;
         const identity_friction_active = identity_friction_signals >= 2;
 
+        // ─── NEW: Confidence declining days ──────────────────────────────────
+        const confPulses14d = pulses14d
+          .filter(p => p.confidence_today)
+          .sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+        let confidence_declining_days = 0;
+        if (confPulses14d.length >= 3) {
+          const confVals = confPulses14d.map(p => CONFIDENCE_ORDER[p.confidence_today] ?? 1);
+          let declineRun = 0;
+          for (let i = 1; i < confVals.length; i++) {
+            if (confVals[i] < confVals[i - 1]) {
+              declineRun++;
+            } else {
+              declineRun = 0;
+            }
+          }
+          confidence_declining_days = declineRun;
+        }
+
+        // ─── NEW: avg_load_7d and avg_growth_7d ─────────────────────────────
+        const loadScores7d = pulses7d
+          .filter(p => p.load_score != null)
+          .map(p => p.load_score);
+        const avg_load_7d = loadScores7d.length > 0
+          ? Math.round((loadScores7d.reduce((a, b) => a + b, 0) / loadScores7d.length) * 10) / 10
+          : null;
+
+        const growthScores7d = pulses7d
+          .filter(p => p.growth_score != null)
+          .map(p => p.growth_score);
+        const avg_growth_7d = growthScores7d.length > 0
+          ? Math.round((growthScores7d.reduce((a, b) => a + b, 0) / growthScores7d.length) * 10) / 10
+          : null;
+
+        // ─── NEW: workload_growth_divergence_days ────────────────────────────
+        const dailyCheckIns28d = await base44.asServiceRole.entities.DailyCheckIn.filter(
+          { user_email: email }, '-check_in_date', 28
+        );
+        let workload_growth_divergence_days = 0;
+        for (const c of dailyCheckIns28d) {
+          if (c.load_score >= 4 && c.growth_score != null && c.growth_score <= 2) {
+            workload_growth_divergence_days++;
+          }
+        }
+
+        // ─── NEW: behavioral_commitments_7d ───────────────────────────────────
+        const cutoff7dISO = cutoff7d.toISOString();
+        let behavioral_commitments_7d = 0;
+        try {
+          const bhGoals = await base44.asServiceRole.entities.Goal.filter(
+            { user_email: email, goal_type: 'coaching_goal' },
+            '-created_date', 20
+          );
+          behavioral_commitments_7d = bhGoals.filter(g =>
+            g.created_date && new Date(g.created_date) >= cutoff7d
+          ).length;
+        } catch {
+          behavioral_commitments_7d = 0;
+        }
+
         // Summaries
         const summary_7d = buildSummary7d(pulses7d.filter(p => p.source !== 'system'), activity7d);
         const summary_28d = buildSummary28d(pulses14d, pulses28d);
@@ -258,15 +317,19 @@ Deno.serve(async (req) => {
           energy_trend,
           confidence_trend,
           resilience_trend,
-          motivation_trend,
-          optimism_trend,
           overload_pattern_strength,
           stretch_frequency_14d,
           operator_risk_trajectory,
           overload_acknowledgment_rate,
           delegation_gap_count_7d,
+          delegation_intent_count_7d,
           identity_friction_signals,
           identity_friction_active,
+          confidence_declining_days,
+          avg_load_7d,
+          avg_growth_7d,
+          workload_growth_divergence_days,
+          behavioral_commitments_7d,
         };
 
         // Generate LLM narrative (only if enough data)
@@ -314,6 +377,11 @@ Deno.serve(async (req) => {
           delegation_gap_count_7d,
           identity_friction_signals,
           identity_friction_active,
+          confidence_declining_days,
+          avg_load_7d,
+          avg_growth_7d,
+          workload_growth_divergence_days,
+          behavioral_commitments_7d,
         };
 
         // Delete ALL existing records then create fresh — avoids RLS update restrictions and duplicate accumulation
