@@ -258,7 +258,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
         <div className="px-5 py-3.5 border-b border-border">
           <div className="flex items-center justify-between mb-1.5">
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Active focus</p>
-            <Link to="/my-goals"><span className="text-[10px] text-[#0202ff] font-medium hover:underline">All goals →</span></Link>
+            <Link to="/my-performance"><span className="text-[10px] text-[#0202ff] font-medium hover:underline">All goals →</span></Link>
           </div>
           <p className="text-xs font-semibold text-foreground">{topGoal.title}</p>
           <div className="flex items-center gap-2 mt-1.5">

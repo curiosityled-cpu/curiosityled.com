@@ -20,6 +20,7 @@ import UpcomingFrictionCard from "@/components/lead/UpcomingFrictionCard";
 import RhythmPulseChart from "@/components/rhythm/RhythmPulseChart";
 import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
+import PerformanceGlanceCard from "@/components/lead/PerformanceGlanceCard";
 
 function getFirstName(user) {
   const raw = user?.display_name || user?.data?.display_name || user?.full_name;
@@ -253,6 +254,23 @@ export default function ManagerToday() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
+  const { data: kpis = [] } = useQuery({
+    queryKey: ['ml-kpis', user?.email],
+    queryFn: async () => { try { return await base44.entities.KPI.filter({ status: "active" }, "-updated_date", 10); } catch { return []; } },
+    enabled: !!user?.email, staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: cascadedGoals = [] } = useQuery({
+    queryKey: ['ml-cascaded-goals', user?.email],
+    queryFn: async () => {
+      try {
+        const allShared = await base44.entities.Goal.filter({ visibility: "shared", status: "active" }, "-updated_date", 10);
+        return allShared.filter(g => g.created_by !== user?.email);
+      } catch { return []; }
+    },
+    enabled: !!user?.email, staleTime: 5 * 60 * 1000,
+  });
+
   const needsToneOnboarding = tonePref === null;
   const firstName = getFirstName(user);
   // Always use ET hour to match check_in_date storage and window logic
@@ -420,6 +438,7 @@ export default function ManagerToday() {
         </div>
       )}
       <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
+      <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
       <UpcomingFrictionCard
         trends={trends}
         goals={goals}
