@@ -452,8 +452,8 @@ export default function ManagerToday() {
           </p>
         </div>
       )}
-      <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
       <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
+      <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
       <UpcomingFrictionCard
         trends={trends}
         goals={goals}
