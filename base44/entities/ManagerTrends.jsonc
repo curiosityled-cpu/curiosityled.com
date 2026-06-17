@@ -4,17 +4,7 @@
   "properties": {
     "user_email": {
       "type": "string",
-      "description": "Email of the manager this trend record belongs to"
-    },
-    "confidence_trend": {
-      "type": "string",
-      "enum": [
-        "improving",
-        "stable",
-        "declining",
-        "insufficient_data"
-      ],
-      "description": "Direction of confidence_today responses over last 14 days. ALWAYS PRIVATE."
+      "description": "Email of the manager"
     },
     "energy_trend": {
       "type": "string",
@@ -24,7 +14,17 @@
         "declining",
         "insufficient_data"
       ],
-      "description": "Direction of energy_level responses over last 14 days. ALWAYS PRIVATE."
+      "description": "14-day energy trend direction"
+    },
+    "confidence_trend": {
+      "type": "string",
+      "enum": [
+        "improving",
+        "stable",
+        "declining",
+        "insufficient_data"
+      ],
+      "description": "14-day confidence trend direction"
     },
     "resilience_trend": {
       "type": "string",
@@ -34,90 +34,123 @@
         "declining",
         "insufficient_data"
       ],
-      "description": "Direction of resilience_signal responses over last 14 days. ALWAYS PRIVATE."
+      "description": "14-day resilience trend direction"
     },
-    "identity_friction_signals": {
-      "type": "number",
-      "description": "Count of check-ins in last 7 days where identity_friction was true. ALWAYS PRIVATE."
+    "motivation_trend": {
+      "type": "string",
+      "enum": [
+        "improving",
+        "stable",
+        "declining",
+        "insufficient_data"
+      ],
+      "description": "14-day motivation trend direction"
     },
-    "identity_friction_active": {
-      "type": "boolean",
-      "default": false,
-      "description": "Whether the manager is currently in an active identity friction period. ALWAYS PRIVATE."
+    "optimism_trend": {
+      "type": "string",
+      "enum": [
+        "improving",
+        "stable",
+        "declining",
+        "insufficient_data"
+      ],
+      "description": "14-day optimism trend direction"
     },
     "overload_pattern_strength": {
       "type": "number",
-      "minimum": 0,
-      "maximum": 100,
-      "description": "Composite score reflecting frequency and intensity of overload signals over 28 days (0-100). ALWAYS PRIVATE."
+      "description": "Composite overload pattern strength (0-100)"
     },
     "stretch_frequency_14d": {
       "type": "number",
-      "description": "Count of check-ins in last 14 days where energy_level was stretched or drained. ALWAYS PRIVATE."
+      "description": "Number of stretch/drain days in last 14 days"
     },
     "operator_risk_trajectory": {
       "type": "string",
       "enum": [
-        "increasing",
+        "improving",
         "stable",
-        "decreasing",
+        "declining",
+        "increasing",
         "insufficient_data"
       ],
-      "description": "Direction of operator_mode_risk_score over last 7 days"
+      "description": "Operator risk trajectory direction"
     },
     "overload_acknowledgment_rate": {
       "type": "number",
-      "minimum": 0,
-      "maximum": 1,
-      "description": "Proportion of overload prompts answered very_much or somewhat in last 28 days. ALWAYS PRIVATE."
+      "description": "Rate of overload acknowledgment (0-1)"
     },
     "summary_7d": {
       "type": "string",
-      "description": "Plain-language summary of the last 7 days for Atreus context. ALWAYS PRIVATE."
+      "description": "7-day natural language summary"
     },
     "summary_28d": {
       "type": "string",
-      "description": "Plain-language summary of the last 28 days for Atreus context. ALWAYS PRIVATE."
+      "description": "28-day natural language summary"
     },
     "trend_narrative": {
       "type": "string",
-      "description": "Short LLM-generated interpretive sentence for Atreus to read. Uses only observational, self-report-respecting language. ALWAYS PRIVATE."
+      "description": "LLM-generated trend narrative"
     },
     "last_trend_computed_at": {
       "type": "string",
       "format": "date-time",
-      "description": "When this record was last updated"
+      "description": "When trends were last computed"
     },
     "data_points_14d": {
       "type": "number",
-      "description": "Number of check-ins in last 14 days (used to qualify confidence of trends)"
+      "description": "Number of data points in 14-day window"
     },
     "data_points_28d": {
       "type": "number",
-      "description": "Number of check-ins in last 28 days"
+      "description": "Number of data points in 28-day window"
     },
     "learning_stall_detected": {
       "type": "boolean",
-      "default": false,
-      "description": "Whether learning inertia has been increasing week-over-week"
+      "description": "Whether learning stall is detected"
     },
     "delegation_intent_count_7d": {
       "type": "number",
-      "description": "How many times delegation was declared as morning intent in last 7 days"
+      "description": "Number of delegation intentions in last 7 days"
     },
     "delegation_gap_count_7d": {
       "type": "number",
-      "description": "How many times delegation intent did not match observed behavior in last 7 days"
+      "description": "Number of delegation gaps in last 7 days"
+    },
+    "identity_friction_signals": {
+      "type": "number",
+      "description": "Number of identity friction signals detected"
+    },
+    "identity_friction_active": {
+      "type": "boolean",
+      "description": "Whether identity friction is currently active"
+    },
+    "confidence_declining_days": {
+      "type": "number",
+      "description": "Consecutive days confidence has been declining"
+    },
+    "avg_load_7d": {
+      "type": "number",
+      "description": "7-day average load check-in score (1-5)"
+    },
+    "avg_growth_7d": {
+      "type": "number",
+      "description": "7-day average growth check-in score (1-5)"
+    },
+    "workload_growth_divergence_days": {
+      "type": "number",
+      "description": "Count of days where load >= 4 AND growth <= 2"
+    },
+    "behavioral_commitments_7d": {
+      "type": "number",
+      "description": "Count of behavioral_commitment Goals created in last 7 days"
     },
     "visibility_level": {
       "type": "string",
       "enum": [
-        "private",
-        "manager_visible",
-        "hr_aggregate"
+        "private"
       ],
       "default": "private",
-      "description": "Manager-initiated visibility: private (sealed), manager_visible (manager can see), hr_aggregate (only in anonymized cohorts)"
+      "description": "Visibility level (always private)"
     },
     "client_id": {
       "type": "string",
@@ -126,7 +159,7 @@
     "description": {
       "type": "string",
       "maxLength": 1000,
-      "description": "Optional description of these manager trends"
+      "description": "Optional description"
     }
   },
   "required": [
@@ -134,16 +167,7 @@
   ],
   "rls": {
     "read": {
-      "$or": [
-        {
-          "user_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_email": "{{user.email}}"
     },
     "write": {}
   }
