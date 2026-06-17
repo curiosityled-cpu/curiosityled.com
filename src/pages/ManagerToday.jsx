@@ -400,6 +400,11 @@ export default function ManagerToday() {
         </button>
       )}
 
+      {/* Mobile: trend dashboard */}
+      <div className="md:hidden">
+        <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
+      </div>
+
       {/* Mobile: Performance at a glance */}
       <div className="md:hidden">
         <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
@@ -413,11 +418,6 @@ export default function ManagerToday() {
           pulses={recentPulses}
           onOpenAtreus={openAtreus}
         />
-      </div>
-
-      {/* Mobile: trend dashboard */}
-      <div className="md:hidden">
-        <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
       </div>
 
       {/* Mobile: Go deeper links */}
