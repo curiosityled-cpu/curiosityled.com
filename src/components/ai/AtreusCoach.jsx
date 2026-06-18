@@ -30,6 +30,7 @@ import LearningModuleCoach from "./LearningModuleCoach";
 import WorkflowSuggestionsPanel from "./WorkflowSuggestionsPanel";
 import { buildAtreusSystemPrompt } from "./atreusSystemPrompt";
 import PostConversationDebrief from "@/components/checkin/PostConversationDebrief";
+import { useAtreusMemoryWriter } from "./useAtreusMemoryWriter";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,6 +55,7 @@ export default function AtreusCoach({
 }) {
   const { user, appRole, userPermissions } = useAuth();
   const { updatePageContext } = usePageContext() || { updatePageContext: () => {} };
+  const { writeMemory } = useAtreusMemoryWriter({ userEmail: user?.email, pageType: context?.pageType });
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -833,6 +835,9 @@ export default function AtreusCoach({
       const finalMessages = [...updatedMessages, assistantMessage];
       // Limit to last 100 messages for performance
       setMessages(finalMessages.slice(-100));
+
+      // Phase 2: Write memory after every assistant response
+      writeMemory(finalMessages);
 
       // Check for workflow suggestions in response
       if (agentResponse.data.workflow_suggestions) {

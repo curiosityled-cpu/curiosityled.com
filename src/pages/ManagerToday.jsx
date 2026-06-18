@@ -7,6 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
+import { useAtreusOrchestrator } from "@/components/ai/useAtreusOrchestrator";
 import { Link } from "react-router-dom";
 import { Brain, ChevronRight, MessageSquare, SlidersHorizontal, BarChart3, Layers, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -94,7 +95,7 @@ function ExploreDeeperCard() {
 export default function ManagerToday() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { openWithContext } = useAtreusChat();
+  const { openWithContext, openWithOrchestrator } = useAtreusChat();
   const [showSettings, setShowSettings] = useState(false);
   const [showWeeklyReflection, setShowWeeklyReflection] = useState(false);
   // Get today's date in ET (matching server-side) to avoid UTC midnight boundary issues
@@ -172,10 +173,26 @@ export default function ManagerToday() {
     }, 8000);
   };
 
-  const openAtreus = (msg) => openWithContext({
-    context: { pageType: 'today', user_name: getFirstName(user) },
-    starterMessage: msg || "I'd like to reflect on my leadership this week."
-  });
+  const openAtreus = (msg) => {
+    // Phase 3: If orchestrator data is available, use enriched context; fallback to basic context
+    if (orchestratorData && !msg) {
+      openWithOrchestrator({
+        orchestratorResult: orchestratorData,
+        page: 'today',
+      });
+    } else {
+      openWithContext({
+        context: {
+          pageType: 'today',
+          user_name: getFirstName(user),
+          orchestrator_mode: orchestratorData?.mode,
+          signal_score: orchestratorData?.signal_score,
+          situation: orchestratorData?.situation,
+        },
+        starterMessage: msg || orchestratorData?.opening_message || "I'd like to reflect on my leadership this week."
+      });
+    }
+  };
 
   const { data: insight } = useQuery({
     queryKey: ['ml-insight', user?.email],
@@ -252,6 +269,19 @@ export default function ManagerToday() {
     queryKey: ['ml-assessment-latest', user?.email],
     queryFn: async () => { try { const rows = await base44.entities.Assessment.filter({ email: user.email }, '-created_date', 1); return rows[0] || null; } catch { return null; } },
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
+  });
+
+  // Phase 1 + 3: Orchestrator — single unified signal fetch for the Lead page
+  const { orchestratorData } = useAtreusOrchestrator({
+    page: 'today',
+    active_pattern: null,
+    check_in_state: todayRecord ? {
+      morning_done: !!todayRecord.morning_completed,
+      evening_done: !!todayRecord.evening_completed,
+      energy_score: todayRecord.energy_score,
+      load_score: todayRecord.load_score,
+    } : null,
+    enabled: !!user?.email,
   });
 
   const { data: kpis = [] } = useQuery({
