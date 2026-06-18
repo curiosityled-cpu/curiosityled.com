@@ -17,7 +17,6 @@ import AtreusProactiveNudge from "@/components/ai/AtreusProactiveNudge";
 import { useAtreusPendingInsight } from "@/components/ai/useAtreusPendingInsight";
 import { AuthProvider as FullAuthProvider } from "@/components/useAuth";
 import { AtreusProvider, useAtreusChat } from "@/components/ai/AtreusContext";
-import AtreusFAB from "@/components/ai/AtreusFAB";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import {
   DropdownMenu,
@@ -100,7 +99,7 @@ function MVPLayoutInner({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState({});
   const [unreadCount, setUnreadCount] = useState(0);
-  const { isOpen: showAtreus, pendingContext, draftMessage, close: closeAtreus, clearPending, openWithContext, lastCardFocus } = useAtreusChat();
+  const { isOpen: showAtreus, pendingContext, draftMessage, close: closeAtreus, clearPending, openWithContext } = useAtreusChat();
   const openAtreusDefault = () => openWithContext({});
 
   // Pillar 3: subscribe to proactive insights from the orchestrator
@@ -519,20 +518,16 @@ function MVPLayoutInner({ children }) {
         />
       )}
 
-      {/* Floating Atreus Button — state-aware (Pillar 4 / buildFABState) */}
-      {!showAtreus && (
-        <AtreusFAB
-          lastCardFocus={lastCardFocus}
-          onOpen={(starterMessage) => {
-            clearPending();
-            if (starterMessage) {
-              openWithContext({ starterMessage });
-            } else {
-              openAtreusDefault();
-            }
-          }}
-        />
-      )}
+      {/* Floating Atreus Button — always accessible */}
+      {!showAtreus &&
+      <button
+        onClick={() => { clearPending(); openAtreusDefault(); }}
+        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full transition-all flex items-center justify-center"
+        style={{ backgroundColor: '#0202ff', boxShadow: '0 4px 20px rgba(2,2,255,0.35)' }}
+        title="Ask Atreus - Your AI Coach">
+          <Brain className="w-6 h-6 text-white" />
+        </button>
+      }
 
       {/* Atreus Coach Panel — wrapped in full AuthProvider so AtreusCoach's useAuth works */}
       {showAtreus &&
