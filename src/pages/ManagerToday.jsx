@@ -444,14 +444,7 @@ export default function ManagerToday() {
           </div>
         </div>
       )}
-      {!todayRecord && !needsToneOnboarding && (
-        <div className="bg-[#0202ff]/5 border border-[#0202ff]/15 rounded-2xl px-4 py-4">
-          <p className="text-xs font-semibold text-[#0202ff] mb-1">Before you dive in</p>
-          <p className="text-xs text-foreground leading-relaxed">
-            A quick check-in takes 60 seconds and helps the system give you sharper signals throughout the day.
-          </p>
-        </div>
-      )}
+
       <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
       <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
       <UpcomingFrictionCard
