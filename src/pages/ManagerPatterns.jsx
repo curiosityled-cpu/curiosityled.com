@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
+import { usePageContext } from "@/Layout";
 import { Brain, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -43,6 +44,7 @@ function EmptyState() {
 export default function ManagerPatterns() {
   const { user } = useAuth();
   const { openWithContext } = useAtreusChat();
+  const { updatePageContext } = usePageContext() || { updatePageContext: () => {} };
   const openAtreus = (msg) => openWithContext({ context: { pageType: 'patterns', user_name: user?.full_name }, starterMessage: msg || "Help me understand my recent patterns." });
 
   const { data: trends = null, isLoading: trendsLoading } = useQuery({
@@ -133,6 +135,7 @@ export default function ManagerPatterns() {
         recentCheckIns={checkInHistory}
         recentPulses={recentPulses}
         onOpenAtreus={openAtreus}
+        updatePageContext={updatePageContext}
       />
       <LeadershipNarrativeCard
         trends={trends}
@@ -149,7 +152,7 @@ export default function ManagerPatterns() {
     <div className="space-y-4">
       <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
       <CheckInHistoryCalendar pulses={recentPulses} />
-      <WatchlistCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreus} />
+      <WatchlistCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreus} updatePageContext={updatePageContext} />
     </div>
   );
 

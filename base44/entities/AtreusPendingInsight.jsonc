@@ -1,0 +1,70 @@
+{
+  "name": "AtreusPendingInsight",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the manager this insight is for"
+    },
+    "insight_type": {
+      "type": "string",
+      "enum": [
+        "proactive_nudge",
+        "pattern_alert",
+        "check_in_follow_up",
+        "goal_reminder",
+        "trend_crossing",
+        "memory_surfaced",
+        "page_context_insight"
+      ],
+      "description": "Category of this pending insight"
+    },
+    "message": {
+      "type": "string",
+      "description": "The pre-composed message Atreus should open with"
+    },
+    "context_data": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Supporting data to inject into the Atreus prompt alongside the message"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "medium"
+    },
+    "source_signal_id": {
+      "type": "string",
+      "description": "ID of the ManagerSignalLog entry that triggered this insight"
+    },
+    "consumed": {
+      "type": "boolean",
+      "default": false,
+      "description": "True once the UI has displayed this insight to the user"
+    },
+    "consumed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Insight expires after this time if not consumed"
+    }
+  },
+  "required": [
+    "user_email",
+    "insight_type",
+    "message"
+  ],
+  "rls": {
+    "read": {
+      "user_email": "{{user.email}}"
+    },
+    "write": {}
+  }
+}
