@@ -1,0 +1,66 @@
+{
+  "name": "AtreusConversationTurn",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the manager"
+    },
+    "thread_id": {
+      "type": "string",
+      "description": "Groups turns into a conversation (maps to Conversation.id)"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "manager",
+        "atreus"
+      ],
+      "description": "Who sent this turn"
+    },
+    "content": {
+      "type": "string",
+      "description": "The message text"
+    },
+    "page_context": {
+      "type": "string",
+      "description": "Which page/card this turn happened on"
+    },
+    "pattern_context": {
+      "type": "string",
+      "description": "Which pattern was active when this turn was sent"
+    },
+    "is_commitment": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the manager made a behavioral commitment in this turn"
+    },
+    "commitment_text": {
+      "type": "string",
+      "description": "Extracted commitment starting with 'I will...' if is_commitment=true"
+    },
+    "commitment_followed_up": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the Close the Loop prompt has been sent for this commitment"
+    },
+    "importance_score": {
+      "type": "number",
+      "description": "0-1 score used for memory summarization prioritization"
+    }
+  },
+  "required": [
+    "user_email",
+    "thread_id",
+    "role",
+    "content"
+  ],
+  "rls": {
+    "read": {
+      "user_email": "{{user.email}}"
+    },
+    "write": {
+      "user_email": "{{user.email}}"
+    }
+  }
+}

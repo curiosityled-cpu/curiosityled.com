@@ -625,40 +625,46 @@ export default function AtreusCoach({
 
   // Greeting and suggestions delegated to atreusGreetings.js helper
 
-  // Enhanced: Comprehensive system prompt with tone, trend memory, and cross-session context
+  // Enhanced: Comprehensive system prompt with tone, trend memory, conversation memory, and cross-session context
   const buildSystemPrompt = async () => {
     const userName = context?.user_name || user?.full_name || 'the user';
     const crossSessionData = await getCrossSessionContext(base44, user?.email);
 
-    // Load tone preference, trend memory, and behavioral memory for this manager
     let toneMode = 'warm_candid';
     let riskScore = context?.operator_mode_risk_score || 0;
     let trends = null;
     let memory = null;
+    let memorySummary = null;
+    let recentTurns = [];
 
     try {
       if (user?.email) {
-        const [tonePrefs, trendRecords, memoryRecords] = await Promise.all([
+        const activeConvId = conversationIdRef.current || conversationId;
+        const [tonePrefs, trendRecords, memoryRecords, summaryRecords, turnRecords] = await Promise.all([
           base44.entities.TonePreference.filter({ user_email: user.email }, '-created_date', 1),
           base44.entities.ManagerTrends.filter({ user_email: user.email }, '-last_trend_computed_at', 1),
           base44.entities.ManagerMemory.filter({ user_email: user.email }, '-last_synthesized_at', 1),
+          base44.entities.AtreusMemorySummary.filter({ user_email: user.email }, '-updated_at', 1),
+          // Layer 2: last 5 turns from current conversation thread
+          activeConvId
+            ? base44.entities.AtreusConversationTurn.filter({ user_email: user.email, thread_id: activeConvId }, '-created_date', 5)
+            : Promise.resolve([]),
         ]);
         toneMode = tonePrefs[0]?.tone_mode || 'warm_candid';
         trends = trendRecords[0] || null;
         memory = memoryRecords[0] || null;
+        memorySummary = summaryRecords[0] || null;
+        recentTurns = turnRecords.reverse(); // chronological order
 
-        // Check for adaptive tone shift based on current state
         try {
           const adaptiveResponse = await base44.functions.invoke('computeAdaptiveTone', {});
           if (adaptiveResponse.data?.should_adapt) {
             toneMode = adaptiveResponse.data.recommended_tone;
           }
-        } catch (e) {
-          // Adaptive tone is best-effort, don't block
-        }
+        } catch (e) { /* best-effort */ }
       }
     } catch (e) {
-      console.warn('Could not load tone/trends for Atreus prompt:', e.message);
+      console.warn('Could not load Atreus prompt context:', e.message);
     }
 
     const pageContext = {
@@ -669,7 +675,49 @@ export default function AtreusCoach({
       cross_session: crossSessionData,
     };
 
-    return buildAtreusSystemPrompt({ toneMode, riskScore, trends, memory, pageContext, userName });
+    return buildAtreusSystemPrompt({ toneMode, riskScore, trends, memory, memorySummary, recentTurns, pageContext, userName });
+  };
+
+  // Save a conversation turn and run lightweight commitment extraction
+  const saveTurn = async (role, content, activeConvId) => {
+    if (!user?.email || !activeConvId) return;
+    try {
+      const turn = await base44.entities.AtreusConversationTurn.create({
+        user_email: user.email,
+        thread_id: activeConvId,
+        role,
+        content,
+        page_context: context?.pageType || null,
+        pattern_context: context?.card || null,
+      });
+
+      // Only run commitment extraction on manager turns
+      if (role === 'manager' && content.length > 20) {
+        base44.integrations.Core.InvokeLLM({
+          prompt: `Manager said: "${content.slice(0, 500)}"
+
+Did they make a commitment or state a clear intention to do something?
+Return JSON: { "is_commitment": boolean, "commitment_text": "I will..." or null }
+Only mark true if they explicitly say they will do something. Not vague statements.`,
+          response_json_schema: {
+            type: 'object',
+            properties: {
+              is_commitment: { type: 'boolean' },
+              commitment_text: { type: 'string' }
+            }
+          }
+        }).then(async (extraction) => {
+          if (extraction?.is_commitment && extraction?.commitment_text) {
+            await base44.entities.AtreusConversationTurn.update(turn.id, {
+              is_commitment: true,
+              commitment_text: extraction.commitment_text,
+            });
+          }
+        }).catch(() => { /* best-effort — don't block the conversation */ });
+      }
+    } catch (e) {
+      // Turn saving is best-effort — never block the chat
+    }
   };
 
   const handleSendMessage = async (messageText = null) => {
@@ -696,6 +744,9 @@ export default function AtreusCoach({
 
     // Always read the latest conversationId from ref (avoids stale closure issues)
     const activeConversationId = conversationIdRef.current || conversationId;
+
+    // Save manager turn for persistent memory
+    saveTurn('manager', text, activeConversationId);
 
     try {
       if (activeConversationId) {
@@ -830,6 +881,10 @@ export default function AtreusCoach({
 
       console.log("Atreus response received", { text, response });
       if (!isMountedRef.current) return;
+
+      // Save Atreus turn for persistent memory
+      if (response) saveTurn('atreus', response, activeConversationId);
+
       const finalMessages = [...updatedMessages, assistantMessage];
       // Limit to last 100 messages for performance
       setMessages(finalMessages.slice(-100));

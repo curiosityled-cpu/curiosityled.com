@@ -1,0 +1,56 @@
+{
+  "name": "AtreusMemorySummary",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the manager"
+    },
+    "summary_text": {
+      "type": "string",
+      "description": "Rolling 200-300 word compressed summary of recent conversations"
+    },
+    "covers_from": {
+      "type": "string",
+      "format": "date",
+      "description": "Start of the date range this summary covers"
+    },
+    "covers_to": {
+      "type": "string",
+      "format": "date",
+      "description": "End of the date range this summary covers"
+    },
+    "key_commitments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Active commitments extracted from recent turns"
+    },
+    "key_themes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Recurring themes Atreus has noticed across conversations"
+    },
+    "turn_count": {
+      "type": "number",
+      "description": "Number of turns this summary was built from"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this summary was last synthesized"
+    }
+  },
+  "required": [
+    "user_email"
+  ],
+  "rls": {
+    "read": {
+      "user_email": "{{user.email}}"
+    },
+    "write": {}
+  }
+}
