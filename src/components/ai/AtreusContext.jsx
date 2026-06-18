@@ -13,6 +13,8 @@ const AtreusContext = createContext({
   draftMessage: null,
   close: () => {},
   clearPending: () => {},
+  emitCardFocus: () => {},
+  lastCardFocus: null,
 });
 
 export function AtreusProvider({ children }) {
@@ -20,6 +22,7 @@ export function AtreusProvider({ children }) {
   const [pendingContext, setPendingContext] = useState(null);
   const [pendingMessage, setPendingMessage] = useState(null);
   const [draftMessage, setDraftMessage] = useState(null);
+  const [lastCardFocus, setLastCardFocus] = useState(null);
 
   const openWithContext = useCallback(({ context = {}, starterMessage = null, draftMessage: draft = null } = {}) => {
     console.log("Atreus openWithContext called", { context, starterMessage, draft });
@@ -45,8 +48,19 @@ export function AtreusProvider({ children }) {
     setDraftMessage(null);
   }, []);
 
+  // Pillar 4: card-level focus emission
+  // action: 'expanded' | 'cta_clicked' | 'dismissed' | 'dwell'
+  const emitCardFocus = useCallback(({ card_id, action, card_data = {} } = {}) => {
+    const event = { card_id, action, card_data, emitted_at: new Date().toISOString() };
+    setLastCardFocus(event);
+    // If Atreus is already open, enrich the pending context with the card focus
+    if (isOpen) {
+      setPendingContext(prev => ({ ...(prev || {}), focused_card: card_id, last_card_action: action, card_data }));
+    }
+  }, [isOpen]);
+
   return (
-    <AtreusContext.Provider value={{ openWithContext, isOpen, pendingContext, pendingMessage, draftMessage, close, clearPending }}>
+    <AtreusContext.Provider value={{ openWithContext, isOpen, pendingContext, pendingMessage, draftMessage, close, clearPending, emitCardFocus, lastCardFocus }}>
       {children}
     </AtreusContext.Provider>
   );
