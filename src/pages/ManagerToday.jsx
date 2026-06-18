@@ -400,30 +400,22 @@ export default function ManagerToday() {
         </button>
       )}
 
-      {/* Mobile: trend dashboard */}
-      <div className="md:hidden">
-        <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
-      </div>
+      {/* Trend dashboard — always visible in main column */}
+      <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
 
-      {/* Mobile: Performance at a glance */}
-      <div className="md:hidden">
-        <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
-      </div>
+      {/* Performance at a glance — always visible in main column */}
+      <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
 
-      {/* Mobile: upcoming friction */}
-      <div className="md:hidden">
-        <UpcomingFrictionCard
-          trends={trends}
-          goals={goals}
-          pulses={recentPulses}
-          onOpenAtreus={openAtreus}
-        />
-      </div>
+      {/* Upcoming friction — always visible in main column */}
+      <UpcomingFrictionCard
+        trends={trends}
+        goals={goals}
+        pulses={recentPulses}
+        onOpenAtreus={openAtreus}
+      />
 
-      {/* Mobile: Go deeper links */}
-      <div className="md:hidden">
-        <ExploreDeeperCard />
-      </div>
+      {/* Go deeper links — always visible */}
+      <ExploreDeeperCard />
     </div>
   );
 
@@ -445,14 +437,7 @@ export default function ManagerToday() {
         </div>
       )}
 
-      <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
-      <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
-      <UpcomingFrictionCard
-        trends={trends}
-        goals={goals}
-        pulses={recentPulses}
-        onOpenAtreus={openAtreus}
-      />
+
     </div>
   );
 
