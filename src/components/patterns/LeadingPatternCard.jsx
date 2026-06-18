@@ -204,15 +204,7 @@ function detectPattern(trends, pulses, goals, recentCheckIns = [], recentPulses 
   }
 
   // ── P3: Reactive Leadership ────────────────────────────────────────────────
-  // Guard: don't fire in the first 21 days — new users naturally have low Big 3 completion
-  const accountAgeDays = (() => {
-    const earliest = (recentCheckIns || []).slice(-1)[0];
-    if (!earliest?.check_in_date) return 999;
-    const diff = (Date.now() - new Date(earliest.check_in_date).getTime()) / 86400000;
-    return Math.round(diff);
-  })();
   const noBig3Habit = (() => {
-    if (accountAgeDays < 21) return false;
     const last7 = (recentCheckIns || []).slice(-7);
     if (last7.length < 3) return false;
     const daysWithBig3 = last7.filter(c =>

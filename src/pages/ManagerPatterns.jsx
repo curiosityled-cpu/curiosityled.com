@@ -10,6 +10,7 @@ import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { Brain, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import IntentLoopCard from "@/components/checkin/IntentLoopCard";
 import { Link } from "react-router-dom";
 import CheckInHistoryCalendar from "@/components/rhythm/CheckInHistoryCalendar";
 import WhatsImprovingCard from "@/components/patterns/WhatsImprovingCard";
@@ -101,8 +102,8 @@ export default function ManagerPatterns() {
   const header = (
     <div className="pt-2 pb-1">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Patterns</p>
-      <h1 className="text-2xl font-bold text-foreground">How you lead over time</h1>
-      <p className="text-sm text-muted-foreground mt-1">Longitudinal patterns, signals, and what's shaping your leadership right now.</p>
+      <h1 className="text-2xl font-bold text-foreground">What we're noticing</h1>
+      <p className="text-sm text-muted-foreground mt-1">Longitudinal memory — how you lead over time.</p>
     </div>
   );
 
@@ -123,7 +124,12 @@ export default function ManagerPatterns() {
     );
   }
 
-  // Left column — primary pattern + narrative (3 cards)
+  // Gate: only show Intentions Loop if 5+ days of Big 3 data
+  const big3DaysCount = checkInHistory.filter(c =>
+    c.big3_priorities?.length > 0
+  ).length;
+
+  // Left column — primary pattern + narrative (4 cards max)
   const leftColumn = (
     <div className="space-y-4">
       <LeadingPatternCard
@@ -140,6 +146,9 @@ export default function ManagerPatterns() {
         goals={goals}
         onOpenAtreus={openAtreus}
       />
+      {big3DaysCount >= 5 && (
+        <IntentLoopCard pulses={recentPulses} trends={trends} onOpenAtreus={openAtreus} />
+      )}
       <WhatsImprovingCard trends={trends} pulses={recentPulses} goals={goals} />
     </div>
   );
