@@ -3,7 +3,7 @@
  * Full trend visualization from DailyCheckIn entries (numeric 1–5 scores)
  * + Leadership Index Assessment competency overlay.
  */
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, ReferenceLine, CartesianGrid
@@ -71,7 +71,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 const PRIMARY_METRICS = new Set(["energy", "focus", "load"]);
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function CheckInTrendDashboard({ checkIns = [], assessment = null, updatePageContext }) {
+export default function CheckInTrendDashboard({ checkIns = [], assessment = null }) {
   const [rangeDays, setRangeDays] = useState(14);
   const [activeMeasures, setActiveMeasures] = useState(new Set(["energy", "focus", "load"]));
   const [showExtra, setShowExtra] = useState(false);
@@ -161,25 +161,6 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
   }, [filtered]);
 
   const hasCheckInData = checkIns.length >= 1;
-
-  // Pillar 4: card-level page context
-  React.useEffect(() => {
-    if (updatePageContext && stats.length > 0) {
-      const energyStat = stats.find(s => s.key === 'energy');
-      const loadStat = stats.find(s => s.key === 'load');
-      updatePageContext({
-        card: 'CheckInTrendDashboard',
-        metrics: {
-          avg_energy: energyStat?.avg,
-          avg_load: loadStat?.avg,
-          energy_trend: energyStat?.trend,
-          load_trend: loadStat?.trend,
-          data_points: filtered.length,
-          range_days: rangeDays,
-        }
-      });
-    }
-  }, [stats, rangeDays]);
 
   if (!hasCheckInData) {
     return (

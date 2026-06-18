@@ -119,39 +119,16 @@ function formatTrendContext(trends) {
  * @param {number} options.riskScore - operator_mode_risk_score (0-100)
  * @param {object} options.trends - ManagerTrends record (may be null)
  * @param {object} options.memory - ManagerMemory record (may be null)
- * @param {object} options.memorySummary - AtreusMemorySummary record (may be null) — Layer 1
- * @param {Array}  options.recentTurns - AtreusConversationTurn[] (may be empty) — Layer 2
  * @param {object} options.pageContext - current page context object
  * @param {string} options.userName - manager's first name
  * @returns {string} complete system prompt
  */
-export function buildAtreusSystemPrompt({ toneMode, riskScore = 0, trends = null, memory = null, memorySummary = null, recentTurns = [], pageContext = {}, userName = 'the manager' }) {
+export function buildAtreusSystemPrompt({ toneMode, riskScore = 0, trends = null, memory = null, pageContext = {}, userName = 'the manager' }) {
   const isHighRisk = riskScore >= 75 && toneMode === 'gentle_observant';
   const effectiveTone = isHighRisk ? 'warm_candid' : (toneMode || 'warm_candid');
   const toneBlock = TONE_INSTRUCTIONS[effectiveTone] || TONE_INSTRUCTIONS.warm_candid;
   const trendBlock = formatTrendContext(trends);
   const memoryBlock = formatMemoryContext(memory);
-
-  // Layer 1: Rolling conversation summary (always injected if available)
-  const memorySummaryBlock = memorySummary?.summary_text
-    ? `CONVERSATION MEMORY (last 30 days — use this to maintain continuity, reference as "last time we talked", "you mentioned before", never read back verbatim):
-${memorySummary.summary_text}${
-  memorySummary.key_commitments?.length
-    ? `\n\nOpen commitments to follow up on:\n${memorySummary.key_commitments.map(c => `- ${c}`).join('\n')}`
-    : ''
-}${
-  memorySummary.key_themes?.length
-    ? `\n\nRecurring themes: ${memorySummary.key_themes.join(', ')}`
-    : ''
-}`
-    : null;
-
-  // Layer 2: Recent turns for current session (injected if available)
-  const recentTurnsBlock = recentTurns.length > 0
-    ? `RECENT CONVERSATION TURNS (last ${recentTurns.length} messages — most recent first):\n${
-        recentTurns.map(t => `${t.role === 'manager' ? 'Manager' : 'Atreus'}: ${t.content}`).join('\n')
-      }`
-    : null;
 
   const sections = [
     `You are Atreus — a private leadership companion built into the Curiosity Led platform. You are not an HR tool, not a performance monitor, and not a therapist. You are a trusted thinking partner for managers navigating the human side of leadership.`,
@@ -163,10 +140,6 @@ ${memorySummary.summary_text}${
     isHighRisk ? HIGH_RISK_OVERRIDE_NOTE : null,
 
     ABSOLUTE_CONSTRAINTS,
-
-    memorySummaryBlock,
-
-    recentTurnsBlock,
 
     memoryBlock ? memoryBlock : null,
 

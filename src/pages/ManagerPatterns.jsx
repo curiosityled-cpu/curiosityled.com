@@ -128,7 +128,6 @@ export default function ManagerPatterns() {
   // Left column — primary pattern + narrative (3 cards)
   const leftColumn = (
     <div className="space-y-4">
-      <div data-atreus-section="leading-pattern" data-atreus-label="Leading Pattern">
       <LeadingPatternCard
         trends={trends}
         pulses={recentPulses}
@@ -138,33 +137,22 @@ export default function ManagerPatterns() {
         onOpenAtreus={openAtreus}
         updatePageContext={updatePageContext}
       />
-      </div>
-      <div data-atreus-section="leadership-narrative" data-atreus-label="Leadership Narrative">
-        <LeadershipNarrativeCard
-          trends={trends}
-          insight={insight}
-          goals={goals}
-          onOpenAtreus={openAtreus}
-        />
-      </div>
-      <div data-atreus-section="whats-improving" data-atreus-label="What's Improving">
-        <WhatsImprovingCard trends={trends} pulses={recentPulses} goals={goals} />
-      </div>
+      <LeadershipNarrativeCard
+        trends={trends}
+        insight={insight}
+        goals={goals}
+        onOpenAtreus={openAtreus}
+      />
+      <WhatsImprovingCard trends={trends} pulses={recentPulses} goals={goals} />
     </div>
   );
 
   // Right column — signal rail (3 cards)
   const rightColumn = (
     <div className="space-y-4">
-      <div data-atreus-section="checkin-trends" data-atreus-label="Check-in Trends">
-        <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} updatePageContext={updatePageContext} />
-      </div>
-      <div data-atreus-section="checkin-calendar" data-atreus-label="Check-in History">
-        <CheckInHistoryCalendar pulses={recentPulses} />
-      </div>
-      <div data-atreus-section="watchlist" data-atreus-label="Watchlist">
-        <WatchlistCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreus} updatePageContext={updatePageContext} />
-      </div>
+      <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
+      <CheckInHistoryCalendar pulses={recentPulses} />
+      <WatchlistCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreus} updatePageContext={updatePageContext} />
     </div>
   );
 

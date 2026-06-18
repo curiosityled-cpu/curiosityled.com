@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { base44 } from '@/api/base44Client';
@@ -45,14 +45,9 @@ export default function NavigationTracker() {
         }
 
         if (isAuthenticated && pageName) {
-            base44.appLogs.logUserInApp(pageName).catch(() => {});
-
-            // Fire page_enter signal to AtreusOrchestrator (best-effort, non-blocking)
-            base44.functions.invoke('atreusOrchestrator', {
-                signal_type: 'page_viewed',
-                signal_data: { page: pageName, path: location.pathname },
-                page_context: { path: location.pathname, search: location.search }
-            }).catch(() => {});
+            base44.appLogs.logUserInApp(pageName).catch(() => {
+                // Silently fail - logging shouldn't break the app
+            });
         }
     }, [location, isAuthenticated, Pages, mainPageKey]);
 
