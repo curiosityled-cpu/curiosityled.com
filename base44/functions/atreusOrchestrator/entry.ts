@@ -36,55 +36,11 @@ const MODEL_SYNTHESIS = 'claude_sonnet_4_6'; // deep — for pattern synthesis
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
     const body = await req.json().catch(() => ({}));
-
-    // ── Dual-mode auth: entity automation (service role) vs. direct frontend call ──
-    // Entity automations send { event, data, old_data } with no user token.
-    // Direct calls from the frontend send { signal_type, signal_data, page_context }
-    // with a valid user token.
-    let user = null;
-    let signal_type = body.signal_type;
-    let signal_data = body.signal_data || {};
-    let page_context = body.page_context || {};
-
-    const isEntityAutomation = !!(body.event && body.event.entity_name);
-
-    if (isEntityAutomation) {
-      // Map entity automation payload → signal format
-      const entityName = body.event?.entity_name;
-      const entityData = body.data || {};
-      const userEmail = entityData.user_email;
-
-      if (!userEmail) {
-        return Response.json({ skipped: true, reason: 'no_user_email_in_entity_data' });
-      }
-
-      // Synthesize a virtual user object from entity data
-      user = { email: userEmail, client_id: entityData.client_id || null };
-
-      // Map entity type → signal type
-      if (!signal_type) {
-        if (entityName === 'ManagerTrends') {
-          signal_type = 'trend_threshold_crossed';
-          signal_data = {
-            overload_pattern_strength: entityData.overload_pattern_strength,
-            confidence_declining_days: entityData.confidence_declining_days,
-            delegation_gap_count_7d: entityData.delegation_gap_count_7d,
-            workload_growth_divergence_days: entityData.workload_growth_divergence_days,
-          };
-        } else if (entityName === 'DailyCheckIn') {
-          signal_type = 'check_in_completed';
-          signal_data = { check_in_type: entityData.check_in_type, check_in_date: entityData.check_in_date };
-        } else {
-          signal_type = 'entity_event';
-          signal_data = { entity: entityName, action: body.event?.type };
-        }
-      }
-    } else {
-      // Direct frontend / scheduled call — require auth
-      user = await base44.auth.me();
-      if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { signal_type, signal_data = {}, page_context = {} } = body;
 
     if (!signal_type) {
       return Response.json({ error: 'signal_type is required' }, { status: 400 });

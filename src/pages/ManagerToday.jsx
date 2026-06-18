@@ -420,7 +420,10 @@ export default function ManagerToday() {
         />
       </div>
 
-
+      {/* Mobile: Go deeper links */}
+      <div className="md:hidden">
+        <ExploreDeeperCard />
+      </div>
     </div>
   );
 
