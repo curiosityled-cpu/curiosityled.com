@@ -3,11 +3,12 @@
  * Priority-cascade detection across 8 named patterns.
  * Hero card on Patterns page: pattern name, triggers, consequence, recommendation, KPI linkage.
  */
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Repeat2, ChevronDown, ChevronUp, Brain, Lightbulb, ExternalLink, AlertTriangle, Target } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import PatternEvidenceDrawer from "@/components/patterns/PatternEvidenceDrawer";
+import { useAtreusChat } from "@/components/ai/AtreusContext";
 
 const PATTERN_LIBRARY = {
   // ── P0: Performance Avoidance ─────────────────────────────────────────────
@@ -301,21 +302,36 @@ export default function LeadingPatternCard({ trends, pulses = [], goals = [], re
   const [expanded, setExpanded] = useState(false);
   const [showDrawer, setShowDrawer] = useState(false);
   const pattern = detectPattern(trends, pulses, goals, recentCheckIns, recentPulses);
+  const { emitCardFocus } = useAtreusChat();
+  const dwellTimerRef = useRef(null);
 
   // Pillar 4: card-level page context awareness
-  React.useEffect(() => {
+  useEffect(() => {
     if (pattern && updatePageContext) {
       updatePageContext({
         card: 'LeadingPatternCard',
         metrics: {
           pattern_name: pattern.name,
-          pattern_key: pattern.key,
+          pattern_key: pattern.id,
           overload_strength: trends?.overload_pattern_strength,
           energy_trend: trends?.energy_trend,
         }
       });
     }
-  }, [pattern?.key, trends?.overload_pattern_strength]);
+  }, [pattern?.id, trends?.overload_pattern_strength]);
+
+  // Pillar 4: 15-second dwell tracking
+  useEffect(() => {
+    if (!pattern) return;
+    dwellTimerRef.current = setTimeout(() => {
+      emitCardFocus({
+        card_id: 'leading-pattern',
+        action: 'dwell',
+        card_data: { pattern_id: pattern.id, pattern_name: pattern.name }
+      });
+    }, 15000);
+    return () => clearTimeout(dwellTimerRef.current);
+  }, [pattern?.id]);
 
   if (!pattern) return null;
 
@@ -404,7 +420,10 @@ export default function LeadingPatternCard({ trends, pulses = [], goals = [], re
           <Button
             size="sm"
             className="flex-1 bg-violet-600 hover:bg-violet-700 text-white text-xs h-8"
-            onClick={() => onOpenAtreus?.(`I want to understand my "${pattern.name}" pattern better and explore what's driving it right now.`)}
+            onClick={() => {
+              emitCardFocus({ card_id: 'leading-pattern', action: 'cta_clicked', card_data: { pattern_id: pattern.id, pattern_name: pattern.name } });
+              onOpenAtreus?.(`I want to understand my "${pattern.name}" pattern better and explore what's driving it right now.`);
+            }}
           >
             <Brain className="w-3 h-3 mr-1.5" /> Explore with Atreus
           </Button>
