@@ -297,25 +297,10 @@ function deriveWhatHelped(pulses, pattern) {
   return learned;
 }
 
-export default function LeadingPatternCard({ trends, pulses = [], goals = [], recentCheckIns = [], recentPulses = [], onOpenAtreus, updatePageContext }) {
+export default function LeadingPatternCard({ trends, pulses = [], goals = [], recentCheckIns = [], recentPulses = [], onOpenAtreus }) {
   const [expanded, setExpanded] = useState(false);
   const [showDrawer, setShowDrawer] = useState(false);
   const pattern = detectPattern(trends, pulses, goals, recentCheckIns, recentPulses);
-
-  // Pillar 4: card-level page context awareness
-  React.useEffect(() => {
-    if (pattern && updatePageContext) {
-      updatePageContext({
-        card: 'LeadingPatternCard',
-        metrics: {
-          pattern_name: pattern.name,
-          pattern_key: pattern.key,
-          overload_strength: trends?.overload_pattern_strength,
-          energy_trend: trends?.energy_trend,
-        }
-      });
-    }
-  }, [pattern?.key, trends?.overload_pattern_strength]);
 
   if (!pattern) return null;
 

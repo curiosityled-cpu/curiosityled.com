@@ -119,24 +119,10 @@ const CONFIDENCE_STYLES = {
   low: { label: "Early signal", color: "bg-gray-100 text-gray-500" },
 };
 
-export default function WatchlistCard({ trends, pulses = [], goals = [], onOpenAtreus, updatePageContext }) {
+export default function WatchlistCard({ trends, pulses = [], goals = [], onOpenAtreus }) {
   const [expanded, setExpanded] = useState(true);
   const [snoozeTick, setSnoozeTick] = useState(0);
   const items = buildWatchlist(trends, pulses, goals);
-
-  // Pillar 4: card-level page context awareness
-  React.useEffect(() => {
-    if (updatePageContext && items.length > 0) {
-      updatePageContext({
-        card: 'WatchlistCard',
-        metrics: {
-          watchlist_count: items.length,
-          high_confidence_signals: items.filter(i => i.confidence === 'high').length,
-          signals: items.map(i => i.signal),
-        }
-      });
-    }
-  }, [items.length]);
   // Re-compute on snooze
   React.useEffect(() => {
     const handler = () => setSnoozeTick(t => t + 1);

@@ -13,8 +13,6 @@ import { useTheme } from "@/lib/ThemeContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import AtreusCoach from "@/components/ai/AtreusCoach";
-import AtreusProactiveNudge from "@/components/ai/AtreusProactiveNudge";
-import { useAtreusPendingInsight } from "@/components/ai/useAtreusPendingInsight";
 import { AuthProvider as FullAuthProvider } from "@/components/useAuth";
 import { AtreusProvider, useAtreusChat } from "@/components/ai/AtreusContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -101,14 +99,6 @@ function MVPLayoutInner({ children }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const { isOpen: showAtreus, pendingContext, draftMessage, close: closeAtreus, clearPending, openWithContext } = useAtreusChat();
   const openAtreusDefault = () => openWithContext({});
-
-  // Pillar 3: subscribe to proactive insights from the orchestrator
-  const { pendingInsight, dismiss: dismissInsight } = useAtreusPendingInsight(
-    user?.email,
-    (insight) => {
-      // Called when a new insight arrives — we surface the nudge banner (handled by state)
-    }
-  );
   const [recentNotifications, setRecentNotifications] = useState([]);
   const navigate = useNavigate();
 
@@ -503,20 +493,6 @@ function MVPLayoutInner({ children }) {
         )}
         <ErrorBoundary>{children}</ErrorBoundary>
       </main>
-
-      {/* Proactive nudge banner — from AtreusOrchestrator */}
-      {!showAtreus && pendingInsight && (
-        <AtreusProactiveNudge
-          insight={pendingInsight}
-          onOpen={(insight) => {
-            openWithContext({
-              starterMessage: insight.message,
-              context: { ...(insight.context_data || {}), insight_type: insight.insight_type }
-            });
-          }}
-          onDismiss={dismissInsight}
-        />
-      )}
 
       {/* Floating Atreus Button — always accessible */}
       {!showAtreus &&
