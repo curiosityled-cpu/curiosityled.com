@@ -283,7 +283,8 @@ Deno.serve(async (req) => {
     if (activityType === 'invoke' || action) {
       const activeAction = action || body?.value?.action;
 
-      if (activeAction === 'check_in_morning') {
+      // Submit with data → save; invoked without data → show card
+      if (activeAction === 'check_in_morning' && !body?.value?.energy_score) {
         const card = buildCheckInCard('morning');
         return Response.json({
           type: 'message',
@@ -291,7 +292,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      if (activeAction === 'check_in_evening') {
+      if (activeAction === 'check_in_evening' && !body?.value?.energy_score) {
         const card = buildCheckInCard('evening');
         return Response.json({
           type: 'message',
@@ -318,10 +319,13 @@ Deno.serve(async (req) => {
       if (activeAction === 'ask_atreus') {
         const prompt = body?.value?.prompt || body?.value?.user_message || messageText;
         try {
+          // Calls inline orchestrator with trigger_type: 'teams_message'
+          // (atreusOrchestrator requires auth.me() — Teams uses service-role inline variant)
           const orchResponse = await _buildTeamsOrchestratorResponse(serviceBase44, teamsUserEmail, prompt);
           const card = buildAtreusResponseCard(orchResponse.opening_message || 'What\'s on your mind?', orchResponse.suggested_actions || []);
           return Response.json({
             type: 'message',
+            trigger_type: 'teams_message',
             attachments: [{ contentType: 'application/vnd.microsoft.card.adaptive', content: card }],
           });
         } catch (e) {
