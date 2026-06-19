@@ -173,6 +173,19 @@ export default function ManagerToday() {
     }, 8000);
   };
 
+  // Phase 1+3: orchestrator hook — MUST be declared before openAtreus so the closure captures it
+  const { orchestratorData } = useAtreusOrchestrator({
+    page: 'today',
+    active_pattern: null,
+    check_in_state: todayRecord ? {
+      morning_done: !!todayRecord.morning_completed,
+      evening_done: !!todayRecord.evening_completed,
+      energy_score: todayRecord.energy_score,
+      load_score: todayRecord.load_score,
+    } : null,
+    enabled: !!user?.email,
+  });
+
   const openAtreus = (msg) => {
     // Phase 3: If orchestrator data is available, use enriched context; fallback to basic context
     if (orchestratorData && !msg) {
@@ -269,19 +282,6 @@ export default function ManagerToday() {
     queryKey: ['ml-assessment-latest', user?.email],
     queryFn: async () => { try { const rows = await base44.entities.Assessment.filter({ email: user.email }, '-created_date', 1); return rows[0] || null; } catch { return null; } },
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
-  });
-
-  // Phase 1 + 3: Orchestrator — single unified signal fetch for the Lead page
-  const { orchestratorData } = useAtreusOrchestrator({
-    page: 'today',
-    active_pattern: null,
-    check_in_state: todayRecord ? {
-      morning_done: !!todayRecord.morning_completed,
-      evening_done: !!todayRecord.evening_completed,
-      energy_score: todayRecord.energy_score,
-      load_score: todayRecord.load_score,
-    } : null,
-    enabled: !!user?.email,
   });
 
   const { data: kpis = [] } = useQuery({

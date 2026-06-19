@@ -22,6 +22,48 @@
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+/**
+ * Inline lightweight orchestrator for Teams context.
+ * atreusOrchestrator requires auth.me() which doesn't work in service-role cross-function calls.
+ * This helper fetches trends + memory directly for the given email and returns opening_message + suggested_actions.
+ */
+async function _buildTeamsOrchestratorResponse(serviceBase44, userEmail, messageText = '') {
+  if (!userEmail) {
+    return { opening_message: 'I\'m here. What\'s on your mind?', suggested_actions: [] };
+  }
+  try {
+    const [trends, memory, tonePrefs] = await Promise.all([
+      serviceBase44.entities.ManagerTrends.filter({ user_email: userEmail }, '-last_trend_computed_at', 1).catch(() => []),
+      serviceBase44.entities.ManagerMemory.filter({ user_email: userEmail }, '-last_synthesized_at', 1).catch(() => []),
+      serviceBase44.entities.TonePreference.filter({ user_email: userEmail }, null, 1).catch(() => []),
+    ]);
+    const trend = trends[0] || null;
+    const tone = tonePrefs[0]?.tone_mode || 'warm_candid';
+
+    let opening_message = 'I\'m here. What\'s on your mind?';
+    const suggested_actions = [];
+
+    if (trend?.energy_trend === 'declining') {
+      opening_message = tone === 'gentle_observant'
+        ? 'I\'ve noticed energy has been trending lower lately. How are you doing?'
+        : 'Energy has been declining over the past couple of weeks. What\'s been driving that?';
+      suggested_actions.push({ label: 'Explore energy pattern', prompt: 'Help me understand why my energy has been declining.' });
+    } else if (trend?.overload_pattern_strength >= 60) {
+      opening_message = 'An overload pattern is building. Want to look at it together?';
+      suggested_actions.push({ label: 'Explore overload pattern', prompt: 'Let\'s explore the overload pattern I\'ve been experiencing.' });
+    } else if (messageText) {
+      opening_message = `You said: "${messageText.slice(0, 100)}". Let me think about that with you.`;
+    }
+
+    suggested_actions.push({ label: '☀️ Morning Check-In', prompt: 'check_in_morning' });
+    suggested_actions.push({ label: '🎯 View Goals', prompt: 'view_goals' });
+
+    return { opening_message, suggested_actions };
+  } catch (e) {
+    return { opening_message: 'I\'m here. What\'s on your mind?', suggested_actions: [] };
+  }
+}
+
 // HMAC validation for Teams bot requests
 async function validateTeamsRequest(req, body) {
   const authHeader = req.headers.get('Authorization') || '';
@@ -201,6 +243,7 @@ Deno.serve(async (req) => {
     }
 
     const base44 = createClientFromRequest(req);
+    const serviceBase44 = base44.asServiceRole;
     // In Teams context, look up user by email from Teams activity
     const teamsUserEmail = body?.from?.email || body?.from?.aadObjectId;
 
@@ -213,17 +256,15 @@ Deno.serve(async (req) => {
 
     // Simple message / freeform text
     if (activityType === 'message' && !action) {
-      // Route through Atreus orchestrator for a response
+      // Route through Atreus orchestrator for a response.
+      // atreusOrchestrator requires auth.me() — call it directly here instead.
       try {
-        const orchResponse = await base44.asServiceRole.functions.invoke('atreusOrchestrator', {
-          trigger_type: 'teams_message',
-          page_context: { page: 'teams', message: messageText },
-        });
+        // Build a lightweight orchestrator response inline (avoids cross-function auth issue)
+        const orchResponse = await _buildTeamsOrchestratorResponse(serviceBase44, teamsUserEmail, messageText);
 
-        const data = orchResponse?.data || {};
         const card = buildAtreusResponseCard(
-          data.opening_message || 'I\'m here. What\'s on your mind?',
-          data.suggested_actions || []
+          orchResponse.opening_message || 'I\'m here. What\'s on your mind?',
+          orchResponse.suggested_actions || []
         );
 
         return Response.json({
@@ -258,26 +299,9 @@ Deno.serve(async (req) => {
         });
       }
 
-      if (activeAction === 'check_in_morning_submit' || activeAction === 'check_in_evening_submit') {
-        const checkInType = activeAction.includes('morning') ? 'morning' : 'evening';
-        // Save check-in via saveDailyCheckIn function
-        try {
-          await base44.asServiceRole.functions.invoke('saveDailyCheckIn', {
-            action: checkInType === 'morning' ? 'save_morning' : 'save_evening',
-            user_email: teamsUserEmail,
-            energy_score: parseInt(body?.value?.energy_score || 3),
-            load_score: parseInt(body?.value?.load_score || 3),
-            focus_note: body?.value?.focus_note || '',
-          });
-          return Response.json({ type: 'message', text: `✅ ${checkInType === 'morning' ? 'Morning' : 'Evening'} check-in saved. Atreus is watching.` });
-        } catch (e) {
-          return Response.json({ type: 'message', text: `Couldn't save your check-in right now. Try again in a moment.` });
-        }
-      }
-
       if (activeAction === 'view_goals') {
         try {
-          const goals = await base44.asServiceRole.entities.Goal.filter(
+          const goals = await serviceBase44.entities.Goal.filter(
             { created_by: teamsUserEmail, status: 'active' }, '-updated_date', 10
           );
           const card = buildGoalsSummaryCard(goals);
@@ -290,21 +314,49 @@ Deno.serve(async (req) => {
         }
       }
 
+
       if (activeAction === 'ask_atreus') {
         const prompt = body?.value?.prompt || body?.value?.user_message || messageText;
         try {
-          const orchResponse = await base44.asServiceRole.functions.invoke('atreusOrchestrator', {
-            trigger_type: 'teams_message',
-            page_context: { page: 'teams', message: prompt },
-          });
-          const data = orchResponse?.data || {};
-          const card = buildAtreusResponseCard(data.opening_message || 'What\'s on your mind?', data.suggested_actions || []);
+          const orchResponse = await _buildTeamsOrchestratorResponse(serviceBase44, teamsUserEmail, prompt);
+          const card = buildAtreusResponseCard(orchResponse.opening_message || 'What\'s on your mind?', orchResponse.suggested_actions || []);
           return Response.json({
             type: 'message',
             attachments: [{ contentType: 'application/vnd.microsoft.card.adaptive', content: card }],
           });
         } catch (e) {
           return Response.json({ type: 'message', text: 'Atreus encountered an issue. Please try again.' });
+        }
+      }
+
+      // Check-in submit actions — card submits action: 'check_in_morning' (not _submit suffix)
+      if (activeAction === 'check_in_morning' && body?.value?.energy_score) {
+        try {
+          await serviceBase44.functions.invoke('saveDailyCheckIn', {
+            action: 'save_morning',
+            user_email: teamsUserEmail,
+            energy_score: parseInt(body?.value?.energy_score || 3),
+            load_score: parseInt(body?.value?.load_score || 3),
+            focus_note: body?.value?.focus_note || '',
+          });
+          return Response.json({ type: 'message', text: '✅ Morning check-in saved. Atreus is watching.' });
+        } catch (e) {
+          return Response.json({ type: 'message', text: 'Couldn\'t save your check-in right now. Try again in a moment.' });
+        }
+      }
+
+      if (activeAction === 'check_in_evening' && body?.value?.energy_score) {
+        try {
+          await serviceBase44.functions.invoke('saveDailyCheckIn', {
+            action: 'save_evening',
+            user_email: teamsUserEmail,
+            energy_score: parseInt(body?.value?.energy_score || 3),
+            load_score: parseInt(body?.value?.load_score || 3),
+            focus_note: body?.value?.focus_note || '',
+          });
+          return Response.json({ type: 'message', text: '✅ Evening check-in saved. Atreus is watching.' });
+        } catch (e) {
+          return Response.json({ type: 'message', text: 'Couldn\'t save your check-in right now. Try again in a moment.' });
         }
       }
     }

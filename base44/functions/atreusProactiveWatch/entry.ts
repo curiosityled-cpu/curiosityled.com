@@ -13,10 +13,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-
-    // This function can be called by automation (no user session) or by admin
-    // In automation context, use service role
+    // This function is called by scheduled automation — no user session exists.
+    // Always use service role. Optionally allow admin-triggered calls too.
     const serviceBase44 = base44.asServiceRole;
 
     const now = new Date();

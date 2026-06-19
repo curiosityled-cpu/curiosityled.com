@@ -48,6 +48,57 @@
       "type": "number",
       "default": 0,
       "description": "How many times memory has been synthesized"
+    },
+    "last_seen_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last time the manager was active in a conversation with Atreus"
+    },
+    "last_page_visited": {
+      "type": "string",
+      "description": "Last page the manager was on when Atreus was active"
+    },
+    "session_message_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Total message count across all Atreus sessions (cumulative)"
+    },
+    "recent_topics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Snippets of recent user messages (last 4, up to 80 chars each)"
+    },
+    "delegation_discussed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether delegation has been discussed in a recent Atreus session"
+    },
+    "overload_discussed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether overload/too much has been discussed in a recent Atreus session"
+    },
+    "confidence_discussed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether confidence/uncertainty has been discussed in a recent Atreus session"
+    },
+    "difficult_conversation_discussed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether difficult/hard conversations were discussed in a recent Atreus session"
+    },
+    "last_overload_signal": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of the last time overload_pattern_strong signal was detected"
+    },
+    "overload_signal_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Running count of overload signals detected by orchestrator"
     }
   },
   "required": [

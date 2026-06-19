@@ -48,7 +48,7 @@ export function useAtreusMemoryWriter({ userEmail, pageType }) {
 
         // Upsert ManagerMemory
         const existing = await base44.entities.ManagerMemory.filter(
-          { user_email: userEmail }, null, 1
+          { user_email: userEmail }, '-last_synthesized_at', 1
         );
 
         if (existing[0]) {
