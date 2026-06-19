@@ -262,13 +262,6 @@ function MVPLayoutInner({ children }) {
           </button>
         </div>
 
-        {/* Role badge */}
-        {mvpRole && !collapsed &&
-        <div className={`mx-3 mt-3 px-3 py-1.5 rounded-lg border text-xs font-medium text-center ${ROLE_COLORS[mvpRole]}`}>
-            {ROLE_LABELS[mvpRole]} View
-          </div>
-        }
-
         {/* Nav */}
         <nav className="flex-1 px-2 py-4 space-y-1">
           {navItems.map((item) =>
@@ -458,11 +451,6 @@ function MVPLayoutInner({ children }) {
             style={{ background: headerBg, borderBottom: sidebarBorder }}
             onClick={(e) => e.stopPropagation()}
           >
-            {mvpRole &&
-          <div className={`mb-3 px-3 py-2 rounded-lg border text-xs font-medium text-center ${ROLE_COLORS[mvpRole]}`}>
-                {ROLE_LABELS[mvpRole]} View
-              </div>
-          }
             <nav className="space-y-1">
               {navItems.map((item) => <NavItem key={item.path || item.label} item={item} />)}
             </nav>
