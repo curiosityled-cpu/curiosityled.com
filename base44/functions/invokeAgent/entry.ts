@@ -266,7 +266,7 @@ NEVER invent parameter names - use ONLY the exact names listed in the available 
    - Extract metrics from context.visible_data_summary (total_learners, completion_rate, avg_engagement, etc.)
    - Set sensible defaults for optional parameters
    - If critical parameters are missing, set needs_clarification: true
-4. Provide confidence score (0-1)
+4. Provide confidence score (0-1). Return tool parameters as a JSON-encoded string in tool_call.parameters_json (use "{}" if none).
 
 **Parameter Extraction Rules:**
 - ALWAYS extract competencyName, journeyTitle, formTitle, etc. from the user's exact words
@@ -291,7 +291,7 @@ Return structured JSON with your analysis.`;
             type: "object",
             properties: {
               tool_name: { type: "string" },
-              parameters: { type: "object" },
+              parameters_json: { type: "string" },
               confidence: { type: "number" }
             }
           },
@@ -317,7 +317,7 @@ Return structured JSON with your analysis.`;
     }
 
     // Step 2: Validate tool call
-    const { tool_name, parameters, confidence } = intentResult.tool_call || {};
+    const { tool_name, parameters_json, confidence } = intentResult.tool_call || {}; let parameters = {}; try { parameters = parameters_json ? JSON.parse(parameters_json) : {}; } catch { parameters = {}; }
     
     if (!tool_name || !AGENT_TOOLS_LIST.includes(tool_name)) {
       return Response.json({
