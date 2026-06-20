@@ -144,7 +144,7 @@ export default function ManagerToday() {
     staleTime: 0,
   });
 
-  const handleCheckInComplete = (big3Priorities, type) => {
+  const handleCheckInComplete = (big3Priorities, type, scores) => {
     if (big3Priorities?.length > 0) {
       setLocalBig3Override(big3Priorities);
       try {
@@ -154,22 +154,39 @@ export default function ManagerToday() {
         }));
       } catch {}
     }
-    // Optimistically update the cache so the "done" card renders immediately
-    // without waiting for a round-trip refetch (prevents flash back to step 1)
+    // Optimistically update the today cache
     const update = {};
     if (type === 'morning') { update.morning_completed = true; update.morning_completed_at = new Date().toISOString(); }
     if (type === 'evening') { update.evening_completed = true; update.evening_completed_at = new Date().toISOString(); update.big3_priorities = big3Priorities || []; }
+    // Merge scores so the chart can render immediately
+    if (scores) {
+      if (scores.energy != null) update.energy_score = scores.energy;
+      if (scores.confidence != null) update.confidence_score = scores.confidence;
+      if (scores.focus != null) update.focus_score = scores.focus;
+      if (scores.load != null) update.load_score = scores.load;
+      if (scores.growth != null) update.growth_score = scores.growth;
+    }
+
+    const optimisticRecord = { check_in_date: todayET, ...(todayData?.record || {}), ...update };
+
     queryClient.setQueryData(['daily-checkin-today', user?.email], (old) => {
       const existing = old || { record: null, yesterday_big3: [] };
-      return { ...existing, record: { check_in_date: todayET, ...(existing.record || {}), ...update } };
+      return { ...existing, record: optimisticRecord };
     });
+
+    // Also inject into history cache so CheckInTrendDashboard updates immediately
+    queryClient.setQueryData(['daily-checkin-history', user?.email], (old = []) => {
+      const existing = Array.isArray(old) ? old : [];
+      const alreadyIn = existing.some(r => r.check_in_date === todayET && r.id === optimisticRecord.id);
+      if (alreadyIn) return existing.map(r => r.check_in_date === todayET ? { ...r, ...update } : r);
+      return [optimisticRecord, ...existing.filter(r => r.check_in_date !== todayET)];
+    });
+
     queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
-    // Delay re-fetches to allow the fire-and-forget backend save to complete before
-    // the queries re-fetch and potentially return stale (pre-write) data.
-    // history needs the save to commit first — otherwise the chart refetch races the write.
+    // Delay refetches to let the backend save commit before we overwrite optimistic data
     setTimeout(() => {
       queryClient.invalidateQueries({ queryKey: ['daily-checkin-history', user?.email] });
-    }, 4000);
+    }, 5000);
     setTimeout(() => {
       queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
     }, 8000);

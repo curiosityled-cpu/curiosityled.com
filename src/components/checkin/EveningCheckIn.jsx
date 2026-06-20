@@ -325,7 +325,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
     setStep(7);
     clearDraft(userEmail);
     markEveningCompletedToday(big3Priorities, scores, notes, userEmail); // Persist so remounts after navigation show "done"
-    onComplete?.(big3Priorities, 'evening');
+    onComplete?.(big3Priorities, 'evening', isActiveWindow ? scores : null);
 
     // When outside the evening window we only have Big 3 (no measure scores were collected),
     // so only save big3_priorities to avoid overwriting real scores with defaults.
@@ -367,7 +367,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
       if (isMountedRef.current) {
         setLocalBig3(big3Priorities);
         setEditMode(false); setExpanded(false);
-        onComplete?.(big3Priorities, 'evening');
+        onComplete?.(big3Priorities, 'evening', scores);
       }
     } catch (err) { console.error(err); }
   };

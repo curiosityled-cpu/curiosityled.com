@@ -202,7 +202,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
       localStorage.removeItem(getDraftKey(userEmail));
       markCompletedToday(userEmail); // Persist completion so remounts after navigation show "done"
     }
-    try { onComplete?.([], 'morning'); } catch (cbErr) { console.error('onComplete error:', cbErr); }
+    try { onComplete?.([], 'morning', scores); } catch (cbErr) { console.error('onComplete error:', cbErr); }
 
     base44.functions.invoke("saveDailyCheckIn", {
       action: "save",
@@ -249,7 +249,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
         questions_used: questions || {},
       });
       setEditMode(false); setExpanded(false);
-      onComplete?.([], 'morning');
+      onComplete?.([], 'morning', scores);
     } catch (err) { console.error('Edit save error:', err); }
     finally { setSaving(false); }
   };
