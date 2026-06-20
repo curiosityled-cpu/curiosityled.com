@@ -163,11 +163,13 @@ export default function ManagerToday() {
       const existing = old || { record: null, yesterday_big3: [] };
       return { ...existing, record: { check_in_date: todayET, ...(existing.record || {}), ...update } };
     });
-    queryClient.invalidateQueries({ queryKey: ['daily-checkin-history', user?.email] });
     queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
-    // Delay re-fetch to allow the fire-and-forget backend save to complete before
-    // the query re-fetches and potentially returns stale (pre-write) data.
-    // 8s gives the backend save plenty of time to persist before we read it back.
+    // Delay re-fetches to allow the fire-and-forget backend save to complete before
+    // the queries re-fetch and potentially return stale (pre-write) data.
+    // history needs the save to commit first — otherwise the chart refetch races the write.
+    setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey: ['daily-checkin-history', user?.email] });
+    }, 4000);
     setTimeout(() => {
       queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
     }, 8000);
