@@ -436,7 +436,7 @@ export default function ManagerToday() {
 
       {/* Mobile: trend dashboard */}
       <div className="md:hidden">
-        <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
+        <CheckInTrendDashboard checkIns={(() => { const ids = new Set(checkInHistory.map(r => r.id)); return todayRecord && todayRecord.id && !ids.has(todayRecord.id) ? [todayRecord, ...checkInHistory] : checkInHistory; })()} assessment={latestAssessment} />
       </div>
 
       {/* Mobile: Performance at a glance */}
@@ -480,7 +480,7 @@ export default function ManagerToday() {
       )}
 
       <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
-      <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
+      <CheckInTrendDashboard checkIns={(() => { const ids = new Set(checkInHistory.map(r => r.id)); return todayRecord && todayRecord.id && !ids.has(todayRecord.id) ? [todayRecord, ...checkInHistory] : checkInHistory; })()} assessment={latestAssessment} />
       <UpcomingFrictionCard
         trends={trends}
         goals={goals}
