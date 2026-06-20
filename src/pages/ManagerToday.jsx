@@ -184,13 +184,12 @@ export default function ManagerToday() {
     });
 
     queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
-    // Delay refetches to let the backend save commit before we overwrite optimistic data
+    // Refresh history immediately (direct entity saves are synchronous) + again after 3s to catch any lag
+    queryClient.invalidateQueries({ queryKey: ['daily-checkin-history', user?.email] });
     setTimeout(() => {
       queryClient.invalidateQueries({ queryKey: ['daily-checkin-history', user?.email] });
-    }, 5000);
-    setTimeout(() => {
       queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
-    }, 8000);
+    }, 3000);
   };
 
   // Phase 1+3: orchestrator hook — MUST be declared before openAtreus so the closure captures it

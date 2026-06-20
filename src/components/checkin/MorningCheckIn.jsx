@@ -204,22 +204,24 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
     }
     try { onComplete?.([], 'morning', scores); } catch (cbErr) { console.error('onComplete error:', cbErr); }
 
-    base44.functions.invoke("saveDailyCheckIn", {
-      action: "save",
-      check_in_type: "morning",
-      client_date: getTodayET(),
-      existing_record_id: todayRecord?.id || null,
-      energy_score: scores.energy,
-      energy_note: notes.energy,
-      confidence_score: scores.confidence,
-      confidence_note: notes.confidence,
-      focus_score: scores.focus,
-      focus_note: notes.focus,
-      load_score: scores.load,
-      load_note: notes.load,
-      growth_score: scores.growth,
-      growth_note: notes.growth,
-      questions_used: questions || {},
+    const today = getTodayET();
+    const scorePayload = {
+      energy_score: scores.energy, energy_note: notes.energy,
+      confidence_score: scores.confidence, confidence_note: notes.confidence,
+      focus_score: scores.focus, focus_note: notes.focus,
+      load_score: scores.load, load_note: notes.load,
+      growth_score: scores.growth, growth_note: notes.growth,
+    };
+
+    // Primary: direct entity save (most reliable, bypasses backend function RLS issues)
+    const directSave = todayRecord?.id
+      ? base44.entities.DailyCheckIn.update(todayRecord.id, { ...scorePayload, morning_completed: true, morning_completed_at: new Date().toISOString() })
+      : base44.entities.DailyCheckIn.create({ user_email: userEmail, check_in_date: today, check_in_type: 'morning', morning_completed: true, morning_completed_at: new Date().toISOString(), ...scorePayload });
+
+    directSave.catch(err => {
+      // Fallback: try backend function if direct save fails
+      console.warn('Direct save failed, trying backend:', err);
+      return base44.functions.invoke("saveDailyCheckIn", { action: "save", check_in_type: "morning", client_date: today, existing_record_id: todayRecord?.id || null, ...scorePayload, questions_used: questions || {} });
     }).catch(err => {
       console.error('Save error:', err);
     }).finally(() => setSaving(false));
@@ -236,22 +238,24 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
 
   const handleEditSave = async () => {
     setSaving(true);
+    const scorePayload = {
+      energy_score: scores.energy, energy_note: notes.energy,
+      confidence_score: scores.confidence, confidence_note: notes.confidence,
+      focus_score: scores.focus, focus_note: notes.focus,
+      load_score: scores.load, load_note: notes.load,
+      growth_score: scores.growth, growth_note: notes.growth,
+    };
     try {
-      await base44.functions.invoke("saveDailyCheckIn", {
-        action: "save", check_in_type: "morning",
-        client_date: getTodayET(),
-        existing_record_id: todayRecord?.id || null,
-        energy_score: scores.energy, energy_note: notes.energy,
-        confidence_score: scores.confidence, confidence_note: notes.confidence,
-        focus_score: scores.focus, focus_note: notes.focus,
-        load_score: scores.load, load_note: notes.load,
-        growth_score: scores.growth, growth_note: notes.growth,
-        questions_used: questions || {},
-      });
+      if (todayRecord?.id) {
+        await base44.entities.DailyCheckIn.update(todayRecord.id, { ...scorePayload, morning_completed: true });
+      } else {
+        await base44.entities.DailyCheckIn.create({ user_email: userEmail, check_in_date: getTodayET(), check_in_type: 'morning', morning_completed: true, ...scorePayload });
+      }
       setEditMode(false); setExpanded(false);
       onComplete?.([], 'morning', scores);
-    } catch (err) { console.error('Edit save error:', err); }
-    finally { setSaving(false); }
+    } catch (err) {
+      console.error('Edit save error:', err);
+    } finally { setSaving(false); }
   };
 
   // Done state — collapsible

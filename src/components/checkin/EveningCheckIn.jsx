@@ -324,46 +324,49 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
     setLocalBig3(big3Priorities);
     setStep(7);
     clearDraft(userEmail);
-    markEveningCompletedToday(big3Priorities, scores, notes, userEmail); // Persist so remounts after navigation show "done"
+    markEveningCompletedToday(big3Priorities, scores, notes, userEmail);
     onComplete?.(big3Priorities, 'evening', isActiveWindow ? scores : null);
 
-    // When outside the evening window we only have Big 3 (no measure scores were collected),
-    // so only save big3_priorities to avoid overwriting real scores with defaults.
-    const payload = {
-      action: "save",
-      check_in_type: "evening",
-      client_date: getTodayET(),
-      existing_record_id: todayRecord?.id || null,
+    const today = getTodayET();
+    const entityPayload = {
+      evening_completed: true,
+      evening_completed_at: new Date().toISOString(),
       big3_priorities: big3Priorities,
-      questions_used: questions || {},
     };
     if (isActiveWindow) {
-      payload.energy_score = scores.energy; payload.energy_note = notes.energy;
-      payload.confidence_score = scores.confidence; payload.confidence_note = notes.confidence;
-      payload.focus_score = scores.focus; payload.focus_note = notes.focus;
-      payload.load_score = scores.load; payload.load_note = notes.load;
-      payload.growth_score = scores.growth; payload.growth_note = notes.growth;
+      entityPayload.energy_score = scores.energy; entityPayload.energy_note = notes.energy;
+      entityPayload.confidence_score = scores.confidence; entityPayload.confidence_note = notes.confidence;
+      entityPayload.focus_score = scores.focus; entityPayload.focus_note = notes.focus;
+      entityPayload.load_score = scores.load; entityPayload.load_note = notes.load;
+      entityPayload.growth_score = scores.growth; entityPayload.growth_note = notes.growth;
     }
-    // Fire-and-forget the API save (UI is already updated)
-    base44.functions.invoke("saveDailyCheckIn", payload).catch(err => {
+
+    // Primary: direct entity save (most reliable, bypasses backend function RLS issues)
+    const directSave = todayRecord?.id
+      ? base44.entities.DailyCheckIn.update(todayRecord.id, entityPayload)
+      : base44.entities.DailyCheckIn.create({ user_email: userEmail, check_in_date: today, check_in_type: 'evening', ...entityPayload });
+
+    directSave.catch(err => {
       console.error("Failed to save evening check-in:", err);
     });
   };
 
   const handleEditSave = async (big3Priorities) => {
     try {
-      await base44.functions.invoke("saveDailyCheckIn", {
-        action: "save", check_in_type: "evening",
-        client_date: getTodayET(),
-        existing_record_id: todayRecord?.id || null,
+      const scorePayload = {
+        evening_completed: true,
         energy_score: scores.energy, energy_note: notes.energy,
         confidence_score: scores.confidence, confidence_note: notes.confidence,
         focus_score: scores.focus, focus_note: notes.focus,
         load_score: scores.load, load_note: notes.load,
         growth_score: scores.growth, growth_note: notes.growth,
         big3_priorities: big3Priorities,
-        questions_used: questions || {},
-      });
+      };
+      if (todayRecord?.id) {
+        await base44.entities.DailyCheckIn.update(todayRecord.id, scorePayload);
+      } else {
+        await base44.entities.DailyCheckIn.create({ user_email: userEmail, check_in_date: getTodayET(), check_in_type: 'evening', ...scorePayload });
+      }
       if (isMountedRef.current) {
         setLocalBig3(big3Priorities);
         setEditMode(false); setExpanded(false);
