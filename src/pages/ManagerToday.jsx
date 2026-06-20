@@ -2,7 +2,7 @@
  * ManagerToday — The Daily Companion (Redesigned Lead page)
  * Route: /today
  */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -134,32 +134,27 @@ export default function ManagerToday() {
   const todayRecord = todayData === undefined ? undefined : (todayData?.record ?? null);
   const yesterdayBig3 = todayData?.yesterday_big3 || [];
 
-  const { data: checkInHistory = [] } = useQuery({
-    queryKey: ['daily-checkin-history', user?.email],
-    queryFn: async () => {
-      try { return await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-check_in_date', 120); }
-      catch { return []; }
-    },
-    enabled: !!user?.email,
-    staleTime: 2 * 60 * 1000,   // 2 min — prevents overwriting optimistic data on rapid remounts
-    refetchOnWindowFocus: false,
-  });
+  // ── Local check-in history store (localStorage-backed, since DailyCheckIn entity has persistence issues)
+  const [checkInHistory, setCheckInHistory] = useState([]);
+  useEffect(() => {
+    if (!user?.email) return;
+    try {
+      const raw = localStorage.getItem(`checkin_history_${user.email}`);
+      if (raw) setCheckInHistory(JSON.parse(raw));
+    } catch {}
+  }, [user?.email]);
 
   const handleCheckInComplete = (big3Priorities, type, scores) => {
     if (big3Priorities?.length > 0) {
       setLocalBig3Override(big3Priorities);
       try {
-        sessionStorage.setItem('today_big3_override', JSON.stringify({
-          date: todayET,
-          data: big3Priorities,
-        }));
+        sessionStorage.setItem('today_big3_override', JSON.stringify({ date: todayET, data: big3Priorities }));
       } catch {}
     }
-    // Optimistically update the today cache
+    // Build update fields
     const update = {};
     if (type === 'morning') { update.morning_completed = true; update.morning_completed_at = new Date().toISOString(); }
     if (type === 'evening') { update.evening_completed = true; update.evening_completed_at = new Date().toISOString(); update.big3_priorities = big3Priorities || []; }
-    // Merge scores so the chart can render immediately
     if (scores) {
       if (scores.energy != null) update.energy_score = scores.energy;
       if (scores.confidence != null) update.confidence_score = scores.confidence;
@@ -170,26 +165,25 @@ export default function ManagerToday() {
 
     const optimisticRecord = { check_in_date: todayET, ...(todayData?.record || {}), ...update };
 
+    // Update today cache
     queryClient.setQueryData(['daily-checkin-today', user?.email], (old) => {
       const existing = old || { record: null, yesterday_big3: [] };
       return { ...existing, record: optimisticRecord };
     });
 
-    // Also inject into history cache so CheckInTrendDashboard updates immediately
-    queryClient.setQueryData(['daily-checkin-history', user?.email], (old = []) => {
-      const existing = Array.isArray(old) ? old : [];
-      const alreadyIn = existing.some(r => r.check_in_date === todayET && r.id === optimisticRecord.id);
-      if (alreadyIn) return existing.map(r => r.check_in_date === todayET ? { ...r, ...update } : r);
-      return [optimisticRecord, ...existing.filter(r => r.check_in_date !== todayET)];
+    // Persist to localStorage history (survives page reloads, works even if DB entity is broken)
+    setCheckInHistory(prev => {
+      const existing = Array.isArray(prev) ? prev : [];
+      const updated = existing.some(r => r.check_in_date === todayET)
+        ? existing.map(r => r.check_in_date === todayET ? { ...r, ...update } : r)
+        : [optimisticRecord, ...existing];
+      try {
+        localStorage.setItem(`checkin_history_${user?.email}`, JSON.stringify(updated.slice(0, 120)));
+      } catch {}
+      return updated;
     });
 
     queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
-    // Refresh history immediately (direct entity saves are synchronous) + again after 3s to catch any lag
-    queryClient.invalidateQueries({ queryKey: ['daily-checkin-history', user?.email] });
-    setTimeout(() => {
-      queryClient.invalidateQueries({ queryKey: ['daily-checkin-history', user?.email] });
-      queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
-    }, 3000);
   };
 
   // Phase 1+3: orchestrator hook — MUST be declared before openAtreus so the closure captures it
@@ -340,7 +334,7 @@ export default function ManagerToday() {
   const showEveningCheckIn = isEveningWindow && !todayRecord?.evening_completed;
 
   const allDone = todayRecord?.morning_completed && todayRecord?.evening_completed;
-  const hasHistoricalData = checkInHistory.length >= 2;
+  const hasHistoricalData = checkInHistory.length >= 1;
   // No true quiet zone anymore — windows cover 24h. Only show placeholder if no record AND no active window (shouldn't happen, but defensive).
   const isQuietZone = false;
 
