@@ -72,7 +72,7 @@
     "questions_used": {
       "type": "object",
       "additionalProperties": true,
-      "description": "The exact question phrasings used in this check-in, keyed by measure name \u2014 enables variation tracking"
+      "description": "The exact question phrasings used in this check-in, keyed by measure name"
     },
     "big3_priorities": {
       "type": "array",
@@ -90,7 +90,7 @@
           },
           "goal_id": {
             "type": "string",
-            "description": "Linked Goal entity ID if pulled from goals module"
+            "description": "Linked Goal entity ID"
           },
           "status": {
             "type": "string",
@@ -110,8 +110,7 @@
               "on_track",
               "shifted",
               "blocked"
-            ],
-            "description": "Status reported during midday priority loop"
+            ]
           },
           "midday_note": {
             "type": "string"
@@ -130,7 +129,7 @@
           }
         }
       },
-      "description": "Big 3 priorities set in evening for next day, confirmed in morning"
+      "description": "Big 3 priorities set in evening for next day"
     },
     "morning_completed": {
       "type": "boolean",
@@ -161,14 +160,14 @@
     },
     "atreus_observation": {
       "type": "string",
-      "description": "Atreus-generated contextual observation for this check-in (system-generated, not user-entered)"
+      "description": "Atreus-generated contextual observation for this check-in"
     },
     "atreus_flags": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Pattern Watch flags detected by Atreus (system-only layer)"
+      "description": "Pattern Watch flags detected by Atreus"
     }
   },
   "required": [
@@ -181,7 +180,7 @@
       "user_email": "{{user.email}}"
     },
     "write": {
-      "user_email": "{{user.email}}"
+      "created_by": "{{user.email}}"
     }
   }
 }
