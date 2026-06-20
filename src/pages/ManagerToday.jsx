@@ -367,13 +367,15 @@ export default function ManagerToday() {
         </div>
       )}
 
-      <EveningCheckIn
-        todayRecord={todayRecord}
-        userEmail={user?.email}
-        goals={goals}
-        onComplete={handleCheckInComplete}
-        isActiveWindow={isEveningWindow}
-      />
+      {(showEveningCheckIn || todayRecord?.evening_completed) && (
+        <EveningCheckIn
+          todayRecord={todayRecord}
+          userEmail={user?.email}
+          goals={goals}
+          onComplete={handleCheckInComplete}
+          isActiveWindow={isEveningWindow}
+        />
+      )}
 
       {/* Today's Playbook */}
       {(todayRecord || yesterdayBig3.length > 0 || goals.length > 0 || assignments.length > 0 || !!localBig3Override) && (
