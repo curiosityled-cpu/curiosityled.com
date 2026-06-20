@@ -141,7 +141,8 @@ export default function ManagerToday() {
       catch { return []; }
     },
     enabled: !!user?.email,
-    staleTime: 0,
+    staleTime: 2 * 60 * 1000,   // 2 min — prevents overwriting optimistic data on rapid remounts
+    refetchOnWindowFocus: false,
   });
 
   const handleCheckInComplete = (big3Priorities, type, scores) => {
@@ -453,7 +454,12 @@ export default function ManagerToday() {
 
       {/* Mobile: trend dashboard */}
       <div className="md:hidden">
-        <CheckInTrendDashboard checkIns={(() => { const ids = new Set(checkInHistory.map(r => r.id)); return todayRecord && todayRecord.id && !ids.has(todayRecord.id) ? [todayRecord, ...checkInHistory] : checkInHistory; })()} assessment={latestAssessment} />
+        <CheckInTrendDashboard checkIns={(() => {
+            const ids = new Set(checkInHistory.map(r => r.check_in_date));
+            const hasToday = ids.has(todayET);
+            const hasScores = todayRecord && (todayRecord.energy_score != null || todayRecord.confidence_score != null);
+            return (!hasToday && hasScores) ? [todayRecord, ...checkInHistory] : checkInHistory;
+          })()} assessment={latestAssessment} />
       </div>
 
       {/* Mobile: Performance at a glance */}
@@ -497,7 +503,12 @@ export default function ManagerToday() {
       )}
 
       <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
-      <CheckInTrendDashboard checkIns={(() => { const ids = new Set(checkInHistory.map(r => r.id)); return todayRecord && todayRecord.id && !ids.has(todayRecord.id) ? [todayRecord, ...checkInHistory] : checkInHistory; })()} assessment={latestAssessment} />
+      <CheckInTrendDashboard checkIns={(() => {
+          const ids = new Set(checkInHistory.map(r => r.check_in_date));
+          const hasToday = ids.has(todayET);
+          const hasScores = todayRecord && (todayRecord.energy_score != null || todayRecord.confidence_score != null);
+          return (!hasToday && hasScores) ? [todayRecord, ...checkInHistory] : checkInHistory;
+        })()} assessment={latestAssessment} />
       <UpcomingFrictionCard
         trends={trends}
         goals={goals}
