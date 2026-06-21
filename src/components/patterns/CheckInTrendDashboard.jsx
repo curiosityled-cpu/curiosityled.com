@@ -10,7 +10,7 @@ import {
   PolarGrid, PolarAngleAxis, Radar, CartesianGrid
 } from "recharts";
 import { format, parseISO, subDays } from "date-fns";
-import { TrendingUp, TrendingDown, Minus, Activity, Brain, Target, ExternalLink } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Activity, Brain, Target, ExternalLink, Maximize2, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 
@@ -104,7 +104,8 @@ const CustomTooltip = ({ active, payload, label }) => {
 // ── Main component ────────────────────────────────────────────────────────────
 export default function CheckInTrendDashboard({ checkIns = [], assessment = null }) {
   const [rangeDays, setRangeDays] = useState(14);
-  const [activeMeasures, setActiveMeasures] = useState(new Set(["energy", "focus", "load"]));
+  const [activeMeasures, setActiveMeasures] = useState(new Set(["energy", "confidence", "focus", "load", "growth"]));
+  const [expanded, setExpanded] = useState(false);
   const [tab, setTab] = useState("rhythm"); // "rhythm" | "assessment"
 
   const toggleMeasure = (key) => {
@@ -213,17 +214,30 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
   }
 
   return (
+    <>
     <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       {/* Header */}
       <div className="px-5 pt-5 pb-3 border-b border-border">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center flex-shrink-0">
-            <Activity className="w-3.5 h-3.5 text-white" />
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center flex-shrink-0">
+              <Activity className="w-3.5 h-3.5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Rhythm Trends</p>
+              <p className="text-[10px] text-muted-foreground">Daily check-in signals · private to you</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-semibold text-foreground">Rhythm Trends</p>
-            <p className="text-[10px] text-muted-foreground">Daily check-in signals · private to you</p>
-          </div>
+          {hasCheckInData && (
+            <button
+              onClick={() => setExpanded(true)}
+              className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+              title="Expand chart"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Expand</span>
+            </button>
+          )}
         </div>
 
         {/* Tab switcher */}
@@ -298,7 +312,7 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
             )}
 
             {/* Line chart */}
-            {chartData.length >= 2 ? (
+            {chartData.length >= 1 ? (
               <ResponsiveContainer width="100%" height={180}>
                 <LineChart data={chartData} margin={{ top: 4, right: 4, left: -22, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
@@ -325,7 +339,7 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
                       name={m.label}
                       stroke={m.color}
                       strokeWidth={2}
-                      dot={{ r: 3, fill: m.color, strokeWidth: 0 }}
+                      dot={{ r: 4, fill: m.color, strokeWidth: 0 }}
                       activeDot={{ r: 5 }}
                       connectNulls
                     />
@@ -333,7 +347,7 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-xs text-muted-foreground text-center py-4">Need at least 2 days of data to draw a trend line.</p>
+              <p className="text-xs text-muted-foreground text-center py-4">No check-ins in this range. Try a wider range.</p>
             )}
 
             {/* Variability row */}
@@ -599,5 +613,83 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
         )}
       </CardContent>
     </Card>
+
+    {/* Expanded modal */}
+    {expanded && (
+
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setExpanded(false)}>
+        <div
+          className="bg-card rounded-2xl border border-border shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+            <div>
+              <p className="text-sm font-semibold text-foreground">Rhythm Trends — Daily rhythm</p>
+              <p className="text-[10px] text-muted-foreground">1 = low · 3 = baseline · 5 = strong · private to you</p>
+            </div>
+            <button onClick={() => setExpanded(false)} className="text-muted-foreground hover:text-foreground transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="px-6 py-5 space-y-4">
+            {/* Range selector */}
+            <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5 w-fit">
+              {RANGE_OPTIONS.map(r => (
+                <button
+                  key={r.label}
+                  onClick={() => setRangeDays(r.days)}
+                  className={`text-[10px] font-semibold px-2.5 py-1 rounded-md transition-colors ${
+                    rangeDays === r.days ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Metric toggles */}
+            <div className="flex gap-2 flex-wrap">
+              {MEASURES.map(m => {
+                const active = activeMeasures.has(m.key);
+                const statVal = stats.find(s => s.key === m.key);
+                return (
+                  <button
+                    key={m.key}
+                    onClick={() => toggleMeasure(m.key)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                      active ? "text-foreground" : "opacity-40 border-transparent bg-transparent text-muted-foreground"
+                    }`}
+                    style={active ? { borderColor: m.color + "60", backgroundColor: m.color + "12" } : {}}
+                  >
+                    <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: m.color }} />
+                    {m.label}
+                    {statVal?.avg != null && <span className="font-bold" style={{ color: active ? m.color : undefined }}>{statVal.avg}</span>}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Expanded chart */}
+            {chartData.length >= 1 ? (
+              <ResponsiveContainer width="100%" height={320}>
+                <LineChart data={chartData} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                  <YAxis domain={[1, 5]} tickCount={5} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <ReferenceLine y={3} stroke="hsl(var(--border))" strokeDasharray="4 4" label={{ value: "baseline", position: "insideTopRight", fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                  {MEASURES.filter(m => activeMeasures.has(m.key)).map(m => (
+                    <Line key={m.key} type="monotone" dataKey={m.key} name={m.label} stroke={m.color} strokeWidth={2.5} dot={{ r: 4, fill: m.color, strokeWidth: 0 }} activeDot={{ r: 6 }} connectNulls />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-xs text-muted-foreground text-center py-8">No check-ins in this range.</p>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

@@ -19,7 +19,7 @@ import EveningCheckIn from "@/components/checkin/EveningCheckIn";
 import MiddayPriorityLoop from "@/components/checkin/MiddayPriorityLoop";
 import WeeklyRhythmReflection from "@/components/checkin/WeeklyRhythmReflection";
 import UpcomingFrictionCard from "@/components/lead/UpcomingFrictionCard";
-import RhythmPulseChart from "@/components/rhythm/RhythmPulseChart";
+
 import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
 import PerformanceGlanceCard from "@/components/lead/PerformanceGlanceCard";
@@ -333,14 +333,7 @@ export default function ManagerToday() {
   // ── Main column — always rendered (tone onboarding is a banner, not a gate)
   const mainContent = (
     <div className="space-y-4">
-      {/* Rhythm trend chart */}
-      {(() => {
-        const historyIds = new Set(checkInHistory.map(r => r.id));
-        const merged = todayRecord && !historyIds.has(todayRecord.id)
-          ? [todayRecord, ...checkInHistory]
-          : checkInHistory;
-        return merged.length >= 1 ? <RhythmPulseChart checkIns={merged} /> : null;
-      })()}
+
 
 
 
