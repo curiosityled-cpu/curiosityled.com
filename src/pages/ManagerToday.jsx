@@ -20,7 +20,6 @@ import MiddayPriorityLoop from "@/components/checkin/MiddayPriorityLoop";
 import WeeklyRhythmReflection from "@/components/checkin/WeeklyRhythmReflection";
 import UpcomingFrictionCard from "@/components/lead/UpcomingFrictionCard";
 import RhythmPulseChart from "@/components/rhythm/RhythmPulseChart";
-import RhythmTrendChart from "@/components/rhythm/RhythmTrendChart";
 import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
 import PerformanceGlanceCard from "@/components/lead/PerformanceGlanceCard";
@@ -348,12 +347,7 @@ export default function ManagerToday() {
           ? [todayRecord, ...checkInHistory]
           : checkInHistory;
         if (merged.length === 0) return null;
-        return (
-          <>
-            <RhythmPulseChart checkIns={merged} />
-            {merged.length >= 2 && <RhythmTrendChart checkIns={merged} />}
-          </>
-        );
+        return <RhythmPulseChart checkIns={merged} />;
       })()}
 
 
