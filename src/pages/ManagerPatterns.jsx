@@ -198,6 +198,7 @@ export default function ManagerPatterns() {
   const rightColumn = (
     <div className="space-y-4">
       <CheckInTrendDashboard checkIns={mergedCheckIns} assessment={latestAssessment} />
+      <CheckInHistoryCalendar pulses={recentPulses} />
       <WatchlistCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreus} />
     </div>
   );
