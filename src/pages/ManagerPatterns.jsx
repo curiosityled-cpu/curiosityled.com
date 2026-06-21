@@ -2,10 +2,11 @@
  * ManagerPatterns — Longitudinal memory, trends, interpretations.
  * Route: /patterns
  */
-import React from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
+import { loadCheckInHistory } from "@/lib/checkInStore";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { Brain, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -78,11 +79,51 @@ export default function ManagerPatterns() {
     enabled: !!user?.email, staleTime: 15 * 60 * 1000,
   });
 
-  const { data: checkInHistory = [] } = useQuery({
+  const { data: entityCheckIns = [] } = useQuery({
     queryKey: ['daily-checkin-history', user?.email],
     queryFn: async () => { try { return await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-check_in_date', 120); } catch { return []; } },
     enabled: !!user?.email, staleTime: 0,
   });
+
+  // Merge localStorage check-in history (same source as ManagerToday) so the chart is always current
+  const [localHistory, setLocalHistory] = useState([]);
+  useEffect(() => {
+    if (!user?.email) return;
+    setLocalHistory(loadCheckInHistory(user.email));
+  }, [user?.email]);
+
+  // Merge: prefer localStorage records (more current), fill gaps with entity records
+  const checkInHistory = useMemo(() => {
+    const map = new Map();
+    entityCheckIns.forEach(r => map.set(r.check_in_date, r));
+    localHistory.forEach(r => { if (r.check_in_date) map.set(r.check_in_date, r); });
+    return Array.from(map.values()).sort((a, b) => b.check_in_date.localeCompare(a.check_in_date));
+  }, [entityCheckIns, localHistory]);
+
+  // Today's live record (same query key as ManagerToday so it reuses cached data)
+  const todayET = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(new Date());
+
+  const { data: todayData } = useQuery({
+    queryKey: ['daily-checkin-today', user?.email],
+    queryFn: async () => {
+      try {
+        const res = await base44.functions.invoke("saveDailyCheckIn", { action: "get_today", client_date: todayET });
+        return { record: res.data?.record || null };
+      } catch { return { record: null }; }
+    },
+    enabled: !!user?.email, staleTime: 10 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false,
+  });
+  const todayRecord = todayData?.record ?? null;
+
+  // Final check-in list passed to the chart: inject todayRecord if not already in history
+  const mergedCheckIns = useMemo(() => {
+    if (!todayRecord) return checkInHistory;
+    const ids = new Set(checkInHistory.map(r => r.check_in_date));
+    const hasScores = todayRecord.energy_score != null || todayRecord.confidence_score != null;
+    return (!ids.has(todayET) && hasScores) ? [todayRecord, ...checkInHistory] : checkInHistory;
+  }, [checkInHistory, todayRecord, todayET]);
 
   const { data: latestAssessment = null } = useQuery({
     queryKey: ['ml-assessment-latest', user?.email],
@@ -156,7 +197,7 @@ export default function ManagerPatterns() {
   // Right column — signal rail (3 cards)
   const rightColumn = (
     <div className="space-y-4">
-      <CheckInTrendDashboard checkIns={checkInHistory} assessment={latestAssessment} />
+      <CheckInTrendDashboard checkIns={mergedCheckIns} assessment={latestAssessment} />
       <CheckInHistoryCalendar pulses={recentPulses} />
       <WatchlistCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreus} />
     </div>
