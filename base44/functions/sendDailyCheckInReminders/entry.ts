@@ -53,6 +53,22 @@ Deno.serve(async (req) => {
       const email = user.email;
       if (!email) continue;
 
+      // ── Read user's notification preferences ──────────────────────────────────
+      const notifPrefs = user.notification_preferences || {};
+      const channels = notifPrefs.channels || {};
+      const types = notifPrefs.types || {};
+
+      // Respect per-type opt-out
+      const reminderTypeKey = isMorning ? 'morning_checkin_reminder' : 'evening_checkin_reminder';
+      const reminderEnabled = types[reminderTypeKey] !== false; // default true if not set
+      if (!reminderEnabled) { skipped++; continue; }
+
+      // At least one channel must be enabled
+      const inAppEnabled  = channels.in_app  !== false; // default true
+      const emailEnabled  = channels.email   !== false; // default true
+      const teamsEnabled  = channels.teams   === true;  // default off
+      const atreusEnabled = types.ai_coach_nudges !== false; // default true
+
       // Check if they already completed today's check-in (via DailyCheckIn entity)
       const todayCheckIns = await base44.asServiceRole.entities.DailyCheckIn.filter(
         { user_email: email, check_in_date: todayET },
@@ -80,70 +96,86 @@ Deno.serve(async (req) => {
       if (alreadyReminded) { skipped++; continue; }
 
       const now = new Date().toISOString();
+      const dispatches = [];
 
       // ── 1. In-app Notification (shows in bell icon) ──────────────────────────
-      await base44.asServiceRole.entities.Notification.create({
-        user_email: email,
-        title: reminderTitle,
-        message: reminderMessage,
-        type: dedupeType,
-        is_read: false,
-        priority: 'medium',
-        scheduled_for: now,
-        action_url: '/today',
-        metadata: { check_in_type: checkInType, date: todayET },
-      }).catch(err => console.warn(`[reminder] In-app notif failed for ${email}:`, err.message));
-
-      // ── 2. Email ─────────────────────────────────────────────────────────────
-      await base44.asServiceRole.integrations.Core.SendEmail({
-        to: email,
-        subject: reminderTitle,
-        body: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Inter', Arial, sans-serif; max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb;">
-            <div style="background: #0202ff; padding: 24px 32px;">
-              <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 700;">${reminderTitle}</h1>
-            </div>
-            <div style="padding: 28px 32px;">
-              <p style="color: #374151; font-size: 15px; line-height: 1.6; margin: 0 0 20px;">${reminderMessage}</p>
-              <a href="${Deno.env.get('APP_URL') || 'https://app.curiosityled.com'}/today"
-                 style="display: inline-block; background: #0202ff; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">
-                ${reminderCta} →
-              </a>
-              <p style="color: #9ca3af; font-size: 13px; margin: 24px 0 0;">
-                You're receiving this because you're a member of Curiosity Led. Check-ins take about 2 minutes.
-              </p>
-            </div>
-          </div>
-        `,
-        from_name: 'Atreus · Curiosity Led',
-      }).catch(err => console.warn(`[reminder] Email failed for ${email}:`, err.message));
-
-      // ── 3. Teams (via atreusTeamsRouter if user has Teams configured) ────────
-      await base44.asServiceRole.functions.invoke('atreusTeamsRouter', {
-        user_email: email,
-        action: 'send_prompt',
-        title: reminderTitle,
-        message: reminderMessage,
-        prompt_type: 'check_in_reminder',
-        check_in_type: checkInType,
-      }).catch(err => console.warn(`[reminder] Teams failed for ${email}:`, err.message));
-
-      // ── 4. Atreus in-app nudge (lightweight — just a nudge, not a full conversation) ─
-      // We update ManagerMemory with a flag so Atreus surfaces the reminder contextually
-      const memRows = await base44.asServiceRole.entities.ManagerMemory.filter(
-        { user_email: email }, null, 1
-      ).catch(() => []);
-
-      const nudgeNote = `${checkInType}_reminder_sent_${todayET}`;
-      if (memRows[0]) {
-        const recent = memRows[0].recent_topics || [];
-        if (!recent.includes(nudgeNote)) {
-          await base44.asServiceRole.entities.ManagerMemory.update(memRows[0].id, {
-            recent_topics: [nudgeNote, ...recent].slice(0, 4),
-          }).catch(() => {});
-        }
+      if (inAppEnabled) {
+        dispatches.push(
+          base44.asServiceRole.entities.Notification.create({
+            user_email: email,
+            title: reminderTitle,
+            message: reminderMessage,
+            type: dedupeType,
+            is_read: false,
+            priority: 'medium',
+            scheduled_for: now,
+            action_url: '/today',
+            metadata: { check_in_type: checkInType, date: todayET },
+          }).catch(err => console.warn(`[reminder] In-app notif failed for ${email}:`, err.message))
+        );
       }
 
+      // ── 2. Email ─────────────────────────────────────────────────────────────
+      if (emailEnabled) {
+        dispatches.push(
+          base44.asServiceRole.integrations.Core.SendEmail({
+            to: email,
+            subject: reminderTitle,
+            body: `
+              <div style="font-family: -apple-system, BlinkMacSystemFont, 'Inter', Arial, sans-serif; max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb;">
+                <div style="background: #0202ff; padding: 24px 32px;">
+                  <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 700;">${reminderTitle}</h1>
+                </div>
+                <div style="padding: 28px 32px;">
+                  <p style="color: #374151; font-size: 15px; line-height: 1.6; margin: 0 0 20px;">${reminderMessage}</p>
+                  <a href="${Deno.env.get('APP_URL') || 'https://app.curiosityled.com'}/today"
+                     style="display: inline-block; background: #0202ff; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">
+                    ${reminderCta} →
+                  </a>
+                  <p style="color: #9ca3af; font-size: 13px; margin: 24px 0 0;">
+                    You're receiving this because you're a member of Curiosity Led. Check-ins take about 2 minutes.<br/>
+                    <a href="${Deno.env.get('APP_URL') || 'https://app.curiosityled.com'}/Settings" style="color: #6b7280;">Manage notification preferences</a>
+                  </p>
+                </div>
+              </div>
+            `,
+            from_name: 'Atreus · Curiosity Led',
+          }).catch(err => console.warn(`[reminder] Email failed for ${email}:`, err.message))
+        );
+      }
+
+      // ── 3. Teams ──────────────────────────────────────────────────────────────
+      if (teamsEnabled) {
+        dispatches.push(
+          base44.asServiceRole.functions.invoke('atreusTeamsRouter', {
+            user_email: email,
+            action: 'send_prompt',
+            title: reminderTitle,
+            message: reminderMessage,
+            prompt_type: 'check_in_reminder',
+            check_in_type: checkInType,
+          }).catch(err => console.warn(`[reminder] Teams failed for ${email}:`, err.message))
+        );
+      }
+
+      // ── 4. Atreus nudge ───────────────────────────────────────────────────────
+      if (atreusEnabled) {
+        dispatches.push(
+          base44.asServiceRole.entities.ManagerMemory.filter(
+            { user_email: email }, null, 1
+          ).then(memRows => {
+            if (!memRows[0]) return;
+            const nudgeNote = `${checkInType}_reminder_sent_${todayET}`;
+            const recent = memRows[0].recent_topics || [];
+            if (recent.includes(nudgeNote)) return;
+            return base44.asServiceRole.entities.ManagerMemory.update(memRows[0].id, {
+              recent_topics: [nudgeNote, ...recent].slice(0, 4),
+            });
+          }).catch(() => {})
+        );
+      }
+
+      await Promise.allSettled(dispatches);
       sent++;
     }
 
