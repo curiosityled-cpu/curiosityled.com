@@ -9,7 +9,7 @@ import {
   ResponsiveContainer, ReferenceLine, RadarChart,
   PolarGrid, PolarAngleAxis, Radar, CartesianGrid
 } from "recharts";
-import { format, parseISO, subDays } from "date-fns";
+import { format, parseISO, subDays, differenceInDays } from "date-fns";
 import { TrendingUp, TrendingDown, Minus, Activity, Brain, Target, ExternalLink, Maximize2, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
@@ -168,6 +168,35 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
     });
   }, [filtered]);
 
+  // Calculate streak and days completed
+  const streakAndDays = useMemo(() => {
+    if (checkIns.length === 0) return { streak: 0, completed: 0, total: 0 };
+    const sortedByDate = [...checkIns].sort((a, b) => b.check_in_date.localeCompare(a.check_in_date));
+    let streak = 0;
+    const today = new Date();
+    let checkDate = new Date(today);
+    const datesWithCheckins = new Set(sortedByDate.map(c => c.check_in_date));
+    
+    // Count consecutive days backward from today
+    for (let i = 0; i < 999; i++) {
+      const dateStr = checkDate.toISOString().split('T')[0];
+      if (datesWithCheckins.has(dateStr)) {
+        streak++;
+      } else if (i === 0) {
+        break; // No check-in today, streak is 0
+      } else {
+        break; // Gap found
+      }
+      checkDate = subDays(checkDate, 1);
+    }
+    
+    const completed = datesWithCheckins.size;
+    const daysSinceFirst = Math.floor(differenceInDays(today, parseISO(sortedByDate[sortedByDate.length - 1].check_in_date))) + 1;
+    const total = Math.min(28, daysSinceFirst);
+    
+    return { streak, completed, total };
+  }, [checkIns]);
+
   // Daily variability — std dev per measure
   const variability = useMemo(() => {
     return MEASURES.map(m => {
@@ -241,15 +270,23 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
         </div>
 
         {/* Tab switcher */}
-        <div className="flex gap-4 mt-3">
-          <button
-            onClick={() => setTab("rhythm")}
-            className={`flex items-center gap-1.5 text-xs font-semibold pb-1.5 border-b-2 transition-colors ${
-              tab === "rhythm" ? "border-[#0202ff] text-[#0202ff]" : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Activity className="w-3.5 h-3.5" /> Daily rhythm
-          </button>
+         <div className="flex gap-4 mt-3 items-center">
+           <button
+             onClick={() => setTab("rhythm")}
+             className={`flex items-center gap-1.5 text-xs font-semibold pb-1.5 border-b-2 transition-colors ${
+               tab === "rhythm" ? "border-[#0202ff] text-[#0202ff]" : "border-transparent text-muted-foreground hover:text-foreground"
+             }`}
+           >
+             <Activity className="w-3.5 h-3.5" /> Daily rhythm
+           </button>
+           {tab === "rhythm" && hasCheckInData && streakAndDays.streak > 0 && (
+             <div className="ml-auto flex items-center gap-2">
+               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-100 text-xs font-semibold text-amber-800">
+                 🔥 {streakAndDays.streak}-day streak
+               </span>
+               <span className="text-xs text-muted-foreground font-medium">{streakAndDays.completed}/{streakAndDays.total} days</span>
+             </div>
+           )}
           <button
             onClick={() => setTab("assessment")}
             className={`flex items-center gap-1.5 text-xs font-semibold pb-1.5 border-b-2 transition-colors ${
