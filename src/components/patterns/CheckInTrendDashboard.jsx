@@ -13,6 +13,7 @@ import { format, parseISO, subDays } from "date-fns";
 import { TrendingUp, TrendingDown, Minus, Activity, Brain, Target, ExternalLink, Maximize2, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import StreakDisplay from "@/components/rhythm/StreakDisplay";
 
 // ── Measure config ────────────────────────────────────────────────────────────
 const MEASURES = [
@@ -402,6 +403,11 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
                 </ResponsiveContainer>
               </div>
             )}
+
+            {/* Streak and days count */}
+            <div className="flex justify-center">
+              <StreakDisplay checkIns={checkIns} />
+            </div>
           </>
         )}
 
