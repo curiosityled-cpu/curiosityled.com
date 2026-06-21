@@ -276,36 +276,24 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
           )}
         </div>
 
-        {/* Tab switcher + streak */}
-         <div className="flex items-center justify-between">
-           <div className="flex gap-4">
-             <button
-               onClick={() => setTab("rhythm")}
-               className={`flex items-center gap-1.5 text-xs font-semibold pb-1.5 border-b-2 transition-colors ${
-                 tab === "rhythm" ? "border-[#0202ff] text-[#0202ff]" : "border-transparent text-muted-foreground hover:text-foreground"
-               }`}
-             >
-               <Activity className="w-3.5 h-3.5" /> Daily rhythm
-             </button>
-             <button
-               onClick={() => setTab("assessment")}
-               className={`flex items-center gap-1.5 text-xs font-semibold pb-1.5 border-b-2 transition-colors ${
-                 tab === "assessment" ? "border-[#0202ff] text-[#0202ff]" : "border-transparent text-muted-foreground hover:text-foreground"
-               }`}
-             >
-               <Brain className="w-3.5 h-3.5" /> Leadership Index
-             </button>
-           </div>
-           {tab === "rhythm" && (
-             <div className="flex items-center gap-3 pb-1.5">
-               {streakDays > 0 && (
-                 <span className="text-xs text-amber-600 font-medium bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
-                   🔥 {streakDays}-day streak
-                 </span>
-               )}
-               <span className="text-xs text-muted-foreground">{checkedInDays28}/28 days</span>
-             </div>
-           )}
+        {/* Tab switcher */}
+         <div className="flex gap-4">
+           <button
+             onClick={() => setTab("rhythm")}
+             className={`flex items-center gap-1.5 text-xs font-semibold pb-1.5 border-b-2 transition-colors ${
+               tab === "rhythm" ? "border-[#0202ff] text-[#0202ff]" : "border-transparent text-muted-foreground hover:text-foreground"
+             }`}
+           >
+             <Activity className="w-3.5 h-3.5" /> Daily rhythm
+           </button>
+           <button
+             onClick={() => setTab("assessment")}
+             className={`flex items-center gap-1.5 text-xs font-semibold pb-1.5 border-b-2 transition-colors ${
+               tab === "assessment" ? "border-[#0202ff] text-[#0202ff]" : "border-transparent text-muted-foreground hover:text-foreground"
+             }`}
+           >
+             <Brain className="w-3.5 h-3.5" /> Leadership Index
+           </button>
          </div>
       </div>
 
@@ -422,10 +410,20 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
             )}
 
             {/* Check-in frequency heatmap — daily bar */}
-            {chartData.length > 0 && (
-              <div>
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Check-in frequency</p>
-                <ResponsiveContainer width="100%" height={40}>
+             {chartData.length > 0 && (
+               <div>
+                 <div className="flex items-center justify-between mb-2">
+                   <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Check-in frequency</p>
+                   <div className="flex items-center gap-3">
+                     {streakDays > 0 && (
+                       <span className="text-xs text-amber-600 font-medium bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
+                         🔥 {streakDays}-day streak
+                       </span>
+                     )}
+                     <span className="text-xs text-muted-foreground">{checkedInDays28}/28 days</span>
+                   </div>
+                 </div>
+                 <ResponsiveContainer width="100%" height={40}>
                   <BarChart data={chartData} margin={{ top: 0, right: 4, left: -22, bottom: 0 }} barSize={10}>
                     <XAxis dataKey="date" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                     <Tooltip
