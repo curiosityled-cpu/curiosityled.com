@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import IntentLoopCard from "@/components/checkin/IntentLoopCard";
 import { Link } from "react-router-dom";
-
+import CheckInHistoryCalendar from "@/components/rhythm/CheckInHistoryCalendar";
 import WhatsImprovingCard from "@/components/patterns/WhatsImprovingCard";
 import WatchlistCard from "@/components/patterns/WatchlistCard";
 import LeadingPatternCard from "@/components/patterns/LeadingPatternCard";
@@ -194,13 +194,14 @@ export default function ManagerPatterns() {
     </div>
   );
 
-  // Right column — signal rail (2 cards)
-   const rightColumn = (
-     <div className="space-y-4">
-       <CheckInTrendDashboard checkIns={mergedCheckIns} assessment={latestAssessment} />
-       <WatchlistCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreus} />
-     </div>
-   );
+  // Right column — signal rail (3 cards)
+  const rightColumn = (
+    <div className="space-y-4">
+      <CheckInTrendDashboard checkIns={mergedCheckIns} assessment={latestAssessment} />
+      <CheckInHistoryCalendar pulses={recentPulses} />
+      <WatchlistCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreus} />
+    </div>
+  );
 
   return (
     <div className="px-4 py-6">
