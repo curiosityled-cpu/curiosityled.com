@@ -17,17 +17,47 @@ function getTodayET() {
   }).format(new Date());
 }
 
+/**
+ * Migrate legacy morning/evening completion caches into the history store.
+ * This runs once per user to seed data from prior check-ins done before
+ * the multi-day store existed.
+ */
+function migrateLegacyData(userEmail) {
+  const today = getTodayET();
+  try {
+    // Morning legacy: { date, email, scores: { energy, confidence, focus, load, growth } }
+    const morningRaw = localStorage.getItem('morning_checkin_completed');
+    const morningCache = morningRaw ? JSON.parse(morningRaw) : null;
+    if (morningCache?.email === userEmail && morningCache?.date && morningCache?.scores) {
+      saveCheckInToHistory(userEmail, 'morning', morningCache.scores, morningCache.date);
+    }
+
+    // Evening legacy: { date, email, scores, big3 }
+    const eveningRaw = localStorage.getItem(`evening_checkin_completed_${userEmail}`);
+    const eveningCache = eveningRaw ? JSON.parse(eveningRaw) : null;
+    if (eveningCache?.date && eveningCache?.scores) {
+      saveCheckInToHistory(userEmail, 'evening', eveningCache.scores, eveningCache.date);
+    }
+  } catch {}
+}
+
 export function loadCheckInHistory(userEmail) {
   if (!userEmail) return [];
   try {
+    // Run migration to seed any legacy cached data on first load
+    const migrationKey = `checkin_migrated_${userEmail}`;
+    if (!localStorage.getItem(migrationKey)) {
+      migrateLegacyData(userEmail);
+      localStorage.setItem(migrationKey, '1');
+    }
     const raw = localStorage.getItem(getHistoryKey(userEmail));
     return raw ? JSON.parse(raw) : [];
   } catch { return []; }
 }
 
-export function saveCheckInToHistory(userEmail, checkInType, scores) {
+export function saveCheckInToHistory(userEmail, checkInType, scores, dateOverride) {
   if (!userEmail || !scores) return;
-  const today = getTodayET();
+  const today = dateOverride || getTodayET();
   try {
     const history = loadCheckInHistory(userEmail);
     const existingIdx = history.findIndex(r => r.check_in_date === today);

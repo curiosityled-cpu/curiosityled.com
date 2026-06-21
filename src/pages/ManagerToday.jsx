@@ -170,14 +170,10 @@ export default function ManagerToday() {
       return { ...existing, record: optimisticRecord };
     });
 
-    // Update in-memory history immediately (store already written by check-in component)
-    setCheckInHistory(prev => {
-      const existing = Array.isArray(prev) ? prev : [];
-      const hasTodayEntry = existing.some(r => r.check_in_date === todayET);
-      return hasTodayEntry
-        ? existing.map(r => r.check_in_date === todayET ? { ...r, ...update } : r)
-        : [{ check_in_date: todayET, ...update }, ...existing];
-    });
+    // Reload history from store (which was just written by the check-in component)
+    if (user?.email) {
+      setCheckInHistory(loadCheckInHistory(user.email));
+    }
 
     queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
   };
