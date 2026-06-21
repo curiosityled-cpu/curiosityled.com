@@ -102,11 +102,47 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 // ── Main component ────────────────────────────────────────────────────────────
+function localDateKey(d) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(d);
+}
+
+function computeStreak(checkIns) {
+  let s = 0;
+  const todayKey = localDateKey(new Date());
+  const sorted = checkIns.map(r => r.check_in_date).filter(Boolean).sort().reverse();
+  for (const date of sorted) {
+    if (date) s++;
+    else if (date !== todayKey) break;
+  }
+  return s;
+}
+
 export default function CheckInTrendDashboard({ checkIns = [], assessment = null }) {
-  const [rangeDays, setRangeDays] = useState(14);
-  const [activeMeasures, setActiveMeasures] = useState(new Set(["energy", "confidence", "focus", "load", "growth"]));
-  const [expanded, setExpanded] = useState(false);
-  const [tab, setTab] = useState("rhythm"); // "rhythm" | "assessment"
+   const [rangeDays, setRangeDays] = useState(14);
+   const [activeMeasures, setActiveMeasures] = useState(new Set(["energy", "confidence", "focus", "load", "growth"]));
+   const [expanded, setExpanded] = useState(false);
+   const [tab, setTab] = useState("rhythm"); // "rhythm" | "assessment"
+
+   const streakDays = useMemo(() => computeStreak(checkIns), [checkIns]);
+   const checkedInDays28 = useMemo(() => {
+     const today = new Date();
+     const map = {};
+     checkIns.forEach(r => {
+       if (!r.check_in_date) return;
+       const key = r.check_in_date;
+       if (!map[key]) map[key] = true;
+     });
+     let count = 0;
+     for (let i = 27; i >= 0; i--) {
+       const d = new Date(today);
+       d.setDate(today.getDate() - i);
+       const key = localDateKey(d);
+       if (map[key]) count++;
+     }
+     return count;
+   }, [checkIns]);
 
   const toggleMeasure = (key) => {
     setActiveMeasures(prev => {
@@ -240,25 +276,37 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
           )}
         </div>
 
-        {/* Tab switcher */}
-        <div className="flex gap-4 mt-3">
-          <button
-            onClick={() => setTab("rhythm")}
-            className={`flex items-center gap-1.5 text-xs font-semibold pb-1.5 border-b-2 transition-colors ${
-              tab === "rhythm" ? "border-[#0202ff] text-[#0202ff]" : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Activity className="w-3.5 h-3.5" /> Daily rhythm
-          </button>
-          <button
-            onClick={() => setTab("assessment")}
-            className={`flex items-center gap-1.5 text-xs font-semibold pb-1.5 border-b-2 transition-colors ${
-              tab === "assessment" ? "border-[#0202ff] text-[#0202ff]" : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Brain className="w-3.5 h-3.5" /> Leadership Index
-          </button>
-        </div>
+        {/* Tab switcher + streak */}
+         <div className="flex items-center justify-between">
+           <div className="flex gap-4">
+             <button
+               onClick={() => setTab("rhythm")}
+               className={`flex items-center gap-1.5 text-xs font-semibold pb-1.5 border-b-2 transition-colors ${
+                 tab === "rhythm" ? "border-[#0202ff] text-[#0202ff]" : "border-transparent text-muted-foreground hover:text-foreground"
+               }`}
+             >
+               <Activity className="w-3.5 h-3.5" /> Daily rhythm
+             </button>
+             <button
+               onClick={() => setTab("assessment")}
+               className={`flex items-center gap-1.5 text-xs font-semibold pb-1.5 border-b-2 transition-colors ${
+                 tab === "assessment" ? "border-[#0202ff] text-[#0202ff]" : "border-transparent text-muted-foreground hover:text-foreground"
+               }`}
+             >
+               <Brain className="w-3.5 h-3.5" /> Leadership Index
+             </button>
+           </div>
+           {tab === "rhythm" && (
+             <div className="flex items-center gap-3 pb-1.5">
+               {streakDays > 0 && (
+                 <span className="text-xs text-amber-600 font-medium bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
+                   🔥 {streakDays}-day streak
+                 </span>
+               )}
+               <span className="text-xs text-muted-foreground">{checkedInDays28}/28 days</span>
+             </div>
+           )}
+         </div>
       </div>
 
       <CardContent className="px-5 pt-4 pb-5 space-y-5">
