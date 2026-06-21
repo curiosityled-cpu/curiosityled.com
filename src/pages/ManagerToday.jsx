@@ -170,9 +170,8 @@ export default function ManagerToday() {
       return { ...existing, record: optimisticRecord };
     });
 
-    // Reload from store (saveCheckInToHistory already wrote it) so chart picks up changes
-    const freshHistory = loadCheckInHistory(user?.email);
-    setCheckInHistory(freshHistory.length > 0 ? freshHistory : prev => {
+    // Update in-memory history immediately (store already written by check-in component)
+    setCheckInHistory(prev => {
       const existing = Array.isArray(prev) ? prev : [];
       const hasTodayEntry = existing.some(r => r.check_in_date === todayET);
       return hasTodayEntry
@@ -340,10 +339,8 @@ export default function ManagerToday() {
     <div className="space-y-4">
       {/* Rhythm trend chart */}
       {(() => {
-        // Merge todayRecord into history if it has scores and isn't already there by date
-        const historyDates = new Set(checkInHistory.map(r => r.check_in_date));
-        const todayHasScores = todayRecord && (todayRecord.energy_score != null || todayRecord.confidence_score != null);
-        const merged = (todayHasScores && !historyDates.has(todayET))
+        const historyIds = new Set(checkInHistory.map(r => r.id));
+        const merged = todayRecord && !historyIds.has(todayRecord.id)
           ? [todayRecord, ...checkInHistory]
           : checkInHistory;
         return merged.length >= 1 ? <RhythmPulseChart checkIns={merged} /> : null;
@@ -447,9 +444,10 @@ export default function ManagerToday() {
       {/* Mobile: trend dashboard */}
       <div className="md:hidden">
         <CheckInTrendDashboard checkIns={(() => {
-            const dates = new Set(checkInHistory.map(r => r.check_in_date));
+            const ids = new Set(checkInHistory.map(r => r.check_in_date));
+            const hasToday = ids.has(todayET);
             const hasScores = todayRecord && (todayRecord.energy_score != null || todayRecord.confidence_score != null);
-            return (hasScores && !dates.has(todayET)) ? [todayRecord, ...checkInHistory] : checkInHistory;
+            return (!hasToday && hasScores) ? [todayRecord, ...checkInHistory] : checkInHistory;
           })()} assessment={latestAssessment} />
       </div>
 
@@ -495,9 +493,10 @@ export default function ManagerToday() {
 
       <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
       <CheckInTrendDashboard checkIns={(() => {
-          const dates = new Set(checkInHistory.map(r => r.check_in_date));
+          const ids = new Set(checkInHistory.map(r => r.check_in_date));
+          const hasToday = ids.has(todayET);
           const hasScores = todayRecord && (todayRecord.energy_score != null || todayRecord.confidence_score != null);
-          return (hasScores && !dates.has(todayET)) ? [todayRecord, ...checkInHistory] : checkInHistory;
+          return (!hasToday && hasScores) ? [todayRecord, ...checkInHistory] : checkInHistory;
         })()} assessment={latestAssessment} />
       <UpcomingFrictionCard
         trends={trends}
