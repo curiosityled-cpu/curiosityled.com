@@ -4,6 +4,7 @@
  */
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { saveCheckInToHistory } from "@/lib/checkInStore";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sun, ChevronRight, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -68,9 +69,9 @@ function wasCompletedToday(userEmail) {
   } catch { return false; }
 }
 
-function markCompletedToday(userEmail) {
+function markCompletedToday(userEmail, scores) {
   try {
-    localStorage.setItem(COMPLETED_KEY, JSON.stringify({ date: getTodayET(), email: userEmail }));
+    localStorage.setItem(COMPLETED_KEY, JSON.stringify({ date: getTodayET(), email: userEmail, scores }));
   } catch {}
 }
 
@@ -200,7 +201,8 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
     setStep(6);
     if (userEmail) {
       localStorage.removeItem(getDraftKey(userEmail));
-      markCompletedToday(userEmail); // Persist completion so remounts after navigation show "done"
+      markCompletedToday(userEmail, scores);
+      saveCheckInToHistory(userEmail, 'morning', scores); // persist to multi-day history store
     }
     try { onComplete?.([], 'morning', scores); } catch (cbErr) { console.error('onComplete error:', cbErr); }
 

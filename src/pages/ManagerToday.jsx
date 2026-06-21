@@ -3,6 +3,7 @@
  * Route: /today
  */
 import React, { useState, useEffect } from "react";
+import { loadCheckInHistory } from "@/lib/checkInStore";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -138,10 +139,8 @@ export default function ManagerToday() {
   const [checkInHistory, setCheckInHistory] = useState([]);
   useEffect(() => {
     if (!user?.email) return;
-    try {
-      const raw = localStorage.getItem(`checkin_history_${user.email}`);
-      if (raw) setCheckInHistory(JSON.parse(raw));
-    } catch {}
+    const history = loadCheckInHistory(user.email);
+    if (history.length > 0) setCheckInHistory(history);
   }, [user?.email]);
 
   const handleCheckInComplete = (big3Priorities, type, scores) => {
@@ -171,16 +170,13 @@ export default function ManagerToday() {
       return { ...existing, record: optimisticRecord };
     });
 
-    // Persist to localStorage history (survives page reloads, works even if DB entity is broken)
+    // Update in-memory history immediately (store already written by check-in component)
     setCheckInHistory(prev => {
       const existing = Array.isArray(prev) ? prev : [];
-      const updated = existing.some(r => r.check_in_date === todayET)
+      const hasTodayEntry = existing.some(r => r.check_in_date === todayET);
+      return hasTodayEntry
         ? existing.map(r => r.check_in_date === todayET ? { ...r, ...update } : r)
-        : [optimisticRecord, ...existing];
-      try {
-        localStorage.setItem(`checkin_history_${user?.email}`, JSON.stringify(updated.slice(0, 120)));
-      } catch {}
-      return updated;
+        : [{ check_in_date: todayET, ...update }, ...existing];
     });
 
     queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });

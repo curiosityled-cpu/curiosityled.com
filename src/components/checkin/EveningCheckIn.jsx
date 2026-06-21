@@ -4,6 +4,7 @@
  */
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { saveCheckInToHistory } from "@/lib/checkInStore";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Moon, ChevronRight, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -325,7 +326,11 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
     setStep(7);
     clearDraft(userEmail);
     markEveningCompletedToday(big3Priorities, scores, notes, userEmail);
-    onComplete?.(big3Priorities, 'evening', isActiveWindow ? scores : null);
+    const eveningScores = isActiveWindow ? scores : null;
+    if (userEmail && eveningScores) {
+      saveCheckInToHistory(userEmail, 'evening', eveningScores); // persist to multi-day history store
+    }
+    onComplete?.(big3Priorities, 'evening', eveningScores);
 
     const today = getTodayET();
     const entityPayload = {
