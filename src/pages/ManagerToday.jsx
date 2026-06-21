@@ -346,8 +346,7 @@ export default function ManagerToday() {
         const merged = (todayHasScores && !historyDates.has(todayET))
           ? [todayRecord, ...checkInHistory]
           : checkInHistory;
-        if (merged.length === 0) return null;
-        return <RhythmPulseChart checkIns={merged} />;
+        return merged.length >= 1 ? <RhythmPulseChart checkIns={merged} /> : null;
       })()}
 
 
