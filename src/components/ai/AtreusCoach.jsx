@@ -637,17 +637,30 @@ export default function AtreusCoach({
     let riskScore = context?.operator_mode_risk_score || 0;
     let trends = null;
     let memory = null;
+    let convMemory = null;
 
     try {
       if (user?.email) {
-        const [tonePrefs, trendRecords, memoryRecords] = await Promise.all([
+        const [tonePrefs, trendRecords, memoryRecords, memorySummaryRecords, recentTurnRecords] = await Promise.all([
           base44.entities.TonePreference.filter({ user_email: user.email }, '-created_date', 1),
           base44.entities.ManagerTrends.filter({ user_email: user.email }, '-last_trend_computed_at', 1),
           base44.entities.ManagerMemory.filter({ user_email: user.email }, '-last_synthesized_at', 1),
+          base44.entities.AtreusMemorySummary.filter({ user_email: user.email }, '-updated_at', 1).catch(() => []),
+          base44.entities.AtreusConversationTurn.filter({ user_email: user.email }, '-created_date', 5).catch(() => []),
         ]);
         toneMode = tonePrefs[0]?.tone_mode || 'warm_candid';
         trends = trendRecords[0] || null;
         memory = memoryRecords[0] || null;
+
+        // Phase 2: Two-layer conversation memory injection
+        const memorySummary = memorySummaryRecords[0] || null;
+        const activePattern = context?.active_pattern || null;
+        const filteredTurns = activePattern
+          ? recentTurnRecords.filter(t => t.pattern_context === activePattern)
+          : recentTurnRecords;
+        convMemory = (memorySummary || filteredTurns.length > 0)
+          ? { summary: memorySummary, recentTurns: filteredTurns }
+          : null;
 
         // Check for adaptive tone shift based on current state
         try {
@@ -671,7 +684,7 @@ export default function AtreusCoach({
       cross_session: crossSessionData,
     };
 
-    return buildAtreusSystemPrompt({ toneMode, riskScore, trends, memory, pageContext, userName });
+    return buildAtreusSystemPrompt({ toneMode, riskScore, trends, memory, pageContext, userName, convMemory });
   };
 
   const handleSendMessage = async (messageText = null) => {
@@ -838,6 +851,28 @@ export default function AtreusCoach({
 
       // Phase 2: Write memory after every assistant response
       writeMemory(finalMessages);
+
+      // Phase 2: Log turns + fire commitment extraction (non-blocking, fire-and-forget)
+      if (user?.email) {
+        const turnPattern = context?.active_pattern || null;
+        const turnPage = context?.pageType || null;
+        // Log Atreus turn
+        base44.entities.AtreusConversationTurn.create({
+          user_email: user.email,
+          thread_id: activeConversationId || null,
+          role: 'atreus',
+          content: (assistantMessage.content || '').slice(0, 2000),
+          page_context: turnPage,
+          pattern_context: turnPattern,
+        }).catch(() => {});
+        // Create manager turn + extract commitment (handled in one backend call)
+        base44.functions.invoke('atreusCommitmentExtract', {
+          message_text: text,
+          thread_id: activeConversationId || null,
+          page_context: turnPage,
+          pattern_context: turnPattern,
+        }).catch(() => {});
+      }
 
       // Check for workflow suggestions in response
       if (agentResponse.data.workflow_suggestions) {

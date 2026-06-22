@@ -1,0 +1,56 @@
+{
+  "name": "AtreusConversationTurn",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the manager this turn belongs to"
+    },
+    "thread_id": {
+      "type": "string",
+      "description": "Maps to the Conversation entity ID (groups turns into a conversation)"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "manager",
+        "atreus"
+      ],
+      "description": "Who said this turn"
+    },
+    "content": {
+      "type": "string",
+      "description": "The message text"
+    },
+    "page_context": {
+      "type": "string",
+      "description": "Which page/pageType this turn happened on"
+    },
+    "pattern_context": {
+      "type": "string",
+      "description": "Which pattern was active when this turn happened (e.g. 'Overload')"
+    },
+    "is_commitment": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the manager made a commitment or stated an intention in this turn"
+    },
+    "commitment_text": {
+      "type": "string",
+      "description": "Extracted commitment text if is_commitment is true (starts with 'I will...')"
+    }
+  },
+  "required": [
+    "user_email",
+    "role",
+    "content"
+  ],
+  "rls": {
+    "read": {
+      "user_email": "{{user.email}}"
+    },
+    "write": {
+      "user_email": "{{user.email}}"
+    }
+  }
+}

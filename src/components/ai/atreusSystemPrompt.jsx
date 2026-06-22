@@ -111,6 +111,36 @@ function formatTrendContext(trends) {
   return parts.length > 1 ? parts.join('\n') : null;
 }
 
+function formatConvMemory(convMemory) {
+  if (!convMemory) return null;
+  const { summary, recentTurns } = convMemory;
+  if (!summary?.summary_text && (!recentTurns || recentTurns.length === 0)) return null;
+
+  const parts = [];
+
+  if (summary?.summary_text) {
+    parts.push(`CONVERSATION MEMORY (last 30 days — compressed):\n${summary.summary_text}`);
+    if (summary.key_commitments?.length) {
+      parts.push(`Manager's recent commitments: ${summary.key_commitments.join('; ')}`);
+    }
+    if (summary.key_themes?.length) {
+      parts.push(`Recurring themes in our conversations: ${summary.key_themes.join(', ')}`);
+    }
+  }
+
+  if (recentTurns?.length > 0) {
+    const turnLines = recentTurns
+      .map(t => `${t.role === 'manager' ? 'Manager' : 'Atreus'}: ${(t.content || '').slice(0, 200)}`)
+      .join('\n');
+    parts.push(`RECENT RELEVANT TURNS:\n${turnLines}`);
+  }
+
+  if (parts.length === 0) return null;
+
+  parts.push(`Use this memory naturally — "last time we talked...", "you mentioned...", "you committed to...". Never read it back as a list or make the manager feel monitored.`);
+  return parts.join('\n\n');
+}
+
 /**
  * buildAtreusSystemPrompt(options)
  *
@@ -123,7 +153,7 @@ function formatTrendContext(trends) {
  * @param {string} options.userName - manager's first name
  * @returns {string} complete system prompt
  */
-export function buildAtreusSystemPrompt({ toneMode, riskScore = 0, trends = null, memory = null, pageContext = {}, userName = 'the manager' }) {
+export function buildAtreusSystemPrompt({ toneMode, riskScore = 0, trends = null, memory = null, pageContext = {}, userName = 'the manager', convMemory = null }) {
   const isHighRisk = riskScore >= 75 && toneMode === 'gentle_observant';
   const effectiveTone = isHighRisk ? 'warm_candid' : (toneMode || 'warm_candid');
   const toneBlock = TONE_INSTRUCTIONS[effectiveTone] || TONE_INSTRUCTIONS.warm_candid;
@@ -142,6 +172,8 @@ export function buildAtreusSystemPrompt({ toneMode, riskScore = 0, trends = null
     ABSOLUTE_CONSTRAINTS,
 
     memoryBlock ? memoryBlock : null,
+
+    convMemory ? formatConvMemory(convMemory) : null,
 
     trendBlock ? trendBlock : null,
 
