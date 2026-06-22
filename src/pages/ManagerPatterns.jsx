@@ -19,6 +19,9 @@ import LeadingPatternCard from "@/components/patterns/LeadingPatternCard";
 import LeadershipNarrativeCard from "@/components/patterns/LeadershipNarrativeCard";
 import SwipeableSections from "@/components/patterns/SwipeableSections";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
+import BpoHeroPatternCard from "@/components/patterns/BpoHeroPatternCard";
+import BpoWatchRow from "@/components/patterns/BpoWatchRow";
+import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
 
 
 
@@ -136,6 +139,19 @@ export default function ManagerPatterns() {
     enabled: !!user?.email, staleTime: 30 * 60 * 1000,
   });
 
+  // BPO pattern engine — must be before any early returns (Rules of Hooks)
+  const rankedPatterns = useMemo(() =>
+    runBpoPatternEngine({
+      trends,
+      checkIns: mergedCheckIns,
+      goals,
+      activities,
+      pulses: recentPulses,
+    }),
+    [trends, mergedCheckIns, goals, activities, recentPulses]
+  );
+  const heroPattern = rankedPatterns[0] || null;
+
   const isLoadingInitial = trendsLoading || pulsesLoading || insightLoading;
   const hasData = trends || recentPulses.length > 0 || insight || checkInHistory.length > 0 || latestAssessment;
 
@@ -169,17 +185,24 @@ export default function ManagerPatterns() {
     c.big3_priorities?.length > 0
   ).length;
 
-  // Left column — primary pattern + narrative (4 cards max)
+  // Left column — BPO hero + watch row + narrative
   const leftColumn = (
     <div className="space-y-4">
-      <LeadingPatternCard
-        trends={trends}
-        pulses={recentPulses}
-        goals={goals}
-        recentCheckIns={checkInHistory}
-        recentPulses={recentPulses}
-        onOpenAtreus={openAtreus}
-      />
+      {heroPattern ? (
+        <>
+          <BpoHeroPatternCard pattern={heroPattern} onOpenAtreus={openAtreus} />
+          <BpoWatchRow patterns={rankedPatterns} onOpenAtreus={openAtreus} />
+        </>
+      ) : (
+        <LeadingPatternCard
+          trends={trends}
+          pulses={recentPulses}
+          goals={goals}
+          recentCheckIns={checkInHistory}
+          recentPulses={recentPulses}
+          onOpenAtreus={openAtreus}
+        />
+      )}
       <LeadershipNarrativeCard
         trends={trends}
         insight={insight}
