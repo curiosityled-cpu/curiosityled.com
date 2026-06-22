@@ -18,7 +18,7 @@ function last(arr, n = 7) {
 function scoreToStatus(score) {
   if (score >= 75) return 'Persistent';
   if (score >= 50) return 'Active';
-  if (score >= 25) return 'Emerging';
+  if (score >= 15) return 'Emerging';
   return null;
 }
 
@@ -564,6 +564,6 @@ export function runBpoPatternEngine({ trends, checkIns = [], goals = [], activit
   ];
 
   return patterns
-    .filter(p => p.score >= 25)
+    .filter(p => p.score >= 15)
     .sort((a, b) => b.score - a.score);
 }
