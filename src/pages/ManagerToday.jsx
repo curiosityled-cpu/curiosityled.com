@@ -292,14 +292,11 @@ export default function ManagerToday() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
-  // DecisionJournal pending decisions — staleTime=0 so every mount (navigation back to /today)
-  // triggers a fresh fetch, regardless of when the last fetch happened.
-  const { data: pendingDecisions = [] } = useQuery({
+  // DecisionJournal pending decisions — always fetch fresh; no stale cache tolerance
+  const { data: pendingDecisions = [], refetch: refetchDecisions } = useQuery({
     queryKey: ['ml-pending-decisions', user?.email],
     queryFn: async () => {
       try {
-        // Fetch all user decisions and filter client-side — avoids $in operator
-        // compatibility issues with the frontend entity SDK
         const rows = await base44.entities.DecisionJournal.filter(
           { user_email: user.email },
           '-created_date',
@@ -310,6 +307,7 @@ export default function ManagerToday() {
     },
     enabled: !!user?.email,
     staleTime: 0,
+    gcTime: 0,
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
   });
@@ -411,8 +409,8 @@ export default function ManagerToday() {
         <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} />
       )}
 
-      {/* Today's Playbook — show once todayData resolved, OR immediately if decisions are ready */}
-      {(todayRecord !== undefined || pendingDecisions.length > 0) && (
+      {/* Today's Playbook — always rendered once user is available */}
+      {!!user?.email && (
         <TodaysPlaybook
           todayRecord={localBig3Override ? { ...todayRecord, big3_priorities: localBig3Override } : todayRecord}
           yesterdayBig3={yesterdayBig3}
@@ -422,7 +420,10 @@ export default function ManagerToday() {
           assignments={assignments}
           pulses={recentPulses}
           pendingDecisions={pendingDecisions}
-          onDecisionOutcomeSaved={() => queryClient.removeQueries({ queryKey: ['ml-pending-decisions', user?.email] })}
+          onDecisionOutcomeSaved={async () => {
+            queryClient.removeQueries({ queryKey: ['ml-pending-decisions', user?.email] });
+            await refetchDecisions();
+          }}
           onOpenAtreus={openAtreus}
           onBig3Saved={(priorities) => {
             setLocalBig3Override(priorities);
