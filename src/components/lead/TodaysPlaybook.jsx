@@ -221,17 +221,26 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
   const [pendingDecisions, setPendingDecisions] = useState([]);
   const [decisionsExpanded, setDecisionsExpanded] = useState(false);
 
-  useEffect(() => {
+  const loadPendingDecisions = () => {
     if (!user?.email) return;
-    // Get Monday of current week
-    const d = new Date();
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    d.setDate(diff);
-    const weekOf = d.toISOString().split('T')[0];
-    base44.entities.DecisionJournal.filter({ user_email: user.email, week_of: weekOf })
+    base44.entities.DecisionJournal.filter({ user_email: user.email }, '-created_date', 30)
       .then(rows => setPendingDecisions((rows || []).filter(r => r.status !== 'completed')))
       .catch(() => {});
+  };
+
+  useEffect(() => {
+    loadPendingDecisions();
+  }, [user?.email]);
+
+  // Re-fetch when window regains focus OR when a decision is committed in the drawer
+  useEffect(() => {
+    const handler = () => loadPendingDecisions();
+    window.addEventListener('focus', handler);
+    window.addEventListener('decision-committed', handler);
+    return () => {
+      window.removeEventListener('focus', handler);
+      window.removeEventListener('decision-committed', handler);
+    };
   }, [user?.email]);
 
   const activeGoals = (goals || []).filter(g => g.status === "active");

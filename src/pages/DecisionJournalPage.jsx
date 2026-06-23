@@ -163,13 +163,16 @@ function DecisionCard({ decision, onLogOutcome }) {
   const { openWithContext } = useAtreusChat();
   const [expanded, setExpanded] = useState(false);
   const [outcomeText, setOutcomeText] = useState('');
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(decision.status === 'completed');
   const daysOld = Math.floor((Date.now() - new Date(decision.created_date)) / 86400000);
-  const readyForReview = daysOld >= 3;
+  const readyForReview = daysOld >= 1 && decision.status !== 'completed'; // Show after 1 day
 
-  // Parse fields from description JSON
+  // Parse extra fields stored in outcome_notes as JSON (from manual form saves)
   let fields = {};
-  try { fields = JSON.parse(decision.description || '{}'); } catch {}
+  try {
+    const parsed = JSON.parse(decision.outcome_notes || '{}');
+    if (parsed.options_considered || parsed.decision_made) fields = parsed;
+  } catch {}
 
   const handleSaveOutcome = async () => {
     if (!outcomeText.trim()) return;
@@ -190,10 +193,11 @@ function DecisionCard({ decision, onLogOutcome }) {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-card-foreground leading-snug truncate">
-            {decision.biggest_weight_today}
+            {decision.decision_text}
           </p>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             <span className="text-[10px] text-muted-foreground">{timeAgo(decision.created_date)}</span>
+            {decision.pattern_name && <span className="text-[10px] font-medium text-[#0202ff]/70">{decision.pattern_name}</span>}
             {confLabel && <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${confLabel.color}`}>{confLabel.label.split(' — ')[0]}</span>}
             {readyForReview && !saved && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-300 text-amber-700">Ready to review</Badge>}
             {saved && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-emerald-300 text-emerald-700">Outcome logged</Badge>}
@@ -204,10 +208,10 @@ function DecisionCard({ decision, onLogOutcome }) {
 
       {expanded && (
         <div className="px-4 pb-4 space-y-3 border-t border-border">
-          {fields.context && (
+          {decision.rationale && (
             <div className="pt-3">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Context</p>
-              <p className="text-xs text-foreground leading-relaxed">{fields.context}</p>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Context / Rationale</p>
+              <p className="text-xs text-foreground leading-relaxed">{decision.rationale}</p>
             </div>
           )}
           {fields.options_considered && (
@@ -218,7 +222,7 @@ function DecisionCard({ decision, onLogOutcome }) {
           )}
           {fields.decision_made && (
             <div className="p-2.5 bg-[#0202ff]/5 rounded-xl border border-[#0202ff]/15">
-              <p className="text-[10px] font-semibold text-[#0202ff] uppercase tracking-wide mb-0.5">Decision made</p>
+              <p className="text-[10px] font-semibold text-[#0202ff] uppercase tracking-wide mb-0.5">Leaning toward</p>
               <p className="text-xs text-foreground leading-relaxed">{fields.decision_made}</p>
             </div>
           )}
@@ -236,8 +240,17 @@ function DecisionCard({ decision, onLogOutcome }) {
               </div>
             )}
           </div>
+          {/* Show existing outcome if already captured */}
+          {decision.outcome && (
+            <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200">
+              <p className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wide mb-0.5">Outcome: {decision.outcome.replace('_', ' ')}</p>
+              {decision.outcome_notes && !fields.options_considered && (
+                <p className="text-xs text-foreground leading-relaxed">{decision.outcome_notes}</p>
+              )}
+            </div>
+          )}
 
-          {/* Outcome review — unlocked after 3 days */}
+          {/* Outcome review */}
           {readyForReview && !saved && (
             <div className="pt-2 border-t border-border space-y-2">
               <p className="text-xs font-semibold text-amber-700">How did it play out?</p>
@@ -262,7 +275,7 @@ function DecisionCard({ decision, onLogOutcome }) {
                   className="text-xs h-7"
                   onClick={() => openWithContext({
                     context: { pageType: 'practice', flow: 'decision_outcome' },
-                    starterMessage: `I made a decision: "${decision.biggest_weight_today}". ${outcomeText ? `What happened: ${outcomeText}.` : ''} Help me learn from this.`,
+                    starterMessage: `I made a decision: "${decision.decision_text}". ${outcomeText ? `What happened: ${outcomeText}.` : ''} Help me learn from this.`,
                   })}
                 >
                   <Brain className="w-3 h-3 mr-1 text-[#0202ff]" /> Reflect
@@ -290,8 +303,8 @@ export default function DecisionJournalPage() {
     queryKey: ['decision-journal-full', user?.email],
     queryFn: async () => {
       try {
-        return await base44.entities.ManagerPulse.filter(
-          { user_email: user.email, prompt_type: 'decision_journal' },
+        return await base44.entities.DecisionJournal.filter(
+          { user_email: user.email },
           '-created_date',
           50
         );
@@ -302,17 +315,25 @@ export default function DecisionJournalPage() {
   });
 
   const handleSave = async (form) => {
-    await base44.entities.ManagerPulse.create({
+    // Get Monday of current week
+    const d = new Date();
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    d.setDate(diff);
+    const weekOf = d.toISOString().split('T')[0];
+
+    await base44.entities.DecisionJournal.create({
       user_email: user.email,
-      prompt_type: 'decision_journal',
-      source: 'web',
-      biggest_weight_today: form.title.slice(0, 500),
-      description: JSON.stringify({
-        context: form.context.slice(0, 200),
-        options_considered: form.options_considered.slice(0, 200),
-        decision_made: form.decision_made.slice(0, 200),
-        assumptions: form.assumptions.slice(0, 150),
-        risks: form.risks.slice(0, 150),
+      decision_text: form.title,
+      rationale: form.context || '',
+      status: 'committed',
+      week_of: weekOf,
+      // Store extra fields in outcome_notes temporarily
+      outcome_notes: JSON.stringify({
+        options_considered: form.options_considered,
+        decision_made: form.decision_made,
+        assumptions: form.assumptions,
+        risks: form.risks,
         confidence: form.confidence,
       }),
     });
@@ -321,17 +342,15 @@ export default function DecisionJournalPage() {
   };
 
   const handleLogOutcome = async (decision, outcomeText) => {
-    await base44.entities.ManagerPulse.create({
-      user_email: user.email,
-      prompt_type: 'follow_up',
-      source: 'web',
-      focus_intention: `Decision outcome: ${decision.biggest_weight_today?.slice(0, 200)}`,
-      description: `outcome_review: ${outcomeText}`.slice(0, 1000),
+    await base44.entities.DecisionJournal.update(decision.id, {
+      outcome_notes: outcomeText,
+      outcome_date: new Date().toISOString(),
+      status: 'completed',
     }).catch(() => {});
     queryClient.invalidateQueries({ queryKey: ['decision-journal-full', user?.email] });
   };
 
-  const reviewReady = decisions.filter(d => Math.floor((Date.now() - new Date(d.created_date)) / 86400000) >= 3);
+  const reviewReady = decisions.filter(d => d.status !== 'completed' && Math.floor((Date.now() - new Date(d.created_date)) / 86400000) >= 3);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">

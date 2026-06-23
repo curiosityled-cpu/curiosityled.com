@@ -168,6 +168,8 @@ Return JSON:
       });
       setSaved(true);
       toast.success("Decision committed — you'll see it in Close the Loop on Today's page.");
+      // Signal TodaysPlaybook to reload decisions
+      window.dispatchEvent(new Event('decision-committed'));
     } catch (e) {
       console.error('Save decision error', e);
       toast.error("Couldn't save. Please try again.");
