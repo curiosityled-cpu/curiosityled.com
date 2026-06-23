@@ -6,8 +6,6 @@ import React, { useState } from "react";
 import { AlertTriangle, Users, Zap, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/lib/AuthContext";
 import PatternDetailDrawer from "@/components/patterns/PatternDetailDrawer";
 
 const BUCKET_STYLES = {
@@ -22,10 +20,8 @@ const STATUS_STYLES = {
   Persistent: 'bg-red-100 text-red-800 border-red-200',
 };
 
-export default function TopPatternCard({ pattern, onOpenAtreus, onDecisionCommitted, onDecisionOptimistic }) {
+export default function TopPatternCard({ pattern, onOpenAtreus, onDecisionCommitted }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
 
   if (!pattern) return null;
 
@@ -76,8 +72,8 @@ export default function TopPatternCard({ pattern, onOpenAtreus, onDecisionCommit
         pattern={pattern}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        onDecisionSaved={(newDecision) => {
-          onDecisionOptimistic?.(newDecision);
+        onDecisionSaved={() => {
+          onDecisionCommitted?.();
         }}
         onOpenAtreus={onOpenAtreus}
       />

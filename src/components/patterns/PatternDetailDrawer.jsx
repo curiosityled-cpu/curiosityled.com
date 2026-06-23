@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 const CONFIDENCE_LEVELS = [
@@ -99,7 +98,6 @@ function getWeekOf() {
 
 export default function PatternDetailDrawer({ pattern, open, onClose, onOpenAtreus, onDecisionSaved }) {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
   const [aiDecision, setAiDecision] = useState(null);
   const [loadingAi, setLoadingAi] = useState(false);
   const [evidenceExpanded, setEvidenceExpanded] = useState(false);

@@ -292,10 +292,11 @@ export default function ManagerToday() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
-  // DecisionJournal pending decisions
+  // DecisionJournal pending decisions — always fetch fresh, never use cache
   const { data: pendingDecisions = [], refetch: refetchDecisions } = useQuery({
     queryKey: ['ml-pending-decisions', user?.email],
     queryFn: async () => {
+      if (!user?.email) return [];
       try {
         const rows = await base44.entities.DecisionJournal.filter(
           { user_email: user.email },
@@ -303,28 +304,19 @@ export default function ManagerToday() {
           100
         );
         return (rows || []).filter(r => r.status !== 'completed');
-      } catch { return []; }
+      } catch (e) {
+        console.error('DecisionJournal fetch error:', e);
+        return [];
+      }
     },
     enabled: !!user?.email,
     staleTime: 0,
-    gcTime: 5 * 60 * 1000,
-    refetchOnMount: true,
+    gcTime: 0,
+    refetchOnMount: 'always',
     refetchOnWindowFocus: false,
   });
 
-  // Optimistically inject a newly saved decision into the list immediately.
-  const addDecisionOptimistic = (newDecision) => {
-    if (!newDecision?.id) {
-      // If we didn't get a record back, just refetch
-      refetchDecisions();
-      return;
-    }
-    queryClient.setQueryData(['ml-pending-decisions', user?.email], (old = []) => {
-      const exists = (old || []).some(d => d.id === newDecision.id);
-      if (exists) return old;
-      return [newDecision, ...(old || [])];
-    });
-  };
+
 
   const { data: kpis = [] } = useQuery({
     queryKey: ['ml-kpis', user?.email],
@@ -420,7 +412,7 @@ export default function ManagerToday() {
 
       {/* Top pattern surface */}
       {topPattern && (
-        <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} onDecisionCommitted={refetchDecisions} onDecisionOptimistic={addDecisionOptimistic} />
+        <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} onDecisionCommitted={refetchDecisions} />
       )}
 
       {/* Today's Playbook — always rendered once user is available */}
