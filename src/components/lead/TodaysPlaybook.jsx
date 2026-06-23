@@ -226,7 +226,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
   const [ftLoading, setFtLoading]     = useState(false);
   const [ftExpanded, setFtExpanded]   = useState(false);
 
-  const [decisionsExpanded, setDecisionsExpanded] = useState(true);
+  const [loopExpanded, setLoopExpanded] = useState(true);
 
   const activeGoals = (goals || []).filter(g => g.status === "active");
   const topGoal     = [...activeGoals].sort((a, b) => (b.progress || 0) - (a.progress || 0))[0];
@@ -352,101 +352,108 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
         )}
       </div>
 
-      {/* ── Active goal strip ────────────────────────────────────────── */}
-      {topGoal && (
-        <div className="px-5 py-3.5 border-b border-border">
-          <div className="flex items-center justify-between mb-1.5">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Active focus</p>
-            <Link to="/my-performance"><span className="text-[10px] text-[#0202ff] font-medium hover:underline">All goals →</span></Link>
-          </div>
-          <p className="text-xs font-semibold text-foreground">{topGoal.title}</p>
-          <div className="flex items-center gap-2 mt-1.5">
-            <Progress value={topGoal.progress || 0} className="h-1.5 flex-1" />
-            <span className="text-[10px] text-muted-foreground flex-shrink-0">{topGoal.progress || 0}%</span>
-          </div>
-          {activeGoals.length > 1 && (
-            <p className="text-[10px] text-muted-foreground mt-1">+{activeGoals.length - 1} more active</p>
-          )}
-        </div>
-      )}
-
-      {/* ── Decision Journal close-the-loop ──────────────────────────── */}
-      {pendingDecisions.length > 0 && (
+      {/* ── Unified Close the Loop ───────────────────────────────────── */}
+      {(pendingDecisions.length > 0 || activeGoals.length > 0 || commitment) && (
         <div className="px-5 py-3 border-b border-border">
-          <button className="flex items-center justify-between w-full text-left" onClick={() => setDecisionsExpanded(v => !v)}>
-            <div>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Close the loop</p>
-              <p className="text-xs text-foreground font-medium mt-0.5">
-                {pendingDecisions.length} decision{pendingDecisions.length > 1 ? 's' : ''} awaiting an outcome
-              </p>
-            </div>
-            {decisionsExpanded
+          <button className="flex items-center justify-between w-full text-left" onClick={() => setLoopExpanded(v => !v)}>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Close the loop</p>
+            {loopExpanded
               ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
               : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
           </button>
-          {decisionsExpanded && (
-            <div className="mt-3 space-y-1">
-              {pendingDecisions.map(d => (
-                <DecisionLoopItem
-                  key={d.id}
-                  decision={d}
-                  onOutcomeSaved={() => onDecisionOutcomeSaved?.()}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
-      {/* ── Follow-through loop (collapsible) ────────────────────────── */}
-      {commitment && !ftSubmitted && (
-        <div className="px-5 py-3">
-          <button className="flex items-center justify-between w-full text-left" onClick={() => setFtExpanded(v => !v)}>
-            <div>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Close the loop</p>
-              <p className="text-xs text-foreground font-medium mt-0.5 line-clamp-1">{commitment.text}</p>
-            </div>
-            {ftExpanded
-              ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-              : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
-          </button>
-          {ftExpanded && (
-            <div className="mt-3 space-y-2.5">
-              <p className="text-xs text-muted-foreground">How did it go?</p>
-              <div className="flex gap-2">
-                {STATUS_OPTS.map(({ value, label, Icon, color, ring }) => (
-                  <button
-                    key={value}
-                    onClick={() => setFtSelected(value)}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border text-xs font-medium transition-all ${ftSelected === value ? ring + " " + color : "bg-muted/60 border-border text-muted-foreground hover:bg-muted"}`}
-                  >
-                    <Icon className="w-3.5 h-3.5" /> {label}
+          {loopExpanded && (
+            <div className="mt-3 space-y-4">
+
+              {/* Decisions subsection */}
+              {pendingDecisions.length > 0 && (
+                <div>
+                  <p className="text-[9px] font-bold text-[#0202ff]/70 uppercase tracking-widest mb-2">Decisions</p>
+                  <div className="space-y-1">
+                    {pendingDecisions.map(d => (
+                      <DecisionLoopItem
+                        key={d.id}
+                        decision={d}
+                        onOutcomeSaved={() => onDecisionOutcomeSaved?.()}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Goals subsection */}
+              {activeGoals.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[9px] font-bold text-emerald-600/80 uppercase tracking-widest">Goals</p>
+                    <Link to="/my-performance"><span className="text-[10px] text-[#0202ff] font-medium hover:underline">All goals →</span></Link>
+                  </div>
+                  <div className="space-y-2">
+                    {activeGoals.slice(0, 3).map(g => (
+                      <div key={g.id}>
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-xs font-medium text-foreground truncate flex-1 mr-2">{g.title}</p>
+                          <span className="text-[10px] text-muted-foreground flex-shrink-0">{g.progress || 0}%</span>
+                        </div>
+                        <Progress value={g.progress || 0} className="h-1" />
+                      </div>
+                    ))}
+                    {activeGoals.length > 3 && (
+                      <p className="text-[10px] text-muted-foreground">+{activeGoals.length - 3} more active</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Commitments (pulse follow-through) subsection */}
+              {commitment && !ftSubmitted && (
+                <div>
+                  <p className="text-[9px] font-bold text-amber-600/80 uppercase tracking-widest mb-2">Commitments</p>
+                  <button className="flex items-start justify-between w-full text-left gap-2 py-1" onClick={() => setFtExpanded(v => !v)}>
+                    <p className="text-xs font-medium text-foreground line-clamp-1 flex-1">{commitment.text}</p>
+                    {ftExpanded ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
                   </button>
-                ))}
-              </div>
-              {ftSelected && ftSelected !== "did_it" && (
-                <textarea
-                  placeholder={ftSelected === "partly" ? "What got in the way?" : "What stopped you? No judgment — just useful data."}
-                  value={ftReflection}
-                  onChange={e => setFtReflection(e.target.value)}
-                  className="w-full text-sm text-foreground placeholder:text-muted-foreground bg-muted/50 border border-border rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-[#0202ff]/30"
-                  rows={2}
-                />
+                  {ftExpanded && (
+                    <div className="mt-2.5 space-y-2.5">
+                      <p className="text-xs text-muted-foreground">How did it go?</p>
+                      <div className="flex gap-2">
+                        {STATUS_OPTS.map(({ value, label, Icon, color, ring }) => (
+                          <button
+                            key={value}
+                            onClick={() => setFtSelected(value)}
+                            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border text-xs font-medium transition-all ${ftSelected === value ? ring + " " + color : "bg-muted/60 border-border text-muted-foreground hover:bg-muted"}`}
+                          >
+                            <Icon className="w-3.5 h-3.5" /> {label}
+                          </button>
+                        ))}
+                      </div>
+                      {ftSelected && ftSelected !== "did_it" && (
+                        <textarea
+                          placeholder={ftSelected === "partly" ? "What got in the way?" : "What stopped you? No judgment — just useful data."}
+                          value={ftReflection}
+                          onChange={e => setFtReflection(e.target.value)}
+                          className="w-full text-sm text-foreground placeholder:text-muted-foreground bg-muted/50 border border-border rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-[#0202ff]/30"
+                          rows={2}
+                        />
+                      )}
+                      {ftSelected && (
+                        <Button size="sm" className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-8" onClick={handleFtSubmit} disabled={ftLoading}>
+                          {ftLoading ? "Saving…" : "Log this"}
+                        </Button>
+                      )}
+                      <p className="text-[10px] text-muted-foreground italic">This feeds your pattern memory — private to you.</p>
+                    </div>
+                  )}
+                </div>
               )}
-              {ftSelected && (
-                <Button size="sm" className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-8" onClick={handleFtSubmit} disabled={ftLoading}>
-                  {ftLoading ? "Saving…" : "Log this"}
-                </Button>
+
+              {ftSubmitted && (
+                <div className="flex items-center gap-2 text-xs text-emerald-600">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Loop closed. Atreus will learn from this.
+                </div>
               )}
-              <p className="text-[10px] text-muted-foreground italic">This feeds your pattern memory — private to you.</p>
             </div>
           )}
-        </div>
-      )}
-
-      {ftSubmitted && (
-        <div className="px-5 py-3 flex items-center gap-2 text-xs text-emerald-600">
-          <CheckCircle2 className="w-3.5 h-3.5" /> Loop closed. Atreus will learn from this.
         </div>
       )}
     </div>
