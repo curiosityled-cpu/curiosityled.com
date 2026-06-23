@@ -21,6 +21,7 @@ import SwipeableSections from "@/components/patterns/SwipeableSections";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
 import BpoHeroPatternCard from "@/components/patterns/BpoHeroPatternCard";
 import BpoWatchRow from "@/components/patterns/BpoWatchRow";
+import DecisionJournalCard from "@/components/lead/DecisionJournalCard";
 import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
 
 
@@ -219,6 +220,7 @@ export default function ManagerPatterns() {
         <IntentLoopCard pulses={recentPulses} trends={trends} onOpenAtreus={openAtreus} />
       )}
       <WhatsImprovingCard trends={trends} pulses={recentPulses} goals={goals} />
+      <DecisionJournalCard />
     </div>
   );
 

@@ -25,6 +25,7 @@ import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
 import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
 import PerformanceGlanceCard from "@/components/lead/PerformanceGlanceCard";
+import DecisionJournalCard from "@/components/lead/DecisionJournalCard";
 
 function getFirstName(user) {
   const raw = user?.display_name || user?.data?.display_name || user?.full_name;
@@ -472,6 +473,11 @@ export default function ManagerToday() {
       <div className="md:hidden">
         <ExploreDeeperCard />
       </div>
+
+      {/* Mobile: Decision journal */}
+      <div className="md:hidden">
+        <DecisionJournalCard />
+      </div>
     </div>
   );
 
@@ -494,20 +500,21 @@ export default function ManagerToday() {
       )}
 
       <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
-      <CheckInTrendDashboard checkIns={(() => {
-          const ids = new Set(checkInHistory.map(r => r.check_in_date));
-          const hasToday = ids.has(todayET);
-          const hasScores = todayRecord && (todayRecord.energy_score != null || todayRecord.confidence_score != null);
-          return (!hasToday && hasScores) ? [todayRecord, ...checkInHistory] : checkInHistory;
-        })()} assessment={latestAssessment} />
-      <UpcomingFrictionCard
-        trends={trends}
-        goals={goals}
-        pulses={recentPulses}
-        onOpenAtreus={openAtreus}
-      />
-    </div>
-  );
+       <CheckInTrendDashboard checkIns={(() => {
+           const ids = new Set(checkInHistory.map(r => r.check_in_date));
+           const hasToday = ids.has(todayET);
+           const hasScores = todayRecord && (todayRecord.energy_score != null || todayRecord.confidence_score != null);
+           return (!hasToday && hasScores) ? [todayRecord, ...checkInHistory] : checkInHistory;
+         })()} assessment={latestAssessment} />
+       <UpcomingFrictionCard
+         trends={trends}
+         goals={goals}
+         pulses={recentPulses}
+         onOpenAtreus={openAtreus}
+       />
+       <DecisionJournalCard />
+      </div>
+      );
 
   return (
     <div className="px-4 py-6">
