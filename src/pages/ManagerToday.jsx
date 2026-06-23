@@ -292,12 +292,18 @@ export default function ManagerToday() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
-  // DecisionJournal pending decisions — fetch fresh on every mount/focus
+  // DecisionJournal pending decisions — use filter() with explicit user_email to bypass any RLS timing issues
   const { data: pendingDecisions = [], refetch: refetchDecisions } = useQuery({
-    queryKey: ['ml-pending-decisions'],
+    queryKey: ['ml-pending-decisions', user?.email],
     queryFn: async () => {
-      const rows = await base44.entities.DecisionJournal.list('-created_date', 100);
-      return (rows || []).filter(r => r.status !== 'completed');
+      try {
+        const rows = await base44.entities.DecisionJournal.filter(
+          { user_email: user.email },
+          '-created_date',
+          100
+        );
+        return (rows || []).filter(r => r.status !== 'completed');
+      } catch { return []; }
     },
     enabled: !!user?.email,
     staleTime: 0,
