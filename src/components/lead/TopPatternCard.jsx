@@ -72,8 +72,8 @@ export default function TopPatternCard({ pattern, onOpenAtreus, onDecisionCommit
         pattern={pattern}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        onDecisionSaved={() => {
-          onDecisionCommitted?.();
+        onDecisionSaved={async () => {
+          await onDecisionCommitted?.();
         }}
         onOpenAtreus={onOpenAtreus}
       />

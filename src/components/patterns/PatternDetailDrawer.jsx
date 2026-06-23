@@ -282,7 +282,7 @@ Generate a well-structured decision for them to capture in their decision journa
       });
       setSaved(true);
       toast.success("Decision committed — you'll see it in Close the Loop on Today's page.");
-      onDecisionSaved?.(result);
+      await onDecisionSaved?.(result);
     } catch (e) {
       console.error('Save decision error', e);
       toast.error("Couldn't save. Please try again.");

@@ -292,18 +292,18 @@ export default function ManagerToday() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
-  // DecisionJournal pending decisions — always fetch fresh, never use cache
+  // DecisionJournal pending decisions — always fetch fresh on mount
   const { data: pendingDecisions = [], refetch: refetchDecisions } = useQuery({
     queryKey: ['ml-pending-decisions', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
       try {
         const rows = await base44.entities.DecisionJournal.filter(
-          { user_email: user.email },
+          { user_email: user.email, status: 'committed' },
           '-created_date',
-          100
+          50
         );
-        return (rows || []).filter(r => r.status !== 'completed');
+        return rows || [];
       } catch (e) {
         console.error('DecisionJournal fetch error:', e);
         return [];
@@ -311,8 +311,7 @@ export default function ManagerToday() {
     },
     enabled: !!user?.email,
     staleTime: 0,
-    gcTime: 0,
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: false,
   });
 
