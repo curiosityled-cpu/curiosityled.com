@@ -75,18 +75,9 @@ export default function TopPatternCard({ pattern, onOpenAtreus, onDecisionCommit
       <PatternDetailDrawer
         pattern={pattern}
         open={drawerOpen}
-        onClose={() => {
-          setDrawerOpen(false);
-          queryClient.invalidateQueries({ queryKey: ['ml-pending-decisions', user?.email] });
-          onDecisionCommitted?.();
-        }}
+        onClose={() => setDrawerOpen(false)}
         onDecisionSaved={(newDecision) => {
-          if (onDecisionOptimistic && newDecision) {
-            onDecisionOptimistic(newDecision);
-          } else {
-            queryClient.invalidateQueries({ queryKey: ['ml-pending-decisions', user?.email] });
-            onDecisionCommitted?.();
-          }
+          onDecisionOptimistic?.(newDecision);
         }}
         onOpenAtreus={onOpenAtreus}
       />

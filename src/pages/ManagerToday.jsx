@@ -292,7 +292,7 @@ export default function ManagerToday() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
-  // DecisionJournal pending decisions — no cache, always fresh
+  // DecisionJournal pending decisions
   const { data: pendingDecisions = [], refetch: refetchDecisions } = useQuery({
     queryKey: ['ml-pending-decisions', user?.email],
     queryFn: async () => {
@@ -307,21 +307,23 @@ export default function ManagerToday() {
     },
     enabled: !!user?.email,
     staleTime: 0,
-    gcTime: 0,
+    gcTime: 5 * 60 * 1000,
     refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
   });
 
-  // Optimistically add a newly committed decision to the list immediately,
-  // before the async refetch completes, so UI updates without delay.
+  // Optimistically inject a newly saved decision into the list immediately.
   const addDecisionOptimistic = (newDecision) => {
+    if (!newDecision?.id) {
+      // If we didn't get a record back, just refetch
+      refetchDecisions();
+      return;
+    }
     queryClient.setQueryData(['ml-pending-decisions', user?.email], (old = []) => {
-      const exists = old.some(d => d.id === newDecision.id);
+      const exists = (old || []).some(d => d.id === newDecision.id);
       if (exists) return old;
-      return [newDecision, ...old];
+      return [newDecision, ...(old || [])];
     });
-    // Also trigger a background refetch to sync with server
-    refetchDecisions();
   };
 
   const { data: kpis = [] } = useQuery({
