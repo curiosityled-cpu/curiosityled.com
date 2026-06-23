@@ -167,20 +167,27 @@ function DecisionCard({ decision, onLogOutcome }) {
   const daysOld = Math.floor((Date.now() - new Date(decision.created_date)) / 86400000);
   const readyForReview = daysOld >= 1 && decision.status !== 'completed'; // Show after 1 day
 
-  // Parse extra fields stored in outcome_notes as JSON (only if it looks like JSON)
-  let fields = {};
-  let plainOutcomeNote = null;
+  // Use top-level fields directly; fall back to legacy JSON-in-outcome_notes for old records
+  let fields = {
+    options_considered: decision.options_considered || '',
+    decision_made: decision.decision_made || '',
+    assumptions: decision.assumptions || '',
+    risks: decision.risks || '',
+    confidence: decision.confidence || '',
+  };
+  let plainOutcomeNote = decision.outcome_notes || null;
+  // Legacy: if outcome_notes is a JSON blob from old records, extract it
   const rawNotes = decision.outcome_notes || '';
   if (rawNotes.startsWith('{')) {
     try {
       const parsed = JSON.parse(rawNotes);
-      fields = parsed;
-      // outcome_text is injected when outcome is logged on a form-captured decision
-      if (parsed.outcome_text) plainOutcomeNote = parsed.outcome_text;
+      if (!fields.options_considered) fields.options_considered = parsed.options_considered || '';
+      if (!fields.decision_made) fields.decision_made = parsed.decision_made || '';
+      if (!fields.assumptions) fields.assumptions = parsed.assumptions || '';
+      if (!fields.risks) fields.risks = parsed.risks || '';
+      if (!fields.confidence) fields.confidence = parsed.confidence || '';
+      plainOutcomeNote = parsed.outcome_text || null;
     } catch {}
-  } else if (rawNotes.trim()) {
-    // Plain-text outcome note from TodaysPlaybook or DecisionJournalOutcomeReview
-    plainOutcomeNote = rawNotes;
   }
 
   const handleSaveOutcome = async () => {
@@ -324,7 +331,6 @@ export default function DecisionJournalPage() {
   });
 
   const handleSave = async (form) => {
-    // Get Monday of current week
     const d = new Date();
     const day = d.getDay();
     const diff = d.getDate() - day + (day === 0 ? -6 : 1);
@@ -335,37 +341,24 @@ export default function DecisionJournalPage() {
       user_email: user.email,
       decision_text: form.title,
       rationale: form.context || '',
+      options_considered: form.options_considered || '',
+      decision_made: form.decision_made || '',
+      assumptions: form.assumptions || '',
+      risks: form.risks || '',
+      confidence: form.confidence || 'medium',
       status: 'committed',
       week_of: weekOf,
-      // Store extra fields in outcome_notes temporarily
-      outcome_notes: JSON.stringify({
-        options_considered: form.options_considered,
-        decision_made: form.decision_made,
-        assumptions: form.assumptions,
-        risks: form.risks,
-        confidence: form.confidence,
-      }),
     });
     queryClient.invalidateQueries({ queryKey: ['decision-journal-full', user?.email] });
     setShowForm(false);
   };
 
   const handleLogOutcome = async (decision, outcomeText) => {
-    // If outcome_notes currently holds JSON form fields, merge the outcome text into the JSON
-    // so we don't lose options_considered / assumptions / risks when recording the outcome
-    let newOutcomeNotes = outcomeText;
-    const rawNotes = decision.outcome_notes || '';
-    if (rawNotes.startsWith('{')) {
-      try {
-        const existing = JSON.parse(rawNotes);
-        newOutcomeNotes = JSON.stringify({ ...existing, outcome_text: outcomeText });
-      } catch { /* keep plain text */ }
-    }
     await base44.entities.DecisionJournal.update(decision.id, {
       outcome: 'did_it',
       outcome_date: new Date().toISOString(),
       status: 'completed',
-      outcome_notes: newOutcomeNotes,
+      outcome_notes: outcomeText,
     }).catch(() => {});
     queryClient.invalidateQueries({ queryKey: ['decision-journal-full', user?.email] });
   };

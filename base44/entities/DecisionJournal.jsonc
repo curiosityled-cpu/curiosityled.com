@@ -22,6 +22,32 @@
       "type": "string",
       "description": "Why this decision matters (from AI or manager)"
     },
+    "options_considered": {
+      "type": "string",
+      "description": "Alternatives the manager considered before deciding"
+    },
+    "decision_made": {
+      "type": "string",
+      "description": "What the manager is leaning toward and why"
+    },
+    "assumptions": {
+      "type": "string",
+      "description": "Key assumptions this decision is based on"
+    },
+    "risks": {
+      "type": "string",
+      "description": "Main risks if this direction doesn't work out"
+    },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "medium",
+      "description": "Manager's confidence level in this decision"
+    },
     "status": {
       "type": "string",
       "enum": [

@@ -269,15 +269,13 @@ Generate a well-structured decision for them to capture in their decision journa
         pattern_bucket: pattern.bucket,
         decision_text: form.title,
         rationale: form.context || '',
+        options_considered: form.options_considered || '',
+        decision_made: form.decision_made || '',
+        assumptions: form.assumptions || '',
+        risks: form.risks || '',
+        confidence: form.confidence || 'medium',
         status: 'committed',
         week_of: getWeekOf(),
-        outcome_notes: JSON.stringify({
-          options_considered: form.options_considered,
-          decision_made: form.decision_made,
-          assumptions: form.assumptions,
-          risks: form.risks,
-          confidence: form.confidence,
-        }),
       });
       setSaved(true);
       toast.success("Decision committed — you'll see it in Close the Loop on Today's page.");
