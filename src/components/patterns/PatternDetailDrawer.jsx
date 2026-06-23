@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 const CONFIDENCE_LEVELS = [
@@ -98,6 +99,7 @@ function getWeekOf() {
 
 export default function PatternDetailDrawer({ pattern, open, onClose, onOpenAtreus }) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [aiDecision, setAiDecision] = useState(null);
   const [loadingAi, setLoadingAi] = useState(false);
   const [evidenceExpanded, setEvidenceExpanded] = useState(false);
@@ -279,10 +281,8 @@ Generate a well-structured decision for them to capture in their decision journa
       });
       setSaved(true);
       toast.success("Decision committed — you'll see it in Close the Loop on Today's page.");
-      // Dispatch event for Today's Playbook to refresh (slight delay ensures DB write is visible)
-      setTimeout(() => {
-        window.dispatchEvent(new Event('decision-committed'));
-      }, 200);
+      // Invalidate the decisions query so /today picks it up immediately on next mount
+      queryClient.invalidateQueries({ queryKey: ['ml-pending-decisions', user?.email] });
     } catch (e) {
       console.error('Save decision error', e);
       toast.error("Couldn't save. Please try again.");

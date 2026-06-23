@@ -292,9 +292,9 @@ export default function ManagerToday() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
-  // DecisionJournal pending decisions — fetched here (always mounted) rather than inside TodaysPlaybook
-  // which is conditionally rendered and may not mount when a decision is committed
-  const { data: pendingDecisions = [], refetch: refetchDecisions } = useQuery({
+  // DecisionJournal pending decisions — staleTime=0 so every mount (navigation back to /today)
+  // triggers a fresh fetch, regardless of when the last fetch happened.
+  const { data: pendingDecisions = [] } = useQuery({
     queryKey: ['ml-pending-decisions', user?.email],
     queryFn: async () => {
       try {
@@ -303,18 +303,10 @@ export default function ManagerToday() {
       } catch { return []; }
     },
     enabled: !!user?.email,
-    staleTime: 60 * 1000,   // 1 min — refetch often enough to stay fresh
+    staleTime: 0,             // Always refetch on mount — decisions change cross-page
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
   });
-
-  // Re-fetch decisions when the 'decision-committed' event fires (from PatternDetailDrawer)
-  useEffect(() => {
-    const handler = () => {
-      queryClient.invalidateQueries({ queryKey: ['ml-pending-decisions', user?.email] });
-    };
-    window.addEventListener('decision-committed', handler);
-    return () => window.removeEventListener('decision-committed', handler);
-  }, [user?.email, queryClient]);
 
   const { data: kpis = [] } = useQuery({
     queryKey: ['ml-kpis', user?.email],
