@@ -230,11 +230,15 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
   const [pendingDecisions, setPendingDecisions] = useState([]);
   const [decisionsExpanded, setDecisionsExpanded] = useState(false);
 
-  const loadPendingDecisions = () => {
+  const loadPendingDecisions = async () => {
     if (!user?.email) return;
-    base44.entities.DecisionJournal.filter({ user_email: user.email }, '-created_date', 30)
-      .then(rows => setPendingDecisions((rows || []).filter(r => r.status !== 'completed')))
-      .catch(() => {});
+    try {
+      const rows = await base44.entities.DecisionJournal.filter({ user_email: user.email }, '-created_date', 30);
+      const pending = (rows || []).filter(r => r.status !== 'completed');
+      setPendingDecisions(pending);
+    } catch (e) {
+      console.error('Error loading pending decisions:', e);
+    }
   };
 
   useEffect(() => {

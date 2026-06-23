@@ -263,7 +263,7 @@ Generate a well-structured decision for them to capture in their decision journa
     if (!form.title.trim()) return;
     setSaving(true);
     try {
-      await base44.entities.DecisionJournal.create({
+      const result = await base44.entities.DecisionJournal.create({
         user_email: user.email,
         pattern_name: pattern.name,
         pattern_bucket: pattern.bucket,
@@ -279,7 +279,10 @@ Generate a well-structured decision for them to capture in their decision journa
       });
       setSaved(true);
       toast.success("Decision committed — you'll see it in Close the Loop on Today's page.");
-      window.dispatchEvent(new Event('decision-committed'));
+      // Dispatch event for Today's Playbook to refresh (slight delay ensures DB write is visible)
+      setTimeout(() => {
+        window.dispatchEvent(new Event('decision-committed'));
+      }, 200);
     } catch (e) {
       console.error('Save decision error', e);
       toast.error("Couldn't save. Please try again.");
