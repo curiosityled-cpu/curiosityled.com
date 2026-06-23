@@ -2,7 +2,7 @@
  * ManagerToday — The Daily Companion (Redesigned Lead page)
  * Route: /today
  */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { loadCheckInHistory } from "@/lib/checkInStore";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
@@ -19,6 +19,8 @@ import EveningCheckIn from "@/components/checkin/EveningCheckIn";
 import MiddayPriorityLoop from "@/components/checkin/MiddayPriorityLoop";
 import WeeklyRhythmReflection from "@/components/checkin/WeeklyRhythmReflection";
 import UpcomingFrictionCard from "@/components/lead/UpcomingFrictionCard";
+import TopPatternCard from "@/components/lead/TopPatternCard";
+import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
 
 import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
@@ -306,6 +308,12 @@ export default function ManagerToday() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
+  // Compute top BPO pattern to surface on Today page
+  const topPattern = useMemo(() => {
+    const patterns = runBpoPatternEngine({ trends, checkIns: checkInHistory, goals, activities: [], pulses: recentPulses });
+    return patterns[0] || null;
+  }, [trends, checkInHistory, goals, recentPulses]);
+
   const needsToneOnboarding = tonePref === null;
   const firstName = getFirstName(user);
   // Always use ET hour to match check_in_date storage and window logic
@@ -373,6 +381,11 @@ export default function ManagerToday() {
           onComplete={handleCheckInComplete}
           isActiveWindow={isEveningWindow}
         />
+      )}
+
+      {/* Top pattern surface */}
+      {topPattern && (
+        <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} />
       )}
 
       {/* Today's Playbook */}

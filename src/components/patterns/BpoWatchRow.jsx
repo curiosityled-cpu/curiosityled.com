@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { AlertTriangle, Users, Zap, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import PatternDetailDrawer from "./PatternDetailDrawer";
 
 const BUCKET_ICON = {
   'Operational Risk': AlertTriangle,
@@ -23,41 +24,43 @@ const BUCKET_DOT = {
 };
 
 function WatchItem({ pattern, onOpenAtreus }) {
-  const navigate = useNavigate();
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const Icon = BUCKET_ICON[pattern.bucket] || Zap;
   const dot = BUCKET_DOT[pattern.bucket] || 'bg-gray-400';
 
-  const handleClick = () => {
-    if (pattern.ctaType === 'practice') navigate('/practice');
-    else if (pattern.ctaType === 'today') navigate('/today');
-    else if (onOpenAtreus) onOpenAtreus(`Tell me more about my ${pattern.name} pattern.`);
-  };
-
   return (
-    <button
-      onClick={handleClick}
-      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-colors text-left group"
-    >
-      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dot}`} />
-      <Icon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="text-xs font-semibold text-gray-800 truncate">{pattern.name}</p>
-          <Badge variant="outline" className={`text-[9px] px-1.5 py-0 border flex-shrink-0 ${STATUS_STYLES[pattern.status] || ''}`}>
-            {pattern.status}
-          </Badge>
+    <>
+      <button
+        onClick={() => setDrawerOpen(true)}
+        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-colors text-left group"
+      >
+        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dot}`} />
+        <Icon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-xs font-semibold text-gray-800 truncate">{pattern.name}</p>
+            <Badge variant="outline" className={`text-[9px] px-1.5 py-0 border flex-shrink-0 ${STATUS_STYLES[pattern.status] || ''}`}>
+              {pattern.status}
+            </Badge>
+          </div>
+          {pattern.evidence[0] && (
+            <p className="text-[11px] text-gray-500 truncate mt-0.5">{pattern.evidence[0]}</p>
+          )}
         </div>
-        {pattern.evidence[0] && (
-          <p className="text-[11px] text-gray-500 truncate mt-0.5">{pattern.evidence[0]}</p>
-        )}
-      </div>
-      <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-400 flex-shrink-0" />
-    </button>
+        <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-400 flex-shrink-0" />
+      </button>
+
+      <PatternDetailDrawer
+        pattern={pattern}
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        onOpenAtreus={onOpenAtreus}
+      />
+    </>
   );
 }
 
 export default function BpoWatchRow({ patterns, onOpenAtreus }) {
-  // Patterns 2 and 3 (index 1 and 2), max 2
   const watchPatterns = (patterns || []).slice(1, 3);
   if (watchPatterns.length === 0) return null;
 
