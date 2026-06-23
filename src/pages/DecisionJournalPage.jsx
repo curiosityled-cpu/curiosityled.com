@@ -492,7 +492,7 @@ export default function DecisionJournalPage() {
       <div className="flex items-start justify-between">
         <div className="pt-1">
           <div className="flex items-center gap-2 mb-1">
-            <button onClick={() => window.history.back()} className="text-xs text-muted-foreground hover:text-foreground">← Back</button>
+            <Link to="/practice" className="text-xs text-muted-foreground hover:text-foreground">← Practice</Link>
           </div>
           <h1 className="text-2xl font-bold text-foreground">Decision Journal</h1>
           <p className="text-sm text-muted-foreground mt-1">Capture high-stakes decisions. Review outcomes. Learn your patterns.</p>

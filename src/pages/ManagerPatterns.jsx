@@ -22,7 +22,6 @@ import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
 import BpoHeroPatternCard from "@/components/patterns/BpoHeroPatternCard";
 import BpoWatchRow from "@/components/patterns/BpoWatchRow";
 import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
-import DecisionJournalCard from "@/components/decisions/DecisionJournalCard";
 
 
 
@@ -220,7 +219,6 @@ export default function ManagerPatterns() {
         <IntentLoopCard pulses={recentPulses} trends={trends} onOpenAtreus={openAtreus} />
       )}
       <WhatsImprovingCard trends={trends} pulses={recentPulses} goals={goals} />
-      <DecisionJournalCard />
     </div>
   );
 
