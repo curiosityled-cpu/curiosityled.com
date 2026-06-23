@@ -71,7 +71,13 @@ export default function ManagerPatterns() {
 
   const { data: goals = [] } = useQuery({
     queryKey: ['ml-goals', user?.email],
-    queryFn: async () => { try { return await base44.entities.Goal.filter({ user_email: user.email }, '-created_date', 15); } catch { return []; } },
+    queryFn: async () => {
+      try {
+        const r = await base44.entities.Goal.filter({ created_by: user.email, status: 'active' }, '-created_date', 15);
+        if (r.length) return r;
+        return await base44.entities.Goal.filter({ assigned_to_emails: { $in: [user.email] } }, '-created_date', 15);
+      } catch { return []; }
+    },
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
