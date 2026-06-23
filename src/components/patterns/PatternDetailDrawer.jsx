@@ -97,7 +97,7 @@ function getWeekOf() {
   return d.toISOString().split('T')[0];
 }
 
-export default function PatternDetailDrawer({ pattern, open, onClose, onOpenAtreus }) {
+export default function PatternDetailDrawer({ pattern, open, onClose, onOpenAtreus, onDecisionSaved }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [aiDecision, setAiDecision] = useState(null);
@@ -285,6 +285,7 @@ Generate a well-structured decision for them to capture in their decision journa
       setSaved(true);
       toast.success("Decision committed — you'll see it in Close the Loop on Today's page.");
       queryClient.invalidateQueries({ queryKey: ['ml-pending-decisions', user?.email] });
+      onDecisionSaved?.();
     } catch (e) {
       console.error('Save decision error', e);
       toast.error("Couldn't save. Please try again.");

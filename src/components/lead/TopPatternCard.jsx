@@ -22,7 +22,7 @@ const STATUS_STYLES = {
   Persistent: 'bg-red-100 text-red-800 border-red-200',
 };
 
-export default function TopPatternCard({ pattern, onOpenAtreus }) {
+export default function TopPatternCard({ pattern, onOpenAtreus, onDecisionCommitted }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -78,6 +78,11 @@ export default function TopPatternCard({ pattern, onOpenAtreus }) {
         onClose={() => {
           setDrawerOpen(false);
           queryClient.invalidateQueries({ queryKey: ['ml-pending-decisions', user?.email] });
+          onDecisionCommitted?.();
+        }}
+        onDecisionSaved={() => {
+          queryClient.invalidateQueries({ queryKey: ['ml-pending-decisions', user?.email] });
+          onDecisionCommitted?.();
         }}
         onOpenAtreus={onOpenAtreus}
       />

@@ -292,7 +292,7 @@ export default function ManagerToday() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
-  // DecisionJournal pending decisions — use filter() with explicit user_email to bypass any RLS timing issues
+  // DecisionJournal pending decisions — no cache, always fresh
   const { data: pendingDecisions = [], refetch: refetchDecisions } = useQuery({
     queryKey: ['ml-pending-decisions', user?.email],
     queryFn: async () => {
@@ -307,7 +307,7 @@ export default function ManagerToday() {
     },
     enabled: !!user?.email,
     staleTime: 0,
-    gcTime: 5 * 60 * 1000,
+    gcTime: 0,
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
   });
@@ -406,7 +406,7 @@ export default function ManagerToday() {
 
       {/* Top pattern surface */}
       {topPattern && (
-        <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} />
+        <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} onDecisionCommitted={refetchDecisions} />
       )}
 
       {/* Today's Playbook — always rendered once user is available */}
