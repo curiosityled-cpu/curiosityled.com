@@ -406,7 +406,7 @@ export default function ManagerToday() {
       )}
 
       {/* Today's Playbook */}
-      {(todayRecord || yesterdayBig3.length > 0 || goals.length > 0 || assignments.length > 0 || !!localBig3Override || pendingDecisions.length > 0) && (
+      {todayRecord !== undefined && (todayRecord || yesterdayBig3.length > 0 || goals.length > 0 || assignments.length > 0 || !!localBig3Override || pendingDecisions.length > 0) && (
         <TodaysPlaybook
           todayRecord={localBig3Override ? { ...todayRecord, big3_priorities: localBig3Override } : todayRecord}
           yesterdayBig3={yesterdayBig3}

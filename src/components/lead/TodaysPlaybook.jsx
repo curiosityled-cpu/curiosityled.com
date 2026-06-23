@@ -226,7 +226,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
   const [ftLoading, setFtLoading]     = useState(false);
   const [ftExpanded, setFtExpanded]   = useState(false);
 
-  const [decisionsExpanded, setDecisionsExpanded] = useState(false);
+  const [decisionsExpanded, setDecisionsExpanded] = useState(true);
 
   const activeGoals = (goals || []).filter(g => g.status === "active");
   const topGoal     = [...activeGoals].sort((a, b) => (b.progress || 0) - (a.progress || 0))[0];
