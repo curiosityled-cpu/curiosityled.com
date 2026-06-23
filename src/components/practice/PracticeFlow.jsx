@@ -210,11 +210,10 @@ export default function PracticeFlow({ flowKey, onClose }) {
       const debriefAt = new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString();
       await base44.entities.ManagerPulse.create({
         user_email: user?.email,
-        prompt_type: 'prepare_debrief_pending',
+        prompt_type: 'follow_up',
         source: 'web',
-        focus_intention: `Debrief: ${responses[flow.steps[0].id] || ''}`.slice(0, 500),
+        focus_intention: `Debrief pending: ${responses[flow.steps[0].id] || ''}`.slice(0, 500),
         description: notes.slice(0, 500),
-        scheduled_for: debriefAt,
       }).catch(() => {});
       setDebriefScheduled(true);
     }
