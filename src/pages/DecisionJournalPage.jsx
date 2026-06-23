@@ -9,7 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
-import { Brain, Plus, FileText, ChevronDown, ChevronUp, CheckCircle2, Clock, Check } from "lucide-react";
+import { Brain, Plus, FileText, ChevronDown, ChevronUp, CheckCircle2, Clock, Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,6 +43,67 @@ function NewDecisionForm({ onSave, onCancel }) {
     confidence: 'medium',
   });
   const [saving, setSaving] = useState(false);
+  const [useAI, setUseAI] = useState(false);
+  const [aiSummary, setAiSummary] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGenerateWithAI = async () => {
+    if (!aiSummary.trim()) {
+      toast.error('Please describe the decision you\'re facing');
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `A manager is documenting a strategic decision. Based on their summary, help them think through the decision by generating thoughtful responses for each field.
+
+Manager's Decision Summary: "${aiSummary}"
+
+Generate a JSON response with these fields (keep each under 300 characters):
+{
+  "title": "A clear, concise title for this decision",
+  "rationale": "Why this decision matters and what prompted it",
+  "options_considered": "What alternatives were considered",
+  "decision_made": "What they're leaning toward and why",
+  "assumptions": "Key assumptions underlying this decision",
+  "risks": "Main risks if this direction doesn't work out"
+}
+
+Be practical, thoughtful, and grounded. Use the manager's own language where possible.`,
+        response_json_schema: {
+          type: 'object',
+          properties: {
+            title: { type: 'string' },
+            rationale: { type: 'string' },
+            options_considered: { type: 'string' },
+            decision_made: { type: 'string' },
+            assumptions: { type: 'string' },
+            risks: { type: 'string' },
+          },
+          required: ['title', 'rationale', 'options_considered', 'decision_made', 'assumptions', 'risks'],
+        },
+      });
+
+      setForm({
+        title: result.title || '',
+        context: result.rationale || '',
+        options_considered: result.options_considered || '',
+        decision_made: result.decision_made || '',
+        assumptions: result.assumptions || '',
+        risks: result.risks || '',
+        confidence: 'medium',
+      });
+      setUseAI(false);
+      setAiSummary('');
+      toast.success('Decision fields generated');
+    } catch (error) {
+      console.error('AI generation error:', error);
+      toast.error('Failed to generate decision fields');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!form.title.trim()) { toast.error("Describe the decision"); return; }
@@ -57,6 +118,49 @@ function NewDecisionForm({ onSave, onCancel }) {
     }
   };
 
+  if (useAI) {
+    return (
+      <Card className="shadow-sm border border-[#0202ff]/20 bg-white rounded-2xl overflow-hidden">
+        <div className="px-5 pt-5 pb-3 flex items-center gap-2 border-b border-gray-50">
+          <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center">
+            <FileText className="w-3.5 h-3.5 text-white" />
+          </div>
+          <p className="text-sm font-semibold text-gray-900">Smart Decision Assistant</p>
+        </div>
+        <CardContent className="px-5 py-4 space-y-3">
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-gray-600">Describe the decision you're facing</label>
+            <Textarea
+              placeholder="Share what's on your mind. What's the core decision, who's involved, what's the timeline?"
+              value={aiSummary}
+              onChange={e => setAiSummary(e.target.value)}
+              className="text-sm h-20 resize-none"
+              autoFocus
+            />
+          </div>
+          <div className="flex gap-2 pt-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => { setUseAI(false); setAiSummary(''); }}
+              className="text-sm"
+            >
+              Back
+            </Button>
+            <Button
+              size="sm"
+              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-sm"
+              onClick={handleGenerateWithAI}
+              disabled={isGenerating || !aiSummary.trim()}
+            >
+              {isGenerating ? 'Generating…' : 'Generate fields'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="shadow-sm border border-[#0202ff]/20 bg-white rounded-2xl overflow-hidden">
       <div className="px-5 pt-5 pb-3 flex items-center gap-2 border-b border-gray-50">
@@ -66,6 +170,23 @@ function NewDecisionForm({ onSave, onCancel }) {
         <p className="text-sm font-semibold text-gray-900">Capture a decision</p>
       </div>
       <CardContent className="px-5 py-4 space-y-4">
+        <button
+          onClick={() => setUseAI(true)}
+          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+        >
+          <Sparkles className="w-4 h-4" /> Use Smart Decision Assistant
+        </button>
+        <p className="text-xs text-gray-600 text-center">Let AI help you think through this decision</p>
+
+        <div className="relative my-3">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200" />
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="px-2 bg-white text-gray-600">Or fill in manually</span>
+          </div>
+        </div>
+
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-gray-600">What decision are you facing? *</label>
           <Input
