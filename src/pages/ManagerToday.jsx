@@ -25,6 +25,7 @@ import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
 import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
 import PerformanceGlanceCard from "@/components/lead/PerformanceGlanceCard";
+import DecisionJournalSummary from "@/components/lead/DecisionJournalSummary";
 
 function getFirstName(user) {
   const raw = user?.display_name || user?.data?.display_name || user?.full_name;
@@ -442,6 +443,9 @@ export default function ManagerToday() {
           <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50" />
         </button>
       )}
+
+      {/* Decision Journal */}
+      <DecisionJournalSummary />
 
       {/* Mobile: trend dashboard */}
       <div className="md:hidden">
