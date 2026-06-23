@@ -343,6 +343,7 @@ export default function DecisionJournalPage() {
 
   const handleLogOutcome = async (decision, outcomeText) => {
     await base44.entities.DecisionJournal.update(decision.id, {
+      outcome: 'did_it',
       outcome_notes: outcomeText,
       outcome_date: new Date().toISOString(),
       status: 'completed',

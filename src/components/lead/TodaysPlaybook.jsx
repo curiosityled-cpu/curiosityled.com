@@ -274,7 +274,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
       prompt_type: "follow_up",
       source: "web",
       focus_intention: ftReflection || `Follow-through: ${ftSelected} on "${commitment.text}"`,
-      intent_actuals_gap: ftSelected === "did_it" ? "no_gap_detected" : ftSelected === "partly" ? "partial_follow_through" : "no_follow_through_detected",
+      intent_actuals_gap: ftSelected === "did_it" ? "no_gap_detected" : "insufficient_data",
     }).catch(() => {});
     setFtLoading(false);
     setFtSubmitted(true);

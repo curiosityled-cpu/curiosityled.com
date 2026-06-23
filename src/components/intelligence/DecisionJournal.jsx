@@ -1,11 +1,6 @@
 /**
  * DecisionJournal — Track and review complex leadership decisions
- *
- * Surfaces:
- * - Recent decisions with context
- * - Outcomes (what actually happened vs. expected)
- * - Lessons learned
- * - Pattern recognition (types of decisions that work well for you)
+ * Uses the DecisionJournal entity (not ManagerPulse).
  */
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
@@ -35,25 +30,18 @@ export default function DecisionJournal() {
   useEffect(() => {
     const fetchDecisions = async () => {
       try {
-        // Fetch decision-related pulses (those with delegation_commitment recorded)
-        const pulses = await base44.entities.ManagerPulse.filter(
+        const rows = await base44.entities.DecisionJournal.filter(
           { user_email: user.email },
           '-created_date',
           30
         );
-
-        const decisionPulses = pulses.filter(p => 
-          p.delegation_commitment && p.prompt_type === 'contextual'
-        );
-
-        setDecisions(decisionPulses);
+        setDecisions(rows || []);
       } catch (error) {
         console.error('Error fetching decisions:', error);
       } finally {
         setLoading(false);
       }
     };
-
     if (user?.email) fetchDecisions();
   }, [user?.email]);
 
@@ -63,20 +51,27 @@ export default function DecisionJournal() {
       toast.error("Please describe the decision");
       return;
     }
-
     setSubmitting(true);
     try {
-      // Create a decision journal entry as a pulse
-      const pulse = await base44.entities.ManagerPulse.create({
+      const d = new Date();
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      d.setDate(diff);
+      const weekOf = d.toISOString().split('T')[0];
+
+      const record = await base44.entities.DecisionJournal.create({
         user_email: user.email,
-        prompt_type: 'contextual',
-        source: 'web',
-        biggest_weight_today: formData.decision,
-        ...(formData.context && { identity_friction_note: formData.context }),
-        ...(formData.decision_made && { delegation_commitment: formData.decision_made }),
+        decision_text: formData.decision,
+        rationale: formData.context || '',
+        status: 'committed',
+        week_of: weekOf,
+        outcome_notes: (formData.options_considered || formData.decision_made) ? JSON.stringify({
+          options_considered: formData.options_considered,
+          decision_made: formData.decision_made,
+        }) : undefined,
       });
 
-      setDecisions(prev => [pulse, ...prev]);
+      setDecisions(prev => [record, ...prev]);
       setFormData({ decision: '', context: '', options_considered: '', decision_made: '' });
       setShowForm(false);
       toast.success("Decision logged. You can review outcomes later.");
@@ -115,12 +110,7 @@ export default function DecisionJournal() {
               <FileText className="w-5 h-5" />
               Decision Journal
             </CardTitle>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setShowForm(true)}
-              className="gap-1"
-            >
+            <Button size="sm" variant="outline" onClick={() => setShowForm(true)} className="gap-1">
               <Plus className="w-4 h-4" />
               Log Decision
             </Button>
@@ -140,25 +130,23 @@ export default function DecisionJournal() {
               {decisions.slice(0, 10).map((decision) => (
                 <div key={decision.id} className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                   <div className="flex items-start justify-between gap-2 mb-1">
-                    <p className="text-sm font-medium text-gray-900">
-                      {decision.biggest_weight_today}
-                    </p>
-                    <Badge variant="outline" className="flex-shrink-0 text-xs">
-                      {new Date(decision.created_date).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric'
-                      })}
-                    </Badge>
+                    <p className="text-sm font-medium text-gray-900">{decision.decision_text}</p>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {decision.status === 'completed' && (
+                        <Badge variant="outline" className="text-[10px] border-emerald-300 text-emerald-700">Done</Badge>
+                      )}
+                      <Badge variant="outline" className="text-xs">
+                        {new Date(decision.created_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </Badge>
+                    </div>
                   </div>
-                  {decision.identity_friction_note && (
+                  {decision.rationale && (
                     <p className="text-xs text-gray-600 mt-1">
-                      <span className="font-semibold">Context:</span> {decision.identity_friction_note.length > 80 ? decision.identity_friction_note.substring(0, 80) + '…' : decision.identity_friction_note}
+                      <span className="font-semibold">Context:</span> {decision.rationale.length > 80 ? decision.rationale.substring(0, 80) + '…' : decision.rationale}
                     </p>
                   )}
-                  {decision.delegation_commitment && (
-                    <p className="text-xs text-gray-600 mt-1">
-                      <span className="font-semibold">Decision:</span> {decision.delegation_commitment.length > 80 ? decision.delegation_commitment.substring(0, 80) + '…' : decision.delegation_commitment}
-                    </p>
+                  {decision.pattern_name && (
+                    <p className="text-xs text-[#0202ff]/70 mt-0.5">{decision.pattern_name}</p>
                   )}
                 </div>
               ))}
@@ -167,7 +155,6 @@ export default function DecisionJournal() {
         </CardContent>
       </Card>
 
-      {/* Decision Logging Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -186,7 +173,6 @@ export default function DecisionJournal() {
                 onChange={(e) => setFormData({ ...formData, decision: e.target.value })}
               />
             </div>
-
             <div className="space-y-2">
               <label className="text-sm font-medium">Context</label>
               <Textarea
@@ -196,7 +182,6 @@ export default function DecisionJournal() {
                 className="h-16 resize-none"
               />
             </div>
-
             <div className="space-y-2">
               <label className="text-sm font-medium">Options you considered</label>
               <Textarea
@@ -206,21 +191,17 @@ export default function DecisionJournal() {
                 className="h-16 resize-none"
               />
             </div>
-
             <div className="space-y-2">
-              <label className="text-sm font-medium">What did you decide?</label>
+              <label className="text-sm font-medium">What are you leaning toward?</label>
               <Textarea
-                placeholder="Your final decision and reasoning"
+                placeholder="Your current inclination and reasoning"
                 value={formData.decision_made}
                 onChange={(e) => setFormData({ ...formData, decision_made: e.target.value })}
                 className="h-16 resize-none"
               />
             </div>
-
             <div className="flex gap-2 pt-4">
-              <Button variant="outline" onClick={() => setShowForm(false)}>
-                Cancel
-              </Button>
+              <Button variant="outline" type="button" onClick={() => setShowForm(false)}>Cancel</Button>
               <Button
                 type="submit"
                 disabled={submitting || !formData.decision.trim()}
@@ -229,14 +210,7 @@ export default function DecisionJournal() {
                 onMouseEnter={(e) => !submitting && (e.currentTarget.style.backgroundColor = '#0101dd')}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#0202ff')}
               >
-                {submitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Logging...
-                  </>
-                ) : (
-                  "Log Decision"
-                )}
+                {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Logging...</> : "Log Decision"}
               </Button>
             </div>
           </form>
