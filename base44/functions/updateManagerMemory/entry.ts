@@ -62,7 +62,10 @@ Deno.serve(async (req) => {
       what_has_helped.push('Explicit behavioral commitments (not just intentions) tend to follow through');
     }
 
-    const prepPulses = pulses.filter(p => p.prompt_type === 'prepare_debrief_pending');
+    const prepPulses = pulses.filter(p =>
+      p.prompt_type === 'follow_up' &&
+      p.focus_intention?.startsWith('Debrief pending:')
+    );
     if (prepPulses.length > 0) {
       what_has_helped.push('Preparation flows before difficult conversations reduce anxiety and improve outcomes');
     }

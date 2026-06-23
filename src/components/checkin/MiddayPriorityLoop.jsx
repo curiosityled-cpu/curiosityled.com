@@ -19,10 +19,10 @@ export default function MiddayPriorityLoop({ todayRecord, onComplete }) {
   const alreadyDone = todayRecord?.midday_loop_completed;
 
   const [statuses, setStatuses] = useState(() =>
-    big3.reduce((acc, p) => ({ ...acc, [p.id]: p.midday_status || "" }), {})
+    big3.reduce((acc, p, i) => ({ ...acc, [i]: p.midday_status || "" }), {})
   );
   const [midNotes, setMidNotes] = useState(() =>
-    big3.reduce((acc, p) => ({ ...acc, [p.id]: p.midday_note || "" }), {})
+    big3.reduce((acc, p, i) => ({ ...acc, [i]: p.midday_note || "" }), {})
   );
   const [saving, setSaving] = useState(false);
 
@@ -42,10 +42,10 @@ export default function MiddayPriorityLoop({ todayRecord, onComplete }) {
 
   const handleSave = async () => {
     setSaving(true);
-    const updatedBig3 = big3.map(p => ({
+    const updatedBig3 = big3.map((p, i) => ({
       ...p,
-      midday_status: statuses[p.id] || "",
-      midday_note: midNotes[p.id] || "",
+      midday_status: statuses[i] || "",
+      midday_note: midNotes[i] || "",
     }));
     const todayET = new Intl.DateTimeFormat('en-CA', {
       timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
@@ -72,7 +72,7 @@ export default function MiddayPriorityLoop({ todayRecord, onComplete }) {
       <div className="px-4 py-4 space-y-4">
         {big3.map((p, i) => (
           <motion.div
-            key={p.id}
+            key={i}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.07 }}
@@ -87,19 +87,19 @@ export default function MiddayPriorityLoop({ todayRecord, onComplete }) {
               {STATUS_OPTIONS.map(opt => (
                 <button
                   key={opt.value}
-                  onClick={() => setStatuses(s => ({ ...s, [p.id]: opt.value }))}
+                  onClick={() => setStatuses(s => ({ ...s, [i]: opt.value }))}
                   className={`flex-1 text-xs font-semibold py-1.5 rounded-lg border transition-all
-                    ${statuses[p.id] === opt.value ? opt.color : "border-border text-muted-foreground hover:bg-muted/50"}`}
+                    ${statuses[i] === opt.value ? opt.color : "border-border text-muted-foreground hover:bg-muted/50"}`}
                 >
                   {opt.label}
                 </button>
               ))}
             </div>
 
-            {statuses[p.id] && statuses[p.id] !== "on_track" && (
+            {statuses[i] && statuses[i] !== "on_track" && (
               <textarea
-                value={midNotes[p.id]}
-                onChange={e => setMidNotes(n => ({ ...n, [p.id]: e.target.value }))}
+                value={midNotes[i]}
+                onChange={e => setMidNotes(n => ({ ...n, [i]: e.target.value }))}
                 placeholder="What shifted or what's blocking you?"
                 rows={2}
                 className="ml-7 w-[calc(100%-1.75rem)] text-xs bg-muted/40 rounded-lg px-2.5 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
@@ -110,7 +110,7 @@ export default function MiddayPriorityLoop({ todayRecord, onComplete }) {
 
         <Button
           onClick={handleSave}
-          disabled={saving || !big3.some(p => statuses[p.id])}
+          disabled={saving || !big3.some((p, i) => statuses[i])}
           className="w-full bg-[#0202ff] hover:bg-[#0101dd] mt-2"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save midday loop"}
