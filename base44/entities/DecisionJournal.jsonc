@@ -1,0 +1,73 @@
+{
+  "name": "DecisionJournal",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the manager who owns this decision"
+    },
+    "pattern_name": {
+      "type": "string",
+      "description": "The BPO pattern this decision was generated from"
+    },
+    "pattern_bucket": {
+      "type": "string",
+      "description": "Pattern bucket (Operational Risk, People Risk, Execution)"
+    },
+    "decision_text": {
+      "type": "string",
+      "description": "The decision the manager committed to (as written/modified by them)"
+    },
+    "rationale": {
+      "type": "string",
+      "description": "Why this decision matters (from AI or manager)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "committed",
+        "completed",
+        "deferred"
+      ],
+      "default": "committed",
+      "description": "Current status of the decision"
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "did_it",
+        "partly",
+        "not_yet",
+        "changed_course"
+      ],
+      "description": "How the decision played out"
+    },
+    "outcome_notes": {
+      "type": "string",
+      "description": "Manager's notes on how the decision went / what they learned"
+    },
+    "outcome_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the outcome was recorded"
+    },
+    "week_of": {
+      "type": "string",
+      "format": "date",
+      "description": "ISO week-start date (Monday) this decision was made for"
+    }
+  },
+  "required": [
+    "user_email",
+    "decision_text"
+  ],
+  "rls": {
+    "read": {
+      "user_email": "{{user.email}}"
+    },
+    "write": {
+      "user_email": "{{user.email}}"
+    }
+  }
+}

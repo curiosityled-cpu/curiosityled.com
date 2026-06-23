@@ -3,7 +3,7 @@
  * Hero: Big 3 priorities (from last night or today's record)
  * Then: Situation signal → One move → Active goal → Loop closer
  */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Brain, ArrowRight, CheckCircle2, Circle, MinusCircle,
   BookmarkCheck, ChevronDown, ChevronUp, Flame, AlertTriangle, Target, Pencil, Loader2, X, Plus
@@ -14,6 +14,7 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import Big3QuickSet from "@/components/lead/Big3QuickSet";
+import { toast } from "sonner";
 
 // ─── Situation builder ────────────────────────────────────────────────────────
 function buildSituation(pulse, trends, goals, insight) {
@@ -116,6 +117,93 @@ function Big3Item({ item, index, fromYesterday }) {
   );
 }
 
+// ─── Decision Journal outcome options ────────────────────────────────────────
+const DECISION_OUTCOMES = [
+  { value: "did_it",        label: "Did it",       Icon: CheckCircle2, color: "text-emerald-600", ring: "border-emerald-400 bg-emerald-50" },
+  { value: "partly",        label: "Partly",       Icon: MinusCircle,  color: "text-amber-500",   ring: "border-amber-400 bg-amber-50" },
+  { value: "not_yet",       label: "Not yet",      Icon: Circle,       color: "text-gray-400",    ring: "border-gray-300 bg-gray-50" },
+  { value: "changed_course",label: "Changed course", Icon: ArrowRight, color: "text-blue-500",   ring: "border-blue-300 bg-blue-50" },
+];
+
+function DecisionLoopItem({ decision, onOutcomeSaved }) {
+  const [expanded, setExpanded]   = useState(false);
+  const [outcome, setOutcome]     = useState(null);
+  const [notes, setNotes]         = useState("");
+  const [saving, setSaving]       = useState(false);
+  const [done, setDone]           = useState(false);
+
+  const handleSave = async () => {
+    if (!outcome) return;
+    setSaving(true);
+    try {
+      await base44.entities.DecisionJournal.update(decision.id, {
+        outcome,
+        outcome_notes: notes || undefined,
+        outcome_date: new Date().toISOString(),
+        status: 'completed',
+      });
+      setDone(true);
+      toast.success("Outcome captured.");
+      onOutcomeSaved?.();
+    } catch (e) {
+      console.error('Outcome save error', e);
+      toast.error("Couldn't save outcome.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (done) {
+    return (
+      <div className="flex items-center gap-2 py-2 text-xs text-emerald-600">
+        <CheckCircle2 className="w-3.5 h-3.5" /> Loop closed on: <span className="font-medium truncate">{decision.decision_text}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border-t border-border/60 first:border-t-0 pt-2 first:pt-0">
+      <button className="flex items-start justify-between w-full text-left gap-2 py-1" onClick={() => setExpanded(v => !v)}>
+        <div className="min-w-0 flex-1">
+          <p className="text-[9px] font-semibold uppercase tracking-wider text-[#0202ff]/70 mb-0.5">{decision.pattern_name}</p>
+          <p className="text-xs font-semibold text-foreground leading-snug line-clamp-2">{decision.decision_text}</p>
+        </div>
+        {expanded ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" /> : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />}
+      </button>
+      {expanded && (
+        <div className="mt-2.5 space-y-2.5">
+          <p className="text-xs text-muted-foreground">How did this decision go?</p>
+          <div className="grid grid-cols-2 gap-1.5">
+            {DECISION_OUTCOMES.map(({ value, label, Icon, color, ring }) => (
+              <button
+                key={value}
+                onClick={() => setOutcome(value)}
+                className={`flex items-center justify-center gap-1.5 py-2 rounded-xl border text-xs font-medium transition-all ${outcome === value ? ring + " " + color : "bg-muted/60 border-border text-muted-foreground hover:bg-muted"}`}
+              >
+                <Icon className="w-3.5 h-3.5" /> {label}
+              </button>
+            ))}
+          </div>
+          {outcome && (
+            <textarea
+              placeholder={outcome === "did_it" ? "Any notes on how it went? (optional)" : "What happened? What would you do differently?"}
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              className="w-full text-sm text-foreground placeholder:text-muted-foreground bg-muted/50 border border-border rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-[#0202ff]/30"
+              rows={2}
+            />
+          )}
+          {outcome && (
+            <Button size="sm" className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-8" onClick={handleSave} disabled={saving}>
+              {saving ? "Saving…" : "Capture outcome"}
+            </Button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [], trends, goals, assignments, pulses, onOpenAtreus, onRefresh, onBig3Saved }) {
   const { user } = useAuth();
@@ -128,6 +216,23 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
   const [ftSubmitted, setFtSubmitted] = useState(false);
   const [ftLoading, setFtLoading]     = useState(false);
   const [ftExpanded, setFtExpanded]   = useState(false);
+
+  // Pending decisions from DecisionJournal (this week, not yet completed)
+  const [pendingDecisions, setPendingDecisions] = useState([]);
+  const [decisionsExpanded, setDecisionsExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!user?.email) return;
+    // Get Monday of current week
+    const d = new Date();
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    d.setDate(diff);
+    const weekOf = d.toISOString().split('T')[0];
+    base44.entities.DecisionJournal.filter({ user_email: user.email, week_of: weekOf })
+      .then(rows => setPendingDecisions((rows || []).filter(r => r.status !== 'completed')))
+      .catch(() => {});
+  }, [user?.email]);
 
   const activeGoals = (goals || []).filter(g => g.status === "active");
   const topGoal     = [...activeGoals].sort((a, b) => (b.progress || 0) - (a.progress || 0))[0];
@@ -267,6 +372,34 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
           </div>
           {activeGoals.length > 1 && (
             <p className="text-[10px] text-muted-foreground mt-1">+{activeGoals.length - 1} more active</p>
+          )}
+        </div>
+      )}
+
+      {/* ── Decision Journal close-the-loop ──────────────────────────── */}
+      {pendingDecisions.length > 0 && (
+        <div className="px-5 py-3 border-b border-border">
+          <button className="flex items-center justify-between w-full text-left" onClick={() => setDecisionsExpanded(v => !v)}>
+            <div>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Close the loop</p>
+              <p className="text-xs text-foreground font-medium mt-0.5">
+                {pendingDecisions.length} decision{pendingDecisions.length > 1 ? 's' : ''} awaiting an outcome
+              </p>
+            </div>
+            {decisionsExpanded
+              ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+              : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
+          </button>
+          {decisionsExpanded && (
+            <div className="mt-3 space-y-1">
+              {pendingDecisions.map(d => (
+                <DecisionLoopItem
+                  key={d.id}
+                  decision={d}
+                  onOutcomeSaved={() => setPendingDecisions(prev => prev.filter(p => p.id !== d.id))}
+                />
+              ))}
+            </div>
           )}
         </div>
       )}

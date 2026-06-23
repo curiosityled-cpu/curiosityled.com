@@ -1,18 +1,23 @@
 /**
  * PatternDetailDrawer — Full elaboration panel for a BPO pattern.
- * Shows: narrative, what good looks like, what to watch, expanded evidence,
- * AI-generated decision recommendations, Ask Atreus, Log Decision link.
+ * Decision support flow:
+ *   1. "What should I decide this week?" → AI generates 3 options + "Something else"
+ *   2. User picks one (or writes their own) → confirm/modify draft
+ *   3. Saves to DecisionJournal entity
+ *   4. Surfaces in /today Close the Loop card for outcome capture
  */
 import React, { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  AlertTriangle, Users, Zap, TrendingDown, Brain, FileText,
-  CheckCircle2, Eye, Lightbulb, Loader2, ChevronDown, ChevronUp, ArrowRight
+  AlertTriangle, Users, Zap, TrendingDown, Brain,
+  CheckCircle2, Eye, Lightbulb, Loader2, ChevronDown, ChevronUp,
+  ArrowRight, Check, Pencil, X
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { Link } from "react-router-dom";
+import { useAuth } from "@/lib/AuthContext";
+import { toast } from "sonner";
 
 const BUCKET_STYLES = {
   'Operational Risk': { bg: 'bg-red-50',   border: 'border-red-200',   text: 'text-red-700',   icon: AlertTriangle },
@@ -26,7 +31,6 @@ const STATUS_STYLES = {
   Persistent: 'bg-red-100 text-red-800 border-red-200',
 };
 
-// Static BPO-context elaborations keyed by pattern name
 const PATTERN_ELABORATIONS = {
   'Performance Avoidance': {
     what_it_means: 'You\'re delaying or softening difficult performance conversations — which in BPO environments compounds quickly. When agents don\'t receive clear, timely feedback, they can\'t course-correct, and performance metrics drift.',
@@ -60,15 +64,32 @@ const PATTERN_ELABORATIONS = {
   },
   'Metric Myopia': {
     what_it_means: 'You\'re focused on a narrow set of metrics while longer-cycle indicators (CSAT trends, agent development, quality scores) are drifting. Metric myopia in BPO creates short-term wins that mask structural underperformance.',
-    what_good_looks_like: 'A balanced scorecard that\'s reviewed weekly — including both leading indicators (coaching done, escalations resolved) and lagging indicators (CSAT, AHT, attrition). ',
+    what_good_looks_like: 'A balanced scorecard reviewed weekly — including both leading indicators (coaching done, escalations resolved) and lagging indicators (CSAT, AHT, attrition).',
     what_to_watch: ['CSAT declining while AHT improves', 'Quality scores not trending alongside efficiency gains', 'Development goals going untouched while operational goals dominate'],
   },
 };
 
+// Get Monday of current week as ISO date string
+function getWeekOf() {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  d.setDate(diff);
+  return d.toISOString().split('T')[0];
+}
+
 export default function PatternDetailDrawer({ pattern, open, onClose, onOpenAtreus }) {
+  const { user } = useAuth();
   const [aiDecision, setAiDecision] = useState(null);
   const [loadingAi, setLoadingAi] = useState(false);
   const [evidenceExpanded, setEvidenceExpanded] = useState(false);
+
+  // Decision flow state
+  const [selectedDecision, setSelectedDecision] = useState(null); // { decision, rationale } or { decision: 'custom', rationale: '' }
+  const [draftText, setDraftText] = useState("");
+  const [isEditingDraft, setIsEditingDraft] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   if (!pattern) return null;
 
@@ -89,17 +110,17 @@ What's happening: ${pattern.tagline}
 What's at stake: ${pattern.whatsAtStake}
 Evidence signals: ${pattern.evidence.join('; ')}
 
-Generate 3 specific, concrete decisions this manager could make THIS WEEK to address this pattern. Each decision should be:
+Generate 3 specific, concrete decisions this manager could make THIS WEEK to address this pattern. Each should be:
 - Actionable in the next 5 working days
 - Specific to BPO operations
-- Framed as a decision, not a task
+- Framed as a decision (not a task)
 
-Return a JSON object with this shape:
+Return JSON:
 {
   "decisions": [
-    { "decision": "string (the decision, starting with 'Decide to...' or 'Choose to...')", "rationale": "string (1 sentence why)", "effort": "low|medium|high" }
+    { "decision": "string (starting with 'Decide to...' or 'Choose to...')", "rationale": "string (1 sentence why)", "effort": "low|medium|high" }
   ],
-  "one_liner": "string (one bold framing sentence about what's really at stake here)"
+  "one_liner": "string (one bold framing sentence about what's really at stake)"
 }`,
         response_json_schema: {
           type: 'object',
@@ -117,6 +138,51 @@ Return a JSON object with this shape:
     }
   };
 
+  const handleSelectDecision = (d) => {
+    setSelectedDecision(d);
+    setDraftText(d.decision);
+    setIsEditingDraft(false);
+    setSaved(false);
+  };
+
+  const handleSelectCustom = () => {
+    setSelectedDecision({ decision: '', rationale: 'My own decision for this week.' });
+    setDraftText('');
+    setIsEditingDraft(true);
+    setSaved(false);
+  };
+
+  const handleSave = async () => {
+    const finalText = draftText.trim();
+    if (!finalText) return;
+    setSaving(true);
+    try {
+      await base44.entities.DecisionJournal.create({
+        user_email: user.email,
+        pattern_name: pattern.name,
+        pattern_bucket: pattern.bucket,
+        decision_text: finalText,
+        rationale: selectedDecision?.rationale || '',
+        status: 'committed',
+        week_of: getWeekOf(),
+      });
+      setSaved(true);
+      toast.success("Decision committed — you'll see it in Close the Loop on Today's page.");
+    } catch (e) {
+      console.error('Save decision error', e);
+      toast.error("Couldn't save. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const resetDecisionFlow = () => {
+    setSelectedDecision(null);
+    setDraftText("");
+    setIsEditingDraft(false);
+    setSaved(false);
+  };
+
   const effortColors = {
     low:    'bg-emerald-50 text-emerald-700 border-emerald-200',
     medium: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -126,7 +192,6 @@ Return a JSON object with this shape:
   return (
     <Sheet open={open} onOpenChange={onClose}>
       <SheetContent side="right" className="w-full max-w-lg overflow-y-auto p-0">
-        {/* Accent bar */}
         <div className={`h-1 ${pattern.status === 'Persistent' ? 'bg-red-500' : pattern.status === 'Active' ? 'bg-orange-400' : 'bg-yellow-400'}`} />
 
         <div className="px-5 pt-5 pb-8 space-y-5">
@@ -186,7 +251,6 @@ Return a JSON object with this shape:
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">What this means in BPO</p>
                 <p className="text-xs text-slate-700 leading-relaxed">{elab.what_it_means}</p>
               </div>
-
               <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3">
                 <div className="flex items-center gap-1.5 mb-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
@@ -194,7 +258,6 @@ Return a JSON object with this shape:
                 </div>
                 <p className="text-xs text-emerald-800 leading-relaxed">{elab.what_good_looks_like}</p>
               </div>
-
               <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
                 <div className="flex items-center gap-1.5 mb-1.5">
                   <Eye className="w-3.5 h-3.5 text-amber-600" />
@@ -223,13 +286,14 @@ Return a JSON object with this shape:
             </div>
           )}
 
-          {/* Decision Support section */}
-          <div className="space-y-3">
+          {/* ── Decision Support ─────────────────────────────────────── */}
+          <div className="space-y-3 border-t border-border pt-4">
             <div className="flex items-center gap-2">
               <Lightbulb className="w-4 h-4 text-[#0202ff]" />
               <p className="text-sm font-semibold text-gray-900">Decision support</p>
             </div>
 
+            {/* Step 1: trigger */}
             {!aiDecision && !loadingAi && (
               <button
                 onClick={generateDecisionSupport}
@@ -247,15 +311,21 @@ Return a JSON object with this shape:
               </div>
             )}
 
-            {aiDecision && (
+            {/* Step 2: options list */}
+            {aiDecision && !selectedDecision && (
               <div className="space-y-2">
                 {aiDecision.one_liner && (
                   <div className="px-4 py-3 rounded-xl bg-[#0202ff]/5 border border-[#0202ff]/15">
                     <p className="text-xs font-semibold text-[#0202ff] leading-relaxed">{aiDecision.one_liner}</p>
                   </div>
                 )}
+                <p className="text-xs text-gray-500 font-medium">Choose one to commit to this week:</p>
                 {(aiDecision.decisions || []).map((d, i) => (
-                  <div key={i} className="rounded-xl border border-border bg-card p-3.5 space-y-1.5">
+                  <button
+                    key={i}
+                    onClick={() => handleSelectDecision(d)}
+                    className="w-full text-left rounded-xl border border-border bg-card hover:border-[#0202ff]/40 hover:bg-[#0202ff]/5 transition-all p-3.5 space-y-1 group"
+                  >
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-xs font-semibold text-gray-900 leading-snug flex-1">{d.decision}</p>
                       {d.effort && (
@@ -265,20 +335,88 @@ Return a JSON object with this shape:
                       )}
                     </div>
                     {d.rationale && <p className="text-[11px] text-gray-500 leading-relaxed">{d.rationale}</p>}
-                  </div>
+                    <div className="flex items-center gap-1 text-[#0202ff] opacity-0 group-hover:opacity-100 transition-opacity">
+                      <ArrowRight className="w-3 h-3" />
+                      <span className="text-[10px] font-medium">Commit to this</span>
+                    </div>
+                  </button>
                 ))}
+                {/* Something else */}
                 <button
-                  onClick={() => setAiDecision(null)}
-                  className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors"
+                  onClick={handleSelectCustom}
+                  className="w-full text-left rounded-xl border border-dashed border-gray-300 hover:border-[#0202ff]/40 bg-transparent hover:bg-[#0202ff]/5 transition-all p-3.5 text-xs text-gray-500 hover:text-[#0202ff] font-medium"
                 >
+                  + Something else — I'll write my own
+                </button>
+                <button onClick={() => setAiDecision(null)} className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors">
                   Regenerate
                 </button>
               </div>
             )}
+
+            {/* Step 3: confirm / modify draft */}
+            {selectedDecision && !saved && (
+              <div className="space-y-3">
+                <div className="rounded-xl border border-[#0202ff]/30 bg-[#0202ff]/5 p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[#0202ff]">Your decision draft</p>
+                    <div className="flex gap-1.5">
+                      <button onClick={() => setIsEditingDraft(v => !v)} className="p-1 rounded hover:bg-[#0202ff]/10 transition-colors">
+                        <Pencil className="w-3 h-3 text-[#0202ff]" />
+                      </button>
+                      <button onClick={resetDecisionFlow} className="p-1 rounded hover:bg-red-50 transition-colors">
+                        <X className="w-3 h-3 text-gray-400" />
+                      </button>
+                    </div>
+                  </div>
+                  {isEditingDraft ? (
+                    <textarea
+                      autoFocus
+                      value={draftText}
+                      onChange={e => setDraftText(e.target.value)}
+                      placeholder="Write your decision here…"
+                      className="w-full text-sm text-gray-900 bg-white border border-[#0202ff]/20 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-[#0202ff]/30"
+                      rows={3}
+                    />
+                  ) : (
+                    <p className="text-sm font-semibold text-gray-900 leading-snug">{draftText}</p>
+                  )}
+                  {selectedDecision.rationale && !isEditingDraft && (
+                    <p className="text-[11px] text-gray-500 leading-relaxed">{selectedDecision.rationale}</p>
+                  )}
+                </div>
+
+                <Button
+                  onClick={handleSave}
+                  disabled={saving || !draftText.trim()}
+                  className="w-full text-white text-sm font-semibold gap-2"
+                  style={{ backgroundColor: '#0202ff' }}
+                  onMouseEnter={e => !saving && (e.currentTarget.style.backgroundColor = '#0101dd')}
+                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#0202ff')}
+                >
+                  {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                  {saving ? 'Saving…' : 'Commit to this decision'}
+                </Button>
+                <p className="text-[10px] text-gray-400 text-center">This will appear in Close the Loop on your Today page so you can track how it went.</p>
+              </div>
+            )}
+
+            {/* Step 4: saved confirmation */}
+            {saved && (
+              <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 flex items-start gap-3">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-emerald-800">Decision committed</p>
+                  <p className="text-xs text-emerald-700 mt-0.5 leading-snug">
+                    Check back on your Today page — you'll see it in the Close the Loop section to capture how it went.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Action buttons */}
-          <div className="flex flex-col gap-2 pt-1 border-t border-border">
+          {/* Ask Atreus */}
+          <div className="pt-1 border-t border-border">
             <Button
               onClick={() => {
                 onClose();
@@ -292,14 +430,6 @@ Return a JSON object with this shape:
               <Brain className="w-3.5 h-3.5" />
               Ask Atreus about this pattern
             </Button>
-
-            <Link to="/decision-journal" onClick={onClose}>
-              <Button variant="outline" className="w-full text-sm gap-2 border-[#0202ff]/30 text-[#0202ff] hover:bg-blue-50">
-                <FileText className="w-3.5 h-3.5" />
-                Log a decision in your journal
-                <ArrowRight className="w-3 h-3 ml-auto" />
-              </Button>
-            </Link>
           </div>
         </div>
       </SheetContent>
