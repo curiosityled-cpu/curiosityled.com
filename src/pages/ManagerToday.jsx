@@ -292,6 +292,30 @@ export default function ManagerToday() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
+  // DecisionJournal pending decisions — fetched here (always mounted) rather than inside TodaysPlaybook
+  // which is conditionally rendered and may not mount when a decision is committed
+  const { data: pendingDecisions = [], refetch: refetchDecisions } = useQuery({
+    queryKey: ['ml-pending-decisions', user?.email],
+    queryFn: async () => {
+      try {
+        const rows = await base44.entities.DecisionJournal.filter({ user_email: user.email }, '-created_date', 30);
+        return (rows || []).filter(r => r.status !== 'completed');
+      } catch { return []; }
+    },
+    enabled: !!user?.email,
+    staleTime: 60 * 1000,   // 1 min — refetch often enough to stay fresh
+    refetchOnWindowFocus: true,
+  });
+
+  // Re-fetch decisions when the 'decision-committed' event fires (from PatternDetailDrawer)
+  useEffect(() => {
+    const handler = () => {
+      queryClient.invalidateQueries({ queryKey: ['ml-pending-decisions', user?.email] });
+    };
+    window.addEventListener('decision-committed', handler);
+    return () => window.removeEventListener('decision-committed', handler);
+  }, [user?.email, queryClient]);
+
   const { data: kpis = [] } = useQuery({
     queryKey: ['ml-kpis', user?.email],
     queryFn: async () => { try { return await base44.entities.KPI.filter({ status: "active" }, "-updated_date", 10); } catch { return []; } },
@@ -390,7 +414,7 @@ export default function ManagerToday() {
       )}
 
       {/* Today's Playbook */}
-      {(todayRecord || yesterdayBig3.length > 0 || goals.length > 0 || assignments.length > 0 || !!localBig3Override) && (
+      {(todayRecord || yesterdayBig3.length > 0 || goals.length > 0 || assignments.length > 0 || !!localBig3Override || pendingDecisions.length > 0) && (
         <TodaysPlaybook
           todayRecord={localBig3Override ? { ...todayRecord, big3_priorities: localBig3Override } : todayRecord}
           yesterdayBig3={yesterdayBig3}
@@ -399,6 +423,8 @@ export default function ManagerToday() {
           goals={goals}
           assignments={assignments}
           pulses={recentPulses}
+          pendingDecisions={pendingDecisions}
+          onDecisionOutcomeSaved={() => queryClient.invalidateQueries({ queryKey: ['ml-pending-decisions', user?.email] })}
           onOpenAtreus={openAtreus}
           onBig3Saved={(priorities) => {
             setLocalBig3Override(priorities);

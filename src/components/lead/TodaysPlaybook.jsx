@@ -214,7 +214,7 @@ function DecisionLoopItem({ decision, onOutcomeSaved }) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [], trends, goals, assignments, pulses, onOpenAtreus, onRefresh, onBig3Saved }) {
+export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [], trends, goals, assignments, pulses, pendingDecisions = [], onDecisionOutcomeSaved, onOpenAtreus, onRefresh, onBig3Saved }) {
   const { user } = useAuth();
 
   const [moveDone, setMoveDone]       = useState(false);
@@ -226,35 +226,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
   const [ftLoading, setFtLoading]     = useState(false);
   const [ftExpanded, setFtExpanded]   = useState(false);
 
-  // Pending decisions from DecisionJournal (this week, not yet completed)
-  const [pendingDecisions, setPendingDecisions] = useState([]);
   const [decisionsExpanded, setDecisionsExpanded] = useState(false);
-
-  const loadPendingDecisions = async () => {
-    if (!user?.email) return;
-    try {
-      const rows = await base44.entities.DecisionJournal.filter({ user_email: user.email }, '-created_date', 30);
-      const pending = (rows || []).filter(r => r.status !== 'completed');
-      setPendingDecisions(pending);
-    } catch (e) {
-      console.error('Error loading pending decisions:', e);
-    }
-  };
-
-  useEffect(() => {
-    loadPendingDecisions();
-  }, [user?.email]);
-
-  // Re-fetch when window regains focus OR when a decision is committed in the drawer
-  useEffect(() => {
-    const handler = () => loadPendingDecisions();
-    window.addEventListener('focus', handler);
-    window.addEventListener('decision-committed', handler);
-    return () => {
-      window.removeEventListener('focus', handler);
-      window.removeEventListener('decision-committed', handler);
-    };
-  }, [user?.email]);
 
   const activeGoals = (goals || []).filter(g => g.status === "active");
   const topGoal     = [...activeGoals].sort((a, b) => (b.progress || 0) - (a.progress || 0))[0];
@@ -418,7 +390,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
                 <DecisionLoopItem
                   key={d.id}
                   decision={d}
-                  onOutcomeSaved={() => setPendingDecisions(prev => prev.filter(p => p.id !== d.id))}
+                  onOutcomeSaved={() => onDecisionOutcomeSaved?.()}
                 />
               ))}
             </div>
