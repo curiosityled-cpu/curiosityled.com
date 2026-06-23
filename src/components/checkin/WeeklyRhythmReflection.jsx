@@ -79,7 +79,7 @@ export default function WeeklyRhythmReflection({ isOpen, onClose, onSuccess, use
     let cancelled = false;
     Promise.all([
       base44.entities.DailyCheckIn.filter({ user_email: userEmail }, "-check_in_date", 14).catch(() => []),
-      base44.entities.Goal.filter({ user_email: userEmail }, "-created_date", 15).catch(() => []),
+      base44.entities.Goal.filter({ created_by: userEmail, status: 'active' }, "-created_date", 15).catch(() => []),
       base44.entities.AssessmentInsights.filter({ user_email: userEmail }, "-created_date", 1).catch(() => []),
     ]).then(([records, goalsData, insightsData]) => {
       if (cancelled) return;
