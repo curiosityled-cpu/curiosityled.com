@@ -298,13 +298,17 @@ export default function ManagerToday() {
     queryKey: ['ml-pending-decisions', user?.email],
     queryFn: async () => {
       try {
-        const rows = await base44.entities.DecisionJournal.filter({ user_email: user.email }, '-created_date', 30);
-        return (rows || []).filter(r => r.status !== 'completed');
+        const rows = await base44.entities.DecisionJournal.filter(
+          { user_email: user.email, status: { $in: ['committed', 'draft'] } },
+          '-created_date',
+          30
+        );
+        return rows || [];
       } catch { return []; }
     },
     enabled: !!user?.email,
-    staleTime: 0,             // Always refetch on mount — decisions change cross-page
-    refetchOnMount: true,
+    staleTime: 0,
+    refetchOnMount: 'always',
     refetchOnWindowFocus: true,
   });
 
@@ -405,8 +409,8 @@ export default function ManagerToday() {
         <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} />
       )}
 
-      {/* Today's Playbook */}
-      {todayRecord !== undefined && (todayRecord || yesterdayBig3.length > 0 || goals.length > 0 || assignments.length > 0 || !!localBig3Override || pendingDecisions.length > 0) && (
+      {/* Today's Playbook — always show once todayData has resolved */}
+      {todayRecord !== undefined && (
         <TodaysPlaybook
           todayRecord={localBig3Override ? { ...todayRecord, big3_priorities: localBig3Override } : todayRecord}
           yesterdayBig3={yesterdayBig3}
