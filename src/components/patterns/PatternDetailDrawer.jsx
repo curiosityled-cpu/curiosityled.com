@@ -156,10 +156,50 @@ Return JSON:
     }
   };
 
-  const handleSelectDecision = (d) => {
+  const handleSelectDecision = async (d) => {
     setSelectedDecision(d);
     setForm({ ...EMPTY_FORM, title: d.decision, context: d.rationale || '' });
     setSaved(false);
+    // Auto-populate remaining fields using AI
+    setLoadingAiAssist(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are a BPO leadership coach. A manager has selected this decision to commit to this week:
+
+Decision: "${d.decision}"
+Rationale: "${d.rationale}"
+Pattern context: ${pattern.name} — ${pattern.tagline}
+What's at stake: ${pattern.whatsAtStake}
+
+Fill in the remaining fields for their decision journal entry. Return JSON:
+{
+  "options_considered": "2-3 concrete alternatives they could have chosen instead",
+  "decision_made": "What they're leaning toward and why — restate the chosen direction with brief reasoning",
+  "assumptions": "Key assumptions this decision is based on (1-2 sentences)",
+  "risks": "Main risk if this doesn't work out (1 sentence)"
+}`,
+        response_json_schema: {
+          type: 'object',
+          properties: {
+            options_considered: { type: 'string' },
+            decision_made: { type: 'string' },
+            assumptions: { type: 'string' },
+            risks: { type: 'string' },
+          }
+        }
+      });
+      setForm(prev => ({
+        ...prev,
+        options_considered: result.options_considered || '',
+        decision_made: result.decision_made || '',
+        assumptions: result.assumptions || '',
+        risks: result.risks || '',
+      }));
+    } catch (e) {
+      console.error('Auto-populate error', e);
+    } finally {
+      setLoadingAiAssist(false);
+    }
   };
 
   const handleSelectCustom = () => {
