@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
         // Cooldown check — skip if nudge sent within 20 hours
         const recentNudges = await serviceBase44.entities.Notification.filter({
           user_email: trend.user_email,
-          type: 'atreus_proactive',
+          type: 'nudge',
         }, '-created_date', 1);
 
         if (recentNudges.length > 0) {
@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
         // Create notification
         await serviceBase44.entities.Notification.create({
           user_email: trend.user_email,
-          type: 'atreus_proactive',
+          type: 'nudge',
           title: 'Atreus has something worth sharing',
           message: nudgeBody,
           is_read: false,

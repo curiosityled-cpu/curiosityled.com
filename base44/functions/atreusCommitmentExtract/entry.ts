@@ -71,6 +71,8 @@ Return JSON: { "is_commitment": boolean, "commitment_text": string | null }`,
         goal_type: 'action_item',
         status: 'active',
         visibility: 'private',
+        created_by: user.email,
+        user_email: user.email,
       }).catch(() => {});
     }
 
