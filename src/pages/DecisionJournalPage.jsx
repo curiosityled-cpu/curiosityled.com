@@ -471,7 +471,7 @@ export default function DecisionJournalPage() {
       week_of: weekOf,
     });
     queryClient.invalidateQueries({ queryKey: ['decision-journal-full', user?.email] });
-    queryClient.removeQueries({ queryKey: ['ml-pending-decisions', user?.email] });
+    queryClient.invalidateQueries({ queryKey: ['ml-pending-decisions'] });
     setShowForm(false);
   };
 

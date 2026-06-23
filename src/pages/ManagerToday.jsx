@@ -292,18 +292,12 @@ export default function ManagerToday() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
-  // DecisionJournal pending decisions — always fetch fresh; no stale cache tolerance
+  // DecisionJournal pending decisions — always fetch fresh on every mount
   const { data: pendingDecisions = [], refetch: refetchDecisions } = useQuery({
     queryKey: ['ml-pending-decisions', user?.email],
     queryFn: async () => {
-      try {
-        const rows = await base44.entities.DecisionJournal.filter(
-          { user_email: user.email },
-          '-created_date',
-          50
-        );
-        return (rows || []).filter(r => r.status !== 'completed');
-      } catch { return []; }
+      const rows = await base44.entities.DecisionJournal.list('-created_date', 100);
+      return (rows || []).filter(r => r.status !== 'completed');
     },
     enabled: !!user?.email,
     staleTime: 0,
@@ -421,7 +415,7 @@ export default function ManagerToday() {
           pulses={recentPulses}
           pendingDecisions={pendingDecisions}
           onDecisionOutcomeSaved={async () => {
-            queryClient.removeQueries({ queryKey: ['ml-pending-decisions', user?.email] });
+            queryClient.invalidateQueries({ queryKey: ['ml-pending-decisions'] });
             await refetchDecisions();
           }}
           onOpenAtreus={openAtreus}

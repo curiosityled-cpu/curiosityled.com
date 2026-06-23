@@ -281,8 +281,7 @@ Generate a well-structured decision for them to capture in their decision journa
       });
       setSaved(true);
       toast.success("Decision committed — you'll see it in Close the Loop on Today's page.");
-      // Invalidate + remove so staleTime:0 forces a fresh fetch on next /today mount
-      queryClient.removeQueries({ queryKey: ['ml-pending-decisions', user?.email] });
+      queryClient.invalidateQueries({ queryKey: ['ml-pending-decisions'] });
     } catch (e) {
       console.error('Save decision error', e);
       toast.error("Couldn't save. Please try again.");
