@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { useAtreusOrchestrator } from "@/components/ai/useAtreusOrchestrator";
 import { Link } from "react-router-dom";
-import { Brain, ChevronRight, MessageSquare, SlidersHorizontal, BarChart3, Layers, X, FileText } from "lucide-react";
+import { Brain, ChevronRight, MessageSquare, SlidersHorizontal, BarChart3, Layers, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ToneOnboarding from "@/components/checkin/ToneOnboarding";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
@@ -72,28 +72,17 @@ function HeroGreeting({ firstName, hasCheckedIn, todayRecord, onSettingsToggle }
 
 function ExploreDeeperCard() {
   return (
-    <div className="space-y-2">
-      <div className="flex gap-2">
-        <Link to="/patterns" className="flex-1">
-          <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors group">
-            <BarChart3 className="w-3.5 h-3.5 text-[#0202ff] flex-shrink-0" />
-            <div className="min-w-0">
-              <p className="text-xs font-semibold text-foreground">Patterns</p>
-              <p className="text-[10px] text-muted-foreground">What the system sees over time</p>
-            </div>
+    <div className="flex gap-2">
+      <Link to="/patterns" className="flex-1">
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors group">
+          <BarChart3 className="w-3.5 h-3.5 text-[#0202ff] flex-shrink-0" />
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-foreground">Patterns</p>
+            <p className="text-[10px] text-muted-foreground">What the system sees over time</p>
           </div>
-        </Link>
-        <Link to="/decision-journal" className="flex-1">
-          <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors group">
-            <FileText className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-            <div className="min-w-0">
-              <p className="text-xs font-semibold text-foreground">Decisions</p>
-              <p className="text-[10px] text-muted-foreground">High-stakes decisions & outcomes</p>
-            </div>
-          </div>
-        </Link>
-      </div>
-      <Link to="/practice" className="w-full">
+        </div>
+      </Link>
+      <Link to="/practice" className="flex-1">
         <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors group">
           <Layers className="w-3.5 h-3.5 text-violet-500 flex-shrink-0" />
           <div className="min-w-0">
