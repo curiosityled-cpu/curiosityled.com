@@ -25,6 +25,7 @@ import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
 import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
 import PerformanceGlanceCard from "@/components/lead/PerformanceGlanceCard";
+import DecisionJournalCard from "@/components/decisions/DecisionJournalCard";
 
 function getFirstName(user) {
   const raw = user?.display_name || user?.data?.display_name || user?.full_name;
@@ -472,6 +473,9 @@ export default function ManagerToday() {
       <div className="md:hidden">
         <ExploreDeeperCard />
       </div>
+
+      {/* Decision Journal */}
+      <DecisionJournalCard />
     </div>
   );
 
@@ -506,6 +510,7 @@ export default function ManagerToday() {
         pulses={recentPulses}
         onOpenAtreus={openAtreus}
       />
+      <DecisionJournalCard />
     </div>
   );
 

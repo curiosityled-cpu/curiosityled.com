@@ -1,9 +1,3 @@
-/**
- * DecisionJournalPage — Full Decision Journal experience.
- * Route: /decision-journal
- * Capture decisions with context, confidence, assumptions, risks.
- * Review outcomes 3+ days later.
- */
 import React, { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
@@ -16,7 +10,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
 
 const CONFIDENCE_LEVELS = [
   { value: 'low', label: "Low — I'm not sure", color: 'bg-rose-50 text-rose-700 border-rose-200' },
@@ -286,9 +279,8 @@ function DecisionCard({ decision, onLogOutcome }) {
   const [outcomeText, setOutcomeText] = useState('');
   const [saved, setSaved] = useState(decision.status === 'completed');
   const daysOld = Math.floor((Date.now() - new Date(decision.created_date)) / 86400000);
-  const readyForReview = daysOld >= 1 && decision.status !== 'completed'; // Show after 1 day
+  const readyForReview = daysOld >= 1 && decision.status !== 'completed';
 
-  // Use top-level fields directly; fall back to legacy JSON-in-outcome_notes for old records
   let fields = {
     options_considered: decision.options_considered || '',
     decision_made: decision.decision_made || '',
@@ -297,7 +289,6 @@ function DecisionCard({ decision, onLogOutcome }) {
     confidence: decision.confidence || '',
   };
   let plainOutcomeNote = decision.outcome_notes || null;
-  // Legacy: if outcome_notes is a JSON blob from old records, extract it
   const rawNotes = decision.outcome_notes || '';
   if (rawNotes.startsWith('{')) {
     try {
@@ -377,7 +368,6 @@ function DecisionCard({ decision, onLogOutcome }) {
               </div>
             )}
           </div>
-          {/* Show existing outcome if already captured */}
           {decision.outcome && (
             <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200">
               <p className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wide mb-0.5">Outcome: {decision.outcome.replace(/_/g, ' ')}</p>
@@ -387,7 +377,6 @@ function DecisionCard({ decision, onLogOutcome }) {
             </div>
           )}
 
-          {/* Outcome review */}
           {readyForReview && !saved && (
             <div className="pt-2 border-t border-border space-y-2">
               <p className="text-xs font-semibold text-amber-700">How did it play out?</p>
@@ -431,19 +420,19 @@ function DecisionCard({ decision, onLogOutcome }) {
   );
 }
 
-export default function DecisionJournalPage() {
+export default function DecisionJournalCard() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
 
   const { data: decisions = [], isLoading } = useQuery({
-    queryKey: ['decision-journal-full', user?.email],
+    queryKey: ['decision-journal-card', user?.email],
     queryFn: async () => {
       try {
         return await base44.entities.DecisionJournal.filter(
           { user_email: user.email },
           '-created_date',
-          50
+          10
         );
       } catch { return []; }
     },
@@ -470,7 +459,7 @@ export default function DecisionJournalPage() {
       status: 'committed',
       week_of: weekOf,
     });
-    queryClient.invalidateQueries({ queryKey: ['decision-journal-full', user?.email] });
+    queryClient.invalidateQueries({ queryKey: ['decision-journal-card', user?.email] });
     setShowForm(false);
   };
 
@@ -481,32 +470,14 @@ export default function DecisionJournalPage() {
       status: 'completed',
       outcome_notes: outcomeText,
     }).catch(() => {});
-    queryClient.invalidateQueries({ queryKey: ['decision-journal-full', user?.email] });
+    queryClient.invalidateQueries({ queryKey: ['decision-journal-card', user?.email] });
   };
 
-  const reviewReady = decisions.filter(d => d.status !== 'completed' && Math.floor((Date.now() - new Date(d.created_date)) / 86400000) >= 3);
+  const reviewReady = decisions.filter(d => d.status !== 'completed' && Math.floor((Date.now() - new Date(d.created_date)) / 86400000) >= 1);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="pt-1">
-          <div className="flex items-center gap-2 mb-1">
-            <button onClick={() => window.history.back()} className="text-xs text-muted-foreground hover:text-foreground">← Back</button>
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">Decision Journal</h1>
-          <p className="text-sm text-muted-foreground mt-1">Capture high-stakes decisions. Review outcomes. Learn your patterns.</p>
-        </div>
-        <Button
-          size="sm"
-          className="bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5 mt-2"
-          onClick={() => setShowForm(true)}
-        >
-          <Plus className="w-4 h-4" /> Capture decision
-        </Button>
-      </div>
-
-      {/* Pending review banner */}
+    <div className="space-y-4">
+      {/* Banner */}
       {reviewReady.length > 0 && !showForm && (
         <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-amber-50 border border-amber-200">
           <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
@@ -516,35 +487,41 @@ export default function DecisionJournalPage() {
         </div>
       )}
 
-      {/* New decision form */}
+      {/* Form */}
       {showForm && (
         <NewDecisionForm onSave={handleSave} onCancel={() => setShowForm(false)} />
       )}
 
-      {/* Decision list */}
-      {isLoading ? (
-        <div className="py-8 flex justify-center">
-          <div className="w-5 h-5 border-2 border-gray-200 border-t-[#0202ff] rounded-full animate-spin" />
-        </div>
-      ) : decisions.length === 0 ? (
-        <Card className="shadow-sm border border-dashed border-border rounded-2xl">
-          <CardContent className="py-12 px-6 text-center">
-            <FileText className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-            <p className="text-sm font-semibold text-card-foreground mb-1">No decisions logged yet</p>
-            <p className="text-xs text-muted-foreground max-w-xs mx-auto mb-4 leading-relaxed">
-              Capture important decisions as you face them — context, confidence level, and assumptions. Come back in a few days to review outcomes and spot patterns.
-            </p>
-            <Button size="sm" onClick={() => setShowForm(true)} className="bg-[#0202ff] hover:bg-[#0101dd] text-white">
-              <Plus className="w-3.5 h-3.5 mr-1.5" /> Capture your first decision
+      {/* List */}
+      {!showForm && decisions.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-foreground">Recent decisions</h3>
+            <Button
+              size="sm"
+              className="bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5 text-xs"
+              onClick={() => setShowForm(true)}
+            >
+              <Plus className="w-3.5 h-3.5" /> Add
             </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-2">
-          {decisions.map(d => (
-            <DecisionCard key={d.id} decision={d} onLogOutcome={handleLogOutcome} />
-          ))}
+          </div>
+          <div className="space-y-2">
+            {decisions.map(d => (
+              <DecisionCard key={d.id} decision={d} onLogOutcome={handleLogOutcome} />
+            ))}
+          </div>
         </div>
+      )}
+
+      {/* Empty or button */}
+      {!showForm && decisions.length === 0 && !isLoading && (
+        <Button
+          size="sm"
+          className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white gap-2"
+          onClick={() => setShowForm(true)}
+        >
+          <Plus className="w-4 h-4" /> Capture your first decision
+        </Button>
       )}
     </div>
   );

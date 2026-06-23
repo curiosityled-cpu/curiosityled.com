@@ -126,7 +126,6 @@ const AuthenticatedApp = () => {
       <Route path="/team" element={<MVPLayout><ManagerTeam /></MVPLayout>} />
       <Route path="/atreus-guide" element={<MVPLayout><ManagerAtreus /></MVPLayout>} />
       <Route path="/practice" element={<MVPLayout><ManagerPractice /></MVPLayout>} />
-      <Route path="/decision-journal" element={<MVPLayout><DecisionJournalPage /></MVPLayout>} />
       <Route path="/you" element={<Navigate to="/Profile" replace />} />
 
       {/* MVP-specific routes */}
