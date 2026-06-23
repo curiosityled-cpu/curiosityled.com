@@ -90,10 +90,10 @@
   ],
   "rls": {
     "read": {
-      "user_email": "{{user.email}}"
+      "created_by": "{{user.email}}"
     },
     "write": {
-      "user_email": "{{user.email}}"
+      "created_by": "{{user.email}}"
     }
   }
 }
