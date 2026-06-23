@@ -167,12 +167,17 @@ function DecisionCard({ decision, onLogOutcome }) {
   const daysOld = Math.floor((Date.now() - new Date(decision.created_date)) / 86400000);
   const readyForReview = daysOld >= 1 && decision.status !== 'completed'; // Show after 1 day
 
-  // Parse extra fields stored in outcome_notes as JSON (from manual form saves)
+  // Parse extra fields stored in outcome_notes as JSON (only if it looks like JSON, not plain text)
   let fields = {};
-  try {
-    const parsed = JSON.parse(decision.outcome_notes || '{}');
-    if (parsed.options_considered || parsed.decision_made) fields = parsed;
-  } catch {}
+  const rawNotes = decision.outcome_notes || '';
+  if (rawNotes.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(rawNotes);
+      if (parsed.options_considered || parsed.decision_made) fields = parsed;
+    } catch {}
+  }
+  // Plain-text outcome note (written after outcome logging)
+  const plainOutcomeNote = !rawNotes.startsWith('{') && rawNotes.trim() ? rawNotes : null;
 
   const handleSaveOutcome = async () => {
     if (!outcomeText.trim()) return;
@@ -243,9 +248,9 @@ function DecisionCard({ decision, onLogOutcome }) {
           {/* Show existing outcome if already captured */}
           {decision.outcome && (
             <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200">
-              <p className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wide mb-0.5">Outcome: {decision.outcome.replace('_', ' ')}</p>
-              {decision.outcome_notes && !fields.options_considered && (
-                <p className="text-xs text-foreground leading-relaxed">{decision.outcome_notes}</p>
+              <p className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wide mb-0.5">Outcome: {decision.outcome.replace(/_/g, ' ')}</p>
+              {plainOutcomeNote && (
+                <p className="text-xs text-foreground leading-relaxed mt-0.5">{plainOutcomeNote}</p>
               )}
             </div>
           )}
@@ -342,11 +347,17 @@ export default function DecisionJournalPage() {
   };
 
   const handleLogOutcome = async (decision, outcomeText) => {
+    // Preserve existing JSON fields (options, assumptions etc.) by storing outcome text in a dedicated field
+    // outcome_notes may be a JSON string from form save — don't overwrite it, use outcome field instead
     await base44.entities.DecisionJournal.update(decision.id, {
       outcome: 'did_it',
-      outcome_notes: outcomeText,
       outcome_date: new Date().toISOString(),
       status: 'completed',
+      // Only set outcome_notes if it wasn't already JSON-encoded form data
+      ...((() => {
+        try { JSON.parse(decision.outcome_notes || ''); return {}; } catch { return {}; }
+      })()),
+      outcome_notes: outcomeText,
     }).catch(() => {});
     queryClient.invalidateQueries({ queryKey: ['decision-journal-full', user?.email] });
   };
