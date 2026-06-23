@@ -267,17 +267,22 @@ Deno.serve(async (req) => {
           confidence_declining_days = declineRun;
         }
 
-        // ─── NEW: avg_load_7d and avg_growth_7d ─────────────────────────────
-        const loadScores7d = pulses7d
-          .filter(p => p.load_score != null)
-          .map(p => p.load_score);
+        // ─── NEW: avg_load_7d and avg_growth_7d (from DailyCheckIn, not ManagerPulse) ───
+        const checkIns7d = dailyCheckIns28d.filter(c => {
+          const d = new Date(c.check_in_date);
+          return d >= cutoff7d;
+        });
+
+        const loadScores7d = checkIns7d
+          .filter(c => c.load_score != null)
+          .map(c => c.load_score);
         const avg_load_7d = loadScores7d.length > 0
           ? Math.round((loadScores7d.reduce((a, b) => a + b, 0) / loadScores7d.length) * 10) / 10
           : null;
 
-        const growthScores7d = pulses7d
-          .filter(p => p.growth_score != null)
-          .map(p => p.growth_score);
+        const growthScores7d = checkIns7d
+          .filter(c => c.growth_score != null)
+          .map(c => c.growth_score);
         const avg_growth_7d = growthScores7d.length > 0
           ? Math.round((growthScores7d.reduce((a, b) => a + b, 0) / growthScores7d.length) * 10) / 10
           : null;
@@ -298,7 +303,7 @@ Deno.serve(async (req) => {
         let behavioral_commitments_7d = 0;
         try {
           const bhGoals = await base44.asServiceRole.entities.Goal.filter(
-            { user_email: email, goal_type: 'coaching_goal' },
+            { user_email: email, goal_type: 'behavioral_commitment' },
             '-created_date', 20
           );
           behavioral_commitments_7d = bhGoals.filter(g =>

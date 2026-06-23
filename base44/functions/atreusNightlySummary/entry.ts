@@ -110,10 +110,10 @@ Return JSON: { "summary_text": string, "key_commitments": string[], "key_themes"
         );
 
         if (unfollowedCommitments.length > 0) {
-          // Cooldown: skip if follow-up notification sent within 48 hours
+          // Cooldown: skip if follow-up nudge sent within 48 hours
           const recentFollowUps = await serviceBase44.entities.Notification.filter({
             user_email: userEmail,
-            type: 'commitment_followup',
+            type: 'atreus_checkin',
           }, '-created_date', 1).catch(() => []);
 
           const hoursSinceLast = recentFollowUps[0]
@@ -124,7 +124,7 @@ Return JSON: { "summary_text": string, "key_commitments": string[], "key_themes"
             const commitment = unfollowedCommitments[0];
             await serviceBase44.entities.Notification.create({
               user_email: userEmail,
-              type: 'commitment_followup',
+              type: 'atreus_checkin',
               title: 'A commitment you made with Atreus',
               message: `You told Atreus you'd "${commitment.commitment_text}". How did that go?`,
               is_read: false,
