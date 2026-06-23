@@ -10,14 +10,32 @@ import React, { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   AlertTriangle, Users, Zap, TrendingDown, Brain,
   CheckCircle2, Eye, Lightbulb, Loader2, ChevronDown, ChevronUp,
-  ArrowRight, Check, Pencil, X
+  ArrowRight, Check, X, Sparkles, FileText
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { toast } from "sonner";
+
+const CONFIDENCE_LEVELS = [
+  { value: 'low', label: "Low — I'm not sure", color: 'bg-rose-50 text-rose-700 border-rose-200' },
+  { value: 'medium', label: 'Medium — leaning one way', color: 'bg-amber-50 text-amber-700 border-amber-200' },
+  { value: 'high', label: 'High — pretty clear', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+];
+
+const EMPTY_FORM = {
+  title: '',
+  context: '',
+  options_considered: '',
+  decision_made: '',
+  assumptions: '',
+  risks: '',
+  confidence: 'medium',
+};
 
 const BUCKET_STYLES = {
   'Operational Risk': { bg: 'bg-red-50',   border: 'border-red-200',   text: 'text-red-700',   icon: AlertTriangle },
@@ -85,11 +103,11 @@ export default function PatternDetailDrawer({ pattern, open, onClose, onOpenAtre
   const [evidenceExpanded, setEvidenceExpanded] = useState(false);
 
   // Decision flow state
-  const [selectedDecision, setSelectedDecision] = useState(null); // { decision, rationale } or { decision: 'custom', rationale: '' }
-  const [draftText, setDraftText] = useState("");
-  const [isEditingDraft, setIsEditingDraft] = useState(false);
+  const [selectedDecision, setSelectedDecision] = useState(null);
+  const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [loadingAiAssist, setLoadingAiAssist] = useState(false);
 
   if (!pattern) return null;
 
@@ -140,35 +158,89 @@ Return JSON:
 
   const handleSelectDecision = (d) => {
     setSelectedDecision(d);
-    setDraftText(d.decision);
-    setIsEditingDraft(false);
+    setForm({ ...EMPTY_FORM, title: d.decision, context: d.rationale || '' });
     setSaved(false);
   };
 
   const handleSelectCustom = () => {
-    setSelectedDecision({ decision: '', rationale: 'My own decision for this week.' });
-    setDraftText('');
-    setIsEditingDraft(true);
+    setSelectedDecision({ decision: '', rationale: '' });
+    setForm(EMPTY_FORM);
     setSaved(false);
   };
 
+  const handleAiAssist = async () => {
+    if (loadingAiAssist) return;
+    setLoadingAiAssist(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are a BPO leadership coach. A manager is working on addressing this pattern:
+
+Pattern: ${pattern.name} (${pattern.bucket})
+What's happening: ${pattern.tagline}
+What's at stake: ${pattern.whatsAtStake}
+${form.title ? `Their current decision framing: "${form.title}"` : ''}
+
+Generate a well-structured decision for them to capture in their decision journal. Return JSON:
+{
+  "title": "Clear statement of the decision they're facing (e.g. 'Whether to restructure my 1:1 cadence to address reactive patterns')",
+  "context": "Why this matters — who's affected, what's the timeline, what's at stake in BPO terms (2-3 sentences)",
+  "options_considered": "2-3 concrete alternatives they could consider",
+  "decision_made": "The recommended direction, framed as what they're leaning toward",
+  "assumptions": "Key assumptions this recommendation is based on",
+  "risks": "Main risk if this direction doesn't work"
+}`,
+        response_json_schema: {
+          type: 'object',
+          properties: {
+            title: { type: 'string' },
+            context: { type: 'string' },
+            options_considered: { type: 'string' },
+            decision_made: { type: 'string' },
+            assumptions: { type: 'string' },
+            risks: { type: 'string' },
+          }
+        }
+      });
+      setForm(prev => ({
+        ...prev,
+        title: result.title || prev.title,
+        context: result.context || prev.context,
+        options_considered: result.options_considered || prev.options_considered,
+        decision_made: result.decision_made || prev.decision_made,
+        assumptions: result.assumptions || prev.assumptions,
+        risks: result.risks || prev.risks,
+      }));
+      toast.success("AI has filled in a draft — edit it to make it yours.");
+    } catch (e) {
+      console.error('AI assist error', e);
+      toast.error("Couldn't generate draft. Try again.");
+    } finally {
+      setLoadingAiAssist(false);
+    }
+  };
+
   const handleSave = async () => {
-    const finalText = draftText.trim();
-    if (!finalText) return;
+    if (!form.title.trim()) return;
     setSaving(true);
     try {
       await base44.entities.DecisionJournal.create({
         user_email: user.email,
         pattern_name: pattern.name,
         pattern_bucket: pattern.bucket,
-        decision_text: finalText,
-        rationale: selectedDecision?.rationale || '',
+        decision_text: form.title,
+        rationale: form.context || '',
         status: 'committed',
         week_of: getWeekOf(),
+        outcome_notes: JSON.stringify({
+          options_considered: form.options_considered,
+          decision_made: form.decision_made,
+          assumptions: form.assumptions,
+          risks: form.risks,
+          confidence: form.confidence,
+        }),
       });
       setSaved(true);
       toast.success("Decision committed — you'll see it in Close the Loop on Today's page.");
-      // Signal TodaysPlaybook to reload decisions
       window.dispatchEvent(new Event('decision-committed'));
     } catch (e) {
       console.error('Save decision error', e);
@@ -180,8 +252,7 @@ Return JSON:
 
   const resetDecisionFlow = () => {
     setSelectedDecision(null);
-    setDraftText("");
-    setIsEditingDraft(false);
+    setForm(EMPTY_FORM);
     setSaved(false);
   };
 
@@ -356,41 +427,120 @@ Return JSON:
               </div>
             )}
 
-            {/* Step 3: confirm / modify draft */}
+            {/* Step 3: robust decision form */}
             {selectedDecision && !saved && (
               <div className="space-y-3">
-                <div className="rounded-xl border border-[#0202ff]/30 bg-[#0202ff]/5 p-4 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[#0202ff]">Your decision draft</p>
-                    <div className="flex gap-1.5">
-                      <button onClick={() => setIsEditingDraft(v => !v)} className="p-1 rounded hover:bg-[#0202ff]/10 transition-colors">
-                        <Pencil className="w-3 h-3 text-[#0202ff]" />
-                      </button>
-                      <button onClick={resetDecisionFlow} className="p-1 rounded hover:bg-red-50 transition-colors">
-                        <X className="w-3 h-3 text-gray-400" />
-                      </button>
-                    </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-[#0202ff]" />
+                    <p className="text-xs font-semibold text-gray-800">Capture your decision</p>
                   </div>
-                  {isEditingDraft ? (
-                    <textarea
-                      autoFocus
-                      value={draftText}
-                      onChange={e => setDraftText(e.target.value)}
-                      placeholder="Write your decision here…"
-                      className="w-full text-sm text-gray-900 bg-white border border-[#0202ff]/20 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-[#0202ff]/30"
-                      rows={3}
+                  <button onClick={resetDecisionFlow} className="p-1 rounded hover:bg-red-50 transition-colors">
+                    <X className="w-3.5 h-3.5 text-gray-400" />
+                  </button>
+                </div>
+
+                {/* AI Smart Assistant button */}
+                <button
+                  onClick={handleAiAssist}
+                  disabled={loadingAiAssist}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-white text-xs font-semibold transition-all disabled:opacity-60"
+                  style={{ background: 'linear-gradient(135deg, #0202ff, #6366f1)' }}
+                >
+                  {loadingAiAssist
+                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    : <Sparkles className="w-3.5 h-3.5" />}
+                  {loadingAiAssist ? 'Generating draft…' : 'Use Smart Decision Assistant'}
+                </button>
+                <p className="text-[10px] text-gray-400 text-center -mt-1">Let AI help you structure this decision clearly</p>
+
+                {/* Decision title */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold text-gray-600 uppercase tracking-wide">What decision are you facing? *</label>
+                  <Input
+                    placeholder="e.g., Whether to restructure weekly 1:1s to reduce reactive load"
+                    value={form.title}
+                    onChange={e => setForm({ ...form, title: e.target.value })}
+                    className="text-sm"
+                  />
+                </div>
+
+                {/* Context */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold text-gray-600 uppercase tracking-wide">Context — why does this matter?</label>
+                  <Textarea
+                    placeholder="Who's affected? What's the timeline? What's at stake?"
+                    value={form.context}
+                    onChange={e => setForm({ ...form, context: e.target.value })}
+                    className="text-sm h-14 resize-none"
+                  />
+                </div>
+
+                {/* Options */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold text-gray-600 uppercase tracking-wide">Options you're weighing</label>
+                  <Textarea
+                    placeholder="What alternatives have you considered?"
+                    value={form.options_considered}
+                    onChange={e => setForm({ ...form, options_considered: e.target.value })}
+                    className="text-sm h-14 resize-none"
+                  />
+                </div>
+
+                {/* Assumptions + Risks */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-gray-600 uppercase tracking-wide">Key assumptions</label>
+                    <Textarea
+                      placeholder="What are you assuming to be true?"
+                      value={form.assumptions}
+                      onChange={e => setForm({ ...form, assumptions: e.target.value })}
+                      className="text-sm h-14 resize-none"
                     />
-                  ) : (
-                    <p className="text-sm font-semibold text-gray-900 leading-snug">{draftText}</p>
-                  )}
-                  {selectedDecision.rationale && !isEditingDraft && (
-                    <p className="text-[11px] text-gray-500 leading-relaxed">{selectedDecision.rationale}</p>
-                  )}
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-gray-600 uppercase tracking-wide">Risks if you're wrong</label>
+                    <Textarea
+                      placeholder="What's the downside if this doesn't work?"
+                      value={form.risks}
+                      onChange={e => setForm({ ...form, risks: e.target.value })}
+                      className="text-sm h-14 resize-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Leaning toward */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold text-gray-600 uppercase tracking-wide">What are you leaning toward?</label>
+                  <Textarea
+                    placeholder="Your current inclination and reasoning"
+                    value={form.decision_made}
+                    onChange={e => setForm({ ...form, decision_made: e.target.value })}
+                    className="text-sm h-14 resize-none"
+                  />
+                </div>
+
+                {/* Confidence */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-semibold text-gray-600 uppercase tracking-wide">Confidence level</label>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {CONFIDENCE_LEVELS.map(c => (
+                      <button
+                        key={c.value}
+                        onClick={() => setForm({ ...form, confidence: c.value })}
+                        className={`text-[10px] px-2.5 py-1 rounded-full border font-medium transition-all ${
+                          form.confidence === c.value ? c.color + ' ring-2 ring-offset-1 ring-current' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                        }`}
+                      >
+                        {c.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <Button
                   onClick={handleSave}
-                  disabled={saving || !draftText.trim()}
+                  disabled={saving || !form.title.trim()}
                   className="w-full text-white text-sm font-semibold gap-2"
                   style={{ backgroundColor: '#0202ff' }}
                   onMouseEnter={e => !saving && (e.currentTarget.style.backgroundColor = '#0101dd')}
