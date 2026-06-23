@@ -75,7 +75,7 @@ export default function TopPatternCard({ pattern, onOpenAtreus }) {
         open={drawerOpen}
         onClose={() => {
           setDrawerOpen(false);
-          queryClient.invalidateQueries({ queryKey: ['ml-pending-decisions'] });
+          queryClient.invalidateQueries({ queryKey: ['ml-pending-decisions'] }); // broad invalidation — matches all user variants
         }}
         onOpenAtreus={onOpenAtreus}
       />

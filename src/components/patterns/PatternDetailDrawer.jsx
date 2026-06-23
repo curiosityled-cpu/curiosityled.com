@@ -262,7 +262,10 @@ Generate a well-structured decision for them to capture in their decision journa
   };
 
   const handleSave = async () => {
-    if (!form.title.trim()) return;
+    if (!form.title.trim() || !user?.email) {
+      if (!user?.email) toast.error("Not logged in. Please refresh.");
+      return;
+    }
     setSaving(true);
     try {
       const result = await base44.entities.DecisionJournal.create({
