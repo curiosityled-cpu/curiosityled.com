@@ -9,7 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
-import { Brain, Plus, FileText, ChevronDown, ChevronUp, CheckCircle2, Clock, Check, Sparkles, Loader2 } from "lucide-react";
+import { Brain, Plus, FileText, ChevronDown, ChevronUp, CheckCircle2, Clock, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,53 +43,6 @@ function NewDecisionForm({ onSave, onCancel }) {
     confidence: 'medium',
   });
   const [saving, setSaving] = useState(false);
-  const [aiMode, setAiMode] = useState(false);
-  const [aiSummary, setAiSummary] = useState('');
-  const [aiLoading, setAiLoading] = useState(false);
-
-  const handleAiPopulate = async () => {
-    if (!aiSummary.trim()) return;
-    setAiLoading(true);
-    try {
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a decision-making assistant. A manager has described a decision they're facing. Extract and structure the key components.
-
-Decision summary from manager:
-"${aiSummary}"
-
-Populate each field thoughtfully based on what the manager said. Be concise (1-3 sentences per field).
-
-Return JSON only, no other text.`,
-        response_json_schema: {
-          type: 'object',
-          properties: {
-            title: { type: 'string', description: 'A clear, specific one-line description of the decision' },
-            context: { type: 'string', description: 'Why this decision matters — who is affected, timeline, stakes' },
-            options_considered: { type: 'string', description: 'The main options or alternatives being weighed' },
-            decision_made: { type: 'string', description: 'What direction they seem to be leaning toward and why' },
-            assumptions: { type: 'string', description: 'Key assumptions this decision relies on being true' },
-            risks: { type: 'string', description: 'Main risks or downsides if this direction doesn\'t work out' },
-            confidence: { type: 'string', enum: ['low', 'medium', 'high'], description: 'Estimated confidence level based on how certain they sound' },
-          },
-        },
-      });
-      setForm({
-        title: result.title || '',
-        context: result.context || '',
-        options_considered: result.options_considered || '',
-        decision_made: result.decision_made || '',
-        assumptions: result.assumptions || '',
-        risks: result.risks || '',
-        confidence: result.confidence || 'medium',
-      });
-      setAiMode(false);
-      toast.success("Fields populated — review and adjust as needed.");
-    } catch {
-      toast.error("Couldn't reach the assistant — try again.");
-    } finally {
-      setAiLoading(false);
-    }
-  };
 
   const handleSave = async () => {
     if (!form.title.trim()) { toast.error("Describe the decision"); return; }
@@ -106,56 +59,12 @@ Return JSON only, no other text.`,
 
   return (
     <Card className="shadow-sm border border-[#0202ff]/20 bg-white rounded-2xl overflow-hidden">
-      <div className="px-5 pt-5 pb-3 flex items-center justify-between border-b border-gray-50">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center">
-            <FileText className="w-3.5 h-3.5 text-white" />
-          </div>
-          <p className="text-sm font-semibold text-gray-900">Capture a decision</p>
+      <div className="px-5 pt-5 pb-3 flex items-center gap-2 border-b border-gray-50">
+        <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center">
+          <FileText className="w-3.5 h-3.5 text-white" />
         </div>
-        {!aiMode && (
-          <button
-            onClick={() => setAiMode(true)}
-            className="flex items-center gap-1.5 text-xs font-medium text-[#0202ff] hover:text-[#0101dd] bg-[#0202ff]/8 hover:bg-[#0202ff]/12 px-2.5 py-1.5 rounded-full transition-colors"
-          >
-            <Sparkles className="w-3 h-3" />
-            Smart Decision Assistant
-          </button>
-        )}
+        <p className="text-sm font-semibold text-gray-900">Capture a decision</p>
       </div>
-
-      {aiMode && (
-        <div className="px-5 py-4 bg-[#0202ff]/5 border-b border-[#0202ff]/15 space-y-3">
-          <div className="flex items-start gap-2">
-            <Sparkles className="w-4 h-4 text-[#0202ff] mt-0.5 flex-shrink-0" />
-            <p className="text-xs text-[#0202ff] font-medium leading-relaxed">
-              Describe the decision in your own words — the assistant will structure it into the fields below.
-            </p>
-          </div>
-          <Textarea
-            placeholder="e.g. I need to decide whether to promote my top performer into a team lead role or hire externally. She's great technically but hasn't managed people before. The team needs stability and we have a backfill headcount approved..."
-            value={aiSummary}
-            onChange={e => setAiSummary(e.target.value)}
-            className="text-sm resize-none h-24 bg-white"
-            autoFocus
-          />
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              className="bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs gap-1.5"
-              onClick={handleAiPopulate}
-              disabled={aiLoading || !aiSummary.trim()}
-            >
-              {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-              {aiLoading ? 'Thinking…' : 'Populate fields'}
-            </Button>
-            <Button size="sm" variant="outline" className="text-xs" onClick={() => setAiMode(false)}>
-              Cancel
-            </Button>
-          </div>
-        </div>
-      )}
-
       <CardContent className="px-5 py-4 space-y-4">
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-gray-600">What decision are you facing? *</label>
