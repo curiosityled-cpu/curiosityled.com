@@ -304,7 +304,7 @@ Deno.serve(async (req) => {
         let behavioral_commitments_7d = 0;
         try {
           const bhGoals = await base44.asServiceRole.entities.Goal.filter(
-            { user_email: email, goal_type: 'behavioral_commitment' },
+            { created_by: email, goal_type: 'behavioral_commitment' },
             '-created_date', 20
           );
           behavioral_commitments_7d = bhGoals.filter(g =>

@@ -72,7 +72,6 @@ Return JSON: { "is_commitment": boolean, "commitment_text": string | null }`,
         status: 'active',
         visibility: 'private',
         created_by: user.email,
-        user_email: user.email,
       }).catch(() => {});
     }
 
