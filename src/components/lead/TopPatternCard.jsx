@@ -6,6 +6,7 @@ import React, { useState } from "react";
 import { AlertTriangle, Users, Zap, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import PatternDetailDrawer from "@/components/patterns/PatternDetailDrawer";
 
 const BUCKET_STYLES = {
@@ -22,6 +23,7 @@ const STATUS_STYLES = {
 
 export default function TopPatternCard({ pattern, onOpenAtreus }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   if (!pattern) return null;
 
@@ -71,7 +73,10 @@ export default function TopPatternCard({ pattern, onOpenAtreus }) {
       <PatternDetailDrawer
         pattern={pattern}
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        onClose={() => {
+          setDrawerOpen(false);
+          queryClient.invalidateQueries({ queryKey: ['ml-pending-decisions'] });
+        }}
         onOpenAtreus={onOpenAtreus}
       />
     </React.Fragment>
