@@ -308,9 +308,21 @@ export default function ManagerToday() {
     enabled: !!user?.email,
     staleTime: 0,
     gcTime: 0,
-    refetchOnMount: 'always',
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
   });
+
+  // Optimistically add a newly committed decision to the list immediately,
+  // before the async refetch completes, so UI updates without delay.
+  const addDecisionOptimistic = (newDecision) => {
+    queryClient.setQueryData(['ml-pending-decisions', user?.email], (old = []) => {
+      const exists = old.some(d => d.id === newDecision.id);
+      if (exists) return old;
+      return [newDecision, ...old];
+    });
+    // Also trigger a background refetch to sync with server
+    refetchDecisions();
+  };
 
   const { data: kpis = [] } = useQuery({
     queryKey: ['ml-kpis', user?.email],
@@ -406,7 +418,7 @@ export default function ManagerToday() {
 
       {/* Top pattern surface */}
       {topPattern && (
-        <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} onDecisionCommitted={refetchDecisions} />
+        <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} onDecisionCommitted={refetchDecisions} onDecisionOptimistic={addDecisionOptimistic} />
       )}
 
       {/* Today's Playbook — always rendered once user is available */}
