@@ -248,9 +248,9 @@ export default function ManagerToday() {
     queryKey: ['ml-goals', user?.email],
     queryFn: async () => {
       try {
-        const byEmail = await base44.entities.Goal.filter({ user_email: user.email }, '-created_date', 15);
-        if (byEmail.length > 0) return byEmail;
-        return await base44.entities.Goal.filter({ created_by: user.email }, '-created_date', 15);
+        const byCreator = await base44.entities.Goal.filter({ created_by: user.email, status: 'active' }, '-created_date', 15);
+        if (byCreator.length > 0) return byCreator;
+        return await base44.entities.Goal.filter({ assigned_to_emails: { $in: [user.email] }, status: 'active' }, '-created_date', 15);
       } catch { return []; }
     },
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
