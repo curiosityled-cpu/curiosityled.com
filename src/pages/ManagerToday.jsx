@@ -298,12 +298,14 @@ export default function ManagerToday() {
     queryKey: ['ml-pending-decisions', user?.email],
     queryFn: async () => {
       try {
+        // Fetch all user decisions and filter client-side — avoids $in operator
+        // compatibility issues with the frontend entity SDK
         const rows = await base44.entities.DecisionJournal.filter(
-          { user_email: user.email, status: { $in: ['committed', 'draft'] } },
+          { user_email: user.email },
           '-created_date',
-          30
+          50
         );
-        return rows || [];
+        return (rows || []).filter(r => r.status !== 'completed');
       } catch { return []; }
     },
     enabled: !!user?.email,
@@ -409,8 +411,8 @@ export default function ManagerToday() {
         <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} />
       )}
 
-      {/* Today's Playbook — always show once todayData has resolved */}
-      {todayRecord !== undefined && (
+      {/* Today's Playbook — show once todayData resolved, OR immediately if decisions are ready */}
+      {(todayRecord !== undefined || pendingDecisions.length > 0) && (
         <TodaysPlaybook
           todayRecord={localBig3Override ? { ...todayRecord, big3_priorities: localBig3Override } : todayRecord}
           yesterdayBig3={yesterdayBig3}
@@ -420,7 +422,7 @@ export default function ManagerToday() {
           assignments={assignments}
           pulses={recentPulses}
           pendingDecisions={pendingDecisions}
-          onDecisionOutcomeSaved={() => queryClient.invalidateQueries({ queryKey: ['ml-pending-decisions', user?.email] })}
+          onDecisionOutcomeSaved={() => queryClient.removeQueries({ queryKey: ['ml-pending-decisions', user?.email] })}
           onOpenAtreus={openAtreus}
           onBig3Saved={(priorities) => {
             setLocalBig3Override(priorities);
