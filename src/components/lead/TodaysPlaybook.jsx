@@ -136,9 +136,18 @@ function DecisionLoopItem({ decision, onOutcomeSaved }) {
     if (!outcome) return;
     setSaving(true);
     try {
+      // Preserve JSON form fields by merging outcome notes into the existing JSON object
+      let newOutcomeNotes = notes || undefined;
+      const rawNotes = decision.outcome_notes || '';
+      if (notes && rawNotes.startsWith('{')) {
+        try {
+          const existing = JSON.parse(rawNotes);
+          newOutcomeNotes = JSON.stringify({ ...existing, outcome_text: notes });
+        } catch { /* keep plain text */ }
+      }
       await base44.entities.DecisionJournal.update(decision.id, {
         outcome,
-        outcome_notes: notes || undefined,
+        outcome_notes: newOutcomeNotes,
         outcome_date: new Date().toISOString(),
         status: 'completed',
       });

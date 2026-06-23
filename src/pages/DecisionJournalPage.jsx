@@ -167,17 +167,21 @@ function DecisionCard({ decision, onLogOutcome }) {
   const daysOld = Math.floor((Date.now() - new Date(decision.created_date)) / 86400000);
   const readyForReview = daysOld >= 1 && decision.status !== 'completed'; // Show after 1 day
 
-  // Parse extra fields stored in outcome_notes as JSON (only if it looks like JSON, not plain text)
+  // Parse extra fields stored in outcome_notes as JSON (only if it looks like JSON)
   let fields = {};
+  let plainOutcomeNote = null;
   const rawNotes = decision.outcome_notes || '';
   if (rawNotes.startsWith('{')) {
     try {
       const parsed = JSON.parse(rawNotes);
-      if (parsed.options_considered || parsed.decision_made) fields = parsed;
+      fields = parsed;
+      // outcome_text is injected when outcome is logged on a form-captured decision
+      if (parsed.outcome_text) plainOutcomeNote = parsed.outcome_text;
     } catch {}
+  } else if (rawNotes.trim()) {
+    // Plain-text outcome note from TodaysPlaybook or DecisionJournalOutcomeReview
+    plainOutcomeNote = rawNotes;
   }
-  // Plain-text outcome note (written after outcome logging)
-  const plainOutcomeNote = !rawNotes.startsWith('{') && rawNotes.trim() ? rawNotes : null;
 
   const handleSaveOutcome = async () => {
     if (!outcomeText.trim()) return;
@@ -347,17 +351,21 @@ export default function DecisionJournalPage() {
   };
 
   const handleLogOutcome = async (decision, outcomeText) => {
-    // Preserve existing JSON fields (options, assumptions etc.) by storing outcome text in a dedicated field
-    // outcome_notes may be a JSON string from form save — don't overwrite it, use outcome field instead
+    // If outcome_notes currently holds JSON form fields, merge the outcome text into the JSON
+    // so we don't lose options_considered / assumptions / risks when recording the outcome
+    let newOutcomeNotes = outcomeText;
+    const rawNotes = decision.outcome_notes || '';
+    if (rawNotes.startsWith('{')) {
+      try {
+        const existing = JSON.parse(rawNotes);
+        newOutcomeNotes = JSON.stringify({ ...existing, outcome_text: outcomeText });
+      } catch { /* keep plain text */ }
+    }
     await base44.entities.DecisionJournal.update(decision.id, {
       outcome: 'did_it',
       outcome_date: new Date().toISOString(),
       status: 'completed',
-      // Only set outcome_notes if it wasn't already JSON-encoded form data
-      ...((() => {
-        try { JSON.parse(decision.outcome_notes || ''); return {}; } catch { return {}; }
-      })()),
-      outcome_notes: outcomeText,
+      outcome_notes: newOutcomeNotes,
     }).catch(() => {});
     queryClient.invalidateQueries({ queryKey: ['decision-journal-full', user?.email] });
   };
