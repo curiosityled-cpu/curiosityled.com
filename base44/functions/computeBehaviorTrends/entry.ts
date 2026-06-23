@@ -267,7 +267,12 @@ Deno.serve(async (req) => {
           confidence_declining_days = declineRun;
         }
 
-        // ─── NEW: avg_load_7d and avg_growth_7d (from DailyCheckIn, not ManagerPulse) ───
+        // ─── NEW: avg_load_7d, avg_growth_7d, workload_growth_divergence_days ─
+        // Fetch DailyCheckIn data first so it's available for all derived metrics
+        const dailyCheckIns28d = await base44.asServiceRole.entities.DailyCheckIn.filter(
+          { user_email: email }, '-check_in_date', 28
+        );
+
         const checkIns7d = dailyCheckIns28d.filter(c => {
           const d = new Date(c.check_in_date);
           return d >= cutoff7d;
@@ -287,10 +292,6 @@ Deno.serve(async (req) => {
           ? Math.round((growthScores7d.reduce((a, b) => a + b, 0) / growthScores7d.length) * 10) / 10
           : null;
 
-        // ─── NEW: workload_growth_divergence_days ────────────────────────────
-        const dailyCheckIns28d = await base44.asServiceRole.entities.DailyCheckIn.filter(
-          { user_email: email }, '-check_in_date', 28
-        );
         let workload_growth_divergence_days = 0;
         for (const c of dailyCheckIns28d) {
           if (c.load_score >= 4 && c.growth_score != null && c.growth_score <= 2) {
