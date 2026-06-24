@@ -9,7 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
-import { Brain, Plus, FileText, ChevronDown, ChevronUp, CheckCircle2, Clock, Check, Sparkles } from "lucide-react";
+import { Brain, Plus, FileText, ChevronDown, ChevronUp, CheckCircle2, Clock, Check, Sparkles, Circle, MinusCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -280,13 +280,26 @@ Be practical, thoughtful, and grounded. Use the manager's own language where pos
   );
 }
 
+const OUTCOME_OPTS = [
+  { value: 'did_it',        label: 'Did it',        Icon: CheckCircle2, color: 'text-emerald-600', ring: 'border-emerald-400 bg-emerald-50' },
+  { value: 'partly',        label: 'Partly',        Icon: MinusCircle,  color: 'text-amber-500',   ring: 'border-amber-400 bg-amber-50' },
+  { value: 'not_yet',       label: 'Not yet',       Icon: Circle,       color: 'text-gray-400',    ring: 'border-gray-300 bg-gray-50' },
+  { value: 'changed_course',label: 'Changed course',Icon: ArrowRight,   color: 'text-blue-500',   ring: 'border-blue-300 bg-blue-50' },
+];
+
+const OUTCOME_LABELS = {
+  did_it: 'Did it', partly: 'Partly', not_yet: 'Not yet', changed_course: 'Changed course'
+};
+
 function DecisionCard({ decision, onLogOutcome }) {
   const { openWithContext } = useAtreusChat();
   const [expanded, setExpanded] = useState(false);
+  const [selectedOutcome, setSelectedOutcome] = useState(null);
   const [outcomeText, setOutcomeText] = useState('');
   const [saved, setSaved] = useState(decision.status === 'completed');
+  const [saving, setSaving] = useState(false);
   const daysOld = Math.floor((Date.now() - new Date(decision.created_date)) / 86400000);
-  const readyForReview = daysOld >= 1 && decision.status !== 'completed'; // Show after 1 day
+  const readyForReview = daysOld >= 1 && decision.status !== 'completed';
 
   // Use top-level fields directly; fall back to legacy JSON-in-outcome_notes for old records
   let fields = {
@@ -312,8 +325,10 @@ function DecisionCard({ decision, onLogOutcome }) {
   }
 
   const handleSaveOutcome = async () => {
-    if (!outcomeText.trim()) return;
-    await onLogOutcome(decision, outcomeText);
+    if (!selectedOutcome) return;
+    setSaving(true);
+    await onLogOutcome(decision, selectedOutcome, outcomeText);
+    setSaving(false);
     setSaved(true);
   };
 
@@ -379,45 +394,69 @@ function DecisionCard({ decision, onLogOutcome }) {
           </div>
           {/* Show existing outcome if already captured */}
           {decision.outcome && (
-            <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200">
-              <p className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wide mb-0.5">Outcome: {decision.outcome.replace(/_/g, ' ')}</p>
-              {plainOutcomeNote && (
-                <p className="text-xs text-foreground leading-relaxed mt-0.5">{plainOutcomeNote}</p>
-              )}
+            <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 space-y-1">
+              <p className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wide">Outcome: {OUTCOME_LABELS[decision.outcome] || decision.outcome.replace(/_/g, ' ')}</p>
+              {plainOutcomeNote && <p className="text-xs text-foreground leading-relaxed">{plainOutcomeNote}</p>}
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs h-7 mt-1 border-[#0202ff]/30 text-[#0202ff]"
+                onClick={() => openWithContext({
+                  context: { pageType: 'practice', flow: 'decision_quality' },
+                  starterMessage: `I want to improve my decision-making quality. I made this decision: "${decision.decision_text}". The outcome was: ${OUTCOME_LABELS[decision.outcome]}. ${plainOutcomeNote ? `Notes: ${plainOutcomeNote}.` : ''} What patterns do you see and how can I make better decisions like this in the future?`,
+                })}
+              >
+                <Brain className="w-3 h-3 mr-1" /> Work with Atreus to improve decision quality
+              </Button>
             </div>
           )}
 
           {/* Outcome review */}
           {readyForReview && !saved && (
-            <div className="pt-2 border-t border-border space-y-2">
+            <div className="pt-2 border-t border-border space-y-3">
               <p className="text-xs font-semibold text-amber-700">How did it play out?</p>
-              <Textarea
-                placeholder="What actually happened? What would you do differently?"
-                value={outcomeText}
-                onChange={e => setOutcomeText(e.target.value)}
-                className="text-xs resize-none h-16 rounded-xl"
-              />
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  className="flex-1 text-xs h-7 bg-amber-500 hover:bg-amber-600 text-white"
-                  onClick={handleSaveOutcome}
-                  disabled={!outcomeText.trim()}
-                >
-                  <Check className="w-3 h-3 mr-1" /> Log outcome
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-xs h-7"
-                  onClick={() => openWithContext({
-                    context: { pageType: 'practice', flow: 'decision_outcome' },
-                    starterMessage: `I made a decision: "${decision.decision_text}". ${outcomeText ? `What happened: ${outcomeText}.` : ''} Help me learn from this.`,
-                  })}
-                >
-                  <Brain className="w-3 h-3 mr-1 text-[#0202ff]" /> Reflect
-                </Button>
+              <div className="grid grid-cols-2 gap-1.5">
+                {OUTCOME_OPTS.map(({ value, label, Icon, color, ring }) => (
+                  <button
+                    key={value}
+                    onClick={() => setSelectedOutcome(value)}
+                    className={`flex items-center justify-center gap-1.5 py-2 rounded-xl border text-xs font-medium transition-all ${selectedOutcome === value ? ring + ' ' + color : 'bg-muted/60 border-border text-muted-foreground hover:bg-muted'}`}
+                  >
+                    <Icon className="w-3.5 h-3.5" /> {label}
+                  </button>
+                ))}
               </div>
+              {selectedOutcome && (
+                <Textarea
+                  placeholder={selectedOutcome === 'did_it' ? 'Any notes on how it went? (optional)' : 'What happened? What would you do differently?'}
+                  value={outcomeText}
+                  onChange={e => setOutcomeText(e.target.value)}
+                  className="text-xs resize-none h-16 rounded-xl"
+                />
+              )}
+              {selectedOutcome && (
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="flex-1 text-xs h-8 bg-[#0202ff] hover:bg-[#0101dd] text-white"
+                    onClick={handleSaveOutcome}
+                    disabled={saving}
+                  >
+                    <Check className="w-3 h-3 mr-1" /> {saving ? 'Saving…' : 'Log outcome'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs h-8 border-[#0202ff]/30 text-[#0202ff]"
+                    onClick={() => openWithContext({
+                      context: { pageType: 'practice', flow: 'decision_quality' },
+                      starterMessage: `I want to improve my decision-making. I decided: "${decision.decision_text}". Outcome so far: ${OUTCOME_LABELS[selectedOutcome] || selectedOutcome}. ${outcomeText ? `Notes: ${outcomeText}.` : ''} Help me learn from this and improve my decision quality.`,
+                    })}
+                  >
+                    <Brain className="w-3 h-3 mr-1" /> Work with Atreus
+                  </Button>
+                </div>
+              )}
             </div>
           )}
           {saved && (
@@ -475,12 +514,12 @@ export default function DecisionJournalPage() {
     setShowForm(false);
   };
 
-  const handleLogOutcome = async (decision, outcomeText) => {
+  const handleLogOutcome = async (decision, outcome, outcomeText) => {
     await base44.entities.DecisionJournal.update(decision.id, {
-      outcome: 'did_it',
+      outcome,
       outcome_date: new Date().toISOString(),
       status: 'completed',
-      outcome_notes: outcomeText,
+      outcome_notes: outcomeText || '',
     }).catch(() => {});
     queryClient.invalidateQueries({ queryKey: ['decision-journal-full', user?.email] });
   };
