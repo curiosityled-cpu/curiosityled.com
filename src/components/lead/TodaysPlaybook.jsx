@@ -260,9 +260,6 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
 
   // Filter decisions older than 7 days for outcome surface in Close the Loop
   // Use timezone-aware date comparison: decisions are stored as ISO UTC, so we compare ISO strings
-  const getTodayET = () => new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
-  }).format(new Date());
   const sevenDaysAgoET = (() => {
     const d = new Date();
     d.setDate(d.getDate() - 7);
@@ -275,7 +272,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
     const decisionDateET = new Intl.DateTimeFormat('en-CA', {
       timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
     }).format(new Date(d.created_date));
-    return decisionDateET <= sevenDaysAgoET;
+    return decisionDateET < sevenDaysAgoET;
   });
 
   const activeGoals = (goals || []).filter(g => g.status === "active");
