@@ -9,7 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
-import { Brain, Plus, FileText, ChevronDown, ChevronUp, CheckCircle2, Clock, Check, Sparkles, Circle, MinusCircle, ArrowRight } from "lucide-react";
+import { Brain, Plus, FileText, ChevronDown, ChevronUp, CheckCircle2, Clock, Check, Sparkles, Circle, MinusCircle, ArrowRight, Pencil, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -296,14 +296,31 @@ const OUTCOME_LABELS = {
   did_it: 'Did it', partly: 'Partly', not_yet: 'Not yet', changed_course: 'Changed course'
 };
 
-function DecisionCard({ decision, onLogOutcome }) {
+function DecisionCard({ decision, onLogOutcome, onEdit }) {
   const { openWithContext } = useAtreusChat();
   const [expanded, setExpanded] = useState(false);
   const [selectedOutcome, setSelectedOutcome] = useState(null);
   const [outcomeText, setOutcomeText] = useState('');
   const [saved, setSaved] = useState(decision.status === 'completed');
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState(null);
+  const [editSaving, setEditSaving] = useState(false);
   const readyForReview = decision.status !== 'completed';
+
+  const handleEditSave = async () => {
+    if (!editForm.title.trim()) return;
+    setEditSaving(true);
+    try {
+      await onEdit(decision.id, editForm);
+      setEditing(false);
+      setEditForm(null);
+    } catch {
+      toast.error("Failed to save changes");
+    } finally {
+      setEditSaving(false);
+    }
+  };
 
   // Use top-level fields directly; fall back to legacy JSON-in-outcome_notes for old records
   let fields = {
@@ -336,6 +353,19 @@ function DecisionCard({ decision, onLogOutcome }) {
     setSaved(true);
   };
 
+  const startEdit = () => {
+    setEditForm({
+      title: decision.decision_text || '',
+      context: decision.rationale || '',
+      options_considered: decision.options_considered || fields.options_considered || '',
+      decision_made: decision.decision_made || fields.decision_made || '',
+      assumptions: decision.assumptions || fields.assumptions || '',
+      risks: decision.risks || fields.risks || '',
+      confidence: decision.confidence || fields.confidence || 'medium',
+    });
+    setEditing(true);
+  };
+
   const confLabel = CONFIDENCE_LEVELS.find(c => c.value === fields.confidence);
 
   return (
@@ -362,8 +392,68 @@ function DecisionCard({ decision, onLogOutcome }) {
         {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
       </button>
 
-      {expanded && (
+      {expanded && editing && editForm && (
+        <div className="px-4 pb-4 pt-3 space-y-3 border-t border-border">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs font-semibold text-foreground">Edit decision</p>
+            <button onClick={() => { setEditing(false); setEditForm(null); }} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Decision *</label>
+            <Input value={editForm.title} onChange={e => setEditForm({ ...editForm, title: e.target.value })} className="text-sm" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Context / Rationale</label>
+            <Textarea value={editForm.context} onChange={e => setEditForm({ ...editForm, context: e.target.value })} className="text-sm h-14 resize-none" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Options considered</label>
+            <Textarea value={editForm.options_considered} onChange={e => setEditForm({ ...editForm, options_considered: e.target.value })} className="text-sm h-14 resize-none" />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Assumptions</label>
+              <Textarea value={editForm.assumptions} onChange={e => setEditForm({ ...editForm, assumptions: e.target.value })} className="text-sm h-14 resize-none" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Risks</label>
+              <Textarea value={editForm.risks} onChange={e => setEditForm({ ...editForm, risks: e.target.value })} className="text-sm h-14 resize-none" />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Leaning toward</label>
+            <Textarea value={editForm.decision_made} onChange={e => setEditForm({ ...editForm, decision_made: e.target.value })} className="text-sm h-14 resize-none" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Confidence</label>
+            <div className="flex gap-2 flex-wrap">
+              {CONFIDENCE_LEVELS.map(c => (
+                <button key={c.value} onClick={() => setEditForm({ ...editForm, confidence: c.value })}
+                  className={`text-xs px-3 py-1 rounded-full border font-medium transition-all ${editForm.confidence === c.value ? c.color + ' ring-2 ring-offset-1 ring-current' : 'bg-muted/60 text-muted-foreground border-border hover:bg-muted'}`}>
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <Button variant="outline" size="sm" className="text-xs" onClick={() => { setEditing(false); setEditForm(null); }}>Cancel</Button>
+            <Button size="sm" className="flex-1 text-xs bg-[#0202ff] hover:bg-[#0101dd] text-white" onClick={handleEditSave} disabled={editSaving || !editForm.title.trim()}>
+              {editSaving ? 'Saving…' : 'Save changes'}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {expanded && !editing && (
         <div className="px-4 pb-4 space-y-3 border-t border-border">
+          <div className="flex justify-end pt-2">
+            <button
+              onClick={startEdit}
+              className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-[#0202ff] transition-colors"
+            >
+              <Pencil className="w-3 h-3" /> Edit decision
+            </button>
+          </div>
           {decision.rationale && (
             <div className="pt-3">
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Context / Rationale</p>
@@ -528,6 +618,21 @@ export default function DecisionJournalPage() {
     setShowForm(false);
   };
 
+  const handleEdit = async (id, form) => {
+    await base44.entities.DecisionJournal.update(id, {
+      decision_text: form.title,
+      rationale: form.context || '',
+      options_considered: form.options_considered || '',
+      decision_made: form.decision_made || '',
+      assumptions: form.assumptions || '',
+      risks: form.risks || '',
+      confidence: form.confidence || 'medium',
+    });
+    queryClient.invalidateQueries({ queryKey: ['decision-journal-full', user?.email] });
+    queryClient.invalidateQueries({ queryKey: ['ml-pending-decisions', user?.email] });
+    toast.success("Decision updated.");
+  };
+
   const handleLogOutcome = async (decision, outcome, outcomeText) => {
     await base44.entities.DecisionJournal.update(decision.id, {
       outcome,
@@ -633,7 +738,7 @@ export default function DecisionJournalPage() {
       ) : (
         <div className="space-y-2">
           {decisions.map(d => (
-            <DecisionCard key={d.id} decision={d} onLogOutcome={handleLogOutcome} />
+            <DecisionCard key={d.id} decision={d} onLogOutcome={handleLogOutcome} onEdit={handleEdit} />
           ))}
         </div>
       )}
