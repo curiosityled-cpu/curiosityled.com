@@ -118,7 +118,7 @@ Return JSON: { "question": string, "rationale": string (1 sentence, internal not
     }
 
     // ── Mode: Debrief ────────────────────────────────────────────────────────
-    if (mode === 'debrief' && decision_id) {
+    if (mode === 'debrief') {
       const decision = decisions.find(d => d.id === decision_id) || null;
       const originalAssumptions = decision?.assumptions || '';
       const originalRisks = decision?.risks || '';
