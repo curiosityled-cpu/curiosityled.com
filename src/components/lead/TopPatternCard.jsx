@@ -86,7 +86,13 @@ export default function TopPatternCard({ pattern, onOpenAtreus, onDecisionCommit
         onDecisionSaved={async () => {
           await onDecisionCommitted?.();
         }}
-        onOpenAtreus={onOpenAtreus}
+        onOpenAtreus={(msg, context) => {
+          // Enrich context with pattern information if not already present
+          const enrichedContext = context ? { ...context } : {};
+          if (!enrichedContext.pattern_name) enrichedContext.pattern_name = pattern.name;
+          if (!enrichedContext.pattern_bucket) enrichedContext.pattern_bucket = pattern.bucket;
+          onOpenAtreus?.(msg, enrichedContext);
+        }}
         autoOpenDecision={autoOpenDecision}
         patternDecisions={pendingDecisions.filter(d => d.pattern_name === pattern.name).slice(0, 3)}
       />

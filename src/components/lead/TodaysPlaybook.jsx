@@ -259,11 +259,24 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
   const [loopExpanded, setLoopExpanded] = useState(true);
 
   // Filter decisions older than 7 days for outcome surface in Close the Loop
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  const outcomePendingDecisions = (pendingDecisions || []).filter(
-    d => d.created_date && new Date(d.created_date) < sevenDaysAgo
-  );
+  // Use timezone-aware date comparison: decisions are stored as ISO UTC, so we compare ISO strings
+  const getTodayET = () => new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(new Date());
+  const sevenDaysAgoET = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).format(d);
+  })();
+  const outcomePendingDecisions = (pendingDecisions || []).filter(d => {
+    if (!d.created_date) return false;
+    const decisionDateET = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).format(new Date(d.created_date));
+    return decisionDateET <= sevenDaysAgoET;
+  });
 
   const activeGoals = (goals || []).filter(g => g.status === "active");
   const topGoal     = [...activeGoals].sort((a, b) => (b.progress || 0) - (a.progress || 0))[0];
