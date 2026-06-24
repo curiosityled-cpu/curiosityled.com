@@ -20,7 +20,7 @@ const STATUS_STYLES = {
   Persistent: 'bg-red-100 text-red-800 border-red-200',
 };
 
-export default function TopPatternCard({ pattern, onOpenAtreus, onDecisionCommitted }) {
+export default function TopPatternCard({ pattern, onOpenAtreus, onDecisionCommitted, pendingDecisions = [] }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [autoOpenDecision, setAutoOpenDecision] = useState(false);
 
@@ -87,6 +87,7 @@ export default function TopPatternCard({ pattern, onOpenAtreus, onDecisionCommit
         }}
         onOpenAtreus={onOpenAtreus}
         autoOpenDecision={autoOpenDecision}
+        patternDecisions={pendingDecisions.filter(d => d.pattern_name === pattern.name).slice(0, 3)}
       />
     </React.Fragment>
   );

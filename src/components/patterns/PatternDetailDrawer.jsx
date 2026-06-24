@@ -97,7 +97,7 @@ function getWeekOf() {
   return d.toISOString().split('T')[0];
 }
 
-export default function PatternDetailDrawer({ pattern, open, onClose, onOpenAtreus, onDecisionSaved, autoOpenDecision = false }) {
+export default function PatternDetailDrawer({ pattern, open, onClose, onOpenAtreus, onDecisionSaved, autoOpenDecision = false, patternDecisions = [] }) {
   const { user } = useAuth();
   const [aiDecision, setAiDecision] = useState(null);
   const [loadingAi, setLoadingAi] = useState(false);
@@ -639,15 +639,19 @@ Generate a well-structured decision for them to capture in their decision journa
             <Button
               onClick={() => {
                 onClose();
-                if (onOpenAtreus) onOpenAtreus(
-                  `I'm looking at my ${pattern.name} pattern. ${pattern.tagline} Help me think through what to do about it.`,
-                  {
-                    mode: 'pattern_exploration',
-                    pattern_name: pattern.name,
-                    pattern_bucket: pattern.bucket,
-                    pattern_status: pattern.status,
-                  }
-                );
+                if (onOpenAtreus) {
+                  const recentDecisionText = patternDecisions[0]?.decision_text ? `\n\nYou recently committed to: "${patternDecisions[0].decision_text.substring(0, 60)}..."` : '';
+                  onOpenAtreus(
+                    `I'm looking at my ${pattern.name} pattern. ${pattern.tagline} Help me think through what to do about it.${recentDecisionText}`,
+                    {
+                      mode: 'pattern_exploration',
+                      pattern_name: pattern.name,
+                      pattern_bucket: pattern.bucket,
+                      pattern_status: pattern.status,
+                      related_decisions: patternDecisions.length,
+                    }
+                  );
+                }
               }}
               className="w-full text-white text-sm font-semibold gap-2"
               style={{ backgroundColor: '#0202ff' }}

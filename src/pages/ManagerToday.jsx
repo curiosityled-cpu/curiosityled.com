@@ -422,7 +422,7 @@ export default function ManagerToday() {
 
       {/* Top pattern surface */}
       {topPattern && (
-        <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} onDecisionCommitted={refetchDecisions} />
+        <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} onDecisionCommitted={refetchDecisions} pendingDecisions={pendingDecisions} />
       )}
 
       {/* Today's Playbook — always rendered once user is available */}
