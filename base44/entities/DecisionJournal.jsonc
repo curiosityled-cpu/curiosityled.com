@@ -199,6 +199,57 @@
       "type": "string",
       "description": "What would you repeat next time (post-review learning)"
     },
+    "linked_competencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "competency_id": {
+            "type": "string"
+          },
+          "competency_name": {
+            "type": "string"
+          },
+          "dq_gap": {
+            "type": "string",
+            "enum": [
+              "frame",
+              "alternatives",
+              "information",
+              "tradeoffs",
+              "reasoning",
+              "commitment"
+            ],
+            "description": "Which DQ step revealed a development opportunity"
+          }
+        }
+      },
+      "description": "Competencies linked to DQ gaps discovered during audit"
+    },
+    "evidence_sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "data",
+              "observation",
+              "stakeholder_input",
+              "assumption"
+            ]
+          }
+        }
+      },
+      "description": "Knowns classified by evidence source quality"
+    },
     "week_of": {
       "type": "string",
       "format": "date",

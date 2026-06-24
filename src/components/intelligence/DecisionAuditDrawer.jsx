@@ -10,8 +10,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { getRubricForType } from './DecisionAuditRubrics';
 
-const AUDIT_STEPS = [
+const AUDIT_STEPS_GENERIC = [
   {
     id: 1,
     title: 'Frame the decision',
@@ -107,8 +108,16 @@ export default function DecisionAuditDrawer({ decision, onClose, onSave, userEma
   });
   const [primaryInput, setPrimaryInput] = useState('');
   const [secondaryInput, setSecondaryInput] = useState('');
+  const [evidenceSource, setEvidenceSource] = useState('observation'); // for tracking step 3
   const [saving, setSaving] = useState(false);
   const [showCompletionFeedback, setShowCompletionFeedback] = useState(false);
+
+  // Get decision-type-specific rubric
+  const rubric = getRubricForType(auditData.decision_type);
+  const AUDIT_STEPS = rubric.steps.map(s => ({
+    ...s,
+    fieldMap: AUDIT_STEPS_GENERIC[s.id - 1]?.fieldMap || {},
+  }));
 
   const step = AUDIT_STEPS[currentStep];
   const dqiPoints = calculateDQI(auditData);
@@ -142,7 +151,13 @@ export default function DecisionAuditDrawer({ decision, onClose, onSave, userEma
       // For alternatives, just mark as provided; in real UI we'd have structured input
       updated.structured_alternatives = [{ id: '1', option_text: primaryInput, is_preferred: true }];
     } else if (step.fieldMap.primary === 'knowns') {
+      // Track evidence source for each known
       updated.knowns = primaryInput.split(';').map(x => x.trim()).filter(x => x);
+      updated.evidence_sources = primaryInput.split(';').map((text, i) => ({
+        id: `${i}`,
+        text: text.trim(),
+        source_type: evidenceSource,
+      })).filter(x => x.text);
     } else if (step.fieldMap.primary === 'tradeoffs_accepted') {
       updated.tradeoffs_accepted = primaryInput.split(';').map(x => x.trim()).filter(x => x);
     } else {
@@ -221,7 +236,7 @@ export default function DecisionAuditDrawer({ decision, onClose, onSave, userEma
         {/* Header */}
         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Decision Audit</p>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Decision Audit — {rubric.label}</p>
             <p className="text-sm text-card-foreground font-medium mt-0.5 truncate">{auditData.decision_text || 'New decision'}</p>
           </div>
           <button
@@ -257,21 +272,44 @@ export default function DecisionAuditDrawer({ decision, onClose, onSave, userEma
               <div className="space-y-1.5 pt-2">
                 <label className="text-sm font-semibold text-card-foreground">{step.prompt}</label>
                 {step.fieldMap.primary === 'structured_alternatives' ? (
-                  <Input
-                    placeholder="List your main alternatives (separate by semicolon if multiple)"
-                    value={primaryInput}
-                    onChange={e => setPrimaryInput(e.target.value)}
-                    className="text-sm"
-                  />
-                ) : (
-                  <Textarea
-                    placeholder={`Your response...`}
-                    value={primaryInput}
-                    onChange={e => setPrimaryInput(e.target.value)}
-                    className="text-sm h-20 resize-none"
-                    autoFocus
-                  />
-                )}
+                    <Input
+                      placeholder="List your main alternatives (separate by semicolon if multiple)"
+                      value={primaryInput}
+                      onChange={e => setPrimaryInput(e.target.value)}
+                      className="text-sm"
+                    />
+                  ) : step.fieldMap.primary === 'knowns' ? (
+                    <>
+                      <Textarea
+                        placeholder="List your evidence/facts (separate by semicolon if multiple)"
+                        value={primaryInput}
+                        onChange={e => setPrimaryInput(e.target.value)}
+                        className="text-sm h-20 resize-none"
+                        autoFocus
+                      />
+                      <div className="space-y-1.5 pt-2">
+                        <label className="text-xs font-semibold text-card-foreground">Evidence source</label>
+                        <select
+                          value={evidenceSource}
+                          onChange={e => setEvidenceSource(e.target.value)}
+                          className="text-sm border border-input rounded-md px-3 py-2 bg-background"
+                        >
+                          <option value="data">Data / Metrics</option>
+                          <option value="observation">Observation / Experience</option>
+                          <option value="stakeholder_input">Stakeholder Input</option>
+                          <option value="assumption">Assumption</option>
+                        </select>
+                      </div>
+                    </>
+                  ) : (
+                    <Textarea
+                      placeholder={`Your response...`}
+                      value={primaryInput}
+                      onChange={e => setPrimaryInput(e.target.value)}
+                      className="text-sm h-20 resize-none"
+                      autoFocus
+                    />
+                  )}
               </div>
 
               {/* Secondary prompt */}
