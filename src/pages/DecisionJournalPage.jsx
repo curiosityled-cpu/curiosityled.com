@@ -6,7 +6,6 @@
  */
 import React, { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
@@ -17,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import DecisionPreMortemPanel from "@/components/intelligence/DecisionPreMortemPanel";
 import DQIStateCard from "@/components/intelligence/DQIStateCard";
 import DecisionAuditDrawer from "@/components/intelligence/DecisionAuditDrawer";
