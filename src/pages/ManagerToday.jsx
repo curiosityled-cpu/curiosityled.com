@@ -181,40 +181,7 @@ export default function ManagerToday() {
     queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
   };
 
-  // Phase 1+3: orchestrator hook — MUST be declared before openAtreus so the closure captures it
-  const { orchestratorData } = useAtreusOrchestrator({
-    page: 'today',
-    active_pattern: topPattern?.name || null,
-    check_in_state: todayRecord ? {
-      morning_done: !!todayRecord.morning_completed,
-      evening_done: !!todayRecord.evening_completed,
-      energy_score: todayRecord.energy_score,
-      load_score: todayRecord.load_score,
-    } : null,
-    pending_decisions: pendingDecisions.length > 0 ? pendingDecisions.slice(0, 3).map(d => ({
-      id: d.id,
-      decision_text: d.decision_text,
-      pattern_name: d.pattern_name,
-      confidence: d.confidence,
-      status: d.status,
-    })) : null,
-    enabled: !!user?.email,
-  });
 
-  const openAtreus = (msg, decisionContext = null) => {
-    // Always use openWithContext so decision_context is never swallowed by the orchestrator path
-    openWithContext({
-      context: {
-        pageType: 'today',
-        user_name: getFirstName(user),
-        orchestrator_mode: orchestratorData?.mode,
-        signal_score: orchestratorData?.signal_score,
-        situation: orchestratorData?.situation,
-        ...(decisionContext ? { decision_context: decisionContext } : {}),
-      },
-      starterMessage: msg || orchestratorData?.opening_message || "I'd like to reflect on my leadership this week."
-    });
-  };
 
   const { data: insight } = useQuery({
     queryKey: ['ml-insight', user?.email],
@@ -319,11 +286,45 @@ export default function ManagerToday() {
   });
 
   // Compute top BPO pattern BEFORE orchestrator hook since it needs the pattern name
-  // Also needed for pendingDecisions which is used by orchestrator
   const topPattern = useMemo(() => {
     const patterns = runBpoPatternEngine({ trends, checkIns: checkInHistory, goals, activities: [], pulses: recentPulses });
     return patterns[0] || null;
   }, [trends, checkInHistory, goals, recentPulses]);
+
+  // Phase 1+3: orchestrator hook — MUST be declared after topPattern and before openAtreus
+  const { orchestratorData } = useAtreusOrchestrator({
+    page: 'today',
+    active_pattern: topPattern?.name || null,
+    check_in_state: todayRecord ? {
+      morning_done: !!todayRecord.morning_completed,
+      evening_done: !!todayRecord.evening_completed,
+      energy_score: todayRecord.energy_score,
+      load_score: todayRecord.load_score,
+    } : null,
+    pending_decisions: pendingDecisions.length > 0 ? pendingDecisions.slice(0, 3).map(d => ({
+      id: d.id,
+      decision_text: d.decision_text,
+      pattern_name: d.pattern_name,
+      confidence: d.confidence,
+      status: d.status,
+    })) : null,
+    enabled: !!user?.email,
+  });
+
+  const openAtreus = (msg, decisionContext = null) => {
+    // Always use openWithContext so decision_context is never swallowed by the orchestrator path
+    openWithContext({
+      context: {
+        pageType: 'today',
+        user_name: getFirstName(user),
+        orchestrator_mode: orchestratorData?.mode,
+        signal_score: orchestratorData?.signal_score,
+        situation: orchestratorData?.situation,
+        ...(decisionContext ? { decision_context: decisionContext } : {}),
+      },
+      starterMessage: msg || orchestratorData?.opening_message || "I'd like to reflect on my leadership this week."
+    });
+  };
 
   const { data: kpis = [] } = useQuery({
     queryKey: ['ml-kpis', user?.email],
