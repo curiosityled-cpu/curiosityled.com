@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import DecisionPreMortemPanel from "@/components/intelligence/DecisionPreMortemPanel";
-import ConfidenceCalibrationCard from "@/components/intelligence/ConfidenceCalibrationCard";
+import DQIStateCard from "@/components/intelligence/DQIStateCard";
 import DecisionAuditDrawer from "@/components/intelligence/DecisionAuditDrawer";
 import PostDecisionReviewDrawer from "@/components/intelligence/PostDecisionReviewDrawer";
 
@@ -750,14 +750,7 @@ export default function DecisionJournalPage() {
         />
       )}
 
-      {/* Confidence Calibration Card — shown when enough data */}
-      {!showForm && calibrationData && (
-        <ConfidenceCalibrationCard
-          calibration={calibrationData.calibration}
-          patternFlags={calibrationData.pattern_flags || []}
-          totalCompleted={calibrationData.completed_decisions || 0}
-        />
-      )}
+
 
       {/* Decision list */}
       {isLoading ? (
