@@ -168,6 +168,7 @@ function DecisionLoopItem({ decision, onOutcomeSaved, onOpenAtreus }) {
           const responseData = res.data || {};
           const debriefMsg = responseData.opening_prompt || responseData.debrief_message || responseData.message || `Let's debrief on how "${decision.decision_text.substring(0, 50)}..." went and what you're learning.`;
           
+          // Pass decision context as flat object merged into context, not nested
           onOpenAtreus(debriefMsg, {
             mode: 'decision_debrief',
             decision_text: decision.decision_text,
@@ -175,6 +176,7 @@ function DecisionLoopItem({ decision, onOutcomeSaved, onOpenAtreus }) {
             pattern_name: decision.pattern_name,
             pattern_bucket: decision.pattern_bucket,
             calibration_flag: responseData.overconfidence_detected ? 'overconfidence_bias' : null,
+            pageType: 'today',
           });
         } catch (e) {
           // non-blocking — debrief is an enhancement; log for debugging

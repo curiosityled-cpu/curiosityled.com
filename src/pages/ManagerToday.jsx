@@ -328,7 +328,16 @@ export default function ManagerToday() {
         orchestrator_mode: orchestratorData?.mode,
         signal_score: orchestratorData?.signal_score,
         situation: orchestratorData?.situation,
-        ...(decisionContext ? { decision_context: decisionContext } : {}),
+        // Flatten decision_context fields directly into context so Atreus sees them
+        ...(decisionContext && {
+          decision_mode: decisionContext.mode,
+          decision_text: decisionContext.decision_text,
+          outcome: decisionContext.outcome,
+          pattern_name: decisionContext.pattern_name,
+          pattern_bucket: decisionContext.pattern_bucket,
+          calibration_flag: decisionContext.calibration_flag,
+          related_decisions: decisionContext.related_decisions,
+        }),
       },
       starterMessage: msg || orchestratorData?.opening_message || "I'd like to reflect on my leadership this week."
     });
