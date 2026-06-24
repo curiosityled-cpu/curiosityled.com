@@ -141,6 +141,31 @@ function formatConvMemory(convMemory) {
   return parts.join('\n\n');
 }
 
+function formatDecisionContext(decisionContext) {
+  if (!decisionContext) return null;
+  const parts = [];
+
+  if (decisionContext.flow === 'decision_premortem' && decisionContext.decision_text) {
+    parts.push(`DECISION COACHING CONTEXT — PRE-MORTEM MODE:`);
+    parts.push(`The manager is about to commit to a decision: "${decisionContext.decision_text}"`);
+    parts.push(`Your role right now is to help them stress-test this decision BEFORE they commit. Ask the hard questions. Surface assumptions they may not have examined. Use their past decision patterns if available.`);
+  } else if (decisionContext.flow === 'decision_debrief') {
+    parts.push(`DECISION COACHING CONTEXT — DEBRIEF MODE:`);
+    parts.push(`The manager just logged a disappointing outcome (${decisionContext.outcome || 'changed course or partly'}). Your role is to help them extract learning from this without judgment. Focus on the gap between their original assumptions and what actually happened.`);
+    if (decisionContext.decision_text) parts.push(`Decision: "${decisionContext.decision_text}"`);
+  } else if (decisionContext.flow === 'decision_quality') {
+    parts.push(`DECISION COACHING CONTEXT — QUALITY REVIEW:`);
+    parts.push(`The manager wants to improve their decision-making quality. Help them identify patterns, biases, and systemic gaps across their decision history. Be specific, not generic.`);
+  }
+
+  if (decisionContext.calibration_flag === 'overconfidence_bias') {
+    parts.push(`CALIBRATION INSIGHT: This manager has a pattern of rating decisions as "high confidence" that frequently end in "changed course". Surface this pattern thoughtfully if relevant.`);
+  }
+
+  if (parts.length === 0) return null;
+  return parts.join('\n');
+}
+
 /**
  * buildAtreusSystemPrompt(options)
  *
@@ -151,14 +176,17 @@ function formatConvMemory(convMemory) {
  * @param {object} options.memory - ManagerMemory record (may be null)
  * @param {object} options.pageContext - current page context object
  * @param {string} options.userName - manager's first name
+ * @param {object} options.decisionContext - optional decision journal context
  * @returns {string} complete system prompt
  */
-export function buildAtreusSystemPrompt({ toneMode, riskScore = 0, trends = null, memory = null, pageContext = {}, userName = 'the manager', convMemory = null }) {
+export function buildAtreusSystemPrompt({ toneMode, riskScore = 0, trends = null, memory = null, pageContext = {}, userName = 'the manager', convMemory = null, decisionContext = null }) {
   const isHighRisk = riskScore >= 75 && toneMode === 'gentle_observant';
   const effectiveTone = isHighRisk ? 'warm_candid' : (toneMode || 'warm_candid');
   const toneBlock = TONE_INSTRUCTIONS[effectiveTone] || TONE_INSTRUCTIONS.warm_candid;
   const trendBlock = formatTrendContext(trends);
   const memoryBlock = formatMemoryContext(memory);
+
+  const decisionBlock = formatDecisionContext(decisionContext || pageContext?.decision_context);
 
   const sections = [
     `You are Atreus — a private leadership companion built into the Curiosity Led platform. You are not an HR tool, not a performance monitor, and not a therapist. You are a trusted thinking partner for managers navigating the human side of leadership.`,
@@ -176,6 +204,8 @@ export function buildAtreusSystemPrompt({ toneMode, riskScore = 0, trends = null
     convMemory ? formatConvMemory(convMemory) : null,
 
     trendBlock ? trendBlock : null,
+
+    decisionBlock ? decisionBlock : null,
 
     pageContext && Object.keys(pageContext).length > 0
       ? `CURRENT CONTEXT:\n${JSON.stringify(pageContext, null, 2)}`

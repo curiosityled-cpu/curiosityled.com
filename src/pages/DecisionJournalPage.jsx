@@ -4,7 +4,7 @@
  * Capture decisions with context, confidence, assumptions, risks.
  * Review outcomes 3+ days later.
  */
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -17,6 +17,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import DecisionPreMortemPanel from "@/components/intelligence/DecisionPreMortemPanel";
+import ConfidenceCalibrationCard from "@/components/intelligence/ConfidenceCalibrationCard";
 
 const CONFIDENCE_LEVELS = [
   { value: 'low', label: "Low — I'm not sure", color: 'bg-rose-50 text-rose-700 border-rose-200' },
@@ -32,7 +34,7 @@ function timeAgo(dateStr) {
   return `${Math.floor(days / 7)} week${Math.floor(days / 7) > 1 ? 's' : ''} ago`;
 }
 
-function NewDecisionForm({ onSave, onCancel }) {
+function NewDecisionForm({ onSave, onCancel, userEmail }) {
   const [form, setForm] = useState({
     title: '',
     context: '',
@@ -196,6 +198,9 @@ Be practical, thoughtful, and grounded. Use the manager's own language where pos
             className="text-sm"
           />
         </div>
+
+        {/* Pre-Mortem Panel — appears once title is long enough */}
+        <DecisionPreMortemPanel decisionText={form.title} userEmail={userEmail} />
 
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-gray-600">Context — why does this matter?</label>
@@ -472,17 +477,27 @@ function DecisionCard({ decision, onLogOutcome }) {
 export default function DecisionJournalPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { openWithContext } = useAtreusChat();
   const [showForm, setShowForm] = useState(false);
+  const [calibrationData, setCalibrationData] = useState(null);
 
   const { data: decisions = [], isLoading } = useQuery({
     queryKey: ['decision-journal-full', user?.email],
     queryFn: async () => {
       try {
-        return await base44.entities.DecisionJournal.filter(
+        const results = await base44.entities.DecisionJournal.filter(
           { user_email: user.email },
           '-created_date',
           50
         );
+        // Fetch calibration data in background when we have completed decisions
+        const completed = results.filter(d => d.outcome);
+        if (completed.length >= 3) {
+          base44.functions.invoke('analyzeDecisionQuality', { mode: 'calibration' })
+            .then(res => setCalibrationData(res.data))
+            .catch(() => {});
+        }
+        return results;
       } catch { return []; }
     },
     enabled: !!user?.email,
@@ -521,6 +536,34 @@ export default function DecisionJournalPage() {
       outcome_notes: outcomeText || '',
     }).catch(() => {});
     queryClient.invalidateQueries({ queryKey: ['decision-journal-full', user?.email] });
+
+    // Pattern-based debrief: trigger Atreus for disappointing outcomes
+    if (outcome === 'changed_course' || outcome === 'partly') {
+      try {
+        const res = await base44.functions.invoke('analyzeDecisionQuality', {
+          mode: 'debrief',
+          decision_id: decision.id,
+          decision_text: decision.decision_text,
+          outcome,
+          outcome_notes: outcomeText || '',
+        });
+        const debriefData = res.data;
+        if (debriefData?.opening_prompt) {
+          // Small delay so the outcome save UI settles first
+          setTimeout(() => {
+            openWithContext({
+              context: { pageType: 'practice', flow: 'decision_debrief', decision_id: decision.id },
+              starterMessage: debriefData.opening_prompt,
+              draftMessage: debriefData.debrief_message
+                ? `${debriefData.debrief_message}\n\n${debriefData.opening_prompt}`
+                : null,
+            });
+          }, 800);
+        }
+      } catch {
+        // debrief is non-blocking
+      }
+    }
   };
 
   const pendingCount = decisions.filter(d => d.status !== 'completed').length;
@@ -557,7 +600,16 @@ export default function DecisionJournalPage() {
 
       {/* New decision form */}
       {showForm && (
-        <NewDecisionForm onSave={handleSave} onCancel={() => setShowForm(false)} />
+        <NewDecisionForm onSave={handleSave} onCancel={() => setShowForm(false)} userEmail={user?.email} />
+      )}
+
+      {/* Confidence Calibration Card — shown when enough data */}
+      {!showForm && calibrationData && (
+        <ConfidenceCalibrationCard
+          calibration={calibrationData.calibration}
+          patternFlags={calibrationData.pattern_flags || []}
+          totalCompleted={calibrationData.completed_decisions || 0}
+        />
       )}
 
       {/* Decision list */}

@@ -147,6 +147,8 @@ Deno.serve(async (req) => {
       opening_message = `You're looking at the patterns view. ${situation} Anything in particular catching your attention?`;
     } else if (page_context?.page === 'practice') {
       opening_message = `Practice is where patterns change. What do you want to work on today, ${firstName}?`;
+    } else if (page_context?.page === 'decision-journal' || page_context?.pageType === 'decision-journal') {
+      opening_message = `You're in the Decision Journal, ${firstName}. This is where patterns in your decision-making become visible. What are you working through?`;
     } else {
       opening_message = `${firstName}, here's what I'm seeing: ${situation} What's on your mind?`;
     }
