@@ -308,13 +308,16 @@ export default function ManagerToday() {
       energy_score: todayRecord.energy_score,
       load_score: todayRecord.load_score,
     } : null,
-    pending_decisions: pendingDecisions.length > 0 ? pendingDecisions.slice(0, 3).map(d => ({
-      id: d.id,
-      decision_text: d.decision_text,
-      pattern_name: d.pattern_name,
-      confidence: d.confidence,
-      status: d.status,
-    })) : null,
+    pending_decisions: pendingDecisions.length > 0 ? {
+      count: pendingDecisions.length,
+      recent: pendingDecisions.slice(0, 3).map(d => ({
+        id: d.id,
+        decision_text: d.decision_text,
+        pattern_name: d.pattern_name,
+        confidence: d.confidence,
+        status: d.status,
+      }))
+    } : null,
     decision_context: decisionContextForOrchestrator,
     enabled: !!user?.email,
   });
@@ -451,6 +454,7 @@ export default function ManagerToday() {
             queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
             refetchToday();
           }}
+          userEmail={user?.email}
         />
       )}
 

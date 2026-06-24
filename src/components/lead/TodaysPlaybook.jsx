@@ -241,8 +241,9 @@ function DecisionLoopItem({ decision, onOutcomeSaved, onOpenAtreus }) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [], trends, goals, assignments, pulses, pendingDecisions = [], onDecisionOutcomeSaved, onOpenAtreus, onRefresh, onBig3Saved }) {
+export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [], trends, goals, assignments, pulses, pendingDecisions = [], onDecisionOutcomeSaved, onOpenAtreus, onRefresh, onBig3Saved, userEmail }) {
   const { user } = useAuth();
+  const email = userEmail || user?.email;
 
   const [moveDone, setMoveDone]       = useState(false);
   const [committed, setCommitted]     = useState(false);
@@ -268,21 +269,21 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
   const saveCommitment = async () => {
     if (committed) return;
     try {
-      await base44.entities.Goal.create({ user_email: user?.email, created_by: user?.email, title: move.move, description: move.reason, status: "active", goal_type: "behavioral_commitment", source: "next_move", progress: 0 });
+      await base44.entities.Goal.create({ user_email: email, created_by: email, title: move.move, description: move.reason, status: "active", goal_type: "behavioral_commitment", source: "next_move", progress: 0 });
       setCommitted(true);
     } catch {}
   };
 
   const handleAtreus = async () => {
     await saveCommitment();
-    onOpenAtreus?.(move.atreusMsg);
+    onOpenAtreus?.(move.atreusMsg, null);
   };
 
   const handleFtSubmit = async () => {
     if (!ftSelected || !commitment) return;
     setFtLoading(true);
     await base44.entities.ManagerPulse.create({
-      user_email: user?.email,
+      user_email: email,
       prompt_type: "follow_up",
       source: "web",
       focus_intention: ftReflection || `Follow-through: ${ftSelected} on "${commitment.text}"`,
