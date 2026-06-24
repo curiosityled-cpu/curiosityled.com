@@ -43,6 +43,7 @@ Deno.serve(async (req) => {
       activeGoals,
       recentPulses,
       latestAssessment,
+      committedDecisions,
     ] = await Promise.all([
       base44.entities.ManagerTrends.filter({ user_email: user.email }, '-last_trend_computed_at', 1).catch(() => []),
       base44.entities.ManagerMemory.filter({ user_email: user.email }, '-last_synthesized_at', 1).catch(() => []),
@@ -51,6 +52,7 @@ Deno.serve(async (req) => {
       base44.entities.Goal.filter({ created_by: user.email, status: 'active' }, '-updated_date', 10).catch(() => []),
       base44.entities.ManagerPulse.filter({ user_email: user.email }, '-created_date', 20).catch(() => []),
       base44.entities.Assessment.filter({ email: user.email }, '-submission_ts', 1).catch(() => []),
+      base44.entities.DecisionJournal.filter({ user_email: user.email, status: 'committed' }, '-created_date', 5).catch(() => []),
     ]);
 
     const trend = trends[0] || null;
@@ -85,6 +87,12 @@ Deno.serve(async (req) => {
     const overdueGoals = activeGoals.filter(g => g.timeframe_end && new Date(g.timeframe_end) < now);
     if (overdueGoals.length >= 2) { signalScore += 10; signals.push('multiple_overdue_goals'); }
 
+    // Decision signals — high-stakes decisions 2+ days old warrant coaching attention
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+    const pendingDecisions = (committedDecisions || []).filter(d => d.created_date && new Date(d.created_date) < twoDaysAgo);
+    if (pendingDecisions.length > 0) { signalScore += 10; signals.push('pending_decisions'); }
+
     // Check-in streak
     const last7 = recentCheckIns.filter(c => {
       const d = new Date(c.check_in_date);
@@ -114,6 +122,9 @@ Deno.serve(async (req) => {
       situation = 'Delegation commitments are not following through — a gap between intent and action.';
     } else if (signals.includes('identity_friction')) {
       situation = 'Some identity friction is showing up — worth exploring what\'s creating the tension.';
+    } else if (signals.includes('pending_decisions')) {
+      const topDecision = pendingDecisions[0];
+      situation = `You have ${pendingDecisions.length} decision${pendingDecisions.length > 1 ? 's' : ''} you committed to that are ready for a check-in. How is "${topDecision?.decision_text?.substring(0, 50)}" playing out?`;
     } else if (signals.includes('no_checkins_7d')) {
       situation = 'No check-ins in 7 days — the system doesn\'t have enough signal to be useful right now.';
     } else if (mode === 'celebrate') {
@@ -122,8 +133,10 @@ Deno.serve(async (req) => {
       situation = 'Signals are relatively stable. A good moment to be intentional rather than reactive.';
     }
 
-    // Append page context to situation if present
-    if (page_context?.active_pattern) {
+    // Append page/decision context to situation if present
+    if (page_context?.decision_context?.pattern_name) {
+      situation += ` You're working on decisions related to ${page_context.decision_context.pattern_name}.`;
+    } else if (page_context?.active_pattern) {
       situation += ` Pattern detected on this page: ${page_context.active_pattern}.`;
     }
 
@@ -133,6 +146,9 @@ Deno.serve(async (req) => {
 
     if (mode === 'celebrate') {
       opening_message = `${firstName}, something is shifting — and it looks like it's moving in the right direction. What's been different lately?`;
+    } else if (mode === 'coaching' && signals.includes('pending_decisions')) {
+      const topDecision = pendingDecisions[0];
+      opening_message = `You committed to a decision a couple days ago about "${topDecision?.decision_text?.substring(0, 50)}..." — I want to know how it's going. What are you seeing?`;
     } else if (mode === 'coaching' && signals.includes('low_energy_today')) {
       opening_message = tone === 'gentle_observant'
         ? `I noticed today looks like a heavy one. No pressure — just checking in. How are you actually doing?`
@@ -219,6 +235,7 @@ Deno.serve(async (req) => {
         evening_done: eveningDone,
         active_goals: activeGoals.length,
         overdue_goals: overdueGoals.length,
+        pending_decisions: pendingDecisions.length,
         trend_available: !!trend,
         memory_available: !!mem,
         assessment_available: !!assessment,

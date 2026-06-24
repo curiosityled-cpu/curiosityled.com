@@ -164,19 +164,21 @@ function DecisionLoopItem({ decision, onOutcomeSaved, onOpenAtreus }) {
             outcome,
             outcome_notes: notes,
           });
-          const debriefMsg = res.data?.opening_prompt || res.data?.debrief_message;
-          if (debriefMsg) {
-            onOpenAtreus(debriefMsg, {
-              mode: 'decision_debrief',
-              decision_text: decision.decision_text,
-              outcome,
-              pattern_name: decision.pattern_name,
-              pattern_bucket: decision.pattern_bucket,
-              calibration_flag: res.data?.overconfidence_detected ? 'overconfidence_bias' : null,
-            });
-          }
-        } catch {
-          // non-blocking — debrief is an enhancement only
+          // Handle both response structures: direct message string or object with nested fields
+          const responseData = res.data || {};
+          const debriefMsg = responseData.opening_prompt || responseData.debrief_message || responseData.message || `Let's debrief on how "${decision.decision_text.substring(0, 50)}..." went and what you're learning.`;
+          
+          onOpenAtreus(debriefMsg, {
+            mode: 'decision_debrief',
+            decision_text: decision.decision_text,
+            outcome,
+            pattern_name: decision.pattern_name,
+            pattern_bucket: decision.pattern_bucket,
+            calibration_flag: responseData.overconfidence_detected ? 'overconfidence_bias' : null,
+          });
+        } catch (e) {
+          // non-blocking — debrief is an enhancement; log for debugging
+          console.warn('Decision debrief failed:', e.message);
         }
       }
     } catch (e) {
