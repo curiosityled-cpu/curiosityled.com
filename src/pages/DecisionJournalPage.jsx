@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import DecisionPreMortemPanel from "@/components/intelligence/DecisionPreMortemPanel";
 import ConfidenceCalibrationCard from "@/components/intelligence/ConfidenceCalibrationCard";
+import DecisionAuditDrawer from "@/components/intelligence/DecisionAuditDrawer";
 
 const CONFIDENCE_LEVELS = [
   { value: 'low', label: "Low — I'm not sure", color: 'bg-rose-50 text-rose-700 border-rose-200' },
@@ -569,6 +570,7 @@ export default function DecisionJournalPage() {
   const queryClient = useQueryClient();
   const { openWithContext } = useAtreusChat();
   const [showForm, setShowForm] = useState(false);
+  const [auditingDecision, setAuditingDecision] = useState(null);
   const [calibrationData, setCalibrationData] = useState(null);
 
   const { data: decisions = [], isLoading } = useQuery({
@@ -705,6 +707,19 @@ export default function DecisionJournalPage() {
         <NewDecisionForm onSave={handleSave} onCancel={() => setShowForm(false)} userEmail={user?.email} />
       )}
 
+      {/* Decision Audit Drawer */}
+      {auditingDecision && (
+        <DecisionAuditDrawer
+          decision={auditingDecision}
+          userEmail={user?.email}
+          onClose={() => setAuditingDecision(null)}
+          onSave={() => {
+            setAuditingDecision(null);
+            queryClient.invalidateQueries({ queryKey: ['decision-journal-full', user?.email] });
+          }}
+        />
+      )}
+
       {/* Confidence Calibration Card — shown when enough data */}
       {!showForm && calibrationData && (
         <ConfidenceCalibrationCard
@@ -735,7 +750,19 @@ export default function DecisionJournalPage() {
       ) : (
         <div className="space-y-2">
           {decisions.map(d => (
-            <DecisionCard key={d.id} decision={d} onLogOutcome={handleLogOutcome} onEdit={handleEdit} />
+            <div key={d.id} className="group relative">
+              <DecisionCard decision={d} onLogOutcome={handleLogOutcome} onEdit={handleEdit} />
+              {/* Audit button (shown on draft decisions) */}
+              {d.status === 'committed' && !d.outcome && (
+                <button
+                  onClick={() => setAuditingDecision(d)}
+                  className="absolute top-3 right-12 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-medium text-[#0202ff] hover:text-[#0101dd] flex items-center gap-1"
+                  title="Run decision quality audit"
+                >
+                  <Sparkles className="w-3 h-3" /> Audit
+                </button>
+              )}
+            </div>
           ))}
         </div>
       )}
