@@ -298,8 +298,7 @@ function DecisionCard({ decision, onLogOutcome }) {
   const [outcomeText, setOutcomeText] = useState('');
   const [saved, setSaved] = useState(decision.status === 'completed');
   const [saving, setSaving] = useState(false);
-  const daysOld = Math.floor((Date.now() - new Date(decision.created_date)) / 86400000);
-  const readyForReview = daysOld >= 1 && decision.status !== 'completed';
+  const readyForReview = decision.status !== 'completed';
 
   // Use top-level fields directly; fall back to legacy JSON-in-outcome_notes for old records
   let fields = {
@@ -351,7 +350,7 @@ function DecisionCard({ decision, onLogOutcome }) {
             <span className="text-[10px] text-muted-foreground">{timeAgo(decision.created_date)}</span>
             {decision.pattern_name && <span className="text-[10px] font-medium text-[#0202ff]/70">{decision.pattern_name}</span>}
             {confLabel && <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${confLabel.color}`}>{confLabel.label.split(' — ')[0]}</span>}
-            {readyForReview && !saved && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-300 text-amber-700">Ready to review</Badge>}
+            {readyForReview && !saved && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-300 text-amber-700">Log outcome</Badge>}
             {saved && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-emerald-300 text-emerald-700">Outcome logged</Badge>}
           </div>
         </div>
@@ -524,7 +523,7 @@ export default function DecisionJournalPage() {
     queryClient.invalidateQueries({ queryKey: ['decision-journal-full', user?.email] });
   };
 
-  const reviewReady = decisions.filter(d => d.status !== 'completed' && Math.floor((Date.now() - new Date(d.created_date)) / 86400000) >= 3);
+  const pendingCount = decisions.filter(d => d.status !== 'completed').length;
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
@@ -547,11 +546,11 @@ export default function DecisionJournalPage() {
       </div>
 
       {/* Pending review banner */}
-      {reviewReady.length > 0 && !showForm && (
+      {pendingCount > 0 && !showForm && (
         <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-amber-50 border border-amber-200">
           <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
           <p className="text-xs text-amber-700 font-medium">
-            {reviewReady.length} decision{reviewReady.length > 1 ? 's are' : ' is'} ready for outcome review
+            {pendingCount} decision{pendingCount > 1 ? 's are' : ' is'} awaiting an outcome — tap any to log how it went
           </p>
         </div>
       )}
