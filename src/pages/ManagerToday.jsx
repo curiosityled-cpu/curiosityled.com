@@ -184,13 +184,20 @@ export default function ManagerToday() {
   // Phase 1+3: orchestrator hook — MUST be declared before openAtreus so the closure captures it
   const { orchestratorData } = useAtreusOrchestrator({
     page: 'today',
-    active_pattern: null,
+    active_pattern: topPattern?.name || null,
     check_in_state: todayRecord ? {
       morning_done: !!todayRecord.morning_completed,
       evening_done: !!todayRecord.evening_completed,
       energy_score: todayRecord.energy_score,
       load_score: todayRecord.load_score,
     } : null,
+    pending_decisions: pendingDecisions.length > 0 ? pendingDecisions.slice(0, 3).map(d => ({
+      id: d.id,
+      decision_text: d.decision_text,
+      pattern_name: d.pattern_name,
+      confidence: d.confidence,
+      status: d.status,
+    })) : null,
     enabled: !!user?.email,
   });
 

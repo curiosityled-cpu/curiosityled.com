@@ -10,22 +10,24 @@
 import { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 
-export function useAtreusOrchestrator({ page, active_pattern = null, check_in_state = null, enabled = true }) {
+export function useAtreusOrchestrator({ page, active_pattern = null, check_in_state = null, pending_decisions = null, enabled = true }) {
   const [orchestratorData, setOrchestratorData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const fetchedForPage = useRef(null);
 
-  // Stable key from check_in_state — prevents re-fetch on object identity changes but
-  // does refetch when morning_done/evening_done actually change (e.g., after todayRecord loads)
+  // Stable key from check_in_state + decisions — prevents re-fetch on object identity changes
   const checkInKey = check_in_state
     ? `${check_in_state.morning_done}:${check_in_state.evening_done}`
+    : 'null';
+  const decisionsKey = pending_decisions
+    ? pending_decisions.map(d => d.id).join(',')
     : 'null';
 
   useEffect(() => {
     if (!enabled) return;
-    // Deduplicate: don't re-fetch if page + pattern + check-in state haven't changed
-    const key = `${page}:${active_pattern}:${checkInKey}`;
+    // Deduplicate: don't re-fetch if page + pattern + check-in state + decisions haven't changed
+    const key = `${page}:${active_pattern}:${checkInKey}:${decisionsKey}`;
     if (fetchedForPage.current === key) return;
 
     let cancelled = false;
@@ -37,6 +39,7 @@ export function useAtreusOrchestrator({ page, active_pattern = null, check_in_st
         page,
         active_pattern,
         check_in_state,
+        pending_decisions,
       },
     })
       .then(res => {
@@ -53,7 +56,7 @@ export function useAtreusOrchestrator({ page, active_pattern = null, check_in_st
       });
 
     return () => { cancelled = true; };
-  }, [page, active_pattern, enabled, checkInKey]);
+  }, [page, active_pattern, enabled, checkInKey, decisionsKey]);
 
   return { orchestratorData, loading, error };
 }
