@@ -195,26 +195,18 @@ export default function ManagerToday() {
   });
 
   const openAtreus = (msg, decisionContext = null) => {
-    // Phase 3: If orchestrator data is available and no specific message, use enriched context
-    if (orchestratorData && !msg) {
-      openWithOrchestrator({
-        orchestratorResult: orchestratorData,
-        page: 'today',
-      });
-    } else {
-      openWithContext({
-        context: {
-          pageType: 'today',
-          user_name: getFirstName(user),
-          orchestrator_mode: orchestratorData?.mode,
-          signal_score: orchestratorData?.signal_score,
-          situation: orchestratorData?.situation,
-          // Inject decision_context so Atreus system prompt enters debrief/premortem mode
-          ...(decisionContext ? { decision_context: decisionContext } : {}),
-        },
-        starterMessage: msg || orchestratorData?.opening_message || "I'd like to reflect on my leadership this week."
-      });
-    }
+    // Always use openWithContext so decision_context is never swallowed by the orchestrator path
+    openWithContext({
+      context: {
+        pageType: 'today',
+        user_name: getFirstName(user),
+        orchestrator_mode: orchestratorData?.mode,
+        signal_score: orchestratorData?.signal_score,
+        situation: orchestratorData?.situation,
+        ...(decisionContext ? { decision_context: decisionContext } : {}),
+      },
+      starterMessage: msg || orchestratorData?.opening_message || "I'd like to reflect on my leadership this week."
+    });
   };
 
   const { data: insight } = useQuery({

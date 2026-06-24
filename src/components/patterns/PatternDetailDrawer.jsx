@@ -426,7 +426,7 @@ Generate a well-structured decision for them to capture in their decision journa
             </div>
 
             {/* Step 1: trigger */}
-            {!aiDecision && !loadingAi && (
+            {!aiDecision && !loadingAi && !selectedDecision && (
               <button
                 onClick={generateDecisionSupport}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-[#0202ff]/30 bg-[#0202ff]/5 text-[#0202ff] text-sm font-medium hover:bg-[#0202ff]/10 transition-colors"
