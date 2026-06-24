@@ -20,6 +20,7 @@ import {
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { toast } from "sonner";
+import DecisionPreMortemPanel from "@/components/intelligence/DecisionPreMortemPanel";
 
 const CONFIDENCE_LEVELS = [
   { value: 'low', label: "Low — I'm not sure", color: 'bg-rose-50 text-rose-700 border-rose-200' },
@@ -549,6 +550,14 @@ Generate a well-structured decision for them to capture in their decision journa
                     />
                   </div>
                 </div>
+
+                {/* Pre-Mortem — shows once title has enough content */}
+                {form.title.trim().length >= 15 && (
+                  <DecisionPreMortemPanel
+                    decisionText={form.title}
+                    userEmail={user?.email}
+                  />
+                )}
 
                 {/* Leaning toward */}
                 <div className="space-y-1">

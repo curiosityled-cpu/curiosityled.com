@@ -125,7 +125,7 @@ const DECISION_OUTCOMES = [
   { value: "changed_course",label: "Changed course", Icon: ArrowRight, color: "text-blue-500",   ring: "border-blue-300 bg-blue-50" },
 ];
 
-function DecisionLoopItem({ decision, onOutcomeSaved }) {
+function DecisionLoopItem({ decision, onOutcomeSaved, onOpenAtreus }) {
   const [expanded, setExpanded]   = useState(false);
   const [outcome, setOutcome]     = useState(null);
   const [notes, setNotes]         = useState("");
@@ -154,6 +154,24 @@ function DecisionLoopItem({ decision, onOutcomeSaved }) {
       setDone(true);
       toast.success("Outcome captured.");
       onOutcomeSaved?.();
+
+      // If outcome wasn't ideal, trigger an Atreus debrief
+      if (outcome !== 'did_it' && onOpenAtreus) {
+        try {
+          const res = await base44.functions.invoke('analyzeDecisionQuality', {
+            mode: 'debrief',
+            decision_text: decision.decision_text,
+            outcome,
+            outcome_notes: notes,
+          });
+          const debriefMsg = res.data?.opening_prompt || res.data?.debrief_message;
+          if (debriefMsg) {
+            onOpenAtreus(debriefMsg);
+          }
+        } catch {
+          // non-blocking — debrief is an enhancement only
+        }
+      }
     } catch (e) {
       console.error('Outcome save error', e);
       toast.error("Couldn't save outcome.");
@@ -375,6 +393,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
                         key={d.id}
                         decision={d}
                         onOutcomeSaved={() => onDecisionOutcomeSaved?.()}
+                        onOpenAtreus={onOpenAtreus}
                       />
                     ))}
                   </div>
