@@ -318,7 +318,12 @@ export default function ManagerToday() {
     refetchOnWindowFocus: false,
   });
 
-
+  // Compute top BPO pattern BEFORE orchestrator hook since it needs the pattern name
+  // Also needed for pendingDecisions which is used by orchestrator
+  const topPattern = useMemo(() => {
+    const patterns = runBpoPatternEngine({ trends, checkIns: checkInHistory, goals, activities: [], pulses: recentPulses });
+    return patterns[0] || null;
+  }, [trends, checkInHistory, goals, recentPulses]);
 
   const { data: kpis = [] } = useQuery({
     queryKey: ['ml-kpis', user?.email],
@@ -336,12 +341,6 @@ export default function ManagerToday() {
     },
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
-
-  // Compute top BPO pattern to surface on Today page
-  const topPattern = useMemo(() => {
-    const patterns = runBpoPatternEngine({ trends, checkIns: checkInHistory, goals, activities: [], pulses: recentPulses });
-    return patterns[0] || null;
-  }, [trends, checkInHistory, goals, recentPulses]);
 
   const needsToneOnboarding = tonePref === null;
   const firstName = getFirstName(user);
