@@ -260,7 +260,7 @@ export default function ManagerToday() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
-  // DecisionJournal pending decisions — only decisions older than 7 days surface for outcome capture
+  // DecisionJournal pending decisions — surface decisions 2+ days old for outcome capture
   const { data: pendingDecisions = [], refetch: refetchDecisions } = useQuery({
     queryKey: ['ml-pending-decisions', user?.email],
     queryFn: async () => {
@@ -271,9 +271,9 @@ export default function ManagerToday() {
           '-created_date',
           50
         );
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        return (rows || []).filter(d => d.created_date && new Date(d.created_date) < sevenDaysAgo);
+        const twoDaysAgo = new Date();
+        twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+        return (rows || []).filter(d => d.created_date && new Date(d.created_date) < twoDaysAgo);
       } catch (e) {
         console.error('DecisionJournal fetch error:', e);
         return [];

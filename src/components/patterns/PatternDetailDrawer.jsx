@@ -639,7 +639,15 @@ Generate a well-structured decision for them to capture in their decision journa
             <Button
               onClick={() => {
                 onClose();
-                if (onOpenAtreus) onOpenAtreus(`I'm looking at my ${pattern.name} pattern. ${pattern.tagline} Help me think through what to do about it.`);
+                if (onOpenAtreus) onOpenAtreus(
+                  `I'm looking at my ${pattern.name} pattern. ${pattern.tagline} Help me think through what to do about it.`,
+                  {
+                    mode: 'pattern_exploration',
+                    pattern_name: pattern.name,
+                    pattern_bucket: pattern.bucket,
+                    pattern_status: pattern.status,
+                  }
+                );
               }}
               className="w-full text-white text-sm font-semibold gap-2"
               style={{ backgroundColor: '#0202ff' }}

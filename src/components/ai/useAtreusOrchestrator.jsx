@@ -24,7 +24,7 @@ export function useAtreusOrchestrator({ page, active_pattern = null, check_in_st
     ? pending_decisions.map(d => d.id).join(',')
     : 'null';
   const decisionContextKey = decision_context
-    ? `${decision_context.mode || 'none'}:${decision_context.decision_text?.substring(0, 20) || 'none'}`
+    ? `${decision_context.mode || 'none'}:${decision_context.pattern_name || 'none'}`
     : 'null';
 
   useEffect(() => {
