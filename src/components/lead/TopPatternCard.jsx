@@ -70,6 +70,7 @@ export default function TopPatternCard({ pattern, onOpenAtreus, onDecisionCommit
             <button
               onClick={() => { setAutoOpenDecision(true); setDrawerOpen(true); }}
               className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-dashed border-[#0202ff]/30 text-[#0202ff] hover:bg-[#0202ff]/5 transition-colors"
+              title={`Draft a decision related to: ${pattern.name}`}
             >
               <FileEdit className="w-3 h-3" />
               Draft a decision related to this pattern

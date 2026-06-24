@@ -256,6 +256,13 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
 
   const [loopExpanded, setLoopExpanded] = useState(true);
 
+  // Filter decisions older than 7 days for outcome surface in Close the Loop
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const outcomePendingDecisions = (pendingDecisions || []).filter(
+    d => d.created_date && new Date(d.created_date) < sevenDaysAgo
+  );
+
   const activeGoals = (goals || []).filter(g => g.status === "active");
   const topGoal     = [...activeGoals].sort((a, b) => (b.progress || 0) - (a.progress || 0))[0];
   const situation   = buildSituation(pulse, trends, goals, null);
@@ -381,7 +388,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
       </div>
 
       {/* ── Unified Close the Loop ───────────────────────────────────── */}
-      {(pendingDecisions.length > 0 || activeGoals.length > 0 || commitment) && (
+      {(outcomePendingDecisions.length > 0 || activeGoals.length > 0 || commitment) && (
         <div className="px-5 py-3 border-b border-border">
           <button className="flex items-center justify-between w-full text-left" onClick={() => setLoopExpanded(v => !v)}>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Close the loop</p>
@@ -394,11 +401,11 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
             <div className="mt-3 space-y-4">
 
               {/* Decisions subsection */}
-              {pendingDecisions.length > 0 && (
+              {outcomePendingDecisions.length > 0 && (
                 <div>
-                  <p className="text-[9px] font-bold text-[#0202ff]/70 uppercase tracking-widest mb-2">Decisions</p>
+                  <p className="text-[9px] font-bold text-[#0202ff]/70 uppercase tracking-widest mb-2">Decisions (7+ days old)</p>
                   <div className="space-y-1">
-                    {pendingDecisions.map(d => (
+                    {outcomePendingDecisions.map(d => (
                       <DecisionLoopItem
                         key={d.id}
                         decision={d}
