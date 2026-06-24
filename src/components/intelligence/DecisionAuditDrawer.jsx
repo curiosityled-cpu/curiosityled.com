@@ -201,8 +201,10 @@ export default function DecisionAuditDrawer({ decision, onClose, onSave, userEma
         dqi_completeness: dqiPoints,
       };
 
+      let decisionId;
       if (decision?.id) {
         await base44.entities.DecisionJournal.update(decision.id, updates);
+        decisionId = decision.id;
       } else {
         // Create new decision with audit data
         const d = new Date();
@@ -211,12 +213,20 @@ export default function DecisionAuditDrawer({ decision, onClose, onSave, userEma
         d.setDate(diff);
         const weekOf = d.toISOString().split('T')[0];
 
-        await base44.entities.DecisionJournal.create({
+        const created = await base44.entities.DecisionJournal.create({
           user_email: userEmail,
           status: 'committed',
           week_of: weekOf,
           ...updates,
         });
+        decisionId = created.id;
+      }
+
+      // Analyze audit gaps and map to competencies
+      try {
+        await base44.functions.invoke('analyzeDecisionGaps', { decision_id: decisionId });
+      } catch {
+        // Gap analysis is non-blocking
       }
 
       toast.success('Decision audit saved — you\'re ready to commit.');

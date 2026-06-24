@@ -6,6 +6,7 @@
  */
 import React, { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
@@ -602,6 +603,7 @@ function DecisionCard({ decision, onLogOutcome, onEdit, onReview }) {
 
 export default function DecisionJournalPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { openWithContext } = useAtreusChat();
   const [showForm, setShowForm] = useState(false);
@@ -718,13 +720,23 @@ export default function DecisionJournalPage() {
           <h1 className="text-2xl font-bold text-foreground">Decision Journal</h1>
           <p className="text-sm text-muted-foreground mt-1">Capture high-stakes decisions. Review outcomes. Learn your patterns.</p>
         </div>
-        <Button
-          size="sm"
-          className="bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5 mt-2"
-          onClick={() => setShowForm(true)}
-        >
-          <Plus className="w-4 h-4" /> Capture decision
-        </Button>
+        <div className="flex gap-2 mt-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-xs"
+            onClick={() => navigate('/decision-analytics')}
+          >
+            Analytics
+          </Button>
+          <Button
+            size="sm"
+            className="bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5"
+            onClick={() => setShowForm(true)}
+          >
+            <Plus className="w-4 h-4" /> Capture decision
+          </Button>
+        </div>
       </div>
 
       {/* Pending review banner */}
