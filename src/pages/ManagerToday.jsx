@@ -291,6 +291,13 @@ export default function ManagerToday() {
     return patterns[0] || null;
   }, [trends, checkInHistory, goals, recentPulses]);
 
+  // Decision context for orchestrator — updated when pattern or decisions change
+  const decisionContextForOrchestrator = topPattern && pendingDecisions.length > 0 ? {
+    mode: 'pattern_linked_decision',
+    pattern_name: topPattern.name,
+    pattern_bucket: topPattern.bucket,
+  } : null;
+
   // Phase 1+3: orchestrator hook — MUST be declared after topPattern and before openAtreus
   const { orchestratorData } = useAtreusOrchestrator({
     page: 'today',
@@ -308,6 +315,7 @@ export default function ManagerToday() {
       confidence: d.confidence,
       status: d.status,
     })) : null,
+    decision_context: decisionContextForOrchestrator,
     enabled: !!user?.email,
   });
 

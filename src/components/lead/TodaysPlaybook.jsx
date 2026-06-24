@@ -155,7 +155,7 @@ function DecisionLoopItem({ decision, onOutcomeSaved, onOpenAtreus }) {
       toast.success("Outcome captured.");
       onOutcomeSaved?.();
 
-      // If outcome wasn't ideal, trigger an Atreus debrief with full decision_context
+      // If outcome wasn't ideal, trigger an Atreus debrief with full decision_context including pattern metadata
       if (outcome !== 'did_it' && onOpenAtreus) {
         try {
           const res = await base44.functions.invoke('analyzeDecisionQuality', {
@@ -167,9 +167,11 @@ function DecisionLoopItem({ decision, onOutcomeSaved, onOpenAtreus }) {
           const debriefMsg = res.data?.opening_prompt || res.data?.debrief_message;
           if (debriefMsg) {
             onOpenAtreus(debriefMsg, {
-              flow: 'decision_debrief',
+              mode: 'decision_debrief',
               decision_text: decision.decision_text,
               outcome,
+              pattern_name: decision.pattern_name,
+              pattern_bucket: decision.pattern_bucket,
               calibration_flag: res.data?.overconfidence_detected ? 'overconfidence_bias' : null,
             });
           }
