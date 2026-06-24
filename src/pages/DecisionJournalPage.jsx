@@ -489,6 +489,11 @@ function DecisionCard({ decision, onLogOutcome, onEdit, onReview }) {
               </div>
             )}
           </div>
+          {/* DQI State — show for all non-outcome decisions, or at top of outcome */}
+          {!decision.outcome && (
+            <DQIStateCard decision={decision} />
+          )}
+
           {/* Show existing outcome if already captured */}
           {decision.outcome && (
             <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 space-y-1">
