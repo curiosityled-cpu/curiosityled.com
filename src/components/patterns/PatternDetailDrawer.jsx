@@ -6,7 +6,7 @@
  *   3. Saves to DecisionJournal entity
  *   4. Surfaces in /today Close the Loop card for outcome capture
  */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -97,18 +97,35 @@ function getWeekOf() {
   return d.toISOString().split('T')[0];
 }
 
-export default function PatternDetailDrawer({ pattern, open, onClose, onOpenAtreus, onDecisionSaved }) {
+export default function PatternDetailDrawer({ pattern, open, onClose, onOpenAtreus, onDecisionSaved, autoOpenDecision = false }) {
   const { user } = useAuth();
   const [aiDecision, setAiDecision] = useState(null);
   const [loadingAi, setLoadingAi] = useState(false);
   const [evidenceExpanded, setEvidenceExpanded] = useState(false);
 
   // Decision flow state
-  const [selectedDecision, setSelectedDecision] = useState(null);
-  const [form, setForm] = useState(EMPTY_FORM);
+  // autoOpenDecision=true skips straight to the "Something else — I'll write my own" form
+  const [selectedDecision, setSelectedDecision] = useState(autoOpenDecision ? { decision: '', rationale: '' } : null);
+  const [form, setForm] = useState(autoOpenDecision ? EMPTY_FORM : EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loadingAiAssist, setLoadingAiAssist] = useState(false);
+
+  // When drawer opens via the "Draft a decision" shortcut, jump straight to the form
+  useEffect(() => {
+    if (open && autoOpenDecision && !selectedDecision) {
+      setSelectedDecision({ decision: '', rationale: '' });
+      setForm(EMPTY_FORM);
+      setSaved(false);
+    }
+    if (!open) {
+      // Reset decision flow when drawer closes so next open starts fresh
+      setSelectedDecision(null);
+      setForm(EMPTY_FORM);
+      setSaved(false);
+      setAiDecision(null);
+    }
+  }, [open, autoOpenDecision]);
 
   if (!pattern) return null;
 

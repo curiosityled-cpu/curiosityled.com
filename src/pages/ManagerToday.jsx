@@ -194,8 +194,8 @@ export default function ManagerToday() {
     enabled: !!user?.email,
   });
 
-  const openAtreus = (msg) => {
-    // Phase 3: If orchestrator data is available, use enriched context; fallback to basic context
+  const openAtreus = (msg, decisionContext = null) => {
+    // Phase 3: If orchestrator data is available and no specific message, use enriched context
     if (orchestratorData && !msg) {
       openWithOrchestrator({
         orchestratorResult: orchestratorData,
@@ -209,6 +209,8 @@ export default function ManagerToday() {
           orchestrator_mode: orchestratorData?.mode,
           signal_score: orchestratorData?.signal_score,
           situation: orchestratorData?.situation,
+          // Inject decision_context so Atreus system prompt enters debrief/premortem mode
+          ...(decisionContext ? { decision_context: decisionContext } : {}),
         },
         starterMessage: msg || orchestratorData?.opening_message || "I'd like to reflect on my leadership this week."
       });
@@ -292,7 +294,7 @@ export default function ManagerToday() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
-  // DecisionJournal pending decisions — always fetch fresh on mount
+  // DecisionJournal pending decisions — only decisions older than 7 days surface for outcome capture
   const { data: pendingDecisions = [], refetch: refetchDecisions } = useQuery({
     queryKey: ['ml-pending-decisions', user?.email],
     queryFn: async () => {
@@ -303,7 +305,9 @@ export default function ManagerToday() {
           '-created_date',
           50
         );
-        return rows || [];
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        return (rows || []).filter(d => d.created_date && new Date(d.created_date) < sevenDaysAgo);
       } catch (e) {
         console.error('DecisionJournal fetch error:', e);
         return [];
