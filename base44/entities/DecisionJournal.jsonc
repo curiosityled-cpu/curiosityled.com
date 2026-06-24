@@ -18,13 +18,48 @@
       "type": "string",
       "description": "The decision the manager committed to (as written/modified by them)"
     },
+    "decision_scope": {
+      "type": "string",
+      "description": "What is outside the scope of this decision (clarifier)"
+    },
+    "decision_type": {
+      "type": "string",
+      "enum": [
+        "people",
+        "operational",
+        "strategic"
+      ],
+      "description": "Type of decision for dynamic audit rubric"
+    },
     "rationale": {
       "type": "string",
       "description": "Why this decision matters (from AI or manager)"
     },
     "options_considered": {
       "type": "string",
-      "description": "Alternatives the manager considered before deciding"
+      "description": "Alternatives the manager considered before deciding (legacy)"
+    },
+    "structured_alternatives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "option_text": {
+            "type": "string"
+          },
+          "why_rejected": {
+            "type": "string"
+          },
+          "is_preferred": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "description": "2\u20133 structured alternatives with rejection rationale"
     },
     "decision_made": {
       "type": "string",
@@ -32,11 +67,51 @@
     },
     "assumptions": {
       "type": "string",
-      "description": "Key assumptions this decision is based on"
+      "description": "Key assumptions this decision is based on (legacy)"
+    },
+    "knowns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Evidence/facts the decision relies on"
+    },
+    "unknowns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Uncertainties acknowledged in the decision"
+    },
+    "critical_assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Explicit assumptions (as opposed to facts)"
+    },
+    "primary_value": {
+      "type": "string",
+      "description": "What is being optimized for (e.g., speed, fairness, cost, morale, risk reduction)"
+    },
+    "tradeoffs_accepted": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Explicit trade-offs and costs accepted by this choice"
     },
     "risks": {
       "type": "string",
-      "description": "Main risks if this direction doesn't work out"
+      "description": "Main risks if this direction doesn't work out (legacy)"
+    },
+    "failure_mode": {
+      "type": "string",
+      "description": "If this decision fails, what is the most likely reason (pre-mortem)"
+    },
+    "best_alternative_rejected_reason": {
+      "type": "string",
+      "description": "Why the strongest competing alternative was rejected"
     },
     "confidence": {
       "type": "string",
@@ -46,7 +121,37 @@
         "high"
       ],
       "default": "medium",
-      "description": "Manager's confidence level in this decision"
+      "description": "Manager's confidence level (calibration signal, not quality metric)"
+    },
+    "next_step": {
+      "type": "string",
+      "description": "What the manager will do first to execute this decision"
+    },
+    "review_trigger": {
+      "type": "string",
+      "description": "What would signal this decision needs revisiting"
+    },
+    "review_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When the manager will review this decision"
+    },
+    "dqi_state": {
+      "type": "string",
+      "enum": [
+        "early_draft",
+        "solid_start",
+        "well_considered",
+        "ready_to_commit"
+      ],
+      "default": "early_draft",
+      "description": "Decision Quality Index state (non-judgmental readiness indicator)"
+    },
+    "dqi_completeness": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 5,
+      "description": "Internal DQI completeness score (0\u20135 points)"
     },
     "status": {
       "type": "string",
@@ -77,6 +182,22 @@
       "type": "string",
       "format": "date-time",
       "description": "When the outcome was recorded"
+    },
+    "assumptions_held": {
+      "type": "boolean",
+      "description": "Did the key assumptions from pre-decision hold true"
+    },
+    "new_information_emerged": {
+      "type": "boolean",
+      "description": "Did new information emerge that could not have been known earlier"
+    },
+    "process_quality_still_sound": {
+      "type": "boolean",
+      "description": "Given what was known at the time, was the process still sound"
+    },
+    "would_repeat": {
+      "type": "string",
+      "description": "What would you repeat next time (post-review learning)"
     },
     "week_of": {
       "type": "string",
