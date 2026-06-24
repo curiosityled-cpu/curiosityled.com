@@ -20,6 +20,7 @@ import { Link } from "react-router-dom";
 import DecisionPreMortemPanel from "@/components/intelligence/DecisionPreMortemPanel";
 import ConfidenceCalibrationCard from "@/components/intelligence/ConfidenceCalibrationCard";
 import DecisionAuditDrawer from "@/components/intelligence/DecisionAuditDrawer";
+import PostDecisionReviewDrawer from "@/components/intelligence/PostDecisionReviewDrawer";
 
 const CONFIDENCE_LEVELS = [
   { value: 'low', label: "Low — I'm not sure", color: 'bg-rose-50 text-rose-700 border-rose-200' },
@@ -297,7 +298,7 @@ const OUTCOME_LABELS = {
   did_it: 'Did it', partly: 'Partly', not_yet: 'Not yet', changed_course: 'Changed course'
 };
 
-function DecisionCard({ decision, onLogOutcome, onEdit }) {
+function DecisionCard({ decision, onLogOutcome, onEdit, onReview }) {
   const { openWithContext } = useAtreusChat();
   const [expanded, setExpanded] = useState(false);
   const [selectedOutcome, setSelectedOutcome] = useState(null);
@@ -307,6 +308,7 @@ function DecisionCard({ decision, onLogOutcome, onEdit }) {
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState(null);
   const [editSaving, setEditSaving] = useState(false);
+  const [showReview, setShowReview] = useState(false);
   const readyForReview = decision.status !== 'completed';
 
   const handleEditSave = async () => {
@@ -492,17 +494,33 @@ function DecisionCard({ decision, onLogOutcome, onEdit }) {
             <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 space-y-1">
               <p className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wide">Outcome: {OUTCOME_LABELS[decision.outcome] || decision.outcome.replace(/_/g, ' ')}</p>
               {plainOutcomeNote && <p className="text-xs text-foreground leading-relaxed">{plainOutcomeNote}</p>}
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-xs h-7 mt-1 border-[#0202ff]/30 text-[#0202ff]"
-                onClick={() => openWithContext({
-                  context: { pageType: 'practice', flow: 'decision_quality' },
-                  starterMessage: `I want to improve my decision-making quality. I made this decision: "${decision.decision_text}". The outcome was: ${OUTCOME_LABELS[decision.outcome]}. ${plainOutcomeNote ? `Notes: ${plainOutcomeNote}.` : ''} What patterns do you see and how can I make better decisions like this in the future?`,
-                })}
-              >
-                <Brain className="w-3 h-3 mr-1" /> Work with Atreus to improve decision quality
-              </Button>
+              <div className="flex gap-1.5 mt-1 flex-wrap">
+                {!decision.would_repeat && (
+                  <Button
+                    size="sm"
+                    className="text-xs h-7 bg-emerald-600 hover:bg-emerald-700 text-white"
+                    onClick={() => setShowReview(true)}
+                  >
+                    Review process
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs h-7 border-[#0202ff]/30 text-[#0202ff]"
+                  onClick={() => openWithContext({
+                    context: { pageType: 'practice', flow: 'decision_quality' },
+                    starterMessage: `I want to improve my decision-making quality. I made this decision: "${decision.decision_text}". The outcome was: ${OUTCOME_LABELS[decision.outcome]}. ${plainOutcomeNote ? `Notes: ${plainOutcomeNote}.` : ''} What patterns do you see and how can I make better decisions like this in the future?`,
+                  })}
+                >
+                  <Brain className="w-3 h-3 mr-1" /> Work with Atreus
+                </Button>
+              </div>
+              {decision.would_repeat && (
+                <div className="pt-2 text-xs text-emerald-700 bg-emerald-100 rounded p-2">
+                  <strong>Learning:</strong> {decision.would_repeat}
+                </div>
+              )}
             </div>
           )}
 
@@ -560,6 +578,18 @@ function DecisionCard({ decision, onLogOutcome, onEdit }) {
             </div>
           )}
         </div>
+      )}
+
+      {/* Post-Decision Review Drawer */}
+      {showReview && (
+        <PostDecisionReviewDrawer
+          decision={decision}
+          onClose={() => setShowReview(false)}
+          onSave={() => {
+            onReview?.();
+            setShowReview(false);
+          }}
+        />
       )}
     </div>
   );
@@ -751,7 +781,7 @@ export default function DecisionJournalPage() {
         <div className="space-y-2">
           {decisions.map(d => (
             <div key={d.id} className="group relative">
-              <DecisionCard decision={d} onLogOutcome={handleLogOutcome} onEdit={handleEdit} />
+              <DecisionCard decision={d} onLogOutcome={handleLogOutcome} onEdit={handleEdit} onReview={() => queryClient.invalidateQueries({ queryKey: ['decision-journal-full', user?.email] })} />
               {/* Audit button (shown on draft decisions) */}
               {d.status === 'committed' && !d.outcome && (
                 <button
