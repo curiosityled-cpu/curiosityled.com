@@ -9,7 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
-import { Brain, Plus, FileText, ChevronDown, ChevronUp, CheckCircle2, Clock, Check, Sparkles, Circle, MinusCircle, ArrowRight, Pencil, X } from "lucide-react";
+import { Brain, Plus, FileText, ChevronDown, ChevronUp, CheckCircle2, Clock, Check, Sparkles, Circle, MinusCircle, ArrowRight, Pencil, X, AlertCircle, TrendingUp, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,6 +21,15 @@ import DecisionPreMortemPanel from "@/components/intelligence/DecisionPreMortemP
 import DQIStateCard from "@/components/intelligence/DQIStateCard";
 import DecisionAuditDrawer from "@/components/intelligence/DecisionAuditDrawer";
 import PostDecisionReviewDrawer from "@/components/intelligence/PostDecisionReviewDrawer";
+
+const GAP_LABELS = {
+  frame:        'Problem Framing',
+  alternatives: 'Evaluating Alternatives',
+  information:  'Evidence Quality',
+  tradeoffs:    'Making Trade-offs Explicit',
+  reasoning:    'Pre-Mortem / Logic Testing',
+  commitment:   'Execution Commitment',
+};
 
 const CONFIDENCE_LEVELS = [
   { value: 'low', label: "Low — I'm not sure", color: 'bg-rose-50 text-rose-700 border-rose-200' },
@@ -600,11 +609,186 @@ function DecisionCard({ decision, onLogOutcome, onEdit, onReview }) {
   );
 }
 
+function AnalyticsTab({ decisions, user, queryClient }) {
+  const [creatingGoalFor, setCreatingGoalFor] = useState(null);
+
+  const { data: existingGoals = [] } = useQuery({
+    queryKey: ['dq-goals', user?.email],
+    queryFn: () => base44.entities.Goal.filter({ created_by: user.email, status: 'active' }, '-created_date', 50),
+    enabled: !!user?.email,
+  });
+
+  const competencyGapMap = {};
+  for (const d of decisions) {
+    if (!d.linked_competencies?.length) continue;
+    for (const lc of d.linked_competencies) {
+      const key = lc.competency_id;
+      if (!competencyGapMap[key]) competencyGapMap[key] = { id: lc.competency_id, name: lc.competency_name, gapDimensions: new Set(), decisionCount: 0 };
+      competencyGapMap[key].gapDimensions.add(lc.dq_gap);
+      competencyGapMap[key].decisionCount++;
+    }
+  }
+  const topGaps = Object.values(competencyGapMap)
+    .map(c => ({ ...c, gapDimensions: Array.from(c.gapDimensions) }))
+    .sort((a, b) => b.decisionCount - a.decisionCount);
+
+  const audited = decisions.filter(d => d.dqi_completeness > 0);
+  const avgDQI = audited.length > 0
+    ? (audited.reduce((s, d) => s + (d.dqi_completeness || 0), 0) / audited.length).toFixed(1) : 0;
+  const strongFraming = decisions.filter(d => d.decision_text && d.decision_scope).length;
+  const strongCommitment = decisions.filter(d => d.next_step && d.review_trigger).length;
+  const completed = decisions.filter(d => d.status === 'completed').length;
+  const reviewsWithProcess = decisions.filter(d => d.process_quality_still_sound !== undefined).length;
+
+  const goalCompetencyIds = new Set(existingGoals.flatMap(g => g.linked_competency_ids || []));
+
+  const handleCreateGoal = async (competencyId, competencyName) => {
+    setCreatingGoalFor(competencyId);
+    try {
+      const isRealId = competencyId.length > 20;
+      await base44.entities.Goal.create({
+        title: `Develop ${competencyName} through deliberate decision practice`,
+        description: `Identified as a recurring development opportunity across ${competencyGapMap[competencyId]?.decisionCount || 1} decision audit(s). Gaps: ${(competencyGapMap[competencyId]?.gapDimensions || []).map(g => GAP_LABELS[g] || g).join(', ')}.`,
+        goal_type: 'standard',
+        linked_competency_ids: isRealId ? [competencyId] : [],
+        status: 'active',
+        visibility: 'private',
+      });
+      queryClient.invalidateQueries({ queryKey: ['dq-goals', user?.email] });
+      toast.success(`Goal created for ${competencyName}`);
+    } catch {
+      toast.error('Failed to create goal');
+    } finally {
+      setCreatingGoalFor(null);
+    }
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* Stats row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        {[
+          { label: 'Total', value: decisions.length },
+          { label: 'Audited', value: audited.length },
+          { label: 'Outcomes Logged', value: decisions.filter(d => d.outcome).length },
+          { label: 'Avg DQI', value: `${avgDQI}/5` },
+        ].map(({ label, value }) => (
+          <Card key={label} className="border border-border">
+            <CardContent className="pt-3 pb-2 px-3">
+              <p className="text-[10px] text-muted-foreground mb-0.5">{label}</p>
+              <p className="text-xl font-bold text-foreground">{value}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Competency gaps */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-amber-600" />
+          <h3 className="text-sm font-bold text-foreground">Development Opportunities</h3>
+          <Badge variant="outline" className="text-[10px] ml-auto">From audit data</Badge>
+        </div>
+        {topGaps.length === 0 ? (
+          <Card className="border border-dashed border-border">
+            <CardContent className="py-6 text-center">
+              <Target className="w-7 h-7 text-muted-foreground/40 mx-auto mb-2" />
+              <p className="text-xs text-muted-foreground">Run a Decision Audit on any committed decision to generate competency insights.</p>
+            </CardContent>
+          </Card>
+        ) : topGaps.map(gap => {
+          const alreadyHasGoal = goalCompetencyIds.has(gap.id);
+          return (
+            <Card key={gap.id} className="border-2 border-amber-200 bg-amber-50">
+              <CardContent className="pt-3 pb-3 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-foreground">{gap.name}</p>
+                    <p className="text-xs text-muted-foreground">Surfaced in {gap.decisionCount} audit{gap.decisionCount !== 1 ? 's' : ''}</p>
+                  </div>
+                  {alreadyHasGoal ? (
+                    <Badge className="text-[10px] bg-emerald-100 text-emerald-700 border-emerald-200 flex-shrink-0">
+                      <CheckCircle2 className="w-2.5 h-2.5 mr-1" /> Goal active
+                    </Badge>
+                  ) : (
+                    <Button size="sm" variant="outline" className="text-xs h-7 border-[#0202ff]/30 text-[#0202ff] flex-shrink-0"
+                      onClick={() => handleCreateGoal(gap.id, gap.name)} disabled={creatingGoalFor === gap.id}>
+                      <Plus className="w-3 h-3 mr-1" />{creatingGoalFor === gap.id ? 'Adding…' : 'Add to Goals'}
+                    </Button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {gap.gapDimensions.map(dim => (
+                    <Badge key={dim} variant="outline" className="text-[10px] border-amber-300 text-amber-700">{GAP_LABELS[dim] || dim}</Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Strengths */}
+      {audited.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <h3 className="text-sm font-bold text-foreground">Decision Strengths</h3>
+          </div>
+          {strongFraming > 0 && (
+            <Card className="border-2 border-emerald-200 bg-emerald-50">
+              <CardContent className="pt-3 pb-3">
+                <p className="text-sm font-bold text-foreground">Strong Framing</p>
+                <p className="text-xs text-muted-foreground">{strongFraming} of {decisions.length} decisions with clear scope</p>
+              </CardContent>
+            </Card>
+          )}
+          {strongCommitment > 0 && (
+            <Card className="border-2 border-emerald-200 bg-emerald-50">
+              <CardContent className="pt-3 pb-3">
+                <p className="text-sm font-bold text-foreground">Execution Focus</p>
+                <p className="text-xs text-muted-foreground">{strongCommitment} of {decisions.length} decisions with next steps & review triggers</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* Review discipline */}
+      {completed > 0 && (
+        <Card className="border-2 border-blue-200 bg-blue-50">
+          <CardContent className="pt-3 pb-3 flex items-start gap-2">
+            <TrendingUp className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-blue-900">{reviewsWithProcess} of {completed} reviews evaluated for process quality</p>
+              <p className="text-xs text-blue-700 mt-0.5">Review discipline is a leading indicator of judgment development.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {topGaps.length > 0 && (
+        <Card className="border border-[#0202ff]/20 bg-[#0202ff]/5">
+          <CardContent className="pt-3 pb-3 flex items-start gap-2">
+            <Brain className="w-4 h-4 text-[#0202ff] flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-semibold text-foreground">These gaps feed your development plan</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Goals you create here link to competencies and appear in your Goals dashboard.</p>
+              <Link to="/my-performance" className="text-xs font-medium text-[#0202ff] hover:text-[#0101dd] mt-1 inline-block">→ View Goals dashboard</Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
 export default function DecisionJournalPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { openWithContext } = useAtreusChat();
+  const [activeTab, setActiveTab] = useState('journal');
   const [showForm, setShowForm] = useState(false);
   const [auditingDecision, setAuditingDecision] = useState(null);
   const [calibrationData, setCalibrationData] = useState(null);
@@ -719,24 +903,41 @@ export default function DecisionJournalPage() {
           <h1 className="text-2xl font-bold text-foreground">Decision Journal</h1>
           <p className="text-sm text-muted-foreground mt-1">Capture high-stakes decisions. Review outcomes. Learn your patterns.</p>
         </div>
-        <div className="flex gap-2 mt-2">
+        {activeTab === 'journal' && (
           <Button
             size="sm"
-            variant="outline"
-            className="text-xs"
-            onClick={() => navigate('/decision-analytics')}
-          >
-            Analytics
-          </Button>
-          <Button
-            size="sm"
-            className="bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5"
+            className="bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5 mt-2"
             onClick={() => setShowForm(true)}
           >
             <Plus className="w-4 h-4" /> Capture decision
           </Button>
-        </div>
+        )}
       </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 p-1 bg-muted rounded-xl">
+        {[{ id: 'journal', label: 'Journal' }, { id: 'analytics', label: 'Analytics' }].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+              activeTab === tab.id
+                ? 'bg-white text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Analytics tab */}
+      {activeTab === 'analytics' && (
+        <AnalyticsTab decisions={decisions} user={user} queryClient={queryClient} />
+      )}
+
+      {/* Journal tab content */}
+      {activeTab === 'journal' && <>
 
       {/* Pending review banner */}
       {pendingCount > 0 && !showForm && (
@@ -805,6 +1006,7 @@ export default function DecisionJournalPage() {
           ))}
         </div>
       )}
+      </> /* end journal tab */}
     </div>
   );
 }
