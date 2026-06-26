@@ -9,14 +9,14 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
-import { Brain, Plus, FileText, ChevronDown, ChevronUp, CheckCircle2, Clock, Check, Sparkles, Circle, MinusCircle, ArrowRight, Pencil, X } from "lucide-react";
+import { Brain, Plus, FileText, ChevronDown, ChevronUp, CheckCircle2, Clock, Check, Sparkles, Circle, MinusCircle, ArrowRight, Pencil, X, AlertCircle, TrendingUp, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import DecisionPreMortemPanel from "@/components/intelligence/DecisionPreMortemPanel";
 import DQIStateCard from "@/components/intelligence/DQIStateCard";
 import DecisionAuditDrawer from "@/components/intelligence/DecisionAuditDrawer";
@@ -719,23 +719,13 @@ export default function DecisionJournalPage() {
           <h1 className="text-2xl font-bold text-foreground">Decision Journal</h1>
           <p className="text-sm text-muted-foreground mt-1">Capture high-stakes decisions. Review outcomes. Learn your patterns.</p>
         </div>
-        <div className="flex gap-2 mt-2">
-          <Button
-            size="sm"
-            variant="outline"
-            className="text-xs"
-            onClick={() => navigate('/decision-analytics')}
-          >
-            Analytics
-          </Button>
-          <Button
-            size="sm"
-            className="bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5"
-            onClick={() => setShowForm(true)}
-          >
-            <Plus className="w-4 h-4" /> Capture decision
-          </Button>
-        </div>
+        <Button
+          size="sm"
+          className="bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5 mt-2"
+          onClick={() => setShowForm(true)}
+        >
+          <Plus className="w-4 h-4" /> Capture decision
+        </Button>
       </div>
 
       {/* Pending review banner */}
@@ -803,6 +793,168 @@ export default function DecisionJournalPage() {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ── Inline Analytics ── */}
+      {decisions.length >= 2 && <DecisionAnalyticsInline decisions={decisions} user={user} />}
+    </div>
+  );
+}
+
+// ── Inline analytics component ────────────────────────────────────────────────
+
+const GAP_LABELS = {
+  frame: 'Problem Framing', alternatives: 'Evaluating Alternatives',
+  information: 'Evidence Quality', tradeoffs: 'Making Trade-offs Explicit',
+  reasoning: 'Pre-Mortem / Logic', commitment: 'Execution Commitment',
+};
+
+function DecisionAnalyticsInline({ decisions, user }) {
+  const queryClient = useQueryClient();
+  const [creatingGoalFor, setCreatingGoalFor] = useState(null);
+
+  const { data: existingGoals = [] } = useQuery({
+    queryKey: ['dq-goals', user?.email],
+    queryFn: () => base44.entities.Goal.filter({ created_by: user.email, status: 'active' }, '-created_date', 50),
+    enabled: !!user?.email,
+  });
+
+  const auditedDecisions = decisions.filter(d => d.dqi_completeness > 0);
+  const avgDQI = auditedDecisions.length > 0
+    ? (auditedDecisions.reduce((s, d) => s + (d.dqi_completeness || 0), 0) / auditedDecisions.length).toFixed(1)
+    : null;
+
+  // Aggregate linked_competencies across all audited decisions
+  const competencyGapMap = {};
+  for (const d of decisions) {
+    if (!d.linked_competencies?.length) continue;
+    for (const lc of d.linked_competencies) {
+      if (!competencyGapMap[lc.competency_id]) {
+        competencyGapMap[lc.competency_id] = { id: lc.competency_id, name: lc.competency_name, gaps: new Set(), count: 0 };
+      }
+      competencyGapMap[lc.competency_id].gaps.add(lc.dq_gap);
+      competencyGapMap[lc.competency_id].count++;
+    }
+  }
+  const topGaps = Object.values(competencyGapMap)
+    .map(c => ({ ...c, gaps: Array.from(c.gaps) }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 3);
+
+  const goalIds = new Set(existingGoals.flatMap(g => g.linked_competency_ids || []));
+
+  const handleCreateGoal = async (id, name, count, gaps) => {
+    setCreatingGoalFor(id);
+    try {
+      const isRealId = id.length > 20;
+      await base44.entities.Goal.create({
+        title: `Develop ${name} through deliberate decision practice`,
+        description: `Surfaced in ${count} decision audit${count !== 1 ? 's' : ''}. Gaps: ${gaps.map(g => GAP_LABELS[g] || g).join(', ')}.`,
+        goal_type: 'standard',
+        linked_competency_ids: isRealId ? [id] : [],
+        status: 'active',
+        visibility: 'private',
+      });
+      queryClient.invalidateQueries({ queryKey: ['dq-goals', user?.email] });
+      toast.success(`Goal created for ${name}`);
+    } catch {
+      toast.error('Failed to create goal');
+    } finally {
+      setCreatingGoalFor(null);
+    }
+  };
+
+  const patterns = {
+    total: decisions.length,
+    strongFraming: decisions.filter(d => d.decision_text && d.decision_scope).length,
+    strongCommitment: decisions.filter(d => d.next_step && d.review_trigger).length,
+    withOutcome: decisions.filter(d => d.outcome).length,
+  };
+
+  return (
+    <div className="pt-6 border-t border-border space-y-4">
+      <div className="flex items-center gap-2">
+        <TrendingUp className="w-4 h-4 text-[#0202ff]" />
+        <h2 className="text-base font-bold text-foreground">Decision Patterns</h2>
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-3 gap-2">
+        {[
+          { label: 'Total', value: patterns.total },
+          { label: 'Outcomes Logged', value: patterns.withOutcome },
+          { label: 'Avg DQI', value: avgDQI ? `${avgDQI}/5` : '—' },
+        ].map(({ label, value }) => (
+          <div key={label} className="rounded-xl bg-muted/40 border border-border px-3 py-2.5 text-center">
+            <p className="text-[10px] text-muted-foreground mb-0.5">{label}</p>
+            <p className="text-lg font-bold text-foreground">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Development opportunities from audit data */}
+      {topGaps.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+            <AlertCircle className="w-3.5 h-3.5 text-amber-500" /> Development Opportunities
+          </p>
+          {topGaps.map(gap => {
+            const hasGoal = goalIds.has(gap.id);
+            return (
+              <div key={gap.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-amber-50 border border-amber-200">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-foreground">{gap.name}</p>
+                  <p className="text-[10px] text-amber-700 mt-0.5">
+                    {gap.gaps.map(g => GAP_LABELS[g] || g).join(' · ')} · {gap.count} audit{gap.count !== 1 ? 's' : ''}
+                  </p>
+                </div>
+                {hasGoal ? (
+                  <Badge className="text-[10px] bg-emerald-100 text-emerald-700 border-emerald-200 flex-shrink-0">
+                    <Check className="w-2.5 h-2.5 mr-1" /> Goal active
+                  </Badge>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-[10px] h-6 px-2 border-[#0202ff]/30 text-[#0202ff] flex-shrink-0"
+                    onClick={() => handleCreateGoal(gap.id, gap.name, gap.count, gap.gaps)}
+                    disabled={creatingGoalFor === gap.id}
+                  >
+                    <Plus className="w-2.5 h-2.5 mr-1" />{creatingGoalFor === gap.id ? 'Adding…' : 'Add goal'}
+                  </Button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Strengths */}
+      {(patterns.strongFraming > 0 || patterns.strongCommitment > 0) && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Decision Strengths
+          </p>
+          {patterns.strongFraming > 0 && (
+            <div className="px-3 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200">
+              <p className="text-xs font-semibold text-foreground">Strong Framing</p>
+              <p className="text-[10px] text-emerald-700">{patterns.strongFraming} of {patterns.total} decisions have clear scope defined</p>
+            </div>
+          )}
+          {patterns.strongCommitment > 0 && (
+            <div className="px-3 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200">
+              <p className="text-xs font-semibold text-foreground">Execution Focus</p>
+              <p className="text-[10px] text-emerald-700">{patterns.strongCommitment} of {patterns.total} decisions have next steps and review triggers set</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {topGaps.length === 0 && auditedDecisions.length === 0 && (
+        <div className="flex items-center gap-2 px-3 py-3 rounded-xl bg-muted/40 border border-dashed border-border">
+          <Target className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />
+          <p className="text-xs text-muted-foreground">Run a decision audit on any committed decision to see competency development patterns here.</p>
         </div>
       )}
     </div>
