@@ -761,6 +761,14 @@ export default function DecisionJournalPage() {
 
 
 
+      {/* Decision list label */}
+      {decisions.length > 0 && !showForm && (
+        <div className="flex items-center gap-2 pt-2">
+          <FileText className="w-4 h-4 text-muted-foreground" />
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Your Decisions</h2>
+        </div>
+      )}
+
       {/* Decision list */}
       {isLoading ? (
         <div className="py-8 flex justify-center">
