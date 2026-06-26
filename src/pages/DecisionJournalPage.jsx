@@ -738,6 +738,9 @@ export default function DecisionJournalPage() {
         </div>
       )}
 
+      {/* ── Inline Analytics ── */}
+      {decisions.length >= 2 && <DecisionAnalyticsInline decisions={decisions} user={user} />}
+
       {/* New decision form */}
       {showForm && (
         <NewDecisionForm onSave={handleSave} onCancel={() => setShowForm(false)} userEmail={user?.email} />
@@ -796,8 +799,6 @@ export default function DecisionJournalPage() {
         </div>
       )}
 
-      {/* ── Inline Analytics ── */}
-      {decisions.length >= 2 && <DecisionAnalyticsInline decisions={decisions} user={user} />}
     </div>
   );
 }
@@ -873,7 +874,7 @@ function DecisionAnalyticsInline({ decisions, user }) {
   };
 
   return (
-    <div className="pt-6 border-t border-border space-y-4">
+    <div className="space-y-4">
       <div className="flex items-center gap-2">
         <TrendingUp className="w-4 h-4 text-[#0202ff]" />
         <h2 className="text-base font-bold text-foreground">Decision Patterns</h2>
