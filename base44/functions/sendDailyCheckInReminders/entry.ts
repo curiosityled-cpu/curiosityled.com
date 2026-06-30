@@ -30,6 +30,7 @@ Deno.serve(async (req) => {
     }).format(new Date());
 
     const dedupeType = `atreus_checkin_${checkInType}`;
+    const notifType = 'atreus_checkin';
     const isMorning = checkInType === 'morning';
     const reminderTitle = isMorning
       ? '⏰ Morning check-in reminder'
@@ -86,11 +87,12 @@ Deno.serve(async (req) => {
       const todayStart = `${todayET}T00:00:00.000Z`;
       const todayEnd = `${todayET}T23:59:59.999Z`;
       const existingReminders = await base44.asServiceRole.entities.Notification.filter(
-        { user_email: email, type: dedupeType },
-        '-created_date', 5
+        { user_email: email, type: notifType },
+        '-created_date', 10
       ).catch(() => []);
 
       const alreadyReminded = existingReminders.some(n =>
+        n.metadata?.dedupe_key === dedupeType &&
         n.scheduled_for >= todayStart && n.scheduled_for <= todayEnd
       );
       if (alreadyReminded) { skipped++; continue; }
@@ -105,12 +107,12 @@ Deno.serve(async (req) => {
             user_email: email,
             title: reminderTitle,
             message: reminderMessage,
-            type: dedupeType,
+            type: notifType,
             is_read: false,
             priority: 'medium',
             scheduled_for: now,
             action_url: '/today',
-            metadata: { check_in_type: checkInType, date: todayET },
+            metadata: { check_in_type: checkInType, date: todayET, dedupe_key: dedupeType },
           }).catch(err => console.warn(`[reminder] In-app notif failed for ${email}:`, err.message))
         );
       }
