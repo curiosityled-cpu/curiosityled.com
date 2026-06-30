@@ -101,7 +101,10 @@
   ],
   "rls": {
     "read": {
-      "user_email": "{{user.email}}"
+      "data.user_email": "{{user.email}}"
+    },
+    "update": {
+      "data.user_email": "{{user.email}}"
     }
   }
 }
