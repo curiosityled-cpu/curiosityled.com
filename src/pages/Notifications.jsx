@@ -37,7 +37,7 @@ export default function Notifications() {
     try {
       const allNotifications = await base44.entities.Notification.filter(
         { user_email: user.email },
-        '-scheduled_for'
+        '-created_date'
       );
       setNotifications(allNotifications);
     } catch (error) {
@@ -73,17 +73,23 @@ export default function Notifications() {
   };
 
   const handleMarkAllAsRead = async () => {
+    const unreadNotifications = notifications.filter(n => !n.is_read);
+    if (unreadNotifications.length === 0) return;
+
+    // Optimistic update first
+    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+
     try {
-      const unreadNotifications = notifications.filter(n => !n.is_read);
-      
-      for (const notification of unreadNotifications) {
-        await base44.entities.Notification.update(notification.id, { is_read: true });
-      }
-      
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+      await Promise.all(
+        unreadNotifications.map(n => base44.entities.Notification.update(n.id, { is_read: true }))
+      );
       toast.success('All notifications marked as read');
     } catch (error) {
       console.error('Error marking all as read:', error);
+      // Revert optimistic update on failure
+      setNotifications(prev => prev.map(n => 
+        unreadNotifications.find(u => u.id === n.id) ? { ...n, is_read: false } : n
+      ));
       toast.error('Failed to mark all as read');
     }
   };
@@ -287,7 +293,7 @@ export default function Notifications() {
                           </p>
                           <div className="flex items-center justify-between flex-wrap gap-2">
                             <span className="text-xs text-gray-500">
-                              {notification.scheduled_for && format(new Date(notification.scheduled_for), 'MMM d, yyyy h:mm a')}
+                              {format(new Date(notification.scheduled_for || notification.created_date), 'MMM d, yyyy h:mm a')}
                             </span>
                             <Button
                               variant="ghost"
