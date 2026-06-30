@@ -113,10 +113,10 @@ function LayoutContent({ children }) {
           base44.entities.Notification.filter({
             user_email: user.email,
             is_read: false
-          }, '-scheduled_for'),
+          }, '-created_date', 100),
           base44.entities.Notification.filter({
             user_email: user.email
-          }, '-scheduled_for', 5)
+          }, '-created_date', 5)
         ]);
         setUnreadCount(unreadNotifs.length);
         setRecentNotifications(recentNotifs);
@@ -128,7 +128,7 @@ function LayoutContent({ children }) {
     };
 
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 600000);
+    const interval = setInterval(fetchNotifications, 60000);
     return () => clearInterval(interval);
   }, [user?.email]);
 
@@ -263,10 +263,10 @@ function LayoutContent({ children }) {
           base44.entities.Notification.filter({
             user_email: user.email,
             is_read: false
-          }, '-scheduled_for'),
+          }, '-created_date', 100),
           base44.entities.Notification.filter({
             user_email: user.email
-          }, '-scheduled_for', 5)
+          }, '-created_date', 5)
         ]);
         setUnreadCount(unreadNotifs.length);
         setRecentNotifications(recentNotifs);
@@ -650,7 +650,7 @@ function LayoutContent({ children }) {
                                         {notification.message}
                                       </p>
                                       <p className="text-xs text-gray-400">
-                                        {formatTimeAgo(notification.scheduled_for)}
+                                        {formatTimeAgo(notification.scheduled_for || notification.created_date)}
                                       </p>
                                     </div>
                                   </div>
@@ -729,7 +729,7 @@ function LayoutContent({ children }) {
                                             {notification.message}
                                           </p>
                                           <p className="text-xs text-gray-400">
-                                            {formatTimeAgo(notification.scheduled_for)}
+                                            {formatTimeAgo(notification.scheduled_for || notification.created_date)}
                                           </p>
                                         </div>
                                       </div>

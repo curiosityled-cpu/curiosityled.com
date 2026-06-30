@@ -107,8 +107,8 @@ function MVPLayoutInner({ children }) {
     const fetchNotifications = async () => {
       try {
         const [unread, recent] = await Promise.all([
-          base44.entities.Notification.filter({ user_email: user.email, is_read: false }, '-scheduled_for'),
-          base44.entities.Notification.filter({ user_email: user.email }, '-scheduled_for', 5),
+          base44.entities.Notification.filter({ user_email: user.email, is_read: false }, '-created_date', 100),
+          base44.entities.Notification.filter({ user_email: user.email }, '-created_date', 5),
         ]);
         setUnreadCount(unread.length);
         setRecentNotifications(recent);
