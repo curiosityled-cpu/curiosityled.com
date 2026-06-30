@@ -319,6 +319,11 @@ function MVPLayoutInner({ children }) {
                       </DropdownMenuItem>
                 )
                 }
+                  <div className="border-t px-3 py-2">
+                    <DropdownMenuItem onClick={() => navigate('/Notifications')} className="cursor-pointer justify-center text-sm font-medium text-[#0202ff] hover:text-[#0101dd]">
+                      View all notifications
+                    </DropdownMenuItem>
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
               {/* Profile */}
@@ -373,6 +378,11 @@ function MVPLayoutInner({ children }) {
                       </DropdownMenuItem>
                 )
                 }
+                  <div className="border-t px-3 py-2">
+                    <DropdownMenuItem onClick={() => navigate('/Notifications')} className="cursor-pointer justify-center text-sm font-medium text-[#0202ff] hover:text-[#0101dd]">
+                      View all notifications
+                    </DropdownMenuItem>
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
               <DropdownMenu>
