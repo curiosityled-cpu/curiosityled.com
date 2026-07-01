@@ -13,9 +13,6 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 // MVP Role-Based Pages
 import MVPLayout, { getMVPRole } from '@/components/mvp/MVPLayout';
 import LandingPage from './pages/LandingPage';
-import LandingBPO from './pages/LandingBPO';
-import LandingHealthcare from './pages/LandingHealthcare';
-import LandingCoaching from './pages/LandingCoaching';
 import MyLeadership from './pages/MyLeadership';
 import MyDevelopment from './pages/MyDevelopment';
 import MyGoalsMVP from './pages/MyGoalsMVP';
@@ -112,9 +109,6 @@ const AuthenticatedApp = () => {
 
       {/* Public landing page — no auth required */}
       <Route path="/LandingPage" element={<LandingPage />} />
-      <Route path="/landing-bpo" element={<LandingBPO />} />
-      <Route path="/landing-healthcare" element={<LandingHealthcare />} />
-      <Route path="/landing-coaching" element={<LandingCoaching />} />
 
       {/* Redirect old ExperienceManagement URL to new DevelopmentManager */}
       <Route path="/ExperienceManagement" element={<Navigate to="/DevelopmentManager" replace />} />
