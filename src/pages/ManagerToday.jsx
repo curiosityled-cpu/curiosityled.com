@@ -1,5 +1,5 @@
 /**
- * ManagerToday — The Daily Companion (Redesigned Lead page)
+ * ManagerToday — The Daily Companion + Patterns (unified)
  * Route: /today
  */
 import React, { useState, useEffect, useMemo } from "react";
@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { useAtreusOrchestrator } from "@/components/ai/useAtreusOrchestrator";
 import { Link } from "react-router-dom";
-import { Brain, ChevronRight, MessageSquare, SlidersHorizontal, BarChart3, Layers, X } from "lucide-react";
+import { Brain, ChevronRight, MessageSquare, SlidersHorizontal, Layers, X, Sun, TrendingUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ToneOnboarding from "@/components/checkin/ToneOnboarding";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
@@ -21,11 +21,20 @@ import WeeklyRhythmReflection from "@/components/checkin/WeeklyRhythmReflection"
 import UpcomingFrictionCard from "@/components/lead/UpcomingFrictionCard";
 import TopPatternCard from "@/components/lead/TopPatternCard";
 import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
-
 import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
 import PerformanceGlanceCard from "@/components/lead/PerformanceGlanceCard";
 import DecisionJournalCard from "@/components/lead/DecisionJournalCard";
+
+// Patterns imports
+import IntentLoopCard from "@/components/checkin/IntentLoopCard";
+import WhatsImprovingCard from "@/components/patterns/WhatsImprovingCard";
+import WatchlistCard from "@/components/patterns/WatchlistCard";
+import LeadingPatternCard from "@/components/patterns/LeadingPatternCard";
+import LeadershipNarrativeCard from "@/components/patterns/LeadershipNarrativeCard";
+import SwipeableSections from "@/components/patterns/SwipeableSections";
+import BpoHeroPatternCard from "@/components/patterns/BpoHeroPatternCard";
+import BpoWatchRow from "@/components/patterns/BpoWatchRow";
 
 function getFirstName(user) {
   const raw = user?.display_name || user?.data?.display_name || user?.full_name;
@@ -71,27 +80,41 @@ function HeroGreeting({ firstName, hasCheckedIn, todayRecord, onSettingsToggle }
   );
 }
 
-function ExploreDeeperCard() {
+function PracticeCard() {
   return (
-    <div className="flex gap-2">
-      <Link to="/patterns" className="flex-1">
-        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors group">
-          <BarChart3 className="w-3.5 h-3.5 text-[#0202ff] flex-shrink-0" />
-          <div className="min-w-0">
-            <p className="text-xs font-semibold text-foreground">Patterns</p>
-            <p className="text-[10px] text-muted-foreground">What the system sees over time</p>
-          </div>
+    <Link to="/practice" className="block">
+      <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors group">
+        <Layers className="w-3.5 h-3.5 text-violet-500 flex-shrink-0" />
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-foreground">Practice</p>
+          <p className="text-[10px] text-muted-foreground">Prepare, reflect, work through</p>
         </div>
-      </Link>
-      <Link to="/practice" className="flex-1">
-        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors group">
-          <Layers className="w-3.5 h-3.5 text-violet-500 flex-shrink-0" />
-          <div className="min-w-0">
-            <p className="text-xs font-semibold text-foreground">Practice</p>
-            <p className="text-[10px] text-muted-foreground">Prepare, reflect, work through</p>
-          </div>
-        </div>
-      </Link>
+      </div>
+    </Link>
+  );
+}
+
+// Tab pill component
+function TabPills({ activeTab, onTabChange }) {
+  return (
+    <div className="flex gap-1 bg-muted/60 rounded-xl p-1 w-fit">
+      {[
+        { id: 'today', label: 'Today', icon: Sun },
+        { id: 'patterns', label: 'Patterns', icon: TrendingUp },
+      ].map(({ id, label, icon: Icon }) => (
+        <button
+          key={id}
+          onClick={() => onTabChange(id)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            activeTab === id
+              ? 'bg-background text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Icon className="w-3.5 h-3.5" />
+          {label}
+        </button>
+      ))}
     </div>
   );
 }
@@ -99,10 +122,11 @@ function ExploreDeeperCard() {
 export default function ManagerToday() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { openWithContext, openWithOrchestrator } = useAtreusChat();
+  const { openWithContext } = useAtreusChat();
   const [showSettings, setShowSettings] = useState(false);
   const [showWeeklyReflection, setShowWeeklyReflection] = useState(false);
-  // Get today's date in ET (matching server-side) to avoid UTC midnight boundary issues
+  const [activeTab, setActiveTab] = useState('today');
+
   const todayET = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
   }).format(new Date());
@@ -127,18 +151,15 @@ export default function ManagerToday() {
       } catch { return { record: null, yesterday_big3: [] }; }
     },
     enabled: !!user?.email,
-    staleTime: 10 * 60 * 1000,   // 10 min — long enough that navigating away+back doesn't stomp optimistic state
-    gcTime: 30 * 60 * 1000,      // Keep in memory for 30 min so remounts reuse cache immediately
-    refetchOnWindowFocus: false, // Prevent refetch (and potential remount) when user switches tabs
-    refetchOnMount: false,       // CRITICAL: don't re-fetch on remount — use cached data until stale
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
-  // Pass `undefined` while the query is still loading so child components can distinguish
-  // "loading" (undefined) from "loaded but no record" (null). Using `|| null` would collapse
-  // both states to null, breaking the localStorage fallback guard in MorningCheckIn/EveningCheckIn.
+
   const todayRecord = todayData === undefined ? undefined : (todayData?.record ?? null);
   const yesterdayBig3 = todayData?.yesterday_big3 || [];
 
-  // ── Local check-in history store (localStorage-backed, since DailyCheckIn entity has persistence issues)
   const [checkInHistory, setCheckInHistory] = useState([]);
   useEffect(() => {
     if (!user?.email) return;
@@ -153,7 +174,6 @@ export default function ManagerToday() {
         sessionStorage.setItem('today_big3_override', JSON.stringify({ date: todayET, data: big3Priorities }));
       } catch {}
     }
-    // Build update fields
     const update = {};
     if (type === 'morning') { update.morning_completed = true; update.morning_completed_at = new Date().toISOString(); }
     if (type === 'evening') { update.evening_completed = true; update.evening_completed_at = new Date().toISOString(); update.big3_priorities = big3Priorities || []; }
@@ -166,22 +186,17 @@ export default function ManagerToday() {
     }
 
     const optimisticRecord = { check_in_date: todayET, ...(todayData?.record || {}), ...update };
-
-    // Update today cache
     queryClient.setQueryData(['daily-checkin-today', user?.email], (old) => {
       const existing = old || { record: null, yesterday_big3: [] };
       return { ...existing, record: optimisticRecord };
     });
 
-    // Reload history from store (which was just written by the check-in component)
     if (user?.email) {
       setCheckInHistory(loadCheckInHistory(user.email));
     }
 
     queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
   };
-
-
 
   const { data: insight } = useQuery({
     queryKey: ['ml-insight', user?.email],
@@ -250,7 +265,7 @@ export default function ManagerToday() {
 
   const { data: recentPulses = [] } = useQuery({
     queryKey: ['ml-pulses', user?.email],
-    queryFn: async () => { try { return await base44.entities.ManagerPulse.filter({ user_email: user.email }, '-created_date', 20); } catch { return []; } },
+    queryFn: async () => { try { return await base44.entities.ManagerPulse.filter({ user_email: user.email }, '-created_date', 50); } catch { return []; } },
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
@@ -260,7 +275,6 @@ export default function ManagerToday() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
-  // DecisionJournal pending decisions — fetch ALL committed, let TodaysPlaybook filter by age
   const { data: pendingDecisions = [], refetch: refetchDecisions } = useQuery({
     queryKey: ['ml-pending-decisions', user?.email],
     queryFn: async () => {
@@ -272,7 +286,6 @@ export default function ManagerToday() {
           50
         );
       } catch (e) {
-        console.error('DecisionJournal fetch error:', e);
         return [];
       }
     },
@@ -282,20 +295,54 @@ export default function ManagerToday() {
     refetchOnWindowFocus: false,
   });
 
-  // Compute top BPO pattern BEFORE orchestrator hook since it needs the pattern name
+  // Patterns-specific data
+  const { data: activities = [] } = useQuery({
+    queryKey: ['ml-activities', user?.email],
+    queryFn: async () => { try { return await base44.entities.UserActivity.filter({ user_email: user.email }, '-date', 14); } catch { return []; } },
+    enabled: !!user?.email && activeTab === 'patterns', staleTime: 15 * 60 * 1000,
+  });
+
+  const { data: entityCheckIns = [] } = useQuery({
+    queryKey: ['daily-checkin-history', user?.email],
+    queryFn: async () => { try { return await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-check_in_date', 120); } catch { return []; } },
+    enabled: !!user?.email && activeTab === 'patterns', staleTime: 0,
+  });
+
+  const { data: memory = null } = useQuery({
+    queryKey: ['ml-memory', user?.email],
+    queryFn: async () => { try { const rows = await base44.entities.ManagerMemory.filter({ user_email: user.email }, '-last_synthesized_at', 1); return rows[0] || null; } catch { return null; } },
+    enabled: !!user?.email && activeTab === 'patterns', staleTime: 30 * 60 * 1000,
+  });
+
+  // Merged check-in history for patterns tab
+  const mergedCheckIns = useMemo(() => {
+    const map = new Map();
+    entityCheckIns.forEach(r => map.set(r.check_in_date, r));
+    checkInHistory.forEach(r => { if (r.check_in_date) map.set(r.check_in_date, r); });
+    const sorted = Array.from(map.values()).sort((a, b) => b.check_in_date.localeCompare(a.check_in_date));
+    if (!todayRecord) return sorted;
+    const ids = new Set(sorted.map(r => r.check_in_date));
+    const hasScores = todayRecord.energy_score != null || todayRecord.confidence_score != null;
+    return (!ids.has(todayET) && hasScores) ? [todayRecord, ...sorted] : sorted;
+  }, [entityCheckIns, checkInHistory, todayRecord, todayET]);
+
   const topPattern = useMemo(() => {
     const patterns = runBpoPatternEngine({ trends, checkIns: checkInHistory, goals, activities: [], pulses: recentPulses });
     return patterns[0] || null;
   }, [trends, checkInHistory, goals, recentPulses]);
 
-  // Decision context for orchestrator — updated when pattern or decisions change
+  const rankedPatterns = useMemo(() =>
+    runBpoPatternEngine({ trends, checkIns: mergedCheckIns, goals, activities, pulses: recentPulses }),
+    [trends, mergedCheckIns, goals, activities, recentPulses]
+  );
+  const heroPattern = rankedPatterns[0] || null;
+
   const decisionContextForOrchestrator = topPattern && pendingDecisions.length > 0 ? {
     mode: 'pattern_linked_decision',
     pattern_name: topPattern.name,
     pattern_bucket: topPattern.bucket,
   } : null;
 
-  // Phase 1+3: orchestrator hook — MUST be declared after topPattern and before openAtreus
   const { orchestratorData } = useAtreusOrchestrator({
     page: 'today',
     active_pattern: topPattern?.name || null,
@@ -320,7 +367,6 @@ export default function ManagerToday() {
   });
 
   const openAtreus = (msg, decisionContext = null) => {
-    // Always use openWithContext so decision_context is never swallowed by the orchestrator path
     openWithContext({
       context: {
         pageType: 'today',
@@ -328,7 +374,6 @@ export default function ManagerToday() {
         orchestrator_mode: orchestratorData?.mode,
         signal_score: orchestratorData?.signal_score,
         situation: orchestratorData?.situation,
-        // Flatten decision_context fields directly into context so Atreus sees them
         ...(decisionContext && {
           decision_mode: decisionContext.mode,
           decision_text: decisionContext.decision_text,
@@ -342,6 +387,11 @@ export default function ManagerToday() {
       starterMessage: msg || orchestratorData?.opening_message || "I'd like to reflect on my leadership this week."
     });
   };
+
+  const openAtreusPatterns = (msg) => openWithContext({
+    context: { pageType: 'patterns', user_name: user?.full_name },
+    starterMessage: msg || "Help me understand my recent patterns."
+  });
 
   const { data: kpis = [] } = useQuery({
     queryKey: ['ml-kpis', user?.email],
@@ -362,15 +412,10 @@ export default function ManagerToday() {
 
   const needsToneOnboarding = tonePref === null;
   const firstName = getFirstName(user);
-  // Always use ET hour to match check_in_date storage and window logic
   const hour = parseInt(new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/New_York', hour: 'numeric', hour12: false
   }).format(new Date()), 10);
 
-  // Morning: 5:00am – 2:59pm (hours 5–14)
-  // Evening: 3:00pm – 4:59am (hours 15–23 OR hours 0–4, wraps past midnight)
-  // Midday: 11:00am – 1:59pm (overlap inside morning window)
-  // Together morning + evening cover all 24 hours — no quiet zone exists
   const isMorningWindow = hour >= 5 && hour < 15;
   const isMiddayWindow = hour >= 11 && hour < 14;
   const isEveningWindow = hour >= 15 || hour < 5;
@@ -381,17 +426,10 @@ export default function ManagerToday() {
 
   const allDone = todayRecord?.morning_completed && todayRecord?.evening_completed;
   const hasHistoricalData = checkInHistory.length >= 1;
-  // No true quiet zone anymore — windows cover 24h. Only show placeholder if no record AND no active window (shouldn't happen, but defensive).
-  const isQuietZone = false;
 
-  // ── Main column — always rendered (tone onboarding is a banner, not a gate)
-  const mainContent = (
+  // ── Today tab content
+  const todayMainContent = (
     <div className="space-y-4">
-
-
-
-
-      {/* Check-in flows */}
       {(showMorningCheckIn || todayRecord?.morning_completed) && (
         <MorningCheckIn
           todayRecord={todayRecord}
@@ -429,12 +467,10 @@ export default function ManagerToday() {
         />
       )}
 
-      {/* Top pattern surface */}
       {topPattern && (
         <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} onDecisionCommitted={refetchDecisions} pendingDecisions={pendingDecisions} />
       )}
 
-      {/* Today's Playbook — always rendered once user is available */}
       {!!user?.email && (
         <TodaysPlaybook
           todayRecord={localBig3Override ? { ...todayRecord, big3_priorities: localBig3Override } : todayRecord}
@@ -445,9 +481,7 @@ export default function ManagerToday() {
           assignments={assignments}
           pulses={recentPulses}
           pendingDecisions={pendingDecisions}
-          onDecisionOutcomeSaved={async () => {
-            await refetchDecisions();
-          }}
+          onDecisionOutcomeSaved={async () => { await refetchDecisions(); }}
           onOpenAtreus={openAtreus}
           onBig3Saved={(priorities) => {
             setLocalBig3Override(priorities);
@@ -464,7 +498,6 @@ export default function ManagerToday() {
         />
       )}
 
-      {/* Day complete */}
       {allDone && (
         <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl px-5 py-4 flex items-start gap-3">
           <span className="text-xl flex-shrink-0">✅</span>
@@ -477,7 +510,6 @@ export default function ManagerToday() {
         </div>
       )}
 
-      {/* Weekly reflection shortcut */}
       {hasHistoricalData && (
         <button
           onClick={() => setShowWeeklyReflection(true)}
@@ -494,47 +526,33 @@ export default function ManagerToday() {
         </button>
       )}
 
-      {/* Mobile: trend dashboard */}
+      {/* Mobile-only: trend dashboard, performance, friction, practice, decisions */}
       <div className="md:hidden">
         <CheckInTrendDashboard checkIns={(() => {
-            const ids = new Set(checkInHistory.map(r => r.check_in_date));
-            const hasToday = ids.has(todayET);
-            const hasScores = todayRecord && (todayRecord.energy_score != null || todayRecord.confidence_score != null);
-            return (!hasToday && hasScores) ? [todayRecord, ...checkInHistory] : checkInHistory;
-          })()} assessment={latestAssessment} />
+          const ids = new Set(checkInHistory.map(r => r.check_in_date));
+          const hasToday = ids.has(todayET);
+          const hasScores = todayRecord && (todayRecord.energy_score != null || todayRecord.confidence_score != null);
+          return (!hasToday && hasScores) ? [todayRecord, ...checkInHistory] : checkInHistory;
+        })()} assessment={latestAssessment} />
       </div>
-
-      {/* Mobile: Performance at a glance */}
       <div className="md:hidden">
         <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
       </div>
-
-      {/* Mobile: upcoming friction */}
       <div className="md:hidden">
-        <UpcomingFrictionCard
-          trends={trends}
-          goals={goals}
-          pulses={recentPulses}
-          onOpenAtreus={openAtreus}
-        />
+        <UpcomingFrictionCard trends={trends} goals={goals} pulses={recentPulses} onOpenAtreus={openAtreus} />
       </div>
-
-      {/* Mobile: Go deeper links */}
       <div className="md:hidden">
-        <ExploreDeeperCard />
+        <PracticeCard />
       </div>
-
-      {/* Mobile: Decision journal */}
       <div className="md:hidden">
         <DecisionJournalCard />
       </div>
     </div>
   );
 
-  // ── Desktop companion column
-  const companionColumn = (
+  // ── Today tab companion column (desktop)
+  const todayCompanionColumn = (
     <div className="space-y-4">
-      {/* Tone onboarding — shown as a sidebar card, not a full-page gate */}
       {needsToneOnboarding && (
         <div className="bg-card rounded-2xl border border-[#0202ff]/20 shadow-sm overflow-hidden">
           <div className="px-4 pt-4 pb-2 flex items-center gap-2">
@@ -548,28 +566,59 @@ export default function ManagerToday() {
           </div>
         </div>
       )}
-
       <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
-       <CheckInTrendDashboard checkIns={(() => {
-           const ids = new Set(checkInHistory.map(r => r.check_in_date));
-           const hasToday = ids.has(todayET);
-           const hasScores = todayRecord && (todayRecord.energy_score != null || todayRecord.confidence_score != null);
-           return (!hasToday && hasScores) ? [todayRecord, ...checkInHistory] : checkInHistory;
-         })()} assessment={latestAssessment} />
-       <UpcomingFrictionCard
-         trends={trends}
-         goals={goals}
-         pulses={recentPulses}
-         onOpenAtreus={openAtreus}
-       />
-       <DecisionJournalCard />
-      </div>
-      );
+      <CheckInTrendDashboard checkIns={(() => {
+        const ids = new Set(checkInHistory.map(r => r.check_in_date));
+        const hasToday = ids.has(todayET);
+        const hasScores = todayRecord && (todayRecord.energy_score != null || todayRecord.confidence_score != null);
+        return (!hasToday && hasScores) ? [todayRecord, ...checkInHistory] : checkInHistory;
+      })()} assessment={latestAssessment} />
+      <UpcomingFrictionCard trends={trends} goals={goals} pulses={recentPulses} onOpenAtreus={openAtreus} />
+      <DecisionJournalCard />
+    </div>
+  );
+
+  // ── Patterns tab content (left column)
+  const big3DaysCount = checkInHistory.filter(c => c.big3_priorities?.length > 0).length;
+
+  const patternsLeftColumn = (
+    <div className="space-y-4">
+      {heroPattern ? (
+        <>
+          <BpoHeroPatternCard pattern={heroPattern} onOpenAtreus={openAtreusPatterns} />
+          <BpoWatchRow patterns={rankedPatterns} onOpenAtreus={openAtreusPatterns} />
+        </>
+      ) : (
+        <LeadingPatternCard
+          trends={trends}
+          pulses={recentPulses}
+          goals={goals}
+          recentCheckIns={checkInHistory}
+          recentPulses={recentPulses}
+          onOpenAtreus={openAtreusPatterns}
+        />
+      )}
+      <LeadershipNarrativeCard trends={trends} insight={insight} goals={goals} onOpenAtreus={openAtreusPatterns} />
+      {big3DaysCount >= 5 && (
+        <IntentLoopCard pulses={recentPulses} trends={trends} onOpenAtreus={openAtreusPatterns} />
+      )}
+      <WhatsImprovingCard trends={trends} pulses={recentPulses} goals={goals} />
+      <DecisionJournalCard />
+    </div>
+  );
+
+  // ── Patterns tab content (right column)
+  const patternsRightColumn = (
+    <div className="space-y-4">
+      <CheckInTrendDashboard checkIns={mergedCheckIns} assessment={latestAssessment} />
+      <WatchlistCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreusPatterns} />
+    </div>
+  );
 
   return (
     <div className="px-4 py-6">
-      {/* Mobile: tone onboarding banner (above content, not blocking it) */}
-      {needsToneOnboarding && (
+      {/* Mobile: tone onboarding banner */}
+      {needsToneOnboarding && activeTab === 'today' && (
         <div className="md:hidden max-w-2xl mx-auto mb-4 bg-card rounded-2xl border border-[#0202ff]/20 shadow-sm overflow-hidden">
           <div className="px-4 pt-4 pb-2 flex items-center gap-2">
             <div className="w-6 h-6 rounded-lg bg-[#0202ff] flex items-center justify-center flex-shrink-0">
@@ -586,16 +635,40 @@ export default function ManagerToday() {
       {/* Mobile: single column */}
       <div className="md:hidden max-w-2xl mx-auto space-y-4">
         <HeroGreeting firstName={firstName} hasCheckedIn={!!todayRecord} todayRecord={todayRecord} onSettingsToggle={todayRecord ? () => setShowSettings(s => !s) : null} />
-        {mainContent}
+        <TabPills activeTab={activeTab} onTabChange={setActiveTab} />
+
+        {activeTab === 'today' && todayMainContent}
+
+        {activeTab === 'patterns' && (
+          <SwipeableSections
+            sections={[
+              { label: "Patterns", content: patternsLeftColumn },
+              { label: "Signals", content: patternsRightColumn },
+            ]}
+          />
+        )}
       </div>
 
       {/* Desktop: two column */}
       <div className="hidden md:block max-w-6xl mx-auto">
         <HeroGreeting firstName={firstName} hasCheckedIn={!!todayRecord} todayRecord={todayRecord} onSettingsToggle={todayRecord ? () => setShowSettings(s => !s) : null} />
-        <div className="mt-4 grid grid-cols-[1fr_340px] gap-6 items-start">
-          <div className="space-y-4">{mainContent}</div>
-          <div className="sticky top-4">{companionColumn}</div>
+        <div className="mt-3 mb-5">
+          <TabPills activeTab={activeTab} onTabChange={setActiveTab} />
         </div>
+
+        {activeTab === 'today' && (
+          <div className="grid grid-cols-[1fr_340px] gap-6 items-start">
+            <div className="space-y-4">{todayMainContent}</div>
+            <div className="sticky top-4">{todayCompanionColumn}</div>
+          </div>
+        )}
+
+        {activeTab === 'patterns' && (
+          <div className="grid grid-cols-[1fr_360px] gap-6 items-start">
+            <div>{patternsLeftColumn}</div>
+            <div className="sticky top-4">{patternsRightColumn}</div>
+          </div>
+        )}
       </div>
 
       <WeeklyRhythmReflection
@@ -609,7 +682,6 @@ export default function ManagerToday() {
         assessmentInsight={insight}
       />
 
-      {/* Atreus Settings Modal */}
       <AnimatePresence>
         {showSettings && (
           <>

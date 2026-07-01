@@ -8,7 +8,7 @@ import { base44 } from "@/api/base44Client";
 import {
   Brain, Target, Home, BarChart2, Users, LogOut, Menu, X,
   ChevronRight, ChevronLeft, Bell, User, ArrowLeft,
-  Settings, Shield, UserCog, TrendingUp, Dumbbell, Sun, Moon, ChevronDown, FolderOpen } from "lucide-react";
+  Settings, Shield, UserCog, Dumbbell, Sun, Moon, ChevronDown, FolderOpen } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -55,12 +55,10 @@ export const getFriendlyRoleLabel = (appRole) => {
 const NAV_CONFIG = {
   manager: [
   { label: 'Lead', path: '/today', icon: Home },
-  { label: 'Patterns', path: '/patterns', icon: TrendingUp },
   { label: 'Practice', path: '/practice', icon: Dumbbell }],
 
   buyer: [
    { label: 'Lead', path: '/today', icon: Home },
-   { label: 'Patterns', path: '/patterns', icon: TrendingUp },
    { label: 'Practice', path: '/practice', icon: Dumbbell },
    { label: 'Administration', icon: FolderOpen, group: true, children: [
      { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
