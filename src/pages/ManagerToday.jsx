@@ -495,6 +495,7 @@ export default function ManagerToday() {
             refetchToday();
           }}
           userEmail={user?.email}
+          isMorningWindow={isMorningWindow}
         />
       )}
 

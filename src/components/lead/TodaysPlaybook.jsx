@@ -243,7 +243,7 @@ function DecisionLoopItem({ decision, onOutcomeSaved, onOpenAtreus }) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [], trends, goals, assignments, pulses, pendingDecisions = [], onDecisionOutcomeSaved, onOpenAtreus, onRefresh, onBig3Saved, userEmail }) {
+export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [], trends, goals, assignments, pulses, pendingDecisions = [], onDecisionOutcomeSaved, onOpenAtreus, onRefresh, onBig3Saved, userEmail, isMorningWindow }) {
   const { user } = useAuth();
   const email = userEmail || user?.email;
 
@@ -280,9 +280,11 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
   const situation   = buildSituation(pulse, trends, goals, null);
   const move        = buildMove(pulse, trends, goals, assignments);
 
-  // Determine the Big 3 to show: today's record first, then fall back to yesterday's
+  // Determine the Big 3 to show: today's record first, then fall back to yesterday's.
+  // During the morning window before check-in is complete, reset — don't carry over yesterday's priorities.
+  const morningNotDone = isMorningWindow && !todayRecord?.morning_completed;
   const todayBig3     = (todayRecord?.big3_priorities || []).filter(p => p?.title);
-  const big3          = todayBig3.length > 0 ? todayBig3 : yesterdayBig3.filter(p => p?.title);
+  const big3          = todayBig3.length > 0 ? todayBig3 : (morningNotDone ? [] : yesterdayBig3.filter(p => p?.title));
   const big3FromYesterday = todayBig3.length === 0 && big3.length > 0;
 
   const saveCommitment = async () => {
@@ -325,7 +327,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
 
       {/* ── BIG 3: Hero section (read-only) ──────────────────────────── */}
       <div className="px-5 py-4 border-b border-border">
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Your Big 3</p>
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Your Big 3 Priorities</p>
 
         {big3.length > 0 ? (
           <div>
