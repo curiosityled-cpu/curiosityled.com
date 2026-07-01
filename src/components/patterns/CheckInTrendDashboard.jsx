@@ -10,7 +10,7 @@ import {
   PolarGrid, PolarAngleAxis, Radar, CartesianGrid
 } from "recharts";
 import { format, parseISO, subDays } from "date-fns";
-import { TrendingUp, TrendingDown, Minus, Activity, Brain, Target, ExternalLink, Maximize2, X } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Activity, Brain, Target, ExternalLink, Maximize2, X, CheckCircle2, AlertCircle, MinusCircle, Clock, ListTodo } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import StreakDisplay from "@/components/rhythm/StreakDisplay";
@@ -107,7 +107,7 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
   const [rangeDays, setRangeDays] = useState(14);
   const [activeMeasures, setActiveMeasures] = useState(new Set(["energy", "confidence", "focus", "load", "growth"]));
   const [expanded, setExpanded] = useState(false);
-  const [tab, setTab] = useState("rhythm"); // "rhythm" | "assessment"
+  const [tab, setTab] = useState("rhythm"); // "rhythm" | "assessment" | "big3"
 
   const toggleMeasure = (key) => {
     setActiveMeasures(prev => {
@@ -258,6 +258,14 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
             }`}
           >
             <Brain className="w-3.5 h-3.5" /> Leadership Index
+          </button>
+          <button
+            onClick={() => setTab("big3")}
+            className={`flex items-center gap-1.5 text-xs font-semibold pb-1.5 border-b-2 transition-colors ${
+              tab === "big3" ? "border-[#0202ff] text-[#0202ff]" : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <ListTodo className="w-3.5 h-3.5" /> Big 3 History
           </button>
         </div>
       </div>
@@ -410,6 +418,82 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
             </div>
           </>
         )}
+
+        {/* ── BIG 3 HISTORY TAB ── */}
+        {tab === "big3" && (() => {
+          const STATUS_CONFIG = {
+            completed: { icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50", label: "Done" },
+            on_track:  { icon: CheckCircle2, color: "text-blue-600",    bg: "bg-blue-50",    label: "On Track" },
+            shifted:   { icon: AlertCircle,  color: "text-amber-600",   bg: "bg-amber-50",   label: "Shifted" },
+            blocked:   { icon: AlertCircle,  color: "text-red-600",     bg: "bg-red-50",     label: "Blocked" },
+            confirmed: { icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50", label: "Confirmed" },
+            planned:   { icon: MinusCircle,  color: "text-gray-400",    bg: "bg-gray-50",    label: "Planned" },
+          };
+
+          // Deduplicate by date — prefer evening records where priorities are set
+          const byDate = {};
+          checkIns.filter(ci => ci.big3_priorities?.length > 0).forEach(ci => {
+            const d = ci.check_in_date;
+            if (!byDate[d]) byDate[d] = ci;
+            else if (ci.check_in_type === 'evening') byDate[d] = ci;
+          });
+          const history = Object.values(byDate).sort((a, b) => b.check_in_date.localeCompare(a.check_in_date));
+
+          if (history.length === 0) return (
+            <div className="py-10 text-center space-y-2">
+              <Clock className="w-8 h-8 mx-auto text-muted-foreground opacity-40" />
+              <p className="text-sm font-semibold text-foreground">No priorities recorded yet</p>
+              <p className="text-xs text-muted-foreground">Set your Big 3 during the evening check-in to start tracking.</p>
+            </div>
+          );
+
+          return (
+            <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
+              {history.map(ci => {
+                let dateLabel;
+                try {
+                  const d = parseISO(ci.check_in_date);
+                  const todayStr = format(new Date(), 'yyyy-MM-dd');
+                  const yestStr = format(subDays(new Date(), 1), 'yyyy-MM-dd');
+                  dateLabel = ci.check_in_date === todayStr ? "Today" : ci.check_in_date === yestStr ? "Yesterday" : format(d, "EEE, MMM d");
+                } catch { dateLabel = ci.check_in_date; }
+
+                const completed = ci.big3_priorities.filter(p => p.status === 'completed').length;
+                const total = ci.big3_priorities.length;
+
+                return (
+                  <div key={ci.id || ci.check_in_date} className="border border-border rounded-xl p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold text-foreground">{dateLabel}</p>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        completed === total && total > 0 ? 'bg-emerald-100 text-emerald-700' :
+                        completed > 0 ? 'bg-blue-100 text-blue-700' : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {completed}/{total} done
+                      </span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {ci.big3_priorities.map((p, idx) => {
+                        const cfg = STATUS_CONFIG[p.status] || STATUS_CONFIG.planned;
+                        const Icon = cfg.icon;
+                        return (
+                          <div key={p.id || idx} className="flex items-start gap-2">
+                            <Icon className={`w-3.5 h-3.5 mt-0.5 flex-shrink-0 ${cfg.color}`} />
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-xs leading-snug ${p.status === 'completed' ? 'line-through text-muted-foreground' : 'text-foreground'}`}>{p.title}</p>
+                              {p.midday_note && <p className="text-[10px] text-muted-foreground mt-0.5 italic">"{p.midday_note}"</p>}
+                            </div>
+                            <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
 
         {/* ── ASSESSMENT TAB — pending / processing ── */}
         {tab === "assessment" && assessmentPending && (
@@ -630,8 +714,12 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
         >
           <div className="flex items-center justify-between px-6 py-4 border-b border-border">
             <div>
-              <p className="text-sm font-semibold text-foreground">Rhythm Trends — Daily rhythm</p>
-              <p className="text-[10px] text-muted-foreground">1 = low · 3 = baseline · 5 = strong · private to you</p>
+              <p className="text-sm font-semibold text-foreground">
+                {tab === "big3" ? "Big 3 Priority History" : "Rhythm Trends — Daily rhythm"}
+              </p>
+              <p className="text-[10px] text-muted-foreground">
+                {tab === "big3" ? "Your daily top 3 priorities and their outcomes" : "1 = low · 3 = baseline · 5 = strong · private to you"}
+              </p>
             </div>
             <button onClick={() => setExpanded(false)} className="text-muted-foreground hover:text-foreground transition-colors">
               <X className="w-5 h-5" />
