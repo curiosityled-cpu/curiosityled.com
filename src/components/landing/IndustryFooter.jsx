@@ -1,0 +1,66 @@
+import React from "react";
+import { CheckCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+
+export default function IndustryFooter() {
+  return (
+    <footer className="bg-[#0f0f1a] border-t border-white/10 py-14 px-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
+          {/* Brand */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <img
+                src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5761758bf_CuriosityLegLogo.png"
+                alt="Curiosity Led"
+                className="h-8 w-8 object-contain"
+              />
+              <span className="text-white font-semibold text-sm">Curiosity Led</span>
+            </div>
+            <p className="text-gray-400 text-xs leading-relaxed max-w-[220px]">
+              Leadership intelligence, built for the flow of work. Microsoft native. Support first. Designed for operational leaders.
+            </p>
+          </div>
+
+          {/* Industries */}
+          <div>
+            <p className="text-white text-xs font-semibold uppercase tracking-widest mb-4">Industries</p>
+            <ul className="space-y-2">
+              <li><Link to="/bpo" className="text-gray-400 text-xs hover:text-white transition-colors">BPO &amp; Operations</Link></li>
+              <li><Link to="/healthcare" className="text-gray-400 text-xs hover:text-white transition-colors">Healthcare</Link></li>
+              <li><Link to="/coaching" className="text-gray-400 text-xs hover:text-white transition-colors">Coaching &amp; Consulting</Link></li>
+            </ul>
+          </div>
+
+          {/* Security */}
+          <div>
+            <p className="text-white text-xs font-semibold uppercase tracking-widest mb-4">Security &amp; Privacy</p>
+            <ul className="space-y-2">
+              {[
+                "Individual data stays private",
+                "Managers own their own data",
+                "No surveillance — support only",
+                "Microsoft-compliant data handling",
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-2">
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                  <span className="text-gray-400 text-xs">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row items-center justify-between gap-3">
+          <p className="text-gray-500 text-xs">© {new Date().getFullYear()} Curiosity Led. All rights reserved.</p>
+          <a
+            href="mailto:hello@curiosityled.com"
+            className="text-gray-400 text-xs hover:text-white transition-colors"
+          >
+            hello@curiosityled.com
+          </a>
+        </div>
+      </div>
+    </footer>
+  );
+}
