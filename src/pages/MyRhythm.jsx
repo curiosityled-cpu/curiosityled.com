@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TrendingUp, TrendingDown, Zap, Brain, AlertCircle, CheckCircle2, Target, Calendar } from "lucide-react";
+import Big3HistoryTab from "@/components/rhythm/Big3HistoryTab";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import BurnoutRiskCard from "@/components/intelligence/BurnoutRiskCard";
 import ResilienceRecoveryChart from "@/components/intelligence/ResilienceRecoveryChart";
@@ -246,9 +247,10 @@ export default function MyRhythm() {
         </div>
       ) : (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="trends">7-28d Trends</TabsTrigger>
             <TabsTrigger value="checkins">Daily Check-Ins</TabsTrigger>
+            <TabsTrigger value="big3">Big 3 History</TabsTrigger>
           </TabsList>
 
           <TabsContent value="trends" className="space-y-6">
@@ -291,6 +293,10 @@ export default function MyRhythm() {
 
           <TabsContent value="checkins">
             <DailyCheckInLog pulses={pulses} />
+          </TabsContent>
+
+          <TabsContent value="big3">
+            <Big3HistoryTab />
           </TabsContent>
         </Tabs>
       )}
