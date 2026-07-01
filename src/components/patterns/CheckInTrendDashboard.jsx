@@ -706,7 +706,6 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
 
     {/* Expanded modal */}
     {expanded && (
-
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setExpanded(false)}>
         <div
           className="bg-card rounded-2xl border border-border shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto"
@@ -715,72 +714,172 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
           <div className="flex items-center justify-between px-6 py-4 border-b border-border">
             <div>
               <p className="text-sm font-semibold text-foreground">
-                {tab === "big3" ? "Big 3 Priority History" : "Rhythm Trends — Daily rhythm"}
+                {tab === "assessment" ? "Leadership Index" : tab === "big3" ? "Big 3 Priority History" : "Rhythm Trends — Daily rhythm"}
               </p>
               <p className="text-[10px] text-muted-foreground">
-                {tab === "big3" ? "Your daily top 3 priorities and their outcomes" : "1 = low · 3 = baseline · 5 = strong · private to you"}
+                {tab === "assessment" ? "Your competency scores benchmarked against industry data" : tab === "big3" ? "Your daily top 3 priorities and their outcomes" : "1 = low · 3 = baseline · 5 = strong · private to you"}
               </p>
             </div>
             <button onClick={() => setExpanded(false)} className="text-muted-foreground hover:text-foreground transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>
-          <div className="px-6 py-5 space-y-4">
-            {/* Range selector */}
-            <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5 w-fit">
-              {RANGE_OPTIONS.map(r => (
-                <button
-                  key={r.label}
-                  onClick={() => setRangeDays(r.days)}
-                  className={`text-[10px] font-semibold px-2.5 py-1 rounded-md transition-colors ${
-                    rangeDays === r.days ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {r.label}
-                </button>
-              ))}
-            </div>
 
-            {/* Metric toggles */}
-            <div className="flex gap-2 flex-wrap">
-              {MEASURES.map(m => {
-                const active = activeMeasures.has(m.key);
-                const statVal = stats.find(s => s.key === m.key);
-                return (
+          {/* ── Assessment tab expanded ── */}
+          {tab === "assessment" && (
+            <div className="px-6 py-8 flex flex-col items-center gap-6 text-center">
+              <Brain className="w-12 h-12 text-[#0202ff] opacity-80" />
+              <div>
+                <p className="text-base font-semibold text-foreground mb-1">View your full Leadership Index report</p>
+                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                  See your complete competency breakdown, historical trends, and personalised development recommendations.
+                </p>
+              </div>
+              {hasAssessment && (
+                <div className="flex items-center gap-4 p-4 bg-[#0202ff]/5 rounded-xl border border-[#0202ff]/15 w-full max-w-sm">
+                  <div className="flex flex-col items-center">
+                    <span className="text-3xl font-bold text-[#0202ff]">{assessment.overall_pct}%</span>
+                    <span className="text-[10px] text-muted-foreground">Overall</span>
+                  </div>
+                  <div className="flex-1 text-left">
+                    {assessment.archetype_label && <p className="text-sm font-semibold text-foreground">{assessment.archetype_label}</p>}
+                    {assessment.band_overall && <p className="text-xs text-muted-foreground">{assessment.band_overall}</p>}
+                  </div>
+                </div>
+              )}
+              <Link
+                to="/Insights"
+                onClick={() => setExpanded(false)}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white transition-colors"
+                style={{ backgroundColor: '#0202ff' }}
+              >
+                <Brain className="w-4 h-4" />
+                Open full Leadership Index report
+                <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+              </Link>
+            </div>
+          )}
+
+          {/* ── Big 3 tab expanded ── */}
+          {tab === "big3" && (() => {
+            const STATUS_CONFIG = {
+              completed: { icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50", label: "Done" },
+              on_track:  { icon: CheckCircle2, color: "text-blue-600",    bg: "bg-blue-50",    label: "On Track" },
+              shifted:   { icon: AlertCircle,  color: "text-amber-600",   bg: "bg-amber-50",   label: "Shifted" },
+              blocked:   { icon: AlertCircle,  color: "text-red-600",     bg: "bg-red-50",     label: "Blocked" },
+              confirmed: { icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50", label: "Confirmed" },
+              planned:   { icon: MinusCircle,  color: "text-gray-400",    bg: "bg-gray-50",    label: "Planned" },
+            };
+            const byDate = {};
+            checkIns.filter(ci => ci.big3_priorities?.length > 0).forEach(ci => {
+              const d = ci.check_in_date;
+              if (!byDate[d]) byDate[d] = ci;
+              else if (ci.check_in_type === 'evening') byDate[d] = ci;
+            });
+            const history = Object.values(byDate).sort((a, b) => b.check_in_date.localeCompare(a.check_in_date));
+            if (history.length === 0) return (
+              <div className="px-6 py-12 text-center space-y-2">
+                <Clock className="w-8 h-8 mx-auto text-muted-foreground opacity-40" />
+                <p className="text-sm font-semibold text-foreground">No priorities recorded yet</p>
+              </div>
+            );
+            return (
+              <div className="px-6 py-5 space-y-3">
+                {history.map(ci => {
+                  let dateLabel;
+                  try {
+                    const d = parseISO(ci.check_in_date);
+                    const todayStr = format(new Date(), 'yyyy-MM-dd');
+                    const yestStr = format(subDays(new Date(), 1), 'yyyy-MM-dd');
+                    dateLabel = ci.check_in_date === todayStr ? "Today" : ci.check_in_date === yestStr ? "Yesterday" : format(d, "EEE, MMM d");
+                  } catch { dateLabel = ci.check_in_date; }
+                  const completed = ci.big3_priorities.filter(p => p.status === 'completed').length;
+                  const total = ci.big3_priorities.length;
+                  return (
+                    <div key={ci.id || ci.check_in_date} className="border border-border rounded-xl p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-semibold text-foreground">{dateLabel}</p>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${completed === total && total > 0 ? 'bg-emerald-100 text-emerald-700' : completed > 0 ? 'bg-blue-100 text-blue-700' : 'bg-muted text-muted-foreground'}`}>
+                          {completed}/{total} done
+                        </span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {ci.big3_priorities.map((p, idx) => {
+                          const cfg = STATUS_CONFIG[p.status] || STATUS_CONFIG.planned;
+                          const Icon = cfg.icon;
+                          return (
+                            <div key={p.id || idx} className="flex items-start gap-2">
+                              <Icon className={`w-3.5 h-3.5 mt-0.5 flex-shrink-0 ${cfg.color}`} />
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-xs leading-snug ${p.status === 'completed' ? 'line-through text-muted-foreground' : 'text-foreground'}`}>{p.title}</p>
+                                {p.midday_note && <p className="text-[10px] text-muted-foreground mt-0.5 italic">"{p.midday_note}"</p>}
+                              </div>
+                              <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          {/* ── Daily rhythm tab expanded ── */}
+          {tab === "rhythm" && (
+            <div className="px-6 py-5 space-y-4">
+              <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5 w-fit">
+                {RANGE_OPTIONS.map(r => (
                   <button
-                    key={m.key}
-                    onClick={() => toggleMeasure(m.key)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                      active ? "text-foreground" : "opacity-40 border-transparent bg-transparent text-muted-foreground"
+                    key={r.label}
+                    onClick={() => setRangeDays(r.days)}
+                    className={`text-[10px] font-semibold px-2.5 py-1 rounded-md transition-colors ${
+                      rangeDays === r.days ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                     }`}
-                    style={active ? { borderColor: m.color + "60", backgroundColor: m.color + "12" } : {}}
                   >
-                    <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: m.color }} />
-                    {m.label}
-                    {statVal?.avg != null && <span className="font-bold" style={{ color: active ? m.color : undefined }}>{statVal.avg}</span>}
+                    {r.label}
                   </button>
-                );
-              })}
+                ))}
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                {MEASURES.map(m => {
+                  const active = activeMeasures.has(m.key);
+                  const statVal = stats.find(s => s.key === m.key);
+                  return (
+                    <button
+                      key={m.key}
+                      onClick={() => toggleMeasure(m.key)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                        active ? "text-foreground" : "opacity-40 border-transparent bg-transparent text-muted-foreground"
+                      }`}
+                      style={active ? { borderColor: m.color + "60", backgroundColor: m.color + "12" } : {}}
+                    >
+                      <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: m.color }} />
+                      {m.label}
+                      {statVal?.avg != null && <span className="font-bold" style={{ color: active ? m.color : undefined }}>{statVal.avg}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+              {chartData.length >= 1 ? (
+                <ResponsiveContainer width="100%" height={320}>
+                  <LineChart data={chartData} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                    <YAxis domain={[1, 5]} tickCount={5} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <ReferenceLine y={3} stroke="hsl(var(--border))" strokeDasharray="4 4" label={{ value: "baseline", position: "insideTopRight", fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                    {MEASURES.filter(m => activeMeasures.has(m.key)).map(m => (
+                      <Line key={m.key} type="monotone" dataKey={m.key} name={m.label} stroke={m.color} strokeWidth={2.5} dot={{ r: 4, fill: m.color, strokeWidth: 0 }} activeDot={{ r: 6 }} connectNulls />
+                    ))}
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-xs text-muted-foreground text-center py-8">No check-ins in this range.</p>
+              )}
             </div>
-
-            {/* Expanded chart */}
-            {chartData.length >= 1 ? (
-              <ResponsiveContainer width="100%" height={320}>
-                <LineChart data={chartData} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                  <YAxis domain={[1, 5]} tickCount={5} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <ReferenceLine y={3} stroke="hsl(var(--border))" strokeDasharray="4 4" label={{ value: "baseline", position: "insideTopRight", fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-                  {MEASURES.filter(m => activeMeasures.has(m.key)).map(m => (
-                    <Line key={m.key} type="monotone" dataKey={m.key} name={m.label} stroke={m.color} strokeWidth={2.5} dot={{ r: 4, fill: m.color, strokeWidth: 0 }} activeDot={{ r: 6 }} connectNulls />
-                  ))}
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-xs text-muted-foreground text-center py-8">No check-ins in this range.</p>
-            )}
-          </div>
+          )}
         </div>
       </div>
     )}
