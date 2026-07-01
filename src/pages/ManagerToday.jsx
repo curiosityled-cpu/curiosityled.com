@@ -610,6 +610,7 @@ export default function ManagerToday() {
   // ── Patterns tab content (right column)
   const patternsRightColumn = (
     <div className="space-y-4">
+      <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
       <CheckInTrendDashboard checkIns={mergedCheckIns} assessment={latestAssessment} />
       <WatchlistCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreusPatterns} />
     </div>
