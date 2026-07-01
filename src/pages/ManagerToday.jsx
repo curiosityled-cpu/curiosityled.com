@@ -659,14 +659,14 @@ export default function ManagerToday() {
         </div>
 
         {activeTab === 'today' && (
-          <div className="grid grid-cols-[1fr_340px] gap-6 items-start">
+          <div className="grid grid-cols-[1fr_400px] gap-6 items-start">
             <div className="space-y-4">{todayMainContent}</div>
             <div className="sticky top-4">{todayCompanionColumn}</div>
           </div>
         )}
 
         {activeTab === 'patterns' && (
-          <div className="grid grid-cols-[1fr_360px] gap-6 items-start">
+          <div className="grid grid-cols-[1fr_400px] gap-6 items-start">
             <div>{patternsLeftColumn}</div>
             <div className="sticky top-4">{patternsRightColumn}</div>
           </div>
