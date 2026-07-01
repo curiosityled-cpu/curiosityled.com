@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getIndustryConfig } from "./industryConfig";
 
 const panels = [
   {
@@ -191,8 +192,10 @@ const panels = [
   },
 ];
 
-export default function LandingExplainer() {
+export default function LandingExplainer({ industry }) {
   const [active, setActive] = useState(0);
+  const cfg = industry ? getIndustryConfig(industry) : null;
+  const ex = cfg?.explainer;
 
   const ActiveVisual = panels[active].visual;
 
@@ -210,19 +213,19 @@ export default function LandingExplainer() {
           <div>
           <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full border border-blue-100 bg-blue-50">
             <span className="w-2 h-2 rounded-full bg-[#0202ff]" />
-            <span className="text-xs font-semibold text-[#0202ff] uppercase tracking-wider">How it works</span>
+            <span className="text-xs font-semibold text-[#0202ff] uppercase tracking-wider">{ex?.label || "How it works"}</span>
           </div>
           <h2 className="text-3xl lg:text-4xl font-bold text-[#0a0a0a] mb-4 leading-tight max-w-2xl">
-            How Curiosity Led turns early signals into timely support.
+            {ex?.heading || "How Curiosity Led turns early signals into timely support."}
           </h2>
           <p className="text-gray-500 max-w-xl leading-relaxed">
-            One system helps you spot risk, guide action, reinforce behavior in the flow of work, and give leadership a clearer view of progress.
+            {ex?.intro || "One system helps you spot risk, guide action, reinforce behavior in the flow of work, and give leadership a clearer view of progress."}
           </p>
           </div>
           {/* Manager engaged with platform image */}
           <div className="rounded-2xl overflow-hidden shadow-sm hidden lg:block">
             <img
-              src="/White and Blue How to Start a Saas Product Webinar Instagram Post_edited.jpg"
+              src={ex?.image || "/White and Blue How to Start a Saas Product Webinar Instagram Post_edited.jpg"}
               alt="Manager engaging with the platform"
               className="w-full h-64 object-cover object-top"
             />

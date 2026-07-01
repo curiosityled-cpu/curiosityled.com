@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, User, TrendingUp, AlertTriangle, CheckCircle2, ArrowRight, ChevronRight, Lock } from "lucide-react";
+import { getIndustryConfig } from "./industryConfig";
 
 const IndividualView = () => (
   <div className="space-y-4">
@@ -146,8 +147,10 @@ const ExecView = () => (
   </div>
 );
 
-export default function LandingInteractivePreview() {
+export default function LandingInteractivePreview({ industry }) {
   const [view, setView] = useState("individual");
+  const cfg = industry ? getIndustryConfig(industry) : null;
+  const ip = cfg?.interactivePreview;
 
   return (
     <section className="py-24 bg-white border-t border-gray-100">
@@ -162,13 +165,13 @@ export default function LandingInteractivePreview() {
         >
           <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full border border-blue-100 bg-blue-50">
             <span className="w-2 h-2 rounded-full bg-[#0202ff]" />
-            <span className="text-xs font-semibold text-[#0202ff] uppercase tracking-wider">For Every Level</span>
+            <span className="text-xs font-semibold text-[#0202ff] uppercase tracking-wider">{ip?.label || "For Every Level"}</span>
           </div>
           <h2 className="text-3xl lg:text-4xl font-bold text-[#0a0a0a] mb-4 leading-tight">
-            One platform. Clear boundaries.
+            {ip?.heading || "One platform. Clear boundaries."}
           </h2>
           <p className="text-gray-500 max-w-2xl mx-auto leading-relaxed">
-            Leaders get a private development view. Executives get an aggregated organizational view designed to support readiness, succession, and earlier intervention.
+            {ip?.subtext || "Leaders get a private development view. Executives get an aggregated organizational view designed to support readiness, succession, and earlier intervention."}
           </p>
         </motion.div>
 
