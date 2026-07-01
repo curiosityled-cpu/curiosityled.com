@@ -467,8 +467,11 @@ export default function ManagerToday() {
         />
       )}
 
+      {/* Mobile only — desktop shows this in the right column */}
       {topPattern && (
-        <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} onDecisionCommitted={refetchDecisions} pendingDecisions={pendingDecisions} />
+        <div className="md:hidden">
+          <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} onDecisionCommitted={refetchDecisions} pendingDecisions={pendingDecisions} />
+        </div>
       )}
 
       {!!user?.email && (
@@ -554,6 +557,9 @@ export default function ManagerToday() {
   // ── Today tab companion column (desktop)
   const todayCompanionColumn = (
     <div className="space-y-4">
+      {topPattern && (
+        <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} onDecisionCommitted={refetchDecisions} pendingDecisions={pendingDecisions} />
+      )}
       {needsToneOnboarding && (
         <div className="bg-card rounded-2xl border border-[#0202ff]/20 shadow-sm overflow-hidden">
           <div className="px-4 pt-4 pb-2 flex items-center gap-2">
