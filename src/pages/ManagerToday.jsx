@@ -584,6 +584,18 @@ export default function ManagerToday() {
 
   const patternsLeftColumn = (
     <div className="space-y-4">
+      <LeadershipNarrativeCard trends={trends} insight={insight} goals={goals} onOpenAtreus={openAtreusPatterns} />
+      {big3DaysCount >= 5 && (
+        <IntentLoopCard pulses={recentPulses} trends={trends} onOpenAtreus={openAtreusPatterns} />
+      )}
+      <WhatsImprovingCard trends={trends} pulses={recentPulses} goals={goals} />
+      <DecisionJournalCard />
+    </div>
+  );
+
+  // ── Patterns tab content (right column)
+  const patternsRightColumn = (
+    <div className="space-y-4">
       {heroPattern ? (
         <>
           <BpoHeroPatternCard pattern={heroPattern} onOpenAtreus={openAtreusPatterns} />
@@ -599,18 +611,6 @@ export default function ManagerToday() {
           onOpenAtreus={openAtreusPatterns}
         />
       )}
-      <LeadershipNarrativeCard trends={trends} insight={insight} goals={goals} onOpenAtreus={openAtreusPatterns} />
-      {big3DaysCount >= 5 && (
-        <IntentLoopCard pulses={recentPulses} trends={trends} onOpenAtreus={openAtreusPatterns} />
-      )}
-      <WhatsImprovingCard trends={trends} pulses={recentPulses} goals={goals} />
-      <DecisionJournalCard />
-    </div>
-  );
-
-  // ── Patterns tab content (right column)
-  const patternsRightColumn = (
-    <div className="space-y-4">
       <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
       <CheckInTrendDashboard checkIns={mergedCheckIns} assessment={latestAssessment} />
       <WatchlistCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreusPatterns} />
