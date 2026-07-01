@@ -242,30 +242,30 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
         </div>
 
         {/* Tab switcher */}
-        <div className="flex gap-2 mt-3">
+        <div className="flex gap-4 mt-3">
           <button
             onClick={() => setTab("rhythm")}
-            className={`flex items-center gap-1 text-xs font-semibold pb-1.5 border-b-2 transition-colors whitespace-nowrap ${
+            className={`flex items-center gap-1.5 text-xs font-semibold pb-1.5 border-b-2 transition-colors ${
               tab === "rhythm" ? "border-[#0202ff] text-[#0202ff]" : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            <Activity className="w-3 h-3 flex-shrink-0" /> Daily rhythm
+            <Activity className="w-3.5 h-3.5" /> Daily rhythm
           </button>
           <button
             onClick={() => setTab("assessment")}
-            className={`flex items-center gap-1 text-xs font-semibold pb-1.5 border-b-2 transition-colors whitespace-nowrap ${
+            className={`flex items-center gap-1.5 text-xs font-semibold pb-1.5 border-b-2 transition-colors ${
               tab === "assessment" ? "border-[#0202ff] text-[#0202ff]" : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            <Brain className="w-3 h-3 flex-shrink-0" /> Leadership Index
+            <Brain className="w-3.5 h-3.5" /> Leadership Index
           </button>
           <button
             onClick={() => setTab("big3")}
-            className={`flex items-center gap-1 text-xs font-semibold pb-1.5 border-b-2 transition-colors whitespace-nowrap ${
+            className={`flex items-center gap-1.5 text-xs font-semibold pb-1.5 border-b-2 transition-colors ${
               tab === "big3" ? "border-[#0202ff] text-[#0202ff]" : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            <ListTodo className="w-3 h-3 flex-shrink-0" /> Big 3 History
+            <ListTodo className="w-3.5 h-3.5" /> Big 3 History
           </button>
         </div>
       </div>

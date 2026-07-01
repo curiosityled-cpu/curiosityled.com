@@ -666,7 +666,7 @@ export default function ManagerToday() {
         )}
 
         {activeTab === 'patterns' && (
-          <div className="grid grid-cols-[1fr_380px] gap-6 items-start">
+          <div className="grid grid-cols-[1fr_360px] gap-6 items-start">
             <div>{patternsLeftColumn}</div>
             <div className="sticky top-4">{patternsRightColumn}</div>
           </div>
