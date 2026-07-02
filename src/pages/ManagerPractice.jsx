@@ -166,7 +166,7 @@ export default function ManagerPractice() {
           {/* Section 2: Take Action */}
           <div className="space-y-4">
             <SectionLabel hint="Structured sessions, quick workouts, and leadership tools — all in one place.">
-              Take Action
+              Coaching Flows
             </SectionLabel>
 
             {/* Coaching Flows */}
@@ -209,8 +209,14 @@ export default function ManagerPractice() {
               />
             </div>
 
-            {/* Daily Workouts */}
-            <WorkoutsSection goals={goals} trends={trends} insight={insight} />
+            {/* Daily Gym */}
+            <div className="space-y-2">
+              <div className="px-1">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Daily Gym</p>
+                <p className="text-xs text-muted-foreground mt-0.5">3–7 min exercises personalised to your active patterns and goals.</p>
+              </div>
+              <WorkoutsSection goals={goals} trends={trends} insight={insight} />
+            </div>
 
             {/* Leadership Tools */}
             <div className="space-y-2.5">
