@@ -1,33 +1,83 @@
 /**
  * ManagerPractice — The active coaching studio.
  * Route: /practice
- * Three-tab workspace: Action Studio | Daily Gym | Growth Plan
+ * Single-scroll, intent-driven layout:
+ *   1. Lead alerts (patterns/risks from the Lead page)
+ *   2. Take Action (coaching flows + workouts + leadership tools)
+ *   3. Leadership Pulse (progress summary → /my-performance, /my-development)
  */
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
+import {
+  MessageSquare, CheckCircle2, Lightbulb, FileText,
+  Brain, Users, Layers, ChevronRight
+} from "lucide-react";
 import PracticeFlow from "@/components/practice/PracticeFlow";
-import ActionStudioTab from "@/components/practice/ActionStudioTab";
-import DailyGymTab from "@/components/practice/DailyGymTab";
-import GrowthPlanTab from "@/components/practice/GrowthPlanTab";
+import WorkoutsSection from "@/components/practice/WorkoutsSection";
+import LeadAlertsSection from "@/components/practice/LeadAlertsSection";
+import LeadershipPulse from "@/components/practice/LeadershipPulse";
+import DecisionJournalOutcomeReview from "@/components/practice/DecisionJournalOutcomeReview";
+import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
 
-const TABS = [
-  { id: 'studio', label: 'Action Studio' },
-  { id: 'gym',    label: 'Daily Gym' },
-  { id: 'growth', label: 'Growth Plan' },
-];
+const FLOW_KEYS = {
+  Prepare: 'prepare',
+  Debrief: 'debrief',
+  'Work through something': 'work_through',
+  Reflect: 'reflect',
+};
+
+function SectionLabel({ children, hint }) {
+  return (
+    <div className="px-1 pt-1">
+      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{children}</p>
+      {hint && <p className="text-xs text-muted-foreground mt-0.5">{hint}</p>}
+    </div>
+  );
+}
+
+function ActionTile({ icon: Icon, iconBg, iconColor, title, subtitle, description, prompt, to, onStartFlow }) {
+  const { openWithContext } = useAtreusChat();
+  const flowKey = FLOW_KEYS[title];
+
+  const handleClick = () => {
+    if (flowKey && onStartFlow) {
+      onStartFlow(flowKey);
+    } else if (prompt) {
+      openWithContext({ context: { pageType: 'practice' }, starterMessage: prompt });
+    }
+  };
+
+  const content = (
+    <div className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-card shadow-sm hover:shadow-md transition-all group cursor-pointer active:scale-[0.99]">
+      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
+        <Icon className={`w-5 h-5 ${iconColor}`} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-card-foreground">{title}</p>
+        {subtitle && <p className="text-[10px] font-medium mt-0.5 text-muted-foreground">{subtitle}</p>}
+        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{description}</p>
+      </div>
+      <ChevronRight className="w-4 h-4 flex-shrink-0 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+    </div>
+  );
+
+  if (to) return <Link to={to}>{content}</Link>;
+  return <button className="w-full text-left" onClick={handleClick}>{content}</button>;
+}
 
 export default function ManagerPractice() {
   const { user } = useAuth();
   const { openWithContext } = useAtreusChat();
-  const [activeTab, setActiveTab] = useState('studio');
   const [activeFlow, setActiveFlow] = useState(null);
 
   const openAtreus = (msg) => openWithContext({ context: { pageType: 'practice', user_name: user?.full_name }, starterMessage: msg });
 
+  // ── Data queries ──
   const { data: goals = [] } = useQuery({
     queryKey: ['mp-goals', user?.email],
     queryFn: async () => {
@@ -43,12 +93,6 @@ export default function ManagerPractice() {
   const { data: assignments = [] } = useQuery({
     queryKey: ['mp-assignments', user?.email],
     queryFn: async () => { try { return await base44.entities.AssignedLearning.filter({ user_email: user.email }, '-created_date', 10); } catch { return []; } },
-    enabled: !!user?.email, staleTime: 5 * 60 * 1000,
-  });
-
-  const { data: devPlans = [] } = useQuery({
-    queryKey: ['mp-devplans', user?.email],
-    queryFn: async () => { try { return await base44.entities.DevelopmentPlan.filter({ user_email: user.email }, '-created_date', 5); } catch { return []; } },
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
@@ -72,9 +116,19 @@ export default function ManagerPractice() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
+  const { data: checkIns = [] } = useQuery({
+    queryKey: ['mp-checkins', user?.email],
+    queryFn: async () => { try { return await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-check_in_date', 30); } catch { return []; } },
+    enabled: !!user?.email, staleTime: 5 * 60 * 1000,
+  });
+
+  // ── Pattern engine for Lead alerts ──
+  const patterns = useMemo(() => {
+    return runBpoPatternEngine({ trends, checkIns, goals, activities: [], pulses });
+  }, [trends, checkIns, goals, pulses]);
+
   const handleStartFlow = (flowKey) => {
     setActiveFlow(flowKey);
-    // Scroll to top so the flow renders at the top
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -84,7 +138,7 @@ export default function ManagerPractice() {
       {/* Header */}
       <div className="pb-4">
         <h1 className="text-2xl font-bold text-foreground">Practice</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Work on your leadership in the moment.</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Prepare, work through, and move the needle on your leadership.</p>
       </div>
 
       {/* Active flow overlay — full width, dismissible */}
@@ -102,58 +156,97 @@ export default function ManagerPractice() {
         )}
       </AnimatePresence>
 
-      {/* Tab bar — hidden while flow is active */}
+      {/* Main single-scroll layout */}
       {!activeFlow && (
-        <>
-          <div className="flex gap-1 p-1 bg-muted rounded-xl mb-5">
-            {TABS.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 py-2 px-2 text-xs font-semibold rounded-lg transition-all duration-200 ${
-                  activeTab === tab.id
-                    ? 'bg-card text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+        <div className="space-y-6">
+
+          {/* Section 1: Lead Alerts */}
+          <LeadAlertsSection patterns={patterns} onOpenAtreus={openAtreus} />
+
+          {/* Section 2: Take Action */}
+          <div className="space-y-4">
+            <SectionLabel hint="Structured sessions, quick workouts, and leadership tools — all in one place.">
+              Take Action
+            </SectionLabel>
+
+            {/* Coaching Flows */}
+            <div className="space-y-2.5">
+              <ActionTile
+                icon={MessageSquare}
+                iconBg="bg-[#0202ff]/10"
+                iconColor="text-[#0202ff]"
+                title="Prepare"
+                subtitle="Before the moment"
+                description="Get ready for a hard conversation, 1:1, feedback, or stakeholder meeting."
+                onStartFlow={handleStartFlow}
+              />
+              <ActionTile
+                icon={CheckCircle2}
+                iconBg="bg-emerald-50 dark:bg-emerald-950/40"
+                iconColor="text-emerald-600"
+                title="Debrief"
+                subtitle="After the moment"
+                description="Reflect after a difficult interaction, missed commitment, or important meeting."
+                onStartFlow={handleStartFlow}
+              />
+              <ActionTile
+                icon={Lightbulb}
+                iconBg="bg-amber-50 dark:bg-amber-950/40"
+                iconColor="text-amber-600"
+                title="Work through something"
+                subtitle="When you're stuck"
+                description="Feeling stuck, avoiding something, or overwhelmed? Let's name it and find a next step."
+                onStartFlow={handleStartFlow}
+              />
+              <ActionTile
+                icon={FileText}
+                iconBg="bg-violet-50 dark:bg-violet-950/40"
+                iconColor="text-violet-600"
+                title="Reflect"
+                subtitle="Weekly or end-of-day"
+                description="Weekly reflection, end-of-day debrief, or momentum review."
+                onStartFlow={handleStartFlow}
+              />
+            </div>
+
+            {/* Daily Workouts */}
+            <WorkoutsSection goals={goals} trends={trends} insight={insight} />
+
+            {/* Leadership Tools */}
+            <div className="space-y-2.5">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Leadership Tools</p>
+              <ActionTile
+                icon={Brain}
+                iconBg="bg-rose-50 dark:bg-rose-950/40"
+                iconColor="text-rose-600"
+                title="Decision journal"
+                description="Capture a high-stakes decision — context, confidence, risks — and review outcomes later."
+                to="/decision-journal"
+              />
+              <DecisionJournalOutcomeReview />
+              <ActionTile
+                icon={Users}
+                iconBg="bg-sky-50 dark:bg-sky-950/40"
+                iconColor="text-sky-600"
+                title="1:1 prep & notes"
+                description="Prepare questions, review commitments, and track conversation notes."
+                prompt="Help me prepare for an upcoming 1:1. What questions should I be thinking about?"
+              />
+              <ActionTile
+                icon={Layers}
+                iconBg="bg-orange-50 dark:bg-orange-950/40"
+                iconColor="text-orange-600"
+                title="Delegation planner"
+                description="Identify what to hand off and how to set your team up for success."
+                prompt="I want to think through what I should delegate. Can you help me work through it?"
+              />
+            </div>
           </div>
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              transition={{ duration: 0.18 }}
-            >
-              {activeTab === 'studio' && (
-                <ActionStudioTab onStartFlow={handleStartFlow} />
-              )}
-              {activeTab === 'gym' && (
-                <DailyGymTab
-                  goals={goals}
-                  assignments={assignments}
-                  devPlans={devPlans}
-                  trends={trends}
-                  insight={insight}
-                  onOpenAtreus={openAtreus}
-                />
-              )}
-              {activeTab === 'growth' && (
-                <GrowthPlanTab
-                  goals={goals}
-                  assignments={assignments}
-                  pulses={pulses}
-                  trends={trends}
-                  onOpenAtreus={openAtreus}
-                />
-              )}
-            </motion.div>
-          </AnimatePresence>
-        </>
+          {/* Section 3: Leadership Pulse */}
+          <LeadershipPulse goals={goals} pulses={pulses} assignments={assignments} />
+
+        </div>
       )}
     </div>
   );
