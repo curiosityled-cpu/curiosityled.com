@@ -14,7 +14,7 @@ import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
-  Brain, Users, Layers, ChevronRight
+  Brain, Users, Layers, ChevronRight, ArrowRight
 } from "lucide-react";
 import PracticeFlow from "@/components/practice/PracticeFlow";
 import CoachingFlowsCard from "@/components/practice/CoachingFlowsCard";
@@ -161,7 +161,18 @@ export default function ManagerPractice() {
         <div className="space-y-6">
 
           {/* Development analytics — mirrors top row of My Development */}
-          <DevelopmentStatsRow />
+          <div className="space-y-3">
+            <div className="flex items-end justify-between px-1">
+              <div>
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Development</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Your active journeys, learning, and experiences.</p>
+              </div>
+              <Link to="/my-development" className="flex items-center gap-1 text-xs font-semibold text-[#0202ff] hover:underline">
+                View Development <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+            <DevelopmentStatsRow />
+          </div>
 
           {/* Top row: Lead Alerts (full width) */}
           <LeadAlertsSection patterns={patterns} onOpenAtreus={openAtreus} />
