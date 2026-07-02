@@ -133,7 +133,7 @@ export default function ManagerPractice() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pt-6 pb-10">
+    <div className="max-w-6xl mx-auto px-4 pt-6 pb-10">
 
       {/* Header */}
       <div className="pb-4">
@@ -156,102 +156,112 @@ export default function ManagerPractice() {
         )}
       </AnimatePresence>
 
-      {/* Main single-scroll layout */}
+      {/* Command Center layout */}
       {!activeFlow && (
         <div className="space-y-6">
 
-          {/* Section 1: Lead Alerts */}
+          {/* Top row: Lead Alerts (full width) */}
           <LeadAlertsSection patterns={patterns} onOpenAtreus={openAtreus} />
 
-          {/* Section 2: Take Action */}
-          <div className="space-y-4">
-            <SectionLabel hint="Structured sessions, quick workouts, and leadership tools — all in one place.">
-              Coaching Flows
-            </SectionLabel>
+          {/* Main grid: Action zone (left) + Context sidebar (right) */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-            {/* Coaching Flows */}
-            <div className="space-y-2.5">
-              <ActionTile
-                icon={MessageSquare}
-                iconBg="bg-[#0202ff]/10"
-                iconColor="text-[#0202ff]"
-                title="Prepare"
-                subtitle="Before the moment"
-                description="Get ready for a hard conversation, 1:1, feedback, or stakeholder meeting."
-                onStartFlow={handleStartFlow}
-              />
-              <ActionTile
-                icon={CheckCircle2}
-                iconBg="bg-emerald-50 dark:bg-emerald-950/40"
-                iconColor="text-emerald-600"
-                title="Debrief"
-                subtitle="After the moment"
-                description="Reflect after a difficult interaction, missed commitment, or important meeting."
-                onStartFlow={handleStartFlow}
-              />
-              <ActionTile
-                icon={Lightbulb}
-                iconBg="bg-amber-50 dark:bg-amber-950/40"
-                iconColor="text-amber-600"
-                title="Work through something"
-                subtitle="When you're stuck"
-                description="Feeling stuck, avoiding something, or overwhelmed? Let's name it and find a next step."
-                onStartFlow={handleStartFlow}
-              />
-              <ActionTile
-                icon={FileText}
-                iconBg="bg-violet-50 dark:bg-violet-950/40"
-                iconColor="text-violet-600"
-                title="Reflect"
-                subtitle="Weekly or end-of-day"
-                description="Weekly reflection, end-of-day debrief, or momentum review."
-                onStartFlow={handleStartFlow}
-              />
-            </div>
+            {/* Left / center — Action zone */}
+            <div className="lg:col-span-2 space-y-6">
 
-            {/* Daily Gym */}
-            <div className="space-y-2">
-              <div className="px-1">
-                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Daily Gym</p>
-                <p className="text-xs text-muted-foreground mt-0.5">3–7 min exercises personalised to your active patterns and goals.</p>
+              {/* Coaching Flows */}
+              <div className="space-y-3">
+                <SectionLabel hint="Structured sessions to prepare, debrief, and reflect.">
+                  Coaching Flows
+                </SectionLabel>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <ActionTile
+                    icon={MessageSquare}
+                    iconBg="bg-[#0202ff]/10"
+                    iconColor="text-[#0202ff]"
+                    title="Prepare"
+                    subtitle="Before the moment"
+                    description="Get ready for a hard conversation, 1:1, feedback, or stakeholder meeting."
+                    onStartFlow={handleStartFlow}
+                  />
+                  <ActionTile
+                    icon={CheckCircle2}
+                    iconBg="bg-emerald-50 dark:bg-emerald-950/40"
+                    iconColor="text-emerald-600"
+                    title="Debrief"
+                    subtitle="After the moment"
+                    description="Reflect after a difficult interaction, missed commitment, or important meeting."
+                    onStartFlow={handleStartFlow}
+                  />
+                  <ActionTile
+                    icon={Lightbulb}
+                    iconBg="bg-amber-50 dark:bg-amber-950/40"
+                    iconColor="text-amber-600"
+                    title="Work through something"
+                    subtitle="When you're stuck"
+                    description="Feeling stuck, avoiding something, or overwhelmed? Let's name it and find a next step."
+                    onStartFlow={handleStartFlow}
+                  />
+                  <ActionTile
+                    icon={FileText}
+                    iconBg="bg-violet-50 dark:bg-violet-950/40"
+                    iconColor="text-violet-600"
+                    title="Reflect"
+                    subtitle="Weekly or end-of-day"
+                    description="Weekly reflection, end-of-day debrief, or momentum review."
+                    onStartFlow={handleStartFlow}
+                  />
+                </div>
               </div>
-              <WorkoutsSection goals={goals} trends={trends} insight={insight} />
+
+              {/* Leadership Tools */}
+              <div className="space-y-3">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Leadership Tools</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <ActionTile
+                    icon={Brain}
+                    iconBg="bg-rose-50 dark:bg-rose-950/40"
+                    iconColor="text-rose-600"
+                    title="Decision journal"
+                    description="Capture a high-stakes decision — context, confidence, risks — and review outcomes later."
+                    to="/decision-journal"
+                  />
+                  <ActionTile
+                    icon={Users}
+                    iconBg="bg-sky-50 dark:bg-sky-950/40"
+                    iconColor="text-sky-600"
+                    title="1:1 prep & notes"
+                    description="Prepare questions, review commitments, and track conversation notes."
+                    prompt="Help me prepare for an upcoming 1:1. What questions should I be thinking about?"
+                  />
+                  <ActionTile
+                    icon={Layers}
+                    iconBg="bg-orange-50 dark:bg-orange-950/40"
+                    iconColor="text-orange-600"
+                    title="Delegation planner"
+                    description="Identify what to hand off and how to set your team up for success."
+                    prompt="I want to think through what I should delegate. Can you help me work through it?"
+                  />
+                </div>
+                <DecisionJournalOutcomeReview />
+              </div>
             </div>
 
-            {/* Leadership Tools */}
-            <div className="space-y-2.5">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Leadership Tools</p>
-              <ActionTile
-                icon={Brain}
-                iconBg="bg-rose-50 dark:bg-rose-950/40"
-                iconColor="text-rose-600"
-                title="Decision journal"
-                description="Capture a high-stakes decision — context, confidence, risks — and review outcomes later."
-                to="/decision-journal"
-              />
-              <DecisionJournalOutcomeReview />
-              <ActionTile
-                icon={Users}
-                iconBg="bg-sky-50 dark:bg-sky-950/40"
-                iconColor="text-sky-600"
-                title="1:1 prep & notes"
-                description="Prepare questions, review commitments, and track conversation notes."
-                prompt="Help me prepare for an upcoming 1:1. What questions should I be thinking about?"
-              />
-              <ActionTile
-                icon={Layers}
-                iconBg="bg-orange-50 dark:bg-orange-950/40"
-                iconColor="text-orange-600"
-                title="Delegation planner"
-                description="Identify what to hand off and how to set your team up for success."
-                prompt="I want to think through what I should delegate. Can you help me work through it?"
-              />
+            {/* Right — Context sidebar */}
+            <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-20 lg:self-start">
+              {/* Daily Gym */}
+              <div className="space-y-2">
+                <div className="px-1">
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Daily Gym</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">3–7 min exercises personalised to your active patterns and goals.</p>
+                </div>
+                <WorkoutsSection goals={goals} trends={trends} insight={insight} />
+              </div>
+
+              {/* Leadership Pulse */}
+              <LeadershipPulse goals={goals} pulses={pulses} assignments={assignments} />
             </div>
           </div>
-
-          {/* Section 3: Leadership Pulse */}
-          <LeadershipPulse goals={goals} pulses={pulses} assignments={assignments} />
-
         </div>
       )}
     </div>
