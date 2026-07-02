@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { useAtreusOrchestrator } from "@/components/ai/useAtreusOrchestrator";
 import { Link } from "react-router-dom";
-import { Brain, ChevronRight, MessageSquare, SlidersHorizontal, Layers, X, Sun, TrendingUp } from "lucide-react";
+import { Brain, ChevronRight, MessageSquare, SlidersHorizontal, Layers, X, Sun, TrendingUp, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ToneOnboarding from "@/components/checkin/ToneOnboarding";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
@@ -650,7 +650,18 @@ export default function ManagerToday() {
 
         {activeTab === 'patterns' && (
           <>
-            <PerformanceMetricsRow />
+            <div className="space-y-3">
+              <div className="flex items-end justify-between px-1">
+                <div>
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Performance</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Your active goals, KPIs, and OKRs at a glance.</p>
+                </div>
+                <Link to="/my-performance" className="flex items-center gap-1 text-xs font-semibold text-[#0202ff] hover:underline">
+                  View Performance <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+              <PerformanceMetricsRow />
+            </div>
             <SwipeableSections
               sections={[
                 { label: "Patterns", content: patternsLeftColumn },
@@ -677,7 +688,18 @@ export default function ManagerToday() {
 
         {activeTab === 'patterns' && (
           <div className="space-y-5">
-            <PerformanceMetricsRow />
+            <div className="space-y-3">
+              <div className="flex items-end justify-between px-1">
+                <div>
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Performance</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Your active goals, KPIs, and OKRs at a glance.</p>
+                </div>
+                <Link to="/my-performance" className="flex items-center gap-1 text-xs font-semibold text-[#0202ff] hover:underline">
+                  View Performance <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+              <PerformanceMetricsRow />
+            </div>
             <div className="grid grid-cols-[1fr_400px] gap-6 items-start">
               <div>{patternsLeftColumn}</div>
               <div className="sticky top-4">{patternsRightColumn}</div>
