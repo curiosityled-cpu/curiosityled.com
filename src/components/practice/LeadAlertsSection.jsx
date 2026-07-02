@@ -50,47 +50,49 @@ export default function LeadAlertsSection({ patterns = [], onOpenAtreus }) {
       </div>
       <p className="text-xs text-muted-foreground px-1 -mt-1">Patterns and risks the system is seeing right now — address them here.</p>
 
-      {topPatterns.map((pattern) => {
-        const style = BUCKET_STYLES[pattern.bucket] || BUCKET_STYLES['Execution'];
-        const Icon = style.icon;
-        return (
-          <div key={pattern.id} className={`rounded-2xl border ${style.border} ${style.bg} overflow-hidden`}>
-            <div className={`h-0.5 ${pattern.status === 'Persistent' ? 'bg-red-500' : pattern.status === 'Active' ? 'bg-orange-400' : 'bg-yellow-400'}`} />
-            <div className="px-4 py-3">
-              <div className="flex items-start gap-3">
-                <div className={`p-1.5 rounded-lg bg-white/70 dark:bg-white/10 border ${style.border} flex-shrink-0 mt-0.5`}>
-                  <Icon className={`w-3.5 h-3.5 ${style.text}`} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                    <Badge variant="outline" className={`text-[9px] px-1.5 py-0 border ${STATUS_STYLES[pattern.status] || ''}`}>
-                      {pattern.status}
-                    </Badge>
-                    <span className="text-[10px] font-medium text-muted-foreground">{pattern.bucket}</span>
+      <div className={`grid gap-2.5 ${topPatterns.length > 1 ? 'sm:grid-cols-2' : ''}`}>
+        {topPatterns.map((pattern) => {
+          const style = BUCKET_STYLES[pattern.bucket] || BUCKET_STYLES['Execution'];
+          const Icon = style.icon;
+          return (
+            <div key={pattern.id} className={`rounded-2xl border ${style.border} ${style.bg} overflow-hidden flex flex-col`}>
+              <div className={`h-0.5 ${pattern.status === 'Persistent' ? 'bg-red-500' : pattern.status === 'Active' ? 'bg-orange-400' : 'bg-yellow-400'}`} />
+              <div className="px-4 py-3 flex-1 flex flex-col">
+                <div className="flex items-start gap-3">
+                  <div className={`p-1.5 rounded-lg bg-white/70 dark:bg-white/10 border ${style.border} flex-shrink-0 mt-0.5`}>
+                    <Icon className={`w-3.5 h-3.5 ${style.text}`} />
                   </div>
-                  <p className="text-sm font-bold text-foreground leading-tight">{pattern.name}</p>
-                  <p className="text-xs text-muted-foreground leading-snug mt-0.5 line-clamp-2">{pattern.tagline}</p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                      <Badge variant="outline" className={`text-[9px] px-1.5 py-0 border ${STATUS_STYLES[pattern.status] || ''}`}>
+                        {pattern.status}
+                      </Badge>
+                      <span className="text-[10px] font-medium text-muted-foreground">{pattern.bucket}</span>
+                    </div>
+                    <p className="text-sm font-bold text-foreground leading-tight">{pattern.name}</p>
+                    <p className="text-xs text-muted-foreground leading-snug mt-0.5 line-clamp-2">{pattern.tagline}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex gap-1.5 mt-3">
-                <button
-                  onClick={() => addressWithAtreus(pattern)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border ${style.border} ${style.text} hover:bg-white/60 dark:hover:bg-white/10 transition-colors`}
-                >
-                  Address now
-                  <ArrowRight className="w-3 h-3" />
-                </button>
-                <button
-                  onClick={() => openDrawer(pattern)}
-                  className="flex items-center justify-center px-3 py-2 rounded-xl text-xs font-medium border border-border text-muted-foreground hover:bg-muted/50 transition-colors"
-                >
-                  Explore
-                </button>
+                <div className="flex gap-1.5 mt-3 mt-auto pt-3">
+                  <button
+                    onClick={() => addressWithAtreus(pattern)}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border ${style.border} ${style.text} hover:bg-white/60 dark:hover:bg-white/10 transition-colors`}
+                  >
+                    Address now
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => openDrawer(pattern)}
+                    className="flex items-center justify-center px-3 py-2 rounded-xl text-xs font-medium border border-border text-muted-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    Explore
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
 
       {selectedPattern && (
         <PatternDetailDrawer
