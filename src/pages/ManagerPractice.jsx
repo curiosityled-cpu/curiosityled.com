@@ -53,7 +53,7 @@ function ActionTile({ icon: Icon, iconBg, iconColor, title, subtitle, descriptio
   };
 
   const content = (
-    <div className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-card shadow-sm hover:shadow-md transition-all group cursor-pointer active:scale-[0.99]">
+    <div className="flex items-center gap-4 p-4 h-full rounded-2xl border border-border bg-card shadow-sm hover:shadow-md transition-all group cursor-pointer active:scale-[0.99]">
       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
         <Icon className={`w-5 h-5 ${iconColor}`} />
       </div>
@@ -66,8 +66,8 @@ function ActionTile({ icon: Icon, iconBg, iconColor, title, subtitle, descriptio
     </div>
   );
 
-  if (to) return <Link to={to}>{content}</Link>;
-  return <button className="w-full text-left" onClick={handleClick}>{content}</button>;
+  if (to) return <Link to={to} className="block h-full">{content}</Link>;
+  return <button className="w-full h-full text-left" onClick={handleClick}>{content}</button>;
 }
 
 export default function ManagerPractice() {
