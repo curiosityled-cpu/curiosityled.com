@@ -20,7 +20,7 @@ import PracticeFlow from "@/components/practice/PracticeFlow";
 import CoachingFlowsCard from "@/components/practice/CoachingFlowsCard";
 import WorkoutsSection from "@/components/practice/WorkoutsSection";
 import LeadAlertsSection from "@/components/practice/LeadAlertsSection";
-import LeadershipPulse from "@/components/practice/LeadershipPulse";
+import DevelopmentStatsRow from "@/components/practice/DevelopmentStatsRow";
 import DecisionJournalOutcomeReview from "@/components/practice/DecisionJournalOutcomeReview";
 import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
 
@@ -160,6 +160,9 @@ export default function ManagerPractice() {
       {!activeFlow && (
         <div className="space-y-6">
 
+          {/* Development analytics — mirrors top row of My Development */}
+          <DevelopmentStatsRow />
+
           {/* Top row: Lead Alerts (full width) */}
           <LeadAlertsSection patterns={patterns} onOpenAtreus={openAtreus} />
 
@@ -215,9 +218,6 @@ export default function ManagerPractice() {
                 </div>
                 <WorkoutsSection goals={goals} trends={trends} insight={insight} />
               </div>
-
-              {/* Leadership Pulse */}
-              <LeadershipPulse goals={goals} pulses={pulses} assignments={assignments} />
             </div>
           </div>
         </div>

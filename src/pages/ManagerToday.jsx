@@ -25,6 +25,7 @@ import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
 import PerformanceGlanceCard from "@/components/lead/PerformanceGlanceCard";
 import DecisionJournalCard from "@/components/lead/DecisionJournalCard";
+import PerformanceMetricsRow from "@/components/performance/PerformanceMetricsRow";
 
 // Patterns imports
 import IntentLoopCard from "@/components/checkin/IntentLoopCard";
@@ -648,12 +649,15 @@ export default function ManagerToday() {
         {activeTab === 'today' && todayMainContent}
 
         {activeTab === 'patterns' && (
-          <SwipeableSections
-            sections={[
-              { label: "Patterns", content: patternsLeftColumn },
-              { label: "Signals", content: patternsRightColumn },
-            ]}
-          />
+          <>
+            <PerformanceMetricsRow />
+            <SwipeableSections
+              sections={[
+                { label: "Patterns", content: patternsLeftColumn },
+                { label: "Signals", content: patternsRightColumn },
+              ]}
+            />
+          </>
         )}
       </div>
 
@@ -672,9 +676,12 @@ export default function ManagerToday() {
         )}
 
         {activeTab === 'patterns' && (
-          <div className="grid grid-cols-[1fr_400px] gap-6 items-start">
-            <div>{patternsLeftColumn}</div>
-            <div className="sticky top-4">{patternsRightColumn}</div>
+          <div className="space-y-5">
+            <PerformanceMetricsRow />
+            <div className="grid grid-cols-[1fr_400px] gap-6 items-start">
+              <div>{patternsLeftColumn}</div>
+              <div className="sticky top-4">{patternsRightColumn}</div>
+            </div>
           </div>
         )}
       </div>

@@ -4,6 +4,7 @@ import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import GoalsAndOKRsTab from "@/components/performance-mgmt/GoalsAndOKRsTab";
+import PerformanceMetricsRow from "@/components/performance/PerformanceMetricsRow";
 
 export default function MyPerformance() {
   const { user, loading } = useAuth();
@@ -23,6 +24,7 @@ export default function MyPerformance() {
       title="My Performance"
       subtitle="Track your goals, KPIs, and OKRs"
     >
+      <PerformanceMetricsRow />
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }}>
         <GoalsAndOKRsTab user={user} />
       </motion.div>
