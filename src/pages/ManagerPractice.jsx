@@ -14,10 +14,10 @@ import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
-  MessageSquare, CheckCircle2, Lightbulb, FileText,
   Brain, Users, Layers, ChevronRight
 } from "lucide-react";
 import PracticeFlow from "@/components/practice/PracticeFlow";
+import CoachingFlowsCard from "@/components/practice/CoachingFlowsCard";
 import WorkoutsSection from "@/components/practice/WorkoutsSection";
 import LeadAlertsSection from "@/components/practice/LeadAlertsSection";
 import LeadershipPulse from "@/components/practice/LeadershipPulse";
@@ -169,50 +169,8 @@ export default function ManagerPractice() {
             {/* Left / center — Action zone */}
             <div className="lg:col-span-2 space-y-6">
 
-              {/* Coaching Flows */}
-              <div className="space-y-3">
-                <SectionLabel hint="Structured sessions to prepare, debrief, and reflect.">
-                  Coaching Flows
-                </SectionLabel>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <ActionTile
-                    icon={MessageSquare}
-                    iconBg="bg-[#0202ff]/10"
-                    iconColor="text-[#0202ff]"
-                    title="Prepare"
-                    subtitle="Before the moment"
-                    description="Get ready for a hard conversation, 1:1, feedback, or stakeholder meeting."
-                    onStartFlow={handleStartFlow}
-                  />
-                  <ActionTile
-                    icon={CheckCircle2}
-                    iconBg="bg-emerald-50 dark:bg-emerald-950/40"
-                    iconColor="text-emerald-600"
-                    title="Debrief"
-                    subtitle="After the moment"
-                    description="Reflect after a difficult interaction, missed commitment, or important meeting."
-                    onStartFlow={handleStartFlow}
-                  />
-                  <ActionTile
-                    icon={Lightbulb}
-                    iconBg="bg-amber-50 dark:bg-amber-950/40"
-                    iconColor="text-amber-600"
-                    title="Work through something"
-                    subtitle="When you're stuck"
-                    description="Feeling stuck, avoiding something, or overwhelmed? Let's name it and find a next step."
-                    onStartFlow={handleStartFlow}
-                  />
-                  <ActionTile
-                    icon={FileText}
-                    iconBg="bg-violet-50 dark:bg-violet-950/40"
-                    iconColor="text-violet-600"
-                    title="Reflect"
-                    subtitle="Weekly or end-of-day"
-                    description="Weekly reflection, end-of-day debrief, or momentum review."
-                    onStartFlow={handleStartFlow}
-                  />
-                </div>
-              </div>
+              {/* Coaching Flows — scrollable list with expandable popups */}
+              <CoachingFlowsCard onStartFlow={handleStartFlow} />
 
               {/* Leadership Tools */}
               <div className="space-y-3">
