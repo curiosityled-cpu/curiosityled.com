@@ -101,23 +101,22 @@ export default function IndustryHero({ industry }) {
               className="flex flex-col sm:flex-row gap-3"
             >
               <a
-                href={hero.primaryCta.href}
+                href="https://calendly.com/team-curiosityled/discoverycall"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg font-semibold text-white text-sm transition-all hover:opacity-90"
                 style={{ backgroundColor: "#0202ff" }}
               >
-                {hero.primaryCta.label}
+                Book a demo
                 <ArrowRight className="w-4 h-4" />
               </a>
-              <a
-                href={hero.secondaryCta.href}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={scrollToHow}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg font-semibold text-gray-700 text-sm border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all"
               >
-                {hero.secondaryCta.label}
-              </a>
+                See how it works
+                <ChevronDown className="w-4 h-4" />
+              </button>
             </motion.div>
           </div>
 
