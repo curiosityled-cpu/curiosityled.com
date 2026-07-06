@@ -175,6 +175,13 @@ export default function ManagerToday() {
         sessionStorage.setItem('today_big3_override', JSON.stringify({ date: todayET, data: big3Priorities }));
       } catch {}
     }
+    // When morning check-in completes, clear the Big 3 override so the Playbook
+    // reads from the DB record (source of truth) instead of a stale session override.
+    if (type === 'morning') {
+      setLocalBig3Override(null);
+      try { sessionStorage.removeItem('today_big3_override'); } catch {}
+      queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
+    }
     const update = {};
     if (type === 'morning') { update.morning_completed = true; update.morning_completed_at = new Date().toISOString(); }
     if (type === 'evening') { update.evening_completed = true; update.evening_completed_at = new Date().toISOString(); update.big3_priorities = big3Priorities || []; }
