@@ -14,21 +14,81 @@
       "type": "string",
       "description": "Employee email"
     },
+    "attendee_name": {
+      "type": "string",
+      "description": "Display name of the employee/report for quick reference"
+    },
     "meeting_date": {
       "type": "string",
       "format": "date",
       "description": "Date of the meeting"
     },
+    "start_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Full start timestamp of the meeting (ISO 8601)"
+    },
+    "calendar_event_id": {
+      "type": "string",
+      "description": "ID of the linked calendar event (Google or Outlook) for sync"
+    },
+    "calendar_source": {
+      "type": "string",
+      "enum": [
+        "google",
+        "outlook",
+        "manual"
+      ],
+      "description": "Which calendar provider this meeting originated from, or manual if created in-app"
+    },
+    "title": {
+      "type": "string",
+      "description": "Meeting title/subject (e.g. '1:1 with Sarah')"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "preparing",
+        "completed",
+        "debriefed"
+      ],
+      "default": "scheduled",
+      "description": "Current workflow state of this 1:1"
+    },
     "coaching_session_id": {
       "type": "string",
       "description": "Linked CoachingSession ID if applicable"
+    },
+    "agenda_items": {
+      "type": "array",
+      "description": "Prep agenda items the manager plans to discuss",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "completed": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
     },
     "discussion_points": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Key topics discussed"
+      "description": "Key topics actually discussed during the meeting"
+    },
+    "meeting_notes": {
+      "type": "string",
+      "description": "Free-form notes taken during the meeting"
     },
     "decisions": {
       "type": "string",
@@ -68,6 +128,11 @@
         }
       }
     },
+    "debrief_completed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the post-meeting debrief has been finalized"
+    },
     "description": {
       "type": "string",
       "maxLength": 1000,
@@ -81,17 +146,33 @@
   ],
   "rls": {
     "create": {
-      "user_condition": {
-        "role": {
-          "$in": [
-            "User Level 2",
-            "Admin Level 1",
-            "Admin Level 2",
-            "Super Administrator",
-            "Platform Admin"
-          ]
+      "$or": [
+        {
+          "user_condition": {
+            "role": "User Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
         }
-      }
+      ]
     },
     "read": {
       "$or": [
