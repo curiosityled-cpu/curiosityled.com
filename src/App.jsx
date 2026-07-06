@@ -39,6 +39,7 @@ import ManagerGrowth from './pages/ManagerGrowth';
 import ManagerTeam from './pages/ManagerTeam';
 import ManagerAtreus from './pages/ManagerAtreus';
 import ManagerPractice from './pages/ManagerPractice';
+import OneOnOneHub from './pages/OneOnOneHub';
 import DecisionJournalPage from './pages/DecisionJournalPage';
 import DecisionQualityAnalytics from './pages/DecisionQualityAnalytics';
 import Insights from './pages/Insights';
@@ -133,6 +134,7 @@ const AuthenticatedApp = () => {
       <Route path="/team" element={<MVPLayout><ManagerTeam /></MVPLayout>} />
       <Route path="/atreus-guide" element={<MVPLayout><ManagerAtreus /></MVPLayout>} />
       <Route path="/practice" element={<MVPLayout><ManagerPractice /></MVPLayout>} />
+      <Route path="/one-on-ones" element={<MVPLayout><OneOnOneHub /></MVPLayout>} />
       <Route path="/decision-journal" element={<MVPLayout><DecisionJournalPage /></MVPLayout>} />
       <Route path="/decision-analytics" element={<MVPLayout><DecisionQualityAnalytics /></MVPLayout>} />
       <Route path="/you" element={<Navigate to="/Profile" replace />} />

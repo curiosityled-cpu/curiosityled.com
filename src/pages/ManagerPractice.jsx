@@ -204,7 +204,7 @@ export default function ManagerPractice() {
                     iconColor="text-sky-600"
                     title="1:1 prep & notes"
                     description="Prepare questions, review commitments, and track conversation notes."
-                    prompt="Help me prepare for an upcoming 1:1. What questions should I be thinking about?"
+                    to="/one-on-ones"
                   />
                   <ActionTile
                     icon={Layers}
