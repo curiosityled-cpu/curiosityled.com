@@ -54,46 +54,6 @@ const FLOWS = {
       `I've just prepped for an upcoming conversation. Here's my context:\n\nSituation: ${responses.context}\nWhat I want: ${responses.goal}\nRisk I'm watching: ${responses.risk}\nPlanned move: ${responses.move}\n\nCan you help me sharpen this and think through anything I might have missed?`,
   },
 
-  one_on_one: {
-    title: "1:1 Prep",
-    subtitle: "Prepare for a meaningful 1:1 conversation.",
-    color: "bg-sky-600",
-    border: "border-sky-100",
-    bg: "from-sky-50/40",
-    steps: [
-      {
-        id: "who_and_focus",
-        question: "Who is this 1:1 with, and what's the main focus?",
-        placeholder: "e.g. Alex — follow up on the project delay and check in on how they're doing…",
-        hint: "Name the person and the headline topic — specificity sharpens everything else.",
-        type: "textarea",
-      },
-      {
-        id: "commitments",
-        question: "What commitments or follow-ups from last time should you check in on?",
-        placeholder: "e.g. They said they'd own the QA handoff. I promised to unblock the budget…",
-        hint: "If there's nothing specific, skip — but most 1:1s lose value when commitments go untracked.",
-        type: "textarea",
-      },
-      {
-        id: "outcome",
-        question: "What's the one outcome you most want from this conversation?",
-        placeholder: "e.g. A clear decision on ownership. For them to feel heard. Alignment on next steps…",
-        hint: "One outcome, not three. What would make this 30 minutes worth it?",
-        type: "textarea",
-      },
-      {
-        id: "question",
-        question: "What's the one question you want to make sure you ask?",
-        placeholder: "e.g. What's getting in your way that I'm not seeing? How are you feeling about the timeline?",
-        hint: "A great question beats a long agenda. What do you actually need to know?",
-        type: "textarea",
-      },
-    ],
-    buildAtreusMsg: (responses) =>
-      `I'm preparing for a 1:1 conversation. Here's my prep:\n\nWho & focus: ${responses.who_and_focus}\nCommitments to check: ${responses.commitments}\nOutcome I want: ${responses.outcome}\nQuestion I want to ask: ${responses.question}\n\nCan you help me sharpen this — anything I'm missing, any blind spots, or ways to make this conversation land better?`,
-  },
-
   debrief: {
     title: "Debrief",
     subtitle: "Close the loop. Learn from what happened.",

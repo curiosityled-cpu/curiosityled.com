@@ -14,7 +14,7 @@ import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
-  Brain, Layers, ChevronRight, ArrowRight
+  Brain, Users, Layers, ChevronRight, ArrowRight
 } from "lucide-react";
 import PracticeFlow from "@/components/practice/PracticeFlow";
 import CoachingFlowsCard from "@/components/practice/CoachingFlowsCard";
@@ -197,6 +197,14 @@ export default function ManagerPractice() {
                     title="Decision journal"
                     description="Capture a high-stakes decision — context, confidence, risks — and review outcomes later."
                     to="/decision-journal"
+                  />
+                  <ActionTile
+                    icon={Users}
+                    iconBg="bg-sky-50 dark:bg-sky-950/40"
+                    iconColor="text-sky-600"
+                    title="1:1 prep & notes"
+                    description="Prepare questions, review commitments, and track conversation notes."
+                    prompt="Help me prepare for an upcoming 1:1. What questions should I be thinking about?"
                   />
                   <ActionTile
                     icon={Layers}
