@@ -6,7 +6,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { MessageSquare, CheckCircle2, Lightbulb, FileText, ChevronRight, Play } from "lucide-react";
+import { MessageSquare, CheckCircle2, Lightbulb, FileText, ChevronRight, Play, Users } from "lucide-react";
 
 const FLOWS = [
   {
@@ -20,6 +20,18 @@ const FLOWS = [
     longDescription:
       "Walk through what's coming: who's in the room, what you want them to feel, what they're likely worried about, and the exact words you'll open with. Walk out with a clear plan and the confidence to execute it.",
     prompts: ["Difficult conversation", "1:1 meeting", "Feedback delivery", "Stakeholder update"],
+  },
+  {
+    key: "one_on_one",
+    icon: Users,
+    iconBg: "bg-sky-50 dark:bg-sky-950/40",
+    iconColor: "text-sky-600",
+    title: "1:1 Prep",
+    subtitle: "Before the conversation",
+    description: "Prepare questions, check commitments, and set a clear outcome for your next 1:1.",
+    longDescription:
+      "Walk into your 1:1 with purpose: who it's with, what commitments to follow up on, the one outcome that matters, and the question you most need to ask. Turn a routine check-in into a meaningful conversation.",
+    prompts: ["Weekly check-in", "Follow-up on commitments", "Feedback conversation", "Career growth talk"],
   },
   {
     key: "debrief",
