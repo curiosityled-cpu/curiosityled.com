@@ -179,7 +179,7 @@ function MVPLayoutInner({ children }) {
         <div>
           <button
             onClick={() => toggleGroup(item.label)}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${anyChildActive ? 'text-[#0202ff]' : ''}`}
+            className={`w-full flex items-center justify-start text-left gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${anyChildActive ? 'text-[#0202ff]' : ''}`}
             style={{ color: anyChildActive ? undefined : 'hsl(var(--muted-foreground))' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'hsl(var(--muted))'; if (!anyChildActive) e.currentTarget.style.color = 'hsl(var(--foreground))'; }}
             onMouseLeave={e => { e.currentTarget.style.background = ''; if (!anyChildActive) e.currentTarget.style.color = 'hsl(var(--muted-foreground))'; }}
