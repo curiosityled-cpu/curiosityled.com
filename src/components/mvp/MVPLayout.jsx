@@ -93,7 +93,16 @@ function MVPLayoutInner({ children }) {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [openGroups, setOpenGroups] = useState({});
+  const [openGroups, setOpenGroups] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('mvp_openGroups');
+      return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  });
+
+  useEffect(() => {
+    try { sessionStorage.setItem('mvp_openGroups', JSON.stringify(openGroups)); } catch {}
+  }, [openGroups]);
   const [unreadCount, setUnreadCount] = useState(0);
   const { isOpen: showAtreus, pendingContext, draftMessage, close: closeAtreus, clearPending, openWithContext } = useAtreusChat();
   const openAtreusDefault = () => openWithContext({});
