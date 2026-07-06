@@ -40,6 +40,7 @@ import ManagerTeam from './pages/ManagerTeam';
 import ManagerAtreus from './pages/ManagerAtreus';
 import ManagerPractice from './pages/ManagerPractice';
 import OneOnOneHub from './pages/OneOnOneHub';
+import DelegationPlanner from './pages/DelegationPlanner';
 import DecisionJournalPage from './pages/DecisionJournalPage';
 import DecisionQualityAnalytics from './pages/DecisionQualityAnalytics';
 import Insights from './pages/Insights';
@@ -135,6 +136,7 @@ const AuthenticatedApp = () => {
       <Route path="/atreus-guide" element={<MVPLayout><ManagerAtreus /></MVPLayout>} />
       <Route path="/practice" element={<MVPLayout><ManagerPractice /></MVPLayout>} />
       <Route path="/one-on-ones" element={<MVPLayout><OneOnOneHub /></MVPLayout>} />
+      <Route path="/delegation-planner" element={<MVPLayout><DelegationPlanner /></MVPLayout>} />
       <Route path="/decision-journal" element={<MVPLayout><DecisionJournalPage /></MVPLayout>} />
       <Route path="/decision-analytics" element={<MVPLayout><DecisionQualityAnalytics /></MVPLayout>} />
       <Route path="/you" element={<Navigate to="/Profile" replace />} />

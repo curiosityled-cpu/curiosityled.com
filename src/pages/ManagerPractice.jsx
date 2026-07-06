@@ -212,7 +212,7 @@ export default function ManagerPractice() {
                     iconColor="text-orange-600"
                     title="Delegation planner"
                     description="Identify what to hand off and how to set your team up for success."
-                    prompt="I want to think through what I should delegate. Can you help me work through it?"
+                    to="/delegation-planner"
                   />
                 </div>
                 <DecisionJournalOutcomeReview />

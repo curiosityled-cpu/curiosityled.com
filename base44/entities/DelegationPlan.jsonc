@@ -1,0 +1,79 @@
+{
+  "name": "DelegationPlan",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the manager who owns this delegation plan"
+    },
+    "task_name": {
+      "type": "string",
+      "description": "What task or responsibility is being delegated"
+    },
+    "task_context": {
+      "type": "string",
+      "description": "Why this task is a good delegation candidate \u2014 what's involved, why now"
+    },
+    "delegatee_name": {
+      "type": "string",
+      "description": "Name of the person receiving the delegated task"
+    },
+    "delegatee_email": {
+      "type": "string",
+      "description": "Email of the delegatee (optional, for linking to 1:1s)"
+    },
+    "skill_level": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "developing",
+        "proficient"
+      ],
+      "description": "Manager's assessment of delegatee's current skill level for this task"
+    },
+    "development_goal": {
+      "type": "string",
+      "description": "What skill or capability this delegation builds in the delegatee"
+    },
+    "success_criteria": {
+      "type": "string",
+      "description": "What does a successful outcome look like \u2014 clear definition of done"
+    },
+    "check_in_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When the manager will follow up on progress"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "assigned",
+        "in_progress",
+        "complete"
+      ],
+      "default": "draft",
+      "description": "Current state of the delegation"
+    },
+    "linked_meeting_id": {
+      "type": "string",
+      "description": "ID of a MeetingRecord (1:1) where this delegation will be or was discussed"
+    },
+    "outcome_notes": {
+      "type": "string",
+      "description": "Manager's notes on how the delegation went \u2014 what worked, what to adjust"
+    }
+  },
+  "required": [
+    "user_email",
+    "task_name"
+  ],
+  "rls": {
+    "read": {
+      "data.user_email": "{{user.email}}"
+    },
+    "write": {
+      "data.user_email": "{{user.email}}"
+    }
+  }
+}
