@@ -6,10 +6,12 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, Calendar, Clock, ChevronRight, Plus, CheckCircle2,
-  Circle, AlertCircle, CalendarPlus, StickyNote, ArrowRight, Inbox
+  Circle, AlertCircle, CalendarPlus, StickyNote, ArrowRight, Inbox,
+  Sparkles, Loader2, Wand2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { motion as motion2, AnimatePresence as AnimatePresence2 } from "framer-motion";
 
 // ── Helpers ──
 function formatMeetingDate(dateStr, startTime) {
@@ -426,8 +428,48 @@ function RecordWorkspace({ record, userEmail, onClose }) {
   const [newAgendaText, setNewAgendaText] = useState('');
   const [newCommitmentText, setNewCommitmentText] = useState('');
   const [saving, setSaving] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState(null);
 
   useEffect(() => { setLocal(record); }, [record]);
+
+  const generateAgendaSuggestions = async () => {
+    setAiLoading(true);
+    setAiSuggestions(null);
+    try {
+      const openCommitments = (local.commitments || []).filter(c => c.status === 'open').map(c => c.action);
+      const prompt = `You are a leadership coach helping a manager prepare for a 1:1 meeting. Suggest 4-5 relevant agenda items.
+
+Meeting: ${local.title || '1:1 Meeting'}
+With: ${local.attendee_name || 'Direct report'}
+Date: ${formatMeetingDate(local.meeting_date, local.start_time)}
+Existing notes: ${local.meeting_notes || 'None yet'}
+Open commitments from last time: ${openCommitments.length ? openCommitments.join('; ') : 'None'}
+
+Return practical, conversational agenda items that a manager would actually discuss — for example: "Review progress on [X]", "Check in on workload and energy", "Discuss upcoming priorities", "Get feedback on my communication style". Keep each item to one short sentence.`;
+
+      const res = await base44.integrations.Core.InvokeLLM({
+        prompt,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            items: { type: "array", items: { type: "string" } }
+          }
+        }
+      });
+      setAiSuggestions(res.items || []);
+    } catch (e) {
+      console.error('AI agenda suggestions failed:', e);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const addSuggestedItem = (text) => {
+    const items = [...(local.agenda_items || []), { id: crypto.randomUUID(), text, completed: false }];
+    update({ agenda_items: items });
+    setAiSuggestions(prev => prev?.filter(s => s !== text) || null);
+  };
 
   const update = async (patch) => {
     setSaving(true);
@@ -531,9 +573,52 @@ function RecordWorkspace({ record, userEmail, onClose }) {
 
       {/* Prep: Agenda Items */}
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-          <Calendar className="w-3 h-3" /> Prep Agenda
-        </label>
+        <div className="flex items-center justify-between">
+          <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <Calendar className="w-3 h-3" /> Prep Agenda
+          </label>
+          <Button size="sm" variant="ghost" onClick={generateAgendaSuggestions} disabled={aiLoading}
+            className="h-7 text-[11px] text-[#0202ff] hover:bg-[#0202ff]/5 px-2">
+            {aiLoading ? (
+              <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Generating…</>
+            ) : (
+              <><Wand2 className="w-3 h-3 mr-1" /> Suggest agenda</>
+            )}
+          </Button>
+        </div>
+
+        {/* AI suggested agenda items */}
+        <AnimatePresence2>
+          {aiSuggestions && aiSuggestions.length > 0 && (
+            <motion2.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-2 rounded-xl border border-[#0202ff]/20 bg-[#0202ff]/5 dark:bg-[#0202ff]/10 p-3 space-y-1.5">
+                <p className="text-[10px] font-semibold text-[#0202ff] uppercase tracking-wide flex items-center gap-1 mb-1">
+                  <Sparkles className="w-3 h-3" /> Suggested by AI
+                </p>
+                {aiSuggestions.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-2 group">
+                    <Plus className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                    <span className="text-xs text-card-foreground flex-1">{item}</span>
+                    <button onClick={() => addSuggestedItem(item)}
+                      className="text-[10px] font-medium text-[#0202ff] opacity-0 group-hover:opacity-100 transition-opacity">
+                      Add
+                    </button>
+                  </div>
+                ))}
+                <button onClick={() => setAiSuggestions(null)}
+                  className="text-[10px] text-muted-foreground hover:text-foreground mt-1">
+                  Dismiss
+                </button>
+              </div>
+            </motion2.div>
+          )}
+        </AnimatePresence2>
+
         <div className="mt-2 space-y-1.5">
           {(local.agenda_items || []).map(item => (
             <div key={item.id} className="flex items-center gap-2 group">

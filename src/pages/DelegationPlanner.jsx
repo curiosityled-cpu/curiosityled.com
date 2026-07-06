@@ -6,7 +6,7 @@ import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { Link } from "react-router-dom";
 import {
   Layers, Plus, ChevronLeft, ChevronRight, Trash2,
-  Calendar, User, Target, CheckCircle2, ArrowRight, Sparkles
+  Calendar, User, Target, CheckCircle2, ArrowRight, Sparkles, Loader2, Wand2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,12 +44,56 @@ function PlanForm({ initial, onSave, onCancel }) {
     status: initial?.status || "draft",
     ...initial,
   });
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState(null);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const submit = (e) => {
     e.preventDefault();
     onSave(form);
+  };
+
+  const generateAiSuggestions = async () => {
+    if (!form.task_name.trim()) return;
+    setAiLoading(true);
+    setAiSuggestions(null);
+    try {
+      const prompt = `You are a leadership coach helping a manager delegate a task. Based on the details below, generate suggestions to strengthen the delegation plan. Be specific, practical, and concise.
+
+Task being delegated: ${form.task_name}
+Delegatee: ${form.delegatee_name || 'Not yet identified'}
+Their skill level: ${form.skill_level || 'developing'}
+
+Return:
+1. task_context: A 2-3 sentence explanation of why this is a good delegation candidate and what's involved.
+2. development_goal: One sentence on what skill or capability this builds in the delegatee.
+3. success_criteria: 2-3 clear, measurable bullet points defining what "done" looks like.
+4. check_in_suggestion: A suggested check-in timeframe (e.g. "1 week" or "3 days").`;
+
+      const res = await base44.integrations.Core.InvokeLLM({
+        prompt,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            task_context: { type: "string" },
+            development_goal: { type: "string" },
+            success_criteria: { type: "string" },
+            check_in_suggestion: { type: "string" }
+          }
+        }
+      });
+      setAiSuggestions(res);
+    } catch (e) {
+      console.error('AI assist failed:', e);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const applySuggestion = (field, value) => {
+    set(field, value);
+    setAiSuggestions(prev => prev ? { ...prev, [field]: null } : null);
   };
 
   return (
@@ -59,6 +103,70 @@ function PlanForm({ initial, onSave, onCancel }) {
         <Input id="task_name" value={form.task_name} onChange={e => set("task_name", e.target.value)}
           placeholder="e.g. Own the weekly ops report" required />
       </div>
+
+      {/* AI Assist button — appears once a task name is entered */}
+      {form.task_name.trim() && (
+        <Button type="button" variant="outline" size="sm" onClick={generateAiSuggestions} disabled={aiLoading}
+          className="w-full border-dashed text-[#0202ff] hover:bg-[#0202ff]/5">
+          {aiLoading ? (
+            <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Generating suggestions…</>
+          ) : (
+            <><Wand2 className="w-3.5 h-3.5 mr-1.5" /> AI Assist — draft context, goals & success criteria</>
+          )}
+        </Button>
+      )}
+
+      {/* AI Suggestions panel */}
+      <AnimatePresence>
+        {aiSuggestions && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="rounded-xl border border-[#0202ff]/20 bg-[#0202ff]/5 dark:bg-[#0202ff]/10 p-3 space-y-2.5">
+              <p className="text-[10px] font-semibold text-[#0202ff] uppercase tracking-wide flex items-center gap-1">
+                <Sparkles className="w-3 h-3" /> AI Suggestions
+              </p>
+              {aiSuggestions.task_context && (
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-foreground">Context</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{aiSuggestions.task_context}</p>
+                  <Button type="button" size="sm" variant="ghost" className="h-6 text-[10px] px-2 text-[#0202ff]"
+                    onClick={() => applySuggestion('task_context', aiSuggestions.task_context)}>
+                    Use this
+                  </Button>
+                </div>
+              )}
+              {aiSuggestions.development_goal && (
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-foreground">Development goal</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{aiSuggestions.development_goal}</p>
+                  <Button type="button" size="sm" variant="ghost" className="h-6 text-[10px] px-2 text-[#0202ff]"
+                    onClick={() => applySuggestion('development_goal', aiSuggestions.development_goal)}>
+                    Use this
+                  </Button>
+                </div>
+              )}
+              {aiSuggestions.success_criteria && (
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-foreground">Success criteria</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">{aiSuggestions.success_criteria}</p>
+                  <Button type="button" size="sm" variant="ghost" className="h-6 text-[10px] px-2 text-[#0202ff]"
+                    onClick={() => applySuggestion('success_criteria', aiSuggestions.success_criteria)}>
+                    Use this
+                  </Button>
+                </div>
+              )}
+              <Button type="button" size="sm" variant="ghost" className="h-6 text-[10px] px-2 w-full"
+                onClick={() => setAiSuggestions(null)}>
+                Dismiss
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="space-y-1.5">
         <Label htmlFor="task_context">Why delegate this — and why now?</Label>
