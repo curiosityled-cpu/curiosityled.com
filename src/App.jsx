@@ -68,19 +68,28 @@ const AuthenticatedApp = () => {
     );
   }
 
+  // Public landing pages accessible to unauthenticated visitors
+  const PublicLanding = () => {
+    const path = window.location.pathname;
+    if (path === '/bpo') return <LandingBPO />;
+    if (path === '/healthcare') return <LandingHealthcare />;
+    if (path === '/coaching') return <LandingCoaching />;
+    return <LandingPage />;
+  };
+
   // Handle authentication errors
   if (authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
-      // Show landing page for unauthenticated users instead of redirecting to login
-      return <LandingPage />;
+      // Show the appropriate landing page for unauthenticated users
+      return <PublicLanding />;
     }
   }
 
   // If not authenticated and no error, show landing page
   if (!isAuthenticated && !authError) {
-    return <LandingPage />;
+    return <PublicLanding />;
   }
 
   // Redirect root based on MVP role
