@@ -181,9 +181,9 @@ export const industryContent = {
     accent: "#10b981",
     pageTitle: "Healthcare — Curiosity Led",
     hero: {
-      headline: ["Support the people", "who carry care."],
+      headline: ["Earlier leadership signals.", "Clearer intervention paths."],
       subheadline:
-        "Frontline healthcare leaders carry extraordinary weight. Curiosity Led gives them a grounded, private daily rhythm — surfacing overload signals and supporting development without adding burden or surveillance.",
+        "Curiosity Led helps HR and operations leaders spot where manager support is needed, understand what patterns are emerging, and intervene before instability, turnover, or performance loss compounds.",
       bullets: [
         "Spot overload and burnout risk early — before it affects patient care.",
         "Build psychological safety through low-burden, private check-ins.",
