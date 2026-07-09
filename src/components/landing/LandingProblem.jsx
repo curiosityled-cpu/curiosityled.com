@@ -23,6 +23,7 @@ export default function LandingProblem({ industry }) {
 
   const heading = ps?.heading || defaultHeading;
   const intro = ps?.intro || defaultIntro;
+  const eyebrow = ps?.eyebrow || "The problem";
   const image = ps?.image || defaultImage;
   const proofPoints = ps?.proofPoints || defaultProofPoints;
   const quotesLabel = ps?.quotesLabel || defaultQuotesLabel;
@@ -35,7 +36,7 @@ export default function LandingProblem({ industry }) {
           <div>
             <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full border border-white/20 bg-white/10">
               <span className="w-2 h-2 rounded-full bg-white" />
-              <span className="text-xs font-semibold text-white uppercase tracking-wider">The problem</span>
+              <span className="text-xs font-semibold text-white uppercase tracking-wider">{eyebrow}</span>
             </div>
             <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6 leading-tight">{heading}</h2>
             <p className="text-gray-200 text-lg leading-relaxed mb-8">{intro}</p>

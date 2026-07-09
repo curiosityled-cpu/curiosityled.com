@@ -233,8 +233,9 @@ export const industryContent = {
       ],
     },
     problemSection: {
-      heading: "Most leadership development starts too late and stays too fragmented.",
-      intro: "Healthcare organizations are already investing in manager development, coaching, and assessments. The challenge is that support often sits outside the flow of work, leadership signals are scattered across systems, and succession conversations start without a clear view of readiness or progress.",
+      eyebrow: "Why support still arrives too late",
+      heading: "Most healthcare manager support starts after the strain is already visible.",
+      intro: "Healthcare organizations already invest in leadership development, coaching, and assessments. The problem is not effort. The problem is that support often sits outside the flow of work, manager signals are scattered across systems, and HR is left trying to piece together readiness, risk, and progress after instability is already showing up in turnover, burnout, or team performance.",
       image: "/web_overworked_CREDIT-PeopleImages_iStock-654187068.png",
       proofPoints: [
         { title: "Development happens after strain is already visible.", body: "Support gets triggered once a behavior has impacted the team — not before." },
