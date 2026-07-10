@@ -251,11 +251,11 @@ export const industryContent = {
     },
     buyerNeeds: {
       label: "What HR and Talent leaders need",
-      heading: ["Built for the work healthcare HR and Talent leaders", "are actually responsible for."],
+      heading: ["Built for the work HR and Talent leaders", "are actually responsible for."],
       cards: [
-        { icon: "Users", title: "Support frontline managers in the moment", body: "Give charge nurses and unit coordinators clear next steps inside the flow of work — not after burnout has already affected patient care or retention." },
-        { icon: "TrendingUp", title: "See readiness and succession more clearly", body: "Surface progression, overload signals, and bench gaps earlier so readiness and succession planning are grounded in better visibility." },
-        { icon: "Puzzle", title: "Work with your existing model", body: "Use Curiosity Led's competency library or align the experience to the leadership framework your health system already uses." },
+        { icon: "Users", title: "Support managers in the moment", body: "Give newly promoted and stretched managers clear next steps inside the flow of work, not after the damage is done." },
+        { icon: "TrendingUp", title: "See readiness and succession more clearly", body: "Surface progression, watch areas, and bench gaps earlier so readiness and succession planning are grounded in better visibility." },
+        { icon: "Puzzle", title: "Work with your existing model", body: "Use Curiosity Led's competency library or align the experience to the leadership framework your organization already uses." },
         { icon: "BarChart2", title: "Show impact more clearly", body: "Connect assessments, goals, and development activity to a stronger story of leadership progress and organizational readiness." },
       ],
     },
