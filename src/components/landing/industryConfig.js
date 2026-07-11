@@ -323,9 +323,9 @@ export const industryContent = {
       ],
     },
     finalCta: {
-      headline: "Support your frontline managers. Strengthen your bench.",
+      headline: "Give HR a clearer leadership story before risk becomes loss.",
       subtext:
-        "See how Curiosity Led helps healthcare organisations spot overload, build succession readiness, and support frontline leaders — without surveillance or burden.",
+        "Curiosity Led helps healthcare organizations identify leadership risk earlier, support managers in the flow of work, and create one clearer view of development progress, readiness, and intervention impact.",
       buttonLabel: "Book a demo",
       href: "https://cal.com/curiosityled/bookdemo",
     },
