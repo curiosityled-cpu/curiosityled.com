@@ -260,11 +260,17 @@ export const industryContent = {
       ],
     },
     explainer: {
-      label: "How it works",
-      heading: "How Curiosity Led turns early overload signals into timely support.",
+      label: "How It Works",
+      heading: "One system from assessment to executive view.",
       intro:
-        "One system helps you spot burnout risk, guide development, reinforce behaviour in the flow of work, and give leadership a clearer view of readiness and succession.",
+        "One system helps teams assess earlier, guide action, reinforce behavior, and show leadership visibility in one place.",
       image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&h=600&fit=crop",
+      panels: [
+        { visualKey: "assess", title: "Assess early", body: "Establish a baseline for newly promoted or newly hired leaders and surface where support may be needed before issues escalate." },
+        { visualKey: "action", title: "Focus the next action", body: "Turn insight into one clear goal and one practical next step tied to what the manager is actually handling in their team right now." },
+        { visualKey: "reinforce", title: "Reinforce in the workflow", body: "Deliver nudges, learning, and coaching loops in the tools managers already use, so support stays connected to real situations instead of becoming another disconnected program." },
+        { visualKey: "leadership", title: "Give leadership one view", body: "Bring assessments, actions, progress, and key lifecycle metrics from across HR into a single Leadership Intelligence Hub so HR and executive sponsors can see who is at risk, who is progressing, and where to focus intervention or investment next." },
+      ],
     },
     objectionStrip:
       "Already have leadership programs, assessments, or a competency model? Curiosity Led helps bring them into one clearer system for manager support, readiness, and visibility.",

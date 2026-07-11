@@ -2,9 +2,12 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getIndustryConfig } from "./industryConfig";
 
+const VISUAL_KEYS = ["assess", "action", "reinforce", "model", "leadership"];
+
 const panels = [
   {
     id: 1,
+    visualKey: "assess",
     title: "Spot risk early",
     body: "Assess leaders earlier and surface where support may be needed before problems escalate.",
     visual: () => (
@@ -52,6 +55,7 @@ const panels = [
   },
   {
     id: 2,
+    visualKey: "action",
     title: "Turn insight into action",
     body: "Translate assessment signals into one clear goal and one practical next step for the manager.",
     visual: () => (
@@ -86,6 +90,7 @@ const panels = [
   },
   {
     id: 3,
+    visualKey: "reinforce",
     title: "Reinforce in the workflow",
     body: "Deliver support through the tools managers already use so development stays connected to real work.",
     visual: () => (
@@ -126,6 +131,7 @@ const panels = [
   },
   {
     id: 4,
+    visualKey: "model",
     title: "Use your model or ours",
     body: "Map Curiosity Led to your organization's existing competency model, including frameworks such as Korn Ferry, or use our built-in library of leadership competencies.",
     visual: () => (
@@ -158,6 +164,7 @@ const panels = [
   },
   {
     id: 5,
+    visualKey: "leadership",
     title: "Give leaders visibility",
     body: "Show readiness, bench strength, and where attention or investment should go next.",
     visual: () => (
@@ -197,7 +204,21 @@ export default function LandingExplainer({ industry }) {
   const cfg = industry ? getIndustryConfig(industry) : null;
   const ex = cfg?.explainer;
 
-  const ActiveVisual = panels[active].visual;
+  // Build visual lookup from hardcoded panels
+  const VISUAL_MAP = {};
+  panels.forEach((p) => { VISUAL_MAP[p.visualKey] = p.visual; });
+
+  // Use config-driven panels if provided, otherwise fall back to hardcoded defaults
+  const renderPanels = ex?.panels
+    ? ex.panels.map((cp, i) => ({
+        id: i + 1,
+        title: cp.title,
+        body: cp.body,
+        visual: VISUAL_MAP[cp.visualKey] || panels[0].visual,
+      }))
+    : panels;
+
+  const ActiveVisual = renderPanels[active]?.visual || panels[0].visual;
 
   return (
     <section id="how-it-works" className="py-24 bg-gray-50">
@@ -242,7 +263,7 @@ export default function LandingExplainer({ industry }) {
         >
           {/* Left: tab list */}
           <div className="col-span-2 space-y-1">
-            {panels.map((panel, i) => (
+            {renderPanels.map((panel, i) => (
               <button
                 key={panel.id}
                 onClick={() => setActive(i)}
@@ -301,7 +322,7 @@ export default function LandingExplainer({ industry }) {
           viewport={{ once: true, amount: 0.15 }}
           transition={{ duration: 0.5 }}
         >
-          {panels.map((panel, i) => (
+          {renderPanels.map((panel, i) => (
             <div
               key={panel.id}
               className="rounded-xl border bg-white overflow-hidden"
