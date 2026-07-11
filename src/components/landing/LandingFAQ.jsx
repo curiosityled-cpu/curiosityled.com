@@ -18,10 +18,6 @@ const faqs = [
     q: "Will executives get a usable view?",
     a: "The Leadership Intelligence Hub summarizes bench strength, risk, and readiness at a glance and shows where intervention is happening, making leadership-development conversations more concrete and defensible.",
   },
-  {
-    q: "Will this fit our existing leadership framework?",
-    a: "Curiosity Led can work with your organization's own competency model or use our built-in competency library, so you do not have to replace the leadership language and structure you already use.",
-  },
 ];
 
 export default function LandingFAQ() {
@@ -36,8 +32,11 @@ export default function LandingFAQ() {
             <span className="text-xs font-semibold text-[#0202ff] uppercase tracking-wider">Common questions</span>
           </div>
           <h2 className="text-3xl lg:text-4xl font-bold text-[#0a0a0a] leading-tight">
-            Built for the questions HR teams actually ask.
+            Frequently Asked Questions
           </h2>
+          <p className="mt-3 text-gray-500 text-sm">
+            Answers to the questions HR teams actually ask.
+          </p>
         </div>
 
         <div className="divide-y divide-gray-100 border border-gray-100 rounded-2xl overflow-hidden">

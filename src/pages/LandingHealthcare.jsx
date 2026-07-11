@@ -10,6 +10,7 @@ import LandingFitSection from "@/components/landing/LandingFitSection";
 import Landing90Days from "@/components/landing/Landing90Days";
 import LandingBeyond from "@/components/landing/LandingBeyond";
 import IndustryFinalCTA from "@/components/landing/IndustryFinalCTA";
+import LandingFAQ from "@/components/landing/LandingFAQ";
 import IndustryFooter from "@/components/landing/IndustryFooter";
 import { getIndustryConfig } from "@/components/landing/industryConfig";
 
@@ -34,6 +35,7 @@ export default function LandingHealthcare() {
       <Landing90Days industry="healthcare" />
       <LandingBeyond industry="healthcare" />
       <IndustryFinalCTA industry="healthcare" />
+      <LandingFAQ />
       <IndustryFooter />
     </div>
   );
