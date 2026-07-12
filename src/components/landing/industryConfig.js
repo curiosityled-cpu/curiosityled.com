@@ -492,6 +492,23 @@ export const industryContent = {
         "Scalable across your entire client portfolio from day one",
       ],
     },
+    faq: {
+      eyebrow: "Buyer questions",
+      headline: "Answers to the questions coaching and consulting firms actually ask.",
+      subtext: "Answers to the questions HR teams actually ask.",
+      items: [
+        { q: "Does Curiosity Led replace the coach or our methodology?", a: "No. Curiosity Led is designed to extend your coaching methodology between live sessions with structured reflection, guided follow-through, and progress visibility that stays connected to your approach." },
+        { q: "How does this help between coaching sessions?", a: "It gives clients a lightweight daily or weekly rhythm for reflection, action, and follow-through, so momentum does not disappear between workshops or coaching calls." },
+        { q: "Can we brand this as part of our own offer?", a: "Yes. The coaching positioning work for Curiosity Led already emphasizes branded experience, configurable prompts, and adaptable competency frameworks so firms can make the system feel like an extension of their own IP." },
+        { q: "How do sponsors or client buyers see value?", a: "Curiosity Led helps make progress, friction patterns, and follow-through visible enough for sponsors to understand what is changing between sessions, rather than relying only on anecdote or end-of-program summaries." },
+        { q: "Will clients actually use it, or will it feel like another portal?", a: "The intended experience is deliberately lightweight, with small prompts and guided reflection built around real leadership moments rather than a heavy LMS-style experience." },
+        { q: "What kinds of coaching work does this fit best?", a: "It is strongest for leadership coaching, manager development, cohort programs, and consulting engagements where the goal is sustained behavior change, clearer follow-through, and more visible movement over time." },
+        { q: "Can this support cohorts as well as one-on-one coaching?", a: "Yes. Your existing positioning for coaching firms supports both individual engagements and broader cohort-based delivery, especially where firms want continuity, consistency, and a more scalable way to reinforce their methods." },
+        { q: "How does Curiosity Led help us prove our program works?", a: "It gives coaching firms a clearer record of actions, reflections, stuck points, and movement over time, which creates a more credible story of client progress than session notes or satisfaction scores alone." },
+        { q: "Will this flatten the human side of coaching?", a: "It should do the opposite when positioned correctly. The platform is meant to keep the human coaching relationship active between sessions by prompting reflection and helping clients bring more specific, real-world material back into the next conversation." },
+        { q: "What does a pilot look like for a coaching firm?", a: "The current commercial model frames coaching as a 12-week visibility pilot focused on making between-session progress, friction patterns, and follow-through more visible for both the firm and the sponsor." },
+      ],
+    },
     finalCta: {
       headline: "Ready to scale your methodology without scaling your headcount?",
       subtext:
