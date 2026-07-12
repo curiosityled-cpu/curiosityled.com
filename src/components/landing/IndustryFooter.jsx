@@ -19,6 +19,9 @@ export default function IndustryFooter() {
             <p className="text-gray-400 text-xs leading-relaxed max-w-[220px]">
               Leadership intelligence, built for the flow of work. Microsoft native. Support first. Designed for operational leaders.
             </p>
+            <Link to="/LandingPage" className="text-gray-400 text-xs hover:text-white transition-colors mt-3">
+              → Visit main site
+            </Link>
           </div>
 
           {/* Industries */}
