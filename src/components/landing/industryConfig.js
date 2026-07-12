@@ -473,7 +473,7 @@ export const industryContent = {
       ],
       quote:
         "The goal is not more coaching hours. The goal is continuous methodology application, measurable follow-through, and an impact story your firm can defend when sponsors ask what changed.",
-      image: "https://images.unsplash.com/photo-1600880292203-757bb62c4d70?w=800&h=600&fit=crop",
+      image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=600&fit=crop",
     },
     beyond: {
       label: "Who we are",
