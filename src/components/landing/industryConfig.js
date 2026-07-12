@@ -164,6 +164,23 @@ export const industryContent = {
         "Compatible with your existing KPIs, scorecards, and competency models",
       ],
     },
+    faq: {
+      eyebrow: "Buyer questions",
+      headline: "Answers to the questions BPO and logistics HR teams actually ask.",
+      subtext: "Answers to the questions HR teams actually ask.",
+      items: [
+        { q: "Will this disrupt our current operation or client delivery?", a: "Curiosity Led is designed to layer into your existing environment, not replace your TMS or client systems on day one. A pilot can start with a very small feature set — simple check-ins, KPI views, and pattern visibility — so teams can test value without disrupting delivery." },
+        { q: "Can this work with the KPIs and scorecards we already use?", a: "Yes. Curiosity Led is built to connect leadership signals to the metrics BPO and logistics teams already manage, such as SLA adherence, QA, FCR, AHT, schedule adherence, escalations, throughput, and attrition. The goal is not to invent a new scorecard, but to show what leadership patterns may be shaping the numbers you already care about." },
+        { q: "Is this just another engagement tool or survey platform?", a: "No. The BPO use case is built around operational performance and coaching quality, not generic engagement tracking. Curiosity Led helps leaders connect daily priorities, KPI movement, coaching behavior, and people risk in one system so they can act earlier instead of waiting for performance reviews or escalations." },
+        { q: "How is this different from surveillance or productivity monitoring?", a: "Curiosity Led is designed to support better leadership decisions, not to monitor every employee action. The product direction and privacy model emphasize aggregated patterns, role-based visibility, and support-first coaching rather than invasive tracking language or watchdog tooling." },
+        { q: "Will team leaders actually use it?", a: "The experience is intentionally lightweight and tied to the work team leaders already need to do. The BPO workflow is built around quick daily priorities, simple KPI-linked prompts, and practical coaching actions, so the system fits the pace of an operations environment instead of feeling like another training portal." },
+        { q: "Can it help reduce subjectivity in reviews and performance conversations?", a: "Yes. One of the clearest BPO pain points in your materials is that reviews depend too much on memory, opinion, or inconsistent manager judgment. Curiosity Led helps bring KPI signals, check-ins, coaching activity, and follow-through into one running picture so conversations can be grounded in clearer evidence over time." },
+        { q: "What if we only want to start with one team or one client line?", a: "That is the recommended motion. The pilot guidance already points to a 12-week rollout with a small cohort, usually around 10 to 20 users, focused on one team or one slice of the operation with clear KPIs and SLAs." },
+        { q: "What happens if something breaks during the pilot?", a: "The intended pilot design limits operational exposure. The failure modes described in your pilot notes are things like missed reminders, dashboards not rendering, or data not recording correctly — not downtime in the client's production systems or TMS." },
+        { q: "Do we have to turn on everything at once?", a: "No. The recommended BPO rollout starts with Lead and simple Patterns first, then layers in more advanced elements later if the basics are working. That phased approach is meant to reduce risk and make adoption easier in a high-pressure environment." },
+        { q: "Can this support coaching and succession, not just performance tracking?", a: "Yes. The BPO materials repeatedly position Curiosity Led as more than a dashboard. It helps identify patterns like Performance Avoidance, Reactive Leadership, Accountability Gap, and Attrition Risk Behavior so leaders can coach earlier, while also building a cleaner basis for development and succession decisions over time." },
+      ],
+    },
     finalCta: {
       headline: "Ready to see leadership risk before it hits your SLA?",
       subtext:
