@@ -167,8 +167,8 @@ export const industryContent = {
     finalCta: {
       headline: "Ready to see leadership risk before it hits your SLA?",
       subtext:
-        "Start a 12-week pilot and see how Curiosity Led surfaces the seven BPO leadership patterns — mapped directly to your operational metrics.",
-      buttonLabel: "Start a 12-week pilot",
+        "See how Curiosity Led surfaces the seven BPO leadership patterns — mapped directly to your operational metrics.",
+      buttonLabel: "Book a demo",
       href: "https://cal.com/curiosityled/bookdemo",
     },
   },
