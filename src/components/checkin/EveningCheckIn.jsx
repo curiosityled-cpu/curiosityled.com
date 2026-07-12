@@ -322,7 +322,8 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
 
   const handleBig3Save = (big3Priorities) => {
     // Immediately update UI and notify parent — don't wait for the API round-trip
-    setLocalBig3(big3Priorities);
+    const hasPriorities = big3Priorities && big3Priorities.length > 0;
+    setLocalBig3(hasPriorities ? big3Priorities : null);
     setStep(7);
     clearDraft(userEmail);
     markEveningCompletedToday(big3Priorities, scores, notes, userEmail);
@@ -330,14 +331,20 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
     if (userEmail && eveningScores) {
       saveCheckInToHistory(userEmail, 'evening', eveningScores); // persist to multi-day history store
     }
-    onComplete?.(big3Priorities, 'evening', eveningScores);
+    // Pass null when skipping (empty Big 3) so the parent preserves the existing override —
+    // don't wipe Big 3 that were set earlier today via Big3QuickSet.
+    onComplete?.(hasPriorities ? big3Priorities : null, 'evening', eveningScores);
 
     const today = getTodayET();
     const entityPayload = {
       evening_completed: true,
       evening_completed_at: new Date().toISOString(),
-      big3_priorities: big3Priorities,
     };
+    // Only write big3_priorities when the user actually set them.
+    // Skipping (empty array) should NOT overwrite Big 3 already saved on the record.
+    if (hasPriorities) {
+      entityPayload.big3_priorities = big3Priorities;
+    }
     if (isActiveWindow) {
       entityPayload.energy_score = scores.energy; entityPayload.energy_note = notes.energy;
       entityPayload.confidence_score = scores.confidence; entityPayload.confidence_note = notes.confidence;
