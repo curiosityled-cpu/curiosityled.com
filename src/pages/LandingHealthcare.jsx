@@ -35,7 +35,7 @@ export default function LandingHealthcare() {
       <Landing90Days industry="healthcare" />
       <LandingBeyond industry="healthcare" />
       <IndustryFinalCTA industry="healthcare" />
-      <LandingFAQ />
+      <LandingFAQ industry="healthcare" />
       <IndustryFooter />
     </div>
   );

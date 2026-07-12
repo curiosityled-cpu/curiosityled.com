@@ -339,6 +339,23 @@ export const industryContent = {
         "Compatible with your existing competency model and leadership programs",
       ],
     },
+    faq: {
+      eyebrow: "Buyer questions",
+      headline: "Answers to the questions healthcare HR teams actually ask.",
+      subtext: "Answers to the questions HR teams actually ask.",
+      items: [
+        { q: "Will managers use it?", a: "Curiosity Led is designed around real leadership moments, not another course catalog. Managers get timely prompts, goals, and guidance linked to what they are facing that week, inside tools they already use." },
+        { q: "Can we prove impact?", a: "Every assessment, goal, and coaching loop feeds into one leadership view, so you can show how development activity connects to behavior, readiness, and risk instead of relying on anecdotes or scattered spreadsheets." },
+        { q: "Will this create more admin work?", a: "Curiosity Led is built to reduce fragmentation. Assigning cohorts, monitoring progress, and reporting outcomes happen in one place, so HR and L&D spend less time chasing updates and stitching data together." },
+        { q: "Will executives get a usable view?", a: "The Leadership Intelligence Hub summarizes bench strength, risk, and readiness at a glance and shows where intervention is happening, making leadership-development conversations more concrete and defensible." },
+        { q: "How does this help with burnout and workforce stability?", a: "Curiosity Led helps healthcare leaders notice overload, follow-through gaps, and support drift earlier, so interventions can happen before strain turns into turnover, errors, or disengagement on the unit." },
+        { q: "Does this work with our existing leadership programs and competency models?", a: "Yes. Curiosity Led is designed to sit on top of what you already do, aligning to your existing competency framework and development programs rather than asking HR to start over with a new model." },
+        { q: "Will this feel like surveillance to managers or staff?", a: "No. The system is built as a leadership support and visibility layer, not a monitoring tool. Detailed responses and reflections stay in a private leader view, while executives only see aggregated signals for readiness, succession, and workforce health." },
+        { q: "Can we use this for succession planning and readiness, not just risk?", a: "Yes. Assessments, development journeys, and daily leadership signals feed into one view of bench strength and readiness, so succession conversations are grounded in clearer evidence instead of subjective impressions alone." },
+        { q: "How heavy is the daily workflow for managers?", a: "The daily rhythm is intentionally light—quick focus and reflection in tools managers already use—so leaders can keep priorities, support, and follow-through in view without adding another heavy system to their day." },
+        { q: "What does a typical healthcare pilot look like?", a: "Most healthcare pilots start with a focused cohort of newly hired or newly promoted leaders, a 12-week window, and a clear goal: earlier visibility into manager risk and readiness, plus a defensible story HR can use to guide support and succession decisions." },
+      ],
+    },
     finalCta: {
       headline: "Give HR a clearer leadership story before risk becomes loss.",
       subtext:
