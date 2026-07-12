@@ -1,14 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/lib/AuthContext";
 
 const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689807051dd69c2529ceabd9/2e32ade86_CuriosityLedLogoBBW.png";
 
 export default function PrivacyPolicy() {
-  const { isAuthenticated } = useAuth();
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -17,14 +13,6 @@ export default function PrivacyPolicy() {
           <Link to={createPageUrl("LandingPage")}>
             <img src={LOGO_URL} alt="Curiosity Led" className="h-8" />
           </Link>
-          {isAuthenticated && (
-            <Link to={createPageUrl("LandingPage")}>
-              <Button variant="ghost" className="gap-2">
-                <ArrowLeft className="w-4 h-4" />
-                Back to Home
-              </Button>
-            </Link>
-          )}
         </div>
       </header>
 
@@ -138,7 +126,7 @@ export default function PrivacyPolicy() {
             </ul>
             <p className="text-gray-600 mt-4">
               You can exercise most of these rights directly through your Privacy Settings page in the platform. 
-              For additional assistance, contact us at <a href="mailto:privacy@curiosityled.com" className="text-[#0202ff] hover:underline">privacy@curiosityled.com</a>.
+              For additional assistance, contact us at <a href="mailto:team@curiosityled.com" className="text-[#0202ff] hover:underline">team@curiosityled.com</a>.
             </p>
           </section>
 
@@ -235,7 +223,7 @@ export default function PrivacyPolicy() {
             </p>
             <div className="bg-gray-50 rounded-lg p-6">
               <p className="text-gray-700 font-medium">Curiosity Led</p>
-              <p className="text-gray-600">Email: <a href="mailto:privacy@curiosityled.com" className="text-[#0202ff] hover:underline">privacy@curiosityled.com</a></p>
+              <p className="text-gray-600">Email: <a href="mailto:team@curiosityled.com" className="text-[#0202ff] hover:underline">team@curiosityled.com</a></p>
               <p className="text-gray-600">Website: <a href="https://www.curiosityled.com" className="text-[#0202ff] hover:underline">www.curiosityled.com</a></p>
             </div>
           </section>
