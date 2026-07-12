@@ -54,7 +54,13 @@ export default function IndustryFooter() {
         </div>
 
         <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row items-center justify-between gap-3">
-          <p className="text-gray-500 text-xs">© {new Date().getFullYear()} Curiosity Led. All rights reserved.</p>
+          <div className="flex flex-col md:flex-row items-center gap-3">
+            <p className="text-gray-500 text-xs">© {new Date().getFullYear()} Curiosity Led. All rights reserved.</p>
+            <div className="flex items-center gap-4">
+              <Link to="/PrivacyPolicy" className="text-gray-400 text-xs hover:text-white transition-colors">Privacy Policy</Link>
+              <Link to="/TermsOfService" className="text-gray-400 text-xs hover:text-white transition-colors">Terms of Service</Link>
+            </div>
+          </div>
           <a
             href="mailto:team@curiosityled.com"
             className="text-gray-400 text-xs hover:text-white transition-colors"
