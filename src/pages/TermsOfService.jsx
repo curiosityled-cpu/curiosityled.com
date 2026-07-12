@@ -3,10 +3,12 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/AuthContext";
 
 const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689807051dd69c2529ceabd9/2e32ade86_CuriosityLedLogoBBW.png";
 
 export default function TermsOfService() {
+  const { isAuthenticated } = useAuth();
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -15,12 +17,14 @@ export default function TermsOfService() {
           <Link to={createPageUrl("LandingPage")}>
             <img src={LOGO_URL} alt="Curiosity Led" className="h-8" />
           </Link>
-          <Link to={createPageUrl("LandingPage")}>
-            <Button variant="ghost" className="gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Home
-            </Button>
-          </Link>
+          {isAuthenticated && (
+            <Link to={createPageUrl("LandingPage")}>
+              <Button variant="ghost" className="gap-2">
+                <ArrowLeft className="w-4 h-4" />
+                Back to Home
+              </Button>
+            </Link>
+          )}
         </div>
       </header>
 

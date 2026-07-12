@@ -16,6 +16,8 @@ import LandingPage from './pages/LandingPage';
 import LandingBPO from './pages/LandingBPO';
 import LandingHealthcare from './pages/LandingHealthcare';
 import LandingCoaching from './pages/LandingCoaching';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
 import MyLeadership from './pages/MyLeadership';
 import MyDevelopment from './pages/MyDevelopment';
 import MyGoalsMVP from './pages/MyGoalsMVP';
@@ -74,6 +76,8 @@ const AuthenticatedApp = () => {
     if (path === '/bpo') return <LandingBPO />;
     if (path === '/healthcare') return <LandingHealthcare />;
     if (path === '/coaching') return <LandingCoaching />;
+    if (path === '/PrivacyPolicy') return <PrivacyPolicy />;
+    if (path === '/TermsOfService') return <TermsOfService />;
     return <LandingPage />;
   };
 
