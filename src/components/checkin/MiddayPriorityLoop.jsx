@@ -58,7 +58,7 @@ export default function MiddayPriorityLoop({ todayRecord, onComplete }) {
       big3_priorities: updatedBig3,
     }).catch(console.error);
     setSaving(false);
-    onComplete?.(updatedBig3, 'midday');
+    onComplete?.();
   };
 
   return (

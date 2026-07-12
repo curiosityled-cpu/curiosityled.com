@@ -191,14 +191,13 @@ export default function ManagerToday() {
       setLocalBig3Override(null);
       try { sessionStorage.removeItem('today_big3_override'); } catch {}
     }
-    // When morning or midday check-in completes, invalidate the query so the Playbook
+    // When morning check-in completes, invalidate the query so the Playbook
     // reads from the DB record (source of truth).
-    if (type === 'morning' || type === 'midday') {
+    if (type === 'morning') {
       queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
     }
     const update = {};
     if (type === 'morning') { update.morning_completed = true; update.morning_completed_at = new Date().toISOString(); }
-    if (type === 'midday') { update.midday_loop_completed = true; update.midday_loop_completed_at = new Date().toISOString(); update.big3_priorities = big3Priorities || []; }
     if (type === 'evening') { update.evening_completed = true; update.evening_completed_at = new Date().toISOString(); update.big3_priorities = big3Priorities || []; }
     if (scores) {
       if (scores.energy != null) update.energy_score = scores.energy;
@@ -469,7 +468,7 @@ export default function ManagerToday() {
 
       {(showMiddayLoop || todayRecord?.midday_loop_completed) && (
         <MiddayPriorityLoop
-          todayRecord={localBig3Override ? { ...todayRecord, big3_priorities: localBig3Override } : todayRecord}
+          todayRecord={todayRecord}
           onComplete={handleCheckInComplete}
         />
       )}
