@@ -14,7 +14,7 @@ import DeleteAccountDialog from "@/components/mobile/DeleteAccountDialog";
 import {
   Bell, Mail, MessageSquare, Loader2, Settings as SettingsIcon,
   Sparkles, CheckCircle2, Info, ArrowLeft, Zap, Shield, Paintbrush,
-  Users, Eye
+  Users, Eye, FileText
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
@@ -372,6 +372,30 @@ export default function Settings() {
           {/* ── Privacy & Data (merged from PrivacySettings) ── */}
           <TabsContent value="privacy-visibility">
             <div className="space-y-6">
+              {/* Privacy Policy & Terms */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Legal</CardTitle>
+                  <p className="text-sm text-gray-600">Review our privacy practices and terms of use</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-3">
+                    <Link to="/PrivacyPolicy">
+                      <Button variant="outline" className="gap-2">
+                        <Shield className="w-4 h-4" />
+                        Privacy Policy
+                      </Button>
+                    </Link>
+                    <Link to="/TermsOfService">
+                      <Button variant="outline" className="gap-2">
+                        <FileText className="w-4 h-4" />
+                        Terms of Service
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Merged Privacy & Sharing Controls */}
               <Card>
                 <CardHeader>
