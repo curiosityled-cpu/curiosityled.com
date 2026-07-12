@@ -46,7 +46,6 @@ export default function Big3QuickSet({ todayRecord, onSaved }) {
     try {
       await base44.functions.invoke("saveDailyCheckIn", {
         action: "save",
-        check_in_type: "morning",
         client_date: getTodayET(),
         existing_record_id: todayRecord?.id || null,
         big3_priorities: priorities,

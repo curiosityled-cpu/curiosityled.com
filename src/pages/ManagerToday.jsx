@@ -168,18 +168,32 @@ export default function ManagerToday() {
     if (history.length > 0) setCheckInHistory(history);
   }, [user?.email]);
 
+  // Clear the Big 3 override when the date changes (midnight crossover).
+  // todayET is recomputed every render; when it changes, the override from the
+  // previous day is stale and must be cleared so the DB record is the source of truth.
+  useEffect(() => {
+    setLocalBig3Override(prev => {
+      if (!prev) return null;
+      try { sessionStorage.removeItem('today_big3_override'); } catch {}
+      return null;
+    });
+  }, [todayET]);
+
   const handleCheckInComplete = (big3Priorities, type, scores) => {
     if (big3Priorities?.length > 0) {
       setLocalBig3Override(big3Priorities);
       try {
         sessionStorage.setItem('today_big3_override', JSON.stringify({ date: todayET, data: big3Priorities }));
       } catch {}
-    }
-    // When morning check-in completes, clear the Big 3 override so the Playbook
-    // reads from the DB record (source of truth) instead of a stale session override.
-    if (type === 'morning') {
+    } else {
+      // Clear override when empty Big 3 is explicitly saved (e.g., evening skip)
+      // so stale priorities don't persist and override the DB record.
       setLocalBig3Override(null);
       try { sessionStorage.removeItem('today_big3_override'); } catch {}
+    }
+    // When morning check-in completes, invalidate the query so the Playbook
+    // reads from the DB record (source of truth).
+    if (type === 'morning') {
       queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
     }
     const update = {};
