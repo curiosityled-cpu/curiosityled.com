@@ -9,13 +9,12 @@ export default function IndustryFooter() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
+            <div className="mb-4">
               <img
-                src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5761758bf_CuriosityLegLogo.png"
+                src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/afe1cf141_CuriosityLedLogoWBB.png"
                 alt="Curiosity Led"
-                className="h-8 w-8 object-contain"
+                className="h-10 object-contain"
               />
-              <span className="text-white font-semibold text-sm">Curiosity Led</span>
             </div>
             <p className="text-gray-400 text-xs leading-relaxed max-w-[220px]">
               Leadership intelligence, built for the flow of work. Microsoft native. Support first. Designed for operational leaders.
