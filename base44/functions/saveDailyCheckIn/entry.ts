@@ -186,8 +186,12 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Most recent prior-day record with Big 3 set
-      const prevWithBig3 = allRecords.find(r => r.check_in_date !== today && r.big3_priorities?.length > 0);
+      // Only return Big 3 from the immediately preceding day (yesterday).
+      // This ensures priorities reset daily — older days' Big 3 don't carry over.
+      const yesterdayDate = new Date(today + 'T00:00:00');
+      yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+      const yesterdayStr = yesterdayDate.toISOString().slice(0, 10);
+      const prevWithBig3 = allRecords.find(r => r.check_in_date === yesterdayStr && r.big3_priorities?.length > 0);
       const yesterday_big3 = prevWithBig3?.big3_priorities || [];
 
       return Response.json({ record: todayRec, yesterday_big3, today });

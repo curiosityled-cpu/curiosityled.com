@@ -144,7 +144,7 @@ export default function ManagerToday() {
   });
 
   const { data: todayData, refetch: refetchToday } = useQuery({
-    queryKey: ['daily-checkin-today', user?.email],
+    queryKey: ['daily-checkin-today', user?.email, todayET],
     queryFn: async () => {
       try {
         const res = await base44.functions.invoke("saveDailyCheckIn", { action: "get_today", client_date: todayET });
@@ -194,7 +194,7 @@ export default function ManagerToday() {
     }
 
     const optimisticRecord = { check_in_date: todayET, ...(todayData?.record || {}), ...update };
-    queryClient.setQueryData(['daily-checkin-today', user?.email], (old) => {
+    queryClient.setQueryData(['daily-checkin-today', user?.email, todayET], (old) => {
       const existing = old || { record: null, yesterday_big3: [] };
       return { ...existing, record: optimisticRecord };
     });

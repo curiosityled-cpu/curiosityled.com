@@ -115,7 +115,7 @@ export default function ManagerPatterns() {
   }).format(new Date());
 
   const { data: todayData } = useQuery({
-    queryKey: ['daily-checkin-today', user?.email],
+    queryKey: ['daily-checkin-today', user?.email, todayET],
     queryFn: async () => {
       try {
         const res = await base44.functions.invoke("saveDailyCheckIn", { action: "get_today", client_date: todayET });
