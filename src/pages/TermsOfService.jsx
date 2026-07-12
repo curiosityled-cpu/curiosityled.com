@@ -19,7 +19,7 @@ export default function TermsOfService() {
       {/* Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h1 className="text-4xl font-bold text-gray-900 mb-2">Terms of Service</h1>
-        <p className="text-gray-500 mb-8">Last updated: December 5, 2025</p>
+        <p className="text-gray-500 mb-8">Last updated: July 12, 2026</p>
 
         <div className="prose prose-lg max-w-none">
           <section className="mb-8">
@@ -40,10 +40,15 @@ export default function TermsOfService() {
             <ul className="list-disc pl-6 text-gray-600 space-y-2">
               <li>Leadership assessments and diagnostics</li>
               <li>Personalized learning paths and content</li>
-              <li>Goal setting and performance tracking</li>
-              <li>AI-powered coaching and insights</li>
+              <li>Goal setting, OKRs, and performance tracking</li>
+              <li>AI-powered coaching through Atreus, including tone and proactivity preferences</li>
+              <li>Daily rhythm features: morning/evening check-ins, Big 3 priorities, midday priority loops, and weekly reflections</li>
+              <li>Decision journal and decision quality analytics</li>
+              <li>1:1 meeting preparation and delegation planning</li>
               <li>Team and organizational analytics</li>
-              <li>Integration with workplace tools (Microsoft Teams, Slack)</li>
+              <li>Calendar integration with Google Calendar and Microsoft Outlook for meeting-aware features</li>
+              <li>Notification delivery via in-app, email, Microsoft Teams, and Slack</li>
+              <li>Gamification, badges, and leaderboards</li>
             </ul>
           </section>
 
@@ -57,12 +62,12 @@ export default function TermsOfService() {
 
             <h3 className="text-xl font-medium text-gray-800 mb-3">Account Security</h3>
             <p className="text-gray-600 mb-4">
-              You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You agree to notify us immediately of any unauthorized use of your account.
+              You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You agree to notify us immediately of any unauthorized use of your account. We support multi-factor authentication and session management to help protect your account.
             </p>
 
             <h3 className="text-xl font-medium text-gray-800 mb-3">Account Termination</h3>
             <p className="text-gray-600">
-              We reserve the right to suspend or terminate your account if you violate these Terms or if your organization's subscription ends.
+              We reserve the right to suspend or terminate your account if you violate these Terms or if your organization's subscription ends. You may delete your account at any time through the Account section of your Settings, which will initiate deletion of your associated data within the configured retention window.
             </p>
           </section>
 
@@ -81,6 +86,7 @@ export default function TermsOfService() {
               <li>Share your account credentials with others</li>
               <li><strong>Enter, store, or transmit Protected Health Information (PHI) of patients</strong> (healthcare organizations only)</li>
               <li>Use the Service in any manner that violates HIPAA or other healthcare data protection regulations</li>
+              <li>Misuse the Atreus AI coach to generate harmful, misleading, or inappropriate content</li>
             </ul>
           </section>
 
@@ -118,6 +124,9 @@ export default function TermsOfService() {
               <li>Implementing policies and technical controls to prevent PHI disclosure</li>
               <li>Conducting independent HIPAA compliance assessments</li>
               <li>Monitoring and auditing employee use to ensure no patient data is entered</li>
+              <li>Configuring and monitoring the automated PHI detection system via the PHI Detection settings</li>
+              <li>Reviewing the Compliance Dashboard and audit logs regularly</li>
+              <li>Ensuring all users complete mandatory privacy training</li>
               <li>Reporting any suspected PHI disclosure to us immediately</li>
             </ul>
           </section>
@@ -132,7 +141,7 @@ export default function TermsOfService() {
 
             <h3 className="text-xl font-medium text-gray-800 mb-3">Your Content</h3>
             <p className="text-gray-600">
-              You retain ownership of any content you submit to the Service (e.g., assessment responses, goals, feedback). By submitting content, you grant us a license to use, store, and process it to provide and improve the Service.
+              You retain ownership of any content you submit to the Service (e.g., assessment responses, check-in data, goals, decision journal entries, Atreus conversations). By submitting content, you grant us a license to use, store, and process it to provide and improve the Service. Your check-in data, Atreus conversations, and behavioral pattern observations remain private to you and are not shared with your organization unless you explicitly enable sharing via your visibility flags.
             </p>
           </section>
 
@@ -151,74 +160,96 @@ export default function TermsOfService() {
 
             <h3 className="text-xl font-medium text-gray-800 mb-3">Refunds</h3>
             <p className="text-gray-600">
-              Refunds are handled on a case-by-case basis. Please contact us at billing@curiosityled.com for refund requests.
+              Refunds are handled on a case-by-case basis. Please contact us at <a href="mailto:team@curiosityled.com" className="text-[#0202ff] hover:underline">team@curiosityled.com</a> for refund requests.
             </p>
           </section>
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Data and Privacy</h2>
             <p className="text-gray-600 mb-4">
-              Your use of the Service is also governed by our <Link to={createPageUrl("PrivacyPolicy")} className="text-[#0202ff] hover:underline">Privacy Policy</Link>, which describes how we collect, use, and protect your data.
+              Your use of the Service is also governed by our <Link to={createPageUrl("PrivacyPolicy")} className="text-[#0202ff] hover:underline">Privacy Policy</Link>, which describes in detail how we collect, use, and protect your data.
+            </p>
+            <p className="text-gray-600 mb-4">
+              While we are not yet SOC 2 certified, our platform is engineered with SOC 2-aligned controls, including encryption in transit and at rest, role-based access control with row-level security, comprehensive audit logging, automated PHI detection, configurable data retention, and mandatory privacy training. We are actively working toward formal SOC 2 Type II certification.
             </p>
             <p className="text-gray-600">
-              For enterprise customers, we offer Data Processing Agreements (DPAs) upon request to comply with GDPR and other data protection regulations.
+              For enterprise customers, we offer Data Processing Agreements (DPAs) upon request to comply with GDPR and other data protection regulations. Contact us at <a href="mailto:team@curiosityled.com" className="text-[#0202ff] hover:underline">team@curiosityled.com</a> for more information.
             </p>
           </section>
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Third-Party Integrations</h2>
+            <p className="text-gray-600 mb-4">
+              The Service may integrate with the following third-party applications. Your use of these integrations is subject to the terms and privacy policies of those third parties:
+            </p>
+            <ul className="list-disc pl-6 text-gray-600 mb-4 space-y-2">
+              <li><strong>Google Calendar:</strong> Opt-in integration via OAuth; processes limited meeting metadata only</li>
+              <li><strong>Microsoft Outlook Calendar:</strong> Opt-in integration via Microsoft Graph; processes limited meeting metadata only</li>
+              <li><strong>Microsoft Teams:</strong> Notification delivery via webhooks you configure</li>
+              <li><strong>Slack:</strong> Notification delivery via webhooks you configure</li>
+            </ul>
             <p className="text-gray-600">
-              The Service may integrate with third-party applications such as Microsoft Teams, Slack, and HR systems. Your use of these integrations is subject to the terms and privacy policies of those third parties. We are not responsible for the practices of third-party services.
+              Calendar integrations require your explicit consent and can be revoked at any time through your Atreus settings. We are not responsible for the practices of third-party services.
             </p>
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Disclaimers</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. AI Coach (Atreus)</h2>
+            <p className="text-gray-600 mb-4">
+              The Service includes an AI-powered coaching assistant called Atreus. Atreus generates insights, observations, and recommendations based on your check-in data, goals, and conversation history. These outputs are for informational and developmental purposes only and should not be considered professional advice.
+            </p>
+            <p className="text-gray-600">
+              Your conversations with Atreus and the behavioral patterns it identifies are private to you. You can disable Atreus entirely, turn off behavioral pattern observation, and adjust its tone and proactivity level at any time through your Settings.
+            </p>
+          </section>
+
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Disclaimers</h2>
             <p className="text-gray-600 mb-4">
               THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED. WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE, OR SECURE.
             </p>
             <p className="text-gray-600">
-              The assessments, insights, and recommendations provided by the Service are for informational and developmental purposes only and should not be considered professional advice. Users should exercise their own judgment in applying any insights gained from the Service.
+              The assessments, insights, recommendations, and coaching provided by the Service (including Atreus) are for informational and developmental purposes only and should not be considered professional advice. Users should exercise their own judgment in applying any insights gained from the Service.
             </p>
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Limitation of Liability</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Limitation of Liability</h2>
             <p className="text-gray-600">
               TO THE MAXIMUM EXTENT PERMITTED BY LAW, CURIOSITY LED SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS, DATA, OR GOODWILL, ARISING OUT OF OR RELATED TO YOUR USE OF THE SERVICE. OUR TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNT PAID BY YOU OR YOUR ORGANIZATION IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM.
             </p>
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Indemnification</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Indemnification</h2>
             <p className="text-gray-600">
               You agree to indemnify and hold harmless Curiosity Led, its officers, directors, employees, and agents from any claims, damages, losses, or expenses (including reasonable attorneys' fees) arising from your use of the Service or violation of these Terms.
             </p>
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Changes to Terms</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">14. Changes to Terms</h2>
             <p className="text-gray-600">
               We may modify these Terms at any time. We will provide notice of material changes by posting the updated Terms on the Service and updating the "Last updated" date. Your continued use of the Service after changes constitutes acceptance of the modified Terms.
             </p>
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">14. Governing Law</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">15. Governing Law</h2>
             <p className="text-gray-600">
               These Terms shall be governed by and construed in accordance with the laws of the State of Delaware, United States, without regard to its conflict of law provisions. Any disputes arising under these Terms shall be resolved in the state or federal courts located in Delaware.
             </p>
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">15. Severability</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">16. Severability</h2>
             <p className="text-gray-600">
               If any provision of these Terms is found to be unenforceable, the remaining provisions will continue in full force and effect.
             </p>
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">16. Contact Us</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">17. Contact Us</h2>
             <p className="text-gray-600 mb-4">
               If you have questions about these Terms, please contact us:
             </p>
