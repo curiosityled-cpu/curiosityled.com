@@ -208,6 +208,12 @@ export default function ManagerToday() {
     }
 
     const optimisticRecord = { check_in_date: todayET, ...(todayData?.record || {}), ...update };
+    // Preserve Big 3 from the local override when morning check-in clears it —
+    // the DB record may not have big3_priorities yet if Big3QuickSet and MorningCheckIn
+    // created separate records (race condition before query refetch)
+    if (type === 'morning' && !optimisticRecord.big3_priorities?.length && localBig3Override?.length) {
+      optimisticRecord.big3_priorities = localBig3Override;
+    }
     queryClient.setQueryData(['daily-checkin-today', user?.email, todayET], (old) => {
       const existing = old || { record: null, yesterday_big3: [] };
       return { ...existing, record: optimisticRecord };
@@ -513,7 +519,10 @@ export default function ManagerToday() {
             try {
               sessionStorage.setItem('today_big3_override', JSON.stringify({ date: todayET, data: priorities }));
             } catch {}
-            setTimeout(() => queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] }), 3000);
+            // Invalidate immediately so todayRecord?.id is fresh for MorningCheckIn —
+            // the 3-second delay caused a race where MorningCheckIn created a duplicate
+            // record instead of updating the one Big3QuickSet just created
+            queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
           }}
           onRefresh={() => {
             queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });

@@ -162,7 +162,8 @@ Deno.serve(async (req) => {
           return score(b) - score(a);
         });
         todayRec = { ...sorted[0] };
-        // Merge fields from any secondary records
+        // Merge fields from any secondary records (handles duplicate records
+        // created when Big3QuickSet and MorningCheckIn race to create separate records)
         for (let i = 1; i < sorted.length; i++) {
           const r = sorted[i];
           if (r.morning_completed && !todayRec.morning_completed) {
@@ -177,11 +178,24 @@ Deno.serve(async (req) => {
           if (r.evening_completed && !todayRec.evening_completed) {
             todayRec.evening_completed = true;
             todayRec.evening_completed_at = r.evening_completed_at;
-            todayRec.big3_priorities = todayRec.big3_priorities?.length ? todayRec.big3_priorities : r.big3_priorities;
           }
+          // Merge big3_priorities from ANY secondary record that has them,
+          // not just those with evening_completed (Big3QuickSet creates records
+          // with big3_priorities but no evening_completed flag)
+          if (r.big3_priorities?.length && !todayRec.big3_priorities?.length) {
+            todayRec.big3_priorities = r.big3_priorities;
+          }
+          // Also merge midday status updates on big3 items from secondary records
           if (r.midday_loop_completed && !todayRec.midday_loop_completed) {
             todayRec.midday_loop_completed = true;
             todayRec.midday_loop_completed_at = r.midday_loop_completed_at;
+            // If the secondary record has updated midday statuses on big3 items, use those
+            if (r.big3_priorities?.length && todayRec.big3_priorities?.length) {
+              todayRec.big3_priorities = todayRec.big3_priorities.map((p, idx) => {
+                const sec = r.big3_priorities[idx];
+                return sec?.midday_status ? { ...p, midday_status: sec.midday_status, midday_note: sec.midday_note } : p;
+              });
+            }
           }
         }
       }
