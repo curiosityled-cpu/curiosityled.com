@@ -204,7 +204,9 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
       markCompletedToday(userEmail, scores);
       saveCheckInToHistory(userEmail, 'morning', scores); // persist to multi-day history store
     }
-    try { onComplete?.([], 'morning', scores); } catch (cbErr) { console.error('onComplete error:', cbErr); }
+    // Pass null — morning check-in doesn't change Big 3. Passing [] would be
+    // interpreted as "explicitly clear Big 3" and wipe the override.
+    try { onComplete?.(null, 'morning', scores); } catch (cbErr) { console.error('onComplete error:', cbErr); }
 
     const today = getTodayET();
     const scorePayload = {
@@ -254,7 +256,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
         await base44.entities.DailyCheckIn.create({ user_email: userEmail, check_in_date: getTodayET(), check_in_type: 'morning', morning_completed: true, ...scorePayload });
       }
       setEditMode(false); setExpanded(false);
-      onComplete?.([], 'morning', scores);
+      onComplete?.(null, 'morning', scores);
     } catch (err) {
       console.error('Edit save error:', err);
     } finally { setSaving(false); }

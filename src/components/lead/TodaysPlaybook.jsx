@@ -281,10 +281,10 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
   const move        = buildMove(pulse, trends, goals, assignments);
 
   // Determine the Big 3 to show: today's record first, then fall back to yesterday's.
-  // During the morning window before check-in is complete, reset — don't carry over yesterday's priorities.
-  const morningNotDone = isMorningWindow && !todayRecord?.morning_completed;
+  // Yesterday's Big 3 were set in last night's evening check-in FOR today — they should
+  // show immediately in the morning, not be hidden until the morning check-in is done.
   const todayBig3     = (todayRecord?.big3_priorities || []).filter(p => p?.title);
-  const big3          = todayBig3.length > 0 ? todayBig3 : (morningNotDone ? [] : yesterdayBig3.filter(p => p?.title));
+  const big3          = todayBig3.length > 0 ? todayBig3 : yesterdayBig3.filter(p => p?.title);
   const big3FromYesterday = todayBig3.length === 0 && big3.length > 0;
 
   const saveCommitment = async () => {

@@ -2,7 +2,7 @@
  * ManagerToday — The Daily Companion + Patterns (unified)
  * Route: /today
  */
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { loadCheckInHistory } from "@/lib/checkInStore";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
@@ -168,32 +168,37 @@ export default function ManagerToday() {
     if (history.length > 0) setCheckInHistory(history);
   }, [user?.email]);
 
-  // Clear the Big 3 override when the date changes (midnight crossover).
-  // todayET is recomputed every render; when it changes, the override from the
-  // previous day is stale and must be cleared so the DB record is the source of truth.
+  // Clear the Big 3 override ONLY when the date actually changes (midnight crossover).
+  // Using a ref ensures this does NOT fire on initial mount — otherwise the override
+  // loaded from sessionStorage is immediately wiped every time the user navigates
+  // away and back to /today.
+  const prevDateRef = useRef(todayET);
   useEffect(() => {
-    setLocalBig3Override(prev => {
-      if (!prev) return null;
+    if (prevDateRef.current !== todayET) {
+      prevDateRef.current = todayET;
+      setLocalBig3Override(null);
       try { sessionStorage.removeItem('today_big3_override'); } catch {}
-      return null;
-    });
+    }
   }, [todayET]);
 
   const handleCheckInComplete = (big3Priorities, type, scores) => {
-    if (big3Priorities?.length > 0) {
+    if (big3Priorities && big3Priorities.length > 0) {
       setLocalBig3Override(big3Priorities);
       try {
         sessionStorage.setItem('today_big3_override', JSON.stringify({ date: todayET, data: big3Priorities }));
       } catch {}
-    } else {
-      // Clear override when empty Big 3 is explicitly saved (e.g., evening skip)
-      // so stale priorities don't persist and override the DB record.
+    } else if (big3Priorities !== null && big3Priorities !== undefined) {
+      // Explicitly clearing with an empty array (e.g., evening skip).
+      // null/undefined means "no Big 3 change" (e.g., morning check-in) — preserve override.
       setLocalBig3Override(null);
       try { sessionStorage.removeItem('today_big3_override'); } catch {}
     }
-    // When morning or midday check-in completes, invalidate the query so the Playbook
-    // reads from the DB record (source of truth).
-    if (type === 'morning' || type === 'midday') {
+    // Only invalidate for midday — the midday save is awaited before onComplete fires,
+    // so the refetch will get the persisted data. Morning/evening use fire-and-forget
+    // saves, so immediate invalidation would race the refetch (overwriting the optimistic
+    // record before the save lands). The override + optimistic record hold the UI until
+    // the query naturally refetches after staleTime.
+    if (type === 'midday') {
       queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
     }
     const update = {};
