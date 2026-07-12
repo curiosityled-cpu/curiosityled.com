@@ -53,10 +53,10 @@ export default function IndustryFooter() {
         <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row items-center justify-between gap-3">
           <p className="text-gray-500 text-xs">© {new Date().getFullYear()} Curiosity Led. All rights reserved.</p>
           <a
-            href="mailto:hello@curiosityled.com"
+            href="mailto:team@curiosityled.com"
             className="text-gray-400 text-xs hover:text-white transition-colors"
           >
-            hello@curiosityled.com
+            team@curiosityled.com
           </a>
         </div>
       </div>
