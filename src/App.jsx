@@ -5,7 +5,7 @@ import { queryClientInstance } from '@/lib/query-client'
 import VisualEditAgent from '@/lib/VisualEditAgent'
 import NavigationTracker from '@/lib/NavigationTracker'
 import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { ThemeProvider } from '@/lib/ThemeContext';
@@ -70,9 +70,11 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Public landing pages accessible to unauthenticated visitors
+  // Public landing pages accessible to unauthenticated visitors.
+  // Reads from useLocation() so navigation between public pages re-renders
+  // immediately (window.location.pathname is not reactive).
   const PublicLanding = () => {
-    const path = window.location.pathname;
+    const path = useLocation().pathname;
     if (path === '/bpo') return <LandingBPO />;
     if (path === '/healthcare') return <LandingHealthcare />;
     if (path === '/coaching') return <LandingCoaching />;
