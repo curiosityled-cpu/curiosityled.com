@@ -174,7 +174,7 @@ export default function OfferPage() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-400 mb-6"
           >
-            The Guarantee
+            Our Guarantee
           </motion.p>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
