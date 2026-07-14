@@ -45,34 +45,39 @@ export default function OfferPage() {
           style={{ background: "#0202ff" }}
         />
 
-        <div className="relative max-w-4xl mx-auto px-6 w-full text-center">
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+        <div className="relative max-w-3xl mx-auto px-6 w-full">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
-            className="text-sm font-medium uppercase tracking-[0.3em] mb-5"
-            style={{ color: "#0202ff" }}
+            className="pl-8 sm:pl-10"
+            style={{ borderLeft: "4px solid #0202ff" }}
           >
-            Your 90-Day Blueprint
-          </motion.p>
+            <p
+              className="text-sm font-semibold uppercase tracking-[0.3em] mb-5"
+              style={{ color: "#0202ff" }}
+            >
+              The Program
+            </p>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-5xl sm:text-6xl lg:text-7xl font-bold text-[#0a0a0a] leading-[1.05] tracking-tight mb-6"
-          >
-            12-Week Leadership Development <span style={{ color: "#0202ff" }}>Reboot</span>
-          </motion.h1>
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.15 }}
+              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#0a0a0a] leading-[1.1] tracking-tight mb-6"
+            >
+              12-Week Leadership Development Reboot
+            </motion.h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.35 }}
-            className="text-2xl sm:text-3xl font-semibold text-[#0a0a0a] leading-snug max-w-3xl mx-auto mb-5"
-          >
-            Stop funding leadership programs <span style={{ color: "#0202ff" }}>you can't defend.</span>
-          </motion.p>
+            <motion.p
+              initial={{ opacity: 0, y: 25 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="text-xl sm:text-2xl font-semibold text-[#0a0a0a] leading-snug mb-5"
+            >
+              Stop funding leadership programs <span style={{ color: "#0202ff" }}>you can't defend.</span>
+            </motion.p>
+          </motion.div>
 
           <motion.p
             initial={{ opacity: 0, y: 30 }}
@@ -89,7 +94,7 @@ export default function OfferPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
-            className="flex flex-col sm:flex-row gap-3 justify-center"
+            className="flex flex-col sm:flex-row gap-3 justify-center sm:justify-start pl-8 sm:pl-10"
           >
             <a
               href={CALENDLY_URL}
