@@ -46,19 +46,15 @@ export default function OfferPage() {
         />
 
         <div className="relative max-w-4xl mx-auto px-6 w-full text-center">
-          <motion.div
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="mb-5"
+            className="text-sm font-medium uppercase tracking-[0.3em] mb-5"
+            style={{ color: "#0202ff" }}
           >
-            <span
-              className="inline-block text-xs font-semibold uppercase tracking-[0.25em] px-3 py-1.5 rounded-full"
-              style={{ color: "#0202ff", backgroundColor: "#0202ff15" }}
-            >
-              The Program
-            </span>
-          </motion.div>
+            Your 90-Day Blueprint
+          </motion.p>
 
           <motion.h1
             initial={{ opacity: 0, y: 40 }}
