@@ -201,7 +201,7 @@ export default function OfferPage() {
             transition={{ duration: 0.5 }}
             className="text-3xl sm:text-4xl font-bold text-[#0a0a0a] mb-4"
           >
-            12 weeks. One Hub. A cohort you can defend.
+            12 weeks. One Hub. A leadership story you can get behind.
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
