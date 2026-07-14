@@ -46,14 +46,19 @@ export default function OfferPage() {
         />
 
         <div className="relative max-w-4xl mx-auto px-6 w-full text-center">
-          <motion.p
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-400 mb-8"
+            className="mb-8"
           >
-            12-Week Leadership Development Reboot
-          </motion.p>
+            <span
+              className="inline-block text-sm font-semibold tracking-wide px-4 py-1.5 rounded-full"
+              style={{ color: "#0202ff", backgroundColor: "#0202ff15" }}
+            >
+              12-Week Leadership Development Reboot
+            </span>
+          </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 40 }}
