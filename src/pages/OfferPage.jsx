@@ -50,13 +50,13 @@ export default function OfferPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="mb-8"
+            className="mb-5"
           >
             <span
-              className="inline-block text-sm font-semibold tracking-wide px-4 py-1.5 rounded-full"
+              className="inline-block text-xs font-semibold uppercase tracking-[0.25em] px-3 py-1.5 rounded-full"
               style={{ color: "#0202ff", backgroundColor: "#0202ff15" }}
             >
-              12-Week Leadership Development Reboot
+              The Program
             </span>
           </motion.div>
 
@@ -64,10 +64,19 @@ export default function OfferPage() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-4xl lg:text-5xl xl:text-[52px] font-bold text-[#0a0a0a] leading-[1.1] tracking-tight mb-6"
+            className="text-5xl sm:text-6xl lg:text-7xl font-bold text-[#0a0a0a] leading-[1.05] tracking-tight mb-6"
+          >
+            12-Week Leadership Development <span style={{ color: "#0202ff" }}>Reboot</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.35 }}
+            className="text-2xl sm:text-3xl font-semibold text-[#0a0a0a] leading-snug max-w-3xl mx-auto mb-5"
           >
             Stop funding leadership programs <span style={{ color: "#0202ff" }}>you can't defend.</span>
-          </motion.h1>
+          </motion.p>
 
           <motion.p
             initial={{ opacity: 0, y: 30 }}
