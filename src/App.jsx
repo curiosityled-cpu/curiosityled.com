@@ -18,6 +18,7 @@ import LandingHealthcare from './pages/LandingHealthcare';
 import LandingCoaching from './pages/LandingCoaching';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
+import OfferPage from './pages/OfferPage';
 import MyLeadership from './pages/MyLeadership';
 import MyDevelopment from './pages/MyDevelopment';
 import MyGoalsMVP from './pages/MyGoalsMVP';
@@ -80,6 +81,7 @@ const AuthenticatedApp = () => {
     if (path === '/coaching') return <LandingCoaching />;
     if (path === '/PrivacyPolicy') return <PrivacyPolicy />;
     if (path === '/TermsOfService') return <TermsOfService />;
+    if (path === '/offer') return <OfferPage />;
     return <LandingPage />;
   };
 
@@ -132,6 +134,7 @@ const AuthenticatedApp = () => {
       <Route path="/bpo" element={<LandingBPO />} />
       <Route path="/healthcare" element={<LandingHealthcare />} />
       <Route path="/coaching" element={<LandingCoaching />} />
+      <Route path="/offer" element={<OfferPage />} />
 
       {/* Redirect old ExperienceManagement URL to new DevelopmentManager */}
       <Route path="/ExperienceManagement" element={<Navigate to="/DevelopmentManager" replace />} />
