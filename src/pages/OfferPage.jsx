@@ -29,7 +29,7 @@ export default function OfferPage() {
 
   return (
     <div className="min-h-screen bg-white font-sans">
-      <LandingNav />
+      <LandingNav hideCtas />
 
       {/* Hero */}
       <section id="hero" className="relative min-h-screen flex flex-col justify-center pt-28 pb-16 overflow-hidden bg-white">

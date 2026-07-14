@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 
-export default function LandingNav() {
+export default function LandingNav({ hideCtas = false }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -39,23 +39,25 @@ export default function LandingNav() {
         </button>
 
         {/* CTAs */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleLogin}
-            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-3 py-2"
-          >
-            Log in
-          </button>
-          <a
-            href="https://cal.com/curiosityled/bookdemo"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-semibold text-white px-4 py-2 rounded-lg transition-all hover:opacity-90"
-            style={{ backgroundColor: "#0202ff" }}
-          >
-            Book a demo
-          </a>
-        </div>
+        {!hideCtas && (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleLogin}
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-3 py-2"
+            >
+              Log in
+            </button>
+            <a
+              href="https://cal.com/curiosityled/bookdemo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-semibold text-white px-4 py-2 rounded-lg transition-all hover:opacity-90"
+              style={{ backgroundColor: "#0202ff" }}
+            >
+              Book a demo
+            </a>
+          </div>
+        )}
       </div>
     </nav>
   );
