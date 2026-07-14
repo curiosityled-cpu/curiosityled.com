@@ -1,6 +1,8 @@
-import React from "react";
-import { ArrowRight, ShieldCheck, CheckCircle2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import React, { useEffect } from "react";
+import { ArrowRight, ShieldCheck } from "lucide-react";
+import { motion } from "framer-motion";
+import LandingNav from "@/components/landing/LandingNav";
+import LandingFooter from "@/components/landing/LandingFooter";
 
 const AUDIENCES = [
   {
@@ -17,96 +19,212 @@ const AUDIENCES = [
   },
 ];
 
+const CALENDLY_URL = "https://calendly.com/team-curiosityled/discoverycall";
+
 export default function OfferPage() {
+  useEffect(() => {
+    document.title = "12-Week Leadership Development Reboot · Curiosity Led";
+    return () => { document.title = "Curiosity Led"; };
+  }, []);
+
   return (
-    <div className="min-h-screen bg-black text-white antialiased">
+    <div className="min-h-screen bg-white font-sans">
+      <LandingNav />
+
       {/* Hero */}
-      <section className="px-6 pt-20 pb-14 max-w-3xl mx-auto text-center">
-        <p className="text-xs font-semibold tracking-[0.3em] text-white/50 uppercase mb-6">
-          12-Week Leadership Development Reboot
-        </p>
-        <h1 className="text-4xl sm:text-6xl font-bold leading-[1.05] tracking-tight mb-6">
-          Stop funding leadership programs you can't defend.
-        </h1>
-        <p className="text-lg sm:text-xl text-white/70 leading-relaxed max-w-2xl mx-auto">
-          With the 12-Week Leadership Development Reboot, Curiosity Led gives HR
-          and executive sponsors a live view of manager risk, readiness, and
-          progress in one Leadership Intelligence Hub — instead of scattered
-          tools and spreadsheets.
-        </p>
-        <a
-          href="mailto:team@curiosityled.com?subject=12-Week Leadership Reboot Pilot"
-          className="inline-flex items-center gap-2 mt-10 px-8 py-4 bg-white text-black rounded-full font-semibold text-base hover:bg-white/90 transition-colors"
-        >
-          Book the pilot call
-          <ArrowRight className="w-4 h-4" />
-        </a>
+      <section id="hero" className="relative min-h-screen flex flex-col justify-center pt-28 pb-16 overflow-hidden bg-white">
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(#0202ff 1px, transparent 1px), linear-gradient(90deg, #0202ff 1px, transparent 1px)`,
+            backgroundSize: "48px 48px",
+          }}
+        />
+        <div
+          className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-[0.06] blur-3xl pointer-events-none"
+          style={{ background: "#0202ff" }}
+        />
+
+        <div className="relative max-w-4xl mx-auto px-6 w-full text-center">
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-400 mb-8"
+          >
+            12-Week Leadership Development Reboot
+          </motion.p>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="text-4xl lg:text-5xl xl:text-[52px] font-bold text-[#0a0a0a] leading-[1.1] tracking-tight mb-6"
+          >
+            Stop funding leadership programs <span style={{ color: "#0202ff" }}>you can't defend.</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.4 }}
+            className="text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto font-medium mb-10"
+          >
+            With the 12-Week Leadership Development Reboot, Curiosity Led gives HR
+            and executive sponsors a live view of manager risk, readiness, and progress
+            in one Leadership Intelligence Hub — instead of scattered tools and spreadsheets.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="flex flex-col sm:flex-row gap-3 justify-center"
+          >
+            <a
+              href={CALENDLY_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg font-semibold text-white text-sm transition-all hover:opacity-90"
+              style={{ backgroundColor: "#0202ff" }}
+            >
+              Book the pilot call
+              <ArrowRight className="w-4 h-4" />
+            </a>
+            <a
+              href="#guarantee"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg font-semibold text-gray-700 text-sm border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all"
+            >
+              See the guarantee
+            </a>
+          </motion.div>
+        </div>
       </section>
 
       {/* Audience strip */}
-      <section className="px-6 py-16 border-t border-white/10">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-center text-2xl sm:text-3xl font-bold mb-12">
+      <section className="relative px-6 py-20 border-t border-gray-100">
+        <div className="max-w-5xl mx-auto">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center text-2xl sm:text-3xl font-bold text-[#0a0a0a] mb-12"
+          >
             Built for everyone who has to defend the spend.
-          </h2>
+          </motion.h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {AUDIENCES.map((a) => (
-              <div
+            {AUDIENCES.map((a, i) => (
+              <motion.div
                 key={a.tag}
-                className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 flex flex-col"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="rounded-2xl border border-gray-100 bg-gray-50/50 p-6 flex flex-col shadow-sm"
               >
-                <p className="text-sm font-semibold tracking-wide text-white mb-3">
-                  {a.tag}
-                </p>
-                <p className="text-white/70 text-sm leading-relaxed">{a.body}</p>
-              </div>
+                <div className="mb-3">
+                  <span
+                    className="inline-block text-xs font-semibold uppercase tracking-widest px-3 py-1 rounded-full"
+                    style={{ color: "#0202ff", backgroundColor: "#0202ff15" }}
+                  >
+                    {a.tag}
+                  </span>
+                </div>
+                <p className="text-gray-700 text-sm leading-relaxed">{a.body}</p>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
       {/* Guarantee */}
-      <section className="px-6 py-20 bg-white/[0.02] border-t border-white/10">
-        <div className="max-w-2xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 text-white/60 text-xs font-semibold tracking-[0.25em] uppercase mb-6">
-            <ShieldCheck className="w-4 h-4" />
+      <section id="guarantee" className="relative px-6 py-24 border-t border-gray-100">
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(#0202ff 1px, transparent 1px), linear-gradient(90deg, #0202ff 1px, transparent 1px)`,
+            backgroundSize: "48px 48px",
+          }}
+        />
+        <div className="relative max-w-2xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 mb-6"
+          >
+            <span
+              className="w-9 h-9 rounded-full flex items-center justify-center text-white"
+              style={{ backgroundColor: "#0202ff" }}
+            >
+              <ShieldCheck className="w-5 h-5" />
+            </span>
+          </motion.div>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-400 mb-6"
+          >
             The Guarantee
-          </div>
-          <p className="text-xl sm:text-2xl font-medium leading-relaxed">
-            If HR and your executive sponsor don't get a live Leadership
-            Intelligence Hub and a clearer, competency-aligned story of which
-            managers are at risk, ready, and where support should go next, we'll
-            keep working with your cohort at no additional charge until they do.
-          </p>
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-xl sm:text-2xl font-medium text-[#0a0a0a] leading-relaxed"
+          >
+            If HR and your executive sponsor don't get a live Leadership Intelligence Hub
+            and a clearer, competency-aligned story of which managers are at risk, ready,
+            and where support should go next, we'll keep working with your cohort at no
+            additional charge until they do.
+          </motion.p>
         </div>
       </section>
 
       {/* Closing CTA */}
-      <section className="px-6 py-20 text-center border-t border-white/10">
+      <section className="px-6 py-24 text-center border-t border-gray-100">
         <div className="max-w-xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-3xl sm:text-4xl font-bold text-[#0a0a0a] mb-4"
+          >
             12 weeks. One Hub. A cohort you can defend.
-          </h2>
-          <p className="text-white/60 mb-8">
-            Limited pilot cohorts. Reply to hold a seat.
-          </p>
-          <a
-            href="mailto:team@curiosityled.com?subject=12-Week Leadership Reboot Pilot"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-black rounded-full font-semibold text-base hover:bg-white/90 transition-colors"
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-gray-600 mb-8"
+          >
+            Limited pilot cohorts. Book a call to hold a seat.
+          </motion.p>
+          <motion.a
+            href={CALENDLY_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg font-semibold text-white text-sm transition-all hover:opacity-90"
+            style={{ backgroundColor: "#0202ff" }}
           >
             Book the pilot call
             <ArrowRight className="w-4 h-4" />
-          </a>
-          <div className="mt-10">
-            <Link
-              to="/LandingPage"
-              className="text-white/40 text-xs hover:text-white/70 transition-colors"
-            >
-              ← Back to main site
-            </Link>
-          </div>
+          </motion.a>
         </div>
       </section>
+
+      <LandingFooter />
     </div>
   );
 }
