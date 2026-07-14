@@ -116,7 +116,7 @@ export default function OfferPage() {
             transition={{ duration: 0.5 }}
             className="text-center text-2xl sm:text-3xl font-bold text-[#0a0a0a] mb-12"
           >
-            Built for everyone who has to defend the spend.
+            Turn daily management into your greatest competitive advantage.
           </motion.h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {AUDIENCES.map((a, i) => (
