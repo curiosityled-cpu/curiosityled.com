@@ -3,6 +3,7 @@ import { ArrowRight, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import LandingNav from "@/components/landing/LandingNav";
 import LandingFooter from "@/components/landing/LandingFooter";
+import OfferUnifiedHub from "@/components/landing/OfferUnifiedHub";
 
 const AUDIENCES = [
   {
@@ -119,10 +120,15 @@ export default function OfferPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="text-center text-2xl sm:text-3xl font-bold text-[#0a0a0a] mb-12"
+            className="text-center text-2xl sm:text-3xl font-bold text-[#0a0a0a] mb-10"
           >
             Turn daily management into your greatest competitive advantage.
           </motion.h2>
+
+          <div className="mb-12">
+            <OfferUnifiedHub />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {AUDIENCES.map((a, i) => (
               <motion.div
