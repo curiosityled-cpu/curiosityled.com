@@ -1,0 +1,152 @@
+{
+  "name": "Prospect",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Full name of the prospect"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Prospect email address"
+    },
+    "organization": {
+      "type": "string",
+      "description": "Company or organization"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "HR",
+        "Talent",
+        "L&D",
+        "People Ops",
+        "Executive Leader",
+        "Other"
+      ],
+      "description": "Functional role of the prospect"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Optional phone number"
+    },
+    "source": {
+      "type": "string",
+      "default": "offer_diagnostic",
+      "description": "Where this prospect came from"
+    },
+    "lead_status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "blueprint_sent",
+        "sequence_step_1_sent",
+        "sequence_step_2_sent",
+        "sequence_finished",
+        "converted",
+        "disqualified"
+      ],
+      "default": "new",
+      "description": "Current state of this prospect in the nurture sequence"
+    },
+    "blueprint_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the 90-day blueprint email was sent"
+    },
+    "diagnostic_answers": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Optional answers from the diagnostic quiz, if collected"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal notes about this prospect"
+    }
+  },
+  "required": [
+    "name",
+    "email"
+  ],
+  "rls": {
+    "create": true,
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}
