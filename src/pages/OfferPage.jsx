@@ -1,242 +1,408 @@
 import React, { useEffect } from "react";
-import { ArrowRight, ShieldCheck } from "lucide-react";
+import { ArrowRight, FileText, ListChecks, Map, MessageSquare, FileCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import LandingNav from "@/components/landing/LandingNav";
 import LandingFooter from "@/components/landing/LandingFooter";
-import OfferUnifiedHub from "@/components/landing/OfferUnifiedHub";
 
-const AUDIENCES = [
+// ── Section wrapper: gives the page its "executive document" rhythm ──────────
+function ReportSection({ number, id, children, className = "" }) {
+  return (
+    <section
+      id={id}
+      className={`px-6 py-16 sm:py-20 border-t border-gray-200 ${className}`}
+    >
+      <div className="max-w-2xl mx-auto">
+        {number && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4 }}
+            className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-400 mb-4 font-mono"
+          >
+            {number}
+          </motion.p>
+        )}
+        {children}
+      </div>
+    </section>
+  );
+}
+
+// ── Reusable CTA button (diagnostic-first) ──────────────────────────────────
+function DiagnosticCTA({ label = "Take the diagnostic", center = true }) {
+  return (
+    <div className={center ? "flex justify-center" : ""}>
+      <a
+        href="#diagnostic"
+        className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-lg font-semibold text-white text-sm tracking-wide transition-all hover:opacity-90 shadow-sm"
+        style={{ backgroundColor: "#0202ff" }}
+      >
+        {label}
+        <ArrowRight className="w-4 h-4" />
+      </a>
+    </div>
+  );
+}
+
+// ── Problem bullets ─────────────────────────────────────────────────────────
+const PROBLEM_BULLETS = [
+  "Support arrives after the impact is already visible.",
+  "Managers experience development as one more requirement.",
+  "HR and Talent are stitching together updates, reporting, and follow-through by hand.",
+  "Leadership asks what is working, and the answer is still too hard to defend.",
+];
+
+// ── What you get (Blueprint modules) ────────────────────────────────────────
+const BLUEPRINT_MODULES = [
   {
-    tag: "Managers",
-    body: "Not another generic program. Get personalized support on real leadership challenges in tools you already use — without weaponizing or surveillance mining your private reflections.",
+    icon: ListChecks,
+    title: "Diagnostic of breakdowns",
+    body: "A clear diagnostic of where leadership support is breaking down across your organization.",
   },
   {
-    tag: "HR / Talent",
-    body: "Run a structured, competency-aligned reboot and finally see which leaders are at risk or ready and where support is landing.",
+    icon: MessageSquare,
+    title: "Top pressure points",
+    body: "Your top pressure points identified, and what they likely mean right now.",
   },
   {
-    tag: "Executive sponsors",
-    body: "Use a live Intelligence Hub to decide where to focus attention and budget, with data you can stand behind.",
+    icon: Map,
+    title: "90-day roadmap",
+    body: "A tailored 90-day roadmap you can implement with the tools and systems you already have.",
+  },
+  {
+    icon: FileText,
+    title: "Executive talking points",
+    body: "Talking points you can bring to leadership to show exactly where change is needed.",
+  },
+  {
+    icon: FileCheck,
+    title: "Internal starting document",
+    body: "A starting document you can use internally — with or without Curiosity Led.",
   },
 ];
 
-const CALENDLY_URL = "https://calendly.com/team-curiosityled/discoverycall";
+// ── How it works steps ──────────────────────────────────────────────────────
+const STEPS = [
+  "Answer a short set of questions about your current leadership support reality.",
+  "Get your tailored 90-Day Leadership Development Reboot Blueprint.",
+  "Use it internally, or review it with Curiosity Led to pressure-test implementation.",
+];
+
+// ── Who it's for ────────────────────────────────────────────────────────────
+const AUDIENCES = [
+  "HR",
+  "Talent",
+  "L&D",
+  "People Ops",
+  "Executive leaders responsible for manager readiness and support systems",
+];
 
 export default function OfferPage() {
   useEffect(() => {
-    document.title = "12-Week Leadership Development Reboot · Curiosity Led";
+    document.title = "90-Day Leadership Development Reboot Blueprint · Curiosity Led";
     return () => { document.title = "Curiosity Led"; };
   }, []);
 
   return (
-    <div className="min-h-screen bg-white font-sans">
+    <div className="min-h-screen bg-white font-sans antialiased">
       <LandingNav hideCtas />
 
-      {/* Hero */}
-      <section id="hero" className="relative min-h-screen flex flex-col justify-center pt-28 pb-16 overflow-hidden bg-white">
+      {/* ─── HERO ─── Immediate clarity. Pain + utility. */}
+      <section
+        id="hero"
+        className="relative min-h-[90vh] flex flex-col justify-center pt-28 pb-16 px-6 overflow-hidden bg-white"
+      >
         <div
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute inset-0 opacity-[0.025]"
           style={{
             backgroundImage: `linear-gradient(#0202ff 1px, transparent 1px), linear-gradient(90deg, #0202ff 1px, transparent 1px)`,
-            backgroundSize: "48px 48px",
+            backgroundSize: "56px 56px",
           }}
         />
-        <div
-          className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-[0.06] blur-3xl pointer-events-none"
-          style={{ background: "#0202ff" }}
-        />
 
-        <div className="relative max-w-4xl mx-auto px-6 w-full text-center">
+        <div className="relative max-w-2xl mx-auto w-full">
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="text-sm font-medium uppercase tracking-[0.3em] mb-5"
+            className="text-xs font-semibold uppercase tracking-[0.3em] mb-6 font-mono"
             style={{ color: "#0202ff" }}
           >
-            Your 90-Day Blueprint
+            Free Diagnostic · 90-Day Blueprint
           </motion.p>
 
           <motion.h1
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-5xl sm:text-6xl lg:text-7xl font-bold text-[#0a0a0a] leading-[1.05] tracking-tight mb-6"
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-4xl sm:text-5xl font-bold text-[#0a0a0a] leading-[1.08] tracking-tight mb-6"
           >
-            12-Week Leadership Development <span style={{ color: "#0202ff" }}>Reboot</span>
+            Leadership support is breaking down in more places than you can see.
           </motion.h1>
 
           <motion.p
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.35 }}
-            className="text-2xl sm:text-3xl font-semibold text-[#0a0a0a] leading-snug max-w-3xl mx-auto mb-5"
+            transition={{ duration: 0.6, delay: 0.25 }}
+            className="text-lg text-gray-600 leading-relaxed mb-10 max-w-xl"
           >
-            Stop funding leadership programs <span style={{ color: "#0202ff" }}>you can't defend.</span>
-          </motion.p>
-
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.4 }}
-            className="text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto font-medium mb-10"
-          >
-            With the 12-Week Leadership Development Reboot, Curiosity Led gives HR
-            and executive sponsors a live view of manager risk, readiness, and progress
-            in one Leadership Intelligence Hub — instead of scattered tools and spreadsheets.
+            For HR, Talent, L&amp;D, and executive leaders who know support is too
+            reactive, too manual, or too disconnected from daily work — this
+            diagnostic gives you a tailored{" "}
+            <span className="font-semibold text-[#0a0a0a]">90-day roadmap</span>{" "}
+            to fix it.
           </motion.p>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            className="flex flex-col sm:flex-row gap-3 justify-center"
+            transition={{ duration: 0.5, delay: 0.4 }}
           >
-            <a
-              href={CALENDLY_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg font-semibold text-white text-sm transition-all hover:opacity-90"
-              style={{ backgroundColor: "#0202ff" }}
-            >
-              Book the pilot call
-              <ArrowRight className="w-4 h-4" />
-            </a>
-            <a
-              href="#guarantee"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg font-semibold text-gray-700 text-sm border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all"
-            >
-              See the guarantee
-            </a>
+            <DiagnosticCTA label="Take the diagnostic" />
+            <p className="text-sm text-gray-400 text-center mt-4">
+              No commitment. No generic report. A tailored starting plan you can use internally.
+            </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Audience strip */}
-      <section className="relative px-6 py-20 border-t border-gray-100">
-        <div className="max-w-5xl mx-auto">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center text-2xl sm:text-3xl font-bold text-[#0a0a0a] mb-10"
-          >
-            Turn daily management into your greatest competitive advantage.
-          </motion.h2>
+      {/* ─── 02 · PROBLEM ─── Fast pattern recognition */}
+      <ReportSection number="02 · The Problem" id="problem">
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-2xl sm:text-3xl font-bold text-[#0a0a0a] leading-tight mb-8"
+        >
+          You do not need more leadership activity. You need a better support system.
+        </motion.h2>
+        <ul className="space-y-4">
+          {PROBLEM_BULLETS.map((item, i) => (
+            <motion.li
+              key={i}
+              initial={{ opacity: 0, x: -16 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: i * 0.08 }}
+              className="flex items-start gap-3"
+            >
+              <span
+                className="mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0"
+                style={{ backgroundColor: "#0202ff" }}
+              />
+              <span className="text-gray-700 leading-relaxed text-[15px]">{item}</span>
+            </motion.li>
+          ))}
+        </ul>
+      </ReportSection>
 
-          <div className="mb-12">
-            <OfferUnifiedHub />
-          </div>
+      {/* ─── 03 · COST ─── Agitate, but stay credible */}
+      <ReportSection number="03 · The Cost" id="cost" className="bg-gray-50/60">
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-2xl sm:text-3xl font-bold text-[#0a0a0a] leading-tight mb-6"
+        >
+          The cost of waiting is usually higher than it looks.
+        </motion.h2>
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="text-gray-600 leading-relaxed text-[15px]"
+        >
+          When leadership support starts too late or depends on too much manual
+          coordination, the downstream cost shows up in manager strain, slower
+          readiness, weaker follow-through, uneven team performance, and growing
+          pressure on HR, Talent, and L&amp;D.
+        </motion.p>
+      </ReportSection>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {AUDIENCES.map((a, i) => (
+      {/* ─── 04 · WHAT YOU GET ─── Core conversion section */}
+      <ReportSection number="04 · What You Get" id="what-you-get">
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-2xl sm:text-3xl font-bold text-[#0a0a0a] leading-tight mb-2"
+        >
+          A 90-Day Leadership Development Reboot Blueprint
+        </motion.h2>
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.05 }}
+          className="text-sm text-gray-400 mb-10"
+        >
+          More than a report — a decision-ready document.
+        </motion.p>
+
+        <div className="space-y-5">
+          {BLUEPRINT_MODULES.map((mod, i) => {
+            const Icon = mod.icon;
+            return (
               <motion.div
-                key={a.tag}
-                initial={{ opacity: 0, y: 20 }}
+                key={i}
+                initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="rounded-2xl border border-gray-100 bg-gray-50/50 p-6 flex flex-col shadow-sm"
+                transition={{ duration: 0.4, delay: i * 0.07 }}
+                className="flex items-start gap-4 p-5 rounded-lg border border-gray-200 bg-white hover:border-gray-300 transition-colors"
               >
-                <div className="mb-3">
-                  <span
-                    className="inline-block text-xs font-semibold uppercase tracking-widest px-3 py-1 rounded-full"
-                    style={{ color: "#0202ff", backgroundColor: "#0202ff15" }}
-                  >
-                    {a.tag}
-                  </span>
+                <span
+                  className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: "#0202ff10" }}
+                >
+                  <Icon className="w-5 h-5" style={{ color: "#0202ff" }} />
+                </span>
+                <div>
+                  <h3 className="font-semibold text-[#0a0a0a] text-[15px] mb-1">{mod.title}</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">{mod.body}</p>
                 </div>
-                <p className="text-gray-700 text-sm leading-relaxed">{a.body}</p>
               </motion.div>
-            ))}
-          </div>
+            );
+          })}
         </div>
-      </section>
+      </ReportSection>
 
-      {/* Guarantee */}
-      <section id="guarantee" className="relative px-6 py-24 border-t border-gray-100">
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `linear-gradient(#0202ff 1px, transparent 1px), linear-gradient(90deg, #0202ff 1px, transparent 1px)`,
-            backgroundSize: "48px 48px",
-          }}
-        />
-        <div className="relative max-w-2xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 mb-6"
-          >
-            <span
-              className="w-9 h-9 rounded-full flex items-center justify-center text-white"
-              style={{ backgroundColor: "#0202ff" }}
+      {/* ─── 05 · HOW IT WORKS ─── 3 steps, remove friction */}
+      <ReportSection number="05 · How It Works" id="how-it-works" className="bg-gray-50/60">
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-2xl sm:text-3xl font-bold text-[#0a0a0a] leading-tight mb-10"
+        >
+          How it works
+        </motion.h2>
+
+        <div className="space-y-8">
+          {STEPS.map((step, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -16 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: i * 0.1 }}
+              className="flex items-start gap-5"
             >
-              <ShieldCheck className="w-5 h-5" />
-            </span>
-          </motion.div>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-400 mb-6"
-          >
-            Our Guarantee
-          </motion.p>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-xl sm:text-2xl font-medium text-[#0a0a0a] leading-relaxed"
-          >
-            If HR and your executive sponsor don't get a live Leadership Intelligence Hub
-            and a clearer, competency-aligned story of which managers are at risk, ready,
-            and where support should go next, we'll keep working with your cohort at no
-            additional charge until they do.
-          </motion.p>
+              <span
+                className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center font-mono font-bold text-sm text-white"
+                style={{ backgroundColor: "#0202ff" }}
+              >
+                {i + 1}
+              </span>
+              <p className="text-gray-700 leading-relaxed text-[15px] pt-1">{step}</p>
+            </motion.div>
+          ))}
         </div>
-      </section>
+      </ReportSection>
 
-      {/* Closing CTA */}
-      <section className="px-6 py-24 text-center border-t border-gray-100">
-        <div className="max-w-xl mx-auto">
+      {/* ─── 06 · WHO IT'S FOR ─── Qualification */}
+      <ReportSection number="06 · Who It's For" id="who-its-for">
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-2xl sm:text-3xl font-bold text-[#0a0a0a] leading-tight mb-8"
+        >
+          Built for teams responsible for leadership outcomes, not just leadership programs.
+        </motion.h2>
+        <div className="flex flex-wrap gap-2.5">
+          {AUDIENCES.map((aud, i) => (
+            <motion.span
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.3, delay: i * 0.06 }}
+              className="text-sm font-medium px-4 py-2 rounded-full border border-gray-200 text-gray-700"
+            >
+              {aud}
+            </motion.span>
+          ))}
+        </div>
+      </ReportSection>
+
+      {/* ─── 07 · IMPLEMENTATION BRIDGE ─── Lightly introduce Curiosity Led */}
+      <ReportSection number="07 · Implementation" id="bridge" className="bg-gray-50/60">
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-2xl sm:text-3xl font-bold text-[#0a0a0a] leading-tight mb-6"
+        >
+          A roadmap is valuable. Implementation is where it gets hard.
+        </motion.h2>
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="text-gray-600 leading-relaxed text-[15px]"
+        >
+          Most teams do not struggle because they cannot name the problem. They
+          struggle because fixing it means reducing friction for managers,
+          creating earlier intervention points, coordinating across tools, and
+          sustaining follow-through without adding more burden to the internal
+          team. That is where{" "}
+          <span className="font-semibold text-[#0a0a0a]">Curiosity Led</span> can
+          help.
+        </motion.p>
+      </ReportSection>
+
+      {/* ─── 08 · FINAL CTA ─── Drive into the diagnostic */}
+      <section
+        id="diagnostic-cta"
+        className="px-6 py-24 border-t border-gray-200 bg-white"
+      >
+        <div className="max-w-2xl mx-auto text-center">
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4 }}
+            className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-400 mb-5 font-mono"
+          >
+            08 · Get Started
+          </motion.p>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="text-3xl sm:text-4xl font-bold text-[#0a0a0a] mb-4"
+            className="text-3xl sm:text-4xl font-bold text-[#0a0a0a] leading-tight mb-4"
           >
-            12 weeks. One Hub. A leadership story you can get behind.
+            Get your 90-Day Leadership Development Reboot Blueprint
           </motion.h2>
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-gray-600 mb-8"
+            className="text-gray-500 mb-10 text-[15px]"
           >
-            Limited pilot cohorts. Book a call to hold a seat.
+            Use it as a starting point for internal action, leadership
+            conversations, or your next implementation decision.
           </motion.p>
-          <motion.a
-            href={CALENDLY_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            initial={{ opacity: 0, y: 20 }}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg font-semibold text-white text-sm transition-all hover:opacity-90"
-            style={{ backgroundColor: "#0202ff" }}
+            transition={{ duration: 0.5, delay: 0.15 }}
           >
-            Book the pilot call
-            <ArrowRight className="w-4 h-4" />
-          </motion.a>
+            <DiagnosticCTA label="Take the diagnostic" />
+          </motion.div>
         </div>
       </section>
 
