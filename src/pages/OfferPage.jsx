@@ -1,10 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, X, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2, Shield } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import ReportPreviewCard from "@/components/landing/ReportPreviewCard";
+
+const STEPS = [
+  { num: "01", title: "Your Readiness Score", desc: "See where support is landing now" },
+  { num: "02", title: "Your #1 Growth Block", desc: "Know where to start" },
+  { num: "03", title: "Your 90-Day Plan", desc: "Print it and share it" },
+];
 
 export default function OfferPage() {
-  const [showForm, setShowForm] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -22,10 +28,7 @@ export default function OfferPage() {
   }, []);
 
   const scrollToForm = () => {
-    setShowForm(true);
-    setTimeout(() => {
-      document.getElementById("lead-form")?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 100);
+    document.getElementById("lead-form")?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
   const handleSubmit = async (e) => {
@@ -47,64 +50,112 @@ export default function OfferPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans text-[#0a0a0a]">
-      {/* Minimal brand mark */}
-      <div className="fixed top-0 left-0 right-0 z-20 flex items-center justify-center py-4 bg-white/80 backdrop-blur-sm">
-        <img
-          src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5761758bf_CuriosityLegLogo.png"
-          alt="Curiosity Led"
-          className="h-8 w-auto object-contain"
-        />
-      </div>
+    <div className="min-h-screen font-sans text-[#0a0a0a]" style={{ backgroundColor: "#F9F7F5" }}>
+      {/* Black header bar */}
+      <header className="sticky top-0 z-30 flex items-center justify-between px-5 py-3 bg-[#0a0a0a]">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center w-9 h-9 rounded bg-white">
+            <img
+              src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5761758bf_CuriosityLegLogo.png"
+              alt="Curiosity Led"
+              className="w-7 h-7 object-contain"
+            />
+          </div>
+          <div className="text-white">
+            <div className="text-sm font-bold tracking-wide">CURIOSITY LED</div>
+            <div className="text-[10px] text-gray-400 leading-none">LEADERSHIP DEVELOPMENT DIAGNOSTIC</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5 text-white/90">
+          <Shield className="w-4 h-4" />
+          <span className="text-xs font-medium">Private Assessment</span>
+        </div>
+      </header>
 
-      {/* Hero */}
-      <section className="relative min-h-screen flex flex-col justify-center px-6 pt-24 pb-16 overflow-hidden">
-        <div className="relative max-w-2xl mx-auto w-full text-center">
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-xs font-semibold uppercase tracking-[0.25em] mb-6"
-            style={{ color: "#0202ff" }}
-          >
-            Leadership Development Diagnostic
-          </motion.p>
+      {/* Split-screen hero */}
+      <section className="px-5 py-12 lg:py-16">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          {/* Left column — content */}
+          <div className="max-w-xl">
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-xs font-semibold uppercase tracking-[0.2em] mb-5"
+              style={{ color: "#0202ff" }}
+            >
+              01 — Leadership Development Review by Curiosity Led
+            </motion.p>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-            className="text-4xl sm:text-5xl font-bold leading-[1.08] tracking-tight mb-6"
-          >
-            Get a <span style={{ color: "#0202ff" }}>90-Day Leadership Development Reboot Blueprint</span> built around your real bottlenecks.
-          </motion.h1>
+            <motion.h1
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.1] tracking-tight mb-5"
+            >
+              What is the #1 thing holding back your <span style={{ color: "#0202ff" }}>leadership development?</span>
+            </motion.h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="text-lg text-gray-600 leading-relaxed mb-8 max-w-xl mx-auto"
-          >
-            For HR, Talent, L&D, and executive leaders who know support is too reactive, too manual, or too disconnected from daily work — this diagnostic gives you a tailored 90-day roadmap to fix it.
-          </motion.p>
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-base sm:text-lg text-gray-600 leading-relaxed mb-7"
+            >
+              Answer a short set of questions. See where leadership support is getting stuck, get a clear readiness score, and download a 90-Day Leadership Development Reboot Blueprint built from your answers.
+            </motion.p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.45 }}
-            className="flex flex-col items-center gap-3"
-          >
-            <button
+            <motion.button
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
               onClick={scrollToForm}
-              className="w-full max-w-sm inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full font-semibold text-white text-base transition-all hover:opacity-90 shadow-lg"
+              className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-lg font-semibold text-white text-base transition-all hover:opacity-90 shadow-lg"
               style={{ backgroundColor: "#0202ff" }}
             >
-              Take the diagnostic
+              Continue my diagnostic
               <ArrowRight className="w-5 h-5" />
-            </button>
-            <p className="text-xs text-gray-500">
-              No commitment. No generic report. A tailored starting plan you can use internally.
-            </p>
+            </motion.button>
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="text-center text-xs text-gray-500 mt-3"
+            >
+              No commitment · About 2 minutes · Instant downloadable blueprint
+            </motion.p>
+
+            {/* Three-step feature row */}
+            <div className="mt-10 grid grid-cols-3 gap-0 border-t border-gray-200 pt-6">
+              {STEPS.map((s) => (
+                <div key={s.num} className="px-2 border-r border-gray-200 last:border-r-0">
+                  <p className="text-sm font-bold mb-1" style={{ color: "#0202ff" }}>{s.num}</p>
+                  <p className="text-xs font-semibold text-[#0a0a0a] leading-snug mb-0.5">{s.title}</p>
+                  <p className="text-[11px] text-gray-500 leading-snug">{s.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer badge */}
+            <div className="mt-6 flex items-center gap-3">
+              <div className="flex items-center justify-center w-8 h-8 rounded bg-[#0a0a0a] text-white text-[11px] font-bold">CL</div>
+              <p className="text-xs text-gray-500 leading-snug">
+                Built for HR, Talent, L&D, and executive leaders who want a clear answer they can use.
+              </p>
+            </div>
+          </div>
+
+          {/* Right column — report preview */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7, delay: 0.25 }}
+            className="w-full"
+          >
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 mb-1">Your takeaway</p>
+            <p className="text-lg font-bold text-[#0a0a0a] mb-4">A Clear Leadership Development Report</p>
+            <ReportPreviewCard />
           </motion.div>
         </div>
       </section>
@@ -162,9 +213,7 @@ export default function OfferPage() {
 
       {/* How it works */}
       <Section>
-        <h2 className="text-2xl sm:text-3xl font-bold leading-tight mb-8">
-          How it works
-        </h2>
+        <h2 className="text-2xl sm:text-3xl font-bold leading-tight mb-8">How it works</h2>
         <div className="space-y-5 max-w-md mx-auto text-left">
           {[
             "Answer a short set of questions about your current leadership support reality.",
@@ -191,10 +240,7 @@ export default function OfferPage() {
         </h2>
         <div className="flex flex-wrap justify-center gap-2 max-w-lg mx-auto">
           {["HR", "Talent", "L&D", "People Ops", "Executive leaders responsible for manager readiness"].map((tag) => (
-            <span
-              key={tag}
-              className="px-4 py-2 rounded-full text-sm font-medium border border-gray-200 text-gray-700"
-            >
+            <span key={tag} className="px-4 py-2 rounded-full text-sm font-medium border border-gray-200 bg-white text-gray-700">
               {tag}
             </span>
           ))}
@@ -212,7 +258,7 @@ export default function OfferPage() {
       </Section>
 
       {/* Final CTA + Form */}
-      <section className="px-6 py-20 border-t border-gray-100">
+      <section className="px-6 py-20 border-t border-gray-200">
         <div className="max-w-xl mx-auto text-center">
           <h2 className="text-3xl sm:text-4xl font-bold leading-tight mb-4">
             Get your 90-Day Leadership Development Reboot Blueprint
@@ -227,7 +273,7 @@ export default function OfferPage() {
                 key="success"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="rounded-2xl border border-gray-100 bg-gray-50 p-8"
+                className="rounded-2xl border border-gray-200 bg-white p-8"
               >
                 <CheckCircle2 className="w-12 h-12 mx-auto mb-4" style={{ color: "#0202ff" }} />
                 <h3 className="text-xl font-bold mb-2">You're on the list.</h3>
@@ -240,8 +286,6 @@ export default function OfferPage() {
                 key="form"
                 id="lead-form"
                 onSubmit={handleSubmit}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: showForm ? 1 : 0.4 }}
                 className="space-y-4 text-left max-w-md mx-auto"
               >
                 <div>
@@ -251,7 +295,7 @@ export default function OfferPage() {
                     required
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#0202ff] focus:ring-2 focus:ring-[#0202ff]/20 outline-none transition-all"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white focus:border-[#0202ff] focus:ring-2 focus:ring-[#0202ff]/20 outline-none transition-all"
                     placeholder="Your name"
                   />
                 </div>
@@ -262,7 +306,7 @@ export default function OfferPage() {
                     required
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#0202ff] focus:ring-2 focus:ring-[#0202ff]/20 outline-none transition-all"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white focus:border-[#0202ff] focus:ring-2 focus:ring-[#0202ff]/20 outline-none transition-all"
                     placeholder="you@company.com"
                   />
                 </div>
@@ -272,7 +316,7 @@ export default function OfferPage() {
                     type="text"
                     value={form.organization}
                     onChange={(e) => setForm({ ...form, organization: e.target.value })}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#0202ff] focus:ring-2 focus:ring-[#0202ff]/20 outline-none transition-all"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white focus:border-[#0202ff] focus:ring-2 focus:ring-[#0202ff]/20 outline-none transition-all"
                     placeholder="Company name"
                   />
                 </div>
@@ -281,7 +325,7 @@ export default function OfferPage() {
                   <select
                     value={form.role}
                     onChange={(e) => setForm({ ...form, role: e.target.value })}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#0202ff] focus:ring-2 focus:ring-[#0202ff]/20 outline-none transition-all bg-white"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white focus:border-[#0202ff] focus:ring-2 focus:ring-[#0202ff]/20 outline-none transition-all"
                   >
                     <option>HR</option>
                     <option>Talent</option>
@@ -295,7 +339,7 @@ export default function OfferPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full font-semibold text-white text-base transition-all hover:opacity-90 disabled:opacity-60 shadow-lg"
+                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-lg font-semibold text-white text-base transition-all hover:opacity-90 disabled:opacity-60 shadow-lg"
                   style={{ backgroundColor: "#0202ff" }}
                 >
                   {submitting ? (
@@ -319,7 +363,7 @@ export default function OfferPage() {
         </div>
       </section>
 
-      <footer className="px-6 py-8 border-t border-gray-100 text-center">
+      <footer className="px-6 py-8 border-t border-gray-200 text-center">
         <p className="text-xs text-gray-400">© {new Date().getFullYear()} Curiosity Led · Leadership Development Platform</p>
       </footer>
     </div>
@@ -328,7 +372,7 @@ export default function OfferPage() {
 
 function Section({ children }) {
   return (
-    <section className="px-6 py-16 border-t border-gray-100">
+    <section className="px-6 py-16 border-t border-gray-200">
       <div className="max-w-2xl mx-auto text-center">{children}</div>
     </section>
   );
