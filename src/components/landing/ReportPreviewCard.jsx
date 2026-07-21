@@ -2,16 +2,6 @@ import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer } from "recharts";
 
-const RADAR_DATA = [
-  { area: "Support", value: 65 },
-  { area: "Readiness", value: 72 },
-  { area: "Follow-through", value: 58 },
-  { area: "Coordination", value: 70 },
-  { area: "Insight", value: 80 },
-];
-
-const SCORE = 68;
-
 const TABS = [
   { key: "SCORE", label: "SCORE" },
   { key: "GROWTH", label: "GROWTH BLOCK" },
@@ -36,37 +26,112 @@ const STATES = [
   },
 ];
 
+// Per-state radar data
+// SCORE — all five areas, normal
+// GROWTH — Follow-through highlighted as the #1 block (lowest score)
+// BLUEPRINT — projected 90-day target scores
+const RADAR_STATES = [
+  [
+    { area: "Support", value: 65 },
+    { area: "Readiness", value: 72 },
+    { area: "Follow-through", value: 58 },
+    { area: "Coordination", value: 70 },
+    { area: "Insight", value: 80 },
+  ],
+  [
+    { area: "Support", value: 65, focus: null },
+    { area: "Readiness", value: 72, focus: null },
+    { area: "Follow-through", value: 58, focus: 58 },
+    { area: "Coordination", value: 70, focus: null },
+    { area: "Insight", value: 80, focus: null },
+  ],
+  [
+    { area: "Support", value: 78 },
+    { area: "Readiness", value: 84 },
+    { area: "Follow-through", value: 75 },
+    { area: "Coordination", value: 82 },
+    { area: "Insight", value: 88 },
+  ],
+];
+
+const GAUGE = [
+  { value: 68, label: "Leadership Readiness Score" },
+  { value: 58, label: "#1 Growth Block · Follow-through" },
+  { value: 82, label: "90-Day Target Score" },
+];
+
 const RULER = [
   { day: "30", label: "Assess" },
   { day: "60", label: "Support" },
   { day: "90", label: "Develop" },
 ];
 
-function ScoreGauge({ value }) {
+function ScoreGauge({ value, label }) {
   const radius = 52;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (value / 100) * circumference;
   return (
-    <div className="relative w-32 h-32 flex items-center justify-center">
-      <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-        <circle cx="60" cy="60" r={radius} fill="none" stroke="#E5E5E5" strokeWidth="8" />
-        <circle
-          cx="60"
-          cy="60"
-          r={radius}
-          fill="none"
-          stroke="#0202ff"
-          strokeWidth="8"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-        />
-      </svg>
-      <div className="absolute text-center">
-        <div className="text-3xl font-bold text-[#0a0a0a] leading-none">{value}</div>
-        <div className="text-xs text-gray-400 mt-0.5">/ 100</div>
+    <div className="flex flex-col items-center">
+      <div className="relative w-32 h-32 flex items-center justify-center">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r={radius} fill="none" stroke="#E5E5E5" strokeWidth="8" />
+          <motion.circle
+            cx="60"
+            cy="60"
+            r={radius}
+            fill="none"
+            stroke="#0202ff"
+            strokeWidth="8"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset: offset }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+          />
+        </svg>
+        <div className="absolute text-center">
+          <div className="text-3xl font-bold text-[#0a0a0a] leading-none">{value}</div>
+          <div className="text-xs text-gray-400 mt-0.5">/ 100</div>
+        </div>
       </div>
+      <p className="text-[10px] font-semibold text-gray-500 mt-2 tracking-wide uppercase text-center">{label}</p>
     </div>
+  );
+}
+
+function RadarVisual({ active }) {
+  const data = RADAR_STATES[active];
+  const isGrowth = active === 1;
+  const isBlueprint = active === 2;
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <RadarChart data={data} outerRadius="70%">
+        <PolarGrid stroke="#E5E5E5" />
+        <PolarAngleAxis dataKey="area" tick={{ fontSize: 9, fill: "#666" }} />
+        {/* Base layer — dim when highlighting a focus area */}
+        <Radar
+          dataKey="value"
+          stroke="#0202ff"
+          fill="#0202ff"
+          fillOpacity={isGrowth ? 0.05 : isBlueprint ? 0.06 : 0.12}
+          strokeWidth={isGrowth ? 1 : 1.5}
+          strokeOpacity={isGrowth ? 0.35 : 1}
+          strokeDasharray={isBlueprint ? "4 3" : undefined}
+        />
+        {/* Focus layer — only the #1 growth block area renders bold on top */}
+        {isGrowth && (
+          <Radar
+            dataKey="focus"
+            stroke="#0202ff"
+            fill="#0202ff"
+            fillOpacity={0.35}
+            strokeWidth={2}
+            strokeLinecap="round"
+          />
+        )}
+      </RadarChart>
+    </ResponsiveContainer>
   );
 }
 
@@ -81,6 +146,7 @@ export default function ReportPreviewCard() {
   }, []);
 
   const state = STATES[active];
+  const gauge = GAUGE[active];
 
   return (
     <div className="w-full rounded-xl overflow-hidden border border-gray-200 bg-white shadow-xl">
@@ -119,20 +185,32 @@ export default function ReportPreviewCard() {
         ))}
       </div>
 
-      {/* Score + radar */}
+      {/* Score + radar — visuals change per state */}
       <div className="px-5 py-5 flex items-center gap-5">
-        <div className="flex flex-col items-center">
-          <ScoreGauge value={SCORE} />
-          <p className="text-[10px] font-semibold text-gray-500 mt-2 tracking-wide uppercase">Leadership Readiness Score</p>
-        </div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`gauge-${active}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <ScoreGauge value={gauge.value} label={gauge.label} />
+          </motion.div>
+        </AnimatePresence>
         <div className="flex-1 h-32">
-          <ResponsiveContainer width="100%" height="100%">
-            <RadarChart data={RADAR_DATA} outerRadius="70%">
-              <PolarGrid stroke="#E5E5E5" />
-              <PolarAngleAxis dataKey="area" tick={{ fontSize: 9, fill: "#666" }} />
-              <Radar dataKey="value" stroke="#0202ff" fill="#0202ff" fillOpacity={0.12} strokeWidth={1.5} />
-            </RadarChart>
-          </ResponsiveContainer>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`radar-${active}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              className="h-full w-full"
+            >
+              <RadarVisual active={active} />
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
 
