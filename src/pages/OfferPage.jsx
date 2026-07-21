@@ -132,7 +132,7 @@ export default function OfferPage() {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="text-center text-xs text-gray-500 mt-3"
             >
-              No commitment · About 2 minutes · Instant downloadable blueprint
+              No commitment · Instant downloadable blueprint
             </motion.p>
 
             {/* Three-step feature row */}
