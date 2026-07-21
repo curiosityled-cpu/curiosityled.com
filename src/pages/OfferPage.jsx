@@ -63,7 +63,7 @@ export default function OfferPage() {
           </div>
           <div className="text-white">
             <div className="text-sm font-bold tracking-wide">CURIOSITY LED</div>
-            <div className="text-[10px] text-gray-400 leading-none">LEADERSHIP DEVELOPMENT DIAGNOSTIC</div>
+            <div className="text-[10px] text-gray-400 leading-none">LEADERSHIP SUPPORT DIAGNOSTIC</div>
           </div>
         </div>
         <div className="flex items-center gap-1.5 text-white/90">
@@ -84,7 +84,7 @@ export default function OfferPage() {
               className="text-xs font-semibold uppercase tracking-[0.2em] mb-5"
               style={{ color: "#0202ff" }}
             >
-              01 — Leadership Development Review by Curiosity Led
+              Leadership Support Diagnostic
             </motion.p>
 
             <motion.h1
