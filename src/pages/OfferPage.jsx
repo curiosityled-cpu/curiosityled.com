@@ -5,9 +5,9 @@ import { base44 } from "@/api/base44Client";
 import ReportPreviewCard from "@/components/landing/ReportPreviewCard";
 
 const STEPS = [
-  { num: "01", title: "Your Readiness Score", desc: "See where support is landing now" },
-  { num: "02", title: "Your #1 Growth Block", desc: "Know where to start" },
-  { num: "03", title: "Your 90-Day Plan", desc: "Print it and share it" },
+  { num: "1", desc: "Answer a short set of questions about your current leadership support reality." },
+  { num: "2", desc: "Get your tailored 90-Day Leadership Development Reboot Blueprint." },
+  { num: "3", desc: "Use it internally, or review it with Curiosity Led to pressure-test implementation." },
 ];
 
 export default function OfferPage() {
@@ -131,8 +131,7 @@ export default function OfferPage() {
               {STEPS.map((s) => (
                 <div key={s.num} className="px-2 border-r border-gray-200 last:border-r-0">
                   <p className="text-sm font-bold mb-1" style={{ color: "#0202ff" }}>{s.num}</p>
-                  <p className="text-xs font-semibold text-[#0a0a0a] leading-snug mb-0.5">{s.title}</p>
-                  <p className="text-[11px] text-gray-500 leading-snug">{s.desc}</p>
+                  <p className="text-[11px] text-gray-600 leading-snug">{s.desc}</p>
                 </div>
               ))}
             </div>
