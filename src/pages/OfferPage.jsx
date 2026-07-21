@@ -51,30 +51,38 @@ export default function OfferPage() {
   };
 
   return (
-    <div className="min-h-screen font-sans text-[#0a0a0a]" style={{ backgroundColor: "#F9F7F5" }}>
-      {/* Black header bar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between px-5 py-3 bg-[#0a0a0a]">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-9 h-9 rounded bg-white">
-            <img
-              src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5761758bf_CuriosityLegLogo.png"
-              alt="Curiosity Led"
-              className="w-7 h-7 object-contain"
-            />
+    <div className="relative min-h-screen font-sans text-[#0a0a0a] bg-white overflow-hidden">
+      {/* Subtle grid background */}
+      <div
+        className="absolute inset-0 opacity-[0.03] pointer-events-none"
+        style={{
+          backgroundImage: `linear-gradient(#0202ff 1px, transparent 1px), linear-gradient(90deg, #0202ff 1px, transparent 1px)`,
+          backgroundSize: "48px 48px",
+        }}
+      />
+      {/* Blue accent blob */}
+      <div
+        className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-[0.06] blur-3xl pointer-events-none"
+        style={{ background: "#0202ff" }}
+      />
+
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <img
+            src="https://raw.githubusercontent.com/curiosityled-cpu/curiosityled.com/main/public/CuriosityLedLogoBBW%20(1).png"
+            alt="Curiosity Led"
+            className="h-10 object-contain"
+          />
+          <div className="flex items-center gap-1.5" style={{ color: "#0202ff" }}>
+            <Shield className="w-4 h-4" />
+            <span className="text-xs font-medium">Private Assessment</span>
           </div>
-          <div className="text-white">
-            <div className="text-sm font-bold tracking-wide">CURIOSITY LED</div>
-            <div className="text-[10px] text-gray-400 leading-none">LEADERSHIP SUPPORT DIAGNOSTIC</div>
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5 text-white/90">
-          <Shield className="w-4 h-4" />
-          <span className="text-xs font-medium">Private Assessment</span>
         </div>
       </header>
 
       {/* Split-screen hero */}
-      <section className="px-5 py-12 lg:py-16">
+      <section className="relative px-5 pt-28 pb-12 lg:pt-32 lg:pb-16">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left column — content */}
           <div className="max-w-xl">
@@ -160,7 +168,7 @@ export default function OfferPage() {
         </div>
       </section>
 
-      <footer className="px-6 py-8 text-center" style={{ backgroundColor: "#FBFBFB" }}>
+      <footer className="relative px-6 py-8 text-center" style={{ backgroundColor: "#FBFBFB" }}>
         <div className="max-w-md mx-auto space-y-1">
           <p className="text-xs" style={{ color: "#666666" }}>
             © 2026 Curiosity Led LLC · Leadership Support Diagnostic
