@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, CheckCircle2, Loader2, Shield } from "lucide-react";
+import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import ReportPreviewCard from "@/components/landing/ReportPreviewCard";
 
@@ -159,8 +160,20 @@ export default function OfferPage() {
         </div>
       </section>
 
-      <footer className="px-6 py-8 border-t border-gray-200 text-center">
-        <p className="text-xs text-gray-400">© {new Date().getFullYear()} Curiosity Led · Leadership Development Platform</p>
+      <footer className="px-6 py-8 text-center" style={{ backgroundColor: "#FBFBFB" }}>
+        <div className="max-w-md mx-auto space-y-1">
+          <p className="text-xs" style={{ color: "#666666" }}>
+            © 2026 Curiosity Led LLC · Leadership Support Diagnostic
+          </p>
+          <p className="text-xs" style={{ color: "#666666" }}>
+            Results are based on your answers and are not a promise of business performance.
+          </p>
+        </div>
+        <div className="mt-4 flex items-center justify-center gap-1.5 text-xs">
+          <Link to="/PrivacyPolicy" className="underline" style={{ color: "#666666" }}>Privacy Policy</Link>
+          <span style={{ color: "#666666" }}>·</span>
+          <Link to="/TermsOfService" className="underline" style={{ color: "#666666" }}>Terms</Link>
+        </div>
       </footer>
     </div>
   );
