@@ -147,11 +147,7 @@ export default function OfferPage() {
 
             {/* Footer badge */}
             <div className="mt-6 flex items-center gap-3">
-              <img
-                src="https://raw.githubusercontent.com/curiosityled-cpu/curiosityled.com/main/public/CuriosityLedLogoBBW%20(1).png"
-                alt="Curiosity Led"
-                className="w-8 h-8 object-contain"
-              />
+              <div className="flex items-center justify-center w-8 h-8 rounded bg-[#0a0a0a] text-white text-[11px] font-bold">CL</div>
               <p className="text-xs text-gray-500 leading-snug">
                 Built for HR, Talent, L&D, and executive leaders who want a clear answer they can use.
               </p>
