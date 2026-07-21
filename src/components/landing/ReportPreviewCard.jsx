@@ -62,7 +62,7 @@ export default function ReportPreviewCard() {
 
       {/* Tabs */}
       <div className="flex gap-6 border-b border-gray-100 px-4">
-        {["SCORE", "GROWTH BLOCK", "90-DAY PLAN"].map((tab, i) => (
+        {["SCORE", "GROWTH BLOCK", "90-DAY BLUEPRINT"].map((tab, i) => (
           <div
             key={tab}
             className={`py-2.5 text-xs font-semibold tracking-wide ${i === 0 ? "text-[#0a0a0a] border-b-2" : "text-gray-400"}`}
