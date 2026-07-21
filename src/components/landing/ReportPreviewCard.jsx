@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer } from "recharts";
 
 const RADAR_DATA = [
@@ -10,6 +11,36 @@ const RADAR_DATA = [
 ];
 
 const SCORE = 68;
+
+const TABS = [
+  { key: "SCORE", label: "SCORE" },
+  { key: "GROWTH", label: "GROWTH BLOCK" },
+  { key: "BLUEPRINT", label: "90-DAY BLUEPRINT" },
+];
+
+const STATES = [
+  {
+    eyebrow: "01 / YOUR SCORE",
+    headline: "See All Five Scores in One View.",
+    body: "See what is working and which part of your leadership support needs attention first.",
+  },
+  {
+    eyebrow: "02 / GROWTH BLOCK",
+    headline: "Your First Area to Fix.",
+    body: "Get a clear answer about what may be slowing leadership growth right now.",
+  },
+  {
+    eyebrow: "03 / 90-DAY BLUEPRINT",
+    headline: "Your Next Moves, in Order.",
+    body: "Use the blueprint with your team or bring it to Curiosity Led.",
+  },
+];
+
+const RULER = [
+  { day: "30", label: "Assess" },
+  { day: "60", label: "Support" },
+  { day: "90", label: "Develop" },
+];
 
 function ScoreGauge({ value }) {
   const radius = 52;
@@ -40,6 +71,17 @@ function ScoreGauge({ value }) {
 }
 
 export default function ReportPreviewCard() {
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setActive((prev) => (prev + 1) % STATES.length);
+    }, 3500);
+    return () => clearInterval(id);
+  }, []);
+
+  const state = STATES[active];
+
   return (
     <div className="w-full rounded-xl overflow-hidden border border-gray-200 bg-white shadow-xl">
       {/* Black header bar */}
@@ -62,14 +104,18 @@ export default function ReportPreviewCard() {
 
       {/* Tabs */}
       <div className="flex gap-6 border-b border-gray-100 px-4">
-        {["SCORE", "GROWTH BLOCK", "90-DAY BLUEPRINT"].map((tab, i) => (
-          <div
-            key={tab}
-            className={`py-2.5 text-xs font-semibold tracking-wide ${i === 0 ? "text-[#0a0a0a] border-b-2" : "text-gray-400"}`}
-            style={i === 0 ? { borderColor: "#0202ff" } : {}}
+        {TABS.map((tab, i) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setActive(i)}
+            className={`py-2.5 text-xs font-semibold tracking-wide transition-colors ${
+              i === active ? "text-[#0a0a0a] border-b-2" : "text-gray-400"
+            }`}
+            style={i === active ? { borderColor: "#0202ff" } : {}}
           >
-            {tab}
-          </div>
+            {tab.label}
+          </button>
         ))}
       </div>
 
@@ -90,20 +136,39 @@ export default function ReportPreviewCard() {
         </div>
       </div>
 
-      {/* Growth block summary */}
+      {/* Rotating takeaway content */}
       <div className="px-5 pb-5">
-        <p className="text-[11px] font-semibold tracking-wide text-[#0202ff] mb-1">01 / YOUR FIRST FOCUS</p>
-        <p className="text-sm font-bold text-[#0a0a0a] mb-1">See Manager Risk and Readiness in One View</p>
-        <p className="text-xs text-gray-500 leading-relaxed">See which leaders are at risk, ready, and where support should go first.</p>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={active}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6, ease: "easeInOut" }}
+          >
+            <p className="text-[11px] font-semibold tracking-wide text-[#0202ff] mb-1">{state.eyebrow}</p>
+            <p className="text-sm font-bold text-[#0a0a0a] mb-1">{state.headline}</p>
+            <p className="text-xs text-gray-500 leading-relaxed">{state.body}</p>
+          </motion.div>
+        </AnimatePresence>
 
-        {/* Progress slider */}
+        {/* Progress ruler */}
         <div className="mt-4 relative">
-          <div className="h-1 bg-gray-200 rounded-full" />
-          <div className="absolute top-0 left-0 h-1 rounded-full" style={{ width: "60%", backgroundColor: "#0202ff" }} />
-          <div className="flex justify-between mt-2 text-[10px] text-gray-400">
-            <span>30 · Assess</span>
-            <span>60 · Support</span>
-            <span>90 · Develop</span>
+          <div className="h-px bg-gray-200" />
+          <div className="flex justify-between -mt-3">
+            {RULER.map((node, i) => (
+              <div key={node.day} className="flex flex-col items-center">
+                <div
+                  className={`w-9 h-9 rounded border flex items-center justify-center text-xs font-bold bg-white ${
+                    i === active ? "text-[#0202ff]" : "text-gray-400"
+                  }`}
+                  style={i === active ? { borderColor: "#0202ff" } : { borderColor: "#D1D5DB" }}
+                >
+                  {node.day}
+                </div>
+                <span className="text-[10px] text-gray-400 mt-1">{node.label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
