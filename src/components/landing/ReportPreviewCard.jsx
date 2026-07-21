@@ -189,7 +189,7 @@ export default function ReportPreviewCard() {
       </div>
 
       {/* Rotating visual panel */}
-      <div className="px-5 py-5 min-h-[180px]">
+      <div className="px-5 py-5 h-[220px] flex items-center">
         <AnimatePresence mode="wait">
           <motion.div
             key={active}
@@ -197,6 +197,7 @@ export default function ReportPreviewCard() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.6, ease: "easeInOut" }}
+            className="w-full"
           >
             {PANELS[active]}
           </motion.div>
