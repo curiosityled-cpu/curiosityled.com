@@ -51,18 +51,24 @@ export default function OfferPage() {
 
   return (
     <div className="min-h-screen font-sans text-[#0a0a0a]" style={{ backgroundColor: "#F9F7F5" }}>
-      {/* Header bar — Curiosity Led branding, no CTAs */}
-      <header className="sticky top-0 z-30 bg-white border-b border-gray-100 shadow-sm">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <img
-            src="https://raw.githubusercontent.com/curiosityled-cpu/curiosityled.com/main/public/CuriosityLedLogoBBW%20(1).png"
-            alt="Curiosity Led"
-            className="h-10 object-contain"
-          />
-          <div className="flex items-center gap-1.5 text-gray-700">
-            <Shield className="w-4 h-4" />
-            <span className="text-xs font-medium">Private Assessment</span>
+      {/* Black header bar */}
+      <header className="sticky top-0 z-30 flex items-center justify-between px-5 py-3 bg-[#0a0a0a]">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center w-9 h-9 rounded bg-white">
+            <img
+              src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5761758bf_CuriosityLegLogo.png"
+              alt="Curiosity Led"
+              className="w-7 h-7 object-contain"
+            />
           </div>
+          <div className="text-white">
+            <div className="text-sm font-bold tracking-wide">CURIOSITY LED</div>
+            <div className="text-[10px] text-gray-400 leading-none">LEADERSHIP SUPPORT DIAGNOSTIC</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5 text-white/90">
+          <Shield className="w-4 h-4" />
+          <span className="text-xs font-medium">Private Assessment</span>
         </div>
       </header>
 
