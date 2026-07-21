@@ -10,8 +10,6 @@ const RADAR_DATA = [
   { area: "Insight", value: 80 },
 ];
 
-const SCORE = 68;
-
 const TABS = [
   { key: "SCORE", label: "SCORE" },
   { key: "GROWTH", label: "GROWTH BLOCK" },
@@ -70,6 +68,77 @@ function ScoreGauge({ value }) {
   );
 }
 
+const SCORE_PANEL = (
+  <div className="flex items-center gap-5">
+    <div className="flex flex-col items-center">
+      <ScoreGauge value={68} />
+      <p className="text-[10px] font-semibold text-gray-500 mt-2 tracking-wide uppercase">Leadership Readiness Score</p>
+    </div>
+    <div className="flex-1 h-32">
+      <ResponsiveContainer width="100%" height="100%">
+        <RadarChart data={RADAR_DATA} outerRadius="70%">
+          <PolarGrid stroke="#E5E5E5" />
+          <PolarAngleAxis dataKey="area" tick={{ fontSize: 9, fill: "#666" }} />
+          <Radar dataKey="value" stroke="#0202ff" fill="#0202ff" fillOpacity={0.12} strokeWidth={1.5} />
+        </RadarChart>
+      </ResponsiveContainer>
+    </div>
+  </div>
+);
+
+const GROWTH_PANEL = (
+  <div className="space-y-2.5">
+    <div className="flex items-center justify-between mb-1">
+      <span className="text-[10px] font-bold tracking-wide text-[#0202ff]">#1 GROWTH BLOCK</span>
+      <span className="text-[10px] text-gray-400">LOWEST SCORE</span>
+    </div>
+    {[
+      { label: "Manager Follow-through", score: 58, flagged: true },
+      { label: "Support Coordination", score: 70, flagged: false },
+      { label: "Insight to Action", score: 80, flagged: false },
+    ].map((row) => (
+      <div key={row.label}>
+        <div className="flex items-center justify-between mb-1">
+          <span className={`text-xs ${row.flagged ? "font-bold text-[#0a0a0a]" : "text-gray-500"}`}>{row.label}</span>
+          <span className={`text-xs font-semibold ${row.flagged ? "text-[#0202ff]" : "text-gray-400"}`}>{row.score}%</span>
+        </div>
+        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full"
+            style={{ width: `${row.score}%`, backgroundColor: row.flagged ? "#0202ff" : "#CBD5E1" }}
+          />
+        </div>
+      </div>
+    ))}
+    <p className="text-[10px] text-gray-400 pt-1">Scores across five leadership support areas.</p>
+  </div>
+);
+
+const BLUEPRINT_PANEL = (
+  <div className="space-y-2">
+    {[
+      { day: "30", label: "Assess", action: "Map manager readiness gaps across your top teams." },
+      { day: "60", label: "Support", action: "Launch weekly check-ins and earlier intervention points." },
+      { day: "90", label: "Develop", action: "Embed follow-through rituals and review with leadership." },
+    ].map((phase) => (
+      <div key={phase.day} className="flex items-start gap-3 rounded-lg border border-gray-100 px-3 py-2.5">
+        <div
+          className="flex-shrink-0 w-8 h-8 rounded flex items-center justify-center text-xs font-bold text-white"
+          style={{ backgroundColor: "#0202ff" }}
+        >
+          {phase.day}
+        </div>
+        <div>
+          <p className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">{phase.label}</p>
+          <p className="text-xs text-[#0a0a0a] leading-snug">{phase.action}</p>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+const PANELS = [SCORE_PANEL, GROWTH_PANEL, BLUEPRINT_PANEL];
+
 export default function ReportPreviewCard() {
   const [active, setActive] = useState(0);
 
@@ -119,21 +188,19 @@ export default function ReportPreviewCard() {
         ))}
       </div>
 
-      {/* Score + radar */}
-      <div className="px-5 py-5 flex items-center gap-5">
-        <div className="flex flex-col items-center">
-          <ScoreGauge value={SCORE} />
-          <p className="text-[10px] font-semibold text-gray-500 mt-2 tracking-wide uppercase">Leadership Readiness Score</p>
-        </div>
-        <div className="flex-1 h-32">
-          <ResponsiveContainer width="100%" height="100%">
-            <RadarChart data={RADAR_DATA} outerRadius="70%">
-              <PolarGrid stroke="#E5E5E5" />
-              <PolarAngleAxis dataKey="area" tick={{ fontSize: 9, fill: "#666" }} />
-              <Radar dataKey="value" stroke="#0202ff" fill="#0202ff" fillOpacity={0.12} strokeWidth={1.5} />
-            </RadarChart>
-          </ResponsiveContainer>
-        </div>
+      {/* Rotating visual panel */}
+      <div className="px-5 py-5 min-h-[180px]">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={active}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6, ease: "easeInOut" }}
+          >
+            {PANELS[active]}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* Rotating takeaway content */}
