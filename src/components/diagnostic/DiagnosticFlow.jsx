@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Shield, CheckCircle2 } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { SCORED_ITEMS } from "@/lib/diagnostic/questions";
 import { computeAllScores } from "@/lib/diagnostic/scoring";

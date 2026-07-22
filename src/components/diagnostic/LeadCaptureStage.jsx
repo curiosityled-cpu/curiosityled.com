@@ -33,7 +33,6 @@ export default function LeadCaptureStage({ onComplete, onBack, firstName }) {
 
   const currentStep = STEPS[stepIndex];
   const isLastStep = stepIndex === STEPS.length - 1;
-  const progress = ((stepIndex + 1) / STEPS.length) * 14 + 72; // 72%-86%
 
   const isValid = () => {
     if (currentStep.id === "email") {
