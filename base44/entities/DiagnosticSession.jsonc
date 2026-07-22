@@ -1,0 +1,205 @@
+{
+  "name": "DiagnosticSession",
+  "type": "object",
+  "properties": {
+    "prospect_id": {
+      "type": "string",
+      "description": "Linked Prospect entity ID (created at lead capture)"
+    },
+    "respondent_name": {
+      "type": "string",
+      "description": "First name of the respondent (used for personalization)"
+    },
+    "intake_answers": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "All 10 intake field answers keyed by field ID"
+    },
+    "scored_responses": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Map of scored item ID (1-24) to response index (0-4)"
+    },
+    "follow_up_answers": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Triggered follow-up answers keyed by follow-up trigger key"
+    },
+    "construct_scores": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Computed 0-100 scores for each of the 5 constructs"
+    },
+    "overall_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Weighted overall score"
+    },
+    "overall_label": {
+      "type": "string",
+      "enum": [
+        "Earlier-Intervention Ready",
+        "In Transition",
+        "Reactive & Fragmented"
+      ],
+      "description": "Overall score band label"
+    },
+    "mer_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Manager Engagement Risk derived index score"
+    },
+    "mer_label": {
+      "type": "string",
+      "enum": [
+        "Low risk",
+        "Emerging risk",
+        "High risk"
+      ],
+      "description": "MER band label"
+    },
+    "lsc_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Leadership Story Coherence derived index score"
+    },
+    "lsc_label": {
+      "type": "string",
+      "enum": [
+        "Clear story",
+        "Partial story",
+        "Fragmented story"
+      ],
+      "description": "LSC band label"
+    },
+    "top_2_pressure_points": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Two lowest construct keys (pressure points)"
+    },
+    "blueprint_priorities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Three blueprint priority keys (construct or derived index)"
+    },
+    "report_json": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Fully assembled report content (all 9 sections)"
+    },
+    "pdf_url": {
+      "type": "string",
+      "description": "URL to the generated PDF report"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "intake",
+        "scoring",
+        "follow_ups",
+        "lead_capture",
+        "scored",
+        "report_generated",
+        "pdf_emailed",
+        "abandoned"
+      ],
+      "default": "intake",
+      "description": "Current stage of the diagnostic flow"
+    },
+    "email_sent": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the PDF was emailed to the respondent"
+    }
+  },
+  "required": [
+    "respondent_name"
+  ],
+  "rls": {
+    "create": true,
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}
