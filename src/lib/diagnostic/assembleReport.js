@@ -162,8 +162,10 @@ export function assembleReport(scores, intakeAnswers, followUpAnswers) {
   const talkingPoints = blueprintPriorities.slice(0, 3).map((key) => {
     return LEADERSHIP_TALKING_POINTS[key] || LEADERSHIP_TALKING_POINTS[top2PressurePoints[0]];
   }).filter(Boolean);
+  // Deduplicate talking points (derived-index fallbacks can repeat P1)
+  const uniqueTalkingPoints = [...new Set(talkingPoints)];
   const section7 = {
-    talking_points: talkingPoints,
+    talking_points: uniqueTalkingPoints,
     framing_sentence: LEADERSHIP_FRAMING_SENTENCE,
     story_coherence_context: lscLabel,
   };

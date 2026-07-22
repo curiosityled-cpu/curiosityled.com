@@ -217,6 +217,10 @@ export const LEADERSHIP_TALKING_POINTS = {
     "Too much effort is going into manual coordination, and that is competing with the work of actually improving support.",
   cost_of_inaction:
     "The hidden cost of our current approach is likely higher than it looks, and it will keep growing without earlier intervention.",
+  manager_engagement_risk:
+    "Managers are experiencing our support as one more requirement rather than as relief, and that is quietly eroding uptake.",
+  leadership_story_coherence:
+    "Our leadership support efforts are not yet adding up to one story executives can trust, which makes investment harder to justify.",
 };
 
 export const LEADERSHIP_FRAMING_SENTENCE =
