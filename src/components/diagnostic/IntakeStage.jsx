@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { INTAKE_FIELDS } from "@/lib/diagnostic/questions";
@@ -12,6 +12,11 @@ export default function IntakeStage({ onComplete, onBack, firstName }) {
 
   const currentSection = SECTIONS[sectionIndex];
   const sectionFields = INTAKE_FIELDS.filter((f) => f.section === currentSection);
+
+  // Jump to the top of the page the instant a new section renders.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [sectionIndex]);
 
   const handleFieldChange = (fieldId, value) => {
     setAnswers((prev) => ({ ...prev, [fieldId]: value }));
@@ -59,7 +64,6 @@ export default function IntakeStage({ onComplete, onBack, firstName }) {
   const handleNext = () => {
     if (sectionIndex < SECTIONS.length - 1) {
       setSectionIndex(sectionIndex + 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       onComplete({ ...answers, ...conditionalAnswers });
     }
@@ -68,7 +72,6 @@ export default function IntakeStage({ onComplete, onBack, firstName }) {
   const handlePrev = () => {
     if (sectionIndex > 0) {
       setSectionIndex(sectionIndex - 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       onBack();
     }
