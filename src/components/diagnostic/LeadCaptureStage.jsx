@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 
@@ -26,10 +26,15 @@ const STEPS = [
   },
 ];
 
-export default function LeadCaptureStage({ onComplete, onBack, firstName }) {
+export default function LeadCaptureStage({ onComplete, onBack, firstName, progress, onProgress }) {
   const [stepIndex, setStepIndex] = useState(0);
   const [values, setValues] = useState({ email: "", organization: "", phone: "" });
   const [consent, setConsent] = useState(false);
+
+  // Report overall completion progress to the parent flow.
+  useEffect(() => {
+    onProgress?.(72 + ((stepIndex + 1) / STEPS.length) * 25);
+  }, [stepIndex]);
 
   const currentStep = STEPS[stepIndex];
   const isLastStep = stepIndex === STEPS.length - 1;
@@ -68,12 +73,19 @@ export default function LeadCaptureStage({ onComplete, onBack, firstName }) {
     <div className="max-w-5xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
       {/* Left column — summary */}
       <div>
-        <div className="flex items-center gap-3 mb-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: "#0202ff" }}>
-            Questions Complete
-          </p>
-          <div className="flex-1 h-px bg-gray-200" />
-          <p className="text-xs text-gray-400">Report Ready</p>
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: "#0202ff" }}>
+              {Math.round(progress)}% Complete
+            </p>
+            <p className="text-xs text-gray-400">Report Ready</p>
+          </div>
+          <div className="w-full h-1 bg-gray-100 rounded-full">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${progress}%`, backgroundColor: "#0202ff" }}
+            />
+          </div>
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-bold leading-tight tracking-tight mb-4 text-[#0a0a0a]">

@@ -1,17 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { SCORED_ITEMS, SCORE_SCALE } from "@/lib/diagnostic/questions";
 import { CONSTRUCT_LABELS } from "@/lib/diagnostic/scoring";
 
-export default function ScoredQuestionsStage({ onComplete, onBack, firstName }) {
+export default function ScoredQuestionsStage({ onComplete, onBack, firstName, progress, onProgress }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [responses, setResponses] = useState({});
 
   const total = SCORED_ITEMS.length;
   const currentItem = SCORED_ITEMS[currentIndex];
   const constructLabel = CONSTRUCT_LABELS[currentItem.construct] || "";
-  const progress = ((currentIndex + 1) / total) * 32 + 32; // 32%-64%
+
+  // Report overall completion progress to the parent flow.
+  useEffect(() => {
+    const answered = Object.keys(responses).length;
+    onProgress?.(42 + (answered / total) * 20);
+  }, [responses, total]);
 
   const handleSelect = (optionIndex) => {
     const newResponses = { ...responses, [currentItem.id]: optionIndex };
@@ -50,7 +55,7 @@ export default function ScoredQuestionsStage({ onComplete, onBack, firstName }) 
           {constructLabel}
         </p>
         <p className="text-xs text-gray-400">
-          Question {currentIndex + 1} of {total}
+          {Math.round(progress)}% · Question {currentIndex + 1} of {total}
         </p>
       </div>
 
@@ -74,7 +79,9 @@ export default function ScoredQuestionsStage({ onComplete, onBack, firstName }) 
           </h1>
 
           <div className="space-y-2">
-            {SCORE_SCALE.map((option, optionIndex) => (
+            {[...SCORE_SCALE].reverse().map((option, displayIndex) => {
+              const optionIndex = SCORE_SCALE.length - 1 - displayIndex;
+              return (
               <button
                 key={option}
                 onClick={() => handleSelect(optionIndex)}
@@ -97,10 +104,11 @@ export default function ScoredQuestionsStage({ onComplete, onBack, firstName }) 
                 </div>
                 {option}
                 <span className="ml-auto text-xs text-gray-400 font-mono">
-                  {optionIndex + 1}
+                  {SCORE_SCALE.length - displayIndex}
                 </span>
               </button>
-            ))}
+              );
+            })}
           </div>
         </motion.div>
       </AnimatePresence>

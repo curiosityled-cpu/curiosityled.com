@@ -5,7 +5,7 @@ import { INTAKE_FIELDS } from "@/lib/diagnostic/questions";
 
 const SECTIONS = ["Context", "Current reality"];
 
-export default function IntakeStage({ onComplete, onBack, firstName }) {
+export default function IntakeStage({ onComplete, onBack, firstName, progress, onProgress }) {
   const [sectionIndex, setSectionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [conditionalAnswers, setConditionalAnswers] = useState({});
@@ -16,6 +16,7 @@ export default function IntakeStage({ onComplete, onBack, firstName }) {
   // Jump to the top of the page the instant a new section renders.
   useEffect(() => {
     window.scrollTo(0, 0);
+    onProgress?.(sectionIndex === 0 ? 25 : 42);
   }, [sectionIndex]);
 
   const handleFieldChange = (fieldId, value) => {
@@ -77,7 +78,6 @@ export default function IntakeStage({ onComplete, onBack, firstName }) {
     }
   };
 
-  const progress = ((sectionIndex + 1) / SECTIONS.length) * 16 + 16; // 16%-32%
 
   return (
     <motion.div
@@ -90,7 +90,7 @@ export default function IntakeStage({ onComplete, onBack, firstName }) {
         <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: "#0202ff" }}>
           Intake · Section {sectionIndex + 1} of {SECTIONS.length}
         </p>
-        <p className="text-xs text-gray-400">0{sectionIndex + 2} / 06</p>
+        <p className="text-xs text-gray-400">{Math.round(progress)}% · 0{sectionIndex + 2} / 06</p>
       </div>
 
       <div className="w-full h-1 bg-gray-100 rounded-full mb-10">

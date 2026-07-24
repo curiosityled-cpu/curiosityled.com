@@ -335,9 +335,11 @@ function generatePDF(report, scores, leadInfo) {
     doc.setDrawColor(228, 231, 235);
     for (const frac of [0.33, 0.66, 1]) {
       const pts = angles.map((a) => polar(cx, cy, r * frac, a));
-      const start = pts[0];
-      const segs = pts.slice(1).map((p) => [p.x - start.x, p.y - start.y]);
-      doc.lines(segs, start.x, start.y, [1, 1], true, "S");
+      for (let i = 0; i < pts.length; i++) {
+        const a = pts[i];
+        const b = pts[(i + 1) % pts.length];
+        doc.line(a.x, a.y, b.x, b.y);
+      }
     }
     for (const a of angles) {
       const p = polar(cx, cy, r, a);
@@ -350,9 +352,17 @@ function generatePDF(report, scores, leadInfo) {
     const scorePts = values.map((v, i) =>
       polar(cx, cy, r * (Math.max(0, Math.min(100, v || 0)) / 100), angles[i])
     );
-    const sp = scorePts[0];
-    const scoreSegs = scorePts.slice(1).map((p) => [p.x - sp.x, p.y - sp.y]);
-    doc.lines(scoreSegs, sp.x, sp.y, [1, 1], true, "DF");
+    // Fill the score polygon with triangles from the center, then stroke the outline.
+    for (let i = 0; i < scorePts.length; i++) {
+      const a = scorePts[i];
+      const b = scorePts[(i + 1) % scorePts.length];
+      doc.triangle(cx, cy, a.x, a.y, b.x, b.y, "F");
+    }
+    for (let i = 0; i < scorePts.length; i++) {
+      const a = scorePts[i];
+      const b = scorePts[(i + 1) % scorePts.length];
+      doc.line(a.x, a.y, b.x, b.y);
+    }
 
     doc.setLineWidth(0.5);
     doc.setFontSize(7);

@@ -10,6 +10,8 @@ export default function FollowUpStage({
   onComplete,
   onBack,
   firstName,
+  progress,
+  onProgress,
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -31,6 +33,14 @@ export default function FollowUpStage({
     }
   }, [validFollowUps.length]);
 
+  // Report overall completion progress to the parent flow.
+  useEffect(() => {
+    if (validFollowUps.length > 0) {
+      const answered = Object.keys(answers).length;
+      onProgress?.(62 + (answered / validFollowUps.length) * 10);
+    }
+  }, [answers, validFollowUps.length]);
+
   if (validFollowUps.length === 0) {
     return (
       <div className="min-h-[40vh] flex items-center justify-center">
@@ -42,7 +52,6 @@ export default function FollowUpStage({
   const currentKey = validFollowUps[currentIndex];
   const currentFU = FOLLOW_UPS[currentKey];
   const total = validFollowUps.length;
-  const progress = ((currentIndex + 1) / total) * 8 + 64; // 64%-72%
 
   const handleAnswer = (value) => {
     const newAnswers = { ...answers, [currentKey]: value };
@@ -91,7 +100,7 @@ export default function FollowUpStage({
           {categoryLabel} · Sharpening your report
         </p>
         <p className="text-xs text-gray-400">
-          Follow-up {currentIndex + 1} of {total}
+          {Math.round(progress)}% · Follow-up {currentIndex + 1} of {total}
         </p>
       </div>
 

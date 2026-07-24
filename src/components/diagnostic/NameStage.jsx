@@ -1,10 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
-export default function NameStage({ onComplete }) {
+export default function NameStage({ onComplete, progress, onProgress }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+
+  useEffect(() => {
+    onProgress?.(8);
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -26,13 +30,13 @@ export default function NameStage({ onComplete }) {
         >
           Before we start
         </p>
-        <p className="text-xs text-gray-400">01 / 06</p>
+        <p className="text-xs text-gray-400">{Math.round(progress)}% · 01 / 06</p>
       </div>
 
       <div className="w-full h-1 bg-gray-100 rounded-full mb-10">
         <div
           className="h-full rounded-full transition-all duration-500"
-          style={{ width: "16%", backgroundColor: "#0202ff" }}
+          style={{ width: `${progress}%`, backgroundColor: "#0202ff" }}
         />
       </div>
 

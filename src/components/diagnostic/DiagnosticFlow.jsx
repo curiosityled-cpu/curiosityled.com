@@ -40,6 +40,7 @@ export default function DiagnosticFlow({ onBackToLanding }) {
   const [pdfUrl, setPdfUrl] = useState(null);
   const [emailSent, setEmailSent] = useState(false);
   const [error, setError] = useState("");
+  const [globalProgress, setGlobalProgress] = useState(0);
 
   // ── Scroll to top whenever the stage changes ──
   useEffect(() => {
@@ -157,12 +158,19 @@ export default function DiagnosticFlow({ onBackToLanding }) {
 
       <AnimatePresence mode="wait">
         {stage === "name" && (
-          <NameStage key="name" onComplete={handleNameComplete} />
+          <NameStage
+            key="name"
+            progress={globalProgress}
+            onProgress={setGlobalProgress}
+            onComplete={handleNameComplete}
+          />
         )}
         {stage === "intake" && (
           <IntakeStage
             key="intake"
             firstName={data.firstName}
+            progress={globalProgress}
+            onProgress={setGlobalProgress}
             onComplete={handleIntakeComplete}
             onBack={() => setStage("name")}
           />
@@ -171,6 +179,8 @@ export default function DiagnosticFlow({ onBackToLanding }) {
           <ScoredQuestionsStage
             key="questions"
             firstName={data.firstName}
+            progress={globalProgress}
+            onProgress={setGlobalProgress}
             onComplete={handleQuestionsComplete}
             onBack={() => setStage("intake")}
           />
@@ -181,6 +191,8 @@ export default function DiagnosticFlow({ onBackToLanding }) {
             triggeredFollowUps={triggeredFollowUps}
             intakeAnswers={data.intakeAnswers}
             firstName={data.firstName}
+            progress={globalProgress}
+            onProgress={setGlobalProgress}
             onComplete={handleFollowUpComplete}
             onBack={() => setStage("questions")}
           />
@@ -189,6 +201,8 @@ export default function DiagnosticFlow({ onBackToLanding }) {
           <LeadCaptureStage
             key="lead_capture"
             firstName={data.firstName}
+            progress={globalProgress}
+            onProgress={setGlobalProgress}
             onComplete={handleLeadCaptureComplete}
             onBack={() =>
               triggeredFollowUps.length > 0
@@ -198,7 +212,11 @@ export default function DiagnosticFlow({ onBackToLanding }) {
           />
         )}
         {stage === "generating" && (
-          <GeneratingStage key="generating" firstName={data.firstName} />
+          <GeneratingStage
+            key="generating"
+            firstName={data.firstName}
+            onProgress={setGlobalProgress}
+          />
         )}
         {stage === "results" && (
           <ResultsStage

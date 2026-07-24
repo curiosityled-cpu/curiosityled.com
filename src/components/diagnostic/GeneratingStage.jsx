@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, FileText } from "lucide-react";
 
-export default function GeneratingStage({ firstName }) {
+export default function GeneratingStage({ firstName, onProgress }) {
+  useEffect(() => {
+    onProgress?.(100);
+  }, []);
   return (
     <motion.div
       initial={{ opacity: 0 }}
