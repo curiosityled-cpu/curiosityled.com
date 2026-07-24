@@ -380,7 +380,14 @@ export const FOLLOW_UPS = {
     triggerType: "context",
     triggerCondition: { field: "leader_populations", operator: "length>=", value: 2 },
     question: "Which of these populations feels most urgent right now?",
-    type: "single_select_from_selected",
+    type: "single_select",
+    options: [
+      "Newly promoted managers",
+      "Newly hired managers",
+      "Frontline leaders",
+      "Mid-level leaders",
+      "Senior leaders",
+    ],
   },
   additional_tools: {
     triggerType: "context",
