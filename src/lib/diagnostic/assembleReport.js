@@ -10,6 +10,14 @@ import {
   PRESSURE_POINT_HEADLINES,
 } from "./scoring";
 import {
+  HOW_TO_READ,
+  CRITERION_NOTE,
+  BAND_RANGES,
+  OVERALL_ANCHOR,
+  CONSTRUCT_ANCHORS,
+  DERIVED_ANCHORS,
+} from "./scoreAnchors";
+import {
   OVERALL_RESULT_BLOCKS,
   CONSTRUCT_INTERPRETATION_BLOCKS,
   MER_BLOCKS,
@@ -103,6 +111,9 @@ export function assembleReport(scores, intakeAnswers, followUpAnswers) {
     interpretation: overallBlock,
     context_insert: contextInsert,
     area_of_focus: intakeAnswers.area_of_focus || "",
+    what_it_measures: OVERALL_ANCHOR.measures,
+    what_100_looks_like: OVERALL_ANCHOR.high,
+    what_low_means: OVERALL_ANCHOR.low,
   };
 
   // ── Section 3: Manager Engagement Risk ──
@@ -116,7 +127,7 @@ export function assembleReport(scores, intakeAnswers, followUpAnswers) {
   };
 
   // ── Section 4: Top 2 pressure points ──
-  const section4 = top2PressurePoints.map((constructKey) => {
+  const section4 = top2PressurePoints.map((constructKey, ppIndex) => {
     const bandKey = getBandKey(constructScores[constructKey]);
     const bandLabel =
       bandKey === "strong" ? "Strong" : bandKey === "mixed" ? "Mixed" : "Weak";
@@ -147,6 +158,7 @@ export function assembleReport(scores, intakeAnswers, followUpAnswers) {
       interpretation,
       specificity,
       urgent_tie: urgentTie,
+      why_for_you: buildWhyForYou(constructKey, ppIndex, scores, intakeAnswers, followUpAnswers, false),
     };
   });
 
@@ -167,6 +179,7 @@ export function assembleReport(scores, intakeAnswers, followUpAnswers) {
       key: priorityKey,
       title: module.title,
       why_it_matters: module.whyItMatters,
+      why_for_you: buildWhyForYou(priorityKey, index, scores, intakeAnswers, followUpAnswers, index === 2),
       days_1_30: module.days["1-30"],
       days_31_60: module.days["31-60"],
       days_61_90: module.days["61-90"],
@@ -229,6 +242,14 @@ export function assembleReport(scores, intakeAnswers, followUpAnswers) {
       lsc_score: lscScore,
       lsc_label: lscLabel,
     },
+    how_to_read: HOW_TO_READ,
+    criterion_note: CRITERION_NOTE,
+    band_ranges: BAND_RANGES,
+    score_definitions: {
+      overall: OVERALL_ANCHOR,
+      constructs: CONSTRUCT_ANCHORS,
+      derived: DERIVED_ANCHORS,
+    },
   };
 }
 
@@ -247,11 +268,94 @@ function buildSynthesis(overallLabel, pressurePoints, concernText, obstacleModif
 
   const consequence = `If nothing changes in the next 6\u201312 months, these gaps will likely widen and compete with other priorities for attention.`;
   const concern = concernText
-    ? `Your stated concern\u2014${concernText}\u2014is directly connected to this pattern.`
+    ? `Because you said your biggest concerns are ${concernText.toLowerCase()}, those risks are directly tied to this pattern.`
     : "";
 
   let synthesis = `${problem} ${consequence}`;
   if (concern) synthesis += ` ${concern}`;
   if (obstacleModifier) synthesis += ` ${obstacleModifier}`;
   return synthesis;
+}
+
+function asArray(v) {
+  if (Array.isArray(v)) return v;
+  if (v) return [v];
+  return [];
+}
+
+// Build a "Because you said..." clause tied to the respondent's intake answers
+// for a given construct or derived index. Returns "" when no relevant signal exists.
+function intakeClause(key, intake, followUps) {
+  const mostTrue = asArray(intake.most_true_today).map((s) => s.toLowerCase());
+  const whyNow = asArray(intake.why_now).map((s) => s.toLowerCase());
+  const concern = asArray(intake.concern_if_no_change);
+  const clauses = [];
+
+  switch (key) {
+    case "signal_delay":
+      if (mostTrue.some((s) => s.includes("too late")))
+        clauses.push("you said support often arrives too late");
+      else if (whyNow.some((s) => s.includes("readiness")))
+        clauses.push("you said leadership readiness feels unclear");
+      break;
+    case "support_friction":
+      if (mostTrue.some((s) => s.includes("disconnected")))
+        clauses.push("you said support feels disconnected from daily work");
+      else if (mostTrue.some((s) => s.includes("overloaded")))
+        clauses.push("you said managers are overloaded");
+      if (followUps?.support_friction)
+        clauses.push(`managers most often struggle because support ${followUps.support_friction.toLowerCase()}`);
+      break;
+    case "proof_defensibility":
+      if (mostTrue.some((s) => s.includes("prove impact")))
+        clauses.push("you said you cannot clearly prove impact");
+      else if (whyNow.some((s) => s.includes("prove impact")))
+        clauses.push("you said you are struggling to prove impact or justify investment");
+      break;
+    case "fragmentation_admin":
+      if (mostTrue.some((s) => s.includes("manual")))
+        clauses.push("you said reporting and follow-through feel too manual");
+      else if (mostTrue.some((s) => s.includes("fragmented")))
+        clauses.push("you said information is fragmented across tools");
+      if (followUps?.fragmentation_admin)
+        clauses.push(`the most manual effort is in ${followUps.fragmentation_admin.toLowerCase()}`);
+      break;
+    case "cost_of_inaction":
+      if (concern.length)
+        clauses.push(`you said your biggest concerns are ${concern.join(", ").toLowerCase()}`);
+      break;
+    case "manager_engagement_risk":
+      if (mostTrue.some((s) => s.includes("overloaded")))
+        clauses.push("you said managers are overloaded");
+      break;
+    case "leadership_story_coherence":
+      if (mostTrue.some((s) => s.includes("prove impact")))
+        clauses.push("you said you cannot clearly prove impact");
+      break;
+  }
+
+  return clauses.length ? `Because ${clauses.join("; ")}, ` : "";
+}
+
+// Produce the "Why this is priority N for you" sentence for a pressure point or
+// blueprint priority, combining the score anchor with the respondent's intake signal.
+function buildWhyForYou(key, index, scores, intake, followUps, isDerived) {
+  const label =
+    key === "manager_engagement_risk"
+      ? "Manager Engagement Risk"
+      : key === "leadership_story_coherence"
+        ? "Story Coherence"
+        : CONSTRUCT_LABELS[key];
+  const score = isDerived
+    ? key === "manager_engagement_risk"
+      ? scores.merScore
+      : scores.lscScore
+    : scores.constructScores[key];
+  const clause = intakeClause(key, intake, followUps);
+
+  if (isDerived) {
+    return `${clause}your ${label} score was ${score}/100, making it the third priority for your 90-day plan.`;
+  }
+  const ordinal = index === 0 ? "lowest" : "second-lowest";
+  return `${clause}${label} was your ${ordinal} area at ${score}/100.`;
 }

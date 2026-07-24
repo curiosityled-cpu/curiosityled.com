@@ -1,6 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 import { jsPDF } from 'npm:jspdf@2.5.2';
 
+const CONSTRUCT_LABELS_PDF = {
+  signal_delay: "Signal Delay",
+  support_friction: "Support Friction",
+  proof_defensibility: "Proof & Defensibility",
+  fragmentation_admin: "Fragmentation & Admin Burden",
+  cost_of_inaction: "Cost of Inaction",
+};
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -195,6 +203,18 @@ function generatePDF(report, scores, leadInfo) {
     doc.text(label, x + 10, y + 48);
   }
 
+  // Horizontal 0-100 score bar. Returns the y after the bar.
+  function scoreBar(score, x, y, width) {
+    const barH = 8;
+    const pct = Math.max(0, Math.min(100, score || 0)) / 100;
+    doc.setFillColor(235, 238, 245);
+    doc.roundedRect(x, y, width, barH, 4, 4, "F");
+    doc.setFillColor(...hexToRgb(brandBlue));
+    const fillW = pct > 0 ? Math.max(width * pct, 4) : 0;
+    if (fillW > 0) doc.roundedRect(x, y, fillW, barH, 4, 4, "F");
+    return y + barH;
+  }
+
   // Helper: horizontal divider
   function divider() {
     doc.setDrawColor(...lightGray);
@@ -269,16 +289,57 @@ function generatePDF(report, scores, leadInfo) {
   }
   y += 20;
 
-  // Overall score badge
-  const s2 = report.section2_overall_result;
-  scoreBadge(s2.score, "OVERALL SCORE", margin, y);
-  y += 80;
+  // How to read this report
+  const htrLines = (report.how_to_read || []).map((l) =>
+    doc.splitTextToSize(`\u2022 ${l}`, contentWidth - 24)
+  );
+  const htrHeight = 24 + htrLines.reduce((a, l) => a + l.length * 12, 0) + 8;
+  if (y > pageHeight - htrHeight - 40) { doc.addPage(); y = margin; }
+  doc.setFillColor(245, 247, 255);
+  doc.roundedRect(margin, y, contentWidth, htrHeight, 6, 6, "F");
+  doc.setFontSize(10);
+  doc.setTextColor(...hexToRgb(brandBlue));
+  doc.setFont("helvetica", "bold");
+  doc.text("HOW TO READ THIS REPORT", margin + 12, y + 18);
+  doc.setFontSize(9);
+  doc.setTextColor(...grayText);
+  doc.setFont("helvetica", "normal");
+  let hy = y + 32;
+  for (const lines of htrLines) {
+    doc.text(lines, margin + 12, hy);
+    hy += lines.length * 12;
+  }
+  y += htrHeight + 14;
+  if (report.criterion_note) {
+    addText(report.criterion_note, 9, grayText, "italic", 12, 14);
+  }
 
+  // Overall score
+  const s2 = report.section2_overall_result;
+  doc.setFontSize(10);
+  doc.setTextColor(...hexToRgb(brandBlue));
+  doc.setFont("helvetica", "bold");
+  doc.text("OVERALL SCORE", margin, y);
+  y += 24;
+  doc.setFontSize(34);
+  doc.setTextColor(...darkText);
+  doc.setFont("helvetica", "bold");
+  doc.text(String(s2.score), margin, y);
+  doc.setFontSize(13);
+  doc.setTextColor(...grayText);
+  doc.setFont("helvetica", "normal");
+  doc.text("/100", margin + doc.getTextWidth(String(s2.score)) + 4, y - 6);
+  y += 8;
+  y = scoreBar(s2.score, margin, y, contentWidth);
+  y += 10;
   doc.setFontSize(13);
   doc.setTextColor(...hexToRgb(brandBlue));
   doc.setFont("helvetica", "bold");
   doc.text(s2.label, margin, y);
-  y += 20;
+  y += 18;
+  if (s2.what_it_measures) addText(`What this measures: ${s2.what_it_measures}`, 10, grayText, "normal", 14, 6);
+  if (s2.what_100_looks_like) addText(`What 100 looks like: ${s2.what_100_looks_like}`, 10, darkText, "normal", 14, 4);
+  if (s2.what_low_means) addText(`What 0 means: ${s2.what_low_means}`, 10, grayText, "normal", 14, 10);
 
   // ── Section 2: Overall result ──
   if (y > pageHeight - 150) { doc.addPage(); y = margin; }
@@ -287,14 +348,60 @@ function generatePDF(report, scores, leadInfo) {
     addText(`Context: ${s2.context_insert}`, 10, grayText, "italic", 14, 8);
   }
 
+  // ── The Five Dimensions ──
+  doc.addPage();
+  y = margin;
+  doc.setFillColor(...hexToRgb(brandBlue));
+  doc.rect(margin, y - 12, 4, 20, "F");
+  doc.setFontSize(16);
+  doc.setTextColor(...darkText);
+  doc.setFont("helvetica", "bold");
+  doc.text("The Five Dimensions Measured", margin, y);
+  y += 24;
+  const bandLabels = (report.band_ranges || [])
+    .map((b) => `${b.min}\u2013${b.max}: ${b.label}`)
+    .join("     ");
+  doc.setFontSize(9);
+  doc.setTextColor(...grayText);
+  doc.setFont("helvetica", "normal");
+  doc.text(bandLabels, margin, y);
+  y += 16;
+  const constructDefs = report.score_definitions?.constructs || {};
+  for (const key of Object.keys(scores.constructScores)) {
+    if (y > pageHeight - 80) { doc.addPage(); y = margin; }
+    const cscore = scores.constructScores[key];
+    const cdef = constructDefs[key] || {};
+    doc.setFontSize(12);
+    doc.setTextColor(...darkText);
+    doc.setFont("helvetica", "bold");
+    doc.text(CONSTRUCT_LABELS_PDF[key] || key, margin, y);
+    const scoreStr = `${cscore}/100`;
+    doc.setFontSize(13);
+    doc.text(scoreStr, pageWidth - margin - doc.getTextWidth(scoreStr), y);
+    y += 6;
+    y = scoreBar(cscore, margin, y, contentWidth);
+    y += 6;
+    if (cdef.measures) addText(cdef.measures, 10, grayText, "normal", 14, 10);
+  }
+
   // ── Section 3: Manager Engagement Risk ──
   doc.addPage();
   y = margin;
   sectionHeader(3, "Manager Engagement Risk");
   const s3 = report.section3_manager_engagement_risk;
-  scoreBadge(s3.score, "MER SCORE", margin, y);
-  y += 80;
-  addText(s3.label, 13, hexToRgb(brandBlue), "bold", 18, 12);
+  const merDef = report.score_definitions?.derived?.manager_engagement_risk || {};
+  doc.setFontSize(12);
+  doc.setTextColor(...darkText);
+  doc.setFont("helvetica", "bold");
+  doc.text("Manager Engagement Risk", margin, y);
+  const merStr = `${s3.score}/100`;
+  doc.setFontSize(13);
+  doc.text(merStr, pageWidth - margin - doc.getTextWidth(merStr), y);
+  y += 6;
+  y = scoreBar(s3.score, margin, y, contentWidth);
+  y += 8;
+  addText(s3.label, 13, hexToRgb(brandBlue), "bold", 18, 8);
+  if (merDef.measures) addText(`What this measures: ${merDef.measures}`, 10, grayText, "normal", 14, 6);
   addText(s3.interpretation, 11, grayText, "normal", 16, 8);
   if (s3.friction_source) {
     addText(`Source of friction: ${s3.friction_source}`, 10, grayText, "italic", 14, 8);
@@ -303,9 +410,19 @@ function generatePDF(report, scores, leadInfo) {
   // Leadership Story Coherence
   y += 10;
   const lsc = report.leadership_story_coherence;
-  scoreBadge(lsc.score, "STORY COHERENCE", margin, y);
-  y += 80;
-  addText(lsc.label, 13, hexToRgb(brandBlue), "bold", 18, 12);
+  const lscDef = report.score_definitions?.derived?.leadership_story_coherence || {};
+  doc.setFontSize(12);
+  doc.setTextColor(...darkText);
+  doc.setFont("helvetica", "bold");
+  doc.text("Story Coherence", margin, y);
+  const lscStr = `${lsc.score}/100`;
+  doc.setFontSize(13);
+  doc.text(lscStr, pageWidth - margin - doc.getTextWidth(lscStr), y);
+  y += 6;
+  y = scoreBar(lsc.score, margin, y, contentWidth);
+  y += 8;
+  addText(lsc.label, 13, hexToRgb(brandBlue), "bold", 18, 8);
+  if (lscDef.measures) addText(`What this measures: ${lscDef.measures}`, 10, grayText, "normal", 14, 6);
   addText(lsc.interpretation, 11, grayText, "normal", 16, 8);
 
   // ── Section 4: Top 2 pressure points ──
@@ -320,6 +437,9 @@ function generatePDF(report, scores, leadInfo) {
     addText(pp.interpretation, 11, grayText, "normal", 16, 6);
     if (pp.specificity) {
       addText(pp.specificity, 10, darkText, "italic", 14, 6);
+    }
+    if (pp.why_for_you) {
+      addText(`Why this rose to the top for you: ${pp.why_for_you}`, 10, hexToRgb(brandBlue), "bold", 14, 8);
     }
     if (pp.urgent_tie) {
       addText(pp.urgent_tie, 10, hexToRgb(brandBlue), "bold", 14, 10);
@@ -341,6 +461,9 @@ function generatePDF(report, scores, leadInfo) {
     if (y > pageHeight - 160) { doc.addPage(); y = margin; }
     addText(`Priority ${priority.priority}: ${priority.title}`, 14, darkText, "bold", 20, 6);
     addText(priority.why_it_matters, 10, grayText, "italic", 14, 10);
+    if (priority.why_for_you) {
+      addText(`Why this is priority ${priority.priority} for you: ${priority.why_for_you}`, 10, hexToRgb(brandBlue), "bold", 14, 10);
+    }
 
     addText("Days 1\u201330", 11, hexToRgb(brandBlue), "bold", 15, 4);
     addText(priority.days_1_30, 10, grayText, "normal", 14, 8);

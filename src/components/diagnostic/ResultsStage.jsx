@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Download, Mail, RotateCcw, Calendar } from "lucide-react";
 import { CONSTRUCT_LABELS } from "@/lib/diagnostic/scoring";
+import ScoreBar from "@/components/diagnostic/ScoreBar";
 
 export default function ResultsStage({ report, scores, leadInfo, pdfUrl, emailSent, onStartOver, onBack }) {
   const s1 = report.section1_title_context;
@@ -62,6 +63,26 @@ export default function ResultsStage({ report, scores, leadInfo, pdfUrl, emailSe
         </div>
       </div>
 
+      {/* How to read these scores */}
+      {report.how_to_read && (
+        <div className="bg-[#0202ff]/5 border border-[#0202ff]/15 rounded-xl p-5 mb-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] mb-3" style={{ color: "#0202ff" }}>
+            How to Read These Scores
+          </p>
+          <ul className="space-y-2">
+            {report.how_to_read.map((line, i) => (
+              <li key={i} className="text-sm text-gray-700 flex gap-2">
+                <span style={{ color: "#0202ff" }}>•</span>
+                {line}
+              </li>
+            ))}
+          </ul>
+          {report.criterion_note && (
+            <p className="text-xs text-gray-500 italic mt-3">{report.criterion_note}</p>
+          )}
+        </div>
+      )}
+
       {/* Score summary */}
       <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
         <div className="border-b border-gray-100 pb-4 mb-4">
@@ -70,20 +91,54 @@ export default function ResultsStage({ report, scores, leadInfo, pdfUrl, emailSe
           </p>
           <h2 className="text-lg font-bold text-[#0a0a0a]">Your Score Summary</h2>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <ScoreCard label="Overall" score={s2.score} sublabel={s2.label} />
-          <ScoreCard label="Manager Engagement Risk" score={s3.score} sublabel={s3.label} />
-          <ScoreCard label="Story Coherence" score={lsc.score} sublabel={lsc.label} />
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 mt-4">
-          {Object.entries(scores.constructScores).map(([key, score]) => (
-            <div key={key} className="bg-gray-50 rounded-lg p-3 text-center">
-              <p className="text-lg font-bold text-[#0a0a0a]">{score}</p>
-              <p className="text-[10px] text-gray-500 leading-tight mt-1">
-                {CONSTRUCT_LABELS[key]}
-              </p>
+
+        <ScoreBar
+          label="Overall"
+          score={s2.score}
+          sublabel={s2.label}
+          definition={s2.what_it_measures}
+          whatHigh={s2.what_100_looks_like}
+          whatLow={s2.what_low_means}
+          prominent
+        />
+
+        <div className="mt-6 pt-4 border-t border-gray-100">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">The Five Dimensions</p>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-gray-400">
+              {report.band_ranges?.map((b) => (
+                <span key={b.key}>{b.min}–{b.max}: {b.label}</span>
+              ))}
             </div>
-          ))}
+          </div>
+          <div className="space-y-3">
+            {Object.entries(scores.constructScores).map(([key, score]) => (
+              <ScoreBar
+                key={key}
+                label={CONSTRUCT_LABELS[key]}
+                score={score}
+                definition={report.score_definitions?.constructs?.[key]?.measures}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-6 pt-4 border-t border-gray-100">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 mb-3">Derived Indexes</p>
+          <div className="space-y-3">
+            <ScoreBar
+              label="Manager Engagement Risk"
+              score={s3.score}
+              sublabel={s3.label}
+              definition={report.score_definitions?.derived?.manager_engagement_risk?.measures}
+            />
+            <ScoreBar
+              label="Story Coherence"
+              score={lsc.score}
+              sublabel={lsc.label}
+              definition={report.score_definitions?.derived?.leadership_story_coherence?.measures}
+            />
+          </div>
         </div>
       </div>
 
