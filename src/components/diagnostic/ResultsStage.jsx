@@ -170,7 +170,7 @@ export default function ResultsStage({ report, scores, leadInfo, pdfUrl, emailSe
         <p className="text-sm text-gray-300 mb-3">{s9.sentence2}</p>
         <p className="text-sm text-white font-medium mb-6">{s9.sentence3}</p>
         <a
-          href="https://calendly.com/curiosityled/consultation"
+          href="https://cal.com/curiosityled/discoverycall?overlayCalendar=true"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-[#0a0a0a] text-sm transition-all hover:opacity-90 shadow-lg"

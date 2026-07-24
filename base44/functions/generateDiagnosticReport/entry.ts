@@ -387,7 +387,7 @@ function generatePDF(report, scores, leadInfo) {
   // Consultant call CTA
   y += 6;
   if (y > pageHeight - 80) { doc.addPage(); y = margin; }
-  const consultUrl = "https://calendly.com/curiosityled/consultation";
+  const consultUrl = "https://cal.com/curiosityled/discoverycall?overlayCalendar=true";
   doc.setFontSize(12);
   doc.setTextColor(...hexToRgb(brandBlue));
   doc.setFont("helvetica", "bold");
