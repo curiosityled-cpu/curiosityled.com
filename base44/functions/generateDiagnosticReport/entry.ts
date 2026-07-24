@@ -381,7 +381,8 @@ function generatePDF(report, scores, leadInfo) {
     y += 6;
     y = scoreBar(cscore, margin, y, contentWidth);
     y += 6;
-    if (cdef.measures) addText(cdef.measures, 10, grayText, "normal", 14, 10);
+    if (cdef.measures) addText(`What this measures: ${cdef.measures}`, 10, grayText, "normal", 14, 4);
+    if (cdef.stronger) addText(`What stronger looks like: ${cdef.stronger}`, 9, hexToRgb(brandBlue), "italic", 13, 10);
   }
 
   // ── Section 3: Manager Engagement Risk ──
@@ -401,7 +402,8 @@ function generatePDF(report, scores, leadInfo) {
   y = scoreBar(s3.score, margin, y, contentWidth);
   y += 8;
   addText(s3.label, 13, hexToRgb(brandBlue), "bold", 18, 8);
-  if (merDef.measures) addText(`What this measures: ${merDef.measures}`, 10, grayText, "normal", 14, 6);
+  if (merDef.measures) addText(`What this measures: ${merDef.measures}`, 10, grayText, "normal", 14, 4);
+  if (merDef.stronger) addText(`What stronger looks like: ${merDef.stronger}`, 9, hexToRgb(brandBlue), "italic", 13, 8);
   addText(s3.interpretation, 11, grayText, "normal", 16, 8);
   if (s3.friction_source) {
     addText(`Source of friction: ${s3.friction_source}`, 10, grayText, "italic", 14, 8);
@@ -422,7 +424,8 @@ function generatePDF(report, scores, leadInfo) {
   y = scoreBar(lsc.score, margin, y, contentWidth);
   y += 8;
   addText(lsc.label, 13, hexToRgb(brandBlue), "bold", 18, 8);
-  if (lscDef.measures) addText(`What this measures: ${lscDef.measures}`, 10, grayText, "normal", 14, 6);
+  if (lscDef.measures) addText(`What this measures: ${lscDef.measures}`, 10, grayText, "normal", 14, 4);
+  if (lscDef.stronger) addText(`What stronger looks like: ${lscDef.stronger}`, 9, hexToRgb(brandBlue), "italic", 13, 8);
   addText(lsc.interpretation, 11, grayText, "normal", 16, 8);
 
   // ── Section 4: Top 2 pressure points ──

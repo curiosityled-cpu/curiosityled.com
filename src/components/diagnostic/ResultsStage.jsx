@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Download, Mail, RotateCcw, Calendar } from "lucide-react";
 import { CONSTRUCT_LABELS } from "@/lib/diagnostic/scoring";
 import ScoreBar from "@/components/diagnostic/ScoreBar";
+import ExpandableScoreBar from "@/components/diagnostic/ExpandableScoreBar";
 
 export default function ResultsStage({ report, scores, leadInfo, pdfUrl, emailSent, onStartOver, onBack }) {
   const s1 = report.section1_title_context;
@@ -103,40 +104,48 @@ export default function ResultsStage({ report, scores, leadInfo, pdfUrl, emailSe
         />
 
         <div className="mt-6 pt-4 border-t border-gray-100">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-1">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">The Five Dimensions</p>
-            <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-gray-400">
-              {report.band_ranges?.map((b) => (
-                <span key={b.key}>{b.min}–{b.max}: {b.label}</span>
-              ))}
-            </div>
+            <span className="text-[10px] text-gray-400">Tap a row for detail</span>
           </div>
-          <div className="space-y-3">
-            {Object.entries(scores.constructScores).map(([key, score]) => (
-              <ScoreBar
-                key={key}
-                label={CONSTRUCT_LABELS[key]}
-                score={score}
-                definition={report.score_definitions?.constructs?.[key]?.measures}
-              />
+          <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-gray-400 mb-2">
+            {report.band_ranges?.map((b) => (
+              <span key={b.key}>{b.min}–{b.max}: {b.label}</span>
             ))}
+          </div>
+          <div className="divide-y divide-gray-100">
+            {Object.entries(scores.constructScores).map(([key, score]) => {
+              const def = report.score_definitions?.constructs?.[key] || {};
+              return (
+                <ExpandableScoreBar
+                  key={key}
+                  label={CONSTRUCT_LABELS[key]}
+                  score={score}
+                  measures={def.measures}
+                  stronger={def.stronger}
+                  defaultOpen={scores.top2PressurePoints?.includes(key)}
+                />
+              );
+            })}
           </div>
         </div>
 
         <div className="mt-6 pt-4 border-t border-gray-100">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 mb-3">Derived Indexes</p>
-          <div className="space-y-3">
-            <ScoreBar
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 mb-2">Derived Indexes</p>
+          <div className="divide-y divide-gray-100">
+            <ExpandableScoreBar
               label="Manager Engagement Risk"
               score={s3.score}
               sublabel={s3.label}
-              definition={report.score_definitions?.derived?.manager_engagement_risk?.measures}
+              measures={report.score_definitions?.derived?.manager_engagement_risk?.measures}
+              stronger={report.score_definitions?.derived?.manager_engagement_risk?.stronger}
             />
-            <ScoreBar
+            <ExpandableScoreBar
               label="Story Coherence"
               score={lsc.score}
               sublabel={lsc.label}
-              definition={report.score_definitions?.derived?.leadership_story_coherence?.measures}
+              measures={report.score_definitions?.derived?.leadership_story_coherence?.measures}
+              stronger={report.score_definitions?.derived?.leadership_story_coherence?.stronger}
             />
           </div>
         </div>

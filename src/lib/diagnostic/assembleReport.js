@@ -96,14 +96,7 @@ export function assembleReport(scores, intakeAnswers, followUpAnswers) {
   };
 
   // ── Section 2: Overall result ──
-  const whyNowRaw = Array.isArray(intakeAnswers.why_now)
-    ? intakeAnswers.why_now.join(", ")
-    : intakeAnswers.why_now || "";
-  const contextInsert =
-    whyNowRaw ||
-    (intakeAnswers.most_true_today && intakeAnswers.most_true_today.length > 0
-      ? intakeAnswers.most_true_today.join(", ")
-      : "");
+  const contextInsert = buildContextInsert(intakeAnswers);
   const overallBlock = OVERALL_RESULT_BLOCKS[overallLabel] || "";
   const section2 = {
     score: overallScore,
@@ -358,4 +351,26 @@ function buildWhyForYou(key, index, scores, intake, followUps, isDerived) {
   }
   const ordinal = index === 0 ? "lowest" : "second-lowest";
   return `${clause}${label} was your ${ordinal} area at ${score}/100.`;
+}
+
+// Interpret the "why now" / context signal rather than echoing raw intake labels.
+// Rephrases weak answers like "Just checking this out" so the report never reads
+// as a casual test run, while still honoring genuine stated reasons.
+function buildContextInsert(intake) {
+  const whyNow = asArray(intake.why_now);
+  const mostTrue = asArray(intake.most_true_today);
+  const realReasons = whyNow.filter(
+    (r) => r !== "Just checking this out" && r !== "Other"
+  );
+  const justChecking = whyNow.includes("Just checking this out");
+
+  if (justChecking && realReasons.length === 0) {
+    return "Even if you were initially just pressure-testing the diagnostic, your responses point to a meaningful operating gap in how leadership support is delivered and coordinated.";
+  }
+  if (justChecking) {
+    return `You came in partly pressure-testing this diagnostic, but your answers also reflect ${realReasons.join(", ").toLowerCase()} \u2014 your responses point to a real operating gap, not a hypothetical one.`;
+  }
+  const whyNowRaw = whyNow.join(", ");
+  if (whyNowRaw) return whyNowRaw;
+  return mostTrue.length ? mostTrue.join(", ") : "";
 }
