@@ -32,7 +32,7 @@ export default function ResultsStage({ report, scores, leadInfo, pdfUrl, emailSe
           className="w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center"
           style={{ backgroundColor: "#0202ff" }}
         >
-          <Mail className="w-6 h-6 text-white" />
+          {emailSent ? <Mail className="w-6 h-6 text-white" /> : <Download className="w-6 h-6 text-white" />}
         </div>
         <h1 className="text-2xl font-bold text-[#0a0a0a] mb-2">
           {leadInfo.firstName}, Your Blueprint Is Ready
@@ -40,7 +40,7 @@ export default function ResultsStage({ report, scores, leadInfo, pdfUrl, emailSe
         <p className="text-sm text-gray-600 mb-6">
           {emailSent
             ? `We've emailed the full PDF to ${leadInfo.email}. You can also download it below.`
-            : `Your report has been generated. Download it below.`}
+            : `Your report is ready. Download it below — we're finishing the setup of automated email delivery, so grab it right from here.`}
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           {pdfUrl && (
