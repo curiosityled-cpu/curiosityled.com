@@ -4,6 +4,8 @@ import { Download, Mail, RotateCcw, Calendar } from "lucide-react";
 import { CONSTRUCT_LABELS } from "@/lib/diagnostic/scoring";
 import ScoreBar from "@/components/diagnostic/ScoreBar";
 import ExpandableScoreBar from "@/components/diagnostic/ExpandableScoreBar";
+import ScoreGauge from "@/components/diagnostic/ScoreGauge";
+import ConstructRadar from "@/components/diagnostic/ConstructRadar";
 
 export default function ResultsStage({ report, scores, leadInfo, pdfUrl, emailSent, onStartOver, onBack }) {
   const s1 = report.section1_title_context;
@@ -93,15 +95,30 @@ export default function ResultsStage({ report, scores, leadInfo, pdfUrl, emailSe
           <h2 className="text-lg font-bold text-[#0a0a0a]">Your Score Summary</h2>
         </div>
 
-        <ScoreBar
-          label="Overall"
-          score={s2.score}
-          sublabel={s2.label}
-          definition={s2.what_it_measures}
-          whatHigh={s2.what_100_looks_like}
-          whatLow={s2.what_low_means}
-          prominent
-        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center mb-4">
+          <div className="flex justify-center">
+            <ScoreGauge score={s2.score} label="Leadership Readiness Score" />
+          </div>
+          <div className="min-w-0">
+            <ConstructRadar constructScores={scores.constructScores} />
+          </div>
+        </div>
+        <div className="mb-3">
+          <p className="text-sm font-bold text-[#0a0a0a]">{s2.label}</p>
+          {s2.what_it_measures && (
+            <p className="text-xs text-gray-500 mt-1 leading-relaxed">{s2.what_it_measures}</p>
+          )}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="bg-gray-50 rounded-lg p-3">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mb-1">What 100 looks like</p>
+            <p className="text-xs text-gray-700 leading-relaxed">{s2.what_100_looks_like}</p>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-3">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mb-1">What 0 means</p>
+            <p className="text-xs text-gray-700 leading-relaxed">{s2.what_low_means}</p>
+          </div>
+        </div>
 
         <div className="mt-6 pt-4 border-t border-gray-100">
           <div className="flex items-center justify-between mb-1">

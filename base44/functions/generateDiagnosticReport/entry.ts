@@ -9,6 +9,14 @@ const CONSTRUCT_LABELS_PDF = {
   cost_of_inaction: "Cost of Inaction",
 };
 
+const RADAR_LABELS_PDF = {
+  signal_delay: "Signal Delay",
+  support_friction: "Support Friction",
+  proof_defensibility: "Proof & Def.",
+  fragmentation_admin: "Fragmentation",
+  cost_of_inaction: "Cost of Inaction",
+};
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -215,6 +223,71 @@ function generatePDF(report, scores, leadInfo) {
     return y + barH;
   }
 
+  // Convert an angle (0 = top, clockwise) to a point on a circle.
+  function polar(cx, cy, r, angleDeg) {
+    const rad = ((angleDeg - 90) * Math.PI) / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  }
+
+  // Circular 0-100 gauge: gray ring + accent arc for the score portion.
+  function drawGauge(cx, cy, r, score) {
+    const segments = 120;
+    const lineWidth = 10;
+    doc.setLineWidth(lineWidth);
+    doc.setDrawColor(228, 231, 235);
+    doc.circle(cx, cy, r, "S");
+    doc.setDrawColor(...hexToRgb(brandBlue));
+    const progressSegs = Math.round(
+      segments * (Math.max(0, Math.min(100, score || 0)) / 100)
+    );
+    for (let i = 0; i < progressSegs; i++) {
+      const a1 = (360 * i) / segments;
+      const a2 = (360 * (i + 1)) / segments;
+      const p1 = polar(cx, cy, r, a1);
+      const p2 = polar(cx, cy, r, a2);
+      doc.line(p1.x, p1.y, p2.x, p2.y);
+    }
+  }
+
+  // Five-axis radar: grid rings, axes, filled score polygon, labels.
+  function drawRadar(cx, cy, r, values, labels) {
+    const n = values.length;
+    const angles = [];
+    for (let i = 0; i < n; i++) angles.push((360 * i) / n);
+
+    doc.setLineWidth(0.5);
+    doc.setDrawColor(228, 231, 235);
+    for (const frac of [0.33, 0.66, 1]) {
+      const pts = angles.map((a) => polar(cx, cy, r * frac, a));
+      const start = pts[0];
+      const segs = pts.slice(1).map((p) => [p.x - start.x, p.y - start.y]);
+      doc.lines(segs, start.x, start.y, [1, 1], true, "S");
+    }
+    for (const a of angles) {
+      const p = polar(cx, cy, r, a);
+      doc.line(cx, cy, p.x, p.y);
+    }
+
+    doc.setDrawColor(...hexToRgb(brandBlue));
+    doc.setFillColor(230, 235, 255);
+    doc.setLineWidth(1.5);
+    const scorePts = values.map((v, i) =>
+      polar(cx, cy, r * (Math.max(0, Math.min(100, v || 0)) / 100), angles[i])
+    );
+    const sp = scorePts[0];
+    const scoreSegs = scorePts.slice(1).map((p) => [p.x - sp.x, p.y - sp.y]);
+    doc.lines(scoreSegs, sp.x, sp.y, [1, 1], true, "DF");
+
+    doc.setLineWidth(0.5);
+    doc.setFontSize(7);
+    doc.setTextColor(...grayText);
+    doc.setFont("helvetica", "normal");
+    for (let i = 0; i < n; i++) {
+      const p = polar(cx, cy, r + 10, angles[i]);
+      doc.text(labels[i] || "", p.x, p.y, { align: "center" });
+    }
+  }
+
   // Helper: horizontal divider
   function divider() {
     doc.setDrawColor(...lightGray);
@@ -314,24 +387,39 @@ function generatePDF(report, scores, leadInfo) {
     addText(report.criterion_note, 9, grayText, "italic", 12, 14);
   }
 
-  // Overall score
+  // Overall score — gauge + radar
   const s2 = report.section2_overall_result;
   doc.setFontSize(10);
   doc.setTextColor(...hexToRgb(brandBlue));
   doc.setFont("helvetica", "bold");
   doc.text("OVERALL SCORE", margin, y);
-  y += 24;
-  doc.setFontSize(34);
+  y += 18;
+
+  const gaugeR = 42;
+  const gaugeCx = margin + gaugeR + 8;
+  const gaugeCy = y + gaugeR + 6;
+  drawGauge(gaugeCx, gaugeCy, gaugeR, s2.score);
+  doc.setFontSize(22);
   doc.setTextColor(...darkText);
   doc.setFont("helvetica", "bold");
-  doc.text(String(s2.score), margin, y);
-  doc.setFontSize(13);
+  doc.text(String(s2.score), gaugeCx, gaugeCy, { align: "center" });
+  doc.setFontSize(9);
   doc.setTextColor(...grayText);
   doc.setFont("helvetica", "normal");
-  doc.text("/100", margin + doc.getTextWidth(String(s2.score)) + 4, y - 6);
-  y += 8;
-  y = scoreBar(s2.score, margin, y, contentWidth);
-  y += 10;
+  doc.text("/100", gaugeCx, gaugeCy + 14, { align: "center" });
+  doc.setFontSize(7);
+  doc.text("LEADERSHIP READINESS", gaugeCx, gaugeCy + gaugeR + 16, { align: "center" });
+
+  const radarR = 54;
+  const radarCx = pageWidth - margin - radarR - 10;
+  const radarCy = gaugeCy;
+  const constructKeys = Object.keys(scores.constructScores);
+  const radarScores = constructKeys.map((k) => scores.constructScores[k]);
+  const radarLabels = constructKeys.map((k) => RADAR_LABELS_PDF[k] || CONSTRUCT_LABELS_PDF[k] || k);
+  drawRadar(radarCx, radarCy, radarR, radarScores, radarLabels);
+
+  y = Math.max(gaugeCy + gaugeR + 24, radarCy + radarR + 26) + 6;
+
   doc.setFontSize(13);
   doc.setTextColor(...hexToRgb(brandBlue));
   doc.setFont("helvetica", "bold");
