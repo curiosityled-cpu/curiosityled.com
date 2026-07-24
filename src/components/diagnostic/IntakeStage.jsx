@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { INTAKE_FIELDS } from "@/lib/diagnostic/questions";
 
-const SECTIONS = ["Context", "Current reality", "Optional detail"];
+const SECTIONS = ["Context", "Current reality"];
 
 export default function IntakeStage({ onComplete, onBack, firstName }) {
   const [sectionIndex, setSectionIndex] = useState(0);
@@ -100,16 +100,12 @@ export default function IntakeStage({ onComplete, onBack, firstName }) {
       <h1 className="text-2xl sm:text-3xl font-bold leading-tight tracking-tight mb-3 text-[#0a0a0a]">
         {sectionIndex === 0
           ? `${firstName}, Tell Me About Your Context`
-          : sectionIndex === 1
-          ? `${firstName}, What's Your Current Reality?`
-          : `A Couple More Details (Optional)`}
+          : `${firstName}, What's Your Current Reality?`}
       </h1>
       <p className="text-sm text-gray-600 mb-8">
         {sectionIndex === 0
           ? "This helps me tailor the report to your lens and population."
-          : sectionIndex === 1
-          ? "Choose what feels most true right now. This sharpens your blueprint."
-          : "These are optional but they make your report feel more specific."}
+          : "Choose what feels most true right now. This sharpens your blueprint."}
       </p>
 
       <div className="space-y-6">
