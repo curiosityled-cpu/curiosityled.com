@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Download, Mail, RotateCcw } from "lucide-react";
+import { Download, Mail, RotateCcw, Calendar } from "lucide-react";
 import { CONSTRUCT_LABELS } from "@/lib/diagnostic/scoring";
 
 export default function ResultsStage({ report, scores, leadInfo, pdfUrl, emailSent, onStartOver, onBack }) {
@@ -168,7 +168,17 @@ export default function ResultsStage({ report, scores, leadInfo, pdfUrl, emailSe
         </p>
         <p className="text-sm text-gray-300 mb-3">{s9.sentence1}</p>
         <p className="text-sm text-gray-300 mb-3">{s9.sentence2}</p>
-        <p className="text-sm text-white font-medium">{s9.sentence3}</p>
+        <p className="text-sm text-white font-medium mb-6">{s9.sentence3}</p>
+        <a
+          href="https://calendly.com/curiosityled/consultation"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-[#0a0a0a] text-sm transition-all hover:opacity-90 shadow-lg"
+          style={{ backgroundColor: "#6C9EFF" }}
+        >
+          <Calendar className="w-4 h-4" />
+          Schedule a Call with a Consultant
+        </a>
       </div>
     </motion.div>
   );

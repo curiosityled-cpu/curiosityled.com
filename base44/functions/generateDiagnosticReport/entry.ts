@@ -384,6 +384,24 @@ function generatePDF(report, scores, leadInfo) {
   addText(s9.sentence2, 11, grayText, "normal", 16, 6);
   addText(s9.sentence3, 11, darkText, "bold", 16, 10);
 
+  // Consultant call CTA
+  y += 6;
+  if (y > pageHeight - 80) { doc.addPage(); y = margin; }
+  const consultUrl = "https://calendly.com/curiosityled/consultation";
+  doc.setFontSize(12);
+  doc.setTextColor(...hexToRgb(brandBlue));
+  doc.setFont("helvetica", "bold");
+  const ctaText = "Schedule a call with a consultant to review your results";
+  doc.text(ctaText, margin, y);
+  doc.link(margin, y - 12, doc.getTextWidth(ctaText), 16, { url: consultUrl });
+  y += 18;
+  doc.setFontSize(10);
+  doc.setTextColor(...grayText);
+  doc.setFont("helvetica", "normal");
+  doc.text(consultUrl, margin, y);
+  doc.link(margin, y - 12, doc.getTextWidth(consultUrl), 16, { url: consultUrl });
+  y += 10;
+
   // Footer on every page
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
