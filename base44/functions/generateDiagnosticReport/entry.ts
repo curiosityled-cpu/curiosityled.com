@@ -17,6 +17,70 @@ const RADAR_LABELS_PDF = {
   cost_of_inaction: "Cost of Inaction",
 };
 
+// Push the diagnostic prospect into HubSpot CRM as a contact (create-or-update by email).
+async function pushProspectToHubspot(base44, leadInfo, scores) {
+  const { accessToken } = await base44.asServiceRole.connectors.getConnection("hubspot");
+  if (!accessToken) throw new Error("HubSpot connection not available");
+
+  const email = (leadInfo?.email || "").trim();
+  if (!email) throw new Error("No email provided for HubSpot contact");
+
+  const firstName = leadInfo?.firstName || "";
+  const fullName = leadInfo?.name || "";
+  const lastName = fullName.startsWith(firstName) ? fullName.slice(firstName.length).trim() : "";
+
+  const props = {
+    email,
+    firstname: firstName || undefined,
+    lastname: lastName || undefined,
+    company: leadInfo?.organization || undefined,
+    phone: leadInfo?.phone || undefined,
+    lifecyclestage: "lead",
+  };
+  Object.keys(props).forEach((k) => props[k] === undefined && delete props[k]);
+
+  // Look up an existing contact by email so we update rather than duplicate.
+  let contactId = null;
+  try {
+    const searchRes = await fetch("https://api.hubapi.com/crm/v3/objects/contacts/search", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        filterGroups: [{ filters: [{ value: email, propertyName: "email", operator: "EQ" }] }],
+        properties: ["email"],
+        limit: 1,
+      }),
+    });
+    if (searchRes.ok) {
+      const searchData = await searchRes.json();
+      if (searchData.results && searchData.results.length > 0) {
+        contactId = searchData.results[0].id;
+      }
+    }
+  } catch {
+    // Search failed — fall through to create.
+  }
+
+  if (contactId) {
+    const upd = await fetch(`https://api.hubapi.com/crm/v3/objects/contacts/${contactId}`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ properties: props }),
+    });
+    if (!upd.ok) throw new Error(`HubSpot update failed: ${await upd.text()}`);
+    return contactId;
+  }
+
+  const createRes = await fetch("https://api.hubapi.com/crm/v3/objects/contacts", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ properties: props }),
+  });
+  if (!createRes.ok) throw new Error(`HubSpot create failed: ${await createRes.text()}`);
+  const created = await createRes.json();
+  return created.id;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -131,6 +195,16 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── Push prospect to HubSpot CRM (non-blocking) ──
+    let hubspot_contact_id = null;
+    let hubspot_error = null;
+    try {
+      hubspot_contact_id = await pushProspectToHubspot(base44, lead_info, scores);
+    } catch (e) {
+      hubspot_error = e.message;
+      console.warn("HubSpot push error:", hubspot_error);
+    }
+
     return Response.json({
       success: true,
       pdf_url,
@@ -138,6 +212,8 @@ Deno.serve(async (req) => {
       prospect_id: prospect?.id,
       email_sent: emailSent,
       email_error: emailError,
+      hubspot_contact_id,
+      hubspot_error,
     });
   } catch (error) {
     console.error("generateDiagnosticReport error:", error);
