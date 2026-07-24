@@ -22,7 +22,7 @@ export const CONSTRUCT_KEYS = Object.keys(CONSTRUCT_WEIGHTS);
 // Derived index item mappings
 export const DERIVED_INDEXES = {
   manager_engagement_risk: {
-    items: [1, 2, 6, 7, 8, 9, 17, 18, 24],
+    items: [1, 2, 3, 5, 6, 11, 12, 15],
     bands: {
       "75-100": "Low risk",
       "50-74": "Emerging risk",
@@ -30,7 +30,7 @@ export const DERIVED_INDEXES = {
     },
   },
   leadership_story_coherence: {
-    items: [10, 11, 13, 14],
+    items: [7, 8, 9],
     bands: {
       "75-100": "Clear story",
       "50-74": "Partial story",

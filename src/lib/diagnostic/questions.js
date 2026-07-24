@@ -1,5 +1,5 @@
 // Curiosity Led Leadership Reboot Diagnostic
-// Question definitions: 10 intake fields, 24 scored items, conditional follow-ups
+// Question definitions: 8 intake fields, 15 scored items (3 per construct), conditional follow-ups
 
 export const INTAKE_FIELDS = [
   // Section 1: Context
@@ -15,17 +15,16 @@ export const INTAKE_FIELDS = [
   {
     id: "leader_populations",
     section: "Context",
-    label: "Which leader populations are in scope right now? Select all that apply.",
+    label: "Which leader populations are in scope right now?",
     type: "multi_select",
     required: true,
-    helper: "Choose all leader groups you are currently most focused on supporting or improving.",
+    helper: "Select all that apply.",
     options: [
       "Newly promoted managers",
       "Newly hired managers",
       "Frontline leaders",
       "Mid-level leaders",
       "Senior leaders",
-      "Mixed population",
       "Other",
     ],
     conditionalReveal: {
@@ -51,18 +50,17 @@ export const INTAKE_FIELDS = [
   {
     id: "most_true_today",
     section: "Current reality",
-    label: "What is most true today? Select up to 3.",
+    label: "What is most true today?",
     type: "multi_select",
     required: true,
-    maxSelect: 3,
-    helper: "Choose the issues that feel most pressing right now.",
+    helper: "Select all that apply.",
     options: [
       "Support arrives too late",
       "Managers are overloaded",
-      "Our programs feel disconnected from daily work",
+      "Our leadership support feels disconnected from daily work",
       "We cannot clearly prove impact",
-      "Data is fragmented across tools",
-      "Reporting is too manual",
+      "Information is fragmented across tools or systems",
+      "Reporting and follow-through feel too manual",
       "Leadership readiness is unclear",
       "Turnover or engagement concerns are rising",
       "Other",
@@ -80,23 +78,25 @@ export const INTAKE_FIELDS = [
   {
     id: "already_in_place",
     section: "Current reality",
-    label: "What is already in place? Select all that apply.",
+    label: "What is already in place today?",
     type: "multi_select",
     required: true,
-    helper: "Select the types of support, systems, or development infrastructure already in use.",
+    helper: "Select all that apply.",
     options: [
-      "Leadership programs",
-      "Coaching",
-      "LMS or learning platform",
-      "360 or assessment tools",
-      "HRIS / talent systems",
+      "New leader onboarding program",
+      "Leadership development programs",
+      "Learning content (internal or external)",
+      "LMS",
+      "Assessment tools",
+      "Performance tracking (HRIS / talent systems)",
+      "Leadership competencies",
+      "Leadership coaching",
       "Mentoring",
       "Manager toolkits",
-      "Additional Tools",
-      "None / very little",
+      "Additional tools",
     ],
     conditionalReveal: {
-      triggerValue: "Additional Tools",
+      triggerValue: "Additional tools",
       field: {
         id: "additional_tools_text",
         label: "What additional tools are currently part of your leadership support approach?",
@@ -109,26 +109,63 @@ export const INTAKE_FIELDS = [
     id: "why_now",
     section: "Current reality",
     label: "What prompted you to take this diagnostic now?",
-    type: "short_text",
+    type: "multi_select",
     required: true,
-    helper: "Share the immediate trigger, concern, or internal conversation that made this feel timely.",
+    helper: "Select all that apply.",
+    options: [
+      "Manager performance or consistency concerns",
+      "Manager burnout or overload",
+      "Team engagement or turnover concerns",
+      "Leadership readiness feels unclear",
+      "Our current leadership support approach is not working as well as it should",
+      "We are struggling to prove impact or justify investment",
+      "A recent change, growth shift, or issue exposed a gap",
+      "Just checking this out",
+      "Other",
+    ],
+    conditionalReveal: {
+      triggerValue: "Other",
+      field: {
+        id: "why_now_other",
+        label: "What else prompted you to take this diagnostic now?",
+        type: "short_text",
+        required: true,
+      },
+    },
   },
   {
     id: "concern_if_no_change",
     section: "Current reality",
     label: "If nothing changes in the next 6–12 months, what concerns you most?",
-    type: "short_text",
+    type: "multi_select",
     required: true,
-    helper:
-      "Examples: turnover, manager burnout, leadership readiness, team performance, executive confidence, or inability to prove value.",
+    helper: "Select all that apply.",
+    options: [
+      "Turnover",
+      "Manager burnout",
+      "Leadership readiness",
+      "Team performance",
+      "Executive confidence",
+      "Inability to prove value",
+      "Other",
+    ],
+    conditionalReveal: {
+      triggerValue: "Other",
+      field: {
+        id: "concern_if_no_change_other",
+        label: "What else concerns you most?",
+        type: "short_text",
+        required: true,
+      },
+    },
   },
   {
     id: "biggest_obstacle",
     section: "Current reality",
-    label: "What is the biggest obstacle to improving leadership support right now?",
-    type: "single_select",
+    label: "What is getting in the way most right now?",
+    type: "multi_select",
     required: true,
-    helper: "Choose the barrier that most limits progress today.",
+    helper: "Select all that apply.",
     options: [
       "Capacity / team bandwidth",
       "Budget",
@@ -150,27 +187,9 @@ export const INTAKE_FIELDS = [
       },
     },
   },
-  // Section 3: Optional detail
-  {
-    id: "late_support_example",
-    section: "Optional detail",
-    label: "Describe one recent example where leadership support arrived too late.",
-    type: "short_text",
-    required: false,
-    helper: "A real example helps make your feedback more specific and actionable.",
-  },
-  {
-    id: "manager_tools",
-    section: "Optional detail",
-    label: "What tools or systems do managers already use most in their day-to-day work?",
-    type: "short_text",
-    required: false,
-    helper:
-      "Examples: Teams, Slack, email, HRIS, spreadsheets, internal check-in routines, or manager one-on-ones.",
-  },
 ];
 
-// 24 scored diagnostic items on a 5-point agreement scale
+// 15 scored diagnostic items (3 per construct) on a 5-point agreement scale
 export const SCORE_SCALE = [
   "Strongly disagree",
   "Disagree",
@@ -180,153 +199,99 @@ export const SCORE_SCALE = [
 ];
 
 export const SCORED_ITEMS = [
-  // Construct 1: Signal Delay (items 1-4, weight 25%)
+  // Construct 1: Signal Delay (items 1-3)
   {
     id: 1,
-    construct: "signal_delay",
-    text: "We usually know which managers need support before team problems become visible.",
-    reverse: false,
-  },
-  {
-    id: 2,
     construct: "signal_delay",
     text: "Struggling or overloaded managers are often identified only after performance, engagement, or retention is already affected.",
     reverse: true,
   },
   {
-    id: 3,
+    id: 2,
     construct: "signal_delay",
-    text: "Newly promoted or newly hired leaders receive meaningful attention early, not only after issues emerge.",
+    text: "Newly promoted or newly hired leaders receive meaningful support early.",
     reverse: false,
   },
   {
-    id: 4,
+    id: 3,
     construct: "signal_delay",
-    text: "By the time leadership concerns become clear, the impact is often already noticeable.",
+    text: "Leadership issues can escalate before support catches up.",
     reverse: true,
   },
-  // Construct 2: Support Friction (items 5-9, weight 25%)
+  // Construct 2: Support Friction (items 4-6)
   {
-    id: 5,
+    id: 4,
     construct: "support_friction",
     text: "When a leadership need is identified, we can quickly turn it into a practical next step.",
     reverse: false,
   },
   {
-    id: 6,
+    id: 5,
     construct: "support_friction",
-    text: "Much of our current leadership support feels disconnected from what managers are facing in real time.",
+    text: "Our leadership support feels disconnected from what managers are facing day to day.",
     reverse: true,
   },
   {
-    id: 7,
+    id: 6,
     construct: "support_friction",
-    text: "Managers are likely to experience our development support as useful, not as one more requirement.",
+    text: "Leadership support feels like an extra program to complete rather than an embedded part of managers' workflow.",
+    reverse: true,
+  },
+  // Construct 3: Proof & Defensibility (items 7-9)
+  {
+    id: 7,
+    construct: "proof_defensibility",
+    text: "We can clearly explain how our leadership support efforts are evolving.",
     reverse: false,
   },
   {
     id: 8,
-    construct: "support_friction",
-    text: "Leadership support usually shows up in the tools, routines, or moments where managers are already working, rather than as an extra program to complete.",
+    construct: "proof_defensibility",
+    text: "We can connect leadership needs, support actions, and progress into one story leaders can understand and trust.",
     reverse: false,
   },
   {
     id: 9,
-    construct: "support_friction",
-    text: "Our current support approach reduces cognitive load for managers instead of adding another layer for them to remember or manage.",
+    construct: "proof_defensibility",
+    text: "Our leadership support efforts operate as a coherent system, not just as separate programs or activities.",
     reverse: false,
   },
-  // Construct 3: Proof & Defensibility (items 10-14, weight 20%)
+  // Construct 4: Fragmentation & Admin Burden (items 10-12)
   {
     id: 10,
-    construct: "proof_defensibility",
-    text: "We can clearly explain what our leadership development efforts are changing.",
-    reverse: false,
-  },
-  {
-    id: 11,
-    construct: "proof_defensibility",
-    text: "When executives ask what is working, we can answer with more than anecdotes.",
-    reverse: false,
-  },
-  {
-    id: 12,
-    construct: "proof_defensibility",
-    text: "We can show where support is happening and what progress is following from it.",
-    reverse: false,
-  },
-  {
-    id: 13,
-    construct: "proof_defensibility",
-    text: "We can connect leadership signals, support actions, and observed progress into one story executives can understand and trust.",
-    reverse: false,
-  },
-  {
-    id: 14,
-    construct: "proof_defensibility",
-    text: "Our leadership development efforts are visible as a coherent system, not just as separate programs or activities.",
-    reverse: false,
-  },
-  // Construct 4: Fragmentation & Admin Burden (items 15-19, weight 15%)
-  {
-    id: 15,
     construct: "fragmentation_admin",
     text: "Leadership support information is spread across too many tools, systems, or spreadsheets.",
     reverse: true,
   },
   {
-    id: 16,
+    id: 11,
     construct: "fragmentation_admin",
     text: "Our team spends too much time chasing updates and stitching together reporting.",
     reverse: true,
   },
   {
-    id: 17,
+    id: 12,
     construct: "fragmentation_admin",
-    text: "Assigning, tracking, and monitoring leadership support is more manual than it should be.",
+    text: "Even when we know what needs to improve, acting on it creates too much administrative burden for HR, Talent, or L&D.",
     reverse: true,
   },
+  // Construct 5: Cost of Inaction (items 13-15)
   {
-    id: 18,
-    construct: "fragmentation_admin",
-    text: "Improving leadership support with our current approach would require significant additional manual effort from HR or Talent.",
-    reverse: true,
-  },
-  {
-    id: 19,
-    construct: "fragmentation_admin",
-    text: "Even when we know what needs to improve, our current system makes it difficult to act without creating more coordination burden.",
-    reverse: true,
-  },
-  // Construct 5: Cost of Inaction (items 20-24, weight 15%)
-  {
-    id: 20,
+    id: 13,
     construct: "cost_of_inaction",
     text: "Delayed leadership support creates meaningful downstream cost for the organization.",
     reverse: false,
   },
   {
-    id: 21,
-    construct: "cost_of_inaction",
-    text: "We are likely paying a hidden price for reactive leadership support, even if we cannot quantify it precisely today.",
-    reverse: false,
-  },
-  {
-    id: 22,
+    id: 14,
     construct: "cost_of_inaction",
     text: "Leadership gaps affect readiness, retention, or team performance more than our current reporting shows.",
     reverse: false,
   },
   {
-    id: 23,
+    id: 15,
     construct: "cost_of_inaction",
-    text: "Trying to improve leadership support manually is likely costing us time and consistency we cannot easily afford.",
-    reverse: false,
-  },
-  {
-    id: 24,
-    construct: "cost_of_inaction",
-    text: "Slow, manual improvement creates risk because leadership issues can escalate before support catches up.",
+    text: "We often underestimate the cost of waiting too long to support managers.",
     reverse: false,
   },
 ];
@@ -419,7 +384,7 @@ export const FOLLOW_UPS = {
   },
   additional_tools: {
     triggerType: "context",
-    triggerCondition: { field: "already_in_place", operator: "includes", value: "Additional Tools" },
+    triggerCondition: { field: "already_in_place", operator: "includes", value: "Additional tools" },
     question: "Which of these tools plays the biggest role in how leadership support is delivered today?",
     type: "short_text",
   },
@@ -456,17 +421,5 @@ export const FOLLOW_UPS = {
       "We have support, but it is too slow to activate",
       "Other",
     ],
-  },
-  strong_score_urgent_narrative: {
-    triggerType: "conflict",
-    triggerCondition: {
-      and: [
-        { field: "overall_score", operator: ">=", value: 75 },
-        { field: "late_support_example", operator: "not_empty" },
-      ],
-    },
-    question:
-      "Is the issue you are trying to solve concentrated in a specific cohort, function, or recent event?",
-    type: "short_text",
   },
 };

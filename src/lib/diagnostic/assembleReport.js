@@ -52,11 +52,21 @@ export function assembleReport(scores, intakeAnswers, followUpAnswers) {
   }
 
   // Get obstacle modifier
-  const obstacle = intakeAnswers.biggest_obstacle || "";
-  const obstacleModifier = OBSTACLE_MODIFIERS[obstacle] || "";
+  const obstacles = Array.isArray(intakeAnswers.biggest_obstacle)
+    ? intakeAnswers.biggest_obstacle
+    : intakeAnswers.biggest_obstacle
+      ? [intakeAnswers.biggest_obstacle]
+      : [];
+  let obstacleModifier = "";
+  for (const obs of obstacles) {
+    if (OBSTACLE_MODIFIERS[obs]) {
+      obstacleModifier = OBSTACLE_MODIFIERS[obs];
+      break;
+    }
+  }
 
   // Get tool modifier
-  const managerTools = (intakeAnswers.manager_tools || "").toLowerCase();
+  const managerTools = (intakeAnswers.additional_tools_text || "").toLowerCase();
   let toolModifier = "";
   for (const tool of Object.keys(TOOL_MODIFIERS)) {
     if (managerTools.includes(tool)) {
@@ -78,8 +88,11 @@ export function assembleReport(scores, intakeAnswers, followUpAnswers) {
   };
 
   // ── Section 2: Overall result ──
+  const whyNowRaw = Array.isArray(intakeAnswers.why_now)
+    ? intakeAnswers.why_now.join(", ")
+    : intakeAnswers.why_now || "";
   const contextInsert =
-    intakeAnswers.why_now ||
+    whyNowRaw ||
     (intakeAnswers.most_true_today && intakeAnswers.most_true_today.length > 0
       ? intakeAnswers.most_true_today.join(", ")
       : "");
@@ -138,7 +151,9 @@ export function assembleReport(scores, intakeAnswers, followUpAnswers) {
   });
 
   // ── Section 5: What this likely means right now ──
-  const concernText = intakeAnswers.concern_if_no_change || "";
+  const concernText = Array.isArray(intakeAnswers.concern_if_no_change)
+    ? intakeAnswers.concern_if_no_change.join(", ")
+    : intakeAnswers.concern_if_no_change || "";
   const section5 = {
     synthesis: buildSynthesis(overallLabel, top2PressurePoints, concernText, obstacleModifier),
   };

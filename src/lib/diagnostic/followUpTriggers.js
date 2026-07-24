@@ -24,7 +24,7 @@ export function determineFollowUps(scores, intakeAnswers) {
   if (populations.length >= 2) {
     triggered.push("multiple_populations");
   } else if (
-    intakeAnswers.already_in_place?.includes("Additional Tools") &&
+    intakeAnswers.already_in_place?.includes("Additional tools") &&
     intakeAnswers.additional_tools_text
   ) {
     triggered.push("additional_tools");
@@ -38,8 +38,6 @@ export function determineFollowUps(scores, intakeAnswers) {
     scores.constructScores.support_friction < 50
   ) {
     triggered.push("many_systems_low_friction");
-  } else if (scores.overallScore >= 75 && intakeAnswers.late_support_example) {
-    triggered.push("strong_score_urgent_narrative");
   }
 
   // ── Cap at 4 ──
