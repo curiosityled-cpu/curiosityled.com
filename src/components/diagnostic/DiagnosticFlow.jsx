@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { SCORED_ITEMS } from "@/lib/diagnostic/questions";
@@ -40,6 +40,11 @@ export default function DiagnosticFlow({ onBackToLanding }) {
   const [pdfUrl, setPdfUrl] = useState(null);
   const [emailSent, setEmailSent] = useState(false);
   const [error, setError] = useState("");
+
+  // ── Scroll to top whenever the stage changes ──
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [stage]);
 
   // ── Stage transitions ──
   const handleNameComplete = (nameData) => {
