@@ -175,6 +175,7 @@ export default function DiagnosticFlow({ onBackToLanding }) {
             onProgress={setGlobalProgress}
             onComplete={handleIntakeComplete}
             onBack={() => setStage("name")}
+            initialAnswers={data.intakeAnswers}
           />
         )}
         {stage === "questions" && (

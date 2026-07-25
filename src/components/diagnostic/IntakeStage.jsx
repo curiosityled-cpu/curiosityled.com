@@ -5,10 +5,30 @@ import { INTAKE_FIELDS } from "@/lib/diagnostic/questions";
 
 const SECTIONS = ["Context", "Current reality"];
 
-export default function IntakeStage({ onComplete, onBack, firstName, progress, onProgress }) {
+// Conditional reveal field IDs, so a merged intakeAnswers object can be split
+// back into main answers and conditional answers when restoring on back-nav.
+const CONDITIONAL_FIELD_IDS = new Set(
+  INTAKE_FIELDS.filter((f) => f.conditionalReveal).map((f) => f.conditionalReveal.field.id)
+);
+
+export default function IntakeStage({ onComplete, onBack, firstName, progress, onProgress, initialAnswers }) {
   const [sectionIndex, setSectionIndex] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [conditionalAnswers, setConditionalAnswers] = useState({});
+  const [answers, setAnswers] = useState(() => {
+    const init = initialAnswers || {};
+    const main = {};
+    for (const k of Object.keys(init)) {
+      if (!CONDITIONAL_FIELD_IDS.has(k)) main[k] = init[k];
+    }
+    return main;
+  });
+  const [conditionalAnswers, setConditionalAnswers] = useState(() => {
+    const init = initialAnswers || {};
+    const cond = {};
+    for (const k of Object.keys(init)) {
+      if (CONDITIONAL_FIELD_IDS.has(k)) cond[k] = init[k];
+    }
+    return cond;
+  });
 
   const currentSection = SECTIONS[sectionIndex];
   const sectionFields = INTAKE_FIELDS.filter((f) => f.section === currentSection);
