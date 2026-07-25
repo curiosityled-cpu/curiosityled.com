@@ -21,6 +21,16 @@ Deno.serve(async (req) => {
             }, { status: 401 });
         }
 
+        // Role check: only managers or admins may bulk-assign goals.
+        const ADMIN_ROLES = ['Platform Admin', 'Super Administrator', 'Admin Level 1', 'Admin Level 2'];
+        const appRole = currentUser.app_role;
+        if (appRole !== 'User Level 2' && !ADMIN_ROLES.includes(appRole)) {
+            return Response.json({
+                success: false,
+                error: 'Forbidden - manager or admin role required to assign goals'
+            }, { status: 403 });
+        }
+
         const { goalTemplate, targetUsers, assignedBy } = await req.json();
         
         if (!goalTemplate || !goalTemplate.title) {
@@ -35,6 +45,18 @@ Deno.serve(async (req) => {
                 success: false,
                 error: 'Target users array is required'
             }, { status: 400 });
+        }
+
+        // Non-admin managers may only assign goals to their direct subordinates.
+        if (!ADMIN_ROLES.includes(appRole)) {
+            const subordinates = currentUser.subordinate_emails || [];
+            const unauthorized = targetUsers.filter(e => !subordinates.includes(e));
+            if (unauthorized.length > 0) {
+                return Response.json({
+                    success: false,
+                    error: `Forbidden - you can only assign goals to your direct subordinates. Not allowed: ${unauthorized.join(', ')}`
+                }, { status: 403 });
+            }
         }
         
         const results = {
