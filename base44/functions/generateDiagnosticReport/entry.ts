@@ -281,17 +281,17 @@ function generatePDF(report, scores, leadInfo) {
       doc.addPage();
       y = margin;
     }
-    doc.setFillColor(...hexToRgb(brandBlue));
-    doc.rect(margin, y - 12, 4, 20, "F");
     doc.setFontSize(9);
     doc.setTextColor(...hexToRgb(brandBlue));
     doc.setFont("helvetica", "bold");
-    doc.text(`SECTION ${num}`, margin + 12, y);
+    doc.text(`SECTION ${num}`, margin, y);
     y += 16;
+    doc.setFillColor(...hexToRgb(brandBlue));
+    doc.rect(margin, y - 12, 4, 22, "F");
     doc.setFontSize(16);
     doc.setTextColor(...darkText);
-    doc.text(title, margin, y);
-    y += 24;
+    doc.text(title, margin + 12, y);
+    y += 26;
   }
 
   // Helper: score badge
@@ -549,12 +549,12 @@ function generatePDF(report, scores, leadInfo) {
   doc.addPage();
   y = margin;
   doc.setFillColor(...hexToRgb(brandBlue));
-  doc.rect(margin, y - 12, 4, 20, "F");
+  doc.rect(margin, y - 12, 4, 22, "F");
   doc.setFontSize(16);
   doc.setTextColor(...darkText);
   doc.setFont("helvetica", "bold");
-  doc.text("The Five Dimensions Measured", margin, y);
-  y += 24;
+  doc.text("The Five Dimensions Measured", margin + 12, y);
+  y += 26;
   const bandLabels = (report.band_ranges || [])
     .map((b) => `${b.min}\u2013${b.max}: ${b.label}`)
     .join("     ");
@@ -562,10 +562,10 @@ function generatePDF(report, scores, leadInfo) {
   doc.setTextColor(...grayText);
   doc.setFont("helvetica", "normal");
   doc.text(bandLabels, margin, y);
-  y += 16;
+  y += 22;
   const constructDefs = report.score_definitions?.constructs || {};
   for (const key of Object.keys(scores.constructScores)) {
-    if (y > pageHeight - 80) { doc.addPage(); y = margin; }
+    if (y > pageHeight - 100) { doc.addPage(); y = margin; }
     const cscore = scores.constructScores[key];
     const cdef = constructDefs[key] || {};
     doc.setFontSize(12);
@@ -575,11 +575,11 @@ function generatePDF(report, scores, leadInfo) {
     const scoreStr = `${cscore}/100`;
     doc.setFontSize(13);
     doc.text(scoreStr, pageWidth - margin - doc.getTextWidth(scoreStr), y);
-    y += 6;
+    y += 10;
     y = scoreBar(cscore, margin, y, contentWidth);
-    y += 6;
-    if (cdef.measures) addText(`What this measures: ${cdef.measures}`, 10, grayText, "normal", 14, 4);
-    if (cdef.stronger) addText(`What stronger looks like: ${cdef.stronger}`, 9, hexToRgb(brandBlue), "italic", 13, 10);
+    y += 12;
+    if (cdef.measures) addText(`What this measures: ${cdef.measures}`, 10, grayText, "normal", 14, 6);
+    if (cdef.stronger) addText(`What stronger looks like: ${cdef.stronger}`, 9, hexToRgb(brandBlue), "italic", 13, 16);
   }
 
   // ── Section 3: Manager Engagement Risk ──
@@ -711,10 +711,14 @@ function generatePDF(report, scores, leadInfo) {
   y += 6;
   if (y > pageHeight - 80) { doc.addPage(); y = margin; }
   const consultUrl = "https://cal.com/curiosityled/discoverycall?overlayCalendar=true";
+  addText(
+    "Schedule a Consultation With Us — we'll walk through your results together, help you make sense of the findings, and work with you to strategize implementation at no cost.",
+    11, grayText, "normal", 16, 8
+  );
   doc.setFontSize(12);
   doc.setTextColor(...hexToRgb(brandBlue));
   doc.setFont("helvetica", "bold");
-  const ctaText = "Schedule a call with a consultant to review your results";
+  const ctaText = "Schedule a Consultation With Us";
   doc.text(ctaText, margin, y);
   doc.link(margin, y - 12, doc.getTextWidth(ctaText), 16, { url: consultUrl });
   y += 18;

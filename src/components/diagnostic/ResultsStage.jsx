@@ -136,9 +136,10 @@ export default function ResultsStage({ report, scores, leadInfo, pdfUrl, emailSe
           <h2 className="text-lg font-bold text-[#0a0a0a]">Your Score Summary</h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center mb-4">
-          <div className="flex justify-center">
-            <ScoreGauge score={s2.score} label="Leadership Readiness Score" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center mb-6">
+          <div className="flex flex-col items-center gap-3">
+            <ScoreGauge score={s2.score} label="" />
+            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-gray-500 text-center">Leadership Readiness Score</p>
           </div>
           <div className="min-w-0">
             <ConstructRadar constructScores={scores.constructScores} />
@@ -291,6 +292,9 @@ export default function ResultsStage({ report, scores, leadInfo, pdfUrl, emailSe
         <p className="text-sm text-gray-300 mb-3">{s9.sentence1}</p>
         <p className="text-sm text-gray-300 mb-3">{s9.sentence2}</p>
         <p className="text-sm text-white font-medium mb-6">{s9.sentence3}</p>
+        <p className="text-sm text-gray-400 mb-5">
+          On the call, we'll walk through your results together, help you make sense of the findings, and work with you to strategize implementation — at no cost.
+        </p>
         <a
           href="https://cal.com/curiosityled/discoverycall?overlayCalendar=true"
           target="_blank"
@@ -299,7 +303,7 @@ export default function ResultsStage({ report, scores, leadInfo, pdfUrl, emailSe
           style={{ backgroundColor: "#6C9EFF" }}
         >
           <Calendar className="w-4 h-4" />
-          Schedule a Call with a Consultant
+          Schedule a Consultation With Us
         </a>
       </div>
     </motion.div>
