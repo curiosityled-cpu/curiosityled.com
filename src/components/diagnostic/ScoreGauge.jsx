@@ -23,10 +23,10 @@ export default function ScoreGauge({ score, label }) {
           strokeDashoffset={offset}
           transform="rotate(-90 70 70)"
         />
-        <text x="70" y="70" textAnchor="middle" dominantBaseline="central" fontSize="34" fontWeight="700" fill="#0a0a0a">
+        <text x="70" y="64" textAnchor="middle" dominantBaseline="central" fontSize="32" fontWeight="700" fill="#0a0a0a">
           {score}
         </text>
-        <text x="70" y="92" textAnchor="middle" fontSize="12" fill="#9ca3af">
+        <text x="70" y="94" textAnchor="middle" dominantBaseline="central" fontSize="11" fill="#9ca3af">
           / 100
         </text>
       </svg>
