@@ -4,16 +4,22 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
-    // Note: This function is designed to run via scheduled automation (no user context)
-    // If called manually, verify admin access
-    const isAuthenticated = await base44.auth.isAuthenticated();
-    if (isAuthenticated) {
+    // This function runs via scheduled automation (no user context).
+    // Trust only an internal automation secret; otherwise require an authenticated Platform Admin.
+    const automationSecret = Deno.env.get('INTERNAL_FUNCTION_SECRET');
+    const providedSecret = req.headers.get('x-automation-secret') || req.headers.get('x-internal-secret');
+    const isAutomation = !!automationSecret && !!providedSecret && providedSecret === automationSecret;
+
+    if (!isAutomation) {
+      const isAuthenticated = await base44.auth.isAuthenticated();
+      if (!isAuthenticated) {
+        return Response.json({ error: 'Unauthorized: automation secret or admin authentication required' }, { status: 401 });
+      }
       const user = await base44.auth.me();
       if (user?.app_role !== 'Platform Admin') {
         return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
       }
     }
-    // If not authenticated, assume it's an automation and proceed with service role
 
     const now = new Date();
     let startedCount = 0;
