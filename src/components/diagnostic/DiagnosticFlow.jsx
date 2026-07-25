@@ -88,12 +88,14 @@ export default function DiagnosticFlow({ onBackToLanding }) {
     setData((prev) => ({ ...prev, leadInfo: fullLeadInfo }));
     setStage("generating");
 
-    // Assemble report
-    const assembledReport = assembleReport(scores, data.intakeAnswers, data.followUpAnswers);
-    setReport(assembledReport);
-
-    // Call backend function to generate PDF + send email + save entities
+    // Assemble report + generate PDF + send email + save entities.
+    // Everything is wrapped so any failure (including report assembly) surfaces
+    // an error and routes to the results recovery state instead of hanging on
+    // the "Generating" screen.
     try {
+      const assembledReport = assembleReport(scores, data.intakeAnswers, data.followUpAnswers);
+      setReport(assembledReport);
+
       const response = await base44.functions.invoke("generateDiagnosticReport", {
         report: assembledReport,
         scores: {

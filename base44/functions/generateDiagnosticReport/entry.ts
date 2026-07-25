@@ -106,6 +106,16 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Validate email format server-side too — client validation can be bypassed
+    // on this public endpoint, and we don't want junk Prospects or failed sends.
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(lead_info.email || ""));
+    if (!emailValid) {
+      return Response.json(
+        { error: "A valid email address is required." },
+        { status: 400 }
+      );
+    }
+
     // ── Generate PDF ──
     const pdfBytes = generatePDF(report, scores, lead_info);
 
