@@ -574,7 +574,7 @@ function generatePDF(report, scores, leadInfo) {
     const scoreStr = `${cscore}/100`;
     doc.setFontSize(13);
     doc.text(scoreStr, pageWidth - margin - doc.getTextWidth(scoreStr), y);
-    y += 10;
+    y += 14;
     y = scoreBar(cscore, margin, y, contentWidth);
     y += 12;
     if (cdef.measures) addText(`What this measures: ${cdef.measures}`, 10, grayText, "normal", 14, 6);
@@ -594,7 +594,7 @@ function generatePDF(report, scores, leadInfo) {
   const merStr = `${s3.score}/100`;
   doc.setFontSize(13);
   doc.text(merStr, pageWidth - margin - doc.getTextWidth(merStr), y);
-  y += 6;
+  y += 13;
   y = scoreBar(s3.score, margin, y, contentWidth);
   y += 8;
   addText(s3.label, 13, hexToRgb(brandBlue), "bold", 18, 8);
@@ -616,7 +616,7 @@ function generatePDF(report, scores, leadInfo) {
   const lscStr = `${lsc.score}/100`;
   doc.setFontSize(13);
   doc.text(lscStr, pageWidth - margin - doc.getTextWidth(lscStr), y);
-  y += 6;
+  y += 13;
   y = scoreBar(lsc.score, margin, y, contentWidth);
   y += 8;
   addText(lsc.label, 13, hexToRgb(brandBlue), "bold", 18, 8);
