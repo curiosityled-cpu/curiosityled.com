@@ -53,5 +53,22 @@
     "name",
     "category"
   ],
-  "rls": {}
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "Platform Admin"
+      }
+    },
+    "read": null,
+    "update": {
+      "user_condition": {
+        "role": "Platform Admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "Platform Admin"
+      }
+    }
+  }
 }

@@ -44,9 +44,17 @@
     "user_email"
   ],
   "rls": {
-    "read": {
-      "user_email": "{{user.email}}"
+    "create": {
+      "data.user_email": "{{user.email}}"
     },
-    "write": {}
+    "read": {
+      "data.user_email": "{{user.email}}"
+    },
+    "update": {
+      "data.user_email": "{{user.email}}"
+    },
+    "delete": {
+      "data.user_email": "{{user.email}}"
+    }
   }
 }

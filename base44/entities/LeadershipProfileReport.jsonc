@@ -236,25 +236,17 @@
     "assessment_id"
   ],
   "rls": {
-    "read": {
-      "$or": [
-        {
-          "user_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "Admin Level 2",
-                "Super Administrator",
-                "Platform Admin"
-              ]
-            }
-          },
-          "client_id": "{{user.client_id}}"
-        }
-      ]
+    "create": {
+      "data.user_email": "{{user.email}}"
     },
-    "write": {}
+    "read": {
+      "data.user_email": "{{user.email}}"
+    },
+    "update": {
+      "data.user_email": "{{user.email}}"
+    },
+    "delete": {
+      "data.user_email": "{{user.email}}"
+    }
   }
 }

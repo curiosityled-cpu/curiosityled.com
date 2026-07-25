@@ -80,46 +80,17 @@
     "user_email"
   ],
   "rls": {
-    "read": {
-      "$or": [
-        {
-          "user_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "User Level 2"
-          },
-          "user_email": {
-            "$in": "{{user.subordinate_emails}}"
-          }
-        },
-        {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "Analyst",
-                "Admin Level 2",
-                "Super Administrator"
-              ]
-            }
-          },
-          "client_id": "{{user.client_id}}"
-        },
-        {
-          "user_condition": {
-            "role": "Partner Business Administrator"
-          },
-          "client_id": {
-            "$in": "{{user.partner_client_ids}}"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Platform Admin"
-          }
-        }
-      ]
+    "create": {
+      "data.user_email": "{{user.email}}"
     },
-    "write": {}
+    "read": {
+      "data.user_email": "{{user.email}}"
+    },
+    "update": {
+      "data.user_email": "{{user.email}}"
+    },
+    "delete": {
+      "data.user_email": "{{user.email}}"
+    }
   }
 }

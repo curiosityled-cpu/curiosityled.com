@@ -65,11 +65,23 @@
     "timestamp"
   ],
   "rls": {
+    "create": {
+      "data.accessed_by": "{{user.email}}"
+    },
     "read": {
       "user_condition": {
         "role": "Platform Admin"
       }
     },
-    "write": {}
+    "update": {
+      "user_condition": {
+        "role": "Platform Admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "Platform Admin"
+      }
+    }
   }
 }
