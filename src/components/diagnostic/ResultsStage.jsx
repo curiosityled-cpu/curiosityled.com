@@ -8,6 +8,47 @@ import ScoreGauge from "@/components/diagnostic/ScoreGauge";
 import ConstructRadar from "@/components/diagnostic/ConstructRadar";
 
 export default function ResultsStage({ report, scores, leadInfo, pdfUrl, emailSent, onStartOver, onBack }) {
+  // Report generation can fail; report stays null in that case. Render a
+  // recovery state instead of crashing on the destructure below.
+  if (!report) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="max-w-2xl mx-auto px-6 pb-16"
+      >
+        <div className="bg-white border border-gray-200 rounded-xl p-8 text-center">
+          <div className="w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center bg-red-50">
+            <Download className="w-6 h-6 text-red-500" />
+          </div>
+          <h1 className="text-2xl font-bold text-[#0a0a0a] mb-2">
+            We Couldn't Assemble Your Report
+          </h1>
+          <p className="text-sm text-gray-600 mb-6">
+            Something went wrong while generating your blueprint. Your answers were saved — you can try again or head back to the start.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={onStartOver}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-white text-sm shadow-lg transition-all hover:opacity-90"
+              style={{ backgroundColor: "#0202ff" }}
+            >
+              <RotateCcw className="w-4 h-4" />
+              Try Again
+            </button>
+            <button
+              onClick={onBack}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-gray-700 text-sm border border-gray-200 hover:bg-gray-50 transition-all"
+            >
+              Back to Home
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
   const s1 = report.section1_title_context;
   const s2 = report.section2_overall_result;
   const s3 = report.section3_manager_engagement_risk;

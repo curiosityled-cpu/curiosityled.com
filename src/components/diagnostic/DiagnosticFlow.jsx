@@ -183,6 +183,7 @@ export default function DiagnosticFlow({ onBackToLanding }) {
             onProgress={setGlobalProgress}
             onComplete={handleQuestionsComplete}
             onBack={() => setStage("intake")}
+            initialResponses={data.scoredResponses}
           />
         )}
         {stage === "follow_ups" && (

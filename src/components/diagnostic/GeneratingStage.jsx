@@ -28,7 +28,7 @@ export default function GeneratingStage({ firstName, onProgress }) {
         {firstName}, Assembling Your Blueprint…
       </h1>
       <p className="text-sm text-gray-500 text-center max-w-md">
-        Scoring your 24 answers across 5 leadership constructs, identifying your top pressure points, and building your 90-day plan.
+        Scoring your 15 answers across 5 leadership constructs, identifying your top pressure points, and building your 90-day plan.
       </p>
 
       <div className="mt-8 flex items-center gap-6 text-xs text-gray-400">

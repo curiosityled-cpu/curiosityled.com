@@ -88,7 +88,7 @@ export default function NameStage({ onComplete, progress, onProgress }) {
         </button>
 
         <p className="text-center text-xs text-gray-500 mt-4">
-          24 Questions · About 3 Minutes · Straight Answers
+          15 Questions · About 3 Minutes · Straight Answers
         </p>
       </form>
     </motion.div>

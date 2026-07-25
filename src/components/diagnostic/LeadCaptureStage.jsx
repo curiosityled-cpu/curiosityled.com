@@ -56,7 +56,7 @@ export default function LeadCaptureStage({ onComplete, onBack, firstName, progre
       setStepIndex(stepIndex + 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
-      onComplete(values);
+      onComplete({ ...values, consent });
     }
   };
 

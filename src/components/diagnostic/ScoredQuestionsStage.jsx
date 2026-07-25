@@ -4,9 +4,9 @@ import { ArrowLeft } from "lucide-react";
 import { SCORED_ITEMS, SCORE_SCALE } from "@/lib/diagnostic/questions";
 import { CONSTRUCT_LABELS } from "@/lib/diagnostic/scoring";
 
-export default function ScoredQuestionsStage({ onComplete, onBack, firstName, progress, onProgress }) {
+export default function ScoredQuestionsStage({ onComplete, onBack, firstName, progress, onProgress, initialResponses }) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [responses, setResponses] = useState({});
+  const [responses, setResponses] = useState(initialResponses || {});
 
   const total = SCORED_ITEMS.length;
   const currentItem = SCORED_ITEMS[currentIndex];

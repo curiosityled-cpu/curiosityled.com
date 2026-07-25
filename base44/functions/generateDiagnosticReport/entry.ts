@@ -166,7 +166,7 @@ Deno.serve(async (req) => {
       blueprint_priorities: scores?.blueprintPriorities || [],
       report_json: report,
       pdf_url,
-      status: "pdf_emailed",
+      status: emailSent ? "pdf_emailed" : "report_generated",
       email_sent: emailSent,
     });
 
@@ -185,6 +185,7 @@ Deno.serve(async (req) => {
         scored_responses,
         follow_up_answers,
         scores,
+        consent: lead_info.consent ?? null,
       },
     });
 
