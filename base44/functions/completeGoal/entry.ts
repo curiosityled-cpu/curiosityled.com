@@ -24,6 +24,20 @@ Deno.serve(async (req) => {
 
     const goal = goals[0];
 
+    // Authorization: only the goal owner, an assignee/member, the coach, or an admin may complete it.
+    const ADMIN_ROLES = ['Platform Admin', 'Super Administrator', 'Admin Level 1', 'Admin Level 2'];
+    const assignees = goal.assigned_to_emails || [];
+    const memberEmails = (goal.members || []).map(m => m.user_email).filter(Boolean);
+    const isAuthorized =
+      goal.created_by === user.email ||
+      assignees.includes(user.email) ||
+      memberEmails.includes(user.email) ||
+      goal.coach_email === user.email ||
+      ADMIN_ROLES.includes(user.app_role);
+    if (!isAuthorized) {
+      return Response.json({ error: 'Forbidden - you are not authorized to complete this goal' }, { status: 403 });
+    }
+
     // Update goal status
     await base44.asServiceRole.entities.Goal.update(goal_id, {
       status: 'archived',
