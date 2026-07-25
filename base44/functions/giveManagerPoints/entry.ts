@@ -62,6 +62,7 @@ Deno.serve(async (req) => {
 
     // Award points
     const result = await base44.asServiceRole.functions.invoke('awardPoints', {
+      internal_secret: Deno.env.get('INTERNAL_FUNCTION_SECRET'),
       user_email: team_member_email,
       points_amount,
       transaction_type: 'manager_award',

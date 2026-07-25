@@ -37,6 +37,7 @@ Deno.serve(async (req) => {
     // Award gamification points
     try {
       await base44.asServiceRole.functions.invoke('awardPoints', {
+        internal_secret: Deno.env.get('INTERNAL_FUNCTION_SECRET'),
         user_email: user.email,
         points_amount: resource.points_value || 50,
         transaction_type: 'earned_activity',

@@ -64,12 +64,20 @@ async function _buildTeamsOrchestratorResponse(serviceBase44, userEmail, message
   }
 }
 
-// HMAC validation for Teams bot requests
+// Validate Teams bot webhook requests via a shared secret bearer token (TEAMS_WEBHOOK_SECRET).
+// A dummy/short token is never accepted — the presented token must match the configured secret.
 async function validateTeamsRequest(req, body) {
+  const secret = Deno.env.get('TEAMS_WEBHOOK_SECRET');
+  if (!secret) return false;
   const authHeader = req.headers.get('Authorization') || '';
-  // Teams sends Bearer token — in production, validate against Microsoft auth
-  // For now, validate presence (full OAuth2 validation requires token introspection)
-  return authHeader.startsWith('Bearer ') && authHeader.length > 20;
+  if (!authHeader.startsWith('Bearer ')) return false;
+  const token = authHeader.slice(7);
+  if (token.length !== secret.length) return false;
+  let diff = 0;
+  for (let i = 0; i < secret.length; i++) {
+    diff |= token.charCodeAt(i) ^ secret.charCodeAt(i);
+  }
+  return diff === 0;
 }
 
 function buildCheckInCard(type = 'morning') {

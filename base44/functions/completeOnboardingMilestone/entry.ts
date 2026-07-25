@@ -52,6 +52,7 @@ Deno.serve(async (req) => {
 
     try {
       await base44.asServiceRole.functions.invoke('awardPoints', {
+        internal_secret: Deno.env.get('INTERNAL_FUNCTION_SECRET'),
         user_email: plan.assigned_to_email,
         points_amount: milestonePoints,
         transaction_type: 'earned_activity',
