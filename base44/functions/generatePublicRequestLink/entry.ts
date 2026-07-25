@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { signToken } from '../../shared/publicRequestToken.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -35,8 +36,14 @@ Deno.serve(async (req) => {
       custom_message: custom_message || null
     };
 
-    // Base64 encode the link data for the URL
-    const encodedData = btoa(JSON.stringify(linkData));
+    // HMAC-sign the link data so the submission endpoint can verify authenticity.
+    const secret = Deno.env.get('PUBLIC_REQUEST_TOKEN_SECRET');
+    if (!secret) {
+      return Response.json({
+        error: 'Submission token signing is not configured (PUBLIC_REQUEST_TOKEN_SECRET).'
+      }, { status: 500 });
+    }
+    const encodedData = await signToken(linkData, secret);
     
     // Get the app URL from environment variable
     const appUrl = Deno.env.get('APP_URL');

@@ -16,6 +16,29 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing fileUrl in request payload' }, { status: 400 });
     }
 
+    // Validate the URL to prevent SSRF: only http/https, block internal/private hosts.
+    try {
+      const parsed = new URL(fileUrl);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        throw new Error('Only http/https URLs are allowed');
+      }
+      const host = parsed.hostname.toLowerCase();
+      if (host === 'localhost' || host === '0.0.0.0' || host === '169.254.169.254' ||
+          host.endsWith('.internal') || host.endsWith('.local')) {
+        throw new Error('Internal hosts are not allowed');
+      }
+      const ip = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+      if (ip) {
+        const [a, b] = [Number(ip[1]), Number(ip[2])];
+        if (a === 0 || a === 10 || a === 127 || (a === 169 && b === 254) ||
+            (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168)) {
+          throw new Error('Private or internal IP addresses are not allowed');
+        }
+      }
+    } catch (e) {
+      return Response.json({ error: `Invalid fileUrl: ${e.message}` }, { status: 400 });
+    }
+
     // Fetch the CSV content from the provided URL
     const csvResponse = await fetch(fileUrl);
     if (!csvResponse.ok) {

@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { verifyToken } from '../../shared/publicRequestToken.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -10,13 +11,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'token and request_data are required' }, { status: 400 });
     }
 
-    // Decode and validate the token
-    let linkData;
-    try {
-      const decoded = atob(token);
-      linkData = JSON.parse(decoded);
-    } catch (e) {
-      return Response.json({ error: 'Invalid token' }, { status: 400 });
+    // Verify the HMAC-signed token to prevent client-side forgery of client_id/expires_at.
+    const secret = Deno.env.get('PUBLIC_REQUEST_TOKEN_SECRET');
+    if (!secret) {
+      return Response.json({ error: 'Submission token verification is not configured.' }, { status: 500 });
+    }
+    const linkData = await verifyToken(token, secret);
+    if (!linkData) {
+      return Response.json({ error: 'Invalid or tampered submission link' }, { status: 400 });
     }
 
     // Check if token is expired

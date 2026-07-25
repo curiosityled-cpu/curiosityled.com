@@ -3,6 +3,19 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
+    // Trust boundary: when invoked by an authenticated user, require an admin role.
+    // Unauthenticated calls are treated as trusted internal system workflows
+    // (scheduled automations and other functions invoking this via asServiceRole).
+    const isAuthenticated = await base44.auth.isAuthenticated().catch(() => false);
+    if (isAuthenticated) {
+      const caller = await base44.auth.me();
+      const ADMIN_ROLES = ['Platform Admin', 'Super Administrator', 'Admin Level 1', 'Admin Level 2'];
+      if (!caller || !ADMIN_ROLES.includes(caller.app_role)) {
+        return Response.json({ error: 'Forbidden - admin access required to award points directly' }, { status: 403 });
+      }
+    }
+
     const { user_email, points_amount, transaction_type, given_by_email, related_entity_type, related_entity_id, reason, client_id } = await req.json();
 
     if (!user_email || points_amount === undefined || !transaction_type) {

@@ -14,6 +14,12 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        // Only administrators may change app roles. Non-admins must use User Management.
+        const ADMIN_ROLES = ['Platform Admin', 'Super Administrator', 'Partner Business Administrator'];
+        if (!ADMIN_ROLES.includes(user.app_role)) {
+            return Response.json({ error: 'Forbidden - admin access required to change roles' }, { status: 403 });
+        }
+
         const { role } = await req.json();
 
         const validRoles = [
