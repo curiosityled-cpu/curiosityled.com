@@ -17,6 +17,19 @@ const RADAR_LABELS_PDF = {
   cost_of_inaction: "Cost of Inaction",
 };
 
+// The diagnostic intake "area_of_focus" options don't all match the Prospect.role
+// enum 1:1 ("People / People Ops" -> "People Ops", "Executive Leadership" ->
+// "Executive Leader"). Map them so we never write an invalid enum value, which
+// would fail schema validation and break report generation for those respondents.
+const AREA_OF_FOCUS_TO_ROLE = {
+  "HR": "HR",
+  "Talent": "Talent",
+  "L&D": "L&D",
+  "People / People Ops": "People Ops",
+  "Executive Leadership": "Executive Leader",
+  "Other": "Other",
+};
+
 // Push the diagnostic prospect into HubSpot CRM as a contact (create-or-update by email).
 async function pushProspectToHubspot(base44, leadInfo, scores) {
   const { accessToken } = await base44.asServiceRole.connectors.getConnection("hubspot");
@@ -186,7 +199,7 @@ Deno.serve(async (req) => {
       email: lead_info.email,
       organization: lead_info.organization || "",
       phone: lead_info.phone || "",
-      role: intake_answers?.area_of_focus || "Other",
+      role: AREA_OF_FOCUS_TO_ROLE[intake_answers?.area_of_focus] || "Other",
       source: "offer_diagnostic",
       lead_status: "blueprint_sent",
       blueprint_sent_at: new Date().toISOString(),
