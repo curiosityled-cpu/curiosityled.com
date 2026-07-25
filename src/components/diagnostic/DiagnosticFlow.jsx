@@ -120,6 +120,12 @@ export default function DiagnosticFlow({ onBackToLanding }) {
       if (response.data?.email_error) {
         console.warn("Email sending error:", response.data.email_error);
       }
+      if (response.data?.pdf_error) {
+        console.warn("PDF generation error (lead still captured):", response.data.pdf_error);
+      }
+      if (response.data?.hubspot_error) {
+        console.warn("HubSpot push error:", response.data.hubspot_error);
+      }
       setStage("results");
     } catch (err) {
       setError(err?.message || "Something went wrong generating your report.");

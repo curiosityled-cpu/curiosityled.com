@@ -128,51 +128,87 @@ Deno.serve(async (req) => {
       );
     }
 
-    // ── Generate PDF ──
-    const pdfBytes = generatePDF(report, scores, lead_info);
+    // ── Create Prospect FIRST (lead capture must never be blocked by PDF/email failures) ──
+    const prospect = await base44.asServiceRole.entities.Prospect.create({
+      name: lead_info.name || "",
+      email: lead_info.email,
+      organization: lead_info.organization || "",
+      phone: lead_info.phone || "",
+      role: AREA_OF_FOCUS_TO_ROLE[intake_answers?.area_of_focus] || "Other",
+      source: "offer_diagnostic",
+      lead_status: "new",
+      diagnostic_answers: {
+        intake_answers,
+        scored_responses,
+        follow_up_answers,
+        scores,
+        consent: lead_info.consent ?? null,
+      },
+    });
 
-    // ── Upload PDF ──
-    const fileName = `leadership-reboot-blueprint-${Date.now()}.pdf`;
-    const file = new File([pdfBytes], fileName, { type: "application/pdf" });
-    const uploadResult = await base44.asServiceRole.integrations.Core.UploadFile({ file });
-    const pdf_url = uploadResult.file_url;
-
-    // ── Send email via Resend ──
-    let emailSent = false;
-    let emailError = null;
+    // ── Push prospect to HubSpot CRM (non-blocking, runs regardless of PDF/email) ──
+    let hubspot_contact_id = null;
+    let hubspot_error = null;
     try {
-      const pdfBase64 = arrayBufferToBase64(pdfBytes);
-      const emailHtml = buildEmailHtml(lead_info, pdf_url);
-      const emailResponse = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: "Curiosity Led <no-reply@curiosityled.com>",
-          to: [lead_info.email],
-          subject: "Your 90-Day Leadership Support Reboot Blueprint",
-          html: emailHtml,
-          attachments: [
-            {
-              filename: "leadership-reboot-blueprint.pdf",
-              content: pdfBase64,
-            },
-          ],
-        }),
-      });
-      if (emailResponse.ok) {
-        emailSent = true;
-      } else {
-        emailError = await emailResponse.text();
+      hubspot_contact_id = await pushProspectToHubspot(base44, lead_info, scores);
+    } catch (e) {
+      hubspot_error = e.message;
+      console.warn("HubSpot push error:", hubspot_error);
+    }
+
+    // ── Generate + upload PDF (non-fatal — a transient upload failure must not lose the lead) ──
+    let pdf_url = null;
+    let pdfError = null;
+    try {
+      const pdfBytes = generatePDF(report, scores, lead_info);
+      const fileName = `leadership-reboot-blueprint-${Date.now()}.pdf`;
+      const file = new File([pdfBytes], fileName, { type: "application/pdf" });
+      const uploadResult = await base44.asServiceRole.integrations.Core.UploadFile({ file });
+      pdf_url = uploadResult.file_url;
+
+      // ── Send email via Resend (only if we have a PDF to attach) ──
+      try {
+        const pdfBase64 = arrayBufferToBase64(pdfBytes);
+        const emailHtml = buildEmailHtml(lead_info, pdf_url);
+        const emailResponse = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: "Curiosity Led <no-reply@curiosityled.com>",
+            to: [lead_info.email],
+            subject: "Your 90-Day Leadership Support Reboot Blueprint",
+            html: emailHtml,
+            attachments: [
+              {
+                filename: "leadership-reboot-blueprint.pdf",
+                content: pdfBase64,
+              },
+            ],
+          }),
+        });
+        if (emailResponse.ok) {
+          // Mark blueprint sent only on a successful email delivery
+          await base44.asServiceRole.entities.Prospect.update(prospect.id, {
+            lead_status: "blueprint_sent",
+            blueprint_sent_at: new Date().toISOString(),
+          });
+        } else {
+          console.warn("Email send failed:", await emailResponse.text());
+        }
+      } catch (emailErr) {
+        console.warn("Email send error:", emailErr.message);
       }
     } catch (e) {
-      emailError = e.message;
+      pdfError = e.message;
+      console.warn("PDF generation/upload failed (lead still captured):", pdfError);
     }
 
     // ── Create DiagnosticSession ──
     const session = await base44.asServiceRole.entities.DiagnosticSession.create({
+      prospect_id: prospect?.id || null,
       respondent_name: lead_info.name || "",
       intake_answers: intake_answers || {},
       scored_responses: scored_responses || {},
@@ -188,55 +224,18 @@ Deno.serve(async (req) => {
       blueprint_priorities: scores?.blueprintPriorities || [],
       report_json: report,
       pdf_url,
-      status: emailSent ? "pdf_emailed" : "report_generated",
-      email_sent: emailSent,
+      status: pdf_url ? "report_generated" : "scored",
+      email_sent: false,
     });
-
-    // ── Create Prospect ──
-    const prospect = await base44.asServiceRole.entities.Prospect.create({
-      name: lead_info.name || "",
-      email: lead_info.email,
-      organization: lead_info.organization || "",
-      phone: lead_info.phone || "",
-      role: AREA_OF_FOCUS_TO_ROLE[intake_answers?.area_of_focus] || "Other",
-      source: "offer_diagnostic",
-      lead_status: "blueprint_sent",
-      blueprint_sent_at: new Date().toISOString(),
-      diagnostic_answers: {
-        intake_answers,
-        scored_responses,
-        follow_up_answers,
-        scores,
-        consent: lead_info.consent ?? null,
-      },
-    });
-
-    // ── Link prospect to session ──
-    if (prospect && prospect.id) {
-      await base44.asServiceRole.entities.DiagnosticSession.update(session.id, {
-        prospect_id: prospect.id,
-      });
-    }
-
-    // ── Push prospect to HubSpot CRM (non-blocking) ──
-    let hubspot_contact_id = null;
-    let hubspot_error = null;
-    try {
-      hubspot_contact_id = await pushProspectToHubspot(base44, lead_info, scores);
-    } catch (e) {
-      hubspot_error = e.message;
-      console.warn("HubSpot push error:", hubspot_error);
-    }
 
     return Response.json({
       success: true,
       pdf_url,
       session_id: session.id,
       prospect_id: prospect?.id,
-      email_sent: emailSent,
-      email_error: emailError,
       hubspot_contact_id,
       hubspot_error,
+      pdf_error: pdfError,
     });
   } catch (error) {
     console.error("generateDiagnosticReport error:", error);
