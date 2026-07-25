@@ -48,7 +48,6 @@ async function pushProspectToHubspot(base44, leadInfo, scores) {
     lastname: lastName || undefined,
     company: leadInfo?.organization || undefined,
     phone: leadInfo?.phone || undefined,
-    lifecyclestage: "lead",
   };
   Object.keys(props).forEach((k) => props[k] === undefined && delete props[k]);
 
@@ -87,7 +86,7 @@ async function pushProspectToHubspot(base44, leadInfo, scores) {
   const createRes = await fetch("https://api.hubapi.com/crm/v3/objects/contacts", {
     method: "POST",
     headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ properties: props }),
+    body: JSON.stringify({ properties: { ...props, lifecyclestage: "lead" } }),
   });
   if (!createRes.ok) throw new Error(`HubSpot create failed: ${await createRes.text()}`);
   const created = await createRes.json();
