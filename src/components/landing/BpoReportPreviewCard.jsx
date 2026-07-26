@@ -203,6 +203,7 @@ export default function BpoReportPreviewCard() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.6, ease: "easeInOut" }}
+            className="min-h-[88px]"
           >
             <p className="text-[11px] font-semibold tracking-wide text-[#0202ff] mb-1">{state.eyebrow}</p>
             <p className="text-sm font-bold text-[#0a0a0a] mb-1">{state.headline}</p>
