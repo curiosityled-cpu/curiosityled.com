@@ -81,7 +81,7 @@ const AuthenticatedApp = () => {
     if (path === '/coaching') return <LandingCoaching />;
     if (path === '/PrivacyPolicy') return <PrivacyPolicy />;
     if (path === '/TermsOfService') return <TermsOfService />;
-    if (path === '/offer') return <OfferPage />;
+    if (path === '/diagnostic') return <OfferPage />;
     return <LandingPage />;
   };
 
@@ -134,7 +134,7 @@ const AuthenticatedApp = () => {
       <Route path="/bpo" element={<LandingBPO />} />
       <Route path="/healthcare" element={<LandingHealthcare />} />
       <Route path="/coaching" element={<LandingCoaching />} />
-      <Route path="/offer" element={<OfferPage />} />
+      <Route path="/diagnostic" element={<OfferPage />} />
 
       {/* Redirect old ExperienceManagement URL to new DevelopmentManager */}
       <Route path="/ExperienceManagement" element={<Navigate to="/DevelopmentManager" replace />} />
