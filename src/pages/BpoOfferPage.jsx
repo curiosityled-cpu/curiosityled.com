@@ -1,0 +1,268 @@
+import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { ArrowRight, Shield } from "lucide-react";
+import { Link } from "react-router-dom";
+import BpoReportPreviewCard from "@/components/landing/BpoReportPreviewCard";
+import DiagnosticFlow from "@/components/diagnostic/DiagnosticFlow";
+
+const STEPS = [
+  { num: "1", desc: "Answer a short set of questions about how your team leaders, managers, and support systems are operating today." },
+  { num: "2", desc: "Get a tailored BPO leadership diagnostic that highlights the pattern most likely affecting performance, coaching, follow-through, or retention." },
+  { num: "3", desc: "Use the 90-day action plan internally, or review it with Curiosity Led to pressure-test implementation." },
+];
+
+export default function BpoOfferPage() {
+  const [started, setStarted] = useState(false);
+
+  useEffect(() => {
+    document.title = "BPO Leadership Diagnostic · Curiosity Led";
+    return () => { document.title = "Curiosity Led"; };
+  }, []);
+
+  const handleStart = () => {
+    setStarted(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleBackToLanding = () => {
+    setStarted(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const landingHero = (
+    <section className="relative px-5 pt-28 pb-12 lg:pt-32 lg:pb-16">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div className="max-w-xl">
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-xs font-semibold uppercase tracking-[0.2em] mb-5"
+            style={{ color: "#0202ff" }}
+          >
+            BPO Leadership Diagnostic
+          </motion.p>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.1] tracking-tight mb-5"
+          >
+            What leadership pattern is <span style={{ color: "#0202ff" }}>hurting team performance</span> right now?
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-base sm:text-lg text-gray-600 leading-relaxed mb-7"
+          >
+            Answer a short set of questions to identify where manager execution, coaching, follow-through, or team support may be breaking down. Get a practical BPO leadership diagnostic and a 90-day action plan tied to the outcomes you care about most.
+          </motion.p>
+
+          <motion.button
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            onClick={handleStart}
+            className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-lg font-semibold text-white text-base transition-all hover:opacity-90 shadow-lg"
+            style={{ backgroundColor: "#0202ff" }}
+          >
+            Start my diagnostic
+            <ArrowRight className="w-5 h-5" />
+          </motion.button>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="text-center text-xs text-gray-500 mt-3"
+          >
+            No commitment · Instant diagnostic · Downloadable 90-day action plan
+          </motion.p>
+
+          <div className="mt-10 grid grid-cols-3 gap-0 border-t border-gray-200 pt-6">
+            {STEPS.map((s) => (
+              <div key={s.num} className="px-2 border-r border-gray-200 last:border-r-0">
+                <p className="text-sm font-bold mb-1" style={{ color: "#0202ff" }}>{s.num}</p>
+                <p className="text-[11px] text-gray-600 leading-snug">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 flex items-center gap-3">
+            <img
+              src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/01f09d997_be036d547_CuriosityLedIcon_20241030_085533_0000.png"
+              alt="Curiosity Led"
+              className="w-8 h-8 object-contain rounded"
+            />
+            <p className="text-xs text-gray-500 leading-snug">
+              Built for BPO, contact center, and operations leaders who need a clear answer they can actually use.
+            </p>
+          </div>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.7, delay: 0.25 }}
+          className="w-full"
+        >
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 mb-1">Your takeaway</p>
+          <p className="text-lg font-bold text-[#0a0a0a] mb-4">A Clear BPO Leadership Report</p>
+          <BpoReportPreviewCard />
+        </motion.div>
+      </div>
+    </section>
+  );
+
+  return (
+    <div className="relative min-h-screen font-sans text-[#0a0a0a] bg-white overflow-hidden">
+      {/* Subtle grid background */}
+      <div
+        className="absolute inset-0 opacity-[0.03] pointer-events-none"
+        style={{
+          backgroundImage: `linear-gradient(#0202ff 1px, transparent 1px), linear-gradient(90deg, #0202ff 1px, transparent 1px)`,
+          backgroundSize: "48px 48px",
+        }}
+      />
+      {/* Blue accent blob */}
+      <div
+        className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-[0.06] blur-3xl pointer-events-none"
+        style={{ background: "#0202ff" }}
+      />
+
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-sm border-b border-gray-100">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <img
+            src="https://raw.githubusercontent.com/curiosityled-cpu/curiosityled.com/main/public/CuriosityLedLogoBBW%20(1).png"
+            alt="Curiosity Led"
+            className="h-10 object-contain"
+          />
+          <div className="flex items-center gap-1.5" style={{ color: "#0202ff" }}>
+            <Shield className="w-4 h-4" />
+            <span className="text-xs font-medium">Private Assessment</span>
+          </div>
+        </div>
+      </header>
+
+      {/* Landing hero or Diagnostic flow */}
+      {started ? (
+        <div className="relative pt-6">
+          <DiagnosticFlow onBackToLanding={handleBackToLanding} variant="bpo" />
+        </div>
+      ) : (
+        <>
+          {landingHero}
+
+          {/* What this diagnostic helps you spot */}
+          <section className="relative px-5 py-12 lg:py-16 bg-[#FBFBFB]">
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-2xl sm:text-3xl font-bold leading-tight tracking-tight mb-3 text-[#0a0a0a]">
+                See where leadership risk is building before it becomes a bigger operating problem.
+              </h2>
+              <div className="mt-6 space-y-3">
+                {[
+                  "Delayed coaching that turns into QA, SLA, or adherence drift.",
+                  "Manager overload that becomes bottlenecks or overcontrol.",
+                  "Weak follow-through that quietly erodes team execution.",
+                  "Leadership patterns that increase burnout, disengagement, or attrition risk.",
+                  "Operational pressure that is driving reactive leadership instead of preventive action.",
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold mt-0.5" style={{ backgroundColor: "#0202ff" }}>
+                      ✓
+                    </span>
+                    <p className="text-sm text-gray-700 leading-relaxed">{item}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* What you get */}
+          <section className="relative px-5 py-12 lg:py-16">
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-2xl sm:text-3xl font-bold leading-tight tracking-tight mb-3 text-[#0a0a0a]">What you get</h2>
+              <div className="mt-6 space-y-3">
+                {[
+                  "A clear primary leadership risk pattern.",
+                  "A view of the secondary patterns worth watching.",
+                  "A practical explanation of what may be driving the pattern.",
+                  "A 90-day action plan tied to BPO team realities.",
+                  "Talking points you can use with site, ops, or support leadership.",
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold mt-0.5" style={{ backgroundColor: "#0202ff" }}>
+                      {i + 1}
+                    </span>
+                    <p className="text-sm text-gray-700 leading-relaxed">{item}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Who it is for */}
+          <section className="relative px-5 py-12 lg:py-16 bg-[#FBFBFB]">
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-2xl sm:text-3xl font-bold leading-tight tracking-tight mb-6 text-[#0a0a0a]">Built for</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {[
+                  "BPO operations leaders",
+                  "Site leaders",
+                  "Team leaders",
+                  "QA leaders",
+                  "Training / enablement leaders",
+                  "Workforce or people leaders supporting frontline operations",
+                ].map((role, i) => (
+                  <div key={i} className="bg-white border border-gray-200 rounded-lg px-4 py-3">
+                    <p className="text-sm font-semibold text-[#0a0a0a]">{role}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Final CTA */}
+          <section className="relative px-5 py-16 lg:py-24 text-center">
+            <div className="max-w-2xl mx-auto">
+              <h2 className="text-2xl sm:text-3xl font-bold leading-tight tracking-tight mb-4 text-[#0a0a0a]">
+                Identify the pattern most worth fixing first.
+              </h2>
+              <button
+                onClick={handleStart}
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-lg font-semibold text-white text-base transition-all hover:opacity-90 shadow-lg"
+                style={{ backgroundColor: "#0202ff" }}
+              >
+                Start my diagnostic
+                <ArrowRight className="w-5 h-5" />
+              </button>
+              <p className="text-center text-xs text-gray-500 mt-3">
+                No commitment · Instant diagnostic · Downloadable 90-day action plan
+              </p>
+            </div>
+          </section>
+
+          <footer className="relative px-6 py-8 text-center" style={{ backgroundColor: "#FBFBFB" }}>
+            <div className="max-w-md mx-auto space-y-1">
+              <p className="text-xs" style={{ color: "#666666" }}>
+                © 2026 Curiosity Led LLC · BPO Leadership Diagnostic
+              </p>
+              <p className="text-xs" style={{ color: "#666666" }}>
+                Results are based on your answers and are not a promise of business performance.
+              </p>
+            </div>
+            <div className="mt-4 flex items-center justify-center gap-1.5 text-xs">
+              <Link to="/PrivacyPolicy" className="underline" style={{ color: "#666666" }}>Privacy Policy</Link>
+              <span style={{ color: "#666666" }}>·</span>
+              <Link to="/TermsOfService" className="underline" style={{ color: "#666666" }}>Terms</Link>
+            </div>
+          </footer>
+        </>
+      )}
+    </div>
+  );
+}

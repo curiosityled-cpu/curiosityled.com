@@ -1,8 +1,11 @@
 import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, FileText } from "lucide-react";
+import { useDiagnosticConfig } from "./DiagnosticConfigContext";
 
 export default function GeneratingStage({ firstName, onProgress }) {
+  const config = useDiagnosticConfig();
+  const { uiCopy } = config;
   useEffect(() => {
     onProgress?.(100);
   }, []);
@@ -25,10 +28,10 @@ export default function GeneratingStage({ firstName, onProgress }) {
       </div>
 
       <h1 className="text-xl font-bold text-[#0a0a0a] mb-2 text-center">
-        {firstName}, Assembling Your Blueprint…
+        {uiCopy.generatingStage.heading(firstName)}
       </h1>
       <p className="text-sm text-gray-500 text-center max-w-md">
-        Scoring your 15 answers across 5 leadership constructs, identifying your top pressure points, and building your 90-day plan.
+        {uiCopy.generatingStage.description}
       </p>
 
       <div className="mt-8 flex items-center gap-6 text-xs text-gray-400">

@@ -1,17 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, ArrowLeft } from "lucide-react";
-import { INTAKE_FIELDS } from "@/lib/diagnostic/questions";
+import { useDiagnosticConfig } from "./DiagnosticConfigContext";
 
-const SECTIONS = ["Context", "Current reality"];
+const SECTIONS_BY_VARIANT = {
+  general: ["Context", "Current reality"],
+  bpo: ["Your context", "Current reality"],
+};
 
 // Conditional reveal field IDs, so a merged intakeAnswers object can be split
 // back into main answers and conditional answers when restoring on back-nav.
-const CONDITIONAL_FIELD_IDS = new Set(
-  INTAKE_FIELDS.filter((f) => f.conditionalReveal).map((f) => f.conditionalReveal.field.id)
-);
+function buildConditionalFieldIds(intakeFields) {
+  return new Set(
+    intakeFields.filter((f) => f.conditionalReveal).map((f) => f.conditionalReveal.field.id)
+  );
+}
 
 export default function IntakeStage({ onComplete, onBack, firstName, progress, onProgress, initialAnswers }) {
+  const config = useDiagnosticConfig();
+  const { questions, uiCopy, variant } = config;
+  const INTAKE_FIELDS = questions.INTAKE_FIELDS;
+  const SECTIONS = SECTIONS_BY_VARIANT[variant] || SECTIONS_BY_VARIANT.general;
+  const CONDITIONAL_FIELD_IDS = buildConditionalFieldIds(INTAKE_FIELDS);
+
   const [sectionIndex, setSectionIndex] = useState(0);
   const [answers, setAnswers] = useState(() => {
     const init = initialAnswers || {};
@@ -122,13 +133,13 @@ export default function IntakeStage({ onComplete, onBack, firstName, progress, o
 
       <h1 className="text-2xl sm:text-3xl font-bold leading-tight tracking-tight mb-3 text-[#0a0a0a]">
         {sectionIndex === 0
-          ? `${firstName}, Tell Me About Your Context`
-          : `${firstName}, What's Your Current Reality?`}
+          ? uiCopy.intakeStage.section1Heading(firstName)
+          : uiCopy.intakeStage.section2Heading(firstName)}
       </h1>
       <p className="text-sm text-gray-600 mb-8">
         {sectionIndex === 0
-          ? "This helps me tailor the report to your lens and population."
-          : "Choose what feels most true right now. This sharpens your blueprint."}
+          ? uiCopy.intakeStage.section1Subtext
+          : uiCopy.intakeStage.section2Subtext}
       </p>
 
       <div className="space-y-6">
@@ -158,7 +169,7 @@ export default function IntakeStage({ onComplete, onBack, firstName, progress, o
           className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white text-sm transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg"
           style={{ backgroundColor: "#0202ff" }}
         >
-          {sectionIndex < SECTIONS.length - 1 ? "Continue" : "Start Diagnostic Questions"}
+          {sectionIndex < SECTIONS.length - 1 ? "Continue" : uiCopy.intakeStage.continueButton}
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>

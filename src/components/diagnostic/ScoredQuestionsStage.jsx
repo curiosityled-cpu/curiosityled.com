@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
-import { SCORED_ITEMS, SCORE_SCALE } from "@/lib/diagnostic/questions";
-import { CONSTRUCT_LABELS } from "@/lib/diagnostic/scoring";
+import { useDiagnosticConfig } from "./DiagnosticConfigContext";
 
 export default function ScoredQuestionsStage({ onComplete, onBack, firstName, progress, onProgress, initialResponses }) {
+  const config = useDiagnosticConfig();
+  const { questions, scoring } = config;
+  const SCORED_ITEMS = questions.SCORED_ITEMS;
+  const SCORE_SCALE = questions.SCORE_SCALE;
+  const CONSTRUCT_LABELS = scoring.CONSTRUCT_LABELS;
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [responses, setResponses] = useState(initialResponses || {});
 

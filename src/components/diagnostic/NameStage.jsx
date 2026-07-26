@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { useDiagnosticConfig } from "./DiagnosticConfigContext";
 
 export default function NameStage({ onComplete, progress, onProgress }) {
+  const config = useDiagnosticConfig();
+  const { uiCopy } = config;
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
@@ -41,10 +44,10 @@ export default function NameStage({ onComplete, progress, onProgress }) {
       </div>
 
       <h1 className="text-3xl sm:text-4xl font-bold leading-tight tracking-tight mb-4 text-[#0a0a0a]">
-        First — What Should I Call You?
+        {uiCopy.nameStage.heading}
       </h1>
       <p className="text-base text-gray-600 mb-8">
-        I'll use your name to personalize the questions and build your report as we go.
+        {uiCopy.nameStage.subtext}
       </p>
 
       <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl p-6 sm:p-8">
@@ -83,12 +86,12 @@ export default function NameStage({ onComplete, progress, onProgress }) {
           className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-lg font-semibold text-white text-base transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg"
           style={{ backgroundColor: "#0202ff" }}
         >
-          Start My Assessment
+          {uiCopy.nameStage.buttonText}
           <ArrowRight className="w-5 h-5" />
         </button>
 
         <p className="text-center text-xs text-gray-500 mt-4">
-          26 Questions + Tailored Follow-ups · About 5 Minutes · Straight Answers
+          {uiCopy.nameStage.helperText}
         </p>
       </form>
     </motion.div>

@@ -7,17 +7,25 @@ import {
   Radar,
   ResponsiveContainer,
 } from "recharts";
-
-const SHORT_LABELS = {
-  signal_delay: "Signal Delay",
-  support_friction: "Support Friction",
-  proof_defensibility: "Proof & Def.",
-  fragmentation_admin: "Fragmentation",
-  cost_of_inaction: "Cost of Inaction",
-};
+import { useDiagnosticConfig } from "./DiagnosticConfigContext";
 
 // Five-construct radar chart (0-100), higher = stronger.
+// Labels come from the active diagnostic config so both general and BPO variants work.
 export default function ConstructRadar({ constructScores }) {
+  const config = useDiagnosticConfig();
+  const { scoring } = config;
+  const CONSTRUCT_LABELS = scoring.CONSTRUCT_LABELS;
+
+  // Short labels for the radar: take first word or two of each construct label
+  const SHORT_LABELS = Object.fromEntries(
+    Object.keys(CONSTRUCT_LABELS || {}).map((key) => {
+      const full = CONSTRUCT_LABELS[key];
+      // Shorten to first 12 chars for radar readability
+      const short = full.length > 14 ? full.substring(0, 12) + "\u2026" : full;
+      return [key, short];
+    })
+  );
+
   const data = Object.entries(constructScores || {}).map(([key, score]) => ({
     subject: SHORT_LABELS[key] || key,
     score: Math.max(0, Math.min(100, score || 0)),

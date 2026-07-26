@@ -17,6 +17,43 @@ const RADAR_LABELS_PDF = {
   cost_of_inaction: "Cost of Inaction",
 };
 
+// BPO variant construct labels
+const BPO_CONSTRUCT_LABELS_PDF = {
+  performance_response: "Performance Response",
+  coaching_cadence: "Coaching Cadence & Quality",
+  operational_control: "Operational Control",
+  follow_through: "Follow-through & Accountability",
+  team_stability: "Team Stability Risk",
+};
+
+const BPO_RADAR_LABELS_PDF = {
+  performance_response: "Perf. Response",
+  coaching_cadence: "Coaching",
+  operational_control: "Op. Control",
+  follow_through: "Follow-thru",
+  team_stability: "Team Stability",
+};
+
+// Variant-specific config
+const VARIANT_CONFIG = {
+  general: {
+    source: "offer_diagnostic",
+    emailSubject: "Your 90-Day Leadership Support Reboot Blueprint",
+    pdfFooter: "Leadership Support Diagnostic",
+    pageHeader: "LEADERSHIP SUPPORT DIAGNOSTIC",
+    constructLabels: CONSTRUCT_LABELS_PDF,
+    radarLabels: RADAR_LABELS_PDF,
+  },
+  bpo: {
+    source: "bpo_diagnostic",
+    emailSubject: "Your BPO Leadership Diagnostic Report",
+    pdfFooter: "BPO Leadership Diagnostic",
+    pageHeader: "BPO LEADERSHIP DIAGNOSTIC",
+    constructLabels: BPO_CONSTRUCT_LABELS_PDF,
+    radarLabels: BPO_RADAR_LABELS_PDF,
+  },
+};
+
 // The diagnostic intake "area_of_focus" options don't all match the Prospect.role
 // enum 1:1 ("People / People Ops" -> "People Ops", "Executive Leadership" ->
 // "Executive Leader"). Map them so we never write an invalid enum value, which
@@ -27,6 +64,18 @@ const AREA_OF_FOCUS_TO_ROLE = {
   "L&D": "L&D",
   "People / People Ops": "People Ops",
   "Executive Leadership": "Executive Leader",
+  "Other": "Other",
+};
+
+// BPO role mapping (BPO intake uses different role labels)
+const BPO_ROLE_TO_PROSPECT_ROLE = {
+  "Operations leader": "Other",
+  "Site leader": "Other",
+  "Team leader": "Other",
+  "QA leader": "Other",
+  "Training / enablement leader": "L&D",
+  "Workforce / support leader": "Other",
+  "People / HR leader": "HR",
   "Other": "Other",
 };
 
@@ -111,6 +160,10 @@ Deno.serve(async (req) => {
       follow_up_answers,
     } = body;
 
+    const variant = body.variant || "general";
+    const vcfg = VARIANT_CONFIG[variant] || VARIANT_CONFIG.general;
+    const isBpo = variant === "bpo";
+
     if (!report || !lead_info || !lead_info.email) {
       return Response.json(
         { error: "Missing required fields: report, lead_info, or lead_info.email" },
@@ -134,8 +187,10 @@ Deno.serve(async (req) => {
       email: lead_info.email,
       organization: lead_info.organization || "",
       phone: lead_info.phone || "",
-      role: AREA_OF_FOCUS_TO_ROLE[intake_answers?.area_of_focus] || "Other",
-      source: "offer_diagnostic",
+      role: isBpo
+        ? (BPO_ROLE_TO_PROSPECT_ROLE[intake_answers?.role] || "Other")
+        : (AREA_OF_FOCUS_TO_ROLE[intake_answers?.area_of_focus] || "Other"),
+      source: vcfg.source,
       lead_status: "new",
       diagnostic_answers: {
         intake_answers,
@@ -160,8 +215,10 @@ Deno.serve(async (req) => {
     let pdf_url = null;
     let pdfError = null;
     try {
-      const pdfBytes = generatePDF(report, scores, lead_info);
-      const fileName = `leadership-reboot-blueprint-${Date.now()}.pdf`;
+      const pdfBytes = generatePDF(report, scores, lead_info, variant);
+      const fileName = isBpo
+        ? `bpo-leadership-report-${Date.now()}.pdf`
+        : `leadership-reboot-blueprint-${Date.now()}.pdf`;
       const file = new File([pdfBytes], fileName, { type: "application/pdf" });
       const uploadResult = await base44.asServiceRole.integrations.Core.UploadFile({ file });
       pdf_url = uploadResult.file_url;
@@ -179,7 +236,7 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             from: "Curiosity Led <no-reply@curiosityled.com>",
             to: [lead_info.email],
-            subject: "Your 90-Day Leadership Support Reboot Blueprint",
+            subject: vcfg.emailSubject,
             html: emailHtml,
             attachments: [
               {
@@ -244,7 +301,7 @@ Deno.serve(async (req) => {
 });
 
 // ── PDF Generation ──
-function generatePDF(report, scores, leadInfo) {
+function generatePDF(report, scores, leadInfo, variant = "general") {
   const doc = new jsPDF({ unit: "pt", format: "letter" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -254,6 +311,10 @@ function generatePDF(report, scores, leadInfo) {
   const darkText = [10, 10, 10];
   const grayText = [102, 102, 102];
   const lightGray = [230, 230, 230];
+  const isBpo = variant === "bpo";
+  const vcfg = VARIANT_CONFIG[variant] || VARIANT_CONFIG.general;
+  const lblConstructs = vcfg.constructLabels;
+  const lblRadar = vcfg.radarLabels;
 
   let y = margin;
 
@@ -420,7 +481,7 @@ function generatePDF(report, scores, leadInfo) {
   doc.setFontSize(9);
   doc.setTextColor(...grayText);
   doc.setFont("helvetica", "normal");
-  doc.text("LEADERSHIP SUPPORT DIAGNOSTIC", margin, y);
+  doc.text(vcfg.pageHeader, margin, y);
   y += 30;
 
   doc.setFontSize(24);
@@ -516,14 +577,14 @@ function generatePDF(report, scores, leadInfo) {
   doc.setFont("helvetica", "normal");
   doc.text("/100", gaugeCx, gaugeCy + 14, { align: "center" });
   doc.setFontSize(7);
-  doc.text("LEADERSHIP READINESS", gaugeCx, gaugeCy + gaugeR + 16, { align: "center" });
+  doc.text(isBpo ? "BPO LEADERSHIP SCORE" : "LEADERSHIP READINESS", gaugeCx, gaugeCy + gaugeR + 16, { align: "center" });
 
   const radarR = 54;
   const radarCx = pageWidth - margin - radarR - 10;
   const radarCy = gaugeCy;
   const constructKeys = Object.keys(scores.constructScores);
   const radarScores = constructKeys.map((k) => scores.constructScores[k]);
-  const radarLabels = constructKeys.map((k) => RADAR_LABELS_PDF[k] || CONSTRUCT_LABELS_PDF[k] || k);
+  const radarLabels = constructKeys.map((k) => lblRadar[k] || lblConstructs[k] || k);
   drawRadar(radarCx, radarCy, radarR, radarScores, radarLabels);
 
   y = Math.max(gaugeCy + gaugeR + 24, radarCy + radarR + 26) + 6;
@@ -570,7 +631,7 @@ function generatePDF(report, scores, leadInfo) {
     doc.setFontSize(12);
     doc.setTextColor(...darkText);
     doc.setFont("helvetica", "bold");
-    doc.text(CONSTRUCT_LABELS_PDF[key] || key, margin, y);
+    doc.text(lblConstructs[key] || key, margin, y);
     const scoreStr = `${cscore}/100`;
     doc.setFontSize(13);
     doc.text(scoreStr, pageWidth - margin - doc.getTextWidth(scoreStr), y);

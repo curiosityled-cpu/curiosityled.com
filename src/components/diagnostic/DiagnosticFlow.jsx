@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
-import { SCORED_ITEMS } from "@/lib/diagnostic/questions";
-import { computeAllScores } from "@/lib/diagnostic/scoring";
-import { determineFollowUps } from "@/lib/diagnostic/followUpTriggers";
-import { assembleReport } from "@/lib/diagnostic/assembleReport";
+import { DiagnosticConfigProvider, useDiagnosticConfig } from "./DiagnosticConfigContext";
+import BpoResultsStage from "./BpoResultsStage";
 
 import NameStage from "./NameStage";
 import IntakeStage from "./IntakeStage";
@@ -24,7 +22,17 @@ const STAGES = [
   "results",
 ];
 
-export default function DiagnosticFlow({ onBackToLanding }) {
+export default function DiagnosticFlow({ onBackToLanding, variant = "general" }) {
+  return (
+    <DiagnosticConfigProvider variant={variant}>
+      <DiagnosticFlowInner onBackToLanding={onBackToLanding} variant={variant} />
+    </DiagnosticConfigProvider>
+  );
+}
+
+function DiagnosticFlowInner({ onBackToLanding, variant }) {
+  const config = useDiagnosticConfig();
+  const { questions, scoring, followUpTriggers, assembleReport } = config;
   const [stage, setStage] = useState("name");
   const [data, setData] = useState({
     firstName: "",
@@ -61,10 +69,10 @@ export default function DiagnosticFlow({ onBackToLanding }) {
   const handleQuestionsComplete = (scoredResponses) => {
     setData((prev) => ({ ...prev, scoredResponses }));
     // Compute scores
-    const computedScores = computeAllScores(SCORED_ITEMS, scoredResponses);
+    const computedScores = scoring.computeAllScores(questions.SCORED_ITEMS, scoredResponses);
     setScores(computedScores);
     // Determine triggered follow-ups
-    const followUps = determineFollowUps(computedScores, data.intakeAnswers);
+    const followUps = followUpTriggers.determineFollowUps(computedScores, data.intakeAnswers);
     setTriggeredFollowUps(followUps);
     // Go to follow-ups or skip to lead capture
     if (followUps.length > 0) {
@@ -93,10 +101,11 @@ export default function DiagnosticFlow({ onBackToLanding }) {
     // an error and routes to the results recovery state instead of hanging on
     // the "Generating" screen.
     try {
-      const assembledReport = assembleReport(scores, data.intakeAnswers, data.followUpAnswers);
+      const assembledReport = assembleReport.assembleReport(scores, data.intakeAnswers, data.followUpAnswers);
       setReport(assembledReport);
 
       const response = await base44.functions.invoke("generateDiagnosticReport", {
+        variant: variant,
         report: assembledReport,
         scores: {
           constructScores: scores.constructScores,
@@ -229,16 +238,29 @@ export default function DiagnosticFlow({ onBackToLanding }) {
           />
         )}
         {stage === "results" && (
-          <ResultsStage
-            key="results"
-            report={report}
-            scores={scores}
-            leadInfo={data.leadInfo}
-            pdfUrl={pdfUrl}
-            emailSent={emailSent}
-            onStartOver={handleStartOver}
-            onBack={handleBackToLanding}
-          />
+          variant === "bpo" ? (
+            <BpoResultsStage
+              key="results"
+              report={report}
+              scores={scores}
+              leadInfo={data.leadInfo}
+              pdfUrl={pdfUrl}
+              emailSent={emailSent}
+              onStartOver={handleStartOver}
+              onBack={handleBackToLanding}
+            />
+          ) : (
+            <ResultsStage
+              key="results"
+              report={report}
+              scores={scores}
+              leadInfo={data.leadInfo}
+              pdfUrl={pdfUrl}
+              emailSent={emailSent}
+              onStartOver={handleStartOver}
+              onBack={handleBackToLanding}
+            />
+          )
         )}
       </AnimatePresence>
     </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ArrowLeft } from "lucide-react";
+import { useDiagnosticConfig } from "./DiagnosticConfigContext";
 
 const STEPS = [
   {
@@ -27,6 +28,8 @@ const STEPS = [
 ];
 
 export default function LeadCaptureStage({ onComplete, onBack, firstName, progress, onProgress }) {
+  const config = useDiagnosticConfig();
+  const { uiCopy } = config;
   const [stepIndex, setStepIndex] = useState(0);
   const [values, setValues] = useState({ email: "", organization: "", phone: "" });
   const [consent, setConsent] = useState(false);
@@ -89,18 +92,14 @@ export default function LeadCaptureStage({ onComplete, onBack, firstName, progre
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-bold leading-tight tracking-tight mb-4 text-[#0a0a0a]">
-          {firstName}, Your Leadership Reboot Blueprint Is Ready.
+          {uiCopy.leadCaptureStage.heading(firstName)}
         </h1>
         <p className="text-sm text-gray-600 mb-8">
-          Add your delivery details one step at a time. Your full score, pressure points, and 90-day plan are ready on the next screen.
+          {uiCopy.leadCaptureStage.subtext}
         </p>
 
         <div className="space-y-3">
-          {[
-            { num: "01", title: "Five-Construct Scorecard", desc: "See what is strong and what needs work" },
-            { num: "02", title: "Your Top 2 Pressure Points", desc: "Know where to focus first" },
-            { num: "03", title: "Your 90-Day Plan", desc: "Download, print, and share it" },
-          ].map((item) => (
+          {uiCopy.leadCaptureStage.summaryItems.map((item) => (
             <div key={item.num} className="flex gap-4 py-3 border-t border-gray-100">
               <p className="text-sm font-bold w-8" style={{ color: "#0202ff" }}>{item.num}</p>
               <div>
@@ -191,7 +190,7 @@ export default function LeadCaptureStage({ onComplete, onBack, firstName, progre
               className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-lg font-semibold text-white text-base transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg"
               style={{ backgroundColor: "#0202ff" }}
             >
-              {isLastStep ? "See My Results" : "Continue"}
+              {isLastStep ? uiCopy.leadCaptureStage.finalButton : "Continue"}
               <ArrowRight className="w-5 h-5" />
             </button>
           </motion.div>

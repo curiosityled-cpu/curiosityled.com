@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { FOLLOW_UPS } from "@/lib/diagnostic/questions";
-import { CONSTRUCT_LABELS } from "@/lib/diagnostic/scoring";
+import { useDiagnosticConfig } from "./DiagnosticConfigContext";
 
 export default function FollowUpStage({
   triggeredFollowUps,
@@ -13,6 +12,11 @@ export default function FollowUpStage({
   progress,
   onProgress,
 }) {
+  const config = useDiagnosticConfig();
+  const { questions, scoring } = config;
+  const FOLLOW_UPS = questions.FOLLOW_UPS;
+  const CONSTRUCT_LABELS = scoring.CONSTRUCT_LABELS;
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});
 
