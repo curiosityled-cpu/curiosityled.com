@@ -226,7 +226,7 @@ Deno.serve(async (req) => {
       // ── Send email via Resend (only if we have a PDF to attach) ──
       try {
         const pdfBase64 = arrayBufferToBase64(pdfBytes);
-        const emailHtml = buildEmailHtml(lead_info, pdf_url);
+        const emailHtml = buildEmailHtml(lead_info, pdf_url, variant);
         const emailResponse = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
@@ -240,7 +240,7 @@ Deno.serve(async (req) => {
             html: emailHtml,
             attachments: [
               {
-                filename: "leadership-reboot-blueprint.pdf",
+                filename: isBpo ? "bpo-leadership-report.pdf" : "leadership-reboot-blueprint.pdf",
                 content: pdfBase64,
               },
             ],
@@ -512,12 +512,20 @@ function generatePDF(report, scores, leadInfo, variant = "general") {
   y += 20;
 
   const ctx = s1.respondent;
-  const contextLines = [
-    `Area of focus: ${ctx.area_of_focus || "Not specified"}`,
-    `Populations in scope: ${ctx.populations_in_scope?.join(", ") || "Not specified"}`,
-    `Organization size: ${ctx.organization_size || "Not specified"}`,
-  ];
-  if (ctx.urgent_population) {
+  const contextLines = isBpo
+    ? [
+        `Role: ${ctx.role || "Not specified"}`,
+        `Operation type: ${ctx.operation_type?.join(", ") || "Not specified"}`,
+        `Populations in scope: ${ctx.populations_in_scope?.join(", ") || "Not specified"}`,
+        `Operation size: ${ctx.operation_size || "Not specified"}`,
+        `Outcomes under pressure: ${ctx.outcomes_under_pressure?.join(", ") || "Not specified"}`,
+      ]
+    : [
+        `Area of focus: ${ctx.area_of_focus || "Not specified"}`,
+        `Populations in scope: ${ctx.populations_in_scope?.join(", ") || "Not specified"}`,
+        `Organization size: ${ctx.organization_size || "Not specified"}`,
+      ];
+  if (!isBpo && ctx.urgent_population) {
     contextLines.push(`Most urgent population: ${ctx.urgent_population}`);
   }
 
@@ -642,130 +650,216 @@ function generatePDF(report, scores, leadInfo, variant = "general") {
     if (cdef.stronger) addText(`What stronger looks like: ${cdef.stronger}`, 9, hexToRgb(brandBlue), "italic", 13, 16);
   }
 
-  // ── Section 3: Manager Engagement Risk ──
-  doc.addPage();
-  y = margin;
-  sectionHeader(3, "Manager Engagement Risk");
-  const s3 = report.section3_manager_engagement_risk;
-  const merDef = report.score_definitions?.derived?.manager_engagement_risk || {};
-  doc.setFontSize(12);
-  doc.setTextColor(...darkText);
-  doc.setFont("helvetica", "bold");
-  doc.text("Manager Engagement Risk", margin, y);
-  const merStr = `${s3.score}/100`;
-  doc.setFontSize(13);
-  doc.text(merStr, pageWidth - margin - doc.getTextWidth(merStr), y);
-  y += 13;
-  y = scoreBar(s3.score, margin, y, contentWidth);
-  y += 8;
-  addText(s3.label, 13, hexToRgb(brandBlue), "bold", 18, 8);
-  if (merDef.measures) addText(`What this measures: ${merDef.measures}`, 10, grayText, "normal", 14, 4);
-  if (merDef.stronger) addText(`What stronger looks like: ${merDef.stronger}`, 9, hexToRgb(brandBlue), "italic", 13, 8);
-  addText(s3.interpretation, 11, grayText, "normal", 16, 8);
-  if (s3.friction_source) {
-    addText(`Source of friction: ${s3.friction_source}`, 10, grayText, "italic", 14, 8);
-  }
+  if (isBpo) {
+    // ── Section 3: Primary risk pattern ──
+    doc.addPage();
+    y = margin;
+    sectionHeader(3, "Primary Risk Pattern");
+    const s4b = report.section4_primary_pattern;
+    addText(s4b.label, 16, darkText, "bold", 22, 8);
+    addText(`${s4b.driving_construct_label} \u2014 Score: ${s4b.driving_score} (${s4b.status})`, 10, grayText, "normal", 14, 8);
+    addText("What this means", 12, hexToRgb(brandBlue), "bold", 16, 6);
+    addText(s4b.what_it_means, 11, grayText, "normal", 16, 6);
+    if (s4b.what_may_drive_it) {
+      addText("What may be driving it", 12, hexToRgb(brandBlue), "bold", 16, 6);
+      addText(s4b.what_may_drive_it, 11, grayText, "normal", 16, 6);
+    }
+    if (s4b.what_is_at_stake) {
+      addText("What is at stake", 12, hexToRgb(brandBlue), "bold", 16, 6);
+      addText(s4b.what_is_at_stake, 11, grayText, "normal", 16, 6);
+    }
+    if (s4b.why_for_you) {
+      addText(`Why this pattern first for you: ${s4b.why_for_you}`, 10, hexToRgb(brandBlue), "bold", 14, 8);
+    }
 
-  // Leadership Story Coherence
-  y += 10;
-  const lsc = report.leadership_story_coherence;
-  const lscDef = report.score_definitions?.derived?.leadership_story_coherence || {};
-  doc.setFontSize(12);
-  doc.setTextColor(...darkText);
-  doc.setFont("helvetica", "bold");
-  doc.text("Story Coherence", margin, y);
-  const lscStr = `${lsc.score}/100`;
-  doc.setFontSize(13);
-  doc.text(lscStr, pageWidth - margin - doc.getTextWidth(lscStr), y);
-  y += 13;
-  y = scoreBar(lsc.score, margin, y, contentWidth);
-  y += 8;
-  addText(lsc.label, 13, hexToRgb(brandBlue), "bold", 18, 8);
-  if (lscDef.measures) addText(`What this measures: ${lscDef.measures}`, 10, grayText, "normal", 14, 4);
-  if (lscDef.stronger) addText(`What stronger looks like: ${lscDef.stronger}`, 9, hexToRgb(brandBlue), "italic", 13, 8);
-  addText(lsc.interpretation, 11, grayText, "normal", 16, 8);
+    // ── Section 4: Secondary watch patterns ──
+    doc.addPage();
+    y = margin;
+    sectionHeader(4, "Secondary Patterns to Watch");
+    const s5b = report.section5_watch_patterns || [];
+    for (const w of s5b) {
+      if (y > pageHeight - 120) { doc.addPage(); y = margin; }
+      addText(w.label, 14, darkText, "bold", 20, 6);
+      addText(`${w.driving_construct_label} \u2014 Score: ${w.driving_score} (${w.status})`, 10, grayText, "normal", 14, 8);
+      addText(w.explanation, 11, grayText, "normal", 16, 6);
+      if (w.watch_because) {
+        addText(w.watch_because, 10, hexToRgb(brandBlue), "bold", 14, 8);
+      }
+      divider();
+    }
 
-  // ── Section 4: Top 2 pressure points ──
-  doc.addPage();
-  y = margin;
-  sectionHeader(4, "Top 2 Pressure Points");
-  const s4 = report.section4_top_2_pressure_points;
-  for (const pp of s4) {
+    // ── Section 5: What this likely means right now ──
     if (y > pageHeight - 120) { doc.addPage(); y = margin; }
-    addText(pp.headline, 14, darkText, "bold", 20, 6);
-    addText(`${pp.construct_label} \u2014 Score: ${pp.score} (${pp.band})`, 10, grayText, "normal", 14, 8);
-    addText(pp.interpretation, 11, grayText, "normal", 16, 6);
-    if (pp.specificity) {
-      addText(pp.specificity, 10, darkText, "italic", 14, 6);
-    }
-    if (pp.why_for_you) {
-      addText(`Why this rose to the top for you: ${pp.why_for_you}`, 10, hexToRgb(brandBlue), "bold", 14, 8);
-    }
-    if (pp.urgent_tie) {
-      addText(pp.urgent_tie, 10, hexToRgb(brandBlue), "bold", 14, 10);
-    }
-    divider();
-  }
+    sectionHeader(5, "What This Likely Means Right Now");
+    addText(report.section6_what_this_means.synthesis, 11, grayText, "normal", 16, 8);
 
-  // ── Section 5: What this likely means right now ──
-  if (y > pageHeight - 120) { doc.addPage(); y = margin; }
-  sectionHeader(5, "What This Likely Means Right Now");
-  addText(report.section5_what_this_means.synthesis, 11, grayText, "normal", 16, 8);
-
-  // ── Section 6: 90-Day plan ──
-  doc.addPage();
-  y = margin;
-  sectionHeader(6, "Your 90-Day Leadership Support Reboot Plan");
-  const s6 = report.section6_90_day_plan;
-  for (const priority of s6) {
-    if (y > pageHeight - 160) { doc.addPage(); y = margin; }
-    addText(`Priority ${priority.priority}: ${priority.title}`, 14, darkText, "bold", 20, 6);
-    addText(priority.why_it_matters, 10, grayText, "italic", 14, 10);
-    if (priority.why_for_you) {
-      addText(`Why this is priority ${priority.priority} for you: ${priority.why_for_you}`, 10, hexToRgb(brandBlue), "bold", 14, 10);
+    // ── Section 6: 90-Day plan ──
+    doc.addPage();
+    y = margin;
+    sectionHeader(6, "Your 90-Day BPO Leadership Action Plan");
+    const s7b = report.section7_90_day_plan;
+    for (const priority of s7b) {
+      if (y > pageHeight - 160) { doc.addPage(); y = margin; }
+      addText(`Priority ${priority.priority}: ${priority.title}`, 14, darkText, "bold", 20, 6);
+      addText(priority.why_it_matters, 10, grayText, "italic", 14, 10);
+      addText("Days 1\u201330", 11, hexToRgb(brandBlue), "bold", 15, 4);
+      addText(priority.days_1_30, 10, grayText, "normal", 14, 8);
+      addText("Days 31\u201360", 11, hexToRgb(brandBlue), "bold", 15, 4);
+      addText(priority.days_31_60, 10, grayText, "normal", 14, 8);
+      addText("Days 61\u201390", 11, hexToRgb(brandBlue), "bold", 15, 4);
+      addText(priority.days_61_90, 10, grayText, "normal", 14, 12);
+      divider();
     }
 
-    addText("Days 1\u201330", 11, hexToRgb(brandBlue), "bold", 15, 4);
-    addText(priority.days_1_30, 10, grayText, "normal", 14, 8);
-    addText("Days 31\u201360", 11, hexToRgb(brandBlue), "bold", 15, 4);
-    addText(priority.days_31_60, 10, grayText, "normal", 14, 8);
-    addText("Days 61\u201390", 11, hexToRgb(brandBlue), "bold", 15, 4);
-    addText(priority.days_61_90, 10, grayText, "normal", 14, 12);
-    divider();
-  }
+    // ── Section 7: What to bring to leadership ──
+    if (y > pageHeight - 140) { doc.addPage(); y = margin; }
+    sectionHeader(7, "What to Bring to Leadership");
+    const s8b = report.section8_what_to_bring_to_leadership;
+    doc.setFontSize(10);
+    doc.setTextColor(...grayText);
+    doc.setFont("helvetica", "bold");
+    doc.text("TALKING POINTS", margin, y);
+    y += 16;
+    for (const tp of s8b.talking_points) {
+      addText(`\u2022 ${tp}`, 11, darkText, "normal", 15, 6);
+    }
+    y += 6;
+    addText("Suggested framing:", 10, grayText, "bold", 14, 4);
+    addText(s8b.framing_sentence, 11, darkText, "italic", 15, 10);
 
-  // ── Section 7: What to bring to leadership ──
-  if (y > pageHeight - 140) { doc.addPage(); y = margin; }
-  sectionHeader(7, "What to Bring to Leadership");
-  const s7 = report.section7_what_to_bring_to_leadership;
-  doc.setFontSize(10);
-  doc.setTextColor(...grayText);
-  doc.setFont("helvetica", "bold");
-  doc.text("TALKING POINTS", margin, y);
-  y += 16;
-  for (const tp of s7.talking_points) {
-    addText(`\u2022 ${tp}`, 11, darkText, "normal", 15, 6);
-  }
-  y += 6;
-  addText("Suggested framing:", 10, grayText, "bold", 14, 4);
-  addText(s7.framing_sentence, 11, darkText, "italic", 15, 10);
+    // ── Section 8: Curiosity Led bridge ──
+    y += 10;
+    if (y > pageHeight - 120) { doc.addPage(); y = margin; }
+    sectionHeader(8, "The Curiosity Led Bridge");
+    const s9b = report.section9_curiosity_led_bridge;
+    addText(s9b.sentence1, 11, grayText, "normal", 16, 6);
+    addText(s9b.sentence2, 11, grayText, "normal", 16, 6);
+    addText(s9b.sentence3, 11, darkText, "bold", 16, 10);
+  } else {
+    // ── Section 3: Manager Engagement Risk ──
+    doc.addPage();
+    y = margin;
+    sectionHeader(3, "Manager Engagement Risk");
+    const s3 = report.section3_manager_engagement_risk;
+    const merDef = report.score_definitions?.derived?.manager_engagement_risk || {};
+    doc.setFontSize(12);
+    doc.setTextColor(...darkText);
+    doc.setFont("helvetica", "bold");
+    doc.text("Manager Engagement Risk", margin, y);
+    const merStr = `${s3.score}/100`;
+    doc.setFontSize(13);
+    doc.text(merStr, pageWidth - margin - doc.getTextWidth(merStr), y);
+    y += 13;
+    y = scoreBar(s3.score, margin, y, contentWidth);
+    y += 8;
+    addText(s3.label, 13, hexToRgb(brandBlue), "bold", 18, 8);
+    if (merDef.measures) addText(`What this measures: ${merDef.measures}`, 10, grayText, "normal", 14, 4);
+    if (merDef.stronger) addText(`What stronger looks like: ${merDef.stronger}`, 9, hexToRgb(brandBlue), "italic", 13, 8);
+    addText(s3.interpretation, 11, grayText, "normal", 16, 8);
+    if (s3.friction_source) {
+      addText(`Source of friction: ${s3.friction_source}`, 10, grayText, "italic", 14, 8);
+    }
 
-  // ── Section 8: Where implementation gets hard ──
-  if (y > pageHeight - 120) { doc.addPage(); y = margin; }
-  sectionHeader(8, "Where Implementation Usually Gets Hard");
-  const s8 = report.section8_where_it_gets_hard;
-  for (const bullet of s8.bullets) {
-    addText(`\u2022 ${bullet}`, 11, grayText, "normal", 15, 8);
-  }
+    // Leadership Story Coherence
+    y += 10;
+    const lsc = report.leadership_story_coherence;
+    const lscDef = report.score_definitions?.derived?.leadership_story_coherence || {};
+    doc.setFontSize(12);
+    doc.setTextColor(...darkText);
+    doc.setFont("helvetica", "bold");
+    doc.text("Story Coherence", margin, y);
+    const lscStr = `${lsc.score}/100`;
+    doc.setFontSize(13);
+    doc.text(lscStr, pageWidth - margin - doc.getTextWidth(lscStr), y);
+    y += 13;
+    y = scoreBar(lsc.score, margin, y, contentWidth);
+    y += 8;
+    addText(lsc.label, 13, hexToRgb(brandBlue), "bold", 18, 8);
+    if (lscDef.measures) addText(`What this measures: ${lscDef.measures}`, 10, grayText, "normal", 14, 4);
+    if (lscDef.stronger) addText(`What stronger looks like: ${lscDef.stronger}`, 9, hexToRgb(brandBlue), "italic", 13, 8);
+    addText(lsc.interpretation, 11, grayText, "normal", 16, 8);
 
-  // ── Section 9: Curiosity Led bridge ──
-  y += 10;
-  if (y > pageHeight - 120) { doc.addPage(); y = margin; }
-  sectionHeader(9, "The Curiosity Led Bridge");
-  const s9 = report.section9_curiosity_led_bridge;
-  addText(s9.sentence1, 11, grayText, "normal", 16, 6);
-  addText(s9.sentence2, 11, grayText, "normal", 16, 6);
-  addText(s9.sentence3, 11, darkText, "bold", 16, 10);
+    // ── Section 4: Top 2 pressure points ──
+    doc.addPage();
+    y = margin;
+    sectionHeader(4, "Top 2 Pressure Points");
+    const s4 = report.section4_top_2_pressure_points;
+    for (const pp of s4) {
+      if (y > pageHeight - 120) { doc.addPage(); y = margin; }
+      addText(pp.headline, 14, darkText, "bold", 20, 6);
+      addText(`${pp.construct_label} \u2014 Score: ${pp.score} (${pp.band})`, 10, grayText, "normal", 14, 8);
+      addText(pp.interpretation, 11, grayText, "normal", 16, 6);
+      if (pp.specificity) {
+        addText(pp.specificity, 10, darkText, "italic", 14, 6);
+      }
+      if (pp.why_for_you) {
+        addText(`Why this rose to the top for you: ${pp.why_for_you}`, 10, hexToRgb(brandBlue), "bold", 14, 8);
+      }
+      if (pp.urgent_tie) {
+        addText(pp.urgent_tie, 10, hexToRgb(brandBlue), "bold", 14, 10);
+      }
+      divider();
+    }
+
+    // ── Section 5: What this likely means right now ──
+    if (y > pageHeight - 120) { doc.addPage(); y = margin; }
+    sectionHeader(5, "What This Likely Means Right Now");
+    addText(report.section5_what_this_means.synthesis, 11, grayText, "normal", 16, 8);
+
+    // ── Section 6: 90-Day plan ──
+    doc.addPage();
+    y = margin;
+    sectionHeader(6, "Your 90-Day Leadership Support Reboot Plan");
+    const s6 = report.section6_90_day_plan;
+    for (const priority of s6) {
+      if (y > pageHeight - 160) { doc.addPage(); y = margin; }
+      addText(`Priority ${priority.priority}: ${priority.title}`, 14, darkText, "bold", 20, 6);
+      addText(priority.why_it_matters, 10, grayText, "italic", 14, 10);
+      if (priority.why_for_you) {
+        addText(`Why this is priority ${priority.priority} for you: ${priority.why_for_you}`, 10, hexToRgb(brandBlue), "bold", 14, 10);
+      }
+      addText("Days 1\u201330", 11, hexToRgb(brandBlue), "bold", 15, 4);
+      addText(priority.days_1_30, 10, grayText, "normal", 14, 8);
+      addText("Days 31\u201360", 11, hexToRgb(brandBlue), "bold", 15, 4);
+      addText(priority.days_31_60, 10, grayText, "normal", 14, 8);
+      addText("Days 61\u201390", 11, hexToRgb(brandBlue), "bold", 15, 4);
+      addText(priority.days_61_90, 10, grayText, "normal", 14, 12);
+      divider();
+    }
+
+    // ── Section 7: What to bring to leadership ──
+    if (y > pageHeight - 140) { doc.addPage(); y = margin; }
+    sectionHeader(7, "What to Bring to Leadership");
+    const s7 = report.section7_what_to_bring_to_leadership;
+    doc.setFontSize(10);
+    doc.setTextColor(...grayText);
+    doc.setFont("helvetica", "bold");
+    doc.text("TALKING POINTS", margin, y);
+    y += 16;
+    for (const tp of s7.talking_points) {
+      addText(`\u2022 ${tp}`, 11, darkText, "normal", 15, 6);
+    }
+    y += 6;
+    addText("Suggested framing:", 10, grayText, "bold", 14, 4);
+    addText(s7.framing_sentence, 11, darkText, "italic", 15, 10);
+
+    // ── Section 8: Where implementation gets hard ──
+    if (y > pageHeight - 120) { doc.addPage(); y = margin; }
+    sectionHeader(8, "Where Implementation Usually Gets Hard");
+    const s8 = report.section8_where_it_gets_hard;
+    for (const bullet of s8.bullets) {
+      addText(`\u2022 ${bullet}`, 11, grayText, "normal", 15, 8);
+    }
+
+    // ── Section 9: Curiosity Led bridge ──
+    y += 10;
+    if (y > pageHeight - 120) { doc.addPage(); y = margin; }
+    sectionHeader(9, "The Curiosity Led Bridge");
+    const s9 = report.section9_curiosity_led_bridge;
+    addText(s9.sentence1, 11, grayText, "normal", 16, 6);
+    addText(s9.sentence2, 11, grayText, "normal", 16, 6);
+    addText(s9.sentence3, 11, darkText, "bold", 16, 10);
+  }
 
   // Consultant call CTA
   y += 6;
@@ -797,7 +891,9 @@ function generatePDF(report, scores, leadInfo, variant = "general") {
     doc.setTextColor(...lightGray);
     doc.setFont("helvetica", "normal");
     doc.text(
-      "Curiosity Led \u00b7 Leadership Support Diagnostic \u00b7 Confidential",
+      isBpo
+        ? "Curiosity Led \u00b7 BPO Leadership Diagnostic \u00b7 Confidential"
+        : "Curiosity Led \u00b7 Leadership Support Diagnostic \u00b7 Confidential",
       margin,
       pageHeight - 20
     );
@@ -808,16 +904,22 @@ function generatePDF(report, scores, leadInfo, variant = "general") {
 }
 
 // ── Email HTML ──
-function buildEmailHtml(leadInfo, pdfUrl) {
+function buildEmailHtml(leadInfo, pdfUrl, variant = "general") {
+  const isBpo = variant === "bpo";
+  const heading = isBpo ? "Your BPO Leadership Diagnostic Report" : "Your 90-Day Leadership Support Reboot Blueprint";
+  const bodyText = isBpo
+    ? "Your BPO Leadership Diagnostic report is ready. Based on your answers, we've assembled a tailored 90-day action plan covering your scores, your primary risk pattern, and concrete next steps."
+    : "Your Leadership Reboot Diagnostic report is ready. Based on your answers, we've assembled a tailored 90-day plan covering your score, your top two growth blocks, and concrete next steps.";
+  const footerLabel = isBpo ? "BPO Leadership Diagnostic" : "Leadership Support Diagnostic";
   return `
     <html>
       <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; color: #0a0a0a;">
         <div style="border-top: 4px solid #0202ff; padding-top: 30px;">
           <p style="font-size: 12px; font-weight: 600; letter-spacing: 0.15em; color: #0202ff; text-transform: uppercase;">Curiosity Led</p>
-          <h1 style="font-size: 26px; font-weight: 700; margin: 16px 0 8px;">Your 90-Day Leadership Support Reboot Blueprint</h1>
+          <h1 style="font-size: 26px; font-weight: 700; margin: 16px 0 8px;">${heading}</h1>
           <p style="font-size: 16px; color: #666; margin: 0 0 24px;">Hi ${leadInfo.name || "there"},</p>
           <p style="font-size: 15px; line-height: 1.6; color: #444;">
-            Your Leadership Reboot Diagnostic report is ready. Based on your answers, we've assembled a tailored 90-day plan covering your score, your top two growth blocks, and concrete next steps.
+            ${bodyText}
           </p>
           <div style="margin: 32px 0;">
             <a href="${pdfUrl}" download style="display: inline-block; background: #0202ff; color: #fff; font-weight: 600; font-size: 15px; padding: 14px 28px; border-radius: 8px; text-decoration: none;">
@@ -830,7 +932,7 @@ function buildEmailHtml(leadInfo, pdfUrl) {
           <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
           <p style="font-size: 12px; color: #999;">
             Results are based on your answers and are not a promise of business performance.<br/>
-            © 2026 Curiosity Led LLC · Leadership Support Diagnostic
+            © 2026 Curiosity Led LLC · ${footerLabel}
           </p>
         </div>
       </body>
