@@ -76,9 +76,9 @@ const SCORE_PANEL = (
     </div>
     <div className="flex-1 h-32">
       <ResponsiveContainer width="100%" height="100%">
-        <RadarChart data={RADAR_DATA} outerRadius="70%">
+        <RadarChart data={RADAR_DATA} outerRadius="48%" margin={{ top: 6, right: 28, bottom: 6, left: 28 }}>
           <PolarGrid stroke="#E5E5E5" />
-          <PolarAngleAxis dataKey="area" tick={{ fontSize: 9, fill: "#666" }} />
+          <PolarAngleAxis dataKey="area" tick={{ fontSize: 8.5, fill: "#666" }} />
           <Radar dataKey="value" stroke="#0202ff" fill="#0202ff" fillOpacity={0.12} strokeWidth={1.5} />
         </RadarChart>
       </ResponsiveContainer>
