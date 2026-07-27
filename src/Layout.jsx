@@ -828,8 +828,16 @@ function LayoutContent({ children }) {
                                     Review Qualifications
                                   </Link>
                                 </DropdownMenuItem>
-                              </>
-                            )}
+                                {(isPlatformAdmin || isSuperAdmin) && (
+                                  <DropdownMenuItem asChild>
+                                    <Link to={createPageUrl("DiagnosticAnalytics")} className="cursor-pointer select-none">
+                                      <BarChart3 className="w-4 h-4 mr-2 select-none" />
+                                      Diagnostic Analytics
+                                    </Link>
+                                  </DropdownMenuItem>
+                                )}
+                                </>
+                                )}
 
 
 
@@ -1086,6 +1094,16 @@ function LayoutContent({ children }) {
                               <CheckCircle className="w-5 h-5 select-none" />
                               Review Qualifications
                             </Link>
+                            {(isPlatformAdmin || isSuperAdmin) && (
+                              <Link
+                                to={createPageUrl("DiagnosticAnalytics")}
+                                className="flex items-center gap-3 px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 select-none active:bg-gray-100"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                              >
+                                <BarChart3 className="w-5 h-5 select-none" />
+                                Diagnostic Analytics
+                              </Link>
+                            )}
                           </>
                         )}
 

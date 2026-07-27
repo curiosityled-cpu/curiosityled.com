@@ -21,6 +21,7 @@ import TermsOfService from './pages/TermsOfService';
 import OfferPage from './pages/OfferPage';
 import BpoOfferPage from './pages/BpoOfferPage';
 import RadarLabelSample from './pages/RadarLabelSample';
+import DiagnosticAnalytics from './pages/DiagnosticAnalytics';
 import MyLeadership from './pages/MyLeadership';
 import MyDevelopment from './pages/MyDevelopment';
 import MyGoalsMVP from './pages/MyGoalsMVP';
@@ -179,6 +180,7 @@ const AuthenticatedApp = () => {
       <Route path="/Notifications" element={mvpRole ? <MVPPage><Notifications /></MVPPage> : <LayoutWrapper currentPageName="Notifications"><Notifications /></LayoutWrapper>} />
       <Route path="/PrivacySettings" element={<Navigate to="/Settings" replace />} />
       <Route path="/AdminDataRestore" element={<AdminDataRestore />} />
+      <Route path="/DiagnosticAnalytics" element={mvpRole ? <MVPPage><DiagnosticAnalytics /></MVPPage> : <LayoutWrapper currentPageName="DiagnosticAnalytics"><DiagnosticAnalytics /></LayoutWrapper>} />
       <Route path="/SeedLinkedInCourses" element={<SeedLinkedInCourses />} />
       <Route path="/OrgBusinessGoals" element={mvpRole ? <MVPPage><OrgBusinessGoals /></MVPPage> : <LayoutWrapper currentPageName="OrgBusinessGoals"><OrgBusinessGoals /></LayoutWrapper>} />
       <Route path="/PerformanceManager" element={<Navigate to="/GoalManager" replace />} />
