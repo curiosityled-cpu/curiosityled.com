@@ -20,6 +20,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import OfferPage from './pages/OfferPage';
 import BpoOfferPage from './pages/BpoOfferPage';
+import RadarLabelSample from './pages/RadarLabelSample';
 import MyLeadership from './pages/MyLeadership';
 import MyDevelopment from './pages/MyDevelopment';
 import MyGoalsMVP from './pages/MyGoalsMVP';
@@ -138,6 +139,7 @@ const AuthenticatedApp = () => {
       <Route path="/coaching" element={<LandingCoaching />} />
       <Route path="/diagnostic" element={<OfferPage />} />
       <Route path="/bpo-diagnostic" element={<BpoOfferPage />} />
+      <Route path="/radar-label-sample" element={<RadarLabelSample />} />
 
       {/* Redirect old ExperienceManagement URL to new DevelopmentManager */}
       <Route path="/ExperienceManagement" element={<Navigate to="/DevelopmentManager" replace />} />
