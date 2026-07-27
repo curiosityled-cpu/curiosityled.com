@@ -597,6 +597,43 @@ function generatePDF(report, scores, leadInfo, variant = "general") {
 
   y = Math.max(gaugeCy + gaugeR + 24, radarCy + radarR + 26) + 6;
 
+  // Score legend — two-column grid beneath the radar, large & legible
+  if (y > pageHeight - 80) { doc.addPage(); y = margin; }
+  doc.setFontSize(9);
+  doc.setTextColor(...hexToRgb(brandBlue));
+  doc.setFont("helvetica", "bold");
+  doc.text("SCORE LEGEND", margin, y);
+  y += 14;
+  const legendCols = 2;
+  const legendCellW = (contentWidth - 10) / legendCols;
+  const legendCellH = 34;
+  const legendGap = 8;
+  for (let i = 0; i < constructKeys.length; i++) {
+    const col = i % legendCols;
+    const row = Math.floor(i / legendCols);
+    const lx = margin + col * (legendCellW + 10);
+    const ly = y + row * (legendCellH + legendGap);
+    if (ly + legendCellH > pageHeight - margin) { doc.addPage(); y = margin; }
+    doc.setDrawColor(...lightGray);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(lx, ly, legendCellW, legendCellH, 4, 4, "S");
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(lx, ly, legendCellW, legendCellH, 4, 4, "F");
+    doc.setFontSize(9);
+    doc.setTextColor(...grayText);
+    doc.setFont("helvetica", "normal");
+    const lbl = radarLabels[i] || constructKeys[i];
+    const maxLabelW = legendCellW - 48;
+    const trimmed = doc.splitTextToSize(lbl, maxLabelW)[0];
+    doc.text(trimmed, lx + 10, ly + legendCellH / 2 + 3);
+    const scoreStr = String(radarScores[i] ?? 0);
+    doc.setFontSize(13);
+    doc.setTextColor(...darkText);
+    doc.setFont("helvetica", "bold");
+    doc.text(scoreStr, lx + legendCellW - 12, ly + legendCellH / 2 + 4, { align: "right" });
+  }
+  y += Math.ceil(constructKeys.length / legendCols) * (legendCellH + legendGap) + 6;
+
   doc.setFontSize(13);
   doc.setTextColor(...hexToRgb(brandBlue));
   doc.setFont("helvetica", "bold");
