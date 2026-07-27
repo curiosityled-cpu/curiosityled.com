@@ -215,7 +215,7 @@ export const SCORED_ITEMS = [
   {
     id: 3,
     construct: "signal_delay",
-    text: "Leadership issues can escalate before support catches up.",
+    text: "Leadership issues often escalates before support catches up.",
     reverse: true,
   },
   // Construct 2: Support Friction (items 4-6)
@@ -279,7 +279,7 @@ export const SCORED_ITEMS = [
   {
     id: 13,
     construct: "cost_of_inaction",
-    text: "Delayed leadership support creates meaningful downstream cost for the organization.",
+    text: "Leadership support is often implemented too late and leads to broader performance, readiness, or retention issues.",
     reverse: false,
   },
   {
