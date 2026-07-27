@@ -9,12 +9,14 @@ export const CONSTRUCT_WEIGHTS = {
   cost_of_inaction: 0.15,
 };
 
+// Reframed as capabilities (outer edge = ideal/mature state) so higher is
+// unambiguously better on the radar and legend.
 export const CONSTRUCT_LABELS = {
-  signal_delay: "Signal Delay",
-  support_friction: "Support Friction",
+  signal_delay: "Early Signal Detection",
+  support_friction: "Flow-of-Work Support",
   proof_defensibility: "Proof & Defensibility",
-  fragmentation_admin: "Fragmentation & Admin Burden",
-  cost_of_inaction: "Cost of Inaction",
+  fragmentation_admin: "System Cohesion",
+  cost_of_inaction: "Proactive Cost Awareness",
 };
 
 export const CONSTRUCT_KEYS = Object.keys(CONSTRUCT_WEIGHTS);

@@ -1,20 +1,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 import { jsPDF } from 'npm:jspdf@2.5.2';
 
+// Reframed as capabilities (outer edge = ideal/mature state).
 const CONSTRUCT_LABELS_PDF = {
-  signal_delay: "Signal Delay",
-  support_friction: "Support Friction",
+  signal_delay: "Early Signal Detection",
+  support_friction: "Flow-of-Work Support",
   proof_defensibility: "Proof & Defensibility",
-  fragmentation_admin: "Fragmentation & Admin Burden",
-  cost_of_inaction: "Cost of Inaction",
+  fragmentation_admin: "System Cohesion",
+  cost_of_inaction: "Proactive Cost Awareness",
 };
 
+// Shortened for the small PDF radar axis; the legend uses the full labels above.
 const RADAR_LABELS_PDF = {
-  signal_delay: "Signal Delay",
-  support_friction: "Support Friction",
+  signal_delay: "Early Signal",
+  support_friction: "Flow-of-Work",
   proof_defensibility: "Proof & Def.",
-  fragmentation_admin: "Fragmentation",
-  cost_of_inaction: "Cost of Inaction",
+  fragmentation_admin: "System Cohesion",
+  cost_of_inaction: "Cost Awareness",
 };
 
 // BPO variant construct labels
@@ -622,7 +624,7 @@ function generatePDF(report, scores, leadInfo, variant = "general") {
     doc.setFontSize(9);
     doc.setTextColor(...grayText);
     doc.setFont("helvetica", "normal");
-    const lbl = radarLabels[i] || constructKeys[i];
+    const lbl = lblConstructs[constructKeys[i]] || radarLabels[i] || constructKeys[i];
     const maxLabelW = legendCellW - 48;
     const trimmed = doc.splitTextToSize(lbl, maxLabelW)[0];
     doc.text(trimmed, lx + 10, ly + legendCellH / 2 + 3);
