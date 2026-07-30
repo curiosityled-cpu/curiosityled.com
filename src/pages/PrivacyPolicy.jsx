@@ -190,7 +190,7 @@ export default function PrivacyPolicy() {
             </ul>
             <p className="text-gray-600 mt-4">
               You can exercise most of these rights directly through your Settings page.
-              For additional assistance, contact us at <a href="mailto:team@curiosityled.com" className="text-[#0202ff] hover:underline">team@curiosityled.com</a>.
+              For additional assistance, contact us at <a href="mailto:privacy@curiosityled.com" className="text-[#0202ff] hover:underline">privacy@curiosityled.com</a>.
             </p>
           </section>
 
@@ -311,7 +311,7 @@ export default function PrivacyPolicy() {
             </p>
             <div className="bg-gray-50 rounded-lg p-6">
               <p className="text-gray-700 font-medium">Curiosity Led</p>
-              <p className="text-gray-600">Email: <a href="mailto:team@curiosityled.com" className="text-[#0202ff] hover:underline">team@curiosityled.com</a></p>
+              <p className="text-gray-600">Email: <a href="mailto:privacy@curiosityled.com" className="text-[#0202ff] hover:underline">privacy@curiosityled.com</a></p>
               <p className="text-gray-600">Website: <a href="https://www.curiosityled.com" className="text-[#0202ff] hover:underline">www.curiosityled.com</a></p>
             </div>
           </section>
