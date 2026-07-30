@@ -112,7 +112,7 @@ export default function TermsOfService() {
 
             <h3 className="text-xl font-medium text-gray-800 mb-3">Business Associate Agreement (BAA)</h3>
             <p className="text-gray-600 mb-4">
-              Healthcare organizations that determine a Business Associate Agreement (BAA) is required for their use of the Service must contact us at <a href="mailto:team@curiosityled.com" className="text-[#0202ff] hover:underline">team@curiosityled.com</a> to execute such an agreement before using the Service.
+              Healthcare organizations that determine a Business Associate Agreement (BAA) is required for their use of the Service must contact us at <a href="mailto:legal@curiosityled.com" className="text-[#0202ff] hover:underline">legal@curiosityled.com</a> to execute such an agreement before using the Service.
             </p>
 
             <h3 className="text-xl font-medium text-gray-800 mb-3">Client Compliance Obligations</h3>
@@ -160,7 +160,7 @@ export default function TermsOfService() {
 
             <h3 className="text-xl font-medium text-gray-800 mb-3">Refunds</h3>
             <p className="text-gray-600">
-              Refunds are handled on a case-by-case basis. Please contact us at <a href="mailto:team@curiosityled.com" className="text-[#0202ff] hover:underline">team@curiosityled.com</a> for refund requests.
+              Refunds are handled on a case-by-case basis. Please contact us at <a href="mailto:legal@curiosityled.com" className="text-[#0202ff] hover:underline">legal@curiosityled.com</a> for refund requests.
             </p>
           </section>
 
@@ -173,7 +173,7 @@ export default function TermsOfService() {
               While we are not yet SOC 2 certified, our platform is engineered with SOC 2-aligned controls, including encryption in transit and at rest, role-based access control with row-level security, comprehensive audit logging, automated PHI detection, configurable data retention, and mandatory privacy training. We are actively working toward formal SOC 2 Type II certification.
             </p>
             <p className="text-gray-600">
-              For enterprise customers, we offer Data Processing Agreements (DPAs) upon request to comply with GDPR and other data protection regulations. Contact us at <a href="mailto:team@curiosityled.com" className="text-[#0202ff] hover:underline">team@curiosityled.com</a> for more information.
+              For enterprise customers, we offer Data Processing Agreements (DPAs) upon request to comply with GDPR and other data protection regulations. Contact us at <a href="mailto:legal@curiosityled.com" className="text-[#0202ff] hover:underline">legal@curiosityled.com</a> for more information.
             </p>
           </section>
 
@@ -255,7 +255,7 @@ export default function TermsOfService() {
             </p>
             <div className="bg-gray-50 rounded-lg p-6">
               <p className="text-gray-700 font-medium">Curiosity Led</p>
-              <p className="text-gray-600">Email: <a href="mailto:team@curiosityled.com" className="text-[#0202ff] hover:underline">team@curiosityled.com</a></p>
+              <p className="text-gray-600">Email: <a href="mailto:legal@curiosityled.com" className="text-[#0202ff] hover:underline">legal@curiosityled.com</a></p>
               <p className="text-gray-600">Website: <a href="https://www.curiosityled.com" className="text-[#0202ff] hover:underline">www.curiosityled.com</a></p>
             </div>
           </section>
