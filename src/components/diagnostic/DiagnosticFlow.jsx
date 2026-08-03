@@ -96,14 +96,6 @@ function DiagnosticFlowInner({ onBackToLanding, variant }) {
     setData((prev) => ({ ...prev, leadInfo: fullLeadInfo }));
     setStage("generating");
 
-    base44.analytics.track({
-      eventName: "diagnostic_completion",
-      properties: {
-        variant: variant,
-        source: "offer_page",
-      },
-    });
-
     // Assemble report + generate PDF + send email + save entities.
     // Everything is wrapped so any failure (including report assembly) surfaces
     // an error and routes to the results recovery state instead of hanging on
