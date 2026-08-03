@@ -94,6 +94,14 @@ function DiagnosticFlowInner({ onBackToLanding, variant }) {
       firstName: data.firstName,
     };
     setData((prev) => ({ ...prev, leadInfo: fullLeadInfo }));
+    base44.analytics.track({
+      eventName: "diagnostic_completion",
+      properties: {
+        variant: variant,
+        source: "offer_page",
+      },
+    });
+
     setStage("generating");
 
     // Assemble report + generate PDF + send email + save entities.
