@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
 import BpoReportPreviewCard from "@/components/landing/BpoReportPreviewCard";
 import DiagnosticFlow from "@/components/diagnostic/DiagnosticFlow";
 
@@ -20,6 +21,10 @@ export default function BpoOfferPage() {
   }, []);
 
   const handleStart = () => {
+    base44.analytics.track({
+      eventName: "diagnostic_start",
+      properties: { variant: "bpo", source: "bpo_offer_page" },
+    });
     setStarted(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
