@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import jsPDF from "jspdf";
 import { useAuth } from "@/components/useAuth";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -75,7 +76,7 @@ const PRIORITY_COLORS = {
   'Opportunity': 'bg-blue-100 text-blue-800 border-blue-200'
 };
 
-export default function OrgInsightsView({ user, onMetricsUpdate }) {
+export default function OrgInsightsView({ user, onMetricsUpdate, actionsRef }) {
   const { isPlatformAdmin, isSuperAdmin } = useAuth();
   const clientId = user?.client_id || user?.data?.client_id;
   const navigate = useNavigate();
@@ -574,6 +575,103 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
   };
 
 
+
+  // ── Expose imperative actions (refresh / export CSV / export PDF) to parent ──
+  useEffect(() => {
+    if (!actionsRef) return;
+    actionsRef.current = {
+      refresh: () => {
+        loadAllData();
+      },
+      exportCSV: () => {
+        const assessments = filteredData.assessments;
+        if (!assessments.length) {
+          toast.error("No assessment data to export");
+          return;
+        }
+        const headers = ["Email", "Name", "Overall %", "SI %", "DM %", "Comm %", "RM %", "SM %", "PM %", "Submission Date"];
+        const rows = assessments.map(a => {
+          const email = a.email ?? a.data?.email ?? "";
+          const userObj = rawData.allUsers.find(u => u.email === email);
+          return [
+            email,
+            userObj?.full_name ?? "",
+            a.overall_pct ?? a.data?.overall_pct ?? 0,
+            a.si_pct ?? a.data?.si_pct ?? 0,
+            a.dm_pct ?? a.data?.dm_pct ?? 0,
+            a.comm_pct ?? a.data?.comm_pct ?? 0,
+            a.rm_pct ?? a.data?.rm_pct ?? 0,
+            a.sm_pct ?? a.data?.sm_pct ?? 0,
+            a.pm_pct ?? a.data?.pm_pct ?? 0,
+            a.submission_ts ?? a.data?.submission_ts ?? a.created_date ?? "",
+          ];
+        });
+        const csv = [headers, ...rows]
+          .map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+          .join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `leadership-intelligence-${format(new Date(), "yyyy-MM-dd")}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+        toast.success("CSV exported");
+      },
+      exportPDF: () => {
+        const doc = new jsPDF();
+        doc.setFontSize(18);
+        doc.setTextColor(30);
+        doc.text("Leadership Intelligence Hub Report", 14, 22);
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(`Generated: ${format(new Date(), "MMM d, yyyy h:mm a")}`, 14, 30);
+
+        doc.setFontSize(14);
+        doc.setTextColor(30);
+        doc.text("Key Metrics", 14, 44);
+        doc.setFontSize(10);
+        doc.setTextColor(60);
+        let y = 52;
+        const lines = [
+          `Average Leadership Score: ${metrics.avgLeadershipScore}%`,
+          `Total Assessments: ${metrics.totalAssessments}`,
+          `At-Risk Leaders (below 60%): ${metrics.atRiskLeaders}`,
+          `High-Potential Leaders (85%+): ${metrics.highPotentialLeaders}`,
+          `Goal Completion Rate: ${metrics.goalCompletionRate}%`,
+          `Learning Completion Rate: ${metrics.learningCompletionRate}%`,
+          `Journey Completion Rate: ${metrics.journeyCompletionRate}%`,
+          `Overdue Goals: ${metrics.overdueGoals}`,
+          "",
+          "Competency Averages:",
+          `  Decision Making: ${metrics.competencyAverages.dm}%`,
+          `  Situational Intelligence: ${metrics.competencyAverages.si}%`,
+          `  Communication: ${metrics.competencyAverages.comm}%`,
+          `  Resource Management: ${metrics.competencyAverages.rm}%`,
+          `  Stakeholder Management: ${metrics.competencyAverages.sm}%`,
+          `  Performance Management: ${metrics.competencyAverages.pm}%`,
+        ];
+        lines.forEach(line => {
+          doc.text(line, 14, y);
+          y += 7;
+        });
+
+        if (executiveBriefing) {
+          if (y > 240) { doc.addPage(); y = 20; }
+          doc.setFontSize(14);
+          doc.setTextColor(30);
+          doc.text("Executive Briefing", 14, y + 8);
+          doc.setFontSize(10);
+          doc.setTextColor(60);
+          const briefingLines = doc.splitTextToSize(executiveBriefing, 180);
+          doc.text(briefingLines, 14, y + 16);
+        }
+
+        doc.save(`leadership-intelligence-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+        toast.success("PDF exported");
+      },
+    };
+  }, [filteredData, metrics, executiveBriefing, loading]);
 
   if (loading) {
     return (

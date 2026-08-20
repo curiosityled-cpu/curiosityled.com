@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -58,7 +58,13 @@ function Insights() {
   };
   
   const [currentView, setCurrentView] = useState(getInitialView());
+  const viewActionsRef = useRef({});
   const [loading, setLoading] = useState(false);
+
+  // Reset action handlers when switching views so stale exports don't fire
+  useEffect(() => {
+    viewActionsRef.current = {};
+  }, [currentView]);
   const [refreshing, setRefreshing] = useState(false);
   const [exportingCSV, setExportingCSV] = useState(false);
   const [exportingPDF, setExportingPDF] = useState(false);
@@ -170,8 +176,12 @@ function Insights() {
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      // Trigger refresh in child components via key change or callback
-      toast.success('Insights refreshed');
+      if (viewActionsRef.current?.refresh) {
+        viewActionsRef.current.refresh();
+        toast.success('Insights refreshed');
+      } else {
+        toast.info('Refresh not available for this view');
+      }
     } catch (error) {
       toast.error('Failed to refresh insights');
     } finally {
@@ -182,8 +192,11 @@ function Insights() {
   const handleExportCSV = async () => {
     setExportingCSV(true);
     try {
-      toast.success('CSV export started');
-      // Export logic handled by child components
+      if (viewActionsRef.current?.exportCSV) {
+        viewActionsRef.current.exportCSV();
+      } else {
+        toast.info('CSV export not available for this view');
+      }
     } catch (error) {
       toast.error('Failed to export CSV');
     } finally {
@@ -194,8 +207,11 @@ function Insights() {
   const handleExportPDF = async () => {
     setExportingPDF(true);
     try {
-      toast.success('PDF export started');
-      // Export logic handled by child components
+      if (viewActionsRef.current?.exportPDF) {
+        viewActionsRef.current.exportPDF();
+      } else {
+        toast.info('PDF export not available for this view');
+      }
     } catch (error) {
       toast.error('Failed to export PDF');
     } finally {
@@ -227,7 +243,7 @@ function Insights() {
       case VIEW_SCOPES.ADMIN:
         return <ProgramAdminInsightsView />;
       case VIEW_SCOPES.ORG:
-        return <OrgInsightsView user={user} onMetricsUpdate={setMetrics} />;
+        return <OrgInsightsView user={user} onMetricsUpdate={setMetrics} actionsRef={viewActionsRef} />;
       default:
         return <MyInsightsView user={user} onMetricsUpdate={setMetrics} />;
     }
