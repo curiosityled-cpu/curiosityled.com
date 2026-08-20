@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 import { useAuth } from "@/components/useAuth";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -136,6 +137,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate, actionsRef }) {
   const [strategicOpportunities, setStrategicOpportunities] = useState([]);
   const [lastGeneratedFingerprint, setLastGeneratedFingerprint] = useState(null);
   const [generatingAll, setGeneratingAll] = useState(false);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     if (user) {
@@ -579,99 +581,269 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
   // ── Expose imperative actions (refresh / export CSV / export PDF) to parent ──
   useEffect(() => {
     if (!actionsRef) return;
+
+    const csvEscape = (val) => `"${String(val ?? "").replace(/"/g, '""')}"`;
+    const buildSection = (title, headers, rows) => {
+      const lines = [`# ${title}`, headers.map(csvEscape).join(","), ...rows.map(r => r.map(csvEscape).join(",")), ""];
+      return lines.join("\n");
+    };
+
     actionsRef.current = {
       refresh: () => {
         loadAllData();
       },
       exportCSV: () => {
-        const assessments = filteredData.assessments;
-        if (!assessments.length) {
-          toast.error("No assessment data to export");
-          return;
+        const { assessments, goals, assignedLearning, journeyEnrollments } = filteredData;
+        const { allUsers, assessmentInsights, workforceMetrics } = rawData;
+
+        const sections = [];
+
+        // Summary metrics
+        sections.push(buildSection(
+          "Summary Metrics",
+          ["Metric", "Value"],
+          [
+            ["Average Leadership Score", `${metrics.avgLeadershipScore}%`],
+            ["Total Assessments", metrics.totalAssessments],
+            ["At-Risk Leaders (<60%)", metrics.atRiskLeaders],
+            ["High-Potential Leaders (85%+)", metrics.highPotentialLeaders],
+            ["Total Goals", metrics.totalGoals],
+            ["Goal Completion Rate", `${metrics.goalCompletionRate}%`],
+            ["Total Learning Items", metrics.totalLearning],
+            ["Learning Completion Rate", `${metrics.learningCompletionRate}%`],
+            ["Total Journeys", metrics.totalJourneys],
+            ["Journey Completion Rate", `${metrics.journeyCompletionRate}%`],
+            ["Overdue Goals", metrics.overdueGoals],
+            ["Decision Making Avg", `${metrics.competencyAverages.dm}%`],
+            ["Situational Intelligence Avg", `${metrics.competencyAverages.si}%`],
+            ["Communication Avg", `${metrics.competencyAverages.comm}%`],
+            ["Resource Management Avg", `${metrics.competencyAverages.rm}%`],
+            ["Stakeholder Management Avg", `${metrics.competencyAverages.sm}%`],
+            ["Performance Management Avg", `${metrics.competencyAverages.pm}%`],
+          ]
+        ));
+
+        // Assessments
+        if (assessments.length) {
+          sections.push(buildSection(
+            "Assessments",
+            ["Email", "Name", "Overall %", "SI %", "DM %", "Comm %", "RM %", "SM %", "PM %", "Submission Date", "Archetype", "Band"],
+            assessments.map(a => {
+              const email = a.email ?? a.data?.email ?? "";
+              const userObj = allUsers.find(u => u.email === email);
+              return [
+                email,
+                userObj?.full_name ?? "",
+                a.overall_pct ?? a.data?.overall_pct ?? 0,
+                a.si_pct ?? a.data?.si_pct ?? 0,
+                a.dm_pct ?? a.data?.dm_pct ?? 0,
+                a.comm_pct ?? a.data?.comm_pct ?? 0,
+                a.rm_pct ?? a.data?.rm_pct ?? 0,
+                a.sm_pct ?? a.data?.sm_pct ?? 0,
+                a.pm_pct ?? a.data?.pm_pct ?? 0,
+                a.submission_ts ?? a.data?.submission_ts ?? a.created_date ?? "",
+                a.archetype_label ?? a.data?.archetype_label ?? "",
+                a.band_overall ?? a.data?.band_overall ?? "",
+              ];
+            })
+          ));
         }
-        const headers = ["Email", "Name", "Overall %", "SI %", "DM %", "Comm %", "RM %", "SM %", "PM %", "Submission Date"];
-        const rows = assessments.map(a => {
-          const email = a.email ?? a.data?.email ?? "";
-          const userObj = rawData.allUsers.find(u => u.email === email);
-          return [
-            email,
-            userObj?.full_name ?? "",
-            a.overall_pct ?? a.data?.overall_pct ?? 0,
-            a.si_pct ?? a.data?.si_pct ?? 0,
-            a.dm_pct ?? a.data?.dm_pct ?? 0,
-            a.comm_pct ?? a.data?.comm_pct ?? 0,
-            a.rm_pct ?? a.data?.rm_pct ?? 0,
-            a.sm_pct ?? a.data?.sm_pct ?? 0,
-            a.pm_pct ?? a.data?.pm_pct ?? 0,
-            a.submission_ts ?? a.data?.submission_ts ?? a.created_date ?? "",
-          ];
-        });
-        const csv = [headers, ...rows]
-          .map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
-          .join("\n");
+
+        // Goals
+        if (goals.length) {
+          sections.push(buildSection(
+            "Goals",
+            ["Title", "Description", "Status", "Progress %", "Visibility", "Department", "Created Date"],
+            goals.map(g => [
+              g.title ?? g.data?.title ?? "",
+              g.description ?? g.data?.description ?? "",
+              g.status ?? g.data?.status ?? "",
+              g.progress ?? g.data?.progress ?? 0,
+              g.visibility ?? g.data?.visibility ?? "",
+              g.department ?? g.data?.department ?? "",
+              g.created_date ?? "",
+            ])
+          ));
+        }
+
+        // Assigned Learning
+        if (assignedLearning.length) {
+          sections.push(buildSection(
+            "Assigned Learning",
+            ["User Email", "Resource Title", "Status", "Due Date", "Assigned Date"],
+            assignedLearning.map(l => [
+              l.user_email ?? l.data?.user_email ?? "",
+              l.resource_title ?? l.data?.resource_title ?? l.title ?? l.data?.title ?? "",
+              l.status ?? l.data?.status ?? "",
+              l.due_date ?? l.data?.due_date ?? "",
+              l.created_date ?? "",
+            ])
+          ));
+        }
+
+        // Journey Enrollments
+        if (journeyEnrollments.length) {
+          sections.push(buildSection(
+            "Journey Enrollments",
+            ["User Email", "Journey Name", "Status", "Enrolled Date", "Progress %"],
+            journeyEnrollments.map(j => [
+              j.user_email ?? j.data?.user_email ?? "",
+              j.journey_name ?? j.data?.journey_name ?? "",
+              j.status ?? j.data?.status ?? "",
+              j.enrolled_date ?? j.data?.enrolled_date ?? "",
+              j.progress ?? j.data?.progress ?? 0,
+            ])
+          ));
+        }
+
+        // Assessment Insights
+        if (assessmentInsights.length) {
+          sections.push(buildSection(
+            "Assessment Insights",
+            ["User Email", "Status", "Risk Flags", "Generated Date"],
+            assessmentInsights.map(i => [
+              i.user_email ?? i.data?.user_email ?? "",
+              i.status ?? i.data?.status ?? "",
+              (i.risk_flags ?? i.data?.risk_flags ?? []).join("; "),
+              i.created_date ?? "",
+            ])
+          ));
+        }
+
+        // Workforce Metrics
+        if (workforceMetrics?.length) {
+          sections.push(buildSection(
+            "Workforce Metrics",
+            ["Effective Date", "Turnover Rate %", "Regrettable Turnover %", "eNPS Score", "Engagement Index"],
+            workforceMetrics.map(w => [
+              w.effective_date ?? w.data?.effective_date ?? "",
+              w.turnover_rate ?? w.data?.turnover_rate ?? "",
+              w.regrettable_turnover ?? w.data?.regrettable_turnover ?? "",
+              w.enps_score ?? w.data?.enps_score ?? "",
+              w.engagement_index ?? w.data?.engagement_index ?? "",
+            ])
+          ));
+        }
+
+        // Users (managers in org)
+        if (allUsers.length) {
+          sections.push(buildSection(
+            "Users",
+            ["Email", "Full Name", "Role", "Department", "Client ID"],
+            allUsers.map(u => [
+              u.email ?? "",
+              u.full_name ?? "",
+              u.app_role ?? u.data?.app_role ?? u.current_role ?? "",
+              u.department ?? u.data?.department ?? "",
+              u.client_id ?? u.data?.client_id ?? "",
+            ])
+          ));
+        }
+
+        // Executive Briefing (if generated)
+        if (executiveBriefing) {
+          sections.push(buildSection(
+            "Executive Briefing",
+            ["Content"],
+            [[executiveBriefing.replace(/\n/g, " ")]]
+          ));
+        }
+
+        // AI Insights
+        if (aiInsights.length) {
+          sections.push(buildSection(
+            "AI Strategic Insights",
+            ["Title", "Description", "Priority", "Action"],
+            aiInsights.map(i => [
+              i.title ?? "",
+              i.description ?? "",
+              i.priority ?? "",
+              i.action ?? "",
+            ])
+          ));
+        }
+
+        // Strategic Risks
+        if (strategicRisks.length) {
+          sections.push(buildSection(
+            "Strategic Risks",
+            ["Title", "Description", "Severity", "Action"],
+            strategicRisks.map(r => [
+              r.title ?? "",
+              r.description ?? "",
+              r.severity ?? "",
+              r.action ?? "",
+            ])
+          ));
+        }
+
+        // Strategic Opportunities
+        if (strategicOpportunities.length) {
+          sections.push(buildSection(
+            "Strategic Opportunities",
+            ["Title", "Description", "Potential", "Action"],
+            strategicOpportunities.map(o => [
+              o.title ?? "",
+              o.description ?? "",
+              o.potential ?? "",
+              o.action ?? "",
+            ])
+          ));
+        }
+
+        const csv = sections.join("\n");
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = `leadership-intelligence-${format(new Date(), "yyyy-MM-dd")}.csv`;
+        link.download = `leadership-intelligence-hub-${format(new Date(), "yyyy-MM-dd")}.csv`;
         link.click();
         URL.revokeObjectURL(url);
-        toast.success("CSV exported");
+        toast.success("CSV exported with all hub data");
       },
-      exportPDF: () => {
-        const doc = new jsPDF();
-        doc.setFontSize(18);
-        doc.setTextColor(30);
-        doc.text("Leadership Intelligence Hub Report", 14, 22);
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text(`Generated: ${format(new Date(), "MMM d, yyyy h:mm a")}`, 14, 30);
-
-        doc.setFontSize(14);
-        doc.setTextColor(30);
-        doc.text("Key Metrics", 14, 44);
-        doc.setFontSize(10);
-        doc.setTextColor(60);
-        let y = 52;
-        const lines = [
-          `Average Leadership Score: ${metrics.avgLeadershipScore}%`,
-          `Total Assessments: ${metrics.totalAssessments}`,
-          `At-Risk Leaders (below 60%): ${metrics.atRiskLeaders}`,
-          `High-Potential Leaders (85%+): ${metrics.highPotentialLeaders}`,
-          `Goal Completion Rate: ${metrics.goalCompletionRate}%`,
-          `Learning Completion Rate: ${metrics.learningCompletionRate}%`,
-          `Journey Completion Rate: ${metrics.journeyCompletionRate}%`,
-          `Overdue Goals: ${metrics.overdueGoals}`,
-          "",
-          "Competency Averages:",
-          `  Decision Making: ${metrics.competencyAverages.dm}%`,
-          `  Situational Intelligence: ${metrics.competencyAverages.si}%`,
-          `  Communication: ${metrics.competencyAverages.comm}%`,
-          `  Resource Management: ${metrics.competencyAverages.rm}%`,
-          `  Stakeholder Management: ${metrics.competencyAverages.sm}%`,
-          `  Performance Management: ${metrics.competencyAverages.pm}%`,
-        ];
-        lines.forEach(line => {
-          doc.text(line, 14, y);
-          y += 7;
-        });
-
-        if (executiveBriefing) {
-          if (y > 240) { doc.addPage(); y = 20; }
-          doc.setFontSize(14);
-          doc.setTextColor(30);
-          doc.text("Executive Briefing", 14, y + 8);
-          doc.setFontSize(10);
-          doc.setTextColor(60);
-          const briefingLines = doc.splitTextToSize(executiveBriefing, 180);
-          doc.text(briefingLines, 14, y + 16);
+      exportPDF: async () => {
+        if (!containerRef.current) {
+          toast.error("Nothing to export yet");
+          return;
         }
+        toast.info("Generating PDF snapshot…");
+        try {
+          const canvas = await html2canvas(containerRef.current, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: "#f9fafb",
+            logging: false,
+            windowWidth: containerRef.current.scrollWidth,
+          });
+          const imgData = canvas.toDataURL("image/png");
+          const pdf = new jsPDF("p", "mm", "a4");
+          const pageWidth = pdf.internal.pageSize.getWidth();
+          const pageHeight = pdf.internal.pageSize.getHeight();
+          const imgWidth = pageWidth;
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-        doc.save(`leadership-intelligence-${format(new Date(), "yyyy-MM-dd")}.pdf`);
-        toast.success("PDF exported");
+          let heightLeft = imgHeight;
+          let position = 0;
+
+          pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+
+          while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+          }
+
+          pdf.save(`leadership-intelligence-hub-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+          toast.success("PDF exported");
+        } catch (err) {
+          console.error("PDF export error:", err);
+          toast.error("Failed to generate PDF");
+        }
       },
     };
-  }, [filteredData, metrics, executiveBriefing, loading]);
+  }, [filteredData, metrics, executiveBriefing, aiInsights, strategicRisks, strategicOpportunities, loading, rawData]);
 
   if (loading) {
     return (
@@ -705,7 +877,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
   const hasSufficientTrendData = trendDataPoints.length >= 3;
 
   return (
-    <div className="space-y-6">
+    <div ref={containerRef} className="space-y-6">
       {/* ── LAYER 1: Sticky context bar ─────────────────────────────────────── */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
         <HubStickyBar
