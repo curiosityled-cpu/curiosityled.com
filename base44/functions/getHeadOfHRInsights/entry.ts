@@ -3,6 +3,7 @@ import {
   fetchManagerSignals,
   buildManagerBundle,
   resolveBUManagers,
+  resolveExplicitManagers,
 } from "../../shared/portfolioData.ts";
 
 const HEAD_OF_HR_ROLES = [
@@ -65,7 +66,7 @@ export default async function(req) {
     let explicitManagers = [];
     if (explicitEmailArray.length > 0) {
       const allUsers = await base44.asServiceRole.entities.User.list(500);
-      explicitManagers = allUsers.filter((u) => explicitEmailArray.includes(u.email));
+      explicitManagers = resolveExplicitManagers(allUsers, explicitEmailArray);
     }
 
     // Resolve BU managers

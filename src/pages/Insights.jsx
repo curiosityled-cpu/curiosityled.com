@@ -23,10 +23,13 @@ import MyInsightsView from "@/components/dashboard/insights/MyInsightsView";
 import TeamInsightsView from "@/components/dashboard/insights/TeamInsightsView";
 import OrgInsightsView from "@/components/dashboard/insights/OrgInsightsView";
 import ProgramAdminInsightsView from "@/components/dashboard/insights/ProgramAdminInsightsView";
+import PortfolioInsightsView from "@/components/portfolio/PortfolioInsightsView";
+import HeadOfHRManagementHealth from "@/components/portfolio/HeadOfHRManagementHealth";
 
 const VIEW_SCOPES = {
   MY: 'my',
   TEAM: 'team',
+  PORTFOLIO: 'portfolio',
   ADMIN: 'admin',
   ORG: 'org'
 };
@@ -48,10 +51,13 @@ function Insights() {
   const urlParams = new URLSearchParams(window.location.search);
   const tabParam = urlParams.get('tab');
   const forcedOrgView = tabParam === 'org';
+  const forcedPortfolioView = tabParam === 'portfolio';
 
   // Platform Admins / Analysts / HR Admins should see org-wide intelligence by default
   const getInitialView = () => {
     if (tabParam === 'org') return VIEW_SCOPES.ORG;
+    if (tabParam === 'portfolio') return VIEW_SCOPES.PORTFOLIO;
+    if (appRole === 'HRBP') return VIEW_SCOPES.PORTFOLIO;
     const ORG_DEFAULT_ROLES = ['Platform Admin', 'Super Administrator', 'Partner Business Administrator', 'Analyst', 'Executive', 'Admin Level 2', 'Admin Level 1'];
     if (ORG_DEFAULT_ROLES.includes(appRole)) return VIEW_SCOPES.ORG;
     return VIEW_SCOPES.MY;
@@ -81,6 +87,9 @@ function Insights() {
   const ORG_ANALYTICS_ROLES = ['Platform Admin', 'Super Administrator', 'Partner Business Administrator', 'Analyst', 'Executive', 'Admin Level 2', 'Admin Level 1'];
   const canViewOrgInsights = hasPermission('analytics.insights.view') || ORG_ANALYTICS_ROLES.includes(appRole);
 
+  // Portfolio view: HRBP role sees their own portfolio
+  const canViewPortfolio = appRole === 'HRBP';
+
   // Program admin insights require program management permissions
   const canViewAdminInsights = hasPermission('programs.view');
 
@@ -89,12 +98,15 @@ function Insights() {
     const tabs = [];
     if (canViewPersonal) tabs.push(VIEW_SCOPES.MY);
     if (canViewTeamInsights) tabs.push(VIEW_SCOPES.TEAM);
+    if (canViewPortfolio) tabs.push(VIEW_SCOPES.PORTFOLIO);
     if (canViewAdminInsights) tabs.push(VIEW_SCOPES.ADMIN);
     if (canViewOrgInsights) tabs.push(VIEW_SCOPES.ORG);
     
     if (tabs.length > 0 && !tabs.includes(currentView)) {
       // Default to appropriate tab based on role
-      if (isOrgLeader && tabs.includes(VIEW_SCOPES.ORG)) {
+      if (canViewPortfolio && tabs.includes(VIEW_SCOPES.PORTFOLIO)) {
+        setCurrentView(VIEW_SCOPES.PORTFOLIO);
+      } else if (isOrgLeader && tabs.includes(VIEW_SCOPES.ORG)) {
         setCurrentView(VIEW_SCOPES.ORG);
       } else if (isProgramManager && tabs.includes(VIEW_SCOPES.ADMIN)) {
         setCurrentView(VIEW_SCOPES.ADMIN);
@@ -102,7 +114,7 @@ function Insights() {
         setCurrentView(tabs[0]);
       }
     }
-  }, [appRole, canViewPersonal, canViewTeamInsights, canViewAdminInsights, canViewOrgInsights, isOrgLeader, isProgramManager]);
+  }, [appRole, canViewPersonal, canViewTeamInsights, canViewPortfolio, canViewAdminInsights, canViewOrgInsights, isOrgLeader, isProgramManager]);
 
   // Get role display name
   const getRoleDisplayName = () => {
@@ -223,16 +235,19 @@ function Insights() {
   // When navigated via MVP nav (?tab=org), only show the Leadership Intelligence Hub tab
   const viewTabs = forcedOrgView
     ? (canViewOrgInsights ? [{ id: VIEW_SCOPES.ORG, label: 'Leadership Intelligence Hub', icon: Brain }] : [])
+    : forcedPortfolioView
+    ? (canViewPortfolio ? [{ id: VIEW_SCOPES.PORTFOLIO, label: 'Portfolio', icon: Users }] : [])
     : [
         ...(canViewPersonal ? [{ id: VIEW_SCOPES.MY, label: 'Insights', icon: Brain }] : []),
         ...(canViewTeamInsights ? [{ id: VIEW_SCOPES.TEAM, label: 'Team Insights', icon: Users }] : []),
+        ...(canViewPortfolio ? [{ id: VIEW_SCOPES.PORTFOLIO, label: 'Portfolio', icon: Users }] : []),
         ...(canViewAdminInsights ? [{ id: VIEW_SCOPES.ADMIN, label: 'Administration Insights', icon: GraduationCap }] : []),
         ...(canViewOrgInsights ? [{ id: VIEW_SCOPES.ORG, label: 'Leadership Intelligence Hub', icon: Brain }] : [])
       ];
 
   // If forcedOrgView (?tab=org), always show ORG regardless of permission load timing.
   // Otherwise fall back to personal insights if no tabs resolved yet.
-  const effectiveView = forcedOrgView ? VIEW_SCOPES.ORG : (viewTabs.length === 0 ? VIEW_SCOPES.MY : currentView);
+  const effectiveView = forcedOrgView ? VIEW_SCOPES.ORG : (forcedPortfolioView ? VIEW_SCOPES.PORTFOLIO : (viewTabs.length === 0 ? VIEW_SCOPES.MY : currentView));
 
   const renderInsightsContent = () => {
     switch (effectiveView) {
@@ -240,10 +255,17 @@ function Insights() {
         return <MyInsightsView user={user} onMetricsUpdate={setMetrics} />;
       case VIEW_SCOPES.TEAM:
         return <TeamInsightsView user={user} onMetricsUpdate={setMetrics} />;
+      case VIEW_SCOPES.PORTFOLIO:
+        return <PortfolioInsightsView user={user} onMetricsUpdate={setMetrics} />;
       case VIEW_SCOPES.ADMIN:
         return <ProgramAdminInsightsView />;
       case VIEW_SCOPES.ORG:
-        return <OrgInsightsView user={user} onMetricsUpdate={setMetrics} actionsRef={viewActionsRef} />;
+        return (
+          <>
+            {appRole === 'Admin Level 2' && <HeadOfHRManagementHealth />}
+            <OrgInsightsView user={user} onMetricsUpdate={setMetrics} actionsRef={viewActionsRef} />
+          </>
+        );
       default:
         return <MyInsightsView user={user} onMetricsUpdate={setMetrics} />;
     }
@@ -318,6 +340,7 @@ export default withAuthProtection(Insights, [
   'Partner Business Administrator', 
   'Analyst',
   'Executive',
+  'HRBP',
   'Admin Level 1', 
   'Admin Level 2', 
   'User Level 1', 

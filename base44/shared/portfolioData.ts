@@ -189,3 +189,31 @@ export async function resolveBUManagers(base44, buScopes) {
         u.app_role === "User Level 2")
   );
 }
+
+/**
+ * Resolve explicit manager emails to user bundles. If a User record exists,
+ * use it; otherwise create a minimal bundle from the email so demo/seed
+ * managers without full User profiles still appear in the portfolio.
+ */
+export function resolveExplicitManagers(allUsers, explicitEmails) {
+  const userMap = {};
+  allUsers.forEach((u) => {
+    userMap[u.email] = u;
+  });
+  return explicitEmails.map((email) => {
+    if (userMap[email]) return userMap[email];
+    const name = email
+      .split("@")[0]
+      .replace(/[._-]/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+    return {
+      id: null,
+      email,
+      full_name: name,
+      display_name: name,
+      current_role: null,
+      department: null,
+      leadership_level: null,
+    };
+  });
+}

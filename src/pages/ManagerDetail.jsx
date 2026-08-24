@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
+import ManagerAdvisorPanel from "@/components/portfolio/ManagerAdvisorPanel";
 
 const getRiskLevel = (insight) => {
   if (!insight) return { label: 'No Data', color: 'text-gray-500', bg: 'bg-gray-100' };
@@ -24,6 +25,8 @@ export default function ManagerDetail() {
   // Prefer data passed via navigation state (fast), fallback to fetch
   const passedManager = location.state?.manager;
   const passedInsight = location.state?.insight;
+  const advisorMode = location.state?.advisorMode;
+  const managerBundle = location.state?.managerBundle;
 
   const { data: fetchedManager, isLoading: loadingManager } = useQuery({
     queryKey: ['manager-detail', id],
@@ -201,6 +204,11 @@ export default function ManagerDetail() {
           )}
         </CardContent>
       </Card>
+
+      {/* Advisor panel — shown when navigated from HRBP Portfolio or Head-of-HR view */}
+      {advisorMode && managerBundle && (
+        <ManagerAdvisorPanel managerBundle={managerBundle} />
+      )}
     </MVPPageLayout>
   );
 }

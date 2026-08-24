@@ -172,7 +172,9 @@ export default function Portfolio() {
           managers={sortedManagers}
           interventions={interventions}
           onSelectManager={(m) =>
-            navigate(`/manager-detail/${m.user.id}`, { state: { manager: m.user, advisorMode: true } })
+            navigate(`/manager-detail/${m.user.id || encodeURIComponent(m.user.email)}`, {
+              state: { manager: m.user, advisorMode: true, managerBundle: m },
+            })
           }
         />
       </div>
