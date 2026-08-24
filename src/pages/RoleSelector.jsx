@@ -49,6 +49,13 @@ function RoleSelector() {
       color: 'bg-teal-500'
     },
     {
+      id: 'HRBP',
+      title: 'HR Business Partner',
+      description: 'Manage a portfolio of managers and track leadership interventions',
+      icon: Users,
+      color: 'bg-indigo-500'
+    },
+    {
       id: 'Admin Level 1',
       title: 'Program Administrator',
       description: 'Manage leadership development programs',
