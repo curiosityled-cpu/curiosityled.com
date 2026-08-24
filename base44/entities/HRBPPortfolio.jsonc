@@ -1,0 +1,177 @@
+{
+  "name": "HRBPPortfolio",
+  "type": "object",
+  "properties": {
+    "hrbp_email": {
+      "type": "string",
+      "description": "Email of the HR Business Partner who owns this portfolio assignment"
+    },
+    "hrbp_name": {
+      "type": "string",
+      "description": "Display name of the HRBP (denormalized for admin lists)"
+    },
+    "assignment_type": {
+      "type": "string",
+      "enum": [
+        "explicit",
+        "business_unit"
+      ],
+      "description": "Explicit = specific manager emails; business_unit = auto-include all managers under a BU/department/team node"
+    },
+    "manager_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Explicit manager email list (used when assignment_type is 'explicit')"
+    },
+    "business_unit": {
+      "type": "string",
+      "description": "Business unit identifier (used when assignment_type is 'business_unit')"
+    },
+    "department": {
+      "type": "string",
+      "description": "Department identifier (optional, for BU-scoped assignments)"
+    },
+    "team": {
+      "type": "string",
+      "description": "Team identifier (optional, for BU-scoped assignments)"
+    },
+    "label": {
+      "type": "string",
+      "description": "Friendly name for this assignment (e.g. 'Operations Managers', 'Q3 Reorg Group')"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Client ID for multi-tenant support"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive"
+      ],
+      "default": "active",
+      "description": "Whether this portfolio assignment is currently active"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal notes about this assignment"
+    }
+  },
+  "required": [
+    "hrbp_email",
+    "assignment_type"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.hrbp_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

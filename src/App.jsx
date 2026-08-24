@@ -28,6 +28,7 @@ import MyGoalsMVP from './pages/MyGoalsMVP';
 import ReportBuilderMVP from './pages/ReportBuilderMVP';
 import ExperienceOverview from './pages/ExperienceOverview';
 import ManagerDetail from './pages/ManagerDetail';
+import Portfolio from './pages/Portfolio';
 import LeadershipIntelligenceHub from './pages/LeadershipIntelligenceHub';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
@@ -128,6 +129,8 @@ const AuthenticatedApp = () => {
           <Navigate to="/Insights?tab=org" replace />
         ) : mvpRole === 'executive' ? (
           <Navigate to="/Insights?tab=org" replace />
+        ) : mvpRole === 'hrbp' ? (
+          <Navigate to="/portfolio" replace />
         ) : (
           <MVPLayout><ManagerToday /></MVPLayout>
         )
@@ -154,6 +157,7 @@ const AuthenticatedApp = () => {
 
       {/* New manager nav routes (Phase 1) */}
       <Route path="/today" element={<MVPLayout><ManagerToday /></MVPLayout>} />
+      <Route path="/portfolio" element={<MVPLayout><Portfolio /></MVPLayout>} />
       <Route path="/patterns" element={<Navigate to="/today" replace />} />
       <Route path="/growth" element={<Navigate to="/practice" replace />} />
       <Route path="/team" element={<MVPLayout><ManagerTeam /></MVPLayout>} />

@@ -1,0 +1,143 @@
+{
+  "name": "HRBPIntervention",
+  "type": "object",
+  "properties": {
+    "hrbp_email": {
+      "type": "string",
+      "description": "Email of the HRBP who logged this intervention"
+    },
+    "manager_email": {
+      "type": "string",
+      "description": "Email of the manager this intervention is about"
+    },
+    "manager_name": {
+      "type": "string",
+      "description": "Display name of the manager (denormalized for quick reference)"
+    },
+    "intervention_type": {
+      "type": "string",
+      "enum": [
+        "coaching_conversation",
+        "nudge",
+        "learning_assignment",
+        "escalation",
+        "check_in",
+        "other"
+      ],
+      "description": "What kind of intervention the HRBP logged"
+    },
+    "notes": {
+      "type": "string",
+      "description": "What the HRBP did or plans to do"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "complete"
+      ],
+      "default": "open",
+      "description": "Whether this intervention is still in progress or done"
+    },
+    "follow_up_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When the HRBP will follow up on this intervention"
+    },
+    "linked_manager_signal": {
+      "type": "string",
+      "description": "Which manager signal triggered this intervention (e.g. 'overload_rising', 'confidence_declining', 'decision_quality_dropping')"
+    },
+    "outcome_notes": {
+      "type": "string",
+      "description": "What happened as a result of this intervention (filled in when status becomes complete)"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Client ID for multi-tenant support"
+    }
+  },
+  "required": [
+    "hrbp_email",
+    "manager_email",
+    "intervention_type"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.hrbp_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "data.hrbp_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.hrbp_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "Platform Admin"
+      }
+    }
+  }
+}

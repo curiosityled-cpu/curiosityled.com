@@ -30,6 +30,7 @@ export const getMVPRole = (appRole) => {
   if (!appRole) return 'manager';
   if (appRole === 'User Level 1' || appRole === 'User Level 2' || appRole === 'user') return 'manager';
   if (appRole === 'Admin Level 1' || appRole === 'Admin Level 2' || appRole === 'Super Administrator' || appRole === 'Platform Admin' || appRole === 'Partner Business Administrator' || appRole === 'admin') return 'buyer';
+  if (appRole === 'HRBP') return 'hrbp';
   if (appRole === 'Analyst') return 'analyst';
   if (appRole === 'Executive') return 'executive';
   // Default unknown roles to 'manager' so they always reach the /today experience
@@ -43,6 +44,7 @@ export const getFriendlyRoleLabel = (appRole) => {
     'User Level 2': 'Team Leader',
     'Analyst': 'Analyst',
     'Executive': 'Executive',
+    'HRBP': 'HR Business Partner',
     'Admin Level 1': 'Program Admin',
     'Admin Level 2': 'HR Admin',
     'Super Administrator': 'Super Administrator',
@@ -75,16 +77,22 @@ const NAV_CONFIG = {
 
   executive: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
+  { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }],
+
+  hrbp: [
+  { label: 'Portfolio', path: '/portfolio', icon: Users },
+  { label: 'Leadership Intelligence', path: '/Insights?tab=portfolio', icon: Brain },
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }]
 
 };
 
-const ROLE_LABELS = { manager: 'Manager', buyer: 'Administrator', analyst: 'Analyst', executive: 'Enterprise' };
+const ROLE_LABELS = { manager: 'Manager', buyer: 'Administrator', analyst: 'Analyst', executive: 'Enterprise', hrbp: 'HR Business Partner' };
 const ROLE_COLORS = {
   manager: 'bg-[#0202ff]/10 border-[#0202ff]/20 text-[#6699ff]',
   buyer: 'bg-violet-500/10 border-violet-500/20 text-violet-400',
   analyst: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400',
-  executive: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+  executive: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
+  hrbp: 'bg-sky-500/10 border-sky-500/20 text-sky-400'
 };
 
 function MVPLayoutInner({ children }) {
