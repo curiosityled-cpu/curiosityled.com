@@ -45,6 +45,7 @@
         "User Level 1",
         "User Level 2",
         "Analyst",
+        "HRBP",
         "Admin Level 1",
         "Admin Level 2",
         "Super Administrator",
@@ -231,6 +232,12 @@
                 "Super Administrator"
               ]
             }
+          },
+          "client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "HRBP"
           },
           "client_id": "{{user.client_id}}"
         },
