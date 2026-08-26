@@ -24,7 +24,6 @@ import TeamInsightsView from "@/components/dashboard/insights/TeamInsightsView";
 import OrgInsightsView from "@/components/dashboard/insights/OrgInsightsView";
 import ProgramAdminInsightsView from "@/components/dashboard/insights/ProgramAdminInsightsView";
 import PortfolioInsightsView from "@/components/portfolio/PortfolioInsightsView";
-import HeadOfHRManagementHealth from "@/components/portfolio/HeadOfHRManagementHealth";
 
 const VIEW_SCOPES = {
   MY: 'my',
@@ -260,12 +259,7 @@ function Insights() {
       case VIEW_SCOPES.ADMIN:
         return <ProgramAdminInsightsView />;
       case VIEW_SCOPES.ORG:
-        return (
-          <>
-            {appRole === 'Admin Level 2' && <HeadOfHRManagementHealth />}
-            <OrgInsightsView user={user} onMetricsUpdate={setMetrics} actionsRef={viewActionsRef} />
-          </>
-        );
+        return <OrgInsightsView user={user} onMetricsUpdate={setMetrics} actionsRef={viewActionsRef} />;
       default:
         return <MyInsightsView user={user} onMetricsUpdate={setMetrics} />;
     }

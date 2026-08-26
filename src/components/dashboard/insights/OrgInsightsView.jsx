@@ -54,6 +54,8 @@ import EngagementCultureCard from "@/components/intelligence/EngagementCultureCa
 import HubExecutivePulse from "@/components/intelligence/HubExecutivePulse";
 import HubStickyBar from "@/components/intelligence/HubStickyBar";
 import ConnectionModule from "@/components/intelligence/ConnectionModule";
+import HubLensToggle from "@/components/intelligence/HubLensToggle";
+import HeadOfHRManagementHealth from "@/components/portfolio/HeadOfHRManagementHealth";
 
 // Map AI-generated dashboard names to actual MVP routes
 const DASHBOARD_ROUTES = {
@@ -90,6 +92,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate, actionsRef }) {
   const appRole = user?.data?.app_role || user?.app_role || '';
   const isExecutiveRole = ['Super Administrator', 'Admin Level 2', 'Analyst'].some(r => appRole.includes(r));
   const [displayPreset, setDisplayPreset] = useState(isExecutiveRole ? 'executive' : 'practitioner');
+  const [activeLens, setActiveLens] = useState(appRole === 'Admin Level 2' ? 'enterprise' : 'capability');
   // Allow user override — track which sections the user has manually expanded
   const [userExpandedSections, setUserExpandedSections] = useState({});
   const toggleUserExpand = (section) => setUserExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
@@ -854,7 +857,22 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
   }
 
   // Scroll to section helper
+  const lensForSection = (id) => {
+    if (id === 'org-health') return 'capability';
+    if (id === 'talent-pipeline' || id === 'leader-profiles') return 'talent';
+    if (id === 'workforce' || id === 'engagement') return 'workforce';
+    return null;
+  };
   const scrollToSection = (id) => {
+    const lens = lensForSection(id);
+    if (lens && lens !== activeLens) {
+      setActiveLens(lens);
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 250);
+      return;
+    }
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -931,7 +949,12 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         )}
       </AnimatePresence>
 
-      {/* ── LAYERS 3–5: Stage-aware section ordering ─────────────────────────── */}
+      {/* ── Lens toggle — group sections by focus area ─────────────────────── */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+        <HubLensToggle activeLens={activeLens} onLensChange={setActiveLens} />
+      </motion.div>
+
+      {/* ── LAYERS 3–5: Lens-grouped sections ─────────────────────────────── */}
       {(() => {
         const assessmentCount = filteredData.assessments.length;
         const orgHealthLowConf = assessmentCount < 3;
@@ -1051,36 +1074,33 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         );
 
         // Build the ordered section list based on active stage
-        let sectionOrder;
-        if (retentionFirst) {
-          // Retain: Workforce/Engagement → Org Health → Talent Pipeline
-          sectionOrder = [WorkforceEngagementSection, OrgHealthSection, TalentSection];
-        } else if (talentFirst) {
-          // Attract & Hire / Mobility & Succession: Talent Pipeline → Org Health → Workforce/Engagement
-          sectionOrder = [TalentSection, OrgHealthSection, WorkforceEngagementSection];
-        } else {
-          // Develop / Perform / Onboarding / default: Org Health → Talent Pipeline → Workforce/Engagement
-          sectionOrder = [OrgHealthSection, TalentSection, WorkforceEngagementSection];
-        }
+        const HeadOfHRSection = appRole === 'Admin Level 2' ? <HeadOfHRManagementHealth /> : null;
+
+        const lensSections = {
+          enterprise: [HeadOfHRSection],
+          capability: [OrgHealthSection],
+          talent: [TalentSection],
+          workforce: [WorkforceEngagementSection],
+        };
 
         return (
           <AnimatePresence mode="wait">
             <motion.div
-              key={activeLifecycleStage || 'default'}
+              key={activeLens}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               className="space-y-6"
             >
-              {sectionOrder}
+              {lensSections[activeLens] || lensSections.capability}
             </motion.div>
           </AnimatePresence>
         );
       })()}
 
       {/* ── Trend Analysis — hidden for stages where it's low-signal ────────── */}
-      {!['transition', 'retention', 'separation', 'attraction'].includes(activeLifecycleStage) && (
+      {activeLens === 'capability' && !['transition', 'retention', 'separation', 'attraction'].includes(activeLifecycleStage) && (
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
         <Card className="border-0 shadow-lg">
           <CardHeader className="pb-3">
@@ -1130,7 +1150,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
       )}
 
       {/* Capability vs. Execution Matrix */}
-      {(() => {
+      {activeLens === 'capability' && (() => {
         // Derive unique departments from users for the filter dropdown
         const departments = [...new Set(
           rawData.allUsers.map(u => u.department).filter(Boolean)
@@ -1301,28 +1321,32 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
       })()}
 
       {/* ── Leader Insight Profiles ─────────────────────────────────────────── */}
-      <motion.div id="leader-profiles" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-        {filteredData.assessments.length < 2 ? (
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 text-center">
-            <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-            <p className="text-sm font-medium text-gray-600">Leader Insight Profiles</p>
-            <p className="text-xs text-gray-500 mt-2">No profiles available yet — run at least 2 assessments to populate this triage shortlist.</p>
-          </div>
-        ) : (
-          <LeaderInsightProfilesCard rawData={rawData} activeLifecycleStage={activeLifecycleStage} activeMobilityChip={activeMobilityChip} onPromptAtreus={promptAtreus} />
-        )}
-      </motion.div>
+      {activeLens === 'talent' && (
+        <motion.div id="leader-profiles" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          {filteredData.assessments.length < 2 ? (
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 text-center">
+              <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+              <p className="text-sm font-medium text-gray-600">Leader Insight Profiles</p>
+              <p className="text-xs text-gray-500 mt-2">No profiles available yet — run at least 2 assessments to populate this triage shortlist.</p>
+            </div>
+          ) : (
+            <LeaderInsightProfilesCard rawData={rawData} activeLifecycleStage={activeLifecycleStage} activeMobilityChip={activeMobilityChip} onPromptAtreus={promptAtreus} />
+          )}
+        </motion.div>
+      )}
 
       {/* ── Atreus Leadership Intelligence (Category B Aggregates) ─────────── */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-        <div className="space-y-3">
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900">Manager Wellbeing Intelligence</h3>
-            <p className="text-xs text-gray-500 mt-0.5">Aggregate, anonymised signals from Atreus check-ins — Category B data only. No individual attribution.</p>
+      {activeLens === 'enterprise' && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+          <div className="space-y-3">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900">Manager Wellbeing Intelligence</h3>
+              <p className="text-xs text-gray-500 mt-0.5">Aggregate, anonymised signals from Atreus check-ins — Category B data only. No individual attribution.</p>
+            </div>
+            <OrgPulseAggregatesView />
           </div>
-          <OrgPulseAggregatesView />
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
 
       {/* Quick Access Dashboard Links — hidden, can re-enable */}
       {false && <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.68 }}>
