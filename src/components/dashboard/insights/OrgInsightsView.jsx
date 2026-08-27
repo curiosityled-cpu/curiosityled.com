@@ -92,7 +92,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate, actionsRef }) {
   const appRole = user?.data?.app_role || user?.app_role || '';
   const isExecutiveRole = ['Super Administrator', 'Admin Level 2', 'Analyst'].some(r => appRole.includes(r));
   const [displayPreset, setDisplayPreset] = useState(isExecutiveRole ? 'executive' : 'practitioner');
-  const [activeLens, setActiveLens] = useState('leadership-health');
+  const [activeLens, setActiveLens] = useState(appRole === 'Admin Level 2' ? 'hrbp' : 'enterprise');
   // Allow user override — track which sections the user has manually expanded
   const [userExpandedSections, setUserExpandedSections] = useState({});
   const toggleUserExpand = (section) => setUserExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
@@ -858,8 +858,8 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
 
   // Scroll to section helper
   const lensForSection = (id) => {
-    if (id === 'org-health' || id === 'wellbeing') return 'leadership-health';
-    if (id === 'management-health') return 'management-health';
+    if (id === 'org-health' || id === 'wellbeing') return 'enterprise';
+    if (id === 'management-health') return 'hrbp';
     if (id === 'talent-pipeline' || id === 'leader-profiles') return 'talent';
     if (id === 'workforce' || id === 'engagement') return 'workforce';
     return null;
@@ -952,7 +952,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
 
       {/* ── Lens toggle — group sections by focus area ─────────────────────── */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-        <HubLensToggle activeLens={activeLens} onLensChange={setActiveLens} appRole={appRole} />
+        <HubLensToggle activeLens={activeLens} onLensChange={setActiveLens} showHRBPLens={appRole === 'Admin Level 2'} />
       </motion.div>
 
       {/* ── LAYERS 3–5: Lens-grouped sections ─────────────────────────────── */}
@@ -1090,8 +1090,8 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         );
 
         const lensSections = {
-          'management-health': [HeadOfHRSection],
-          'leadership-health': [OrgHealthSection, WellbeingSection],
+          'hrbp': [HeadOfHRSection],
+          'enterprise': [OrgHealthSection, WellbeingSection],
           talent: [TalentSection],
           workforce: [WorkforceEngagementSection],
         };
@@ -1106,14 +1106,14 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
               transition={{ duration: 0.2 }}
               className="space-y-6"
             >
-              {lensSections[activeLens] || lensSections['leadership-health']}
+              {lensSections[activeLens] || lensSections['enterprise']}
             </motion.div>
           </AnimatePresence>
         );
       })()}
 
       {/* ── Trend Analysis — hidden for stages where it's low-signal ────────── */}
-      {activeLens === 'leadership-health' && !['transition', 'retention', 'separation', 'attraction'].includes(activeLifecycleStage) && (
+      {activeLens === 'enterprise' && !['transition', 'retention', 'separation', 'attraction'].includes(activeLifecycleStage) && (
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
         <Card className="border-0 shadow-lg">
           <CardHeader className="pb-3">
@@ -1163,7 +1163,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
       )}
 
       {/* Capability vs. Execution Matrix */}
-      {activeLens === 'leadership-health' && (() => {
+      {activeLens === 'enterprise' && (() => {
         // Derive unique departments from users for the filter dropdown
         const departments = [...new Set(
           rawData.allUsers.map(u => u.department).filter(Boolean)

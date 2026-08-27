@@ -1,23 +1,23 @@
 import React from "react";
-import { ShieldCheck, Brain, Users, Heart } from "lucide-react";
+import { Building2, Shield, Users, Heart } from "lucide-react";
 
 /**
  * Segmented lens toggle for the Leadership Intelligence Hub.
  * Groups the Hub's cards into focused views so only one group renders at a time.
- * "Management Health" is HR-specific (Admin Level 2 only) and is hidden otherwise.
+ * The HRBP lens is gated to Head-of-HR / HRBP roles via showHRBPLens.
  */
 const LENSES = [
-  { id: "leadership-health", label: "Leadership Health", icon: Brain, hint: "Org-wide leadership capability, trends & coaching matrix", roles: null },
-  { id: "management-health", label: "Management Health", icon: ShieldCheck, hint: "HR oversight: BU heat map, HRBP engagement & support risk", roles: ["Admin Level 2"] },
-  { id: "talent", label: "Talent", icon: Users, hint: "Succession pipeline & leader triage", roles: null },
-  { id: "workforce", label: "Workforce", icon: Heart, hint: "Retention, stability & engagement", roles: null },
+  { id: "enterprise", label: "Enterprise", icon: Building2, hint: "Org-wide leadership capability & trends" },
+  { id: "hrbp", label: "HRBP", icon: Shield, hint: "HRBP / Head-of-HR management health", gated: true },
+  { id: "talent", label: "Talent", icon: Users, hint: "Succession pipeline & leader triage" },
+  { id: "workforce", label: "Workforce", icon: Heart, hint: "Retention, stability & engagement" },
 ];
 
-export default function HubLensToggle({ activeLens, onLensChange, appRole }) {
-  const visibleLenses = LENSES.filter((lens) => !lens.roles || (appRole && lens.roles.includes(appRole)));
+export default function HubLensToggle({ activeLens, onLensChange, showHRBPLens }) {
+  const lenses = LENSES.filter((l) => !l.gated || showHRBPLens);
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-1.5 flex flex-wrap items-center gap-1">
-      {visibleLenses.map((lens) => {
+      {lenses.map((lens) => {
         const Icon = lens.icon;
         const active = activeLens === lens.id;
         return (
