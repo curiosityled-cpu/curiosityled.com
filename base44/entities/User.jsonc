@@ -23,6 +23,22 @@
       "format": "date",
       "description": "Employee start date"
     },
+    "leadership_start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the user became a leader \u2014 anchor for lifecycle stage derivation. Defaults to start_date if unset; set to the promotion date for newly-promoted leaders whose start_date predates the stage threshold."
+    },
+    "leadership_lifecycle_stage": {
+      "type": "string",
+      "enum": [
+        "attraction",
+        "onboarding",
+        "development",
+        "performance",
+        "retention"
+      ],
+      "description": "Optional manual override of the derived leadership lifecycle stage. Takes precedence over the time-based derivation. Use 'attraction' for high-potentials not yet in a leadership role."
+    },
     "sector": {
       "type": "string",
       "description": "Industry sector"

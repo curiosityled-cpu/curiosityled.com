@@ -56,6 +56,7 @@ import HubStickyBar from "@/components/intelligence/HubStickyBar";
 import ConnectionModule from "@/components/intelligence/ConnectionModule";
 import HubLensToggle from "@/components/intelligence/HubLensToggle";
 import HeadOfHRManagementHealth from "@/components/portfolio/HeadOfHRManagementHealth";
+import { deriveLeadershipStage } from "@/lib/lifecycleStage";
 
 // Map AI-generated dashboard names to actual MVP routes
 const DASHBOARD_ROUTES = {
@@ -249,15 +250,35 @@ export default function OrgInsightsView({ user, onMetricsUpdate, actionsRef }) {
     return startOfDay(addDays(new Date(), 1));
   };
 
+  // Narrow the entire dataset to users in the selected lifecycle stage.
+  // When no stage is selected, stageScopedData === rawData (no narrowing).
+  const stageScopedData = useMemo(() => {
+    if (!activeLifecycleStage) return rawData;
+    const stageEmails = new Set(
+      rawData.allUsers
+        .filter(u => deriveLeadershipStage(u) === activeLifecycleStage)
+        .map(u => u.email)
+    );
+    return {
+      ...rawData,
+      allUsers: rawData.allUsers.filter(u => stageEmails.has(u.email)),
+      assessments: rawData.assessments.filter(a => stageEmails.has(a.email)),
+      goals: rawData.goals.filter(g => stageEmails.has(g.user_email)),
+      assignedLearning: rawData.assignedLearning.filter(l => stageEmails.has(l.user_email)),
+      journeyEnrollments: rawData.journeyEnrollments.filter(j => stageEmails.has(j.user_email)),
+      assessmentInsights: rawData.assessmentInsights.filter(i => stageEmails.has(i.user_email)),
+    };
+  }, [rawData, activeLifecycleStage]);
+
   const filteredData = useMemo(() => {
     const cutoffDate = getDateCutoff();
     const endDate = getDateEnd();
     
-    let filteredUsers = [...rawData.allUsers];
-    let filteredAssessments = [...rawData.assessments];
-    let filteredGoals = [...rawData.goals];
-    let filteredLearning = [...rawData.assignedLearning];
-    let filteredJourneys = [...rawData.journeyEnrollments];
+    let filteredUsers = [...stageScopedData.allUsers];
+    let filteredAssessments = [...stageScopedData.assessments];
+    let filteredGoals = [...stageScopedData.goals];
+    let filteredLearning = [...stageScopedData.assignedLearning];
+    let filteredJourneys = [...stageScopedData.journeyEnrollments];
 
     // Apply date filters
     filteredAssessments = filteredAssessments.filter(a => {
@@ -349,12 +370,13 @@ export default function OrgInsightsView({ user, onMetricsUpdate, actionsRef }) {
 
 
     return {
+      users: filteredUsers,
       assessments: filteredAssessments,
       goals: filteredGoals,
       assignedLearning: filteredLearning,
       journeyEnrollments: filteredJourneys
     };
-  }, [rawData, filters, appliedCustomDateRange]);
+  }, [stageScopedData, filters, appliedCustomDateRange]);
 
   const metrics = useMemo(() => {
     const { assessments, goals, assignedLearning, journeyEnrollments } = filteredData;
@@ -1013,7 +1035,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
                 assessments={filteredData.assessments}
                 assignedLearning={filteredData.assignedLearning}
                 journeyEnrollments={filteredData.journeyEnrollments}
-                allUsers={rawData.allUsers}
+                allUsers={stageScopedData.allUsers}
                 workforceMetrics={rawData.workforceMetrics}
                 activeLifecycleStage={activeLifecycleStage}
                 activeMobilityChip={activeMobilityChip}
@@ -1343,7 +1365,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
               <p className="text-xs text-gray-500 mt-2">No profiles available yet — run at least 2 assessments to populate this triage shortlist.</p>
             </div>
           ) : (
-            <LeaderInsightProfilesCard rawData={rawData} activeLifecycleStage={activeLifecycleStage} activeMobilityChip={activeMobilityChip} onPromptAtreus={promptAtreus} />
+            <LeaderInsightProfilesCard rawData={stageScopedData} activeLifecycleStage={activeLifecycleStage} activeMobilityChip={activeMobilityChip} onPromptAtreus={promptAtreus} />
           )}
         </motion.div>
       )}
