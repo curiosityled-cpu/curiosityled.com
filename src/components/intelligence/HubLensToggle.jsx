@@ -1,21 +1,23 @@
 import React from "react";
-import { Building2, Brain, Users, Heart } from "lucide-react";
+import { ShieldCheck, Brain, Users, Heart } from "lucide-react";
 
 /**
  * Segmented lens toggle for the Leadership Intelligence Hub.
  * Groups the Hub's cards into focused views so only one group renders at a time.
+ * "Management Health" is HR-specific (Admin Level 2 only) and is hidden otherwise.
  */
 const LENSES = [
-  { id: "enterprise", label: "Enterprise", icon: Building2, hint: "Org-wide management health & wellbeing" },
-  { id: "capability", label: "Capability", icon: Brain, hint: "Leadership health, trends & coaching matrix" },
-  { id: "talent", label: "Talent", icon: Users, hint: "Succession pipeline & leader triage" },
-  { id: "workforce", label: "Workforce", icon: Heart, hint: "Retention, stability & engagement" },
+  { id: "leadership-health", label: "Leadership Health", icon: Brain, hint: "Org-wide leadership capability, trends & coaching matrix", roles: null },
+  { id: "management-health", label: "Management Health", icon: ShieldCheck, hint: "HR oversight: BU heat map, HRBP engagement & support risk", roles: ["Admin Level 2"] },
+  { id: "talent", label: "Talent", icon: Users, hint: "Succession pipeline & leader triage", roles: null },
+  { id: "workforce", label: "Workforce", icon: Heart, hint: "Retention, stability & engagement", roles: null },
 ];
 
-export default function HubLensToggle({ activeLens, onLensChange }) {
+export default function HubLensToggle({ activeLens, onLensChange, appRole }) {
+  const visibleLenses = LENSES.filter((lens) => !lens.roles || (appRole && lens.roles.includes(appRole)));
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-1.5 flex flex-wrap items-center gap-1">
-      {LENSES.map((lens) => {
+      {visibleLenses.map((lens) => {
         const Icon = lens.icon;
         const active = activeLens === lens.id;
         return (
