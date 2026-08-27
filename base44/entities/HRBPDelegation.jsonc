@@ -1,0 +1,182 @@
+{
+  "name": "HRBPDelegation",
+  "type": "object",
+  "properties": {
+    "from_hrbp_email": {
+      "type": "string",
+      "description": "Email of the HRBP delegating their portfolio"
+    },
+    "to_hrbp_email": {
+      "type": "string",
+      "description": "Email of the backup HRBP receiving the delegation"
+    },
+    "scope": {
+      "type": "string",
+      "enum": [
+        "all",
+        "assignment"
+      ],
+      "default": "all",
+      "description": "all = entire portfolio; assignment = a single portfolio assignment (use assignment_id)"
+    },
+    "assignment_id": {
+      "type": "string",
+      "description": "HRBPPortfolio ID being delegated (used when scope is 'assignment')"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Optional delegation start date. If null, active immediately."
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Optional delegation end date. If null, open-ended until revoked."
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "leave",
+        "vacation",
+        "termination",
+        "other"
+      ],
+      "description": "Why the delegation was created"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "revoked"
+      ],
+      "default": "active",
+      "description": "active = delegation in effect; revoked = manually ended"
+    },
+    "created_by_email": {
+      "type": "string",
+      "description": "Who created the delegation (the HRBP themselves or an admin on their behalf)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal notes about this delegation"
+    }
+  },
+  "required": [
+    "from_hrbp_email",
+    "to_hrbp_email",
+    "scope"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.from_hrbp_email": "{{user.email}}"
+        },
+        {
+          "data.to_hrbp_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "data.from_hrbp_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.from_hrbp_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.from_hrbp_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        }
+      ]
+    }
+  }
+}

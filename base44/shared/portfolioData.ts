@@ -171,16 +171,51 @@ export function buildManagerBundle(user, signals) {
 }
 
 /**
- * Resolve managers from BU-scoped portfolio assignments by querying users
- * in the matching department(s) who appear to be managers.
+ * Resolve a list of HRBPPortfolio assignments into a deduplicated manager
+ * list. Supports all three assignment types: explicit (manager emails),
+ * business_unit (BU/department/team node), and client (whole Client org).
+ * Fetches the user list once and resolves all scopes from it.
  */
-export async function resolveBUManagers(base44, buScopes) {
-  if (!buScopes || buScopes.length === 0) return [];
+export async function resolvePortfolioManagers(base44, portfolios) {
+  if (!portfolios || portfolios.length === 0) return [];
 
-  const departments = [...new Set(buScopes.map((s) => s.department).filter(Boolean))];
-  if (departments.length === 0) return [];
+  const explicitEmails = new Set();
+  const buScopes = [];
+  const clientIds = new Set();
+  for (const p of portfolios) {
+    if (p.assignment_type === "explicit" && p.manager_emails) {
+      p.manager_emails.forEach((e) => explicitEmails.add(e));
+    } else if (p.assignment_type === "business_unit") {
+      buScopes.push({
+        business_unit: p.business_unit,
+        department: p.department,
+        team: p.team,
+      });
+    } else if (p.assignment_type === "client" && p.scope_client_id) {
+      clientIds.add(p.scope_client_id);
+    }
+  }
 
   const allUsers = await base44.asServiceRole.entities.User.list(500);
+  const explicitManagers = resolveExplicitManagers(allUsers, [...explicitEmails]);
+  const buManagers = resolveBUManagersFromUsers(allUsers, buScopes);
+  const clientManagers = resolveClientManagersFromUsers(allUsers, [...clientIds]);
+
+  const seenEmails = new Set();
+  return [...explicitManagers, ...buManagers, ...clientManagers].filter((m) => {
+    if (seenEmails.has(m.email)) return false;
+    seenEmails.add(m.email);
+    return true;
+  });
+}
+
+/**
+ * Resolve managers from BU-scoped portfolio assignments (by department).
+ */
+export function resolveBUManagersFromUsers(allUsers, buScopes) {
+  if (!buScopes || buScopes.length === 0) return [];
+  const departments = [...new Set(buScopes.map((s) => s.department).filter(Boolean))];
+  if (departments.length === 0) return [];
   return allUsers.filter(
     (u) =>
       departments.includes(u.department) &&
@@ -188,6 +223,32 @@ export async function resolveBUManagers(base44, buScopes) {
         (u.leadership_level || "").includes("Leading") ||
         u.app_role === "User Level 2")
   );
+}
+
+/**
+ * Resolve all managers within one or more whole Client organizations.
+ */
+export function resolveClientManagersFromUsers(allUsers, clientIds) {
+  if (!clientIds || clientIds.length === 0) return [];
+  return allUsers.filter((u) => {
+    const uClientId = u.client_id || u.data?.client_id;
+    return (
+      clientIds.includes(uClientId) &&
+      (u.subordinate_emails?.length > 0 ||
+        (u.leadership_level || "").includes("Leading") ||
+        u.app_role === "User Level 2")
+    );
+  });
+}
+
+/**
+ * Resolve managers from BU-scoped portfolio assignments by querying users
+ * in the matching department(s) who appear to be managers.
+ */
+export async function resolveBUManagers(base44, buScopes) {
+  if (!buScopes || buScopes.length === 0) return [];
+  const allUsers = await base44.asServiceRole.entities.User.list(500);
+  return resolveBUManagersFromUsers(allUsers, buScopes);
 }
 
 /**
