@@ -273,25 +273,46 @@ export default function OrgInsightsView({ user, onMetricsUpdate, actionsRef }) {
     return startOfDay(addDays(new Date(), 1));
   };
 
+  // Portfolio scope: for HRBP users, narrow email-keyed data to the managers in
+  // their resolved portfolio (incl. delegated coverage) so every lens reflects
+  // their portfolio rather than the whole org. Non-HRBP users get raw org data.
+  const portfolioEmails = portfolioScope.emails;
+  const isPortfolioScoped = appRole === 'HRBP' && portfolioEmails instanceof Set && portfolioEmails.size > 0;
+
+  const portfolioScopedRawData = useMemo(() => {
+    if (!isPortfolioScoped) return rawData;
+    const has = (e) => !!e && portfolioEmails.has(e);
+    return {
+      ...rawData,
+      allUsers: rawData.allUsers.filter(u => has(u.email)),
+      assessments: rawData.assessments.filter(a => has(a.email ?? a.data?.email)),
+      goals: rawData.goals.filter(g => has(g.user_email ?? g.data?.user_email)),
+      assignedLearning: rawData.assignedLearning.filter(l => has(l.user_email ?? l.data?.user_email)),
+      journeyEnrollments: rawData.journeyEnrollments.filter(j => has(j.user_email ?? j.data?.user_email)),
+      assessmentInsights: rawData.assessmentInsights.filter(i => has(i.user_email ?? i.data?.user_email)),
+      // workforceMetrics intentionally left org-wide (not email-keyed)
+    };
+  }, [rawData, isPortfolioScoped, portfolioEmails]);
+
   // Narrow the entire dataset to users in the selected lifecycle stage.
-  // When no stage is selected, stageScopedData === rawData (no narrowing).
+  // When no stage is selected, stageScopedData === portfolioScopedRawData.
   const stageScopedData = useMemo(() => {
-    if (!activeLifecycleStage) return rawData;
+    if (!activeLifecycleStage) return portfolioScopedRawData;
     const stageEmails = new Set(
-      rawData.allUsers
+      portfolioScopedRawData.allUsers
         .filter(u => deriveLeadershipStage(u) === activeLifecycleStage)
         .map(u => u.email)
     );
     return {
-      ...rawData,
-      allUsers: rawData.allUsers.filter(u => stageEmails.has(u.email)),
-      assessments: rawData.assessments.filter(a => stageEmails.has(a.email)),
-      goals: rawData.goals.filter(g => stageEmails.has(g.user_email)),
-      assignedLearning: rawData.assignedLearning.filter(l => stageEmails.has(l.user_email)),
-      journeyEnrollments: rawData.journeyEnrollments.filter(j => stageEmails.has(j.user_email)),
-      assessmentInsights: rawData.assessmentInsights.filter(i => stageEmails.has(i.user_email)),
+      ...portfolioScopedRawData,
+      allUsers: portfolioScopedRawData.allUsers.filter(u => stageEmails.has(u.email)),
+      assessments: portfolioScopedRawData.assessments.filter(a => stageEmails.has(a.email)),
+      goals: portfolioScopedRawData.goals.filter(g => stageEmails.has(g.user_email)),
+      assignedLearning: portfolioScopedRawData.assignedLearning.filter(l => stageEmails.has(l.user_email)),
+      journeyEnrollments: portfolioScopedRawData.journeyEnrollments.filter(j => stageEmails.has(j.user_email)),
+      assessmentInsights: portfolioScopedRawData.assessmentInsights.filter(i => stageEmails.has(i.user_email)),
     };
-  }, [rawData, activeLifecycleStage]);
+  }, [portfolioScopedRawData, activeLifecycleStage]);
 
   const filteredData = useMemo(() => {
     const cutoffDate = getDateCutoff();
@@ -1259,23 +1280,23 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
       {activeLens === 'enterprise' && (() => {
         // Derive unique departments from users for the filter dropdown
         const departments = [...new Set(
-          rawData.allUsers.map(u => u.department).filter(Boolean)
+          portfolioScopedRawData.allUsers.map(u => u.department).filter(Boolean)
         )].sort();
 
         // Filter correlationData by selected matrixDepartment
         let matrixFilteredCorrelation = chartData.correlationData;
         if (matrixDepartment !== 'all') {
           const deptEmails = new Set(
-            rawData.allUsers.filter(u => u.department === matrixDepartment).map(u => u.email)
+            portfolioScopedRawData.allUsers.filter(u => u.department === matrixDepartment).map(u => u.email)
           );
           matrixFilteredCorrelation = matrixFilteredCorrelation.filter(d => {
-            const email = rawData.allUsers.find(u => u.full_name === d.name || u.full_name?.split(' ')[0] === d.name)?.email;
+            const email = portfolioScopedRawData.allUsers.find(u => u.full_name === d.name || u.full_name?.split(' ')[0] === d.name)?.email;
             return deptEmails.has(email);
           });
           // Fallback: match by name substring against email prefix
           if (matrixFilteredCorrelation.length === 0) {
             const deptNameSet = new Set(
-              rawData.allUsers.filter(u => u.department === matrixDepartment).map(u => u.full_name || u.email?.split('@')[0])
+              portfolioScopedRawData.allUsers.filter(u => u.department === matrixDepartment).map(u => u.full_name || u.email?.split('@')[0])
             );
             matrixFilteredCorrelation = chartData.correlationData.filter(d => deptNameSet.has(d.name));
           }
