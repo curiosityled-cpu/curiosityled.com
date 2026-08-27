@@ -7,6 +7,7 @@ import {
 } from "../../shared/portfolioData.ts";
 
 const HEAD_OF_HR_ROLES = [
+  "HRBP",
   "Admin Level 2",
   "Super Administrator",
   "Platform Admin",

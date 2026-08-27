@@ -92,7 +92,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate, actionsRef }) {
   const appRole = user?.data?.app_role || user?.app_role || '';
   const isExecutiveRole = ['Super Administrator', 'Admin Level 2', 'Analyst'].some(r => appRole.includes(r));
   const [displayPreset, setDisplayPreset] = useState(isExecutiveRole ? 'executive' : 'practitioner');
-  const [activeLens, setActiveLens] = useState(appRole === 'Admin Level 2' ? 'hrbp' : 'enterprise');
+  const [activeLens, setActiveLens] = useState(appRole === 'HRBP' ? 'hrbp' : 'enterprise');
   // Allow user override — track which sections the user has manually expanded
   const [userExpandedSections, setUserExpandedSections] = useState({});
   const toggleUserExpand = (section) => setUserExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
@@ -952,7 +952,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
 
       {/* ── Lens toggle — group sections by focus area ─────────────────────── */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-        <HubLensToggle activeLens={activeLens} onLensChange={setActiveLens} showHRBPLens={appRole === 'Admin Level 2'} />
+        <HubLensToggle activeLens={activeLens} onLensChange={setActiveLens} showHRBPLens={appRole === 'HRBP'} />
       </motion.div>
 
       {/* ── LAYERS 3–5: Lens-grouped sections ─────────────────────────────── */}
@@ -1075,7 +1075,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         );
 
         // Build the ordered section list based on active stage
-        const HeadOfHRSection = appRole === 'Admin Level 2' ? <HeadOfHRManagementHealth /> : null;
+        const HeadOfHRSection = appRole === 'HRBP' ? <HeadOfHRManagementHealth /> : null;
 
         const WellbeingSection = (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>

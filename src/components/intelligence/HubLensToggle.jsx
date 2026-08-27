@@ -4,11 +4,11 @@ import { Building2, Shield, Users, Heart } from "lucide-react";
 /**
  * Segmented lens toggle for the Leadership Intelligence Hub.
  * Groups the Hub's cards into focused views so only one group renders at a time.
- * The HRBP lens is gated to Head-of-HR / HRBP roles via showHRBPLens.
+ * The HRBP lens is gated to HRBP roles via showHRBPLens.
  */
 const LENSES = [
-  { id: "enterprise", label: "Enterprise", icon: Building2, hint: "Org-wide leadership capability & trends" },
   { id: "hrbp", label: "HRBP", icon: Shield, hint: "HRBP / Head-of-HR management health", gated: true },
+  { id: "enterprise", label: "Enterprise", icon: Building2, hint: "Org-wide leadership capability & trends" },
   { id: "talent", label: "Talent", icon: Users, hint: "Succession pipeline & leader triage" },
   { id: "workforce", label: "Workforce", icon: Heart, hint: "Retention, stability & engagement" },
 ];
