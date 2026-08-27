@@ -122,6 +122,35 @@ export default function EditUserModal({ open, onOpenChange, editingUser, setEdit
             </div>
 
             <div>
+              <Label>Leadership Start Date</Label>
+              <Input
+                type="date"
+                value={editingUser.leadership_start_date || ''}
+                onChange={(e) => setEditingUser({ ...editingUser, leadership_start_date: e.target.value || null })}
+              />
+              <p className="text-xs text-gray-500 mt-1">When they became a leader. Falls back to Start Date if empty. Set to the promotion date for newly-promoted leaders.</p>
+            </div>
+
+            <div>
+              <Label>Leadership Lifecycle Stage</Label>
+              <Select
+                value={editingUser.leadership_lifecycle_stage || 'auto'}
+                onValueChange={(value) => setEditingUser({ ...editingUser, leadership_lifecycle_stage: value === 'auto' ? null : value })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">Auto (derived from date)</SelectItem>
+                  <SelectItem value="attraction">Attraction</SelectItem>
+                  <SelectItem value="onboarding">Onboarding</SelectItem>
+                  <SelectItem value="development">Development</SelectItem>
+                  <SelectItem value="performance">Performance</SelectItem>
+                  <SelectItem value="retention">Retention</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500 mt-1">Override the auto-derived stage for edge cases (e.g. tag a high-potential as Attraction).</p>
+            </div>
+
+            <div>
               <Label>Addon Role</Label>
               <Select value={editingUser.custom_role_id || 'none'} onValueChange={(value) => setEditingUser({ ...editingUser, custom_role_id: value === 'none' ? null : value })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
