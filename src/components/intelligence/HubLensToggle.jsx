@@ -7,8 +7,8 @@ import { Building2, Shield, Users, Heart } from "lucide-react";
  * The HRBP lens is gated to Head-of-HR / HRBP roles via showHRBPLens.
  */
 const LENSES = [
-  { id: "enterprise", label: "Enterprise", icon: Building2, hint: "Org-wide leadership capability & trends" },
   { id: "hrbp", label: "HRBP", icon: Shield, hint: "HRBP / Head-of-HR management health", gated: true },
+  { id: "enterprise", label: "Enterprise", icon: Building2, hint: "Org-wide leadership capability & trends" },
   { id: "talent", label: "Talent", icon: Users, hint: "Succession pipeline & leader triage" },
   { id: "workforce", label: "Workforce", icon: Heart, hint: "Retention, stability & engagement" },
 ];
