@@ -14,6 +14,10 @@ import {
   BAND_LABELS,
   TREND_LABELS,
 } from "@/lib/portfolio/managerStatus";
+import PortfolioAssignmentManager from "@/components/portfolio/PortfolioAssignmentManager";
+import PortfolioDelegationManager from "@/components/portfolio/PortfolioDelegationManager";
+
+const HR_ADMIN_ROLES = ["Admin Level 2", "Super Administrator", "Platform Admin", "Partner Business Administrator"];
 
 export default function Portfolio() {
   const { user } = useAuth();
@@ -41,6 +45,9 @@ export default function Portfolio() {
 
   const managers = data?.managers || [];
   const interventions = data?.interventions || [];
+
+  const appRole = user?.app_role || user?.data?.app_role || user?.role;
+  const isAdmin = HR_ADMIN_ROLES.includes(appRole);
 
   // Compute statuses
   const managerStatuses = useMemo(() => {
@@ -138,7 +145,7 @@ export default function Portfolio() {
     );
   }
 
-  if (managers.length === 0) {
+  if (managers.length === 0 && !isAdmin) {
     return (
       <MVPPageLayout title="My Portfolio" subtitle="Manager support intelligence">
         <Card className="border-dashed">
@@ -151,6 +158,18 @@ export default function Portfolio() {
             </p>
           </CardContent>
         </Card>
+      </MVPPageLayout>
+    );
+  }
+
+  // HR Admins manage assignments + delegations here
+  if (isAdmin) {
+    return (
+      <MVPPageLayout title="HRBP Portfolio Management" subtitle="Assign portfolios & manage delegations">
+        <div className="space-y-6">
+          <PortfolioAssignmentManager />
+          <PortfolioDelegationManager />
+        </div>
       </MVPPageLayout>
     );
   }
@@ -177,6 +196,9 @@ export default function Portfolio() {
             })
           }
         />
+
+        {/* Self-delegation controls */}
+        <PortfolioDelegationManager />
       </div>
     </MVPPageLayout>
   );

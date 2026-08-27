@@ -83,7 +83,7 @@ function Insights() {
   const canViewPersonal = hasPermission('personal.insights.view');
   const canViewTeamInsights = hasPermission('team.insights.view');
   // Org analytics: explicit permission OR role-level access for Analyst / HR Admin / Super Admin / Platform Admin
-  const ORG_ANALYTICS_ROLES = ['Platform Admin', 'Super Administrator', 'Partner Business Administrator', 'Analyst', 'Executive', 'Admin Level 2', 'Admin Level 1'];
+  const ORG_ANALYTICS_ROLES = ['Platform Admin', 'Super Administrator', 'Partner Business Administrator', 'Analyst', 'Executive', 'Admin Level 2', 'Admin Level 1', 'HRBP'];
   const canViewOrgInsights = hasPermission('analytics.insights.view') || ORG_ANALYTICS_ROLES.includes(appRole);
 
   // Portfolio view: HRBP role sees their own portfolio

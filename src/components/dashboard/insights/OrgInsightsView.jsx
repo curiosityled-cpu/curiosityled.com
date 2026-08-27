@@ -56,6 +56,8 @@ import HubStickyBar from "@/components/intelligence/HubStickyBar";
 import ConnectionModule from "@/components/intelligence/ConnectionModule";
 import HubLensToggle from "@/components/intelligence/HubLensToggle";
 import HeadOfHRManagementHealth from "@/components/portfolio/HeadOfHRManagementHealth";
+import PortfolioInsightsView from "@/components/portfolio/PortfolioInsightsView";
+import HRBPPortfolioIntelligence from "@/components/portfolio/HRBPPortfolioIntelligence";
 import { deriveLeadershipStage } from "@/lib/lifecycleStage";
 
 // Map AI-generated dashboard names to actual MVP routes
@@ -94,6 +96,8 @@ export default function OrgInsightsView({ user, onMetricsUpdate, actionsRef }) {
   const isExecutiveRole = ['Super Administrator', 'Admin Level 2', 'Analyst'].some(r => appRole.includes(r));
   const [displayPreset, setDisplayPreset] = useState(isExecutiveRole ? 'executive' : 'practitioner');
   const [activeLens, setActiveLens] = useState(['HRBP', 'Admin Level 2', 'Super Administrator'].includes(appRole) ? 'hrbp' : 'enterprise');
+  const [hrbpLensTab, setHrbpLensTab] = useState('intelligence');
+  const [portfolioScope, setPortfolioScope] = useState({ emails: null, loading: true });
   // Allow user override — track which sections the user has manually expanded
   const [userExpandedSections, setUserExpandedSections] = useState({});
   const toggleUserExpand = (section) => setUserExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
@@ -148,6 +152,23 @@ export default function OrgInsightsView({ user, onMetricsUpdate, actionsRef }) {
       loadAllData();
     }
   }, [user]);
+
+  // HRBP lens: fetch portfolio manager scope (incl. delegated coverage) for scoping
+  useEffect(() => {
+    if (appRole !== 'HRBP') return;
+    let active = true;
+    setPortfolioScope((prev) => ({ ...prev, loading: true }));
+    base44.functions.invoke('resolveHRBPPortfolio', { scope_only: true })
+      .then((res) => {
+        if (!active) return;
+        setPortfolioScope({ emails: new Set(res.data?.manager_emails || []), loading: false });
+      })
+      .catch(() => {
+        if (!active) return;
+        setPortfolioScope({ emails: new Set(), loading: false });
+      });
+    return () => { active = false; };
+  }, [appRole]);
 
   const loadAllData = async () => {
     setLoading(true);
@@ -1099,6 +1120,39 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         // Build the ordered section list based on active stage
         const HeadOfHRSection = appRole === 'Admin Level 2' ? <HeadOfHRManagementHealth /> : null;
 
+        // HRBP-role lens: portfolio-scoped intelligence + a My Portfolio case-management tab.
+        const HRBPLensContent = appRole === 'HRBP' ? (
+          <div className="space-y-5">
+            <div className="flex gap-2 bg-white border border-gray-200 rounded-xl p-1 w-fit">
+              {[
+                { id: 'intelligence', label: 'Intelligence' },
+                { id: 'portfolio', label: 'My Portfolio' },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setHrbpLensTab(t.id)}
+                  className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all select-none ${
+                    hrbpLensTab === t.id
+                      ? 'bg-[#0202ff] text-white'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            {hrbpLensTab === 'intelligence' ? (
+              <HRBPPortfolioIntelligence
+                portfolioEmails={portfolioScope.emails}
+                filteredData={filteredData}
+                loading={portfolioScope.loading}
+              />
+            ) : (
+              <PortfolioInsightsView user={user} />
+            )}
+          </div>
+        ) : null;
+
         const WellbeingSection = (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
             <div className="space-y-3">
@@ -1112,7 +1166,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         );
 
         const lensSections = {
-          'hrbp': [HeadOfHRSection],
+          'hrbp': appRole === 'HRBP' ? [HRBPLensContent] : [HeadOfHRSection],
           'enterprise': [OrgHealthSection, WellbeingSection],
           talent: [TalentSection],
           workforce: [WorkforceEngagementSection],
