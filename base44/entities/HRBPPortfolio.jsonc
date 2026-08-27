@@ -14,9 +14,10 @@
       "type": "string",
       "enum": [
         "explicit",
-        "business_unit"
+        "business_unit",
+        "client"
       ],
-      "description": "Explicit = specific manager emails; business_unit = auto-include all managers under a BU/department/team node"
+      "description": "explicit = specific manager emails; business_unit = auto-include managers under a BU/department/team node; client = all managers in a whole Client organization"
     },
     "manager_emails": {
       "type": "array",
@@ -36,6 +37,10 @@
     "team": {
       "type": "string",
       "description": "Team identifier (optional, for BU-scoped assignments)"
+    },
+    "scope_client_id": {
+      "type": "string",
+      "description": "Client organization ID whose managers are all included (used when assignment_type is 'client')"
     },
     "label": {
       "type": "string",
@@ -100,11 +105,6 @@
       "$or": [
         {
           "user_condition": {
-            "role": "Admin Level 1"
-          }
-        },
-        {
-          "user_condition": {
             "role": "Admin Level 2"
           }
         },
@@ -127,11 +127,6 @@
     },
     "update": {
       "$or": [
-        {
-          "user_condition": {
-            "role": "Admin Level 1"
-          }
-        },
         {
           "user_condition": {
             "role": "Admin Level 2"
@@ -169,6 +164,11 @@
         {
           "user_condition": {
             "role": "Platform Admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
           }
         }
       ]
