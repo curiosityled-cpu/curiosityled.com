@@ -26,7 +26,7 @@ export default function HeadOfHRManagementHealth() {
       const res = await base44.functions.invoke("getHeadOfHRInsights", {});
       setData(res.data);
     } catch (e) {
-      setError(e.message || "Failed to load management health data");
+      setError(e.message || "Failed to load portfolio health data");
     } finally {
       setLoading(false);
     }
@@ -136,8 +136,8 @@ export default function HeadOfHRManagementHealth() {
           <Brain className="w-4 h-4 text-[#0202ff]" />
         </div>
         <div>
-          <h2 className="text-base font-bold text-gray-900">Management Health</h2>
-          <p className="text-xs text-gray-500">Org-wide manager capability and support risk</p>
+          <h2 className="text-base font-bold text-gray-900">Portfolio Health</h2>
+          <p className="text-xs text-gray-500">Portfolio-wide manager capability and support risk</p>
         </div>
       </div>
 

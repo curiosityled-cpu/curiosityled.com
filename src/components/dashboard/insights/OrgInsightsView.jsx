@@ -58,6 +58,8 @@ import HubLensToggle from "@/components/intelligence/HubLensToggle";
 import HeadOfHRManagementHealth from "@/components/portfolio/HeadOfHRManagementHealth";
 import PortfolioInsightsView from "@/components/portfolio/PortfolioInsightsView";
 import HRBPPortfolioIntelligence from "@/components/portfolio/HRBPPortfolioIntelligence";
+import PortfolioAssignmentManager from "@/components/portfolio/PortfolioAssignmentManager";
+import PortfolioDelegationManager from "@/components/portfolio/PortfolioDelegationManager";
 import { deriveLeadershipStage } from "@/lib/lifecycleStage";
 
 // Map AI-generated dashboard names to actual MVP routes
@@ -1120,14 +1122,20 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         // Build the ordered section list based on active stage
         const HeadOfHRSection = appRole === 'Admin Level 2' ? <HeadOfHRManagementHealth /> : null;
 
-        // HRBP-role lens: portfolio-scoped intelligence + a My Portfolio case-management tab.
-        const HRBPLensContent = appRole === 'HRBP' ? (
+        // HRBP lens: portfolio-scoped intelligence + a portfolio case-management tab.
+        // HRBP role sees their own scoped portfolio; HR Admin / Super Admin see
+        // portfolio health plus portfolio management tools.
+        const isHRBPRole = appRole === 'HRBP';
+        const isAdminLens = ['Admin Level 2', 'Super Administrator'].includes(appRole);
+        const showHRBPLensContent = isHRBPRole || isAdminLens;
+        const hrbpTabs = isHRBPRole
+          ? [{ id: 'intelligence', label: 'Intelligence' }, { id: 'portfolio', label: 'My Portfolio' }]
+          : [{ id: 'intelligence', label: 'Portfolio Health' }, { id: 'portfolio', label: 'Manage Portfolios' }];
+
+        const HRBPLensContent = showHRBPLensContent ? (
           <div className="space-y-5">
             <div className="flex gap-2 bg-white border border-gray-200 rounded-xl p-1 w-fit">
-              {[
-                { id: 'intelligence', label: 'Intelligence' },
-                { id: 'portfolio', label: 'My Portfolio' },
-              ].map((t) => (
+              {hrbpTabs.map((t) => (
                 <button
                   key={t.id}
                   onClick={() => setHrbpLensTab(t.id)}
@@ -1142,13 +1150,22 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
               ))}
             </div>
             {hrbpLensTab === 'intelligence' ? (
-              <HRBPPortfolioIntelligence
-                portfolioEmails={portfolioScope.emails}
-                filteredData={filteredData}
-                loading={portfolioScope.loading}
-              />
-            ) : (
+              isHRBPRole ? (
+                <HRBPPortfolioIntelligence
+                  portfolioEmails={portfolioScope.emails}
+                  filteredData={filteredData}
+                  loading={portfolioScope.loading}
+                />
+              ) : (
+                <HeadOfHRManagementHealth />
+              )
+            ) : isHRBPRole ? (
               <PortfolioInsightsView user={user} />
+            ) : (
+              <div className="space-y-6">
+                <PortfolioAssignmentManager />
+                <PortfolioDelegationManager />
+              </div>
             )}
           </div>
         ) : null;
@@ -1166,7 +1183,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         );
 
         const lensSections = {
-          'hrbp': appRole === 'HRBP' ? [HRBPLensContent] : [HeadOfHRSection],
+          'hrbp': showHRBPLensContent ? [HRBPLensContent] : [HeadOfHRSection],
           'enterprise': [OrgHealthSection, WellbeingSection],
           talent: [TalentSection],
           workforce: [WorkforceEngagementSection],
