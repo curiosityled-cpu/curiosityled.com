@@ -55,11 +55,7 @@ import HubExecutivePulse from "@/components/intelligence/HubExecutivePulse";
 import HubStickyBar from "@/components/intelligence/HubStickyBar";
 import ConnectionModule from "@/components/intelligence/ConnectionModule";
 import HubLensToggle from "@/components/intelligence/HubLensToggle";
-import HeadOfHRManagementHealth from "@/components/portfolio/HeadOfHRManagementHealth";
-import PortfolioInsightsView from "@/components/portfolio/PortfolioInsightsView";
-import HRBPPortfolioIntelligence from "@/components/portfolio/HRBPPortfolioIntelligence";
-import PortfolioAssignmentManager from "@/components/portfolio/PortfolioAssignmentManager";
-import PortfolioDelegationManager from "@/components/portfolio/PortfolioDelegationManager";
+import HRBPLensContent from "@/components/portfolio/HRBPLensContent";
 import { deriveLeadershipStage } from "@/lib/lifecycleStage";
 
 // Map AI-generated dashboard names to actual MVP routes
@@ -98,7 +94,6 @@ export default function OrgInsightsView({ user, onMetricsUpdate, actionsRef }) {
   const isExecutiveRole = ['Super Administrator', 'Admin Level 2', 'Analyst'].some(r => appRole.includes(r));
   const [displayPreset, setDisplayPreset] = useState(isExecutiveRole ? 'executive' : 'practitioner');
   const [activeLens, setActiveLens] = useState(['HRBP', 'Admin Level 2', 'Super Administrator'].includes(appRole) ? 'hrbp' : 'enterprise');
-  const [hrbpLensTab, setHrbpLensTab] = useState('intelligence');
   const [portfolioScope, setPortfolioScope] = useState({ emails: null, loading: true });
   // Allow user override — track which sections the user has manually expanded
   const [userExpandedSections, setUserExpandedSections] = useState({});
@@ -1140,57 +1135,6 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
           </div>
         );
 
-        // Build the ordered section list based on active stage
-        const HeadOfHRSection = appRole === 'Admin Level 2' ? <HeadOfHRManagementHealth /> : null;
-
-        // HRBP lens: portfolio-scoped intelligence + a portfolio case-management tab.
-        // HRBP role sees their own scoped portfolio; HR Admin / Super Admin see
-        // portfolio health plus portfolio management tools.
-        const isHRBPRole = appRole === 'HRBP';
-        const isAdminLens = ['Admin Level 2', 'Super Administrator'].includes(appRole);
-        const showHRBPLensContent = isHRBPRole || isAdminLens;
-        const hrbpTabs = isHRBPRole
-          ? [{ id: 'intelligence', label: 'Intelligence' }, { id: 'portfolio', label: 'My Portfolio' }]
-          : [{ id: 'intelligence', label: 'Portfolio Health' }, { id: 'portfolio', label: 'Manage Portfolios' }];
-
-        const HRBPLensContent = showHRBPLensContent ? (
-          <div className="space-y-5">
-            <div className="flex gap-2 bg-white border border-gray-200 rounded-xl p-1 w-fit">
-              {hrbpTabs.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => setHrbpLensTab(t.id)}
-                  className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all select-none ${
-                    hrbpLensTab === t.id
-                      ? 'bg-[#0202ff] text-white'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-            {hrbpLensTab === 'intelligence' ? (
-              isHRBPRole ? (
-                <HRBPPortfolioIntelligence
-                  portfolioEmails={portfolioScope.emails}
-                  filteredData={filteredData}
-                  loading={portfolioScope.loading}
-                />
-              ) : (
-                <HeadOfHRManagementHealth />
-              )
-            ) : isHRBPRole ? (
-              <PortfolioInsightsView user={user} />
-            ) : (
-              <div className="space-y-6">
-                <PortfolioAssignmentManager />
-                <PortfolioDelegationManager />
-              </div>
-            )}
-          </div>
-        ) : null;
-
         const WellbeingSection = (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
             <div className="space-y-3">
@@ -1204,7 +1148,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         );
 
         const lensSections = {
-          'hrbp': showHRBPLensContent ? [HRBPLensContent] : [HeadOfHRSection],
+          'hrbp': [<HRBPLensContent appRole={appRole} />],
           'enterprise': [OrgHealthSection, WellbeingSection],
           talent: [TalentSection],
           workforce: [WorkforceEngagementSection],

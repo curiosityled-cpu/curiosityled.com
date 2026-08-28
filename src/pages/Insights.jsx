@@ -56,7 +56,7 @@ function Insights() {
   const getInitialView = () => {
     if (tabParam === 'org') return VIEW_SCOPES.ORG;
     if (tabParam === 'portfolio') return VIEW_SCOPES.PORTFOLIO;
-    if (appRole === 'HRBP') return VIEW_SCOPES.PORTFOLIO;
+    if (appRole === 'HRBP') return VIEW_SCOPES.ORG;
     const ORG_DEFAULT_ROLES = ['Platform Admin', 'Super Administrator', 'Partner Business Administrator', 'Analyst', 'Executive', 'Admin Level 2', 'Admin Level 1'];
     if (ORG_DEFAULT_ROLES.includes(appRole)) return VIEW_SCOPES.ORG;
     return VIEW_SCOPES.MY;
@@ -86,8 +86,8 @@ function Insights() {
   const ORG_ANALYTICS_ROLES = ['Platform Admin', 'Super Administrator', 'Partner Business Administrator', 'Analyst', 'Executive', 'Admin Level 2', 'Admin Level 1', 'HRBP'];
   const canViewOrgInsights = hasPermission('analytics.insights.view') || ORG_ANALYTICS_ROLES.includes(appRole);
 
-  // Portfolio view: HRBP role sees their own portfolio
-  const canViewPortfolio = appRole === 'HRBP';
+  // Portfolio view: HRBP portfolio now lives in the Hub's HRBP lens (Portfolio Health tab)
+  const canViewPortfolio = false;
 
   // Program admin insights require program management permissions
   const canViewAdminInsights = hasPermission('programs.view');

@@ -80,8 +80,7 @@ const NAV_CONFIG = {
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }],
 
   hrbp: [
-  { label: 'Portfolio', path: '/portfolio', icon: Users },
-  { label: 'Leadership Intelligence', path: '/Insights?tab=portfolio', icon: Brain },
+  { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }]
 
 };
