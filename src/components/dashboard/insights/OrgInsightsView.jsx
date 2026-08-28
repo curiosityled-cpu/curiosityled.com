@@ -268,15 +268,19 @@ export default function OrgInsightsView({ user, onMetricsUpdate, actionsRef }) {
     return startOfDay(addDays(new Date(), 1));
   };
 
-  // Portfolio scope: for HRBP users, narrow email-keyed data to the managers in
-  // their resolved portfolio (incl. delegated coverage) so every lens reflects
-  // their portfolio rather than the whole org. Non-HRBP users get raw org data.
+  // Portfolio scope: HRBP users ALWAYS see only their resolved portfolio
+  // (own assignments + active delegations) across every lens — never the whole
+  // org, even while the scope is loading or the portfolio is empty. Non-HRBP
+  // users get raw org data. workforceMetrics is gated by RLS (HRBPs read none).
   const portfolioEmails = portfolioScope.emails;
-  const isPortfolioScoped = appRole === 'HRBP' && portfolioEmails instanceof Set && portfolioEmails.size > 0;
+  const isHRBPRole = appRole === 'HRBP';
+  const isPortfolioScoped = isHRBPRole;
 
   const portfolioScopedRawData = useMemo(() => {
     if (!isPortfolioScoped) return rawData;
-    const has = (e) => !!e && portfolioEmails.has(e);
+    // While the portfolio is still resolving (null) or empty, `has` is always
+    // false — so an HRBP with no assignments sees empty lenses, not org-wide data.
+    const has = (e) => !!e && portfolioEmails instanceof Set && portfolioEmails.has(e);
     return {
       ...rawData,
       allUsers: rawData.allUsers.filter(u => has(u.email)),
@@ -285,7 +289,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate, actionsRef }) {
       assignedLearning: rawData.assignedLearning.filter(l => has(l.user_email ?? l.data?.user_email)),
       journeyEnrollments: rawData.journeyEnrollments.filter(j => has(j.user_email ?? j.data?.user_email)),
       assessmentInsights: rawData.assessmentInsights.filter(i => has(i.user_email ?? i.data?.user_email)),
-      // workforceMetrics intentionally left org-wide (not email-keyed)
+      // workforceMetrics intentionally left org-wide (HRBPs read none via RLS)
     };
   }, [rawData, isPortfolioScoped, portfolioEmails]);
 
@@ -552,12 +556,12 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
   useEffect(() => {
     if (onMetricsUpdate) {
       onMetricsUpdate({
-        totalInsights: rawData.assessmentInsights.length || aiInsights.length || 0,
+        totalInsights: portfolioScopedRawData.assessmentInsights.length || aiInsights.length || 0,
         actionItems: strategicOpportunities.length + strategicRisks.length,
         completionRate: metrics.goalCompletionRate
       });
     }
-  }, [rawData.assessmentInsights.length, aiInsights.length, strategicOpportunities.length, strategicRisks.length, metrics.goalCompletionRate]);
+  }, [portfolioScopedRawData.assessmentInsights.length, aiInsights.length, strategicOpportunities.length, strategicRisks.length, metrics.goalCompletionRate]);
 
   const chartData = useMemo(() => {
     const { assessments, goals, assignedLearning } = filteredData;
@@ -658,7 +662,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
       },
       exportCSV: () => {
         const { assessments, goals, assignedLearning, journeyEnrollments } = filteredData;
-        const { allUsers, assessmentInsights, workforceMetrics } = rawData;
+        const { allUsers, assessmentInsights, workforceMetrics } = portfolioScopedRawData;
 
         const sections = [];
 
@@ -907,7 +911,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         }
       },
     };
-  }, [filteredData, metrics, executiveBriefing, aiInsights, strategicRisks, strategicOpportunities, loading, rawData]);
+  }, [filteredData, metrics, executiveBriefing, aiInsights, strategicRisks, strategicOpportunities, loading, portfolioScopedRawData]);
 
   if (loading) {
     return (
@@ -1015,6 +1019,22 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <HubLensToggle activeLens={activeLens} onLensChange={setActiveLens} showHRBPLens={['HRBP', 'Admin Level 2', 'Super Administrator'].includes(appRole)} />
       </motion.div>
+
+      {/* Portfolio scope indicator — HRBPs see only their resolved portfolio */}
+      {isHRBPRole && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }}>
+          <div className="flex items-center gap-2 text-xs text-gray-600 bg-[#0202ff]/5 border border-[#0202ff]/15 rounded-lg px-3 py-2">
+            <Shield className="w-3.5 h-3.5 text-[#0202ff] flex-shrink-0" />
+            {portfolioScope.loading ? (
+              <span className="text-gray-500">Resolving your portfolio scope…</span>
+            ) : portfolioEmails instanceof Set && portfolioEmails.size > 0 ? (
+              <span>Showing your portfolio — <span className="font-medium text-gray-900">{portfolioEmails.size} manager{portfolioEmails.size !== 1 ? "s" : ""}</span> (incl. delegated coverage). Every lens is scoped to these managers.</span>
+            ) : (
+              <span>No portfolio assignments yet — ask your HR administrator to assign managers to see scoped data here.</span>
+            )}
+          </div>
+        </motion.div>
+      )}
 
       {/* ── LAYERS 3–5: Lens-grouped sections ─────────────────────────────── */}
       {(() => {

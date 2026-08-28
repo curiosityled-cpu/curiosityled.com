@@ -2,7 +2,7 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.40";
 import {
   fetchManagerSignals,
   buildManagerBundle,
-  resolvePortfolioManagers,
+  resolveHRBPManagerEmails,
 } from "../../shared/portfolioData.ts";
 
 const ADMIN_ROLES = [
@@ -11,20 +11,6 @@ const ADMIN_ROLES = [
   "Platform Admin",
   "Partner Business Administrator",
 ];
-
-// A delegation is in effect when status is active and today falls within the
-// optional [start_date, end_date] window. Missing dates mean unbounded.
-function isDelegationActive(d) {
-  if (d.status !== "active") return false;
-  const now = new Date();
-  if (d.start_date && new Date(d.start_date) > now) return false;
-  if (d.end_date) {
-    const end = new Date(d.end_date);
-    end.setHours(23, 59, 59, 999);
-    if (end < now) return false;
-  }
-  return true;
-}
 
 export default async function (req) {
   try {
@@ -42,71 +28,9 @@ export default async function (req) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // 1. Fetch active portfolio assignments owned by this HRBP
-    const ownPortfolios = await base44.asServiceRole.entities.HRBPPortfolio.filter({
-      hrbp_email: targetHrbpEmail,
-      status: "active",
-    });
-
-    // 2. Resolve own managers (explicit + BU + client scopes)
-    const ownManagers = await resolvePortfolioManagers(base44, ownPortfolios);
-
-    // 3. Active delegations TO this HRBP (backup coverage)
-    const delegationsRaw = await base44.asServiceRole.entities.HRBPDelegation.filter({
-      to_hrbp_email: targetHrbpEmail,
-      status: "active",
-    });
-    const activeDelegations = delegationsRaw.filter(isDelegationActive);
-
-    // 4. Resolve delegated managers (whole portfolio or single assignment)
-    const delegatedManagers = [];
-    const delegationSummaries = [];
-    for (const d of activeDelegations) {
-      let delegatedPortfolios = [];
-      if (d.scope === "all") {
-        delegatedPortfolios = await base44.asServiceRole.entities.HRBPPortfolio.filter({
-          hrbp_email: d.from_hrbp_email,
-          status: "active",
-        });
-      } else if (d.assignment_id) {
-        const p = await base44.asServiceRole.entities.HRBPPortfolio
-          .get(d.assignment_id)
-          .catch(() => null);
-        if (p && p.status === "active") delegatedPortfolios = [p];
-      }
-      const managers = await resolvePortfolioManagers(base44, delegatedPortfolios);
-      managers.forEach((m) => {
-        delegatedManagers.push({
-          ...m,
-          delegated_from: d.from_hrbp_email,
-          delegation_id: d.id,
-        });
-      });
-      delegationSummaries.push({
-        id: d.id,
-        from_hrbp_email: d.from_hrbp_email,
-        scope: d.scope,
-        assignment_id: d.assignment_id,
-        start_date: d.start_date,
-        end_date: d.end_date,
-        reason: d.reason,
-        manager_count: managers.length,
-      });
-    }
-
-    // 5. Combine + dedupe — own portfolio takes precedence over delegated
-    const seenEmails = new Set();
-    const managers = [];
-    for (const m of ownManagers) {
-      if (seenEmails.has(m.email)) continue;
-      seenEmails.add(m.email);
-      managers.push({ ...m, delegated_from: null, delegation_id: null });
-    }
-    for (const m of delegatedManagers) {
-      if (seenEmails.has(m.email)) continue;
-      seenEmails.add(m.email);
-      managers.push(m);
-    }
+    // Resolve own portfolio + active delegations (shared scoping logic)
+    const { managers, ownPortfolios, delegationSummaries } =
+      await resolveHRBPManagerEmails(base44, targetHrbpEmail);
 
     const portfolioSummary = (p) => ({
       id: p.id,
@@ -128,7 +52,7 @@ export default async function (req) {
         delegations: delegationSummaries,
         manager_emails: managers.map((m) => m.email),
         manager_count: managers.length,
-        delegated_manager_count: delegatedManagers.length,
+        delegated_manager_count: managers.filter((m) => m.delegated_from).length,
       });
     }
 

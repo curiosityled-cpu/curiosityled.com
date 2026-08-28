@@ -188,20 +188,38 @@ export default function PortfolioDelegationManager() {
               </Select>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 md:col-span-2">
               <Label className="text-xs">Scope</Label>
-              <Select
-                value={form.scope}
-                onValueChange={(v) => setForm({ ...form, scope: v, assignment_id: "" })}
-              >
-                <SelectTrigger className="text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Entire Portfolio</SelectItem>
-                  <SelectItem value="assignment">Single Assignment</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[
+                  { id: "all", label: "Entire Portfolio", description: "Hand off all of this HRBP's assignments" },
+                  { id: "assignment", label: "Single Assignment", description: "Hand off just one scoped assignment" },
+                ].map((s) => {
+                  const active = form.scope === s.id;
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setForm({ ...form, scope: s.id, assignment_id: "" })}
+                      className={`text-left p-3 rounded-xl border transition-all select-none ${
+                        active
+                          ? "border-[#0202ff] bg-[#0202ff]/5 ring-1 ring-[#0202ff]/30"
+                          : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${active ? "border-[#0202ff]" : "border-gray-300"}`}>
+                          {active && <span className="w-2 h-2 rounded-full bg-[#0202ff]" />}
+                        </span>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{s.label}</p>
+                          <p className="text-xs text-gray-500 mt-0.5 leading-snug">{s.description}</p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="space-y-1.5">

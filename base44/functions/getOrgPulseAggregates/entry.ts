@@ -15,6 +15,7 @@
  *   - org-level risk bands (high/medium/low) — counts only, no names
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { resolveHRBPManagerEmails } from '../../shared/portfolioData.ts';
 
 const ADMIN_ROLES = ['admin', 'Admin Level 2', 'Super Administrator', 'Partner Business Administrator', 'Platform Admin'];
 const MIN_GROUP_SIZE = 5; // never show metrics for groups smaller than this
@@ -23,13 +24,24 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    const userRole = user?.app_role || user?.data?.app_role || user?.role;
 
-    if (!user || !ADMIN_ROLES.includes(user.role)) {
-      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    // Admins see org-wide aggregates; HRBPs see only their resolved portfolio.
+    if (!user || ![...ADMIN_ROLES, 'HRBP'].includes(userRole)) {
+      return Response.json({ error: 'Forbidden: Admin or HRBP access required' }, { status: 403 });
     }
 
     // Load all manager trends (aggregated signals only — never raw pulses)
-    const allTrends = await base44.asServiceRole.entities.ManagerTrends.list('-last_trend_computed_at', 500);
+    let allTrends = await base44.asServiceRole.entities.ManagerTrends.list('-last_trend_computed_at', 500);
+
+    // HRBP scoping: narrow to the managers in this HRBP's resolved portfolio
+    // (own assignments + active delegations). Admins keep org-wide visibility.
+    if (userRole === 'HRBP') {
+      const { managers } = await resolveHRBPManagerEmails(base44, user.email);
+      const portfolioEmails = new Set(managers.map((m) => m.email));
+      allTrends = allTrends.filter((t) => portfolioEmails.has(t.user_email));
+    }
+
     const totalManagers = allTrends.length;
 
     if (totalManagers < MIN_GROUP_SIZE) {
@@ -108,6 +120,7 @@ Deno.serve(async (req) => {
       function_name: 'getOrgPulseAggregates',
       timestamp: new Date().toISOString(),
       record_count: totalManagers,
+      scope: userRole === 'HRBP' ? 'portfolio' : 'org_wide',
     });
 
     return Response.json({
