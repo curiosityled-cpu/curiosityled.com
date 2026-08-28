@@ -43,16 +43,23 @@ Deno.serve(async (req) => {
         // Update user's role using service role
         await base44.asServiceRole.entities.User.update(user.id, { app_role: role });
 
-        // Log the role change
-        await base44.asServiceRole.entities.ActivityLog.create({
-            timestamp: new Date().toISOString(),
-            initiator_user_email: user.email,
-            action_type: 'USER_ROLE_CHANGE',
-            target_user_email: user.email,
-            old_value: oldRole,
-            new_value: role,
-            metadata: { action: 'self_role_change', note: 'Via Role Selector (demo feature)' }
-        });
+        // Best-effort audit log — never block a successful role change on logging.
+        try {
+            if (user.client_id) {
+                await base44.asServiceRole.entities.ActivityLog.create({
+                    timestamp: new Date().toISOString(),
+                    initiator_user_email: user.email,
+                    action_type: 'USER_ROLE_CHANGE',
+                    target_user_email: user.email,
+                    client_id: user.client_id,
+                    old_value: oldRole,
+                    new_value: role,
+                    metadata: { action: 'self_role_change', note: 'Via Role Selector (demo feature)' }
+                });
+            }
+        } catch (logError) {
+            console.error('Failed to log role change:', logError);
+        }
 
         return Response.json({ 
             success: true,
