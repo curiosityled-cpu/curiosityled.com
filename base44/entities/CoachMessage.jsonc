@@ -1,0 +1,62 @@
+{
+  "name": "CoachMessage",
+  "type": "object",
+  "properties": {
+    "engagement_id": {
+      "type": "string",
+      "description": "ID of the CoachingEngagement this message belongs to"
+    },
+    "sender_email": {
+      "type": "string",
+      "description": "Email of the sender (coach or coachee)"
+    },
+    "recipient_email": {
+      "type": "string",
+      "description": "Email of the recipient (coach or coachee)"
+    },
+    "body": {
+      "type": "string",
+      "description": "Message text"
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "app",
+        "email"
+      ],
+      "default": "app",
+      "description": "Channel the message was sent through"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Optional subject line (used for email channel)"
+    }
+  },
+  "required": [
+    "engagement_id",
+    "sender_email",
+    "recipient_email",
+    "body"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.sender_email": "{{user.email}}"
+        },
+        {
+          "data.recipient_email": "{{user.email}}"
+        }
+      ]
+    },
+    "create": {
+      "data.sender_email": "{{user.email}}"
+    },
+    "update": {
+      "data.sender_email": "{{user.email}}"
+    },
+    "delete": {
+      "data.sender_email": "{{user.email}}"
+    }
+  }
+}

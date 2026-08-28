@@ -63,6 +63,14 @@ function RoleSelector() {
       color: 'bg-orange-500'
     },
     {
+      id: 'Leadership Coach',
+      title: 'Leadership Coach',
+      description: 'Program Admin + coachee workspace, session prep, confidential notes, and messaging',
+      icon: Target,
+      color: 'bg-amber-500',
+      badge: 'Coach variant'
+    },
+    {
       id: 'Admin Level 2',
       title: 'HR Administrator',
       description: 'HR administration and analytics',

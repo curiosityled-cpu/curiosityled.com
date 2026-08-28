@@ -30,6 +30,7 @@ import ExperienceOverview from './pages/ExperienceOverview';
 import ManagerDetail from './pages/ManagerDetail';
 
 import LeadershipIntelligenceHub from './pages/LeadershipIntelligenceHub';
+import CoachingWorkspace from './pages/CoachingWorkspace';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import Notifications from './pages/Notifications';
@@ -171,6 +172,7 @@ const AuthenticatedApp = () => {
 
       {/* MVP-specific routes */}
       <Route path="/my-leadership" element={<MVPLayout><ManagerToday /></MVPLayout>} />
+      <Route path="/coaching" element={<MVPLayout><CoachingWorkspace /></MVPLayout>} />
       <Route path="/my-development" element={<MVPLayout><MyDevelopment /></MVPLayout>} />
       <Route path="/experience-overview" element={<MVPLayout><ExperienceOverview /></MVPLayout>} />
       <Route path="/report-builder-mvp" element={<MVPLayout><ReportBuilderMVP /></MVPLayout>} />

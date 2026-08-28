@@ -8,7 +8,8 @@ import { base44 } from "@/api/base44Client";
 import {
   Brain, Target, Home, BarChart2, Users, LogOut, Menu, X,
   ChevronRight, ChevronLeft, Bell, User, ArrowLeft,
-  Settings, Shield, UserCog, Dumbbell, Sun, Moon, ChevronDown, FolderOpen } from "lucide-react";
+  Settings, Shield, UserCog, Dumbbell, Sun, Moon, ChevronDown, FolderOpen,
+  ClipboardList } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -29,7 +30,7 @@ import { Badge } from "@/components/ui/badge";
 export const getMVPRole = (appRole) => {
   if (!appRole) return 'manager';
   if (appRole === 'User Level 1' || appRole === 'User Level 2' || appRole === 'user') return 'manager';
-  if (appRole === 'Admin Level 1' || appRole === 'Admin Level 2' || appRole === 'Super Administrator' || appRole === 'Platform Admin' || appRole === 'Partner Business Administrator' || appRole === 'admin') return 'buyer';
+  if (appRole === 'Admin Level 1' || appRole === 'Leadership Coach' || appRole === 'Admin Level 2' || appRole === 'Super Administrator' || appRole === 'Platform Admin' || appRole === 'Partner Business Administrator' || appRole === 'admin') return 'buyer';
   if (appRole === 'HRBP') return 'hrbp';
   if (appRole === 'Analyst') return 'analyst';
   if (appRole === 'Executive') return 'executive';
@@ -46,6 +47,7 @@ export const getFriendlyRoleLabel = (appRole) => {
     'Executive': 'Executive',
     'HRBP': 'HR Business Partner',
     'Admin Level 1': 'Program Admin',
+    'Leadership Coach': 'Leadership Coach',
     'Admin Level 2': 'HR Admin',
     'Super Administrator': 'Super Administrator',
     'Partner Business Administrator': 'Partner Administrator',
@@ -145,7 +147,20 @@ function MVPLayoutInner({ children }) {
   };
 
   const mvpRole = getMVPRole(user?.app_role || user?.data?.app_role || user?.role || 'user');
-  const navItems = NAV_CONFIG[mvpRole] || [];
+  const isLeadershipCoach = (user?.app_role || user?.data?.app_role || user?.role) === 'Leadership Coach';
+  const baseNav = NAV_CONFIG[mvpRole] || [];
+  // Leadership Coaches get a dedicated Coaching nav group alongside the Administration group
+  const navItems = isLeadershipCoach && mvpRole === 'buyer'
+    ? [
+        ...baseNav.filter(item => !item.group),
+        { label: 'Coaching', icon: ClipboardList, group: true, children: [
+          { label: 'My Coachees', path: '/coaching?tab=coachees', icon: Users },
+          { label: 'Session Prep', path: '/coaching?tab=prep', icon: ClipboardList },
+          { label: 'Engagement Outcomes', path: '/coaching?tab=outcomes', icon: BarChart2 },
+        ]},
+        ...baseNav.filter(item => item.group),
+      ]
+    : baseNav;
 
   // Determine if current page is a "sub-page" (not a core nav root)
   const coreNavPaths = navItems.flatMap(i => i.group ? i.children.map(c => c.path.split('?')[0]) : [i.path.split('?')[0]]);

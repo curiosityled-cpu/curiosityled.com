@@ -26,6 +26,7 @@ Deno.serve(async (req) => {
             'Executive',
             'HRBP',
             'Admin Level 1',
+            'Leadership Coach',
             'Admin Level 2',
             'Super Administrator',
             'Partner Business Administrator',

@@ -1,0 +1,47 @@
+{
+  "name": "CoachReflection",
+  "type": "object",
+  "properties": {
+    "coach_email": {
+      "type": "string",
+      "description": "Email of the coach who wrote this private reflection"
+    },
+    "engagement_id": {
+      "type": "string",
+      "description": "ID of the CoachingEngagement this reflection relates to"
+    },
+    "session_id": {
+      "type": "string",
+      "description": "ID of the CoachingSession this reflection relates to (optional)"
+    },
+    "reflection_text": {
+      "type": "string",
+      "description": "Private coaching reflection \u2014 visible only to the coach"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Optional tags for organizing reflections"
+    }
+  },
+  "required": [
+    "coach_email",
+    "reflection_text"
+  ],
+  "rls": {
+    "read": {
+      "data.coach_email": "{{user.email}}"
+    },
+    "create": {
+      "data.coach_email": "{{user.email}}"
+    },
+    "update": {
+      "data.coach_email": "{{user.email}}"
+    },
+    "delete": {
+      "data.coach_email": "{{user.email}}"
+    }
+  }
+}
