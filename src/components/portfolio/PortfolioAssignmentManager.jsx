@@ -14,6 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import UserMultiSelect from "@/components/assignment/UserMultiSelect";
+import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import {
   Plus,
@@ -79,6 +81,8 @@ export default function PortfolioAssignmentManager() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [bulkMode, setBulkMode] = useState(false);
+  const [selectedDepts, setSelectedDepts] = useState([]);
 
   const fetchAll = async () => {
     setLoading(true);
@@ -152,6 +156,35 @@ export default function PortfolioAssignmentManager() {
     }
   };
 
+  const handleCreateBulk = async () => {
+    if (!form.hrbp_email) return toast.error("Select an HRBP");
+    if (selectedDepts.length === 0) return toast.error("Select at least one department");
+    const hrbpName = hrbps.find((h) => h.email === form.hrbp_email)?.full_name || "";
+    const payloads = selectedDepts.map((dept) => ({
+      hrbp_email: form.hrbp_email,
+      hrbp_name: hrbpName,
+      assignment_type: "business_unit",
+      label: form.label.trim() ? `${form.label.trim()} — ${dept}` : dept,
+      business_unit: form.business_unit.trim(),
+      department: dept,
+      team: "",
+      status: "active",
+    }));
+    setSaving(true);
+    try {
+      await base44.entities.HRBPPortfolio.bulkCreate(payloads);
+      toast.success(`Created ${payloads.length} assignment${payloads.length !== 1 ? "s" : ""}`);
+      setForm(EMPTY_FORM);
+      setSelectedDepts([]);
+      setBulkMode(false);
+      fetchAll();
+    } catch (e) {
+      toast.error(e.message || "Failed to create assignments");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleDelete = async (id) => {
     if (!confirm("Delete this portfolio assignment?")) return;
     try {
@@ -192,6 +225,7 @@ export default function PortfolioAssignmentManager() {
       return `${form.manager_emails.length} manager${form.manager_emails.length !== 1 ? "s" : ""} selected`;
     }
     if (form.assignment_type === "business_unit") {
+      if (bulkMode) return `${selectedDepts.length} department${selectedDepts.length !== 1 ? "s" : ""} selected`;
       return [form.business_unit, form.department, form.team].filter(Boolean).join(" · ") || "No department set";
     }
     if (form.assignment_type === "client") {
@@ -257,9 +291,11 @@ export default function PortfolioAssignmentManager() {
                   <button
                     key={s.id}
                     type="button"
-                    onClick={() =>
-                      setForm({ ...form, assignment_type: s.id, manager_emails: [], department: "", team: "", business_unit: "", scope_client_id: "" })
-                    }
+                    onClick={() => {
+                      setForm({ ...form, assignment_type: s.id, manager_emails: [], department: "", team: "", business_unit: "", scope_client_id: "" });
+                      setBulkMode(false);
+                      setSelectedDepts([]);
+                    }}
                     className={`text-left p-3 rounded-xl border transition-all select-none ${
                       active
                         ? "border-[#0202ff] bg-[#0202ff]/5 ring-1 ring-[#0202ff]/30"
@@ -298,41 +334,97 @@ export default function PortfolioAssignmentManager() {
           )}
 
           {form.assignment_type === "business_unit" && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Department *</Label>
-                <Input
-                  list="portfolio-dept-options"
-                  value={form.department}
-                  onChange={(e) => setForm({ ...form, department: e.target.value })}
-                  placeholder="Type or pick a department"
-                  className="text-sm"
-                />
-                <datalist id="portfolio-dept-options">
-                  {departmentOptions.map((d) => (
-                    <option key={d} value={d} />
-                  ))}
-                </datalist>
+            <div className="space-y-3">
+              {/* Bulk toggle */}
+              <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-900">Assign multiple departments at once</p>
+                  <p className="text-xs text-gray-500">Creates one assignment per checked department for this HRBP.</p>
+                </div>
+                <Switch checked={bulkMode} onCheckedChange={setBulkMode} />
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Business Unit (optional)</Label>
-                <Input
-                  value={form.business_unit}
-                  onChange={(e) => setForm({ ...form, business_unit: e.target.value })}
-                  className="text-sm"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Team (optional)</Label>
-                <Input
-                  value={form.team}
-                  onChange={(e) => setForm({ ...form, team: e.target.value })}
-                  className="text-sm"
-                />
-              </div>
-              <p className="text-xs text-gray-400 md:col-span-3">
-                All managers whose profile department matches will be auto-included.
-              </p>
+
+              {bulkMode ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Select Departments ({selectedDepts.length})</Label>
+                    <div className="flex gap-3 text-xs">
+                      <button type="button" className="text-[#0202ff] hover:underline" onClick={() => setSelectedDepts(departmentOptions)}>
+                        Select all
+                      </button>
+                      <button type="button" className="text-gray-500 hover:underline" onClick={() => setSelectedDepts([])}>
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                  {departmentOptions.length === 0 ? (
+                    <p className="text-xs text-gray-400 py-3 text-center">No departments found in user profiles yet.</p>
+                  ) : (
+                    <div className="max-h-56 overflow-y-auto rounded-lg border border-gray-100 divide-y divide-gray-50">
+                      {departmentOptions.map((d) => {
+                        const checked = selectedDepts.includes(d);
+                        return (
+                          <label key={d} className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-gray-50 select-none">
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(c) =>
+                                setSelectedDepts(c ? [...selectedDepts, d] : selectedDepts.filter((x) => x !== d))
+                              }
+                            />
+                            <span className="text-sm text-gray-800">{d}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Business Unit (applies to all)</Label>
+                    <Input
+                      value={form.business_unit}
+                      onChange={(e) => setForm({ ...form, business_unit: e.target.value })}
+                      className="text-sm"
+                      placeholder="Optional"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Department *</Label>
+                    <Input
+                      list="portfolio-dept-options"
+                      value={form.department}
+                      onChange={(e) => setForm({ ...form, department: e.target.value })}
+                      placeholder="Type or pick a department"
+                      className="text-sm"
+                    />
+                    <datalist id="portfolio-dept-options">
+                      {departmentOptions.map((d) => (
+                        <option key={d} value={d} />
+                      ))}
+                    </datalist>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Business Unit (optional)</Label>
+                    <Input
+                      value={form.business_unit}
+                      onChange={(e) => setForm({ ...form, business_unit: e.target.value })}
+                      className="text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Team (optional)</Label>
+                    <Input
+                      value={form.team}
+                      onChange={(e) => setForm({ ...form, team: e.target.value })}
+                      className="text-sm"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 md:col-span-3">
+                    All managers whose profile department matches will be auto-included.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -366,12 +458,14 @@ export default function PortfolioAssignmentManager() {
               <span className="font-medium text-gray-700">Scope:</span> {scopeSummary()}
             </div>
             <Button
-              onClick={handleCreate}
+              onClick={bulkMode && form.assignment_type === "business_unit" ? handleCreateBulk : handleCreate}
               disabled={saving}
               className="bg-[#0202ff] hover:bg-[#0101dd] text-white"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              Create Assignment
+              {bulkMode && form.assignment_type === "business_unit"
+                ? `Create ${selectedDepts.length} Assignment${selectedDepts.length !== 1 ? "s" : ""}`
+                : "Create Assignment"}
             </Button>
           </div>
         </CardContent>
