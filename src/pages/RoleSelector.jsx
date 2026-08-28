@@ -105,8 +105,9 @@ function RoleSelector() {
     setUpdating(true);
     try {
       const response = await base44.functions.invoke('setMyRole', { role: selectedRole });
+      const result = response?.data ?? response;
       
-      if (response.data?.success) {
+      if (result?.success) {
         toast.success(`Role updated to ${roles.find(r => r.id === selectedRole)?.title}`);
         await refreshUser();
         

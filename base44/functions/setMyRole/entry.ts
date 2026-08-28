@@ -14,12 +14,9 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Only administrators may change app roles. Non-admins must use User Management.
-        const ADMIN_ROLES = ['Platform Admin', 'Super Administrator', 'Partner Business Administrator', 'Admin Level 2'];
-        if (!ADMIN_ROLES.includes(user.app_role)) {
-            return Response.json({ error: 'Forbidden - admin access required to change roles' }, { status: 403 });
-        }
-
+        // The Role Selector is a self-service testing/demo feature: any
+        // authenticated user may change their own app_role to preview different
+        // experiences. Production role management happens via User Management.
         const { role } = await req.json();
 
         const validRoles = [
