@@ -146,6 +146,35 @@
           ],
           "default": "User Level 1",
           "description": "Default role for new users in this client"
+        },
+        "coaching_request_allowlist_enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, only users matching the allowlist can submit coaching_support requests for this client"
+        },
+        "coaching_request_allowed_roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "App roles permitted to submit coaching requests (e.g. 'HRBP', 'User Level 2')"
+        },
+        "coaching_request_allowed_titles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Job titles (current_role) permitted to submit coaching requests"
+        },
+        "coaching_request_allowed_emails": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Specific email addresses permitted to submit coaching requests"
         }
       },
       "description": "Feature flags and settings"
