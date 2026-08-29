@@ -257,7 +257,7 @@ function MVPLayoutInner({ children }) {
     <div className={`${isDark ? 'cl-dark' : ''} min-h-screen flex bg-background`}>
       {/* Desktop Sidebar */}
       <aside
-        className={`hidden md:flex flex-col ${sidebarWidth} fixed inset-y-0 left-0 z-20 transition-all duration-200`}
+        className={`hidden sm:flex flex-col ${sidebarWidth} fixed inset-y-0 left-0 z-20 transition-all duration-200`}
         style={{ background: sidebarBg, borderRight: sidebarBorder }}
       >
         {/* Logo + Collapse Toggle */}
@@ -453,7 +453,7 @@ function MVPLayoutInner({ children }) {
 
       {/* Mobile Header */}
       <header
-        className="md:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 h-14"
+        className="sm:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 h-14"
         style={{ background: headerBg, borderBottom: sidebarBorder }}
       >
         <div className="flex items-center gap-2">
@@ -503,7 +503,7 @@ function MVPLayoutInner({ children }) {
 
       {/* Mobile Menu */}
       {mobileOpen &&
-      <div className="md:hidden fixed inset-0 z-20 bg-black/60" onClick={() => setMobileOpen(false)}>
+      <div className="sm:hidden fixed inset-0 z-20 bg-black/60" onClick={() => setMobileOpen(false)}>
           <div
             className="absolute top-14 left-0 right-0 shadow-lg p-4"
             style={{ background: headerBg, borderBottom: sidebarBorder }}
@@ -522,9 +522,9 @@ function MVPLayoutInner({ children }) {
       }
 
       {/* Main content */}
-      <main className={`flex-1 ${collapsed ? 'md:ml-16' : 'md:ml-64'} pt-14 md:pt-0 min-h-screen transition-all duration-200`}>
+      <main className={`flex-1 ${collapsed ? 'sm:ml-16' : 'sm:ml-64'} pt-14 sm:pt-0 min-h-screen transition-all duration-200`}>
         {isSubPage && (
-          <div className="hidden md:flex items-center px-6 pt-5 pb-1">
+          <div className="hidden sm:flex items-center px-6 pt-5 pb-1">
             <button
               onClick={() => navigate(-1)}
               className="flex items-center gap-1.5 text-sm font-medium transition-colors rounded-lg px-2 py-1.5 -ml-2"
