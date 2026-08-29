@@ -71,7 +71,7 @@ function AssignJourneyDialog({ open, onClose, plan, users, onAssigned }) {
   );
 }
 
-export default function AdminJourneysTab({ user }) {
+export default function AdminJourneysTab({ user, coacheeEmails }) {
   const [plans, setPlans] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -90,16 +90,23 @@ export default function AdminJourneysTab({ user }) {
         base44.entities.DevelopmentPlan.list("-created_date"),
         base44.entities.User.filter({ client_id: user.client_id })
       ]);
-      const adminRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin', 'Partner Business Administrator'];
-      const adminEmails = new Set(allUsers.filter(u => adminRoles.includes(u.app_role)).map(u => u.email));
-      setPlans(allPlans.filter(p => adminEmails.has(p.created_by)));
-      setUsers(allUsers);
+      const scoped = (coacheeEmails || []).length > 0;
+      if (scoped) {
+        // Leadership Coaches: only journeys belonging to their coachees
+        setPlans(allPlans.filter(p => coacheeEmails.includes(p.user_email)));
+        setUsers(allUsers.filter(u => coacheeEmails.includes(u.email)));
+      } else {
+        const adminRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin', 'Partner Business Administrator'];
+        const adminEmails = new Set(allUsers.filter(u => adminRoles.includes(u.app_role)).map(u => u.email));
+        setPlans(allPlans.filter(p => adminEmails.has(p.created_by)));
+        setUsers(allUsers);
+      }
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
-  }, [user.client_id]);
+  }, [user.client_id, coacheeEmails]);
 
   useEffect(() => { load(); }, [load]);
 

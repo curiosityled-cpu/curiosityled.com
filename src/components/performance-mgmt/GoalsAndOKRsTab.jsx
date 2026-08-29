@@ -49,7 +49,7 @@ function ProgressBar({ value }) {
 
 // ─── Goals sub-view ────────────────────────────────────────────────────────────
 
-function GoalsView({ user }) {
+function GoalsView({ user, coacheeEmails }) {
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -57,13 +57,21 @@ function GoalsView({ user }) {
   const [showCreate, setShowCreate] = useState(false);
   const [editingGoal, setEditingGoal] = useState(null);
 
-  useEffect(() => { loadGoals(); }, [user?.email]);
+  useEffect(() => { loadGoals(); }, [user?.email, coacheeEmails]);
 
   const loadGoals = async () => {
     setLoading(true);
     try {
       const data = await base44.entities.Goal.list("-updated_date");
-      setGoals(data);
+      // Leadership Coaches: only goals assigned to their coachees or coached by them
+      const scoped = (coacheeEmails || []).length > 0;
+      const visible = scoped
+        ? data.filter(g =>
+            (g.assigned_to_emails || []).some(e => coacheeEmails.includes(e)) ||
+            g.coach_email === user.email
+          )
+        : data;
+      setGoals(visible);
     } catch {
       toast.error("Failed to load goals");
     } finally {
@@ -688,7 +696,7 @@ const SUB_TABS = [
   { id: "okrs", label: "OKRs", icon: TrendingUp },
 ];
 
-export default function GoalsAndOKRsTab({ user }) {
+export default function GoalsAndOKRsTab({ user, coacheeEmails }) {
   const [subTab, setSubTab] = useState("goals");
 
   return (
@@ -711,7 +719,7 @@ export default function GoalsAndOKRsTab({ user }) {
         })}
       </div>
 
-      {subTab === "goals" && <GoalsView user={user} />}
+      {subTab === "goals" && <GoalsView user={user} coacheeEmails={coacheeEmails} />}
       {subTab === "kpis" && <KPIsView user={user} />}
       {subTab === "okrs" && <OKRsView user={user} />}
     </div>

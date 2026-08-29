@@ -21,7 +21,7 @@ const STATUS_BADGE = {
   paused: "bg-amber-100 text-amber-700",
 };
 
-export default function AdminExperiencesTab({ user }) {
+export default function AdminExperiencesTab({ user, coacheeEmails }) {
   const [experiences, setExperiences] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,13 +39,20 @@ export default function AdminExperiencesTab({ user }) {
         base44.entities.DevelopmentExperience.list('-created_date'),
         base44.entities.User.filter({ client_id: user.client_id })
       ]);
-      const adminRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin', 'Partner Business Administrator'];
-      const adminEmails = new Set(allUsers.filter(u => adminRoles.includes(u.app_role)).map(u => u.email));
-      setExperiences(exps.filter(e => adminEmails.has(e.created_by)));
-      setUsers(allUsers);
+      const scoped = (coacheeEmails || []).length > 0;
+      if (scoped) {
+        // Leadership Coaches: only experiences belonging to their coachees
+        setExperiences(exps.filter(e => coacheeEmails.includes(e.user_email)));
+        setUsers(allUsers.filter(u => coacheeEmails.includes(u.email)));
+      } else {
+        const adminRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin', 'Partner Business Administrator'];
+        const adminEmails = new Set(allUsers.filter(u => adminRoles.includes(u.app_role)).map(u => u.email));
+        setExperiences(exps.filter(e => adminEmails.has(e.created_by)));
+        setUsers(allUsers);
+      }
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
-  }, [user.client_id]);
+  }, [user.client_id, coacheeEmails]);
 
   useEffect(() => { load(); }, [load]);
 

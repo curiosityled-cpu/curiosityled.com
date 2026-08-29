@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import PerformanceOverviewTab from "@/components/performance-mgmt/PerformanceOverviewTab";
 import GoalsAndOKRsTab from "@/components/performance-mgmt/GoalsAndOKRsTab";
+import { useCoachCoacheeScope } from "@/hooks/useCoachCoacheeScope";
 const TABS = [
   { id: "overview", label: "Overview & Analytics", icon: BarChart2 },
   { id: "goals", label: "Goals & OKRs", icon: Target },
@@ -14,6 +15,7 @@ const TABS = [
 
 export default function PerformanceManager() {
   const { user, loading: authLoading } = useAuth();
+  const { coacheeEmails } = useCoachCoacheeScope(user);
   const [section, setSection] = useState("overview");
   const [fullUser, setFullUser] = useState(null);
 
@@ -77,8 +79,8 @@ export default function PerformanceManager() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.05 }}
       >
-        {section === "overview" && <PerformanceOverviewTab user={fullUser} />}
-        {section === "goals" && <GoalsAndOKRsTab user={fullUser} />}
+        {section === "overview" && <PerformanceOverviewTab user={fullUser} coacheeEmails={coacheeEmails} />}
+        {section === "goals" && <GoalsAndOKRsTab user={fullUser} coacheeEmails={coacheeEmails} />}
 
       </motion.div>
     </MVPPageLayout>

@@ -18,6 +18,7 @@ import AdminJourneysTab from "@/components/experience-mgmt/AdminJourneysTab";
 import AdminLearningManagementTab from "@/components/experience-mgmt/AdminLearningManagementTab";
 import AdminExperiencesTab from "@/components/experience-mgmt/AdminExperiencesTab";
 import ExperienceAnalyticsTab from "@/components/experience-mgmt/ExperienceAnalyticsTab";
+import { useCoachCoacheeScope } from "@/hooks/useCoachCoacheeScope";
 
 // Lazy load request components
 const RequestDetailPanel = lazy(() => import("@/components/requests/RequestDetailPanel"));
@@ -48,6 +49,7 @@ const TABS = [
 
 export default function ExperienceManagement() {
   const { user, hasPermission, loading: authLoading } = useAuth();
+  const { coacheeEmails } = useCoachCoacheeScope(user);
   const [section, setSection] = useState("analytics");
 
   // ── Requests state ──
@@ -164,7 +166,7 @@ export default function ExperienceManagement() {
       {/* ── JOURNEYS ── */}
       {section === 'journeys' && (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <AdminJourneysTab user={user} />
+          <AdminJourneysTab user={user} coacheeEmails={coacheeEmails} />
         </motion.div>
       )}
 
@@ -178,7 +180,7 @@ export default function ExperienceManagement() {
       {/* ── EXPERIENCES ── */}
       {section === 'experiences' && (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <AdminExperiencesTab user={user} />
+          <AdminExperiencesTab user={user} coacheeEmails={coacheeEmails} />
         </motion.div>
       )}
 

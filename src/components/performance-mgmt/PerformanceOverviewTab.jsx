@@ -35,19 +35,27 @@ function KPICard({ label, value, sub, icon: Icon, color }) { // Icon is the dest
   );
 }
 
-export default function PerformanceOverviewTab({ user }) {
+export default function PerformanceOverviewTab({ user, coacheeEmails }) {
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadData();
-  }, [user]);
+  }, [user, coacheeEmails]);
 
   const loadData = async () => {
     setLoading(true);
     try {
       const allGoals = await base44.entities.Goal.filter({ client_id: user.client_id });
-      setGoals(allGoals);
+      // Leadership Coaches: only goals assigned to their coachees or coached by them
+      const scoped = (coacheeEmails || []).length > 0;
+      const visible = scoped
+        ? allGoals.filter(g =>
+            (g.assigned_to_emails || []).some(e => coacheeEmails.includes(e)) ||
+            g.coach_email === user.email
+          )
+        : allGoals;
+      setGoals(visible);
     } catch (e) {
       console.error(e);
     } finally {
