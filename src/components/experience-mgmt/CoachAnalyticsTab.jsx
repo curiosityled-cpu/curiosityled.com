@@ -6,7 +6,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
 import {
-  Users, Star, Target, BookOpen, Clock, ClipboardList
+  Users, Star, BookOpen, Clock, ClipboardList, Activity
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
@@ -54,6 +54,7 @@ function StatCard({ icon: Icon, label, value, sub, color = "text-[#0202ff]", bgC
 }
 
 export default function CoachAnalyticsTab({ user, coacheeEmails }) {
+  const isConsultant = user?.app_role === 'Consultant';
   const [experiences, setExperiences] = useState([]);
   const [engagements, setEngagements] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -92,16 +93,9 @@ export default function CoachAnalyticsTab({ user, coacheeEmails }) {
     return emails.size;
   }, [engagements]);
 
-  // Captured goals stats
-  const goalsStats = useMemo(() => {
-    let total = 0, adopted = 0;
-    experiences.forEach(exp => {
-      (exp.captured_goals || []).forEach(g => {
-        total++;
-        if (g.adopted_by_coachee) adopted++;
-      });
-    });
-    return { total, adopted, rate: total > 0 ? Math.round((adopted / total) * 100) : 0 };
+  // Active experiences (planned or in progress) — primary metric for consultants
+  const activeExperienceCount = useMemo(() => {
+    return experiences.filter(e => e.status === 'planned' || e.status === 'in_progress').length;
   }, [experiences]);
 
   // Recommended learning stats
@@ -133,7 +127,7 @@ export default function CoachAnalyticsTab({ user, coacheeEmails }) {
     return Object.entries(freq).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
   }, [experiences]);
 
-  // Per-coachee breakdown
+  // Per-coachee breakdown (coaches only)
   const coacheeBreakdown = useMemo(() => {
     const map = {};
     experiences.forEach(exp => {
@@ -144,8 +138,6 @@ export default function CoachAnalyticsTab({ user, coacheeEmails }) {
           email,
           experiences: 0,
           completed: 0,
-          goalsCaptured: 0,
-          goalsAdopted: 0,
           learningRecommended: 0,
           learningAdopted: 0,
         };
@@ -153,10 +145,6 @@ export default function CoachAnalyticsTab({ user, coacheeEmails }) {
       const c = map[email];
       c.experiences++;
       if (exp.status === 'completed') c.completed++;
-      (exp.captured_goals || []).forEach(g => {
-        c.goalsCaptured++;
-        if (g.adopted_by_coachee) c.goalsAdopted++;
-      });
       (exp.recommended_learning || []).forEach(r => {
         c.learningRecommended++;
         if (r.adopted_by_coachee) c.learningAdopted++;
@@ -183,75 +171,46 @@ export default function CoachAnalyticsTab({ user, coacheeEmails }) {
   return (
     <div className="space-y-5">
       {/* Summary Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard icon={Users} label="Active Coachees" value={activeCoacheeCount} sub="across active engagements" color="text-[#0202ff]" bgColor="bg-blue-50" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {isConsultant ? (
+          <StatCard icon={Activity} label="Active Experiences" value={activeExperienceCount} sub="planned or in progress" color="text-[#0202ff]" bgColor="bg-blue-50" />
+        ) : (
+          <StatCard icon={Users} label="Active Coachees" value={activeCoacheeCount} sub="across active engagements" color="text-[#0202ff]" bgColor="bg-blue-50" />
+        )}
         <StatCard icon={Star} label="Experiences Logged" value={experiences.length} sub={`${experiences.filter(e => e.status === 'completed').length} completed`} color="text-amber-600" bgColor="bg-amber-50" />
-        <StatCard icon={Target} label="Captured Goals" value={goalsStats.total} sub={`${goalsStats.adopted} adopted (${goalsStats.rate}%)`} color="text-emerald-600" bgColor="bg-emerald-50" />
         <StatCard icon={BookOpen} label="Recommended Learning" value={learningStats.total} sub={`${learningStats.adopted} adopted (${learningStats.rate}%)`} color="text-purple-600" bgColor="bg-purple-50" />
       </div>
 
-      {/* Adoption Rates */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="shadow-sm border border-gray-100 rounded-2xl">
-          <CardHeader className="pb-2 pt-4 px-5">
-            <CardTitle className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-              <Target className="w-4 h-4 text-emerald-500" /> Captured Goals Adoption
-            </CardTitle>
-            <p className="text-xs text-gray-400">Goals you captured during sessions that coachees opted into</p>
-          </CardHeader>
-          <CardContent className="px-2 pb-4">
-            {goalsStats.total === 0 ? (
-              <div className="h-48 flex items-center justify-center text-sm text-gray-400">No captured goals yet</div>
-            ) : (
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={[
-                  { name: 'Adopted', value: goalsStats.adopted },
-                  { name: 'Not Adopted', value: goalsStats.total - goalsStats.adopted },
-                ]} barCategoryGap="30%">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #e2e8f0' }} />
-                  <Bar dataKey="value" name="Goals" radius={[4, 4, 0, 0]}>
-                    <Cell fill="#10b981" />
-                    <Cell fill="#e5e7eb" />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm border border-gray-100 rounded-2xl">
-          <CardHeader className="pb-2 pt-4 px-5">
-            <CardTitle className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-purple-500" /> Recommended Learning Adoption
-            </CardTitle>
-            <p className="text-xs text-gray-400">Learning resources you recommended that coachees opted into</p>
-          </CardHeader>
-          <CardContent className="px-2 pb-4">
-            {learningStats.total === 0 ? (
-              <div className="h-48 flex items-center justify-center text-sm text-gray-400">No recommendations yet</div>
-            ) : (
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={[
-                  { name: 'Adopted', value: learningStats.adopted },
-                  { name: 'Not Adopted', value: learningStats.total - learningStats.adopted },
-                ]} barCategoryGap="30%">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #e2e8f0' }} />
-                  <Bar dataKey="value" name="Resources" radius={[4, 4, 0, 0]}>
-                    <Cell fill="#8b5cf6" />
-                    <Cell fill="#e5e7eb" />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      {/* Recommended Learning Adoption */}
+      <Card className="shadow-sm border border-gray-100 rounded-2xl">
+        <CardHeader className="pb-2 pt-4 px-5">
+          <CardTitle className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <BookOpen className="w-4 h-4 text-purple-500" /> Recommended Learning Adoption
+          </CardTitle>
+          <p className="text-xs text-gray-400">Learning resources you recommended that participants opted into</p>
+        </CardHeader>
+        <CardContent className="px-2 pb-4">
+          {learningStats.total === 0 ? (
+            <div className="h-48 flex items-center justify-center text-sm text-gray-400">No recommendations yet</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={[
+                { name: 'Adopted', value: learningStats.adopted },
+                { name: 'Not Adopted', value: learningStats.total - learningStats.adopted },
+              ]} barCategoryGap="30%">
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #e2e8f0' }} />
+                <Bar dataKey="value" name="Resources" radius={[4, 4, 0, 0]}>
+                  <Cell fill="#8b5cf6" />
+                  <Cell fill="#e5e7eb" />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Experience Status + Type Breakdown */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -260,7 +219,7 @@ export default function CoachAnalyticsTab({ user, coacheeEmails }) {
             <CardTitle className="text-sm font-semibold text-gray-900 flex items-center gap-2">
               <Clock className="w-4 h-4 text-[#0202ff]" /> Experience Status
             </CardTitle>
-            <p className="text-xs text-gray-400">Where your coachees' experiences stand</p>
+            <p className="text-xs text-gray-400">Where your logged experiences stand</p>
           </CardHeader>
           <CardContent className="px-2 pb-4">
             {experiences.length === 0 ? (
@@ -306,7 +265,8 @@ export default function CoachAnalyticsTab({ user, coacheeEmails }) {
         </Card>
       </div>
 
-      {/* Per-Coachee Breakdown */}
+      {/* Per-Coachee Breakdown (coaches only) */}
+      {!isConsultant && (
       <Card className="border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
         <CardHeader className="pb-3 pt-4 px-5">
           <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
@@ -323,15 +283,14 @@ export default function CoachAnalyticsTab({ user, coacheeEmails }) {
             </div>
           ) : (
             <>
-              <div className="hidden sm:grid grid-cols-[1fr_auto_auto_auto_auto] gap-3 px-5 py-2 border-b border-gray-100 bg-gray-50/50">
+              <div className="hidden sm:grid grid-cols-[1fr_auto_auto_auto] gap-3 px-5 py-2 border-b border-gray-100 bg-gray-50/50">
                 <span className="text-[10px] font-semibold text-gray-400 uppercase">Coachee</span>
                 <span className="text-[10px] font-semibold text-gray-400 uppercase w-20 text-center">Experiences</span>
                 <span className="text-[10px] font-semibold text-gray-400 uppercase w-20 text-center">Completed</span>
-                <span className="text-[10px] font-semibold text-gray-400 uppercase w-24 text-center">Goals Adopted</span>
                 <span className="text-[10px] font-semibold text-gray-400 uppercase w-24 text-center">Learning Adopted</span>
               </div>
               {coacheeBreakdown.map(c => (
-                <div key={c.email} className="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_auto_auto_auto_auto] gap-3 items-center px-5 py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50">
+                <div key={c.email} className="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_auto_auto_auto] gap-3 items-center px-5 py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-8 h-8 rounded-full bg-[#0202ff]/10 flex items-center justify-center flex-shrink-0">
                       <span className="text-xs font-bold text-[#0202ff]">{c.email?.[0]?.toUpperCase()}</span>
@@ -347,11 +306,6 @@ export default function CoachAnalyticsTab({ user, coacheeEmails }) {
                     <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 rounded px-2 py-0.5">{c.completed}</span>
                   </div>
                   <div className="hidden sm:flex items-center justify-center w-24">
-                    {c.goalsCaptured > 0 ? (
-                      <span className="text-xs font-semibold text-[#0202ff] bg-blue-50 rounded px-2 py-0.5">{c.goalsAdopted}/{c.goalsCaptured}</span>
-                    ) : <span className="text-xs text-gray-300">—</span>}
-                  </div>
-                  <div className="hidden sm:flex items-center justify-center w-24">
                     {c.learningRecommended > 0 ? (
                       <span className="text-xs font-semibold text-purple-600 bg-purple-50 rounded px-2 py-0.5">{c.learningAdopted}/{c.learningRecommended}</span>
                     ) : <span className="text-xs text-gray-300">—</span>}
@@ -359,7 +313,6 @@ export default function CoachAnalyticsTab({ user, coacheeEmails }) {
                   {/* Mobile summary */}
                   <div className="flex sm:hidden items-center gap-1.5 flex-wrap justify-end">
                     <span className="text-xs font-semibold text-amber-600 bg-amber-50 rounded px-1.5 py-0.5">{c.experiences} exp</span>
-                    {c.goalsCaptured > 0 && <span className="text-xs font-semibold text-[#0202ff] bg-blue-50 rounded px-1.5 py-0.5">{c.goalsAdopted}/{c.goalsCaptured}</span>}
                   </div>
                 </div>
               ))}
@@ -367,6 +320,7 @@ export default function CoachAnalyticsTab({ user, coacheeEmails }) {
           )}
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }
