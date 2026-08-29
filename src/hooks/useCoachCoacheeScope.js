@@ -29,7 +29,7 @@ export function useCoachCoacheeScope(user) {
       try {
         const engagements = await base44.entities.CoachingEngagement.filter({
           coach_email: user.email,
-          status: { $in: ['pending', 'active', 'on_hold'] },
+          status: { $in: ['pending', 'active', 'on_hold', 'completed', 'terminated'] },
         });
         const emails = new Set();
         engagements.forEach((eng) => {
