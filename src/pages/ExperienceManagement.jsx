@@ -18,6 +18,7 @@ import AdminJourneysTab from "@/components/experience-mgmt/AdminJourneysTab";
 import AdminLearningManagementTab from "@/components/experience-mgmt/AdminLearningManagementTab";
 import AdminExperiencesTab from "@/components/experience-mgmt/AdminExperiencesTab";
 import ExperienceAnalyticsTab from "@/components/experience-mgmt/ExperienceAnalyticsTab";
+import CoachAnalyticsTab from "@/components/experience-mgmt/CoachAnalyticsTab";
 import { useCoachCoacheeScope } from "@/hooks/useCoachCoacheeScope";
 
 // Lazy load request components
@@ -47,11 +48,16 @@ const TABS = [
   { id: 'requests', label: 'Requests', icon: Inbox },
 ];
 
+const COACH_TABS = [
+  { id: 'experiences', label: 'Experiences', icon: Star },
+  { id: 'coach_analytics', label: 'Coaching Analytics', icon: BarChart2 },
+];
+
 export default function ExperienceManagement() {
   const { user, hasPermission, loading: authLoading } = useAuth();
   const { isCoachScoped, coacheeEmails } = useCoachCoacheeScope(user);
   const [section, setSection] = useState(isCoachScoped ? "experiences" : "analytics");
-  const visibleTabs = isCoachScoped ? TABS.filter(t => ['experiences', 'analytics'].includes(t.id)) : TABS;
+  const visibleTabs = isCoachScoped ? COACH_TABS : TABS;
 
   // ── Requests state ──
   const [requests, setRequests] = useState([]);
@@ -189,6 +195,13 @@ export default function ExperienceManagement() {
       {section === 'analytics' && (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <ExperienceAnalyticsTab user={user} coacheeEmails={coacheeEmails} isCoachScoped={isCoachScoped} />
+        </motion.div>
+      )}
+
+      {/* ── COACH ANALYTICS (coaches only) ── */}
+      {section === 'coach_analytics' && (
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <CoachAnalyticsTab user={user} coacheeEmails={coacheeEmails} />
         </motion.div>
       )}
 
