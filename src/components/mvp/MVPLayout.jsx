@@ -153,11 +153,7 @@ function MVPLayoutInner({ children }) {
   const navItems = isLeadershipCoach && mvpRole === 'buyer'
     ? [
         ...baseNav.filter(item => !item.group),
-        { label: 'Coaching', icon: ClipboardList, group: true, children: [
-          { label: 'My Coachees', path: '/coaching-workspace?tab=coachees', icon: Users },
-          { label: 'Session Prep', path: '/coaching-workspace?tab=prep', icon: ClipboardList },
-          { label: 'Engagement Outcomes', path: '/coaching-workspace?tab=outcomes', icon: BarChart2 },
-        ]},
+        { label: 'Coaching', path: '/coaching-workspace', icon: ClipboardList },
         ...baseNav.filter(item => item.group),
       ]
     : baseNav;
