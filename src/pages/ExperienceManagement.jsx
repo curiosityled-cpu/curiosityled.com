@@ -59,6 +59,12 @@ export default function ExperienceManagement() {
   const [section, setSection] = useState(isCoachScoped ? "experiences" : "analytics");
   const visibleTabs = isCoachScoped ? COACH_TABS : TABS;
 
+  // Once coach scope resolves (auth was still loading on first render),
+  // make sure coaches land on Experiences, not the org-wide Analytics tab.
+  useEffect(() => {
+    if (isCoachScoped && section === 'analytics') setSection('experiences');
+  }, [isCoachScoped, section]);
+
   // ── Requests state ──
   const [requests, setRequests] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
