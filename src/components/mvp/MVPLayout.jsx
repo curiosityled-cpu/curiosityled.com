@@ -154,9 +154,9 @@ function MVPLayoutInner({ children }) {
     ? [
         ...baseNav.filter(item => !item.group),
         { label: 'Coaching', icon: ClipboardList, group: true, children: [
-          { label: 'My Coachees', path: '/coaching?tab=coachees', icon: Users },
-          { label: 'Session Prep', path: '/coaching?tab=prep', icon: ClipboardList },
-          { label: 'Engagement Outcomes', path: '/coaching?tab=outcomes', icon: BarChart2 },
+          { label: 'My Coachees', path: '/coaching-workspace?tab=coachees', icon: Users },
+          { label: 'Session Prep', path: '/coaching-workspace?tab=prep', icon: ClipboardList },
+          { label: 'Engagement Outcomes', path: '/coaching-workspace?tab=outcomes', icon: BarChart2 },
         ]},
         ...baseNav.filter(item => item.group),
       ]
