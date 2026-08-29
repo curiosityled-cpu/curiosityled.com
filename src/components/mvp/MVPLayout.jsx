@@ -152,6 +152,7 @@ function MVPLayoutInner({ children }) {
   const isConsultant = (user?.app_role || user?.data?.app_role || user?.role) === 'Consultant';
   const isCoachOrConsultant = isLeadershipCoach || isConsultant;
   const workspaceLabel = isConsultant ? 'Experiences' : 'Coaching';
+  const workspacePath = isConsultant ? '/experience-workspace' : '/coaching-workspace';
   const baseNav = NAV_CONFIG[mvpRole] || [];
   // Leadership Coaches and Consultants get a dedicated workspace nav group alongside a trimmed
   // Administration group (no Leadership Intelligence Hub or User Management),
@@ -159,7 +160,7 @@ function MVPLayoutInner({ children }) {
   const coachAdminLabels = ['Development Manager', 'Report Builder'];
   const navItems = isCoachOrConsultant && mvpRole === 'buyer'
     ? [
-        { label: workspaceLabel, path: '/coaching-workspace', icon: ClipboardList },
+        { label: workspaceLabel, path: workspacePath, icon: ClipboardList },
         ...baseNav
           .filter(item => item.group)
           .map(item => ({
