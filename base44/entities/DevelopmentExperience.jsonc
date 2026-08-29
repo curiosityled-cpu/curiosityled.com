@@ -6,6 +6,10 @@
       "type": "string",
       "description": "Email of the user this experience belongs to"
     },
+    "coach_email": {
+      "type": "string",
+      "description": "Email of the Leadership Coach who created this coaching experience (set when a coach logs it for a coachee)"
+    },
     "title": {
       "type": "string",
       "description": "Title of the development experience"
@@ -74,6 +78,74 @@
       "type": "string",
       "description": "User's notes or reflections on the experience"
     },
+    "captured_goals": {
+      "type": "array",
+      "description": "Goals agreed upon during the coaching experience \u2014 captured here, not assigned. The coachee opts in to add them to their own goals.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "target_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "not_started",
+              "in_progress",
+              "achieved",
+              "not_achieved",
+              "deferred"
+            ],
+            "default": "not_started"
+          },
+          "linked_goal_id": {
+            "type": "string",
+            "description": "ID of the Goal created when the coachee adopted this captured goal"
+          },
+          "adopted_by_coachee": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    },
+    "recommended_learning": {
+      "type": "array",
+      "description": "Learning resources recommended by the coach as part of this experience \u2014 not assigned. The coachee opts in to add them to their own learning.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "resource_title": {
+            "type": "string"
+          },
+          "resource_url": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why the coach recommends this resource"
+          },
+          "linked_assigned_learning_id": {
+            "type": "string",
+            "description": "ID of the AssignedLearning created when the coachee adopted this recommendation"
+          },
+          "adopted_by_coachee": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    },
     "client_id": {
       "type": "string",
       "description": "Client ID for multi-tenant support"
@@ -92,6 +164,18 @@
           "data.user_email": "{{user.email}}"
         },
         {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Leadership Coach"
+              }
+            },
+            {
+              "data.coach_email": "{{user.email}}"
+            }
+          ]
+        },
+        {
           "user_condition": {
             "role": "Platform Admin"
           }
@@ -104,14 +188,30 @@
           "data.user_email": "{{user.email}}"
         },
         {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "User Level 2",
-                "Admin Level 2",
-                "Platform Admin"
-              ]
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Leadership Coach"
+              }
+            },
+            {
+              "data.coach_email": "{{user.email}}"
             }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "User Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
           }
         }
       ]
@@ -120,6 +220,18 @@
       "$or": [
         {
           "data.user_email": "{{user.email}}"
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Leadership Coach"
+              }
+            },
+            {
+              "data.coach_email": "{{user.email}}"
+            }
+          ]
         },
         {
           "user_condition": {
