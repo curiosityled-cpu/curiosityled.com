@@ -149,10 +149,10 @@ function MVPLayoutInner({ children }) {
   const mvpRole = getMVPRole(user?.app_role || user?.data?.app_role || user?.role || 'user');
   const isLeadershipCoach = (user?.app_role || user?.data?.app_role || user?.role) === 'Leadership Coach';
   const baseNav = NAV_CONFIG[mvpRole] || [];
-  // Leadership Coaches get a dedicated Coaching nav group alongside the Administration group
+  // Leadership Coaches get a dedicated Coaching nav group alongside the Administration group.
+  // Coaches don't use the manager-facing Lead/Practice daily-cadence tools.
   const navItems = isLeadershipCoach && mvpRole === 'buyer'
     ? [
-        ...baseNav.filter(item => !item.group),
         { label: 'Coaching', path: '/coaching-workspace', icon: ClipboardList },
         ...baseNav.filter(item => item.group),
       ]
