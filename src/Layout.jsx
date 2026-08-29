@@ -5,7 +5,7 @@ import { createPageUrl } from "@/utils";
 import { Home, BarChart3, BookOpen, Target, Brain, Menu, X, Map, Bell, User, Settings as SettingsIcon, LogOut, CreditCard, Building2, Shield, Users as UsersIcon, CheckCircle, LayoutGrid, FileText, GraduationCap, Eye, ClipboardList, Trophy, FlaskConical, Minimize2, Mail, Paintbrush, ArrowLeft, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AuthProvider, useAuth } from "@/components/useAuth";
+import { useAuth } from "@/components/useAuth";
 import AtreusCoach from "@/components/ai/AtreusCoach";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -1424,10 +1424,8 @@ function LayoutContent({ children }) {
 
 export default function Layout({ children }) {
   return (
-    <AuthProvider>
-      <ContextProviders>
-        <LayoutContent>{children}</LayoutContent>
-      </ContextProviders>
-    </AuthProvider>
+    <ContextProviders>
+      <LayoutContent>{children}</LayoutContent>
+    </ContextProviders>
   );
 }

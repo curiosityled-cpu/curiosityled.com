@@ -53,7 +53,6 @@ import DecisionJournalPage from './pages/DecisionJournalPage';
 import DecisionQualityAnalytics from './pages/DecisionQualityAnalytics';
 import Insights from './pages/Insights';
 import ReportBuilder from './pages/ReportBuilder';
-import { AuthProvider as FullAuthProvider } from '@/components/useAuth';
 import { ContextProviders } from '@/components/contexts/ContextProviders';
 
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -112,9 +111,7 @@ const AuthenticatedApp = () => {
   // Helper: wrap a page component for MVP users (needs FullAuthProvider for legacy pages)
   const MVPPage = ({ children }) => (
     <MVPLayout>
-      <FullAuthProvider>
-        <ContextProviders>{children}</ContextProviders>
-      </FullAuthProvider>
+      <ContextProviders>{children}</ContextProviders>
     </MVPLayout>
   );
 
