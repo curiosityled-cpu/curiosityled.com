@@ -151,7 +151,7 @@ function MVPLayoutInner({ children }) {
   const isLeadershipCoach = (user?.app_role || user?.data?.app_role || user?.role) === 'Leadership Coach';
   const isConsultant = (user?.app_role || user?.data?.app_role || user?.role) === 'Consultant';
   const isCoachOrConsultant = isLeadershipCoach || isConsultant;
-  const workspaceLabel = isConsultant ? 'Engagements' : 'Coaching';
+  const workspaceLabel = isConsultant ? 'Experiences' : 'Coaching';
   const baseNav = NAV_CONFIG[mvpRole] || [];
   // Leadership Coaches and Consultants get a dedicated workspace nav group alongside a trimmed
   // Administration group (no Leadership Intelligence Hub or User Management),
