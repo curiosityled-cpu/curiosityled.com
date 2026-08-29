@@ -124,7 +124,7 @@ const AuthenticatedApp = () => {
       <Route path="/" element={
         !mvpRole ? (
           <LandingPage />
-        ) : (user?.app_role || user?.data?.app_role || user?.role) === 'Leadership Coach' ? (
+        ) : (user?.app_role || user?.data?.app_role || user?.role) === 'Leadership Coach' || (user?.app_role || user?.data?.app_role || user?.role) === 'Consultant' ? (
           <Navigate to="/coaching-workspace" replace />
         ) : mvpRole === 'buyer' ? (
           <Navigate to="/today" replace />
@@ -193,7 +193,7 @@ const AuthenticatedApp = () => {
       <Route path="/OrgBusinessGoals" element={mvpRole ? <MVPPage><OrgBusinessGoals /></MVPPage> : <LayoutWrapper currentPageName="OrgBusinessGoals"><OrgBusinessGoals /></LayoutWrapper>} />
       <Route path="/PerformanceManager" element={<Navigate to="/GoalManager" replace />} />
       <Route path="/GoalManager" element={
-        (user?.app_role || user?.data?.app_role || user?.role) === 'Leadership Coach'
+        (user?.app_role || user?.data?.app_role || user?.role) === 'Leadership Coach' || (user?.app_role || user?.data?.app_role || user?.role) === 'Consultant'
           ? <Navigate to="/coaching-workspace" replace />
           : mvpRole ? <MVPPage><PerformanceManager /></MVPPage> : <LayoutWrapper currentPageName="GoalManager"><PerformanceManager /></LayoutWrapper>
       } />

@@ -27,7 +27,7 @@ function looksVague(formData) {
   return (weakSignalCount >= 2) || (highPriority && weakSignalCount >= 1);
 }
 
-export default function RequestSubmissionForm({ onSuccess, onSubmit, onCancel }) {
+export default function RequestSubmissionForm({ onSuccess, onSubmit, onCancel, defaultRequestType }) {
   const { user, appRole } = useAuth();
   const { openWithContext } = useAtreusChat();
   const [loading, setLoading] = useState(false);
@@ -39,7 +39,7 @@ export default function RequestSubmissionForm({ onSuccess, onSubmit, onCancel })
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    request_type: "custom",
+    request_type: defaultRequestType || "custom",
     source: "form",
     priority: "medium",
     impact_level: "team",
@@ -183,6 +183,24 @@ export default function RequestSubmissionForm({ onSuccess, onSubmit, onCancel })
         approval_status: requiresApproval ? 'pending' : 'not_required',
         initial_notes: riskAnalysis ? `AI Risk Analysis: ${JSON.stringify(riskAnalysis)}` : undefined
       };
+
+      // Enforce per-client allowlist for coaching_support requests
+      if (formData.request_type === 'coaching_support' && user?.client_id) {
+        try {
+          const { data: accessData } = await base44.functions.invoke('validateCoachingRequestAccess', {
+            requester_email: user.email,
+            client_id: user.client_id,
+            request_type: 'coaching_support'
+          });
+          if (accessData?.allowed === false) {
+            toast.error(accessData.reason || 'You are not authorized to submit coaching requests.');
+            return;
+          }
+        } catch (error) {
+          toast.error('Could not verify coaching request permissions. Please try again.');
+          return;
+        }
+      }
 
       await base44.entities.DevelopmentRequest.create(requestData);
       

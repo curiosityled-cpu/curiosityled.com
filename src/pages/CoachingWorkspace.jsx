@@ -4,17 +4,25 @@ import { Users, ClipboardList, TrendingUp } from 'lucide-react';
 import MyCoacheesView from '@/components/coaching/MyCoacheesView';
 import SessionPrepView from '@/components/coaching/SessionPrepView';
 import EngagementOutcomesView from '@/components/coaching/EngagementOutcomesView';
-
-const TABS = [
-  { key: 'coachees', label: 'My Coachees', icon: Users },
-  { key: 'prep', label: 'Session Prep', icon: ClipboardList },
-  { key: 'outcomes', label: 'Engagement Outcomes', icon: TrendingUp },
-];
+import { useAuth } from '@/lib/AuthContext';
 
 export default function CoachingWorkspace() {
+  const { user } = useAuth();
+  const isConsultant = (user?.app_role || user?.data?.app_role || user?.role) === 'Consultant';
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get('tab') || 'coachees';
   const selectedEngagement = searchParams.get('engagement') || '';
+
+  const tabs = [
+    { key: 'coachees', label: isConsultant ? 'My Engagements' : 'My Coachees', icon: Users },
+    { key: 'prep', label: 'Session Prep', icon: ClipboardList },
+    { key: 'outcomes', label: 'Engagement Outcomes', icon: TrendingUp },
+  ];
+
+  const workspaceTitle = isConsultant ? 'Engagement Workspace' : 'Coaching Workspace';
+  const workspaceSubtitle = isConsultant
+    ? 'Manage your engagements, prepare for sessions, and track outcomes.'
+    : 'Manage your coachees, prepare for sessions, and track engagement outcomes.';
 
   const setTab = (newTab) => {
     const next = new URLSearchParams(searchParams);
@@ -33,15 +41,15 @@ export default function CoachingWorkspace() {
     <div className="p-4 md:p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Coaching Workspace</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground">{workspaceTitle}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Manage your coachees, prepare for sessions, and track engagement outcomes.
+          {workspaceSubtitle}
         </p>
       </div>
 
       {/* Tab bar */}
       <div className="flex gap-1 mb-6 border-b border-border overflow-x-auto">
-        {TABS.map(t => {
+        {tabs.map(t => {
           const Icon = t.icon;
           const active = tab === t.key;
           return (

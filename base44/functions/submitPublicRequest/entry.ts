@@ -33,6 +33,22 @@ Deno.serve(async (req) => {
       }, { status: 400 });
     }
 
+    // Enforce per-client allowlist for coaching_support requests
+    if ((request_data.request_type || 'other') === 'coaching_support') {
+      try {
+        const accessResult = await base44.asServiceRole.functions.invoke('validateCoachingRequestAccess', {
+          requester_email: request_data.requester_email.trim(),
+          client_id: linkData.client_id,
+          request_type: 'coaching_support'
+        });
+        if (accessResult?.allowed === false) {
+          return Response.json({ error: accessResult.reason || 'You are not authorized to submit coaching requests.' }, { status: 403 });
+        }
+      } catch (e) {
+        console.log('Allowlist check skipped:', e.message);
+      }
+    }
+
     // Create the request using service role (since user is not authenticated)
     const newRequest = await base44.asServiceRole.entities.DevelopmentRequest.create({
       title: request_data.title.trim(),

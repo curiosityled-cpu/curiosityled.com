@@ -57,7 +57,35 @@ export default function ApprovalWorkflowPanel({ request, onUpdate }) {
       };
 
       await base44.entities.DevelopmentRequest.update(request.id, updates);
-      
+
+      // On rejection, notify the requester via email + in-app notification
+      if (anyRejected && request.requested_by_email) {
+        try {
+          await base44.functions.invoke('sendRequestNotification', {
+            request_id: request.id,
+            notification_type: 'rejection',
+            recipient_email: request.requested_by_email,
+            custom_message: decisionNotes || 'Your coaching request was not approved at this time.'
+          });
+        } catch (e) {
+          console.log('Rejection email skipped:', e.message);
+        }
+        try {
+          await base44.entities.Notification.create({
+            user_email: request.requested_by_email,
+            type: 'reminder',
+            title: `Coaching request update: ${request.title}`,
+            message: decisionNotes || 'Your coaching request was not approved at this time.',
+            related_entity_type: 'DevelopmentRequest',
+            related_entity_id: request.id,
+            action_url: '/DevelopmentManager',
+            priority: 'high'
+          });
+        } catch (e) {
+          console.log('In-app notification skipped:', e.message);
+        }
+      }
+
       toast.success(decision === 'approved' ? 'Request approved' : 'Request rejected');
       setDecisionNotes("");
       

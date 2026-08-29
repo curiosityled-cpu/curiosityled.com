@@ -363,6 +363,34 @@ export const BASE_ROLE_PERMISSIONS = {
     'coaching.message',
     'coaching.brief.view'
   ],
+  'Consultant': [
+    // Mirrors Leadership Coach — internal consultants/facilitators who run engagements
+    'classes.view', 'classes.create', 'classes.edit', 'classes.delete',
+    'classes.schedule', 'classes.manage_enrollment', 'classes.mark_attendance', 'classes.issue_certificates',
+    'programs.view', 'programs.create', 'programs.edit', 'programs.manage_participants',
+    'journeys.view', 'journeys.create', 'journeys.edit', 'journeys.assign', 'journeys.manage',
+    'coaching.view', 'coaching.create', 'coaching.manage',
+    'coaching.action_plans.create', 'coaching.action_plans.manage',
+    'coaching.goals.create', 'coaching.goals.manage',
+    'coaching.sessions.schedule', 'coaching.sessions.manage',
+    'coaching.engagements.create', 'coaching.engagements.manage',
+    'cohorts.view', 'cohorts.create', 'cohorts.edit', 'cohorts.manage_participants',
+    'certificates.view', 'certificates.issue', 'certificates.revoke',
+    'analytics.view_team', 'analytics.program.view', 'analytics.coaching.view',
+    'analytics.engagement.view', 'analytics.content.view',
+    'reports.program.view', 'reports.program.create', 'reports.program.schedule', 'reports.program.download',
+    'assessments.view', 'assessments.view_results',
+    'learning.view', 'learning.assign', 'learning.track_progress',
+    'goals.view', 'goals.create', 'goals.assign',
+    'program_goals.view', 'program_goals.manage', 'program_goals.approve', 'program_goals.comment',
+    'program_performance.view', 'program_performance.export', 'program_performance.reports',
+    'experiences.manage_org', 'experiences.create_journey', 'experiences.create_onboarding',
+    'experiences.deploy', 'experiences.view_analytics',
+    // Consultant-specific tools
+    'coaching.notes.private',
+    'coaching.message',
+    'coaching.brief.view'
+  ],
   'Admin Level 2': [
     'users.view', 'users.create', 'users.edit',
     'analytics.view_client', 'analytics.export',

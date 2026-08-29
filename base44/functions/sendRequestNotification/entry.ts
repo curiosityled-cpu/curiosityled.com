@@ -104,6 +104,18 @@ Deno.serve(async (req) => {
         `;
         break;
 
+      case 'rejection':
+        subject = `Coaching Request Update: ${request.title}`;
+        body = `
+          <h2>Coaching Request Update</h2>
+          <p><strong>Title:</strong> ${request.title}</p>
+          <p>Your coaching request was not approved at this time.</p>
+          ${custom_message ? `<p><strong>Reason:</strong> ${custom_message}</p>` : ''}
+          <p>If you have questions, please contact your Program Administrator.</p>
+          <p><a href="${appUrl}/DevelopmentManager">View Request Details</a></p>
+        `;
+        break;
+
       case 'completion':
         subject = `Request Completed: ${request.title}`;
         body = `

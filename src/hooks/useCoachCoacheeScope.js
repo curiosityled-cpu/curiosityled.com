@@ -15,7 +15,7 @@ import { base44 } from '@/api/base44Client';
  */
 export function useCoachCoacheeScope(user) {
   const appRole = user?.app_role || user?.data?.app_role || user?.role;
-  const isCoach = appRole === 'Leadership Coach';
+  const isCoach = appRole === 'Leadership Coach' || appRole === 'Consultant';
   const [coacheeEmails, setCoacheeEmails] = useState([]);
   const [loading, setLoading] = useState(true);
 

@@ -26,6 +26,7 @@ const RequestDetailPanel = lazy(() => import("@/components/requests/RequestDetai
 const RequestSubmissionForm = lazy(() => import("@/components/requests/RequestSubmissionForm"));
 const RequestStatistics = lazy(() => import("@/components/requests/RequestStatistics"));
 const AdvancedFilters = lazy(() => import("@/components/requests/AdvancedFilters"));
+const CoachingRequestAllowlistSettings = lazy(() => import("@/components/requests/CoachingRequestAllowlistSettings"));
 
 const STATUS_BADGE_COLORS = {
   new: 'bg-blue-100 text-blue-800', triaging: 'bg-yellow-100 text-yellow-800',
@@ -50,6 +51,7 @@ const TABS = [
 
 const COACH_TABS = [
   { id: 'experiences', label: 'Experiences', icon: Star },
+  { id: 'requests', label: 'My Requests', icon: Inbox },
   { id: 'coach_analytics', label: 'Coaching Analytics', icon: BarChart2 },
 ];
 
@@ -221,6 +223,10 @@ export default function ExperienceManagement() {
                 <Plus className="w-4 h-4 mr-1.5" /> New Request
               </Button>
             </div>
+
+            {!isCoachScoped && user?.client_id && (
+              <CoachingRequestAllowlistSettings clientId={user.client_id} />
+            )}
 
             {loadingRequests ? (
               <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-[#0202ff]" /></div>

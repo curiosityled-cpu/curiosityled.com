@@ -67,7 +67,8 @@ export default function RequestDetailPanel({ requestId, onClose, onUpdate }) {
       const response = await base44.functions.invoke('listAllUsers');
       if (response.data?.success) {
         const admins = response.data.users.filter(u => 
-          u.app_role === 'Admin Level 1' || u.app_role === 'Admin Level 2'
+          u.app_role === 'Admin Level 1' || u.app_role === 'Admin Level 2' ||
+          u.app_role === 'Leadership Coach' || u.app_role === 'Consultant'
         );
         setProgramAdmins(admins);
       }

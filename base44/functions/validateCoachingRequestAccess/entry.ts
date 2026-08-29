@@ -3,7 +3,6 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 export default async function(req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
 
     const body = await req.json();
     const { requester_email, client_id, request_type } = body;
@@ -18,12 +17,16 @@ export default async function(req: Request): Promise<Response> {
     }
 
     // Fetch the client to read allowlist settings
-    const clients = await base44.asServiceRole.entities.Client.filter({ id: client_id });
-    if (clients.length === 0) {
+    let client;
+    try {
+      const clients = await base44.asServiceRole.entities.Client.filter({ id: client_id });
+      if (clients.length === 0) {
+        return Response.json({ allowed: false, reason: 'Client organization not found' }, { status: 403 });
+      }
+      client = clients[0];
+    } catch (e) {
       return Response.json({ allowed: false, reason: 'Client organization not found' }, { status: 403 });
     }
-
-    const client = clients[0];
     const settings = client.settings || {};
     const allowlist = settings.coaching_request_allowlist_enabled === true;
 

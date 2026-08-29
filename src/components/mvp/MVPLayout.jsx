@@ -30,7 +30,7 @@ import { Badge } from "@/components/ui/badge";
 export const getMVPRole = (appRole) => {
   if (!appRole) return 'manager';
   if (appRole === 'User Level 1' || appRole === 'User Level 2' || appRole === 'user') return 'manager';
-  if (appRole === 'Admin Level 1' || appRole === 'Leadership Coach' || appRole === 'Admin Level 2' || appRole === 'Super Administrator' || appRole === 'Platform Admin' || appRole === 'Partner Business Administrator' || appRole === 'admin') return 'buyer';
+  if (appRole === 'Admin Level 1' || appRole === 'Leadership Coach' || appRole === 'Consultant' || appRole === 'Admin Level 2' || appRole === 'Super Administrator' || appRole === 'Platform Admin' || appRole === 'Partner Business Administrator' || appRole === 'admin') return 'buyer';
   if (appRole === 'HRBP') return 'hrbp';
   if (appRole === 'Analyst') return 'analyst';
   if (appRole === 'Executive') return 'executive';
@@ -48,6 +48,7 @@ export const getFriendlyRoleLabel = (appRole) => {
     'HRBP': 'HR Business Partner',
     'Admin Level 1': 'Program Admin',
     'Leadership Coach': 'Leadership Coach',
+    'Consultant': 'Consultant',
     'Admin Level 2': 'HR Admin',
     'Super Administrator': 'Super Administrator',
     'Partner Business Administrator': 'Partner Administrator',
@@ -148,14 +149,17 @@ function MVPLayoutInner({ children }) {
 
   const mvpRole = getMVPRole(user?.app_role || user?.data?.app_role || user?.role || 'user');
   const isLeadershipCoach = (user?.app_role || user?.data?.app_role || user?.role) === 'Leadership Coach';
+  const isConsultant = (user?.app_role || user?.data?.app_role || user?.role) === 'Consultant';
+  const isCoachOrConsultant = isLeadershipCoach || isConsultant;
+  const workspaceLabel = isConsultant ? 'Engagements' : 'Coaching';
   const baseNav = NAV_CONFIG[mvpRole] || [];
-  // Leadership Coaches get a dedicated Coaching nav group alongside a trimmed
+  // Leadership Coaches and Consultants get a dedicated workspace nav group alongside a trimmed
   // Administration group (no Leadership Intelligence Hub or User Management),
   // and no manager-facing Lead/Practice daily-cadence tools.
   const coachAdminLabels = ['Development Manager', 'Report Builder'];
-  const navItems = isLeadershipCoach && mvpRole === 'buyer'
+  const navItems = isCoachOrConsultant && mvpRole === 'buyer'
     ? [
-        { label: 'Coaching', path: '/coaching-workspace', icon: ClipboardList },
+        { label: workspaceLabel, path: '/coaching-workspace', icon: ClipboardList },
         ...baseNav
           .filter(item => item.group)
           .map(item => ({

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import PracticeFlow from "@/components/practice/PracticeFlow";
 import CoachingFlowsCard from "@/components/practice/CoachingFlowsCard";
+import RequestCoachingCard from "@/components/practice/RequestCoachingCard";
 import WorkoutsSection from "@/components/practice/WorkoutsSection";
 import LeadAlertsSection from "@/components/practice/LeadAlertsSection";
 import DevelopmentStatsRow from "@/components/practice/DevelopmentStatsRow";
@@ -185,6 +186,9 @@ export default function ManagerPractice() {
 
               {/* Coaching Flows — scrollable list with expandable popups */}
               <CoachingFlowsCard onStartFlow={handleStartFlow} />
+
+              {/* Request Coaching — formal coaching request submission */}
+              <RequestCoachingCard />
 
               {/* Leadership Tools */}
               <div className="space-y-3">
