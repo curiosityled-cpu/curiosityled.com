@@ -171,7 +171,7 @@ export default function AdminExperiencesTab({ user, coacheeEmails }) {
         onSaved={() => { setShowModal(false); setEditingExp(null); load(); }}
         experience={editingExp}
         userEmail={assignToEmail || user?.email}
-        coachMode={scoped}
+        coachMode={user?.app_role === 'Leadership Coach' || user?.app_role === 'Consultant'}
         coachRole={user?.app_role === 'Consultant' ? 'consultant' : 'leadership_coach'}
       />
     </div>
