@@ -124,6 +124,8 @@ const AuthenticatedApp = () => {
       <Route path="/" element={
         !mvpRole ? (
           <LandingPage />
+        ) : (user?.app_role || user?.data?.app_role || user?.role) === 'Leadership Coach' ? (
+          <Navigate to="/coaching-workspace" replace />
         ) : mvpRole === 'buyer' ? (
           <Navigate to="/today" replace />
         ) : mvpRole === 'analyst' ? (
