@@ -10,6 +10,23 @@
       "type": "string",
       "description": "Email of the Leadership Coach who created this coaching experience (set when a coach logs it for a coachee)"
     },
+    "engagement_id": {
+      "type": "string",
+      "description": "ID of the CoachingEngagement this experience is linked to (coaching-type experiences)"
+    },
+    "session_id": {
+      "type": "string",
+      "description": "ID of a specific CoachingSession stamped onto this experience (optional, for session-linked experiences)"
+    },
+    "group_assignment": {
+      "type": "string",
+      "enum": [
+        "individual",
+        "group"
+      ],
+      "default": "individual",
+      "description": "individual = assigned to one coachee (user_email); group = shared across the engagement's team_member_emails"
+    },
     "title": {
       "type": "string",
       "description": "Title of the development experience"
@@ -152,7 +169,6 @@
     }
   },
   "required": [
-    "user_email",
     "title",
     "type",
     "competencies"

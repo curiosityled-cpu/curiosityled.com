@@ -3,16 +3,23 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, AlertCircle, Activity, Target, FileText, ClipboardCheck, MessageSquare } from 'lucide-react';
+import { Loader2, AlertCircle, Activity, Target, FileText, ClipboardCheck, MessageSquare, Plus, Calendar, Star } from 'lucide-react';
 import { format } from 'date-fns';
 import CoachReflectionPanel from '@/components/coaching/CoachReflectionPanel';
 import CoachMessageThread from '@/components/coaching/CoachMessageThread';
+import SessionLogModal from '@/components/coaching/SessionLogModal';
+import ExperienceFormModal from '@/components/development/ExperienceFormModal';
+import { loadEngagementChildren } from '@/lib/coaching/engagementChildren';
+import { Button } from '@/components/ui/button';
 
 export default function SessionPrepView({ engagementId, onSelect }) {
   const { user } = useAuth();
   const [engagement, setEngagement] = useState(null);
   const [brief, setBrief] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [children, setChildren] = useState({ experiences: [], sessions: [] });
+  const [showSessionModal, setShowSessionModal] = useState(false);
+  const [showExpModal, setShowExpModal] = useState(false);
 
   useEffect(() => {
     if (engagementId) loadEngagement();
@@ -23,10 +30,14 @@ export default function SessionPrepView({ engagementId, onSelect }) {
     try {
       const eng = await base44.entities.CoachingEngagement.get(engagementId);
       setEngagement(eng);
-      if (eng?.coachee_email) {
-        const res = await base44.functions.invoke('getCoacheeBrief', { coachee_email: eng.coachee_email });
-        setBrief(res?.data?.brief || res?.brief);
-      }
+      const [briefRes, childData] = await Promise.all([
+        eng?.coachee_email
+          ? base44.functions.invoke('getCoacheeBrief', { coachee_email: eng.coachee_email }).catch(() => null)
+          : Promise.resolve(null),
+        loadEngagementChildren(engagementId),
+      ]);
+      setBrief(briefRes?.data?.brief || briefRes?.brief);
+      setChildren(childData);
     } catch (e) {
       console.error('Error loading engagement:', e);
     } finally {
@@ -217,6 +228,60 @@ export default function SessionPrepView({ engagementId, onSelect }) {
         </div>
       )}
 
+      {/* Sessions & Experiences */}
+      <Card>
+        <CardContent className="py-4 px-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Star className="w-4 h-4 text-[#0202ff]" /> Sessions & Experiences
+            </h3>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setShowSessionModal(true)}>
+                <Calendar className="w-3.5 h-3.5 mr-1" /> Log Session
+              </Button>
+              <Button size="sm" className="h-8 text-xs bg-[#0202ff] hover:bg-[#0101dd]" onClick={() => setShowExpModal(true)}>
+                <Plus className="w-3.5 h-3.5 mr-1" /> Add Experience
+              </Button>
+            </div>
+          </div>
+
+          {children.sessions.length === 0 && children.experiences.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">
+              No sessions or experiences logged yet for this engagement.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {children.sessions.map(s => (
+                <div key={s.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/40 border border-border">
+                  <Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{s.title || 'Session'}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(s.scheduled_date), 'MMM d, yyyy · h:mm a')}
+                      {s.duration_minutes ? ` · ${s.duration_minutes}min` : ''}
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="text-xs">{s.status}</Badge>
+                </div>
+              ))}
+              {children.experiences.map(e => (
+                <div key={e.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-amber-50/50 border border-amber-100">
+                  <Star className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{e.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {e.type === 'leadership_coaching' ? 'Coaching experience' : e.type}
+                      {e.group_assignment === 'group' ? ' · Group' : ''}
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="text-xs">{e.status}</Badge>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Confidential notes */}
       <CoachReflectionPanel engagementId={engagementId} coachEmail={user?.email} />
 
@@ -227,6 +292,26 @@ export default function SessionPrepView({ engagementId, onSelect }) {
         </h3>
         <CoachMessageThread engagementId={engagementId} coacheeEmail={engagement.coachee_email} />
       </div>
+
+      <SessionLogModal
+        open={showSessionModal}
+        onClose={() => setShowSessionModal(false)}
+        onSaved={() => { setShowSessionModal(false); loadEngagement(); }}
+        engagementId={engagementId}
+        coachEmail={user?.email}
+        coacheeEmail={engagement?.coachee_email}
+      />
+
+      <ExperienceFormModal
+        open={showExpModal}
+        onClose={() => setShowExpModal(false)}
+        onSaved={() => { setShowExpModal(false); loadEngagement(); }}
+        userEmail={engagement?.coachee_email}
+        coachMode
+        coachEmail={user?.email}
+        clientId={engagement?.client_id}
+        defaultEngagementId={engagementId}
+      />
     </div>
   );
 }
