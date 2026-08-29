@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { Loader2, X, Check, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import CapturedGoalsEditor from "@/components/development/CapturedGoalsEditor";
+import RecommendedLearningEditor from "@/components/development/RecommendedLearningEditor";
 
 const EXPERIENCE_TYPES = [
   { value: "leadership_coaching", label: "Leadership Coaching", emoji: "🎯" },
@@ -32,7 +34,7 @@ const COMPETENCIES = [
   "Performance Management",
 ];
 
-export default function ExperienceFormModal({ open, onClose, onSaved, experience, userEmail }) {
+export default function ExperienceFormModal({ open, onClose, onSaved, experience, userEmail, coachMode }) {
   const editing = !!experience?.id;
   const [form, setForm] = useState({
     title: "",
@@ -45,6 +47,8 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
     end_date: "",
     provider_or_sponsor: "",
     status: "planned",
+    captured_goals: [],
+    recommended_learning: [],
   });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
@@ -62,14 +66,17 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
         end_date: experience.end_date || "",
         provider_or_sponsor: experience.provider_or_sponsor || "",
         status: experience.status || "planned",
-      });
-    } else {
-      setForm({
-        title: "", description: "", type: "stretch_project", competencies: [],
+        captured_goals: experience.captured_goals || [],
+        recommended_learning: experience.recommended_learning || [],
+        });
+        } else {
+        setForm({
+        title: "", description: "", type: coachMode ? "leadership_coaching" : "stretch_project", competencies: [],
         expected_impact: 5, planned_month: "", start_date: "", end_date: "",
         provider_or_sponsor: "", status: "planned",
-      });
-    }
+        captured_goals: [], recommended_learning: [],
+        });
+        }
   }, [experience, open]);
 
   const toggleCompetency = (c) => {
@@ -92,6 +99,7 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
       if (!email) throw new Error("Could not determine your user account. Please refresh and try again.");
       const clientId = me?.client_id || me?.data?.client_id || null;
       const data = { ...form, user_email: email, client_id: clientId };
+      if (coachMode) data.coach_email = me?.email;
       if (editing) {
         await base44.entities.DevelopmentExperience.update(experience.id, data);
       } else {
@@ -130,6 +138,7 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
         <div className="space-y-4 pt-2">
           {field("Title *", "title", "text", "e.g. Executive Coaching with Jane Smith")}
 
+          {!coachMode && (
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Type *</label>
             <div className="grid grid-cols-3 gap-2">
@@ -149,6 +158,7 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
               ))}
             </div>
           </div>
+          )}
 
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
@@ -231,6 +241,19 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
               <span className="text-sm font-bold text-indigo-600 w-10 text-right">+{form.expected_impact}%</span>
             </div>
           </div>
+
+          {coachMode && (
+            <>
+              <CapturedGoalsEditor
+                value={form.captured_goals}
+                onChange={(goals) => setForm((f) => ({ ...f, captured_goals: goals }))}
+              />
+              <RecommendedLearningEditor
+                value={form.recommended_learning}
+                onChange={(items) => setForm((f) => ({ ...f, recommended_learning: items }))}
+              />
+            </>
+          )}
 
           {saveError && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs">

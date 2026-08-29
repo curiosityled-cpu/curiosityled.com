@@ -12,6 +12,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import CertificateViewer from "@/components/learning/CertificateViewer";
 import CreateDevelopmentPlanModal from "@/components/development/CreateDevelopmentPlanModal";
 import ExperienceFormModal from "@/components/development/ExperienceFormModal";
+import ExperienceAdoptionPanel from "@/components/development/ExperienceAdoptionPanel";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 
 const EXP_TYPE_LABELS = {
@@ -26,7 +27,7 @@ const EXP_TYPE_LABELS = {
   other: "Other",
 };
 
-function ExperienceCard({ exp, index, onEdit, onDelete }) {
+function ExperienceCard({ exp, index, onEdit, onDelete, onAdopt }) {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }}>
       <Card className="shadow-sm border border-gray-100 rounded-2xl hover:shadow-md transition-shadow">
@@ -55,6 +56,9 @@ function ExperienceCard({ exp, index, onEdit, onDelete }) {
                 {exp.start_date && <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{new Date(exp.start_date).toLocaleDateString()}</span>}
                 {exp.expected_impact && <span className="text-emerald-600">+{exp.expected_impact}% projected</span>}
               </div>
+              {((exp.captured_goals?.length > 0) || (exp.recommended_learning?.length > 0)) && (
+                <ExperienceAdoptionPanel exp={exp} onAdopted={onAdopt} />
+              )}
             </div>
             <div className="flex flex-col gap-1.5 flex-shrink-0">
               <button onClick={onEdit} className="text-gray-400 hover:text-[#0202ff] transition-colors">
@@ -484,7 +488,7 @@ export default function MyDevelopment() {
                   </Card>
                 ) : (
                   activeExperiences.map((exp, i) => (
-                    <ExperienceCard key={exp.id} exp={exp} index={i} onEdit={() => { setEditingExp(exp); setShowExpModal(true); }} onDelete={async () => { await base44.entities.DevelopmentExperience.delete(exp.id); load(); }} />
+                    <ExperienceCard key={exp.id} exp={exp} index={i} onEdit={() => { setEditingExp(exp); setShowExpModal(true); }} onDelete={async () => { await base44.entities.DevelopmentExperience.delete(exp.id); load(); }} onAdopt={load} />
                   ))
                 )}
               </div>
@@ -500,7 +504,7 @@ export default function MyDevelopment() {
                   </Card>
                 ) : (
                   completedExperiences.map((exp, i) => (
-                    <ExperienceCard key={exp.id} exp={exp} index={i} onEdit={() => { setEditingExp(exp); setShowExpModal(true); }} onDelete={async () => { await base44.entities.DevelopmentExperience.delete(exp.id); load(); }} />
+                    <ExperienceCard key={exp.id} exp={exp} index={i} onEdit={() => { setEditingExp(exp); setShowExpModal(true); }} onDelete={async () => { await base44.entities.DevelopmentExperience.delete(exp.id); load(); }} onAdopt={load} />
                   ))
                 )}
               </div>

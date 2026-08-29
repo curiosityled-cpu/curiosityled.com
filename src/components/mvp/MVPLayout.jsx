@@ -152,7 +152,7 @@ function MVPLayoutInner({ children }) {
   // Leadership Coaches get a dedicated Coaching nav group alongside a trimmed
   // Administration group (no Leadership Intelligence Hub or User Management),
   // and no manager-facing Lead/Practice daily-cadence tools.
-  const coachAdminLabels = ['Development Manager', 'Goal Manager', 'Report Builder'];
+  const coachAdminLabels = ['Development Manager', 'Report Builder'];
   const navItems = isLeadershipCoach && mvpRole === 'buyer'
     ? [
         { label: 'Coaching', path: '/coaching-workspace', icon: ClipboardList },

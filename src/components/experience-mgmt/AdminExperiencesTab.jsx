@@ -22,6 +22,7 @@ const STATUS_BADGE = {
 };
 
 export default function AdminExperiencesTab({ user, coacheeEmails }) {
+  const scoped = (coacheeEmails || []).length > 0;
   const [experiences, setExperiences] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +40,6 @@ export default function AdminExperiencesTab({ user, coacheeEmails }) {
         base44.entities.DevelopmentExperience.list('-created_date'),
         base44.entities.User.filter({ client_id: user.client_id })
       ]);
-      const scoped = (coacheeEmails || []).length > 0;
       if (scoped) {
         // Leadership Coaches: only experiences belonging to their coachees
         setExperiences(exps.filter(e => coacheeEmails.includes(e.user_email)));
@@ -169,6 +169,7 @@ export default function AdminExperiencesTab({ user, coacheeEmails }) {
         onSaved={() => { setShowModal(false); setEditingExp(null); load(); }}
         experience={editingExp}
         userEmail={assignToEmail || user?.email}
+        coachMode={scoped}
       />
     </div>
   );

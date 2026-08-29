@@ -66,7 +66,7 @@ const getRiskLevel = (insight) => {
   return { label: 'At Risk', color: 'text-red-700', bg: 'bg-red-50 border-red-200', dot: 'bg-red-500' };
 };
 
-export default function ExperienceAnalyticsTab({ user }) {
+export default function ExperienceAnalyticsTab({ user, coacheeEmails, isCoachScoped }) {
   const navigate = useNavigate();
   const [plans, setPlans] = useState([]);
   const [assignments, setAssignments] = useState([]);
@@ -94,11 +94,20 @@ export default function ExperienceAnalyticsTab({ user }) {
       const adminRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin', 'Partner Business Administrator'];
       const adminEmails = new Set(users.filter(u => adminRoles.includes(u.app_role)).map(u => u.email));
 
-      setPlans(allPlans.filter(p => adminEmails.has(p.created_by)));
-      setAssignments(allAssignments.filter(a => adminEmails.has(a.assigned_by)));
-      setExperiences(allExps.filter(e => adminEmails.has(e.created_by)));
-      setResources(allResources);
-      setAllUsers(users);
+      if (isCoachScoped && (coacheeEmails || []).length > 0) {
+        const coacheeSet = new Set(coacheeEmails);
+        setPlans(allPlans.filter(p => coacheeSet.has(p.user_email)));
+        setAssignments(allAssignments.filter(a => coacheeSet.has(a.user_email)));
+        setExperiences(allExps.filter(e => coacheeSet.has(e.user_email) || coacheeSet.has(e.created_by)));
+        setResources(allResources);
+        setAllUsers(users.filter(u => coacheeSet.has(u.email)));
+      } else {
+        setPlans(allPlans.filter(p => adminEmails.has(p.created_by)));
+        setAssignments(allAssignments.filter(a => adminEmails.has(a.assigned_by)));
+        setExperiences(allExps.filter(e => adminEmails.has(e.created_by)));
+        setResources(allResources);
+        setAllUsers(users);
+      }
 
       const assessmentByEmail = assessments.reduce((acc, a) => {
         if (!acc[a.email]) acc[a.email] = a;
@@ -115,7 +124,7 @@ export default function ExperienceAnalyticsTab({ user }) {
       setAllInsights(insightsMap);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
-  }, [user.client_id]);
+  }, [user.client_id, isCoachScoped, coacheeEmails]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -272,6 +281,13 @@ export default function ExperienceAnalyticsTab({ user }) {
 
   return (
     <div className="space-y-5">
+
+      {isCoachScoped && (
+        <div className="flex items-center gap-2 bg-[#0202ff]/5 border border-[#0202ff]/15 rounded-lg px-3 py-2">
+          <Users className="w-4 h-4 text-[#0202ff]" />
+          <p className="text-xs font-medium text-[#0202ff]">Showing your coachees — past and current</p>
+        </div>
+      )}
 
       {/* ── Top KPI Summary ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

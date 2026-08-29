@@ -49,8 +49,9 @@ const TABS = [
 
 export default function ExperienceManagement() {
   const { user, hasPermission, loading: authLoading } = useAuth();
-  const { coacheeEmails } = useCoachCoacheeScope(user);
-  const [section, setSection] = useState("analytics");
+  const { isCoachScoped, coacheeEmails } = useCoachCoacheeScope(user);
+  const [section, setSection] = useState(isCoachScoped ? "experiences" : "analytics");
+  const visibleTabs = isCoachScoped ? TABS.filter(t => ['experiences', 'analytics'].includes(t.id)) : TABS;
 
   // ── Requests state ──
   const [requests, setRequests] = useState([]);
@@ -150,7 +151,7 @@ export default function ExperienceManagement() {
       {/* Section Toggle */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex gap-1 bg-gray-100 rounded-xl p-1 overflow-x-auto">
-          {TABS.map(tab => {
+          {visibleTabs.map(tab => {
             const Icon = tab.icon;
             return (
               <button key={tab.id} onClick={() => setSection(tab.id)}
@@ -187,7 +188,7 @@ export default function ExperienceManagement() {
       {/* ── ANALYTICS ── */}
       {section === 'analytics' && (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <ExperienceAnalyticsTab user={user} />
+          <ExperienceAnalyticsTab user={user} coacheeEmails={coacheeEmails} isCoachScoped={isCoachScoped} />
         </motion.div>
       )}
 
