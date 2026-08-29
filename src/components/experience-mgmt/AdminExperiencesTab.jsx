@@ -2,14 +2,11 @@ import React, { useState, useCallback, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Star, Clock, Search, Plus, Pencil, Trash2, Calendar } from "lucide-react";
+import { Star, Clock, Search, Plus, Pencil, Trash2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import ExperienceFormModal from "@/components/development/ExperienceFormModal";
-import SessionLogModal from "@/components/coaching/SessionLogModal";
-import ExperienceCard from "@/components/experience-mgmt/ExperienceCard";
-import { loadEngagementMap } from "@/lib/coaching/engagementChildren";
 
 const EXP_TYPE_LABELS = {
   leadership_coaching: "Leadership Coaching", stretch_project: "Stretch Project",
@@ -35,10 +32,6 @@ export default function AdminExperiencesTab({ user, coacheeEmails }) {
   const [showModal, setShowModal] = useState(false);
   const [editingExp, setEditingExp] = useState(null);
   const [assignToEmail, setAssignToEmail] = useState('');
-  const [groupByEngagement, setGroupByEngagement] = useState(false);
-  const [engagementMap, setEngagementMap] = useState({});
-  const [showSessionModal, setShowSessionModal] = useState(false);
-  const [sessionExp, setSessionExp] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -47,20 +40,16 @@ export default function AdminExperiencesTab({ user, coacheeEmails }) {
         base44.entities.DevelopmentExperience.list('-created_date'),
         base44.entities.User.filter({ client_id: user.client_id })
       ]);
-      let filteredExps;
       if (scoped) {
         // Leadership Coaches: only experiences belonging to their coachees
-        filteredExps = exps.filter(e => coacheeEmails.includes(e.user_email));
+        setExperiences(exps.filter(e => coacheeEmails.includes(e.user_email)));
         setUsers(allUsers.filter(u => coacheeEmails.includes(u.email)));
       } else {
         const adminRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin', 'Partner Business Administrator'];
         const adminEmails = new Set(allUsers.filter(u => adminRoles.includes(u.app_role)).map(u => u.email));
-        filteredExps = exps.filter(e => adminEmails.has(e.created_by));
+        setExperiences(exps.filter(e => adminEmails.has(e.created_by)));
         setUsers(allUsers);
       }
-      setExperiences(filteredExps);
-      const engMap = await loadEngagementMap(filteredExps.map(e => e.engagement_id));
-      setEngagementMap(engMap);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   }, [user.client_id, coacheeEmails]);
@@ -120,86 +109,59 @@ export default function AdminExperiencesTab({ user, coacheeEmails }) {
         <button onClick={() => setActiveTab("completed")} className={`flex-1 text-sm font-medium py-1.5 rounded-lg transition-all ${activeTab === "completed" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"}`}>Completed ({completed.length})</button>
       </div>
 
-      {/* Group-by toggle (coaches only) */}
-      {scoped && (
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">Group by engagement</span>
-          <button
-            onClick={() => setGroupByEngagement(g => !g)}
-            className={`relative w-10 h-5 rounded-full transition-colors ${groupByEngagement ? 'bg-[#0202ff]' : 'bg-gray-300'}`}
-          >
-            <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${groupByEngagement ? 'left-5' : 'left-0.5'}`} />
-          </button>
-        </div>
-      )}
-
-      {/* User selector + Log buttons */}
+      {/* User selector + Log button */}
       <div className="flex gap-2 items-center">
         <select value={assignToEmail} onChange={e => setAssignToEmail(e.target.value)} className="flex-1 h-9 text-sm border border-gray-200 rounded-lg px-3 bg-white focus:outline-none focus:ring-1 focus:ring-[#0202ff]/30">
           <option value="">Log for user...</option>
           {users.map(u => <option key={u.id} value={u.email}>{u.full_name || u.email}</option>)}
         </select>
-        <Button size="sm" variant="outline" className="border-[#0202ff]/30 text-[#0202ff]" onClick={() => { setSessionExp(null); setShowSessionModal(true); }}>
-          <Calendar className="w-4 h-4 mr-1.5" /> Log Session
-        </Button>
         <Button size="sm" className="bg-[#0202ff] hover:bg-[#0101dd] text-white" onClick={() => { setEditingExp(null); setShowModal(true); }} disabled={!assignToEmail}>
           <Plus className="w-4 h-4 mr-1.5" /> Log Experience
         </Button>
       </div>
 
       {/* List */}
-      {filtered.length === 0 ? (
-        <Card className="shadow-sm border border-gray-100 rounded-2xl">
-          <CardContent className="p-8 text-center">
-            <Star className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="font-semibold text-gray-800">No experiences found</p>
-          </CardContent>
-        </Card>
-      ) : groupByEngagement && scoped ? (
-        <div className="space-y-4">
-          {Object.entries(
-            filtered.reduce((acc, exp) => {
-              const key = exp.engagement_id || '__unlinked__';
-              (acc[key] = acc[key] || []).push(exp);
-              return acc;
-            }, {})
-          ).map(([key, exps]) => (
-            <div key={key}>
-              <div className="flex items-center gap-2 mb-2 px-1">
-                <h3 className="text-sm font-semibold text-gray-700">
-                  {key === '__unlinked__' ? 'Ad-hoc / Unlinked' : engagementMap[key]?.title || 'Unknown engagement'}
-                </h3>
-                <span className="text-xs text-gray-400">({exps.length})</span>
-              </div>
-              <div className="space-y-3">
-                {exps.map((exp, i) => (
-                  <ExperienceCard
-                    key={exp.id}
-                    exp={exp}
-                    index={i}
-                    onEdit={(e) => { setEditingExp(e); setAssignToEmail(e.user_email || e.created_by); setShowModal(true); }}
-                    onDelete={handleDelete}
-                    onLogSession={scoped ? (e) => { setSessionExp(e); setShowSessionModal(true); } : null}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filtered.map((exp, i) => (
-            <ExperienceCard
-              key={exp.id}
-              exp={exp}
-              index={i}
-              onEdit={(e) => { setEditingExp(e); setAssignToEmail(e.user_email || e.created_by); setShowModal(true); }}
-              onDelete={handleDelete}
-              onLogSession={scoped ? (e) => { setSessionExp(e); setShowSessionModal(true); } : null}
-            />
-          ))}
-        </div>
-      )}
+      <div className="space-y-3">
+        {filtered.length === 0 ? (
+          <Card className="shadow-sm border border-gray-100 rounded-2xl">
+            <CardContent className="p-8 text-center">
+              <Star className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+              <p className="font-semibold text-gray-800">No experiences found</p>
+            </CardContent>
+          </Card>
+        ) : filtered.map((exp, i) => (
+          <motion.div key={exp.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
+            <Card className="shadow-sm border border-gray-100 rounded-2xl hover:shadow-md transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <p className="font-medium text-gray-900 leading-snug">{exp.title}</p>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_BADGE[exp.status] || 'bg-gray-100 text-gray-600'}`}>{exp.status}</span>
+                    </div>
+                    <p className="text-xs text-[#0202ff] mb-1">{exp.created_by}</p>
+                    {exp.type && <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full inline-block mb-2">{EXP_TYPE_LABELS[exp.type] || exp.type}</p>}
+                    {exp.description && <p className="text-xs text-gray-500 line-clamp-2 mb-2">{exp.description}</p>}
+                    <div className="flex flex-wrap gap-1">
+                      {exp.competencies?.slice(0, 3).map(c => (
+                        <span key={c} className="text-xs px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-100">{c}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1.5 flex-shrink-0">
+                    <button onClick={() => { setEditingExp(exp); setAssignToEmail(exp.created_by); setShowModal(true); }} className="text-gray-400 hover:text-[#0202ff] transition-colors">
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(exp.id)} className="text-gray-400 hover:text-red-500 transition-colors">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
 
       <ExperienceFormModal
         open={showModal}
@@ -208,19 +170,6 @@ export default function AdminExperiencesTab({ user, coacheeEmails }) {
         experience={editingExp}
         userEmail={assignToEmail || user?.email}
         coachMode={scoped}
-        coachEmail={user?.email}
-        clientId={user?.client_id}
-      />
-
-      <SessionLogModal
-        open={showSessionModal}
-        onClose={() => { setShowSessionModal(false); setSessionExp(null); }}
-        onSaved={() => { setShowSessionModal(false); setSessionExp(null); load(); }}
-        engagementId={sessionExp?.engagement_id}
-        coachEmail={user?.email}
-        coacheeEmail={sessionExp?.user_email}
-        experienceId={sessionExp?.id}
-        experienceTitle={sessionExp?.title}
       />
     </div>
   );

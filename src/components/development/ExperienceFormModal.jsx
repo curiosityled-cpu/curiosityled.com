@@ -12,7 +12,6 @@ import { Loader2, X, Check, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import CapturedGoalsEditor from "@/components/development/CapturedGoalsEditor";
 import RecommendedLearningEditor from "@/components/development/RecommendedLearningEditor";
-import EngagementPicker from "@/components/coaching/EngagementPicker";
 
 const EXPERIENCE_TYPES = [
   { value: "leadership_coaching", label: "Leadership Coaching", emoji: "🎯" },
@@ -35,7 +34,7 @@ const COMPETENCIES = [
   "Performance Management",
 ];
 
-export default function ExperienceFormModal({ open, onClose, onSaved, experience, userEmail, coachMode, coachEmail, clientId, defaultEngagementId }) {
+export default function ExperienceFormModal({ open, onClose, onSaved, experience, userEmail, coachMode }) {
   const editing = !!experience?.id;
   const [form, setForm] = useState({
     title: "",
@@ -48,8 +47,6 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
     end_date: "",
     provider_or_sponsor: "",
     status: "planned",
-    engagement_id: "",
-    group_assignment: "individual",
     captured_goals: [],
     recommended_learning: [],
   });
@@ -69,8 +66,6 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
         end_date: experience.end_date || "",
         provider_or_sponsor: experience.provider_or_sponsor || "",
         status: experience.status || "planned",
-        engagement_id: experience.engagement_id || "",
-        group_assignment: experience.group_assignment || "individual",
         captured_goals: experience.captured_goals || [],
         recommended_learning: experience.recommended_learning || [],
         });
@@ -79,7 +74,6 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
         title: "", description: "", type: coachMode ? "leadership_coaching" : "stretch_project", competencies: [],
         expected_impact: 5, planned_month: "", start_date: "", end_date: "",
         provider_or_sponsor: "", status: "planned",
-        engagement_id: defaultEngagementId || "", group_assignment: "individual",
         captured_goals: [], recommended_learning: [],
         });
         }
@@ -164,51 +158,6 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
               ))}
             </div>
           </div>
-          )}
-
-          {coachMode && (
-            <>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Coaching Engagement <span className="text-indigo-500">*</span>
-                </label>
-                <EngagementPicker
-                  value={form.engagement_id}
-                  onChange={(id) => setForm((f) => ({ ...f, engagement_id: id }))}
-                  coachEmail={coachEmail}
-                  coacheeEmail={userEmail}
-                  clientId={clientId}
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1.5">Assignment</label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setForm((f) => ({ ...f, group_assignment: "individual" }))}
-                    className={`flex-1 text-sm py-2 rounded-lg border transition-all ${
-                      form.group_assignment === "individual"
-                        ? "border-indigo-500 bg-indigo-50 text-indigo-700 font-medium"
-                        : "border-gray-200 text-gray-600 hover:border-indigo-200"
-                    }`}
-                  >
-                    Individual (one coachee)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setForm((f) => ({ ...f, group_assignment: "group" }))}
-                    className={`flex-1 text-sm py-2 rounded-lg border transition-all ${
-                      form.group_assignment === "group"
-                        ? "border-indigo-500 bg-indigo-50 text-indigo-700 font-medium"
-                        : "border-gray-200 text-gray-600 hover:border-indigo-200"
-                    }`}
-                  >
-                    Group (engagement team)
-                  </button>
-                </div>
-              </div>
-            </>
           )}
 
           <div>

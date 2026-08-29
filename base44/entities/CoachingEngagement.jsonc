@@ -37,10 +37,9 @@
         "leadership_development",
         "career_coaching",
         "performance_improvement",
-        "executive_coaching",
-        "ad_hoc"
+        "executive_coaching"
       ],
-      "description": "Type of coaching engagement. ad_hoc = auto-created lightweight engagement for a standalone session."
+      "description": "Type of coaching engagement"
     },
     "status": {
       "type": "string",
@@ -226,6 +225,7 @@
     }
   },
   "required": [
+    "client_id",
     "coach_email",
     "title",
     "engagement_type"
