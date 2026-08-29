@@ -149,12 +149,19 @@ function MVPLayoutInner({ children }) {
   const mvpRole = getMVPRole(user?.app_role || user?.data?.app_role || user?.role || 'user');
   const isLeadershipCoach = (user?.app_role || user?.data?.app_role || user?.role) === 'Leadership Coach';
   const baseNav = NAV_CONFIG[mvpRole] || [];
-  // Leadership Coaches get a dedicated Coaching nav group alongside the Administration group.
-  // Coaches don't use the manager-facing Lead/Practice daily-cadence tools.
+  // Leadership Coaches get a dedicated Coaching nav group alongside a trimmed
+  // Administration group (no Leadership Intelligence Hub or User Management),
+  // and no manager-facing Lead/Practice daily-cadence tools.
+  const coachAdminLabels = ['Development Manager', 'Goal Manager', 'Report Builder'];
   const navItems = isLeadershipCoach && mvpRole === 'buyer'
     ? [
         { label: 'Coaching', path: '/coaching-workspace', icon: ClipboardList },
-        ...baseNav.filter(item => item.group),
+        ...baseNav
+          .filter(item => item.group)
+          .map(item => ({
+            ...item,
+            children: (item.children || []).filter(child => coachAdminLabels.includes(child.label)),
+          })),
       ]
     : baseNav;
 
