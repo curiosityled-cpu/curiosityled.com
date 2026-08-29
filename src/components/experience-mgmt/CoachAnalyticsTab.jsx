@@ -22,6 +22,10 @@ const STATUS_LABELS = {
 
 const TYPE_LABELS = {
   leadership_coaching: 'Leadership Coaching',
+  team_coaching: 'Team Coaching',
+  workshop: 'Workshop',
+  consultation: 'Consultation',
+  assessment: 'Assessment',
   stretch_project: 'Stretch Project',
   leadership_opportunity: 'Leadership Opportunity',
   mentorship: 'Mentorship',

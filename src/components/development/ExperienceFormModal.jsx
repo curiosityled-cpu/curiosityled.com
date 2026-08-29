@@ -15,6 +15,10 @@ import RecommendedLearningEditor from "@/components/development/RecommendedLearn
 
 const EXPERIENCE_TYPES = [
   { value: "leadership_coaching", label: "Leadership Coaching", emoji: "🎯" },
+  { value: "team_coaching", label: "Team Coaching", emoji: "👥" },
+  { value: "workshop", label: "Workshop", emoji: "🛠️" },
+  { value: "consultation", label: "Consultation", emoji: "💬" },
+  { value: "assessment", label: "Assessment", emoji: "📋" },
   { value: "stretch_project", label: "Stretch Project", emoji: "🚀" },
   { value: "leadership_opportunity", label: "Leadership Opportunity", emoji: "⭐" },
   { value: "mentorship", label: "Mentorship", emoji: "🤝" },
@@ -25,6 +29,11 @@ const EXPERIENCE_TYPES = [
   { value: "other", label: "Other", emoji: "💡" },
 ];
 
+// Types available to coaches/consultants when logging an experience on behalf of a coachee.
+// Leadership Coaches can log all five; Consultants log only Workshop, Consultation, Assessment.
+const COACH_TYPE_VALUES = ["leadership_coaching", "team_coaching", "workshop", "consultation", "assessment"];
+const CONSULTANT_TYPE_VALUES = ["workshop", "consultation", "assessment"];
+
 const COMPETENCIES = [
   "Situational Intelligence",
   "Decision Making",
@@ -34,7 +43,7 @@ const COMPETENCIES = [
   "Performance Management",
 ];
 
-export default function ExperienceFormModal({ open, onClose, onSaved, experience, userEmail, coachMode }) {
+export default function ExperienceFormModal({ open, onClose, onSaved, experience, userEmail, coachMode, coachRole }) {
   const editing = !!experience?.id;
   const [form, setForm] = useState({
     title: "",
@@ -71,7 +80,7 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
         });
         } else {
         setForm({
-        title: "", description: "", type: coachMode ? "leadership_coaching" : "stretch_project", competencies: [],
+        title: "", description: "", type: coachMode ? (coachRole === 'consultant' ? 'workshop' : 'leadership_coaching') : "stretch_project", competencies: [],
         expected_impact: 5, planned_month: "", start_date: "", end_date: "",
         provider_or_sponsor: "", status: "planned",
         captured_goals: [], recommended_learning: [],
@@ -128,6 +137,12 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
     </div>
   );
 
+  // Coaches/consultants pick from a role-filtered type set; regular users see the full list.
+  const allowedCoachTypes = coachRole === 'consultant' ? CONSULTANT_TYPE_VALUES : COACH_TYPE_VALUES;
+  const visibleTypes = coachMode
+    ? EXPERIENCE_TYPES.filter(t => allowedCoachTypes.includes(t.value) || (editing && t.value === form.type))
+    : EXPERIENCE_TYPES;
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -138,11 +153,10 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
         <div className="space-y-4 pt-2">
           {field("Title *", "title", "text", "e.g. Executive Coaching with Jane Smith")}
 
-          {!coachMode && (
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Type *</label>
             <div className="grid grid-cols-3 gap-2">
-              {EXPERIENCE_TYPES.map((t) => (
+              {visibleTypes.map((t) => (
                 <button
                   type="button"
                   key={t.value}
@@ -158,7 +172,6 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
               ))}
             </div>
           </div>
-          )}
 
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>

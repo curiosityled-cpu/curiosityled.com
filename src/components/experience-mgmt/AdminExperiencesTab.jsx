@@ -9,10 +9,12 @@ import { motion } from "framer-motion";
 import ExperienceFormModal from "@/components/development/ExperienceFormModal";
 
 const EXP_TYPE_LABELS = {
-  leadership_coaching: "Leadership Coaching", stretch_project: "Stretch Project",
-  leadership_opportunity: "Leadership Opportunity", mentorship: "Mentorship",
-  conference_event: "Conference / Event", volunteer_leadership: "Volunteer Leadership",
-  cross_functional_project: "Cross-Functional Project", speaking_opportunity: "Speaking Opportunity", other: "Other",
+  leadership_coaching: "Leadership Coaching", team_coaching: "Team Coaching",
+  workshop: "Workshop", consultation: "Consultation", assessment: "Assessment",
+  stretch_project: "Stretch Project", leadership_opportunity: "Leadership Opportunity",
+  mentorship: "Mentorship", conference_event: "Conference / Event",
+  volunteer_leadership: "Volunteer Leadership", cross_functional_project: "Cross-Functional Project",
+  speaking_opportunity: "Speaking Opportunity", other: "Other",
 };
 
 const STATUS_BADGE = {
@@ -170,6 +172,7 @@ export default function AdminExperiencesTab({ user, coacheeEmails }) {
         experience={editingExp}
         userEmail={assignToEmail || user?.email}
         coachMode={scoped}
+        coachRole={user?.app_role === 'Consultant' ? 'consultant' : 'leadership_coach'}
       />
     </div>
   );

@@ -22,6 +22,10 @@
       "type": "string",
       "enum": [
         "leadership_coaching",
+        "team_coaching",
+        "workshop",
+        "consultation",
+        "assessment",
         "stretch_project",
         "leadership_opportunity",
         "mentorship",
