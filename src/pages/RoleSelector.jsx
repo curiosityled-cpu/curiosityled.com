@@ -71,6 +71,14 @@ function RoleSelector() {
       badge: 'Coach variant'
     },
     {
+      id: 'Consultant',
+      title: 'Consultant',
+      description: 'Coach-scoped coachee workspace, session prep, and messaging (external consultant)',
+      icon: Target,
+      color: 'bg-amber-600',
+      badge: 'Coach variant'
+    },
+    {
       id: 'Admin Level 2',
       title: 'HR Administrator',
       description: 'HR administration and analytics',
