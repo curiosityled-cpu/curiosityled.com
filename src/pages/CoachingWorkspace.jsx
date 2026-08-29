@@ -14,14 +14,14 @@ export default function CoachingWorkspace() {
   const selectedEngagement = searchParams.get('engagement') || '';
 
   const tabs = [
-    { key: 'coachees', label: isConsultant ? 'My Engagements' : 'My Coachees', icon: Users },
+    { key: 'coachees', label: isConsultant ? 'My Experiences' : 'My Coachees', icon: Users },
     { key: 'prep', label: 'Session Prep', icon: ClipboardList },
-    { key: 'outcomes', label: 'Engagement Outcomes', icon: TrendingUp },
+    { key: 'outcomes', label: isConsultant ? 'Experience Outcomes' : 'Engagement Outcomes', icon: TrendingUp },
   ];
 
-  const workspaceTitle = isConsultant ? 'Engagement Workspace' : 'Coaching Workspace';
+  const workspaceTitle = isConsultant ? 'Experience Workspace' : 'Coaching Workspace';
   const workspaceSubtitle = isConsultant
-    ? 'Manage your engagements, prepare for sessions, and track outcomes.'
+    ? 'Manage your experiences, prepare for sessions, and track outcomes.'
     : 'Manage your coachees, prepare for sessions, and track engagement outcomes.';
 
   const setTab = (newTab) => {

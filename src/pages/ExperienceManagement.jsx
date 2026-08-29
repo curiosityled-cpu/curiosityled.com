@@ -49,17 +49,18 @@ const TABS = [
   { id: 'requests', label: 'Requests', icon: Inbox },
 ];
 
-const COACH_TABS = [
+const COACH_TABS = (isConsultant) => [
   { id: 'experiences', label: 'Experiences', icon: Star },
   { id: 'requests', label: 'My Requests', icon: Inbox },
-  { id: 'coach_analytics', label: 'Coaching Analytics', icon: BarChart2 },
+  { id: 'coach_analytics', label: isConsultant ? 'Experience Analytics' : 'Coaching Analytics', icon: BarChart2 },
 ];
 
 export default function ExperienceManagement() {
   const { user, hasPermission, loading: authLoading } = useAuth();
   const { isCoachScoped, coacheeEmails } = useCoachCoacheeScope(user);
+  const isConsultant = user?.app_role === 'Consultant';
   const [section, setSection] = useState(isCoachScoped ? "experiences" : "analytics");
-  const visibleTabs = isCoachScoped ? COACH_TABS : TABS;
+  const visibleTabs = isCoachScoped ? COACH_TABS(isConsultant) : TABS;
 
   // Once coach scope resolves (auth was still loading on first render),
   // make sure coaches land on Experiences, not the org-wide Analytics tab.

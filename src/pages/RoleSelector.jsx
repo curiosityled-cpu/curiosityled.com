@@ -67,16 +67,14 @@ function RoleSelector() {
       title: 'Leadership Coach',
       description: 'Program Admin + coachee workspace, session prep, confidential notes, and messaging',
       icon: Target,
-      color: 'bg-amber-500',
-      badge: 'Coach variant'
+      color: 'bg-amber-500'
     },
     {
       id: 'Consultant',
       title: 'Consultant',
-      description: 'Coach-scoped coachee workspace, session prep, and messaging (external consultant)',
+      description: 'External consultant delivering scoped development experiences, session prep, and outcome tracking',
       icon: Target,
-      color: 'bg-amber-600',
-      badge: 'Coach variant'
+      color: 'bg-amber-600'
     },
     {
       id: 'Admin Level 2',
