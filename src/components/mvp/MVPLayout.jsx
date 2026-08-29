@@ -266,7 +266,11 @@ function MVPLayoutInner({ children }) {
           style={{ borderBottom: sidebarBorder }}
         >
           {!collapsed &&
-          <div className="flex items-center gap-2 min-w-0">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 min-w-0 rounded-lg transition-opacity hover:opacity-80"
+            title="Home"
+          >
               <img
               src={isDark ? "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/329f40d48_Untitleddesign.png" : "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5761758bf_CuriosityLegLogo.png"}
               alt="Curiosity Led"
@@ -274,13 +278,19 @@ function MVPLayoutInner({ children }) {
               <div className="min-w-0">
                 <p className="text-sm font-bold truncate text-foreground">Curiosity Led</p>
               </div>
-            </div>
+            </button>
           }
           {collapsed &&
-          <img
-            src={isDark ? "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/329f40d48_Untitleddesign.png" : "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5761758bf_CuriosityLegLogo.png"}
-            alt="Curiosity Led"
-            className="w-7 h-7 object-contain" />
+          <button
+            onClick={() => navigate('/')}
+            className="rounded-lg transition-opacity hover:opacity-80"
+            title="Home"
+          >
+            <img
+              src={isDark ? "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/329f40d48_Untitleddesign.png" : "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5761758bf_CuriosityLegLogo.png"}
+              alt="Curiosity Led"
+              className="w-7 h-7 object-contain" />
+          </button>
           }
           <button
             onClick={() => setCollapsed(!collapsed)}
@@ -458,11 +468,17 @@ function MVPLayoutInner({ children }) {
             </button>
           ) : (
             <>
-              <img
-                src={isDark ? "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/329f40d48_Untitleddesign.png" : "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5761758bf_CuriosityLegLogo.png"}
-                alt="Curiosity Led"
-                className="w-7 h-7 object-contain" />
-              <span className="text-sm font-bold" style={{ color: 'hsl(var(--foreground))' }}>Curiosity Led</span>
+              <button
+                onClick={() => navigate('/')}
+                className="flex items-center gap-2 rounded-lg transition-opacity hover:opacity-80"
+                title="Home"
+              >
+                <img
+                  src={isDark ? "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/329f40d48_Untitleddesign.png" : "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5761758bf_CuriosityLegLogo.png"}
+                  alt="Curiosity Led"
+                  className="w-7 h-7 object-contain" />
+                <span className="text-sm font-bold" style={{ color: 'hsl(var(--foreground))' }}>Curiosity Led</span>
+              </button>
             </>
           )}
         </div>

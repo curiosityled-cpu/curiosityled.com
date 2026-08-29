@@ -125,7 +125,7 @@ const AuthenticatedApp = () => {
         !mvpRole ? (
           <LandingPage />
         ) : mvpRole === 'buyer' ? (
-          <Navigate to="/Insights?tab=org" replace />
+          <Navigate to="/today" replace />
         ) : mvpRole === 'analyst' ? (
           <Navigate to="/Insights?tab=org" replace />
         ) : mvpRole === 'executive' ? (
