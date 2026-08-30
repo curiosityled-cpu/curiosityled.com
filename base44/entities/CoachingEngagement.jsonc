@@ -222,6 +222,10 @@
         "type": "string"
       },
       "description": "Tags for filtering and categorization"
+    },
+    "request_id": {
+      "type": "string",
+      "description": "ID of the CoachingRequest that originated this engagement (back-link)"
     }
   },
   "required": [

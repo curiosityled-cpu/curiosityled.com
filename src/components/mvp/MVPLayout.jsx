@@ -60,12 +60,14 @@ export const getFriendlyRoleLabel = (appRole) => {
 const NAV_CONFIG = {
   manager: [
   { label: 'Lead', path: '/today', icon: Home },
-  { label: 'Practice', path: '/practice', icon: Dumbbell }],
+  { label: 'Practice', path: '/practice', icon: Dumbbell },
+  { label: 'Request Support', path: '/request-submit', icon: ClipboardList }],
 
   buyer: [
    { label: 'Lead', path: '/today', icon: Home },
    { label: 'Practice', path: '/practice', icon: Dumbbell },
    { label: 'Administration', icon: FolderOpen, group: true, children: [
+     { label: 'Request Triage', path: '/request-triage', icon: ClipboardList },
      { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
      { label: 'Development Manager', path: '/DevelopmentManager', icon: Users },
      { label: 'Goal Manager', path: '/GoalManager', icon: Target },
@@ -151,8 +153,8 @@ function MVPLayoutInner({ children }) {
   const isLeadershipCoach = (user?.app_role || user?.data?.app_role || user?.role) === 'Leadership Coach';
   const isConsultant = (user?.app_role || user?.data?.app_role || user?.role) === 'Consultant';
   const isCoachOrConsultant = isLeadershipCoach || isConsultant;
-  const workspaceLabel = isConsultant ? 'Experiences' : 'Coaching';
-  const workspacePath = isConsultant ? '/experience-workspace' : '/coaching-workspace';
+  const workspaceLabel = isConsultant ? 'Consulting' : 'Coaching';
+  const workspacePath = isConsultant ? '/consultant-workspace' : '/coach-workspace';
   const baseNav = NAV_CONFIG[mvpRole] || [];
   // Leadership Coaches and Consultants get a dedicated workspace nav group alongside a trimmed
   // Administration group (no Leadership Intelligence Hub or User Management),

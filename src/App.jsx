@@ -28,6 +28,10 @@ import MyGoalsMVP from './pages/MyGoalsMVP';
 import ReportBuilderMVP from './pages/ReportBuilderMVP';
 import ExperienceOverview from './pages/ExperienceOverview';
 import ManagerDetail from './pages/ManagerDetail';
+import CoachWorkspace from './pages/CoachWorkspace';
+import ConsultantWorkspace from './pages/ConsultantWorkspace';
+import RequestSubmit from './pages/RequestSubmit';
+import RequestTriage from './pages/RequestTriage';
 
 import LeadershipIntelligenceHub from './pages/LeadershipIntelligenceHub';
 import CoachingWorkspace from './pages/CoachingWorkspace';
@@ -175,6 +179,10 @@ const AuthenticatedApp = () => {
       <Route path="/my-leadership" element={<MVPLayout><ManagerToday /></MVPLayout>} />
       <Route path="/coaching-workspace" element={<MVPLayout><CoachingWorkspace /></MVPLayout>} />
       <Route path="/experience-workspace" element={<MVPLayout><CoachingWorkspace /></MVPLayout>} />
+      <Route path="/coach-workspace" element={<MVPLayout><CoachWorkspace /></MVPLayout>} />
+      <Route path="/consultant-workspace" element={<MVPLayout><ConsultantWorkspace /></MVPLayout>} />
+      <Route path="/request-submit" element={<MVPLayout><RequestSubmit /></MVPLayout>} />
+      <Route path="/request-triage" element={<MVPLayout><RequestTriage /></MVPLayout>} />
       <Route path="/my-development" element={<MVPLayout><MyDevelopment /></MVPLayout>} />
       <Route path="/experience-overview" element={<MVPLayout><ExperienceOverview /></MVPLayout>} />
       <Route path="/report-builder-mvp" element={<MVPLayout><ReportBuilderMVP /></MVPLayout>} />

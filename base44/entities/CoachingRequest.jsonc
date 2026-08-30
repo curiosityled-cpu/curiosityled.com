@@ -1,0 +1,378 @@
+{
+  "name": "CoachingRequest",
+  "type": "object",
+  "properties": {
+    "request_category": {
+      "type": "string",
+      "enum": [
+        "1on1_coaching",
+        "group_coaching",
+        "team_coaching",
+        "workshop",
+        "consultation",
+        "assessment"
+      ],
+      "description": "Category of request \u2014 determines Coach vs Consultant routing"
+    },
+    "participant_scope": {
+      "type": "string",
+      "enum": [
+        "individual",
+        "cohort",
+        "team"
+      ],
+      "default": "individual",
+      "description": "Who this request is for: a single person, a cohort, or a team"
+    },
+    "participant_email": {
+      "type": "string",
+      "description": "Email of the individual participant (when scope = individual)"
+    },
+    "participant_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Emails of participants (when scope = cohort or team)"
+    },
+    "cohort_id": {
+      "type": "string",
+      "description": "ID of the Cohort this request targets (when scope = cohort)"
+    },
+    "title": {
+      "type": "string",
+      "description": "Brief title of the request"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of what is being requested"
+    },
+    "requested_by_email": {
+      "type": "string",
+      "description": "Email of the user who submitted the request"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client this request belongs to"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "submitted",
+        "intake_scheduled",
+        "intake_complete",
+        "approved",
+        "assigned",
+        "accepted",
+        "declined",
+        "engagement_created",
+        "in_progress",
+        "completed",
+        "rejected"
+      ],
+      "default": "submitted",
+      "description": "Current stage in the request lifecycle"
+    },
+    "designated_program_admin_email": {
+      "type": "string",
+      "description": "Email of the Program Administrator responsible for triaging this request"
+    },
+    "assigned_practitioner_email": {
+      "type": "string",
+      "description": "Email of the Coach or Consultant assigned to fulfill this request"
+    },
+    "assigned_practitioner_role": {
+      "type": "string",
+      "enum": [
+        "Leadership Coach",
+        "Consultant"
+      ],
+      "description": "Role of the assigned practitioner (derived from request_category)"
+    },
+    "decline_reason": {
+      "type": "string",
+      "description": "Reason given by the practitioner when declining the assignment"
+    },
+    "decline_count": {
+      "type": "number",
+      "default": 0,
+      "description": "How many times this request has been declined (for reassignment tracking)"
+    },
+    "linked_engagement_id": {
+      "type": "string",
+      "description": "ID of the CoachingEngagement created when the practitioner accepted"
+    },
+    "intake_conversation_required": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether an intake conversation is required before approval (defaulted from Client settings)"
+    },
+    "intake_bypassed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the Program Admin bypassed the intake requirement for this specific request"
+    },
+    "intake_notes": {
+      "type": "string",
+      "description": "Notes captured during the intake conversation"
+    },
+    "intake_scheduled_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the intake conversation is scheduled"
+    },
+    "intake_completed_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the intake conversation was completed"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "urgent"
+      ],
+      "default": "medium",
+      "description": "Priority level set during triage"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Target completion date"
+    },
+    "business_justification": {
+      "type": "string",
+      "description": "Why this request is needed (provided by requestor or captured during intake)"
+    },
+    "sessions_planned": {
+      "type": "number",
+      "description": "Number of sessions planned for this engagement (set during intake/assignment)"
+    },
+    "sponsor_email": {
+      "type": "string",
+      "description": "Email of the HRBP or manager sponsoring this request"
+    },
+    "competency_focus": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Competency IDs this request should develop"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Custom tags for filtering"
+    },
+    "first_response_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of the first status change from 'submitted'"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when the request was marked 'completed'"
+    },
+    "result_summary": {
+      "type": "string",
+      "description": "Summary of outcomes captured when the engagement completes"
+    }
+  },
+  "required": [
+    "request_category",
+    "title",
+    "description",
+    "requested_by_email",
+    "client_id"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "data.requested_by_email": "{{user.email}}"
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.client_id}}"
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.requested_by_email": "{{user.email}}"
+        },
+        {
+          "data.sponsor_email": "{{user.email}}"
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Leadership Coach"
+              }
+            },
+            {
+              "data.assigned_practitioner_email": "{{user.email}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Consultant"
+              }
+            },
+            {
+              "data.assigned_practitioner_email": "{{user.email}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.client_id}}"
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.requested_by_email": "{{user.email}}"
+            },
+            {
+              "data.status": "submitted"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Leadership Coach"
+              }
+            },
+            {
+              "data.assigned_practitioner_email": "{{user.email}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Consultant"
+              }
+            },
+            {
+              "data.assigned_practitioner_email": "{{user.email}}"
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "Platform Admin"
+      }
+    }
+  }
+}
