@@ -32,6 +32,7 @@ import CoachWorkspace from './pages/CoachWorkspace';
 import ConsultantWorkspace from './pages/ConsultantWorkspace';
 import RequestSubmit from './pages/RequestSubmit';
 import RequestTriage from './pages/RequestTriage';
+import TestLanding from './pages/TestLanding';
 
 import LeadershipIntelligenceHub from './pages/LeadershipIntelligenceHub';
 import CoachingWorkspace from './pages/CoachingWorkspace';
@@ -150,6 +151,7 @@ const AuthenticatedApp = () => {
       <Route path="/diagnostic" element={<OfferPage />} />
       <Route path="/bpo-diagnostic" element={<BpoOfferPage />} />
       <Route path="/radar-label-sample" element={<RadarLabelSample />} />
+      <Route path="/testlanding" element={<TestLanding />} />
 
       {/* Redirect old ExperienceManagement URL to new DevelopmentManager */}
       <Route path="/ExperienceManagement" element={<Navigate to="/DevelopmentManager" replace />} />
