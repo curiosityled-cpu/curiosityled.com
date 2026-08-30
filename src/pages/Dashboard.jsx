@@ -21,7 +21,6 @@ const GoalsOverview = lazy(() => import("../components/dashboard/GoalsOverview")
 const InsightsOverview = lazy(() => import("../components/dashboard/InsightsOverview"));
 const PlatformAdminDashboard = lazy(() => import("../components/dashboard/PlatformAdminDashboard"));
 const EnterpriseAnalytics = lazy(() => import("@/components/analytics/EnterpriseAnalytics"));
-const ExperienceAnalytics = lazy(() => import("./ExperienceAnalytics"));
 const AssessmentAnalytics = lazy(() => import("./AssessmentAnalytics"));
 const LearningAnalyticsDashboard = lazy(() => import("./LearningAnalyticsDashboard"));
 const ReportBuilder = lazy(() => import("./ReportBuilder"));
@@ -294,7 +293,7 @@ function Dashboard() {
       return (
         <div className="min-h-screen">
           <Suspense fallback={<LoadingFallback />}>
-            <ExperienceAnalytics />
+            <Insights />
           </Suspense>
         </div>
       );
