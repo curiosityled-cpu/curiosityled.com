@@ -179,10 +179,6 @@
       "type": "string",
       "description": "ID of learning journey associated with this engagement"
     },
-    "request_id": {
-      "type": "string",
-      "description": "ID of the CoachingRequest this engagement was created from (back-link)"
-    },
     "overall_progress": {
       "type": "number",
       "default": 0,

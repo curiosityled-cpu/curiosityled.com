@@ -90,7 +90,7 @@ export default function HRAdminDashboard({ user, loading }) {
           description: 'Consider sending reminders to complete assessments',
           priority: 'medium',
           icon: AlertTriangle,
-          link: createPageUrl('Insights')
+          link: createPageUrl('HRAssessmentDashboard')
         });
       }
 
@@ -116,7 +116,7 @@ export default function HRAdminDashboard({ user, loading }) {
 
   const quickActions = [
     { label: 'Manage Users', icon: Users, link: createPageUrl('UserManagement'), color: 'blue' },
-    { label: 'Assessments', icon: BarChart3, link: createPageUrl('Insights'), color: 'green' },
+    { label: 'Assessments', icon: BarChart3, link: createPageUrl('HRAssessmentDashboard'), color: 'green' },
     { label: 'Learning Library', icon: BookOpen, link: createPageUrl('LearningLibrary'), color: 'purple' },
     { label: 'Reports', icon: FileText, link: createPageUrl('ReportBuilder'), color: 'amber' },
     { label: 'Onboarding', icon: UserPlus, link: createPageUrl('OnboardingPlanBuilder'), color: 'pink' },

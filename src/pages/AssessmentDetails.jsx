@@ -61,7 +61,7 @@ export default function AssessmentDetails() {
 
       if (!assessmentId) {
         toast.error('No assessment ID provided');
-        navigate(createPageUrl('Insights'));
+        navigate(createPageUrl('AssessmentAnalytics'));
         return;
       }
 
@@ -69,7 +69,7 @@ export default function AssessmentDetails() {
       
       if (!assessmentData || assessmentData.length === 0) {
         toast.error('Assessment not found');
-        navigate(createPageUrl('Insights'));
+        navigate(createPageUrl('AssessmentAnalytics'));
         return;
       }
 
@@ -156,7 +156,7 @@ export default function AssessmentDetails() {
         <Card className="max-w-md p-8 text-center">
           <h2 className="text-xl font-bold mb-2">Assessment Not Found</h2>
           <p className="text-gray-600 mb-4">The assessment you're looking for doesn't exist.</p>
-          <Button onClick={() => navigate(createPageUrl('Insights'))}>
+          <Button onClick={() => navigate(createPageUrl('AssessmentAnalytics'))}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Analytics
           </Button>
@@ -173,7 +173,7 @@ export default function AssessmentDetails() {
         {/* Back Button */}
         <Button
           variant="ghost"
-          onClick={() => navigate(createPageUrl('Insights'))}
+          onClick={() => navigate(createPageUrl('AssessmentAnalytics'))}
           className="mb-4"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />

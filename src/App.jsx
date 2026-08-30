@@ -28,10 +28,6 @@ import MyGoalsMVP from './pages/MyGoalsMVP';
 import ReportBuilderMVP from './pages/ReportBuilderMVP';
 import ExperienceOverview from './pages/ExperienceOverview';
 import ManagerDetail from './pages/ManagerDetail';
-import RequestSubmit from './pages/RequestSubmit';
-import RequestTriage from './pages/RequestTriage';
-import CoachWorkspace from './pages/CoachWorkspace';
-import ConsultantWorkspace from './pages/ConsultantWorkspace';
 
 import LeadershipIntelligenceHub from './pages/LeadershipIntelligenceHub';
 import CoachingWorkspace from './pages/CoachingWorkspace';
@@ -59,9 +55,13 @@ import Insights from './pages/Insights';
 import ReportBuilder from './pages/ReportBuilder';
 import { ContextProviders } from '@/components/contexts/ContextProviders';
 
-const { Pages, mainPage } = pagesConfig;
+const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
+
+const LayoutWrapper = ({ children, currentPageName }) => Layout ?
+  <Layout currentPageName={currentPageName}>{children}</Layout>
+  : <>{children}</>;
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin, user } = useAuth();
@@ -148,12 +148,14 @@ const AuthenticatedApp = () => {
       <Route path="/radar-label-sample" element={<RadarLabelSample />} />
 
       {/* Redirect old ExperienceManagement URL to new DevelopmentManager */}
-      <Route path="/ExperienceManagement" element={<Navigate to="/experience-overview" replace />} />
-      <Route path="/DevelopmentManager" element={<Navigate to="/experience-overview" replace />} />
+      <Route path="/ExperienceManagement" element={<Navigate to="/DevelopmentManager" replace />} />
 
-      {/* Legacy Dashboard — redirect all roles to role-appropriate home */}
-      <Route path="/Dashboard" element={<Navigate to="/" replace />} />
-      <Route path="/Home" element={<Navigate to="/" replace />} />
+      {/* Legacy Dashboard — redirect manager-role users to /today */}
+      <Route path="/Dashboard" element={
+        mvpRole === 'manager' 
+          ? <Navigate to="/today" replace />
+          : <LayoutWrapper currentPageName="Dashboard"><Pages.Dashboard /></LayoutWrapper>
+      } />
 
       {/* New manager nav routes (Phase 1) */}
       <Route path="/today" element={<MVPLayout><ManagerToday /></MVPLayout>} />
@@ -173,33 +175,29 @@ const AuthenticatedApp = () => {
       <Route path="/my-leadership" element={<MVPLayout><ManagerToday /></MVPLayout>} />
       <Route path="/coaching-workspace" element={<MVPLayout><CoachingWorkspace /></MVPLayout>} />
       <Route path="/experience-workspace" element={<MVPLayout><CoachingWorkspace /></MVPLayout>} />
-      <Route path="/coach-workspace" element={<MVPLayout><CoachWorkspace /></MVPLayout>} />
-      <Route path="/consultant-workspace" element={<MVPLayout><ConsultantWorkspace /></MVPLayout>} />
-      <Route path="/request-submit" element={<MVPLayout><RequestSubmit /></MVPLayout>} />
-      <Route path="/request-triage" element={<MVPLayout><RequestTriage /></MVPLayout>} />
       <Route path="/my-development" element={<MVPLayout><MyDevelopment /></MVPLayout>} />
       <Route path="/experience-overview" element={<MVPLayout><ExperienceOverview /></MVPLayout>} />
       <Route path="/report-builder-mvp" element={<MVPLayout><ReportBuilderMVP /></MVPLayout>} />
       <Route path="/manager-detail/:id" element={<MVPLayout><ManagerDetail /></MVPLayout>} />
 
-      {/* Shared pages — all roles get the unified MVPLayout shell */}
-      <Route path="/Insights" element={<MVPPage><Insights /></MVPPage>} />
-      <Route path="/ReportBuilder" element={<MVPPage><ReportBuilder /></MVPPage>} />
-      <Route path="/Profile" element={<MVPPage><Profile /></MVPPage>} />
-      <Route path="/Settings" element={<MVPPage><Settings /></MVPPage>} />
-      <Route path="/Notifications" element={<MVPPage><Notifications /></MVPPage>} />
+      {/* Shared pages — MVP users get MVPLayout, others get legacy LayoutWrapper */}
+      <Route path="/Insights" element={mvpRole ? <MVPPage><Insights /></MVPPage> : <LayoutWrapper currentPageName="Insights"><Insights /></LayoutWrapper>} />
+      <Route path="/ReportBuilder" element={mvpRole ? <MVPPage><ReportBuilder /></MVPPage> : <LayoutWrapper currentPageName="ReportBuilder"><ReportBuilder /></LayoutWrapper>} />
+      <Route path="/Profile" element={mvpRole ? <MVPPage><Profile /></MVPPage> : <LayoutWrapper currentPageName="Profile"><Profile /></LayoutWrapper>} />
+      <Route path="/Settings" element={mvpRole ? <MVPPage><Settings /></MVPPage> : <LayoutWrapper currentPageName="Settings"><Settings /></LayoutWrapper>} />
+      <Route path="/Notifications" element={mvpRole ? <MVPPage><Notifications /></MVPPage> : <LayoutWrapper currentPageName="Notifications"><Notifications /></LayoutWrapper>} />
       <Route path="/PrivacySettings" element={<Navigate to="/Settings" replace />} />
       <Route path="/AdminDataRestore" element={<AdminDataRestore />} />
-      <Route path="/DiagnosticAnalytics" element={<MVPPage><DiagnosticAnalytics /></MVPPage>} />
+      <Route path="/DiagnosticAnalytics" element={mvpRole ? <MVPPage><DiagnosticAnalytics /></MVPPage> : <LayoutWrapper currentPageName="DiagnosticAnalytics"><DiagnosticAnalytics /></LayoutWrapper>} />
       <Route path="/SeedLinkedInCourses" element={<SeedLinkedInCourses />} />
-      <Route path="/OrgBusinessGoals" element={<MVPPage><OrgBusinessGoals /></MVPPage>} />
+      <Route path="/OrgBusinessGoals" element={mvpRole ? <MVPPage><OrgBusinessGoals /></MVPPage> : <LayoutWrapper currentPageName="OrgBusinessGoals"><OrgBusinessGoals /></LayoutWrapper>} />
       <Route path="/PerformanceManager" element={<Navigate to="/GoalManager" replace />} />
       <Route path="/GoalManager" element={
         (user?.app_role || user?.data?.app_role || user?.role) === 'Consultant'
           ? <Navigate to="/experience-workspace" replace />
           : (user?.app_role || user?.data?.app_role || user?.role) === 'Leadership Coach'
             ? <Navigate to="/coaching-workspace" replace />
-            : <MVPPage><PerformanceManager /></MVPPage>
+            : mvpRole ? <MVPPage><PerformanceManager /></MVPPage> : <LayoutWrapper currentPageName="GoalManager"><PerformanceManager /></LayoutWrapper>
       } />
       <Route path="/my-performance" element={<MVPPage><MyPerformance /></MVPPage>} />
       <Route path="/my-goals" element={<Navigate to="/my-performance" replace />} />
@@ -207,44 +205,21 @@ const AuthenticatedApp = () => {
       <Route path="/teams-settings" element={<Navigate to="/Settings" replace />} />
       {/* Redirect /Performance to My Goals */}
       <Route path="/Performance" element={<Navigate to="/my-goals" replace />} />
-      <Route path="/Goal" element={<Navigate to="/my-performance" replace />} />
-      <Route path="/GoalBoard" element={<Navigate to="/my-performance" replace />} />
 
-      {/* Retired legacy request pages — redirected to clean-core request system */}
-      <Route path="/MyRequests" element={<Navigate to="/request-submit" replace />} />
-      <Route path="/RequestDashboard" element={<Navigate to="/request-triage" replace />} />
-      <Route path="/RequestSystemGuide" element={<Navigate to="/request-submit" replace />} />
-
-      {/* Retired legacy experience surfaces — redirected to clean-core development pages */}
-      <Route path="/MyExperiences" element={<Navigate to="/my-development" replace />} />
-      <Route path="/TeamExperiences" element={<Navigate to="/experience-overview" replace />} />
-      <Route path="/ExperienceAnalytics" element={<Navigate to="/Insights" replace />} />
-      <Route path="/Development" element={<Navigate to="/my-development" replace />} />
-      <Route path="/MyLearning" element={<Navigate to="/my-development" replace />} />
-      <Route path="/TeamLearning" element={<Navigate to="/experience-overview" replace />} />
-      <Route path="/MyJourneys" element={<Navigate to="/my-development" replace />} />
-      <Route path="/Onboarding" element={<Navigate to="/MyOnboarding" replace />} />
-
-      {/* Retired legacy analytics pages — redirected to consolidated analytics */}
-      <Route path="/Analytics" element={<Navigate to="/Insights" replace />} />
-      <Route path="/AIInsightsDashboard" element={<Navigate to="/Insights" replace />} />
-      <Route path="/ReportAnalytics" element={<Navigate to="/report-builder-mvp" replace />} />
-
-      {/* Retired specialized analytics dashboards — redirected to consolidated Insights */}
-      <Route path="/AssessmentAnalytics" element={<Navigate to="/Insights" replace />} />
-      <Route path="/AssessmentAnalyticsDashboard" element={<Navigate to="/Insights" replace />} />
-      <Route path="/LearningAnalyticsDashboard" element={<Navigate to="/Insights" replace />} />
-      <Route path="/LeadershipIndexAnalytics" element={<Navigate to="/Insights" replace />} />
-      <Route path="/OrgPerformance" element={<Navigate to="/Insights" replace />} />
-      <Route path="/HRAssessmentDashboard" element={<Navigate to="/Insights" replace />} />
-      <Route path="/LeadershipIndexAdmin" element={<Navigate to="/Insights" replace />} />
-
-      {/* All other legacy pages — unified under MVPLayout shell */}
+      {/* All other legacy pages — MVP users still get MVPLayout shell */}
       {Object.entries(Pages).map(([path, Page]) => (
         <Route
           key={path}
           path={`/${path}`}
-          element={<MVPPage><Page /></MVPPage>}
+          element={
+            mvpRole ? (
+              <MVPPage><Page /></MVPPage>
+            ) : (
+              <LayoutWrapper currentPageName={path}>
+                <Page />
+              </LayoutWrapper>
+            )
+          }
         />
       ))}
       <Route path="*" element={<PageNotFound />} />

@@ -175,16 +175,6 @@
           },
           "default": [],
           "description": "Specific email addresses permitted to submit coaching requests"
-        },
-        "require_intake_conversation": {
-          "type": "boolean",
-          "default": true,
-          "description": "When true, a coaching/consulting request must go through an intake conversation before the Program Admin can approve it. Can be bypassed per-request if intake_bypass_allowed is true."
-        },
-        "intake_bypass_allowed": {
-          "type": "boolean",
-          "default": true,
-          "description": "When true, the Program Admin can bypass the intake conversation on individual requests even when require_intake_conversation is enabled."
         }
       },
       "description": "Feature flags and settings"

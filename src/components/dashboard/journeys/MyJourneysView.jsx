@@ -116,7 +116,7 @@ export default function MyJourneysView() {
     if (safeHasRole(['Admin Level 2', 'Super Administrator'])) {
       journeys.push(
         { id: "onboarding_hr", title: "Onboarding Plan Builder", description: "Create and deploy personalized 90-day onboarding plans", icon: UserPlus, color: "bg-green-500", url: createPageUrl("OnboardingPlanBuilder"), badge: "In Progress" },
-        { id: "assessment_management_hr", title: "Assessment Management", description: "Deploy assessments and analyze leadership data", icon: BarChart3, color: "bg-purple-500", url: createPageUrl("Insights"), badge: "In Progress" },
+        { id: "assessment_management_hr", title: "Assessment Management", description: "Deploy assessments and analyze leadership data", icon: BarChart3, color: "bg-purple-500", url: createPageUrl("HRAssessmentDashboard"), badge: "In Progress" },
         { id: "journey_builder_hr", title: "Experience Builder", description: "Create custom learning curricula", icon: Map, color: "bg-indigo-500", url: createPageUrl("JourneyBuilder"), badge: "Start Experience" },
         { id: "career_path_creator_hr", title: "Career Path Creator", description: "Design and manage career progression paths", icon: TrendingUp, color: "bg-blue-500", url: createPageUrl("CareerPathCreator"), badge: "Start Experience" }
       );

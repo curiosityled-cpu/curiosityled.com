@@ -60,14 +60,14 @@ import { deriveLeadershipStage } from "@/lib/lifecycleStage";
 
 // Map AI-generated dashboard names to actual MVP routes
 const DASHBOARD_ROUTES = {
-  'EnterpriseAnalytics': '/Insights',
-  'Performance': '/Insights',
-  'LearningAnalyticsDashboard': '/Insights',
-  'JourneyAnalytics': '/Insights',
-  'AssessmentAnalytics': '/Insights',
-  'AssessmentAnalyticsDashboard': '/Insights',
-  'Assessments': '/Insights',
-  'Development': '/Insights',
+  'EnterpriseAnalytics': '/AssessmentAnalyticsDashboard',
+  'Performance': '/AssessmentAnalyticsDashboard',
+  'LearningAnalyticsDashboard': '/LearningAnalyticsDashboard',
+  'JourneyAnalytics': '/ExperienceAnalytics',
+  'AssessmentAnalytics': '/AssessmentAnalyticsDashboard',
+  'AssessmentAnalyticsDashboard': '/AssessmentAnalyticsDashboard',
+  'Assessments': '/AssessmentAnalyticsDashboard',
+  'Development': '/LearningAnalyticsDashboard',
   'CommandCenter': '/experience-overview',
 };
 
@@ -1456,7 +1456,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
               <Button
                 variant="outline"
                 className="h-auto py-4 justify-between hover:bg-blue-50"
-                onClick={() => navigate('/Insights')}
+                onClick={() => navigate('/AssessmentAnalyticsDashboard')}
               >
                 <div className="flex items-center gap-3">
                   <Brain className="w-5 h-5 text-blue-600" />
@@ -1471,7 +1471,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
               <Button
                 variant="outline"
                 className="h-auto py-4 justify-between hover:bg-green-50"
-                onClick={() => navigate('/Insights')}
+                onClick={() => navigate('/LearningAnalyticsDashboard')}
               >
                 <div className="flex items-center gap-3">
                   <BookOpen className="w-5 h-5 text-green-600" />
