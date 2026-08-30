@@ -147,13 +147,11 @@ const AuthenticatedApp = () => {
       <Route path="/bpo-diagnostic" element={<BpoOfferPage />} />
       <Route path="/radar-label-sample" element={<RadarLabelSample />} />
 
-      {/* Retired legacy ExperienceManagement — redirected to clean-core experience overview */}
-      <Route path="/ExperienceManagement" element={<Navigate to="/experience-overview" replace />} />
-      <Route path="/DevelopmentManager" element={<Navigate to="/experience-overview" replace />} />
+      {/* Redirect old ExperienceManagement URL to new DevelopmentManager */}
+      <Route path="/ExperienceManagement" element={<Navigate to="/DevelopmentManager" replace />} />
 
       {/* Legacy Dashboard — redirect all roles to role-appropriate home */}
       <Route path="/Dashboard" element={<Navigate to="/" replace />} />
-      <Route path="/Home" element={<Navigate to="/" replace />} />
 
       {/* New manager nav routes (Phase 1) */}
       <Route path="/today" element={<MVPLayout><ManagerToday /></MVPLayout>} />

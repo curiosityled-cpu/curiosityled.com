@@ -67,8 +67,11 @@ import ConversationalModule from './pages/ConversationalModule';
 import ConversationalModuleBuilder from './pages/ConversationalModuleBuilder';
 import ConversationalModulesLibrary from './pages/ConversationalModulesLibrary';
 import CustomAssessmentBuilder from './pages/CustomAssessmentBuilder';
+import Dashboard from './pages/Dashboard';
 import EmailTemplates from './pages/EmailTemplates';
 import EnableUATTesting from './pages/EnableUATTesting';
+import ExperienceManagement from './pages/ExperienceManagement';
+import DevelopmentManager from './pages/ExperienceManagement';
 import FirstLoginPasswordReset from './pages/FirstLoginPasswordReset';
 import FormBuilder from './pages/FormBuilder';
 import FormBuilderDashboard from './pages/FormBuilderDashboard';
@@ -79,6 +82,7 @@ import GamificationTesting from './pages/GamificationTesting';
 import Goal from './pages/Goal';
 import GoalBoard from './pages/GoalBoard';
 import HRAssessmentDashboard from './pages/HRAssessmentDashboard';
+import Home from './pages/Home';
 import Insights from './pages/Insights';
 import IntegrationContracts from './pages/IntegrationContracts';
 import JourneyBuilder from './pages/JourneyBuilder';
@@ -92,6 +96,7 @@ import Notifications from './pages/Notifications';
 import Onboarding from './pages/Onboarding';
 import OnboardingPlanBuilder from './pages/OnboardingPlanBuilder';
 import PartnerPortal from './pages/PartnerPortal';
+import Performance from './pages/Performance';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Profile from './pages/Profile';
 import ProvisioningBatchDetail from './pages/ProvisioningBatchDetail';
@@ -141,8 +146,11 @@ export const PAGES = {
     "ConversationalModuleBuilder": ConversationalModuleBuilder,
     "ConversationalModulesLibrary": ConversationalModulesLibrary,
     "CustomAssessmentBuilder": CustomAssessmentBuilder,
+    "Dashboard": Dashboard,
     "EmailTemplates": EmailTemplates,
     "EnableUATTesting": EnableUATTesting,
+    "ExperienceManagement": ExperienceManagement,
+    "DevelopmentManager": DevelopmentManager,
     "FirstLoginPasswordReset": FirstLoginPasswordReset,
     "FormBuilder": FormBuilder,
     "FormBuilderDashboard": FormBuilderDashboard,
@@ -153,6 +161,7 @@ export const PAGES = {
     "Goal": Goal,
     "GoalBoard": GoalBoard,
     "HRAssessmentDashboard": HRAssessmentDashboard,
+    "Home": Home,
     "Insights": Insights,
     "IntegrationContracts": IntegrationContracts,
     "JourneyBuilder": JourneyBuilder,
@@ -166,6 +175,7 @@ export const PAGES = {
     "Onboarding": Onboarding,
     "OnboardingPlanBuilder": OnboardingPlanBuilder,
     "PartnerPortal": PartnerPortal,
+    "Performance": Performance,
     "PrivacyPolicy": PrivacyPolicy,
     "Profile": Profile,
     "ProvisioningBatchDetail": ProvisioningBatchDetail,
@@ -194,7 +204,7 @@ export const PAGES = {
 }
 
 export const pagesConfig = {
-    mainPage: null,
+    mainPage: "Dashboard",
     Pages: PAGES,
     Layout: __Layout,
 };
