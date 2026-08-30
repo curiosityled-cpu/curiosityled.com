@@ -27,7 +27,7 @@ const SCREENSHOTS = [
       "Daily check-in, top priorities, and KPI / goal tracking — the in-the-flow-of-work experience that proves the manager moment is lightweight and practical.",
     icon: Calendar,
     route: "/today",
-    image: "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/491f81f72_generated_image.png",
+    image: "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/c6c3c64c6_generated_image.png",
   },
   {
     key: "manager-patterns",
@@ -37,7 +37,7 @@ const SCREENSHOTS = [
       "A prioritized hero pattern with evidence/signals, a linked KPI or trend, and a recommended next action. Watch items carry statuses like Emerging, Active, and Persistent.",
     icon: TrendingUp,
     route: "/patterns",
-    image: "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/db6caac00_generated_image.png",
+    image: "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/829dde484_generated_image.png",
   },
   {
     key: "manager-practice",
@@ -47,7 +47,7 @@ const SCREENSHOTS = [
       "A scenario-based coaching flow — \"prepare for a difficult conversation,\" \"1:1 prep,\" or \"work through it.\" Critical for the scenario-based walkthrough.",
     icon: Dumbbell,
     route: "/practice",
-    image: "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/e57532116_generated_image.png",
+    image: "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/b9ec71367_generated_image.png",
   },
   {
     key: "hrbp-dashboard",
@@ -57,7 +57,7 @@ const SCREENSHOTS = [
       "A manager list or unit view showing manager risk/pattern status, trends, recommended actions, and team-level signal. (If not yet live, a labeled illustrative mockup can stand in.)",
     icon: Users,
     route: "/Portfolio",
-    image: "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/35cfc906f_generated_image.png",
+    image: "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/c8a0d5b2d_generated_image.png",
   },
   {
     key: "leadership-intelligence-hub",
@@ -67,7 +67,7 @@ const SCREENSHOTS = [
       "Leadership health, risk, bench strength/readiness, intervention activity/effectiveness, trend filters, and facility/function drill-down. Supports the executive message that leaders see aggregate patterns, not confidential individual details.",
     icon: Brain,
     route: "/LeadershipIntelligenceHub",
-    image: "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/cc3504759_generated_image.png",
+    image: "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/9bf8dfb0f_generated_image.png",
   },
   {
     key: "admin-talent-specialist",
@@ -77,7 +77,7 @@ const SCREENSHOTS = [
       "User provisioning, assessment configuration, learning journey administration, report scheduling, competency configuration, or adoption analytics. Demonstrates the platform is operationally real.",
     icon: Settings,
     route: "/UserManagement",
-    image: "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/ee7b57f3b_generated_image.png",
+    image: "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/9f24ded6c_generated_image.png",
   },
 ];
 
