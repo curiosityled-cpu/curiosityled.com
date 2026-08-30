@@ -265,7 +265,7 @@ export default function TeamInsightsView({ user, onMetricsUpdate }) {
         window.location.href = createPageUrl('LearningLibrary');
         break;
       case 'review_goals':
-        window.location.href = createPageUrl('OrgPerformance');
+        window.location.href = createPageUrl('Insights');
         break;
       default:
         toast.info('Action coming soon');

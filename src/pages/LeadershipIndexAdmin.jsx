@@ -115,7 +115,7 @@ function LeadershipIndexAdmin() {
       description: 'View comprehensive analytics and insights',
       icon: BarChart3,
       color: 'green',
-      action: () => window.location.href = createPageUrl('LeadershipIndexAnalytics'),
+      action: () => window.location.href = createPageUrl('Insights'),
       available: true
     },
     {
@@ -258,7 +258,7 @@ function LeadershipIndexAdmin() {
                   {getStatusBadge(systemStatus.submissions.status)}
                   {systemStatus.submissions.count > 0 && (
                     <Button
-                      onClick={() => window.location.href = createPageUrl('LeadershipIndexAnalytics')}
+                      onClick={() => window.location.href = createPageUrl('Insights')}
                       variant="outline"
                     >
                       <BarChart3 className="w-4 h-4 mr-2" />

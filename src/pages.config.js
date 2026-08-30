@@ -50,8 +50,6 @@
 import AccessDenied from './pages/AccessDenied';
 import Achievements from './pages/Achievements';
 import ActivateAccount from './pages/ActivateAccount';
-import AssessmentAnalytics from './pages/AssessmentAnalytics';
-import AssessmentAnalyticsDashboard from './pages/AssessmentAnalyticsDashboard';
 import AssessmentDetails from './pages/AssessmentDetails';
 import AssessmentResults from './pages/AssessmentResults';
 import Assessments from './pages/Assessments';
@@ -91,15 +89,12 @@ import JourneyBuilder from './pages/JourneyBuilder';
 import JourneyDetails from './pages/JourneyDetails';
 import LeadershipAssessment from './pages/LeadershipAssessment';
 import LeadershipIndexAdmin from './pages/LeadershipIndexAdmin';
-import LeadershipIndexAnalytics from './pages/LeadershipIndexAnalytics';
 import LeadershipIndexAssessment from './pages/LeadershipIndexAssessment';
-import LearningAnalyticsDashboard from './pages/LearningAnalyticsDashboard';
 import LearningLibrary from './pages/LearningLibrary';
 import MyOnboarding from './pages/MyOnboarding';
 import Notifications from './pages/Notifications';
 import Onboarding from './pages/Onboarding';
 import OnboardingPlanBuilder from './pages/OnboardingPlanBuilder';
-import OrgPerformance from './pages/OrgPerformance';
 import PartnerPortal from './pages/PartnerPortal';
 import Performance from './pages/Performance';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -134,8 +129,6 @@ export const PAGES = {
     "AccessDenied": AccessDenied,
     "Achievements": Achievements,
     "ActivateAccount": ActivateAccount,
-    "AssessmentAnalytics": AssessmentAnalytics,
-    "AssessmentAnalyticsDashboard": AssessmentAnalyticsDashboard,
     "AssessmentDetails": AssessmentDetails,
     "AssessmentResults": AssessmentResults,
     "Assessments": Assessments,
@@ -175,15 +168,12 @@ export const PAGES = {
     "JourneyDetails": JourneyDetails,
     "LeadershipAssessment": LeadershipAssessment,
     "LeadershipIndexAdmin": LeadershipIndexAdmin,
-    "LeadershipIndexAnalytics": LeadershipIndexAnalytics,
     "LeadershipIndexAssessment": LeadershipIndexAssessment,
-    "LearningAnalyticsDashboard": LearningAnalyticsDashboard,
     "LearningLibrary": LearningLibrary,
     "MyOnboarding": MyOnboarding,
     "Notifications": Notifications,
     "Onboarding": Onboarding,
     "OnboardingPlanBuilder": OnboardingPlanBuilder,
-    "OrgPerformance": OrgPerformance,
     "PartnerPortal": PartnerPortal,
     "Performance": Performance,
     "PrivacyPolicy": PrivacyPolicy,

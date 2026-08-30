@@ -225,6 +225,13 @@ const AuthenticatedApp = () => {
       <Route path="/AIInsightsDashboard" element={<Navigate to="/Insights" replace />} />
       <Route path="/ReportAnalytics" element={<Navigate to="/report-builder-mvp" replace />} />
 
+      {/* Retired specialized analytics dashboards — redirected to consolidated Insights */}
+      <Route path="/AssessmentAnalytics" element={<Navigate to="/Insights" replace />} />
+      <Route path="/AssessmentAnalyticsDashboard" element={<Navigate to="/Insights" replace />} />
+      <Route path="/LearningAnalyticsDashboard" element={<Navigate to="/Insights" replace />} />
+      <Route path="/LeadershipIndexAnalytics" element={<Navigate to="/Insights" replace />} />
+      <Route path="/OrgPerformance" element={<Navigate to="/Insights" replace />} />
+
       {/* All other legacy pages — unified under MVPLayout shell */}
       {Object.entries(Pages).map(([path, Page]) => (
         <Route
