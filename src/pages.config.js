@@ -76,19 +76,15 @@ import FormSubmission from './pages/FormSubmission';
 import FormSubmissions from './pages/FormSubmissions';
 import GamificationManager from './pages/GamificationManager';
 import GamificationTesting from './pages/GamificationTesting';
-import Goal from './pages/Goal';
-import GoalBoard from './pages/GoalBoard';
 import Insights from './pages/Insights';
 import IntegrationContracts from './pages/IntegrationContracts';
 import JourneyBuilder from './pages/JourneyBuilder';
 import JourneyDetails from './pages/JourneyDetails';
 import LeadershipAssessment from './pages/LeadershipAssessment';
-import LeadershipIndexAdmin from './pages/LeadershipIndexAdmin';
 import LeadershipIndexAssessment from './pages/LeadershipIndexAssessment';
 import LearningLibrary from './pages/LearningLibrary';
 import MyOnboarding from './pages/MyOnboarding';
 import Notifications from './pages/Notifications';
-import Onboarding from './pages/Onboarding';
 import OnboardingPlanBuilder from './pages/OnboardingPlanBuilder';
 import PartnerPortal from './pages/PartnerPortal';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -149,19 +145,15 @@ export const PAGES = {
     "FormSubmissions": FormSubmissions,
     "GamificationManager": GamificationManager,
     "GamificationTesting": GamificationTesting,
-    "Goal": Goal,
-    "GoalBoard": GoalBoard,
     "Insights": Insights,
     "IntegrationContracts": IntegrationContracts,
     "JourneyBuilder": JourneyBuilder,
     "JourneyDetails": JourneyDetails,
     "LeadershipAssessment": LeadershipAssessment,
-    "LeadershipIndexAdmin": LeadershipIndexAdmin,
     "LeadershipIndexAssessment": LeadershipIndexAssessment,
     "LearningLibrary": LearningLibrary,
     "MyOnboarding": MyOnboarding,
     "Notifications": Notifications,
-    "Onboarding": Onboarding,
     "OnboardingPlanBuilder": OnboardingPlanBuilder,
     "PartnerPortal": PartnerPortal,
     "PrivacyPolicy": PrivacyPolicy,

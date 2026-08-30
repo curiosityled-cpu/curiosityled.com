@@ -207,6 +207,8 @@ const AuthenticatedApp = () => {
       <Route path="/teams-settings" element={<Navigate to="/Settings" replace />} />
       {/* Redirect /Performance to My Goals */}
       <Route path="/Performance" element={<Navigate to="/my-goals" replace />} />
+      <Route path="/Goal" element={<Navigate to="/my-performance" replace />} />
+      <Route path="/GoalBoard" element={<Navigate to="/my-performance" replace />} />
 
       {/* Retired legacy request pages — redirected to clean-core request system */}
       <Route path="/MyRequests" element={<Navigate to="/request-submit" replace />} />
@@ -221,6 +223,7 @@ const AuthenticatedApp = () => {
       <Route path="/MyLearning" element={<Navigate to="/my-development" replace />} />
       <Route path="/TeamLearning" element={<Navigate to="/experience-overview" replace />} />
       <Route path="/MyJourneys" element={<Navigate to="/my-development" replace />} />
+      <Route path="/Onboarding" element={<Navigate to="/MyOnboarding" replace />} />
 
       {/* Retired legacy analytics pages — redirected to consolidated analytics */}
       <Route path="/Analytics" element={<Navigate to="/Insights" replace />} />
@@ -234,6 +237,7 @@ const AuthenticatedApp = () => {
       <Route path="/LeadershipIndexAnalytics" element={<Navigate to="/Insights" replace />} />
       <Route path="/OrgPerformance" element={<Navigate to="/Insights" replace />} />
       <Route path="/HRAssessmentDashboard" element={<Navigate to="/Insights" replace />} />
+      <Route path="/LeadershipIndexAdmin" element={<Navigate to="/Insights" replace />} />
 
       {/* All other legacy pages — unified under MVPLayout shell */}
       {Object.entries(Pages).map(([path, Page]) => (
