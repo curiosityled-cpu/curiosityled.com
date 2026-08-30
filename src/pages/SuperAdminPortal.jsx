@@ -75,7 +75,7 @@ function SuperAdminPortal() {
       description: "View assessment results and insights",
       icon: BarChart3,
       color: "bg-purple-500",
-      href: createPageUrl("HRAssessmentDashboard")
+      href: createPageUrl("Insights")
     },
     {
       title: "Programs & Cohorts",

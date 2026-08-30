@@ -195,7 +195,7 @@ export default function AdminDashboardCard() {
                   <span className="text-xl font-bold text-orange-600">{adminData.totalUsers - Math.round(adminData.totalUsers * adminData.assessmentCompletion / 100)}</span>
                 </div>
               </div>
-              <Link to={createPageUrl("HRAssessmentDashboard")} className="block">
+              <Link to={createPageUrl("Insights")} className="block">
                 <Button className="w-full" variant="outline">
                   Manage Assessments
                   <ArrowRight className="w-4 h-4 ml-2" />

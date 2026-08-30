@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -173,7 +172,7 @@ export default function SuperAdminDashboardCard({ user }) {
                 </Button>
               </Link>
               
-              <Link to={createPageUrl("HRAssessmentDashboard")}>
+              <Link to={createPageUrl("Insights")}>
                 <Button 
                   variant="outline" 
                   className="w-full justify-between hover:bg-purple-50 hover:border-purple-300"

@@ -272,7 +272,7 @@ export default function TeamLeaderDashboard({ user, dashboardData, loading }) {
               </Card>
             </Link>
 
-            <Link to={createPageUrl('HRAssessmentDashboard')}>
+            <Link to={createPageUrl('Insights')}>
               <Card className="border-0 shadow-md hover:shadow-lg transition-all cursor-pointer">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-3">

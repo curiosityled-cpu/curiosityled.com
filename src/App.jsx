@@ -148,10 +148,12 @@ const AuthenticatedApp = () => {
       <Route path="/radar-label-sample" element={<RadarLabelSample />} />
 
       {/* Redirect old ExperienceManagement URL to new DevelopmentManager */}
-      <Route path="/ExperienceManagement" element={<Navigate to="/DevelopmentManager" replace />} />
+      <Route path="/ExperienceManagement" element={<Navigate to="/experience-overview" replace />} />
+      <Route path="/DevelopmentManager" element={<Navigate to="/experience-overview" replace />} />
 
       {/* Legacy Dashboard — redirect all roles to role-appropriate home */}
       <Route path="/Dashboard" element={<Navigate to="/" replace />} />
+      <Route path="/Home" element={<Navigate to="/" replace />} />
 
       {/* New manager nav routes (Phase 1) */}
       <Route path="/today" element={<MVPLayout><ManagerToday /></MVPLayout>} />
@@ -231,6 +233,7 @@ const AuthenticatedApp = () => {
       <Route path="/LearningAnalyticsDashboard" element={<Navigate to="/Insights" replace />} />
       <Route path="/LeadershipIndexAnalytics" element={<Navigate to="/Insights" replace />} />
       <Route path="/OrgPerformance" element={<Navigate to="/Insights" replace />} />
+      <Route path="/HRAssessmentDashboard" element={<Navigate to="/Insights" replace />} />
 
       {/* All other legacy pages — unified under MVPLayout shell */}
       {Object.entries(Pages).map(([path, Page]) => (
