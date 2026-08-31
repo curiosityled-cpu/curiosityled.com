@@ -7,6 +7,7 @@
  *   3. Leadership Pulse (progress summary → /my-performance, /my-development)
  */
 import React, { useState, useMemo } from "react";
+// ManagerPractice — coaching hub
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";

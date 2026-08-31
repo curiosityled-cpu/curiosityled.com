@@ -3,6 +3,7 @@
  * Route: /today
  */
 import React, { useState, useEffect, useMemo, useRef } from "react";
+// ManagerToday — daily leadership dashboard
 import { loadCheckInHistory } from "@/lib/checkInStore";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
