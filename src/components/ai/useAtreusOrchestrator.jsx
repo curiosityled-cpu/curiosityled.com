@@ -20,7 +20,7 @@ export function useAtreusOrchestrator({ page, active_pattern = null, check_in_st
   const checkInKey = check_in_state
     ? `${check_in_state.morning_done}:${check_in_state.evening_done}`
     : 'null';
-  const decisionsKey = pending_decisions
+  const decisionsKey = Array.isArray(pending_decisions)
     ? pending_decisions.map(d => d.id).join(',')
     : 'null';
   const decisionContextKey = decision_context
