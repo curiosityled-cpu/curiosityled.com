@@ -219,6 +219,9 @@ export default function ManagerPractice() {
                 </div>
                 <DecisionJournalOutcomeReview />
               </div>
+
+              {/* Request Support — formal coaching request submission */}
+              <RequestCoachingCard />
             </div>
 
             {/* Right — Context sidebar */}
@@ -233,9 +236,6 @@ export default function ManagerPractice() {
               </div>
             </div>
           </div>
-
-          {/* Request Support — formal coaching request submission */}
-          <RequestCoachingCard />
         </div>
       )}
     </div>
