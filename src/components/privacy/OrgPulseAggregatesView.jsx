@@ -74,7 +74,7 @@ function MetricCard({ icon: Icon, iconBg, title, value, subtitle, note, suppress
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function OrgPulseAggregatesView() {
+export default function OrgPulseAggregatesView({ demoData }) {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const { data, isLoading, error } = useQuery({
@@ -84,9 +84,13 @@ export default function OrgPulseAggregatesView() {
       return res;
     },
     staleTime: 30 * 60 * 1000,
+    enabled: !demoData,
   });
 
-  if (isLoading) {
+  // Demo data bypasses the API call entirely (for presentation screenshots)
+  const effectiveData = demoData || data;
+
+  if (!demoData && isLoading) {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map(i => (
@@ -96,7 +100,7 @@ export default function OrgPulseAggregatesView() {
     );
   }
 
-  if (error) {
+  if (!demoData && error) {
     return (
       <Card className="shadow-sm border border-red-100 bg-red-50 rounded-2xl">
         <CardContent className="px-5 py-4">
@@ -109,7 +113,7 @@ export default function OrgPulseAggregatesView() {
     );
   }
 
-  if (data?.suppressed) {
+  if (effectiveData?.suppressed) {
     return (
       <Card className="shadow-sm border border-amber-100 bg-amber-50 rounded-2xl">
         <CardContent className="px-5 py-5">
@@ -117,10 +121,10 @@ export default function OrgPulseAggregatesView() {
             <Shield className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-semibold text-amber-800">Data suppressed for privacy</p>
-              <p className="text-xs text-amber-700 mt-1 leading-relaxed">{data.reason}</p>
+              <p className="text-xs text-amber-700 mt-1 leading-relaxed">{effectiveData.reason}</p>
               <p className="text-xs text-amber-600 mt-2">
-                Aggregate metrics require at least {data.minimum_required} managers to prevent identification.
-                Currently: {data.total_managers}.
+                Aggregate metrics require at least {effectiveData.minimum_required} managers to prevent identification.
+                Currently: {effectiveData.total_managers}.
               </p>
             </div>
           </div>
@@ -129,7 +133,7 @@ export default function OrgPulseAggregatesView() {
     );
   }
 
-  const total = data?.meta?.total_managers || 0;
+  const total = effectiveData?.meta?.total_managers || 0;
 
   const energyColors = {
     improving: { bar: 'bg-emerald-400', text: 'text-emerald-600' },
@@ -166,7 +170,7 @@ export default function OrgPulseAggregatesView() {
           <p className="text-xs font-semibold text-emerald-800">Category B — Aggregated signals only</p>
           <p className="text-xs text-emerald-700 mt-0.5 leading-relaxed">
             No individual manager data is shown here. All metrics represent group trends across {total} managers.
-            Groups below {data?.meta?.minimum_group_size || 5} are suppressed. Individual check-in content, confidence
+            Groups below {effectiveData?.meta?.minimum_group_size || 5} are suppressed. Individual check-in content, confidence
             history, identity friction, and reflections are always private to each manager.
           </p>
         </div>
@@ -186,15 +190,15 @@ export default function OrgPulseAggregatesView() {
           icon={Users}
           iconBg="bg-[#0202ff]"
           title="Active engagers (14d)"
-          value={`${data?.engagement?.check_in_engagement_rate_pct}%`}
-          subtitle={`${data?.engagement?.active_engagers} of ${total} managers`}
+          value={`${effectiveData?.engagement?.check_in_engagement_rate_pct}%`}
+          subtitle={`${effectiveData?.engagement?.active_engagers} of ${total} managers`}
           note="% of managers with ≥3 check-ins in last 14 days"
         />
         <MetricCard
           icon={Zap}
           iconBg="bg-amber-500"
           title="Stretched frequently"
-          value={`${data?.energy?.stretched_frequently_pct}%`}
+          value={`${effectiveData?.energy?.stretched_frequently_pct}%`}
           subtitle="Reported stretched ≥5x in 14 days"
           note="Aggregate self-report — no individual attribution"
         />
@@ -202,7 +206,7 @@ export default function OrgPulseAggregatesView() {
           icon={BookOpen}
           iconBg="bg-purple-500"
           title="Learning stall rate"
-          value={`${data?.development?.learning_stall_rate_pct}%`}
+          value={`${effectiveData?.development?.learning_stall_rate_pct}%`}
           subtitle="No learning activity in 7+ days"
           note="Engagement signal — not performance data"
         />
@@ -210,24 +214,24 @@ export default function OrgPulseAggregatesView() {
           icon={Target}
           iconBg="bg-blue-500"
           title="Delegation gap rate"
-          value={`${data?.development?.delegation_gap_rate_pct}%`}
+          value={`${effectiveData?.development?.delegation_gap_rate_pct}%`}
           subtitle="Declared intent didn't match behavior (7d)"
           note="Closed-loop morning intent vs evening actuals"
         />
-        {data?.identity_friction?.suppressed ? (
+        {effectiveData?.identity_friction?.suppressed ? (
           <MetricCard
             icon={Brain}
             iconBg="bg-gray-400"
             title="Identity friction signals"
             suppressed={true}
-            note={data.identity_friction.reason}
+            note={effectiveData.identity_friction.reason}
           />
         ) : (
           <MetricCard
             icon={Brain}
             iconBg="bg-violet-500"
             title="Identity friction signals"
-            value={`${data?.identity_friction?.rate_pct}%`}
+            value={`${effectiveData?.identity_friction?.rate_pct}%`}
             subtitle="Reporting role/identity friction this week"
             note="Always private at individual level. Aggregate only."
           />
@@ -244,7 +248,7 @@ export default function OrgPulseAggregatesView() {
             <p className="text-sm font-semibold text-gray-900">Energy trends</p>
             <Badge variant="outline" className="ml-auto text-[10px]">14-day window</Badge>
           </div>
-          <DistributionBar data={data?.energy?.distribution || {}} total={total} colorMap={energyColors} />
+          <DistributionBar data={effectiveData?.energy?.distribution || {}} total={total} colorMap={energyColors} />
         </CardContent>
       </Card>
 
@@ -258,10 +262,10 @@ export default function OrgPulseAggregatesView() {
             <p className="text-sm font-semibold text-gray-900">Overload risk distribution</p>
             <Badge variant="outline" className="ml-auto text-[10px]">28-day composite</Badge>
           </div>
-          <DistributionBar data={data?.overload?.risk_bands || {}} total={total} colorMap={riskColors} />
+          <DistributionBar data={effectiveData?.overload?.risk_bands || {}} total={total} colorMap={riskColors} />
           <div className="mt-4 pt-3 border-t border-gray-50">
             <p className="text-xs text-gray-500 mb-2">Operator-mode risk trajectory</p>
-            <DistributionBar data={data?.overload?.risk_trajectory || {}} total={total} colorMap={trajectoryColors} />
+            <DistributionBar data={effectiveData?.overload?.risk_trajectory || {}} total={total} colorMap={trajectoryColors} />
           </div>
         </CardContent>
       </Card>
@@ -276,9 +280,9 @@ export default function OrgPulseAggregatesView() {
             <p className="text-sm font-semibold text-gray-900">Confidence & resilience trends</p>
           </div>
           <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-2">Confidence (14d)</p>
-          <DistributionBar data={data?.confidence?.distribution || {}} total={total} colorMap={confidenceColors} />
+          <DistributionBar data={effectiveData?.confidence?.distribution || {}} total={total} colorMap={confidenceColors} />
           <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide mt-3 mb-2">Resilience (14d)</p>
-          <DistributionBar data={data?.resilience?.distribution || {}} total={total} colorMap={confidenceColors} />
+          <DistributionBar data={effectiveData?.resilience?.distribution || {}} total={total} colorMap={confidenceColors} />
         </CardContent>
       </Card>
 
@@ -286,7 +290,7 @@ export default function OrgPulseAggregatesView() {
       <div className="flex items-start gap-2 px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl">
         <Info className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-gray-500 leading-relaxed">
-          {data?.meta?.data_freshness}. These signals are meant for development support and organizational planning — not performance evaluation or disciplinary decisions. See your platform's Privacy Policy for the full taxonomy of what can and cannot be used at the individual level.
+          {effectiveData?.meta?.data_freshness}. These signals are meant for development support and organizational planning — not performance evaluation or disciplinary decisions. See your platform's Privacy Policy for the full taxonomy of what can and cannot be used at the individual level.
         </p>
       </div>
 

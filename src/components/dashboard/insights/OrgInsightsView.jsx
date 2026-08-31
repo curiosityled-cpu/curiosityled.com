@@ -57,6 +57,13 @@ import ConnectionModule from "@/components/intelligence/ConnectionModule";
 import HubLensToggle from "@/components/intelligence/HubLensToggle";
 import HRBPLensContent from "@/components/portfolio/HRBPLensContent";
 import { deriveLeadershipStage } from "@/lib/lifecycleStage";
+import { DEMO_TREND_DATA, DEMO_PULSE_AGGREGATES } from "./demoSnapshotData";
+
+// ── DEMO SNAPSHOT MODE ─────────────────────────────────────────────────────
+// Set to true to inject realistic dummy data into the Manager Wellbeing
+// Intelligence section and DM / SI / Manager Effectiveness Trends chart.
+// Flip back to false (or remove) after taking your screenshot.
+const DEMO_SNAPSHOT_MODE = true;
 
 // Map AI-generated dashboard names to actual MVP routes
 const DASHBOARD_ROUTES = {
@@ -958,7 +965,8 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
 
   // Trend chart sparse data check
   const trendDataPoints = chartData.trendData.filter(d => d.assessmentScore > 0);
-  const hasSufficientTrendData = trendDataPoints.length >= 3;
+  const hasSufficientTrendData = DEMO_SNAPSHOT_MODE || trendDataPoints.length >= 3;
+  const effectiveTrendData = DEMO_SNAPSHOT_MODE ? DEMO_TREND_DATA : chartData.trendData;
 
   return (
     <div ref={containerRef} className="space-y-6">
@@ -1162,7 +1170,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
                 <h3 className="text-sm font-semibold text-gray-900">Manager Wellbeing Intelligence</h3>
                 <p className="text-xs text-gray-500 mt-0.5">Aggregate, anonymised signals from Atreus check-ins — Category B data only. No individual attribution.</p>
               </div>
-              <OrgPulseAggregatesView />
+              <OrgPulseAggregatesView demoData={DEMO_SNAPSHOT_MODE ? DEMO_PULSE_AGGREGATES : undefined} />
             </div>
           </motion.div>
         );
@@ -1218,7 +1226,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
             ) : (
               <>
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={chartData.trendData}>
+                  <LineChart data={effectiveTrendData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                     <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
@@ -1231,7 +1239,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
                   </LineChart>
                 </ResponsiveContainer>
                 <p className="text-[11px] text-gray-400 mt-3">
-                  Solid lines (DM & SI) are primary Manager Effectiveness drivers. Sample size: {trendDataPoints.length} active periods of {chartData.trendData.length}.
+                  Solid lines (DM & SI) are primary Manager Effectiveness drivers. Sample size: {DEMO_SNAPSHOT_MODE ? effectiveTrendData.length : trendDataPoints.length} active periods of {effectiveTrendData.length}.
                 </p>
               </>
             )}
