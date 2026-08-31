@@ -216,6 +216,7 @@ export default function ManagerPractice() {
                     description="Identify what to hand off and how to set your team up for success."
                     to="/delegation-planner"
                   />
+                  <RequestCoachingCard showHeader={false} />
                 </div>
                 <DecisionJournalOutcomeReview />
               </div>
@@ -233,9 +234,6 @@ export default function ManagerPractice() {
               </div>
             </div>
           </div>
-
-          {/* Request Support — formal coaching request submission */}
-          <RequestCoachingCard />
         </div>
       )}
     </div>
