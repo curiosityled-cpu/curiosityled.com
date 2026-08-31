@@ -66,10 +66,10 @@ const NAV_CONFIG = {
    { label: 'Lead', path: '/today', icon: Home },
    { label: 'Practice', path: '/practice', icon: Dumbbell },
    { label: 'Administration', icon: FolderOpen, group: true, children: [
-     { label: 'Request Triage', path: '/request-triage', icon: ClipboardList },
      { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
      { label: 'Development Manager', path: '/DevelopmentManager', icon: Users },
      { label: 'Goal Manager', path: '/GoalManager', icon: Target },
+     { label: 'Request Triage', path: '/request-triage', icon: ClipboardList },
      { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 },
      { label: 'User Management', path: '/UserManagement', icon: UserCog },
    ]}],
