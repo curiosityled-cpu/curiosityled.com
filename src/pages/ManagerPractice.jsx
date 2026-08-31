@@ -188,9 +188,6 @@ export default function ManagerPractice() {
               {/* Coaching Flows — scrollable list with expandable popups */}
               <CoachingFlowsCard onStartFlow={handleStartFlow} />
 
-              {/* Request Coaching — formal coaching request submission */}
-              <RequestCoachingCard />
-
               {/* Leadership Tools */}
               <div className="space-y-3">
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Leadership Tools</p>
@@ -236,6 +233,9 @@ export default function ManagerPractice() {
               </div>
             </div>
           </div>
+
+          {/* Request Support — formal coaching request submission */}
+          <RequestCoachingCard />
         </div>
       )}
     </div>
