@@ -170,7 +170,7 @@ const AuthenticatedApp = () => {
       <Route path="/growth" element={<Navigate to="/practice" replace />} />
       <Route path="/team" element={<MVPLayout><ManagerTeam /></MVPLayout>} />
       <Route path="/atreus-guide" element={<MVPLayout><ManagerAtreus /></MVPLayout>} />
-      <Route path="/practice" element={<MVPLayout><ManagerPractice /></MVPLayout>} />
+      <Route path="/practice" element={<MVPLayout><ContextProviders><ManagerPractice /></ContextProviders></MVPLayout>} />
       <Route path="/one-on-ones" element={<MVPLayout><OneOnOneHub /></MVPLayout>} />
       <Route path="/delegation-planner" element={<MVPLayout><DelegationPlanner /></MVPLayout>} />
       <Route path="/decision-journal" element={<MVPLayout><DecisionJournalPage /></MVPLayout>} />
