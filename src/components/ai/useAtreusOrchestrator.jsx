@@ -20,9 +20,11 @@ export function useAtreusOrchestrator({ page, active_pattern = null, check_in_st
   const checkInKey = check_in_state
     ? `${check_in_state.morning_done}:${check_in_state.evening_done}`
     : 'null';
-  const decisionsKey = Array.isArray(pending_decisions)
-    ? pending_decisions.map(d => d.id).join(',')
-    : 'null';
+  const decisionsKey = (() => {
+    if (Array.isArray(pending_decisions)) return pending_decisions.map(d => d.id).join(',');
+    if (pending_decisions && Array.isArray(pending_decisions.recent)) return pending_decisions.recent.map(d => d.id).join(',');
+    return 'null';
+  })();
   const decisionContextKey = decision_context
     ? `${decision_context.mode || 'none'}:${decision_context.pattern_name || 'none'}`
     : 'null';
