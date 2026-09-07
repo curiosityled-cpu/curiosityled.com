@@ -1,0 +1,38 @@
+{
+  "name": "Post-Meeting Debrief (Calendar Event Ends)",
+  "description": "When a high-stakes calendar event ends (flagged by AI), trigger post-meeting reflection: \"How did that go? What's one thing you'd do differently?\"",
+  "trigger": {
+    "condition": "${ ((.trigger.data.event.status == \"confirmed\") and (.trigger.data.event.summary | index(\"lunch\") == null) and (.trigger.data.event.summary | index(\"break\") == null)) }",
+    "config": {
+      "trigger_type": "connector",
+      "events": [
+        "events"
+      ],
+      "integration_type": "googlecalendar",
+      "resource_id": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "post_meeting_debrief_calendar_event_ends",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "triggerPostMeetingDebrief",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "triggerPostMeetingDebrief"
+  }
+}

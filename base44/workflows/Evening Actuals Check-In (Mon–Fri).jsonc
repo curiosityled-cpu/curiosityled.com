@@ -1,0 +1,44 @@
+{
+  "name": "Evening Actuals Check-In (Mon\u2013Fri)",
+  "description": "Runs Mon\u2013Fri at 6pm ET. Sends evening pulse prompt asking \"What actually happened today?\" Compares intent vs actuals, flags delegation gaps. Creates ManagerPulse with intent_actuals_gap analysis.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 22 * * 1-5",
+      "one_time_date": null,
+      "timezone": "UTC",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "evening_actuals_check_in_mon_fri",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "computeEveningActuals",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "computeEveningActuals"
+  }
+}

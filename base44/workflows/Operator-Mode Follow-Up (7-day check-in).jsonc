@@ -1,0 +1,37 @@
+{
+  "name": "Operator-Mode Follow-Up (7-day check-in)",
+  "description": "When manager makes delegation commitment, schedule Friday reflection to verify if work actually moved off their plate",
+  "trigger": {
+    "condition": "${ ((.trigger.data.delegation_commitment != null) and (.trigger.data.delegation_commitment != null and .trigger.data.delegation_commitment != \"\" and .trigger.data.delegation_commitment != [] and .trigger.data.delegation_commitment != {})) }",
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create"
+      ],
+      "entity_name": "ManagerPulse"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "operator_mode_follow_up_7_day_check_in",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "scheduleWeeklyReflection",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "scheduleWeeklyReflection"
+  }
+}
