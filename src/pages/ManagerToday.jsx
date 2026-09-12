@@ -1,9 +1,17 @@
 /**
  * ManagerToday — The Daily Companion + Patterns (unified)
  * Route: /today
+ *
+ * Redesigned around a calm "headline + detail" density model:
+ *   - Top Bar Rail: org badge + preset pill | density toggle + settings
+ *   - Headline Tier Hero: greeting, signal, top priority, next move
+ *   - 4 Collapsible Detail Zones (Today's Rhythm / What the System Sees / Your Work / Reflect)
+ *   - Patterns tab preserved for deep-dive
+ *
+ * Density (compact/detailed) resolves from user preference → org default → compact.
+ * Check-in measures resolve from the active preset (org default + user override).
  */
 import React, { useState, useEffect, useMemo, useRef } from "react";
-// ManagerToday — daily leadership dashboard
 import { loadCheckInHistory } from "@/lib/checkInStore";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
@@ -11,7 +19,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { useAtreusOrchestrator } from "@/components/ai/useAtreusOrchestrator";
 import { Link } from "react-router-dom";
-import { Brain, ChevronRight, MessageSquare, SlidersHorizontal, Layers, X, Sun, TrendingUp, ArrowRight } from "lucide-react";
+import { Brain, ChevronRight, MessageSquare, SlidersHorizontal, X, Sun, TrendingUp, ArrowRight, Activity, Target } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ToneOnboarding from "@/components/checkin/ToneOnboarding";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
@@ -38,68 +46,21 @@ import SwipeableSections from "@/components/patterns/SwipeableSections";
 import BpoHeroPatternCard from "@/components/patterns/BpoHeroPatternCard";
 import BpoWatchRow from "@/components/patterns/BpoWatchRow";
 
+// Density + preset
+import { useManagerPreferences } from "@/hooks/useManagerPreferences";
+import DensityToggle from "@/components/density/DensityToggle";
+import CollapsibleZone from "@/components/density/CollapsibleZone";
+import HeadlineSignal from "@/components/density/HeadlineSignal";
+
 function getFirstName(user) {
   const raw = user?.display_name || user?.data?.display_name || user?.full_name;
   return raw && raw.trim() && !raw.includes('@') ? raw.split(' ')[0] : 'there';
 }
 
-function HeroGreeting({ firstName, hasCheckedIn, todayRecord, onSettingsToggle }) {
-  const etHour = parseInt(new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/New_York', hour: 'numeric', hour12: false
-  }).format(new Date()), 10);
-  const greeting = etHour < 12 ? 'Good morning' : etHour < 17 ? 'Good afternoon' : 'Good evening';
-  const day = new Date().toLocaleDateString('en-US', { timeZone: 'America/New_York', weekday: 'long', month: 'long', day: 'numeric' });
-
-  let sub = "Let's see what matters right now.";
-  if (hasCheckedIn && todayRecord) {
-    const energy = todayRecord.energy_score;
-    const load = todayRecord.load_score;
-    if (energy <= 2 || load >= 4) sub = "It's a heavy one. Let's make it count.";
-    else if (energy >= 4 && load <= 2) sub = "You're in a good place. Use it well.";
-    else if (todayRecord.big3_priorities?.length > 0) sub = "Intent is set. Let's hold the shape.";
-    else sub = "Here's what the system sees right now.";
-  }
-
-  return (
-    <div className="pt-2 pb-3">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">{day}</p>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">{greeting}, {firstName}.</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{sub}</p>
-        </div>
-        {onSettingsToggle && hasCheckedIn && (
-          <button
-            onClick={onSettingsToggle}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 mt-1"
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Atreus settings</span>
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function PracticeCard() {
-  return (
-    <Link to="/practice" className="block">
-      <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors group">
-        <Layers className="w-3.5 h-3.5 text-violet-500 flex-shrink-0" />
-        <div className="min-w-0">
-          <p className="text-xs font-semibold text-foreground">Practice</p>
-          <p className="text-[10px] text-muted-foreground">Prepare, reflect, work through</p>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
 // Tab pill component
 function TabPills({ activeTab, onTabChange }) {
   return (
-    <div className="flex gap-1 bg-muted/60 rounded-xl p-1 w-fit">
+    <div className="flex gap-1 bg-slate-100 rounded-xl p-1 w-fit">
       {[
         { id: 'today', label: 'Today', icon: Sun },
         { id: 'patterns', label: 'Patterns', icon: TrendingUp },
@@ -109,8 +70,8 @@ function TabPills({ activeTab, onTabChange }) {
           onClick={() => onTabChange(id)}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
             activeTab === id
-              ? 'bg-background text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700'
           }`}
         >
           <Icon className="w-3.5 h-3.5" />
@@ -125,9 +86,16 @@ export default function ManagerToday() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { openWithContext } = useAtreusChat();
+  const { preset, presetId, density, updateDensity, client: clientOrg } = useManagerPreferences();
   const [showSettings, setShowSettings] = useState(false);
   const [showWeeklyReflection, setShowWeeklyReflection] = useState(false);
   const [activeTab, setActiveTab] = useState('today');
+  const [openZones, setOpenZones] = useState({});
+
+  const isCompact = density === 'compact';
+  const zoneOpen = (id) => (openZones[id] !== undefined ? openZones[id] : !isCompact);
+  const toggleZone = (id) => setOpenZones(prev => ({ ...prev, [id]: !zoneOpen(id) }));
+  const openZone = (id) => setOpenZones(prev => ({ ...prev, [id]: true }));
 
   const todayET = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
@@ -169,10 +137,6 @@ export default function ManagerToday() {
     if (history.length > 0) setCheckInHistory(history);
   }, [user?.email]);
 
-  // Clear the Big 3 override ONLY when the date actually changes (midnight crossover).
-  // Using a ref ensures this does NOT fire on initial mount — otherwise the override
-  // loaded from sessionStorage is immediately wiped every time the user navigates
-  // away and back to /today.
   const prevDateRef = useRef(todayET);
   useEffect(() => {
     if (prevDateRef.current !== todayET) {
@@ -189,16 +153,9 @@ export default function ManagerToday() {
         sessionStorage.setItem('today_big3_override', JSON.stringify({ date: todayET, data: big3Priorities }));
       } catch {}
     } else if (big3Priorities !== null && big3Priorities !== undefined) {
-      // Explicitly clearing with an empty array (e.g., evening skip).
-      // null/undefined means "no Big 3 change" (e.g., morning check-in) — preserve override.
       setLocalBig3Override(null);
       try { sessionStorage.removeItem('today_big3_override'); } catch {}
     }
-    // Only invalidate for midday — the midday save is awaited before onComplete fires,
-    // so the refetch will get the persisted data. Morning/evening use fire-and-forget
-    // saves, so immediate invalidation would race the refetch (overwriting the optimistic
-    // record before the save lands). The override + optimistic record hold the UI until
-    // the query naturally refetches after staleTime.
     if (type === 'midday') {
       queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
     }
@@ -215,9 +172,6 @@ export default function ManagerToday() {
     }
 
     const optimisticRecord = { check_in_date: todayET, ...(todayData?.record || {}), ...update };
-    // Preserve Big 3 from the local override when morning check-in clears it —
-    // the DB record may not have big3_priorities yet if Big3QuickSet and MorningCheckIn
-    // created separate records (race condition before query refetch)
     if (type === 'morning' && !optimisticRecord.big3_priorities?.length && localBig3Override?.length) {
       optimisticRecord.big3_priorities = localBig3Override;
     }
@@ -349,7 +303,6 @@ export default function ManagerToday() {
     enabled: !!user?.email && activeTab === 'patterns', staleTime: 30 * 60 * 1000,
   });
 
-  // Merged check-in history for patterns tab
   const mergedCheckIns = useMemo(() => {
     const map = new Map();
     entityCheckIns.forEach(r => map.set(r.check_in_date, r));
@@ -462,24 +415,82 @@ export default function ManagerToday() {
   const allDone = todayRecord?.morning_completed && todayRecord?.evening_completed;
   const hasHistoricalData = checkInHistory.length >= 1;
 
-  // ── Today tab content
-  const todayMainContent = (
-    <div className="space-y-4">
+  // ── Headline derivations ──
+  const etHour = hour;
+  const greeting = etHour < 12 ? 'Good morning' : etHour < 17 ? 'Good afternoon' : 'Good evening';
+  const day = new Date().toLocaleDateString('en-US', { timeZone: 'America/New_York', weekday: 'long', month: 'long', day: 'numeric' });
+
+  const topPriority = (localBig3Override || todayRecord?.big3_priorities)?.[0];
+
+  const nextMove = useMemo(() => {
+    if (showMorningCheckIn) return { label: 'Start morning check-in', zone: 'rhythm' };
+    if (showMiddayLoop) return { label: 'Set midday priorities', zone: 'rhythm' };
+    if (showEveningCheckIn) return { label: 'Complete evening check-in', zone: 'rhythm' };
+    if (allDone) return { label: 'Review your day', zone: 'reflect' };
+    return null;
+  }, [showMorningCheckIn, showMiddayLoop, showEveningCheckIn, allDone]);
+
+  const handleNextMove = () => {
+    if (!nextMove) return;
+    setActiveTab('today');
+    openZone(nextMove.zone);
+  };
+
+  // ── Zone summaries (condensed states) ──
+  const rhythmSummary = (
+    <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
+      {todayRecord?.morning_completed ? (
+        <span className="inline-flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Morning done
+          {todayRecord.energy_score != null && <span className="text-slate-400">· Energy {todayRecord.energy_score}/5</span>}
+        </span>
+      ) : isMorningWindow ? (
+        <span className="inline-flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-400" /> Morning check-in pending</span>
+      ) : null}
+      {todayRecord?.evening_completed && <span className="inline-flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-indigo-400" /> Evening done</span>}
+      {todayRecord?.big3_priorities?.length > 0 && <span>· {todayRecord.big3_priorities.length} priorities set</span>}
+    </div>
+  );
+
+  const systemSummary = topPattern ? (
+    <div className="flex items-center gap-2 text-xs text-slate-500">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium">{topPattern.bucket || 'Pattern'}</span>
+      <span className="truncate">{topPattern.name}</span>
+    </div>
+  ) : (
+    <p className="text-xs text-slate-400">No active patterns detected yet.</p>
+  );
+
+  const workSummary = (
+    <div className="flex items-center gap-3 text-xs text-slate-500">
+      <span>{goals.length} active goal{goals.length !== 1 ? 's' : ''}</span>
+      {pendingDecisions.length > 0 && <span>· {pendingDecisions.length} decision{pendingDecisions.length !== 1 ? 's' : ''} to review</span>}
+    </div>
+  );
+
+  const reflectSummary = hasHistoricalData ? (
+    <p className="text-xs text-slate-500">{checkInHistory.length} day{checkInHistory.length !== 1 ? 's' : ''} of check-in history · Weekly summary ready</p>
+  ) : (
+    <p className="text-xs text-slate-400">Check in to build your trend.</p>
+  );
+
+  // ── Zone 1 content (Today's Rhythm) ──
+  const rhythmContent = (
+    <>
       {(showMorningCheckIn || todayRecord?.morning_completed) && (
         <MorningCheckIn
           todayRecord={todayRecord}
           userEmail={user?.email}
+          measures={preset.measures}
           onComplete={handleCheckInComplete}
         />
       )}
-
       {(showMiddayLoop || todayRecord?.midday_loop_completed) && (
         <MiddayPriorityLoop
           todayRecord={localBig3Override ? { ...todayRecord, big3_priorities: localBig3Override } : todayRecord}
           onComplete={handleCheckInComplete}
         />
       )}
-
       {isMiddayWindow && !todayRecord?.midday_loop_completed && !todayRecord?.big3_priorities?.length && (
         <div className="bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3.5 flex items-start gap-3">
           <span className="text-lg flex-shrink-0">📋</span>
@@ -491,24 +502,16 @@ export default function ManagerToday() {
           </div>
         </div>
       )}
-
       {(showEveningCheckIn || todayRecord?.evening_completed) && (
         <EveningCheckIn
           todayRecord={todayRecord}
           userEmail={user?.email}
           goals={goals}
+          measures={preset.measures}
           onComplete={handleCheckInComplete}
           isActiveWindow={isEveningWindow}
         />
       )}
-
-      {/* Mobile only — desktop shows this in the right column */}
-      {topPattern && (
-        <div className="md:hidden">
-          <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} onDecisionCommitted={refetchDecisions} pendingDecisions={pendingDecisions} />
-        </div>
-      )}
-
       {!!user?.email && (
         <TodaysPlaybook
           todayRecord={localBig3Override ? { ...todayRecord, big3_priorities: localBig3Override } : todayRecord}
@@ -526,9 +529,6 @@ export default function ManagerToday() {
             try {
               sessionStorage.setItem('today_big3_override', JSON.stringify({ date: todayET, data: priorities }));
             } catch {}
-            // Invalidate immediately so todayRecord?.id is fresh for MorningCheckIn —
-            // the 3-second delay caused a race where MorningCheckIn created a duplicate
-            // record instead of updating the one Big3QuickSet just created
             queryClient.invalidateQueries({ queryKey: ['daily-checkin-today', user?.email] });
           }}
           onRefresh={() => {
@@ -539,7 +539,6 @@ export default function ManagerToday() {
           isMorningWindow={isMorningWindow}
         />
       )}
-
       {allDone && (
         <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl px-5 py-4 flex items-start gap-3">
           <span className="text-xl flex-shrink-0">✅</span>
@@ -551,79 +550,55 @@ export default function ManagerToday() {
           </div>
         </div>
       )}
+    </>
+  );
 
+  // ── Zone 2 content (What the System Sees) ──
+  const systemContent = (
+    <>
+      {topPattern && (
+        <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} onDecisionCommitted={refetchDecisions} pendingDecisions={pendingDecisions} />
+      )}
+      <UpcomingFrictionCard trends={trends} goals={goals} pulses={recentPulses} onOpenAtreus={openAtreus} />
+    </>
+  );
+
+  // ── Zone 3 content (Your Work) ──
+  const workContent = (
+    <>
+      <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
+      <DecisionJournalCard />
+    </>
+  );
+
+  // ── Zone 4 content (Reflect) ──
+  const reflectContent = (
+    <>
       {hasHistoricalData && (
         <button
           onClick={() => setShowWeeklyReflection(true)}
-          className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-card border border-border hover:bg-muted/50 transition-colors group"
+          className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors group"
         >
           <div className="flex items-center gap-3">
             <Brain className="w-4 h-4 text-[#0202ff] flex-shrink-0" />
             <div className="text-left">
-              <p className="text-sm font-semibold text-foreground">Weekly rhythm summary</p>
-              <p className="text-[10px] text-muted-foreground">Charts, AI narrative, risks, recognition & next steps</p>
+              <p className="text-sm font-semibold text-slate-900">Weekly rhythm summary</p>
+              <p className="text-[10px] text-slate-500">Charts, AI narrative, risks, recognition & next steps</p>
             </div>
           </div>
-          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50" />
+          <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
         </button>
       )}
-
-      {/* Mobile-only: trend dashboard, performance, friction, practice, decisions */}
-      <div className="md:hidden">
-        <CheckInTrendDashboard checkIns={(() => {
-          const ids = new Set(checkInHistory.map(r => r.check_in_date));
-          const hasToday = ids.has(todayET);
-          const hasScores = todayRecord && (todayRecord.energy_score != null || todayRecord.confidence_score != null);
-          return (!hasToday && hasScores) ? [todayRecord, ...checkInHistory] : checkInHistory;
-        })()} assessment={latestAssessment} />
-      </div>
-      <div className="md:hidden">
-        <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
-      </div>
-      <div className="md:hidden">
-        <UpcomingFrictionCard trends={trends} goals={goals} pulses={recentPulses} onOpenAtreus={openAtreus} />
-      </div>
-      <div className="md:hidden">
-        <PracticeCard />
-      </div>
-      <div className="md:hidden">
-        <DecisionJournalCard />
-      </div>
-    </div>
-  );
-
-  // ── Today tab companion column (desktop)
-  const todayCompanionColumn = (
-    <div className="space-y-4">
-      {topPattern && (
-        <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} onDecisionCommitted={refetchDecisions} pendingDecisions={pendingDecisions} />
-      )}
-      {needsToneOnboarding && (
-        <div className="bg-card rounded-2xl border border-[#0202ff]/20 shadow-sm overflow-hidden">
-          <div className="px-4 pt-4 pb-2 flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-[#0202ff] flex items-center justify-center flex-shrink-0">
-              <MessageSquare className="w-3 h-3 text-white" />
-            </div>
-            <p className="text-xs font-semibold text-foreground">How should Atreus talk to you?</p>
-          </div>
-          <div className="px-4 pb-4">
-            <ToneOnboarding existingTone={null} onComplete={() => queryClient.invalidateQueries({ queryKey: ['ml-tone', user?.email] })} />
-          </div>
-        </div>
-      )}
-      <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
       <CheckInTrendDashboard checkIns={(() => {
         const ids = new Set(checkInHistory.map(r => r.check_in_date));
         const hasToday = ids.has(todayET);
         const hasScores = todayRecord && (todayRecord.energy_score != null || todayRecord.confidence_score != null);
         return (!hasToday && hasScores) ? [todayRecord, ...checkInHistory] : checkInHistory;
       })()} assessment={latestAssessment} />
-      <UpcomingFrictionCard trends={trends} goals={goals} pulses={recentPulses} onOpenAtreus={openAtreus} />
-      <DecisionJournalCard />
-    </div>
+    </>
   );
 
-  // ── Patterns tab content (left column)
+  // ── Patterns tab content (preserved) ──
   const big3DaysCount = checkInHistory.filter(c => c.big3_priorities?.length > 0).length;
 
   const patternsLeftColumn = (
@@ -652,7 +627,6 @@ export default function ManagerToday() {
     </div>
   );
 
-  // ── Patterns tab content (right column)
   const patternsRightColumn = (
     <div className="space-y-4">
       <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
@@ -662,15 +636,15 @@ export default function ManagerToday() {
   );
 
   return (
-    <div className="px-4 py-6">
-      {/* Mobile: tone onboarding banner */}
-      {needsToneOnboarding && activeTab === 'today' && (
-        <div className="md:hidden max-w-2xl mx-auto mb-4 bg-card rounded-2xl border border-[#0202ff]/20 shadow-sm overflow-hidden">
+    <div className="px-4 py-6 max-w-6xl mx-auto">
+      {/* Tone onboarding banner (if needed) */}
+      {needsToneOnboarding && (
+        <div className="mb-4 bg-white rounded-2xl border border-[#0202ff]/20 shadow-sm overflow-hidden">
           <div className="px-4 pt-4 pb-2 flex items-center gap-2">
             <div className="w-6 h-6 rounded-lg bg-[#0202ff] flex items-center justify-center flex-shrink-0">
               <MessageSquare className="w-3 h-3 text-white" />
             </div>
-            <p className="text-xs font-semibold text-foreground">How should Atreus talk to you?</p>
+            <p className="text-xs font-semibold text-slate-900">How should Atreus talk to you?</p>
           </div>
           <div className="px-4 pb-4">
             <ToneOnboarding existingTone={null} onComplete={() => queryClient.invalidateQueries({ queryKey: ['ml-tone', user?.email] })} />
@@ -678,73 +652,153 @@ export default function ManagerToday() {
         </div>
       )}
 
-      {/* Mobile: single column */}
-      <div className="md:hidden max-w-2xl mx-auto space-y-4">
-        <HeroGreeting firstName={firstName} hasCheckedIn={!!todayRecord} todayRecord={todayRecord} onSettingsToggle={todayRecord ? () => setShowSettings(s => !s) : null} />
-        <TabPills activeTab={activeTab} onTabChange={setActiveTab} />
+      {/* ── Top Bar Rail ── */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-xs font-medium text-slate-500 truncate">{clientOrg?.name || 'Your organization'}</span>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#0202ff]/10 text-[#0202ff] text-[10px] font-semibold flex-shrink-0">
+            {preset.name} Preset
+          </span>
+        </div>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <DensityToggle value={density} onChange={updateDensity} />
+          <button
+            onClick={() => setShowSettings(s => !s)}
+            className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 transition-colors"
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Settings</span>
+          </button>
+        </div>
+      </div>
 
-        {activeTab === 'today' && todayMainContent}
+      {/* ── Headline Tier Hero ── */}
+      <div className="mb-5">
+        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1">{day}</p>
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>
+          {greeting}, {firstName}.
+        </h1>
+        <div className="mt-2">
+          <HeadlineSignal todayRecord={todayRecord} hasCheckedIn={!!todayRecord} />
+        </div>
 
-        {activeTab === 'patterns' && (
-          <>
-            <div className="space-y-3">
-              <div className="flex items-end justify-between px-1">
-                <div>
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Performance</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Your active goals, KPIs, and OKRs at a glance.</p>
-                </div>
-                <Link to="/my-performance" className="flex items-center gap-1 text-xs font-semibold text-[#0202ff] hover:underline">
-                  View Performance <ArrowRight className="w-3 h-3" />
-                </Link>
+        {/* Top priority + next move */}
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-4">
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Top priority</p>
+            {topPriority ? (
+              <p className="text-sm font-semibold text-slate-900 leading-snug">{topPriority.title}</p>
+            ) : (
+              <p className="text-sm text-slate-400">No priority set yet</p>
+            )}
+          </div>
+          {nextMove && (
+            <button
+              onClick={handleNextMove}
+              className="bg-[#0202ff] text-white rounded-2xl p-4 flex items-center justify-between hover:bg-[#0101dd] transition-colors text-left"
+            >
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider opacity-80">Next move</p>
+                <p className="text-sm font-semibold">{nextMove.label}</p>
               </div>
-              <PerformanceMetricsRow />
+              <ArrowRight className="w-4 h-4 flex-shrink-0" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Tab pills ── */}
+      <div className="mb-4">
+        <TabPills activeTab={activeTab} onTabChange={setActiveTab} />
+      </div>
+
+      {/* ── Today tab: 4 collapsible zones ── */}
+      {activeTab === 'today' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+          <CollapsibleZone
+            title="Today's Rhythm"
+            icon={Sun}
+            iconColor="text-amber-400"
+            accentColor="#f59e0b"
+            open={zoneOpen('rhythm')}
+            onToggle={() => toggleZone('rhythm')}
+            summary={rhythmSummary}
+          >
+            {rhythmContent}
+          </CollapsibleZone>
+
+          <CollapsibleZone
+            title="What the System Sees"
+            icon={Activity}
+            iconColor="text-[#0202ff]"
+            accentColor="#0202ff"
+            open={zoneOpen('system')}
+            onToggle={() => toggleZone('system')}
+            summary={systemSummary}
+          >
+            {systemContent}
+          </CollapsibleZone>
+
+          <CollapsibleZone
+            title="Your Work"
+            icon={Target}
+            iconColor="text-emerald-500"
+            accentColor="#10b981"
+            open={zoneOpen('work')}
+            onToggle={() => toggleZone('work')}
+            summary={workSummary}
+          >
+            {workContent}
+          </CollapsibleZone>
+
+          <CollapsibleZone
+            title="Reflect"
+            icon={Brain}
+            iconColor="text-violet-500"
+            accentColor="#8b5cf6"
+            open={zoneOpen('reflect')}
+            onToggle={() => toggleZone('reflect')}
+            summary={reflectSummary}
+          >
+            {reflectContent}
+          </CollapsibleZone>
+        </div>
+      )}
+
+      {/* ── Patterns tab (preserved) ── */}
+      {activeTab === 'patterns' && (
+        <div className="space-y-5">
+          <div className="space-y-3">
+            <div className="flex items-end justify-between px-1">
+              <div>
+                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Performance</p>
+                <p className="text-xs text-slate-500 mt-0.5">Your active goals, KPIs, and OKRs at a glance.</p>
+              </div>
+              <Link to="/my-performance" className="flex items-center gap-1 text-xs font-semibold text-[#0202ff] hover:underline">
+                View Performance <ArrowRight className="w-3 h-3" />
+              </Link>
             </div>
+            <PerformanceMetricsRow />
+          </div>
+          {/* Mobile: swipeable; Desktop: two columns */}
+          <div className="md:hidden">
             <SwipeableSections
               sections={[
                 { label: "Patterns", content: patternsLeftColumn },
                 { label: "Signals", content: patternsRightColumn },
               ]}
             />
-          </>
-        )}
-      </div>
-
-      {/* Desktop: two column */}
-      <div className="hidden md:block max-w-6xl mx-auto">
-        <HeroGreeting firstName={firstName} hasCheckedIn={!!todayRecord} todayRecord={todayRecord} onSettingsToggle={todayRecord ? () => setShowSettings(s => !s) : null} />
-        <div className="mt-3 mb-5">
-          <TabPills activeTab={activeTab} onTabChange={setActiveTab} />
-        </div>
-
-        {activeTab === 'today' && (
-          <div className="grid grid-cols-[1fr_400px] gap-6 items-start">
-            <div className="space-y-4">{todayMainContent}</div>
-            <div className="sticky top-4">{todayCompanionColumn}</div>
           </div>
-        )}
-
-        {activeTab === 'patterns' && (
-          <div className="space-y-5">
-            <div className="space-y-3">
-              <div className="flex items-end justify-between px-1">
-                <div>
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Performance</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Your active goals, KPIs, and OKRs at a glance.</p>
-                </div>
-                <Link to="/my-performance" className="flex items-center gap-1 text-xs font-semibold text-[#0202ff] hover:underline">
-                  View Performance <ArrowRight className="w-3 h-3" />
-                </Link>
-              </div>
-              <PerformanceMetricsRow />
-            </div>
+          <div className="hidden md:block">
             <div className="grid grid-cols-[1fr_400px] gap-6 items-start">
               <div>{patternsLeftColumn}</div>
               <div className="sticky top-4">{patternsRightColumn}</div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
+      {/* Weekly reflection modal */}
       <WeeklyRhythmReflection
         isOpen={showWeeklyReflection}
         onClose={() => setShowWeeklyReflection(false)}
@@ -756,6 +810,7 @@ export default function ManagerToday() {
         assessmentInsight={insight}
       />
 
+      {/* Settings slide-out */}
       <AnimatePresence>
         {showSettings && (
           <>

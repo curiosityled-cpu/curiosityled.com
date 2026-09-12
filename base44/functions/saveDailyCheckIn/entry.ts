@@ -12,6 +12,7 @@
  * validates user ownership. Writes use user-scoped client.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { CHECK_IN_PRESETS, getPreset } from '../../shared/checkInPresets.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -47,6 +48,19 @@ Deno.serve(async (req) => {
         base44.asServiceRole.entities.ManagerMemory.filter({ user_email: user.email }, null, 1).catch(() => []),
       ]);
 
+      // Resolve the client's active check-in preset (org-level config on Client.settings)
+      let presetId = 'balance';
+      try {
+        if (user.client_id) {
+          const client = await base44.asServiceRole.entities.Client.get(user.client_id).catch(() => null);
+          if (client?.settings?.check_in_config?.preset_id) {
+            presetId = client.settings.check_in_config.preset_id;
+          }
+        }
+      } catch { /* fall back to balance */ }
+      const preset = getPreset(presetId);
+      const measures = preset.measures;
+
       const trendData = trends[0] || {};
       const memoryData = memory[0] || {};
       const lastCheckIn = recentCheckIns[0];
@@ -60,33 +74,62 @@ Deno.serve(async (req) => {
         lastCheckIn?.load_score >= 4 ? 'Yesterday\'s load was high.' : null,
       ].filter(Boolean).join(' ');
 
+      const measureList = measures.map(m => `${m.key} (${m.label} — ${m.desc})`).join(', ');
+      const jsonKeys = measures.map(m => `"${m.key}"`).join(', ');
+
       const prompt = check_in_type === 'morning'
-        ? `Generate 5 short, conversational check-in questions for a manager starting their day. 
-           One question each for: Energy/Steadiness, Confidence/Clarity, Focus/Momentum, Load/Pressure, Growth Follow-through.
+        ? `Generate 5 short check-in statements for a manager starting their day — one for each measure: ${measureList}.
+           Each statement MUST be a first-person, present-tense sentence that can be rated on a 1-5 scale (1=Low, 5=Strong).
+           Examples of the correct format: "I feel steady and rested this morning." / "I can see my top priorities clearly."
+           Do NOT ask open-ended questions. Do NOT use question marks. Each statement should be rateable — the user will score 1-5 on how true it feels right now.
            ${contextSummary ? `Context about this manager: ${contextSummary}` : ''}
-           Make questions feel natural and varied — not the same phrasing every day. Avoid corporate jargon.
-           Return JSON: { energy: "...", confidence: "...", focus: "...", load: "...", growth: "..." }`
-        : `Generate 5 short, conversational end-of-day reflection questions for a manager closing their day.
-           One question each for: Energy/Steadiness (how you finish), Confidence/Clarity (decisions made today), Focus/Momentum (on priorities), Load/Pressure (what drained you), Growth Follow-through (did you honour your intentions).
+           Vary the phrasing naturally day to day. Avoid corporate jargon. Keep each statement under 12 words.
+           Return JSON: { ${jsonKeys}: "..." }`
+        : `Generate 5 short end-of-day reflection statements for a manager closing their day — one for each measure: ${measureList}.
+           Each statement MUST be a first-person, present-tense sentence reflecting on today, rateable on a 1-5 scale (1=Low, 5=Strong).
+           Examples: "I finished the day with energy to spare." / "I made clear decisions under pressure today."
+           Do NOT ask open-ended questions. Do NOT use question marks. Each statement should be rateable.
            ${contextSummary ? `Context about this manager: ${contextSummary}` : ''}
-           Make questions feel like a thoughtful debrief, not a form. Varied phrasing each day.
-           Return JSON: { energy: "...", confidence: "...", focus: "...", load: "...", growth: "..." }`;
+           Vary the phrasing naturally. Keep each statement under 12 words.
+           Return JSON: { ${jsonKeys}: "..." }`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt,
         response_json_schema: {
           type: 'object',
-          properties: {
-            energy: { type: 'string' },
-            confidence: { type: 'string' },
-            focus: { type: 'string' },
-            load: { type: 'string' },
-            growth: { type: 'string' },
-          },
+          properties: Object.fromEntries(measures.map(m => [m.key, { type: 'string' }])),
         },
       });
 
-      return Response.json({ questions: result });
+      // ── Likert guardrail: validate each question reads as a rateable statement ──
+      // If any question starts with a question word or contains a question mark,
+      // run a rewrite pass to convert them all to first-person Likert statements.
+      const questionWords = /^(how|what|why|did|do|are|is|can|could|would|will|have|has|should)\b/i;
+      let questions = result || {};
+      let needsRewrite = false;
+      for (const m of measures) {
+        const q = (questions[m.key] || '').trim();
+        if (!q || questionWords.test(q) || q.includes('?')) {
+          needsRewrite = true;
+          break;
+        }
+      }
+
+      if (needsRewrite) {
+        try {
+          const rewritePrompt = `Rewrite each of these check-in prompts as a first-person, present-tense statement that can be rated 1-5 (1=Low, 5=Strong). Do NOT use question marks or question words (How, What, Why, etc.). Keep each under 12 words.\nReturn JSON with the same keys.\n${JSON.stringify(questions)}`;
+          const rewritten = await base44.integrations.Core.InvokeLLM({
+            prompt: rewritePrompt,
+            response_json_schema: {
+              type: 'object',
+              properties: Object.fromEntries(measures.map(m => [m.key, { type: 'string' }])),
+            },
+          });
+          if (rewritten) questions = rewritten;
+        } catch { /* keep original if rewrite fails */ }
+      }
+
+      return Response.json({ questions, preset_id: presetId, measures });
     }
 
     // ── SAVE ─────────────────────────────────────────────────────────────────

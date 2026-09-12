@@ -1,23 +1,17 @@
 /**
- * EveningCheckIn — End-of-day reflection check (5 measures) + Big 3 planning for tomorrow.
- * Prompts user to reflect on today and set tomorrow's Big 3 priorities.
+ * EveningCheckIn — End-of-day reflection check (configurable preset) + Big 3 planning.
+ * Measures come from the active check-in preset (passed via props).
+ * Notes are opt-in (collapsed behind "+ add a note") to shorten the flow.
  */
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { saveCheckInToHistory } from "@/lib/checkInStore";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Moon, ChevronRight, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, Moon, ChevronRight, CheckCircle2, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CHECK_IN_PRESETS, SCALE_LABELS } from "@/lib/checkInPresets";
 
-const MEASURES = [
-  { key: "energy",     label: "Energy",     emoji: "⚡", desc: "How you finished" },
-  { key: "confidence", label: "Confidence", emoji: "🎯", desc: "Decisions made today" },
-  { key: "focus",      label: "Focus",      emoji: "🔍", desc: "On your priorities" },
-  { key: "load",       label: "Load",       emoji: "🪨", desc: "What drained you" },
-  { key: "growth",     label: "Growth",     emoji: "🌱", desc: "Honoured your intentions" },
-];
-
-const SCALE_LABELS = { 1: "Low", 2: "Below avg", 3: "Okay", 4: "Good", 5: "Strong" };
+const DEFAULT_MEASURES = CHECK_IN_PRESETS.balance.measures;
 
 function ScorePicker({ value, onChange }) {
   return (
@@ -37,6 +31,30 @@ function ScorePicker({ value, onChange }) {
         </button>
       ))}
     </div>
+  );
+}
+
+function OptInNote({ value, onChange }) {
+  const [expanded, setExpanded] = useState(!!value);
+  if (expanded) {
+    return (
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Add a note (optional)"
+        rows={2}
+        autoFocus
+        className="w-full text-sm bg-muted/40 rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/60"
+      />
+    );
+  }
+  return (
+    <button
+      onClick={() => setExpanded(true)}
+      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors py-0.5"
+    >
+      <Plus className="w-3 h-3" /> Add a note
+    </button>
   );
 }
 
@@ -69,7 +87,6 @@ function Big3Step({ goals, onSave, onSkip, isActiveWindow = true, initialPriorit
     const filled = priorities.filter(p => p.title.trim());
     setSaving(true);
     try {
-      // Always pass filled priorities (may be empty if user cleared all fields)
       await onSave(filled.map(p => ({ ...p, status: "planned" })));
     } catch (err) {
       console.error("Big3 save error:", err);
@@ -154,10 +171,10 @@ function wasEveningCompletedToday(userEmail) {
   try {
     const key = userEmail ? `${EVENING_COMPLETED_KEY}_${userEmail}` : EVENING_COMPLETED_KEY;
     const raw = localStorage.getItem(key);
-    if (!raw) return null; // null = not found
+    if (!raw) return null;
     const saved = JSON.parse(raw);
     if (saved.date !== getTodayET()) { localStorage.removeItem(key); return null; }
-    return saved; // { date, big3, scores, notes }
+    return saved;
   } catch { return null; }
 }
 
@@ -188,7 +205,6 @@ function loadDraft(userEmail) {
     const raw = localStorage.getItem(getDraftKey(userEmail));
     if (!raw) return null;
     const draft = JSON.parse(raw);
-    // Only restore if it's from today (ET)
     if (draft.date !== getTodayET()) {
       localStorage.removeItem(getDraftKey(userEmail));
       return null;
@@ -210,13 +226,11 @@ function clearDraft(userEmail) {
   try { localStorage.removeItem(getDraftKey(userEmail)); } catch {}
 }
 
-export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goals = [], isActiveWindow = true }) {
+export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goals = [], isActiveWindow = true, measures = DEFAULT_MEASURES }) {
+  const MEASURES = measures;
   const completedCache = wasEveningCompletedToday(userEmail);
   const alreadyDoneFromCache = !!completedCache;
 
-  // DB truth takes priority once loaded, but localStorage completion is a floor:
-  // if the user just completed (localStorage says done) but the DB hasn't persisted yet
-  // (fire-and-forget save still in-flight), we trust localStorage to prevent a reset.
   const alreadyDone = !!todayRecord?.evening_completed || alreadyDoneFromCache;
 
   const [step, setStep] = useState(() => alreadyDone ? 7 : 0);
@@ -227,29 +241,20 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
   const [notes, setNotes] = useState(() =>
     completedCache?.notes || { energy: "", confidence: "", focus: "", load: "", growth: "" }
   );
-  const [localBig3, setLocalBig3] = useState(() => completedCache?.big3 || null); // persisted after save for step 7 display
+  const [localBig3, setLocalBig3] = useState(() => completedCache?.big3 || null);
   const [expanded, setExpanded] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editStep, setEditStep] = useState(1);
 
-  // Track whether we've already initiated the fetch this mount
   const fetchInitiatedRef = useRef(false);
   const isMountedRef = useRef(true);
   const stepRef = useRef(0);
 
-  // Track component mount/unmount
-  useEffect(() => {
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
-  // Keep stepRef in sync so the alreadyDone effect can read current step without a dep
+  useEffect(() => { return () => { isMountedRef.current = false; }; }, []);
   useEffect(() => { stepRef.current = step; }, [step]);
 
-  // Persist draft to localStorage whenever in-progress state changes
   useEffect(() => {
-    if (step >= 1 && step <= 5 && !alreadyDone) {
+    if (step >= 1 && step <= MEASURES.length && !alreadyDone) {
       saveDraft(step, scores, notes, questions, userEmail);
     }
   }, [step, scores, notes, questions, alreadyDone, userEmail]);
@@ -257,7 +262,6 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
   useEffect(() => {
     if (alreadyDone) {
       setStep(prev => (prev >= 6) ? prev : 7);
-      // Don't overwrite scores/notes while the user is actively editing them
       if (todayRecord && !editMode) {
         setScores({
           energy:     todayRecord.energy_score     || 3,
@@ -273,7 +277,6 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
           load:       todayRecord.load_note       || "",
           growth:     todayRecord.growth_note     || "",
         });
-        // Only pull Big 3 from the record if we haven't already captured it locally
         if (todayRecord.big3_priorities?.length > 0) {
           setLocalBig3(prev => prev && prev.length > 0 ? prev : todayRecord.big3_priorities);
         }
@@ -282,10 +285,8 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
       return;
     }
 
-    // Don't reset step if we're already in the completion/Big3 phase
     if (stepRef.current >= 6) return;
 
-    // Restore from draft if available
     const draft = loadDraft(userEmail);
     if (draft) {
       setScores(draft.scores);
@@ -296,14 +297,12 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
       return;
     }
 
-    // Outside the evening window — skip reflection questions and go straight to Big 3 planning
     if (!isActiveWindow) {
       fetchInitiatedRef.current = true;
       setStep(6);
       return;
     }
 
-    // Only fetch once per mount
     if (fetchInitiatedRef.current) return;
     fetchInitiatedRef.current = true;
 
@@ -316,12 +315,11 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
   }, [alreadyDone, isActiveWindow, editMode, userEmail]);
 
   const handleMeasureNext = () => {
-    if (step < 5) setStep(s => s + 1);
+    if (step < MEASURES.length) setStep(s => s + 1);
     else setStep(6); // → Big 3
   };
 
   const handleBig3Save = (big3Priorities) => {
-    // Immediately update UI and notify parent — don't wait for the API round-trip
     const hasPriorities = big3Priorities && big3Priorities.length > 0;
     setLocalBig3(hasPriorities ? big3Priorities : null);
     setStep(7);
@@ -329,10 +327,8 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
     markEveningCompletedToday(big3Priorities, scores, notes, userEmail);
     const eveningScores = isActiveWindow ? scores : null;
     if (userEmail && eveningScores) {
-      saveCheckInToHistory(userEmail, 'evening', eveningScores); // persist to multi-day history store
+      saveCheckInToHistory(userEmail, 'evening', eveningScores);
     }
-    // Pass null when skipping (empty Big 3) so the parent preserves the existing override —
-    // don't wipe Big 3 that were set earlier today via Big3QuickSet.
     onComplete?.(hasPriorities ? big3Priorities : null, 'evening', eveningScores);
 
     const today = getTodayET();
@@ -340,8 +336,6 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
       evening_completed: true,
       evening_completed_at: new Date().toISOString(),
     };
-    // Only write big3_priorities when the user actually set them.
-    // Skipping (empty array) should NOT overwrite Big 3 already saved on the record.
     if (hasPriorities) {
       entityPayload.big3_priorities = big3Priorities;
     }
@@ -353,7 +347,6 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
       entityPayload.growth_score = scores.growth; entityPayload.growth_note = notes.growth;
     }
 
-    // Primary: direct entity save (most reliable, bypasses backend function RLS issues)
     const directSave = todayRecord?.id
       ? base44.entities.DailyCheckIn.update(todayRecord.id, entityPayload)
       : base44.entities.DailyCheckIn.create({ user_email: userEmail, check_in_date: today, check_in_type: 'evening', ...entityPayload });
@@ -466,25 +459,25 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
       );
     }
     const measure = MEASURES[editStep - 1];
-    const question = questions?.[measure.key] || `How did your ${measure.label.toLowerCase()} hold up today?`;
+    const question = questions?.[measure.key] || `Rate your ${measure.label.toLowerCase()} for today.`;
     return (
       <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
         <div className="px-4 pt-4 pb-3 border-b border-border flex items-center gap-2">
           <Moon className="w-4 h-4 text-indigo-400" />
           <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Edit evening check-in</p>
-          <span className="ml-auto text-xs text-muted-foreground">{editStep}/5</span>
+          <span className="ml-auto text-xs text-muted-foreground">{editStep}/{MEASURES.length}</span>
         </div>
-        <div className="h-1 bg-muted"><div className="h-1 bg-indigo-500 transition-all" style={{ width: `${(editStep/5)*100}%` }} /></div>
+        <div className="h-1 bg-muted"><div className="h-1 bg-indigo-500 transition-all" style={{ width: `${(editStep/MEASURES.length)*100}%` }} /></div>
         <AnimatePresence mode="wait">
           <motion.div key={editStep} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="px-4 py-5 space-y-4">
             <div className="flex items-center gap-2"><span className="text-xl">{measure.emoji}</span><p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide">{measure.label} · {measure.desc}</p></div>
             <p className="text-sm font-medium text-foreground leading-snug">{question}</p>
             <ScorePicker value={scores[measure.key]} onChange={(v) => setScores(s => ({ ...s, [measure.key]: v }))} />
-            <textarea value={notes[measure.key]} onChange={(e) => setNotes(n => ({ ...n, [measure.key]: e.target.value }))} placeholder="Add a note (optional)" rows={2} className="w-full text-sm bg-muted/40 rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/60" />
+            <OptInNote value={notes[measure.key]} onChange={(v) => setNotes(n => ({ ...n, [measure.key]: v }))} />
             <div className="flex gap-2">
               <Button variant="outline" size="sm" className="text-xs" onClick={() => { setEditMode(false); setExpanded(false); }}>Cancel</Button>
-              <Button onClick={() => editStep < 5 ? setEditStep(s => s+1) : setEditStep(6)} className="flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-sm">
-                {editStep < 5 ? <><span>Next</span><ChevronRight className="w-3.5 h-3.5" /></> : "Edit Big 3 →"}
+              <Button onClick={() => editStep < MEASURES.length ? setEditStep(s => s+1) : setEditStep(6)} className="flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-sm">
+                {editStep < MEASURES.length ? <><span>Next</span><ChevronRight className="w-3.5 h-3.5" /></> : "Edit Big 3 →"}
               </Button>
             </div>
           </motion.div>
@@ -516,18 +509,18 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
       <Loader2 className="w-5 h-5 animate-spin text-[#0202ff]" />
     </div>
   );
-  const question = questions?.[measure.key] || `How did your ${measure.label.toLowerCase()} hold up today?`;
+  const question = questions?.[measure.key] || `Rate your ${measure.label.toLowerCase()} for today.`;
 
   return (
     <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
       <div className="px-4 pt-4 pb-3 border-b border-border flex items-center gap-2">
         <Moon className="w-4 h-4 text-indigo-400" />
         <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Evening check-in</p>
-        <span className="ml-auto text-xs text-muted-foreground">{step}/5</span>
+        <span className="ml-auto text-xs text-muted-foreground">{step}/{MEASURES.length}</span>
       </div>
 
       <div className="h-1 bg-muted">
-        <div className="h-1 bg-indigo-500 transition-all duration-300" style={{ width: `${(step / 5) * 100}%` }} />
+        <div className="h-1 bg-indigo-500 transition-all duration-300" style={{ width: `${(step / MEASURES.length) * 100}%` }} />
       </div>
 
       <AnimatePresence mode="wait">
@@ -553,16 +546,13 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
             onChange={(v) => setScores(s => ({ ...s, [measure.key]: v }))}
           />
 
-          <textarea
+          <OptInNote
             value={notes[measure.key]}
-            onChange={(e) => setNotes(n => ({ ...n, [measure.key]: e.target.value }))}
-            placeholder="Add a note (optional)"
-            rows={2}
-            className="w-full text-sm bg-muted/40 rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/60"
+            onChange={(v) => setNotes(n => ({ ...n, [measure.key]: v }))}
           />
 
           <Button onClick={handleMeasureNext} className="w-full bg-[#0202ff] hover:bg-[#0101dd] flex items-center gap-1.5">
-            {step < 5 ? <><span>Next</span><ChevronRight className="w-3.5 h-3.5" /></> : "Plan tomorrow →"}
+            {step < MEASURES.length ? <><span>Next</span><ChevronRight className="w-3.5 h-3.5" /></> : "Plan tomorrow →"}
           </Button>
         </motion.div>
       </AnimatePresence>

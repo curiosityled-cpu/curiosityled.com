@@ -90,6 +90,23 @@
       },
       "description": "Privacy and data retention preferences"
     },
+    "ui_density": {
+      "type": "string",
+      "enum": [
+        "compact",
+        "detailed"
+      ],
+      "description": "User's preferred UI density (overrides org default). compact = headline + collapsed detail; detailed = full cards expanded."
+    },
+    "check_in_preset_override": {
+      "type": "string",
+      "enum": [
+        "balance",
+        "wellbeing",
+        "performance"
+      ],
+      "description": "User's personal check-in preset override (overrides org default)"
+    },
     "description": {
       "type": "string",
       "maxLength": 1000,

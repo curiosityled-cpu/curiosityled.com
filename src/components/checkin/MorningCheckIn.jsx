@@ -1,29 +1,18 @@
 /**
- * MorningCheckIn — 5-measure morning self-check (Energy, Confidence, Focus, Load, Growth)
- * Uses AI-generated conversational questions from saveDailyCheckIn backend.
+ * MorningCheckIn — 5-measure morning self-check (configurable preset).
+ * Uses AI-generated Likert statements from saveDailyCheckIn backend.
+ * Measures come from the active check-in preset (passed via props).
+ * Notes are opt-in (collapsed behind "+ add a note") to shorten the flow.
  */
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { saveCheckInToHistory } from "@/lib/checkInStore";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Sun, ChevronRight, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, Sun, ChevronRight, CheckCircle2, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CHECK_IN_PRESETS, SCALE_LABELS } from "@/lib/checkInPresets";
 
-const MEASURES = [
-  { key: "energy",     label: "Energy",     emoji: "⚡", desc: "Steadiness" },
-  { key: "confidence", label: "Confidence", emoji: "🎯", desc: "Clarity" },
-  { key: "focus",      label: "Focus",      emoji: "🔍", desc: "Momentum" },
-  { key: "load",       label: "Load",       emoji: "🪨", desc: "Pressure" },
-  { key: "growth",     label: "Growth",     emoji: "🌱", desc: "Follow-through" },
-];
-
-const SCALE_LABELS = {
-  1: "Low",
-  2: "Below avg",
-  3: "Okay",
-  4: "Good",
-  5: "Strong",
-};
+const DEFAULT_MEASURES = CHECK_IN_PRESETS.balance.measures;
 
 function ScorePicker({ value, onChange }) {
   return (
@@ -37,7 +26,7 @@ function ScorePicker({ value, onChange }) {
               ? "bg-[#0202ff] text-white shadow-sm"
               : "bg-muted text-muted-foreground hover:bg-muted/70"
             }`}
-        >
+          >
           {n}
           <span className="block text-[9px] font-normal leading-tight mt-0.5 opacity-80">
             {SCALE_LABELS[n]}
@@ -45,6 +34,30 @@ function ScorePicker({ value, onChange }) {
         </button>
       ))}
     </div>
+  );
+}
+
+function OptInNote({ value, onChange }) {
+  const [expanded, setExpanded] = useState(!!value);
+  if (expanded) {
+    return (
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Add a note (optional)"
+        rows={2}
+        autoFocus
+        className="w-full text-sm bg-muted/40 rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/60"
+      />
+    );
+  }
+  return (
+    <button
+      onClick={() => setExpanded(true)}
+      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors py-0.5"
+    >
+      <Plus className="w-3 h-3" /> Add a note
+    </button>
   );
 }
 
@@ -75,7 +88,9 @@ function markCompletedToday(userEmail, scores) {
   } catch {}
 }
 
-export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
+export default function MorningCheckIn({ onComplete, todayRecord, userEmail, measures = DEFAULT_MEASURES }) {
+  const MEASURES = measures;
+
   // DB truth takes priority once loaded, but localStorage completion is a floor:
   // if the user just completed (localStorage says done) but the DB hasn't persisted yet
   // (fire-and-forget save still in-flight), we trust localStorage to prevent a reset.
@@ -109,7 +124,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
 
   // Persist in-progress draft to localStorage on every step/score/note change
   useEffect(() => {
-    if (!userEmail || alreadyDone || step < 1 || step > 5) return;
+    if (!userEmail || alreadyDone || step < 1 || step > MEASURES.length) return;
     const draft = { step, scores, notes, questions };
     localStorage.setItem(getDraftKey(userEmail), JSON.stringify(draft));
   }, [step, scores, notes, questions, userEmail, alreadyDone]);
@@ -154,7 +169,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
       const raw = localStorage.getItem(getDraftKey(userEmail));
       if (raw) {
         const draft = JSON.parse(raw);
-        if (draft.step >= 1 && draft.step <= 5) {
+        if (draft.step >= 1 && draft.step <= MEASURES.length) {
           setStep(draft.step);
           setScores(draft.scores);
           setNotes(draft.notes);
@@ -188,7 +203,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
   const currentMeasure = MEASURES[step - 1];
 
   const handleNext = () => {
-    if (step < 5) {
+    if (step < MEASURES.length) {
       setStep(s => s + 1);
     } else {
       handleSave();
@@ -317,25 +332,25 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
   // Edit mode
   if (editMode) {
     const measure = MEASURES[editStep - 1];
-    const question = questions?.[measure.key] || `How's your ${measure.label.toLowerCase()} right now?`;
+    const question = questions?.[measure.key] || `Rate your ${measure.label.toLowerCase()} right now.`;
     return (
       <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
         <div className="px-4 pt-4 pb-3 border-b border-border flex items-center gap-2">
           <Sun className="w-4 h-4 text-amber-400" />
           <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Edit morning check-in</p>
-          <span className="ml-auto text-xs text-muted-foreground">{editStep}/5</span>
+          <span className="ml-auto text-xs text-muted-foreground">{editStep}/{MEASURES.length}</span>
         </div>
-        <div className="h-1 bg-muted"><div className="h-1 bg-[#0202ff] transition-all" style={{ width: `${(editStep/5)*100}%` }} /></div>
+        <div className="h-1 bg-muted"><div className="h-1 bg-[#0202ff] transition-all" style={{ width: `${(editStep/MEASURES.length)*100}%` }} /></div>
         <AnimatePresence mode="wait">
           <motion.div key={editStep} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="px-4 py-5 space-y-4">
             <div className="flex items-center gap-2"><span className="text-xl">{measure.emoji}</span><p className="text-xs font-semibold text-[#0202ff] uppercase tracking-wide">{measure.label} · {measure.desc}</p></div>
             <p className="text-sm font-medium text-foreground leading-snug">{question}</p>
             <ScorePicker value={scores[measure.key]} onChange={(v) => setScores(s => ({ ...s, [measure.key]: v }))} />
-            <textarea value={notes[measure.key]} onChange={(e) => setNotes(n => ({ ...n, [measure.key]: e.target.value }))} placeholder="Add a note (optional)" rows={2} className="w-full text-sm bg-muted/40 rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/60" />
+            <OptInNote value={notes[measure.key]} onChange={(v) => setNotes(n => ({ ...n, [measure.key]: v }))} />
             <div className="flex gap-2">
               <Button variant="outline" size="sm" className="text-xs" onClick={() => { setEditMode(false); setExpanded(false); }}>Cancel</Button>
-              <Button onClick={() => editStep < 5 ? setEditStep(s => s+1) : handleEditSave()} disabled={saving} className="flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-sm">
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : editStep < 5 ? <><span>Next</span><ChevronRight className="w-3.5 h-3.5" /></> : "Save changes"}
+              <Button onClick={() => editStep < MEASURES.length ? setEditStep(s => s+1) : handleEditSave()} disabled={saving} className="flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-sm">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : editStep < MEASURES.length ? <><span>Next</span><ChevronRight className="w-3.5 h-3.5" /></> : "Save changes"}
               </Button>
             </div>
           </motion.div>
@@ -345,7 +360,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
   }
 
   const measure = currentMeasure;
-  const question = questions?.[measure.key] || `How's your ${measure.label.toLowerCase()} right now?`;
+  const question = questions?.[measure.key] || `Rate your ${measure.label.toLowerCase()} right now.`;
 
   return (
     <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
@@ -353,12 +368,12 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
       <div className="px-4 pt-4 pb-3 border-b border-border flex items-center gap-2">
         <Sun className="w-4 h-4 text-amber-400" />
         <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Morning check-in</p>
-        <span className="ml-auto text-xs text-muted-foreground">{step}/5</span>
+        <span className="ml-auto text-xs text-muted-foreground">{step}/{MEASURES.length}</span>
       </div>
 
       {/* Progress bar */}
       <div className="h-1 bg-muted">
-        <div className="h-1 bg-[#0202ff] transition-all duration-300" style={{ width: `${(step / 5) * 100}%` }} />
+        <div className="h-1 bg-[#0202ff] transition-all duration-300" style={{ width: `${(step / MEASURES.length) * 100}%` }} />
       </div>
 
       <AnimatePresence mode="wait">
@@ -378,7 +393,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
             </div>
           </div>
 
-          {/* AI question */}
+          {/* AI Likert statement */}
           <p className="text-sm font-medium text-foreground leading-snug">{question}</p>
 
           {/* Score picker */}
@@ -387,13 +402,10 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
             onChange={(v) => setScores(s => ({ ...s, [measure.key]: v }))}
           />
 
-          {/* Optional note */}
-          <textarea
+          {/* Opt-in note */}
+          <OptInNote
             value={notes[measure.key]}
-            onChange={(e) => setNotes(n => ({ ...n, [measure.key]: e.target.value }))}
-            placeholder="Add a note (optional)"
-            rows={2}
-            className="w-full text-sm bg-muted/40 rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/60"
+            onChange={(v) => setNotes(n => ({ ...n, [measure.key]: v }))}
           />
 
           <Button
@@ -401,7 +413,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail }) {
             disabled={saving}
             className="w-full bg-[#0202ff] hover:bg-[#0101dd] flex items-center gap-1.5"
           >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : step < 5 ? <><span>Next</span><ChevronRight className="w-3.5 h-3.5" /></> : "Complete check-in"}
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : step < MEASURES.length ? <><span>Next</span><ChevronRight className="w-3.5 h-3.5" /></> : "Complete check-in"}
           </Button>
         </motion.div>
       </AnimatePresence>

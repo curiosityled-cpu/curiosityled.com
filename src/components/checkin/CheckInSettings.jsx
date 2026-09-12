@@ -6,11 +6,14 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { Shield, Clock, MessageSquare, Pencil, ChevronDown, ChevronUp, Zap, BellOff, Sun, Moon, Repeat } from "lucide-react";
+import { Shield, Clock, MessageSquare, Pencil, ChevronDown, ChevronUp, Zap, BellOff, Sun, Moon, Repeat, SlidersHorizontal, Layers } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import ToneOnboarding from "./ToneOnboarding";
+import { useManagerPreferences } from "@/hooks/useManagerPreferences";
+import DensityToggle from "@/components/density/DensityToggle";
+import { PRESET_LIST } from "@/lib/checkInPresets";
 
 const TONE_LABELS = {
   gentle_observant: "Gentle and observant",
@@ -44,6 +47,7 @@ const DND_DAYS = [
 
 export default function CheckInSettings() {
   const { user } = useAuth();
+  const { preset, presetId, orgPresetId, userPresetOverride, density, updateDensity, updatePresetOverride } = useManagerPreferences();
   const [tonePref, setTonePref] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editingTone, setEditingTone] = useState(false);
@@ -124,6 +128,60 @@ export default function CheckInSettings() {
 
   return (
     <div className="space-y-4">
+
+      {/* Check-in preset */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-5 pt-5 pb-2 flex items-center gap-2">
+          <SlidersHorizontal className="w-4 h-4 text-[#0202ff]" />
+          <p className="text-sm font-semibold text-gray-900">Check-in preset</p>
+        </div>
+        <div className="px-5 pb-5 space-y-2">
+          <p className="text-xs text-gray-500 mb-2">
+            Your organization uses the <span className="font-semibold">{PRESET_LIST.find(p => p.id === orgPresetId)?.name || 'Balance'}</span> preset. Keep the org default or choose your own.
+          </p>
+          {PRESET_LIST.map((p) => {
+            const isSelected = presetId === p.id;
+            const isOrgDefault = orgPresetId === p.id;
+            const showingOrgDefault = isOrgDefault && !userPresetOverride;
+            return (
+              <button
+                key={p.id}
+                onClick={() => updatePresetOverride(showingOrgDefault ? null : (p.id === orgPresetId ? null : p.id))}
+                className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all ${
+                  isSelected ? 'border-[#0202ff] bg-[#0202ff]/5' : 'border-gray-200 hover:border-gray-300 bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${isSelected ? 'border-[#0202ff] bg-[#0202ff]' : 'border-gray-300'}`}>
+                    {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className={`text-sm font-medium ${isSelected ? 'text-[#0202ff]' : 'text-gray-800'}`}>{p.name}</p>
+                      {showingOrgDefault && <span className="text-[10px] font-medium bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full">Org default</span>}
+                    </div>
+                    <p className="text-xs text-gray-500">{p.description}</p>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* UI density */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-5 pt-5 pb-2 flex items-center gap-2">
+          <Layers className="w-4 h-4 text-[#0202ff]" />
+          <p className="text-sm font-semibold text-gray-900">Page density</p>
+        </div>
+        <div className="px-5 pb-5">
+          <p className="text-xs text-gray-500 mb-3">
+            Compact shows a calm headline with collapsed detail sections. Detailed shows everything expanded.
+          </p>
+          <DensityToggle value={density} onChange={updateDensity} />
+        </div>
+      </div>
 
       {/* Tone */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">

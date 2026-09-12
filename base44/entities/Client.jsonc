@@ -185,6 +185,50 @@
           "type": "boolean",
           "default": true,
           "description": "Whether Program Admins are allowed to bypass the intake requirement on individual requests"
+        },
+        "check_in_config": {
+          "type": "object",
+          "properties": {
+            "preset_id": {
+              "type": "string",
+              "enum": [
+                "balance",
+                "wellbeing",
+                "performance"
+              ],
+              "default": "balance",
+              "description": "Which check-in preset is active for this organization"
+            },
+            "question_style": {
+              "type": "string",
+              "enum": [
+                "likert_statement",
+                "conversational"
+              ],
+              "default": "likert_statement",
+              "description": "How check-in questions are phrased"
+            },
+            "proactivity_level": {
+              "type": "string",
+              "enum": [
+                "reactive",
+                "suggestive",
+                "proactive"
+              ],
+              "default": "proactive",
+              "description": "How proactive Atreus is with check-ins for this org"
+            }
+          },
+          "description": "Check-in engine configuration for this organization"
+        },
+        "ui_density_default": {
+          "type": "string",
+          "enum": [
+            "compact",
+            "detailed"
+          ],
+          "default": "compact",
+          "description": "Default UI density for managers in this organization"
         }
       },
       "description": "Feature flags and settings"
