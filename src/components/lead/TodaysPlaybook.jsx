@@ -258,6 +258,22 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
 
   const [loopExpanded, setLoopExpanded] = useState(true);
 
+  // Filter decisions older than 7 days for outcome surface in Close the Loop
+  // Use timezone-aware date comparison: decisions are stored as ISO UTC, so we compare ISO strings
+  const sevenDaysAgoET = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).format(d);
+  })();
+  const outcomePendingDecisions = (pendingDecisions || []).filter(d => {
+    if (!d.created_date) return false;
+    const decisionDateET = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).format(new Date(d.created_date));
+    return decisionDateET < sevenDaysAgoET;
+  });
 
   const activeGoals = (goals || []).filter(g => g.status === "active");
   const topGoal     = [...activeGoals].sort((a, b) => (b.progress || 0) - (a.progress || 0))[0];
@@ -386,7 +402,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
       </div>
 
       {/* ── Unified Close the Loop ───────────────────────────────────── */}
-      {(activeGoals.length > 0 || commitment) && (
+      {(outcomePendingDecisions.length > 0 || activeGoals.length > 0 || commitment) && (
         <div className="px-5 py-3 border-b border-border">
           <button className="flex items-center justify-between w-full text-left" onClick={() => setLoopExpanded(v => !v)}>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Close the loop</p>
@@ -398,6 +414,22 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
           {loopExpanded && (
             <div className="mt-3 space-y-4">
 
+              {/* Decisions subsection */}
+              {outcomePendingDecisions.length > 0 && (
+                <div>
+                  <p className="text-[9px] font-bold text-[#0202ff]/70 uppercase tracking-widest mb-2">Decisions (7+ days old)</p>
+                  <div className="space-y-1">
+                    {outcomePendingDecisions.map(d => (
+                      <DecisionLoopItem
+                        key={d.id}
+                        decision={d}
+                        onOutcomeSaved={() => onDecisionOutcomeSaved?.()}
+                        onOpenAtreus={onOpenAtreus}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Goals subsection */}
               {activeGoals.length > 0 && (
