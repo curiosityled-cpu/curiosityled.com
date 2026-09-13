@@ -29,6 +29,7 @@ import MiddayPriorityLoop from "@/components/checkin/MiddayPriorityLoop";
 import WeeklyRhythmReflection from "@/components/checkin/WeeklyRhythmReflection";
 import UpcomingFrictionCard from "@/components/lead/UpcomingFrictionCard";
 import TopPatternCard from "@/components/lead/TopPatternCard";
+import SituationSignalCard from "@/components/lead/SituationSignalCard";
 import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
 import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
@@ -498,7 +499,7 @@ export default function ManagerToday() {
   // ── Zone 3 content (Reflect) ──
   const reflectContent = (
     <>
-      <HeadlineSignal todayRecord={todayRecord} hasCheckedIn={!!todayRecord} />
+      <SituationSignalCard pulse={recentPulses[0] || null} trends={trends} goals={goals} />
       <UpcomingFrictionCard trends={trends} goals={goals} pulses={recentPulses} onOpenAtreus={openAtreus} />
       <CheckInTrendDashboard checkIns={(() => {
         const ids = new Set(checkInHistory.map(r => r.check_in_date));
@@ -604,6 +605,9 @@ export default function ManagerToday() {
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>
           {greeting}, {firstName}.
         </h1>
+        <div className="mt-2">
+          <HeadlineSignal todayRecord={todayRecord} hasCheckedIn={!!todayRecord} />
+        </div>
       </div>
 
       {/* ── Tab pills ── */}

@@ -17,37 +17,6 @@ import Big3QuickSet from "@/components/lead/Big3QuickSet";
 import TopPatternCard from "@/components/lead/TopPatternCard";
 import { toast } from "sonner";
 
-// ─── Situation builder ────────────────────────────────────────────────────────
-function buildSituation(pulse, trends, goals, insight) {
-  const activeGoals  = (goals || []).filter(g => g.status === "active");
-  const stalledGoals = activeGoals.filter(g => (g.progress || 0) < 25);
-  const signals = [];
-  if (pulse?.energy_level === "drained" || pulse?.energy_level === "stretched") signals.push("low_energy");
-  if (pulse?.perceived_load === "heavy" || pulse?.perceived_load === "unsustainable") signals.push("overload");
-  if (pulse?.avoidance_flag === "yes") signals.push("avoidance");
-  if (trends?.energy_trend === "declining") signals.push("declining_energy");
-  if (trends?.overload_pattern_strength > 60) signals.push("overload");
-  if (trends?.identity_friction_active) signals.push("friction");
-  if (stalledGoals.length > 0) signals.push("stalled_goals");
-
-  let headline = "You're in a steady state today.";
-  let body = "No major friction signals. Good conditions to make progress on your Big 3.";
-  let icon = "🟢";
-
-  if (signals.includes("overload"))       { headline = "You're carrying a heavy load.";     body = "Identify one thing to hand off or defer before diving in.";                    icon = "🔴"; }
-  else if (signals.includes("avoidance")) { headline = "Something feels avoided.";           body = "Naming it often reduces half its weight. Take 5 minutes before the day runs."; icon = "🟡"; }
-  else if (signals.includes("low_energy") || signals.includes("declining_energy")) {
-    headline = "Energy is lower than usual."; body = "Protect thinking time. Defer non-urgent decisions where possible."; icon = "🟡";
-  } else if (stalledGoals.length > 0)    { headline = `"${stalledGoals[0].title}" hasn't moved.`; body = "A small committed action today is worth more than waiting."; icon = "🟡"; }
-  else if (insight?.development_areas?.[0]) {
-    const a = insight.development_areas[0].split(" (")[0];
-    headline = `${a} is your growth edge.`;
-    body = "Your Leadership Index points here as highest-leverage.";
-  }
-
-  return { headline, body, icon, signals, stalledGoals, activeGoals };
-}
-
 // ─── Next move builder ────────────────────────────────────────────────────────
 function buildMove(pulse, trends, goals, assignments) {
   if (pulse?.avoidance_flag === "yes")
@@ -278,7 +247,6 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
 
   const activeGoals = (goals || []).filter(g => g.status === "active");
   const topGoal     = [...activeGoals].sort((a, b) => (b.progress || 0) - (a.progress || 0))[0];
-  const situation   = buildSituation(pulse, trends, goals, null);
   const move        = buildMove(pulse, trends, goals, assignments);
 
   // Determine the Big 3 to show: today's record first, then fall back to yesterday's.
@@ -347,24 +315,6 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
             <Big3QuickSet todayRecord={todayRecord} onSaved={onBig3Saved} />
           </div>
         )}
-      </div>
-
-      {/* ── Situation signal ─────────────────────────────────────────── */}
-      <div className="px-5 py-4 border-b border-border">
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
-          {situation.signals.includes("overload") ? "Load signal" :
-           situation.signals.includes("avoidance") ? "Attention signal" :
-           situation.signals.includes("low_energy") || situation.signals.includes("declining_energy") ? "Energy signal" :
-           situation.signals.includes("stalled_goals") ? "Situation read" :
-           "Today's read"}
-        </p>
-        <div className="flex items-start gap-2.5">
-          <span className="text-base flex-shrink-0 mt-0.5">{situation.icon}</span>
-          <div>
-            <p className="text-sm font-semibold text-foreground leading-snug">{situation.headline}</p>
-            <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">{situation.body}</p>
-          </div>
-        </div>
       </div>
 
       {/* ── Top pattern ──────────────────────────────────────────────── */}
