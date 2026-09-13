@@ -13,6 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import Big3QuickSet from "@/components/lead/Big3QuickSet";
+import DecisionJournalCard from "@/components/lead/DecisionJournalCard";
 import TopPatternsMoveCard from "@/components/lead/TopPatternsMoveCard";
 import { toast } from "sonner";
 
@@ -290,6 +291,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
                   </div>
                 )}
 
+                <DecisionJournalCard />
               </div>
             )}
           </div>
