@@ -102,6 +102,52 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
+// ── Rhythm-derived energy signal ─────────────────────────────────────────────
+// Reads from the Daily Rhythm tab's stats/variability so it updates with the
+// selected range and reflects exactly what the chart is showing.
+function buildRhythmSignal(stats, variability, rangeDays) {
+  const get = (k) => stats.find(s => s.key === k);
+  const energy = get("energy");
+  const load = get("load");
+  const focus = get("focus");
+  const confidence = get("confidence");
+  const energyVar = variability.find(v => v.key === "energy");
+  const rangeLabel = rangeDays >= 999 ? "all time" : `last ${rangeDays}d`;
+
+  if (load?.avg != null && load.avg >= 3.5)
+    return { icon: "🔴", label: "Load signal", headline: "Load is running high.", body: "Identify one thing to hand off or defer before the week compounds.", tone: "rose", rangeLabel };
+  if (energy?.avg != null && energy.avg <= 2.5)
+    return { icon: "🟡", label: "Energy signal", headline: "Energy is running low.", body: "Protect thinking time and defer non-urgent decisions where possible.", tone: "amber", rangeLabel };
+  if (energy?.trend === "down")
+    return { icon: "🟡", label: "Energy signal", headline: "Energy is trending down.", body: "Watch for compounding fatigue — protect recovery time this week.", tone: "amber", rangeLabel };
+  if (energyVar?.stdDev != null && energyVar.stdDev >= 1)
+    return { icon: "🟡", label: "Energy signal", headline: "Energy is swinging day to day.", body: "Inconsistent rhythm — notice what's driving the highs and lows.", tone: "amber", rangeLabel };
+  if (focus?.avg != null && focus.avg <= 2.5)
+    return { icon: "🟡", label: "Focus signal", headline: "Focus has been scattered.", body: "Try protecting one uninterrupted block for your hardest task.", tone: "amber", rangeLabel };
+  if (energy?.avg != null && energy.avg >= 3.5 && (confidence?.avg == null || confidence.avg >= 3.5))
+    return { icon: "🟢", label: "Energy signal", headline: "You're in a strong rhythm.", body: "Energy and confidence are holding — good conditions to push on your Big 3.", tone: "emerald", rangeLabel };
+  return { icon: "🟢", label: "Energy signal", headline: "Your rhythm is steady.", body: "No major friction signals in this range. Keep the cadence.", tone: "emerald", rangeLabel };
+}
+
+function RhythmEnergySignal({ stats, variability, rangeDays }) {
+  const s = buildRhythmSignal(stats, variability, rangeDays);
+  const toneClass = {
+    rose: "bg-rose-50/60 border-rose-100",
+    amber: "bg-amber-50/60 border-amber-100",
+    emerald: "bg-emerald-50/60 border-emerald-100",
+  }[s.tone];
+  return (
+    <div className={`flex items-start gap-2.5 px-3.5 py-3 rounded-xl border ${toneClass}`}>
+      <span className="text-base flex-shrink-0 mt-0.5">{s.icon}</span>
+      <div>
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{s.label} · {s.rangeLabel}</p>
+        <p className="text-sm font-semibold text-foreground leading-snug">{s.headline}</p>
+        <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">{s.body}</p>
+      </div>
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 export default function CheckInTrendDashboard({ checkIns = [], assessment = null }) {
   const [rangeDays, setRangeDays] = useState(14);
@@ -220,10 +266,8 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
       {/* Header */}
       <div className="px-5 pt-5 pb-3 border-b border-border">
         <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center flex-shrink-0">
-              <Activity className="w-3.5 h-3.5 text-white" />
-            </div>
+          <div className="flex items-center gap-2.5">
+            <Activity className="w-4 h-4 text-[#0202ff] flex-shrink-0" />
             <div>
               <p className="text-sm font-semibold text-foreground">Leadership Pulse</p>
               <p className="text-[10px] text-muted-foreground">Daily check-in signals · private to you</p>
@@ -289,6 +333,9 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
                 </button>
               ))}
             </div>
+
+            {/* Energy signal — derived from the rhythm data in the selected range */}
+            <RhythmEnergySignal stats={stats} variability={variability} rangeDays={rangeDays} />
 
             {/* Stat strip */}
             <div className="grid grid-cols-5 gap-2">
@@ -842,6 +889,7 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
                   </button>
                 ))}
               </div>
+              <RhythmEnergySignal stats={stats} variability={variability} rangeDays={rangeDays} />
               <div className="flex gap-2 flex-wrap">
                 {MEASURES.map(m => {
                   const active = activeMeasures.has(m.key);

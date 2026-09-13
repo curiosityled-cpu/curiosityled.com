@@ -29,7 +29,6 @@ import MiddayPriorityLoop from "@/components/checkin/MiddayPriorityLoop";
 import WeeklyRhythmReflection from "@/components/checkin/WeeklyRhythmReflection";
 import UpcomingFrictionCard from "@/components/lead/UpcomingFrictionCard";
 import TopPatternCard from "@/components/lead/TopPatternCard";
-import SituationSignalCard from "@/components/lead/SituationSignalCard";
 import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
 import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
@@ -506,7 +505,6 @@ export default function ManagerToday() {
         const hasScores = todayRecord && (todayRecord.energy_score != null || todayRecord.confidence_score != null);
         return (!hasToday && hasScores) ? [todayRecord, ...checkInHistory] : checkInHistory;
       })()} assessment={latestAssessment} />
-      <SituationSignalCard pulse={recentPulses[0] || null} trends={trends} goals={goals} />
       {hasHistoricalData && (
         <button
           onClick={() => setShowWeeklyReflection(true)}
