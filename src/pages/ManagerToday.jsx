@@ -33,7 +33,7 @@ import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
 import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
 import PerformanceGlanceCard from "@/components/lead/PerformanceGlanceCard";
-import PerformanceProgressCard from "@/components/lead/PerformanceProgressCard";
+import TalentScoreCard from "@/components/lead/TalentScoreCard";
 import DecisionJournalCard from "@/components/lead/DecisionJournalCard";
 import PerformanceMetricsRow from "@/components/performance/PerformanceMetricsRow";
 
@@ -623,7 +623,7 @@ export default function ManagerToday() {
           </div>
 
           <div className="space-y-4">
-            <PerformanceProgressCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
+            <TalentScoreCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
             <ZoneCard
               title="Reflect"
               icon={Lightbulb}
