@@ -19,7 +19,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { useAtreusOrchestrator } from "@/components/ai/useAtreusOrchestrator";
 import { Link } from "react-router-dom";
-import { ChevronRight, MessageSquare, SlidersHorizontal, X, Sun, TrendingUp, ArrowRight, Target, Lightbulb, Sparkles } from "lucide-react";
+import { ChevronRight, MessageSquare, SlidersHorizontal, X, Sun, TrendingUp, ArrowRight, Target, Lightbulb, Sparkles, Eye, Brain, Repeat2, BarChart3, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ToneOnboarding from "@/components/checkin/ToneOnboarding";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
@@ -42,9 +42,9 @@ import WhatsImprovingCard from "@/components/patterns/WhatsImprovingCard";
 import WatchlistCard from "@/components/patterns/WatchlistCard";
 import LeadingPatternCard from "@/components/patterns/LeadingPatternCard";
 import LeadershipNarrativeCard from "@/components/patterns/LeadershipNarrativeCard";
-import SwipeableSections from "@/components/patterns/SwipeableSections";
 import BpoHeroPatternCard from "@/components/patterns/BpoHeroPatternCard";
 import BpoWatchRow from "@/components/patterns/BpoWatchRow";
+import PatternsZone from "@/components/density/PatternsZone";
 
 // Density + preset
 import { useManagerPreferences } from "@/hooks/useManagerPreferences";
@@ -547,40 +547,126 @@ export default function ManagerToday() {
     </>
   );
 
-  // ── Patterns tab content (preserved) ──
+  // ── Patterns tab content (density zone stack) ──
   const big3DaysCount = checkInHistory.filter(c => c.big3_priorities?.length > 0).length;
 
-  const patternsLeftColumn = (
-    <div className="space-y-4">
-      {heroPattern ? (
-        <>
-          <BpoHeroPatternCard pattern={heroPattern} onOpenAtreus={openAtreusPatterns} />
-          <BpoWatchRow patterns={rankedPatterns} onOpenAtreus={openAtreusPatterns} />
-        </>
-      ) : (
-        <LeadingPatternCard
-          trends={trends}
-          pulses={recentPulses}
-          goals={goals}
-          recentCheckIns={checkInHistory}
-          recentPulses={recentPulses}
-          onOpenAtreus={openAtreusPatterns}
-        />
-      )}
-      <LeadershipNarrativeCard trends={trends} insight={insight} goals={goals} onOpenAtreus={openAtreusPatterns} />
-      {big3DaysCount >= 5 && (
-        <IntentLoopCard pulses={recentPulses} trends={trends} onOpenAtreus={openAtreusPatterns} />
-      )}
-      <WhatsImprovingCard trends={trends} pulses={recentPulses} goals={goals} />
-      <DecisionJournalCard />
-    </div>
-  );
+  // One-line summaries for the two CollapsibleZone instances (hero + narrative)
+  const _truncate = (text, max = 110) =>
+    text && text.length > max ? text.slice(0, max).trimEnd() + "\u2026" : (text || "");
+  const heroSummary = heroPattern
+    ? `${heroPattern.name} \u00b7 ${heroPattern.status}`
+    : _truncate(trends?.trend_narrative || trends?.summary_28d) ||
+      "Your leading pattern will emerge as more signals accumulate.";
+  const narrativeSummary = _truncate(trends?.trend_narrative || trends?.summary_28d) ||
+    "Your leadership narrative is building with each check-in.";
 
-  const patternsRightColumn = (
-    <div className="space-y-4">
-      <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
-      <CheckInTrendDashboard checkIns={mergedCheckIns} assessment={latestAssessment} />
-      <WatchlistCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreusPatterns} />
+  let _zoneIdx = 0;
+  const patternsZones = (
+    <div className="cl-patterns">
+      <div className="cl-patterns-ornament" />
+      <div className="cl-patterns-intro">
+        <h2>Patterns</h2>
+        <p>Longitudinal memory {"\u2014"} how you lead over time.</p>
+      </div>
+      <div className="cl-zones">
+        <PatternsZone
+          title="Leading pattern"
+          label="Primary signal"
+          icon={TrendingUp}
+          summary={heroSummary}
+          index={_zoneIdx++}
+        >
+          {heroPattern ? (
+            <BpoHeroPatternCard pattern={heroPattern} onOpenAtreus={openAtreusPatterns} />
+          ) : (
+            <LeadingPatternCard
+              trends={trends}
+              pulses={recentPulses}
+              goals={goals}
+              recentCheckIns={checkInHistory}
+              recentPulses={recentPulses}
+              onOpenAtreus={openAtreusPatterns}
+            />
+          )}
+        </PatternsZone>
+
+        {heroPattern && (
+          <PatternsZone
+            title="Watch"
+            label="Also watching"
+            icon={Eye}
+            index={_zoneIdx++}
+          >
+            <BpoWatchRow patterns={rankedPatterns} onOpenAtreus={openAtreusPatterns} />
+          </PatternsZone>
+        )}
+
+        <PatternsZone
+          title="Leadership narrative"
+          label="Memory"
+          icon={Brain}
+          summary={narrativeSummary}
+          index={_zoneIdx++}
+        >
+          <LeadershipNarrativeCard trends={trends} insight={insight} goals={goals} onOpenAtreus={openAtreusPatterns} />
+        </PatternsZone>
+
+        {big3DaysCount >= 5 && (
+          <PatternsZone
+            title="Intentions loop"
+            label="Follow-through"
+            icon={Repeat2}
+            index={_zoneIdx++}
+          >
+            <IntentLoopCard pulses={recentPulses} trends={trends} onOpenAtreus={openAtreusPatterns} />
+          </PatternsZone>
+        )}
+
+        <PatternsZone
+          title="What's improving"
+          label="Momentum"
+          icon={TrendingUp}
+          index={_zoneIdx++}
+        >
+          <WhatsImprovingCard trends={trends} pulses={recentPulses} goals={goals} />
+        </PatternsZone>
+
+        <PatternsZone
+          title="Performance at a glance"
+          label="Goals & KPIs"
+          icon={Target}
+          index={_zoneIdx++}
+        >
+          <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
+        </PatternsZone>
+
+        <PatternsZone
+          title="Check-in trends"
+          label="Recent signal"
+          icon={BarChart3}
+          index={_zoneIdx++}
+        >
+          <CheckInTrendDashboard checkIns={mergedCheckIns} assessment={latestAssessment} />
+        </PatternsZone>
+
+        <PatternsZone
+          title="Watchlist"
+          label="Keep in view"
+          icon={Eye}
+          index={_zoneIdx++}
+        >
+          <WatchlistCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreusPatterns} />
+        </PatternsZone>
+
+        <PatternsZone
+          title="Decision journal"
+          label="Reflection"
+          icon={BookOpen}
+          index={_zoneIdx++}
+        >
+          <DecisionJournalCard />
+        </PatternsZone>
+      </div>
     </div>
   );
 
@@ -653,7 +739,7 @@ export default function ManagerToday() {
         </div>
       )}
 
-      {/* ── Patterns tab (preserved) ── */}
+      {/* ── Patterns tab (density zone stack) ── */}
       {activeTab === 'patterns' && (
         <div className="space-y-5">
           <div className="space-y-3">
@@ -668,21 +754,7 @@ export default function ManagerToday() {
             </div>
             <PerformanceMetricsRow />
           </div>
-          {/* Mobile: swipeable; Desktop: two columns */}
-          <div className="md:hidden">
-            <SwipeableSections
-              sections={[
-                { label: "Patterns", content: patternsLeftColumn },
-                { label: "Signals", content: patternsRightColumn },
-              ]}
-            />
-          </div>
-          <div className="hidden md:block">
-            <div className="grid grid-cols-[1fr_400px] gap-6 items-start">
-              <div>{patternsLeftColumn}</div>
-              <div className="sticky top-4">{patternsRightColumn}</div>
-            </div>
-          </div>
+          {patternsZones}
         </div>
       )}
 
