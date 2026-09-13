@@ -499,7 +499,6 @@ export default function ManagerToday() {
   // ── Zone 3 content (Reflect) ──
   const reflectContent = (
     <>
-      <SituationSignalCard pulse={recentPulses[0] || null} trends={trends} goals={goals} />
       <UpcomingFrictionCard trends={trends} goals={goals} pulses={recentPulses} onOpenAtreus={openAtreus} />
       <CheckInTrendDashboard checkIns={(() => {
         const ids = new Set(checkInHistory.map(r => r.check_in_date));
@@ -507,6 +506,7 @@ export default function ManagerToday() {
         const hasScores = todayRecord && (todayRecord.energy_score != null || todayRecord.confidence_score != null);
         return (!hasToday && hasScores) ? [todayRecord, ...checkInHistory] : checkInHistory;
       })()} assessment={latestAssessment} />
+      <SituationSignalCard pulse={recentPulses[0] || null} trends={trends} goals={goals} />
       {hasHistoricalData && (
         <button
           onClick={() => setShowWeeklyReflection(true)}
