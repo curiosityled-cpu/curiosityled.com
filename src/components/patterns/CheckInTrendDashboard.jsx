@@ -154,7 +154,7 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
   const [activeMeasures, setActiveMeasures] = useState(new Set(["energy", "confidence", "focus", "load", "growth"]));
   const [expanded, setExpanded] = useState(false);
   const [dashboardExpanded, setDashboardExpanded] = useState(true);
-  const [tab, setTab] = useState("rhythm"); // "rhythm" | "assessment" | "big3"
+  const [tab, setTab] = useState("rhythm"); // "rhythm" | "assessment" | "big3" — collapsible
 
   const toggleMeasure = (key) => {
     setActiveMeasures(prev => {
