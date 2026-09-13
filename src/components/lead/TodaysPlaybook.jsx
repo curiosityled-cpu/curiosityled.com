@@ -207,6 +207,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
   const [ftExpanded, setFtExpanded]   = useState(false);
 
   const [loopExpanded, setLoopExpanded] = useState(true);
+  const [playbookExpanded, setPlaybookExpanded] = useState(true);
 
   // Filter decisions older than 7 days for outcome surface in Close the Loop
   // Use timezone-aware date comparison: decisions are stored as ISO UTC, so we compare ISO strings
@@ -253,15 +254,22 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
       <div className="h-0.5 w-full" style={{ backgroundColor: '#0202ff' }} />
 
       {/* ── Header ──────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2.5 px-4 py-3.5">
+      <button
+        onClick={() => setPlaybookExpanded(v => !v)}
+        className="flex items-center gap-2.5 px-4 py-3.5 w-full text-left group"
+      >
         <BookOpen className="w-4 h-4 text-[#0202ff] flex-shrink-0" />
-        <p className="text-sm font-semibold text-slate-900 flex-1">Today's Playbook</p>
+        <p className="text-sm font-semibold text-slate-900 flex-1 group-hover:text-slate-700 transition-colors">Today's Playbook</p>
         {big3FromYesterday && (
           <span className="text-[10px] text-[#6c84e8] font-medium bg-[#0202ff]/10 dark:bg-[#0202ff]/15 dark:text-[#8fa4f0] px-2 py-0.5 rounded-full">From last night</span>
         )}
-      </div>
+        {playbookExpanded
+          ? <ChevronUp className="w-4 h-4 text-slate-400 flex-shrink-0" />
+          : <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />}
+      </button>
 
       {/* ── Content area ─────────────────────────────────────────────── */}
+      {playbookExpanded && (
       <div className="px-4 pb-4 space-y-3 border-t border-slate-100 pt-3">
 
         {/* ── BIG 3 sub-card ─────────────────────────────────────────── */}
@@ -382,6 +390,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

@@ -68,6 +68,7 @@ function SectionLink({ to, label }) {
 export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals = [] }) {
   const { user } = useAuth();
   const [goalsExpanded, setGoalsExpanded] = useState(false);
+  const [scorecardExpanded, setScorecardExpanded] = useState(true);
 
   const { data: devStats = { journeys: 0, learning: 0, experiences: 0 } } = useQuery({
     queryKey: ['dev-stats', user?.email],
@@ -102,12 +103,19 @@ export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals =
       <div className="h-0.5 w-full" style={{ backgroundColor: '#0202ff' }} />
 
       {/* ── Header ──────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2.5 px-4 py-3.5">
+      <button
+        onClick={() => setScorecardExpanded(v => !v)}
+        className="flex items-center gap-2.5 px-4 py-3.5 w-full text-left group"
+      >
         <Trophy className="w-4 h-4 text-[#0202ff] flex-shrink-0" />
-        <p className="text-sm font-semibold text-slate-900 flex-1">Talent Scorecard</p>
-      </div>
+        <p className="text-sm font-semibold text-slate-900 flex-1 group-hover:text-slate-700 transition-colors">Talent Scorecard</p>
+        {scorecardExpanded
+          ? <ChevronUp className="w-4 h-4 text-slate-400 flex-shrink-0" />
+          : <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />}
+      </button>
 
       {/* ── Content area ─────────────────────────────────────────────── */}
+      {scorecardExpanded && (
       <div className="px-4 pb-4 space-y-3 border-t border-slate-100 pt-3">
 
         {/* ── My Performance sub-card ────────────────────────────────── */}
@@ -199,6 +207,7 @@ export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals =
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }
