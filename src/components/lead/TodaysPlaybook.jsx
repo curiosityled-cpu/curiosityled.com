@@ -173,8 +173,12 @@ function DecisionLoopItem({ decision, onOutcomeSaved, onOpenAtreus }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [], trends, goals, assignments, pulses, pendingDecisions = [], topPattern, crossToolData, onDecisionCommitted, onDecisionOutcomeSaved, onOpenAtreus, onRefresh, onBig3Saved, userEmail, isMorningWindow }) {
-  const [loopExpanded, setLoopExpanded] = useState(true);
-  const [playbookExpanded, setPlaybookExpanded] = useState(true);
+  const [loopExpanded, setLoopExpanded] = useState(() => {
+    try { const s = localStorage.getItem("cl_collapse_playbook_loop"); return s !== null ? JSON.parse(s) : true; } catch { return true; }
+  });
+  const [playbookExpanded, setPlaybookExpanded] = useState(() => {
+    try { const s = localStorage.getItem("cl_collapse_playbook"); return s !== null ? JSON.parse(s) : true; } catch { return true; }
+  });
 
   // Filter decisions older than 7 days for outcome surface in Close the Loop
   // Use timezone-aware date comparison: decisions are stored as ISO UTC, so we compare ISO strings
@@ -208,7 +212,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
 
       {/* ── Header ──────────────────────────────────────────────────── */}
       <button
-        onClick={() => setPlaybookExpanded(v => !v)}
+        onClick={() => { const v = !playbookExpanded; setPlaybookExpanded(v); try { localStorage.setItem("cl_collapse_playbook", JSON.stringify(v)); } catch {} }}
         className="flex items-center gap-2.5 px-4 py-3.5 w-full text-left group"
       >
         <BookOpen className="w-4 h-4 text-[#0202ff] flex-shrink-0" />
@@ -264,7 +268,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
         {/* ── Close the loop sub-card ────────────────────────────────── */}
         {outcomePendingDecisions.length > 0 && (
           <div className="bg-card border border-border rounded-2xl px-5 py-4">
-            <button className="flex items-center justify-between w-full text-left" onClick={() => setLoopExpanded(v => !v)}>
+            <button className="flex items-center justify-between w-full text-left" onClick={() => { const v = !loopExpanded; setLoopExpanded(v); try { localStorage.setItem("cl_collapse_playbook_loop", JSON.stringify(v)); } catch {} }}>
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Close the loop</p>
               {loopExpanded
                 ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />

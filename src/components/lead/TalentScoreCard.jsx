@@ -67,8 +67,12 @@ function SectionLink({ to, label }) {
 
 export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals = [] }) {
   const { user } = useAuth();
-  const [goalsExpanded, setGoalsExpanded] = useState(false);
-  const [scorecardExpanded, setScorecardExpanded] = useState(true);
+  const [goalsExpanded, setGoalsExpanded] = useState(() => {
+    try { const s = localStorage.getItem("cl_collapse_scorecard_goals"); return s !== null ? JSON.parse(s) : false; } catch { return false; }
+  });
+  const [scorecardExpanded, setScorecardExpanded] = useState(() => {
+    try { const s = localStorage.getItem("cl_collapse_scorecard"); return s !== null ? JSON.parse(s) : true; } catch { return true; }
+  });
 
   const { data: devStats = { journeys: 0, learning: 0, experiences: 0 } } = useQuery({
     queryKey: ['dev-stats', user?.email],
@@ -104,7 +108,7 @@ export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals =
 
       {/* ── Header ──────────────────────────────────────────────────── */}
       <button
-        onClick={() => setScorecardExpanded(v => !v)}
+        onClick={() => { const v = !scorecardExpanded; setScorecardExpanded(v); try { localStorage.setItem("cl_collapse_scorecard", JSON.stringify(v)); } catch {} }}
         className="flex items-center gap-2.5 px-4 py-3.5 w-full text-left group"
       >
         <Trophy className="w-4 h-4 text-[#0202ff] flex-shrink-0" />
@@ -157,7 +161,7 @@ export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals =
               <div>
                 <button
                   className="flex items-center justify-between w-full text-left mb-1"
-                  onClick={() => setGoalsExpanded(v => !v)}
+                  onClick={() => { const v = !goalsExpanded; setGoalsExpanded(v); try { localStorage.setItem("cl_collapse_scorecard_goals", JSON.stringify(v)); } catch {} }}
                 >
                   <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-widest">My Goals</p>
                   {goalsExpanded

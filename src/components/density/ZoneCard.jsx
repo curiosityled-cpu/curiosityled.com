@@ -12,7 +12,18 @@ export default function ZoneCard({
   defaultExpanded = true,
   children,
 }) {
-  const [expanded, setExpanded] = useState(defaultExpanded);
+  const storageKey = `cl_collapse_${title}`;
+  const [expanded, setExpanded] = useState(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      return saved !== null ? JSON.parse(saved) : defaultExpanded;
+    } catch { return defaultExpanded; }
+  });
+  const toggleExpanded = () => {
+    const newVal = !expanded;
+    setExpanded(newVal);
+    try { localStorage.setItem(storageKey, JSON.stringify(newVal)); } catch {}
+  };
 
   return (
     <div className={cn("bg-white rounded-2xl border border-slate-200/80 overflow-hidden", className)}>
@@ -20,8 +31,8 @@ export default function ZoneCard({
       {collapsible ? (
         <button
           type="button"
-          onClick={() => setExpanded(v => !v)}
-          className="flex items-center gap-2.5 px-4 py-3.5 w-full text-left hover:bg-slate-50/50 transition-colors group"
+          onClick={toggleExpanded}
+          className="flex items-center gap-2.5 px-4 py-3.5 w-full text-left transition-colors group"
         >
           {Icon && <Icon className={cn("w-4 h-4 flex-shrink-0", iconColor)} />}
           <p className="text-sm font-semibold text-slate-900 flex-1">{title}</p>
