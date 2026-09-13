@@ -621,7 +621,7 @@ export default function ManagerToday() {
           {greeting}, {firstName}.
         </h1>
         <div className="mt-2">
-          <HeadlineSignal todayRecord={todayRecord} hasCheckedIn={!!todayRecord} />
+          <HeadlineSignal todayRecord={todayRecord} hasCheckedIn={!!todayRecord} userEmail={user?.email} />
         </div>
       </div>
 

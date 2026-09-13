@@ -2,22 +2,74 @@
  * HeadlineSignal — a one-line, derived signal from today's check-in scores.
  * The calm, at-a-glance indicator that sits in the headline tier of the Today page.
  *
+ * Uses the DB record when available, but also falls back to the same localStorage
+ * completion flags that MorningCheckIn / EveningCheckIn write — so the signal
+ * updates instantly even before the query refetches.
+ *
  * Examples: "Heavy day — energy 2, load 4" / "Strong day — energy 4, load 2"
  */
 import React from "react";
 import { cn } from "@/lib/utils";
 
-export default function HeadlineSignal({ todayRecord, hasCheckedIn }) {
+function getTodayET() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(new Date());
+}
+
+function getMorningLocal(userEmail) {
+  try {
+    const raw = localStorage.getItem("morning_checkin_completed");
+    if (!raw) return null;
+    const saved = JSON.parse(raw);
+    if (saved.date !== getTodayET()) return null;
+    if (userEmail && saved.email !== userEmail) return null;
+    return saved;
+  } catch { return null; }
+}
+
+function getEveningLocal(userEmail) {
+  try {
+    const key = userEmail ? `evening_checkin_completed_${userEmail}` : "evening_checkin_completed";
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const saved = JSON.parse(raw);
+    if (saved.date !== getTodayET()) return null;
+    return saved;
+  } catch { return null; }
+}
+
+export default function HeadlineSignal({ todayRecord, hasCheckedIn, userEmail }) {
+  // Merge DB record with localStorage fallbacks so the signal reflects
+  // the latest check-in even before the query catches up.
+  const morningLocal = getMorningLocal(userEmail);
+  const eveningLocal = getEveningLocal(userEmail);
+
+  const merged = { ...(todayRecord || {}) };
+  if (morningLocal && !merged.morning_completed) {
+    merged.morning_completed = true;
+    if (morningLocal.scores) {
+      merged.energy_score = merged.energy_score ?? morningLocal.scores.energy;
+      merged.load_score = merged.load_score ?? morningLocal.scores.load;
+    }
+  }
+  if (eveningLocal && !merged.evening_completed) {
+    merged.evening_completed = true;
+    if (eveningLocal.big3) merged.big3_priorities = merged.big3_priorities?.length ? merged.big3_priorities : eveningLocal.big3;
+  }
+
+  const hasData = hasCheckedIn || !!morningLocal || !!eveningLocal || !!merged.morning_completed || !!merged.evening_completed;
+
   let signal = "Set your morning check-in to calibrate the day.";
   let tone = "neutral";
 
-  if (hasCheckedIn && todayRecord) {
-    const energy = todayRecord.energy_score;
-    const load = todayRecord.load_score;
-    const morningDone = !!todayRecord.morning_completed;
-    const eveningDone = !!todayRecord.evening_completed;
+  if (hasData && merged && Object.keys(merged).length > 0) {
+    const energy = merged.energy_score;
+    const load = merged.load_score;
+    const morningDone = !!merged.morning_completed;
+    const eveningDone = !!merged.evening_completed;
     const hasScores = energy != null && load != null;
-    const hasBig3 = todayRecord.big3_priorities?.length > 0;
+    const hasBig3 = merged.big3_priorities?.length > 0;
 
     if (eveningDone) {
       signal = hasBig3 ? "Day complete — Big 3 set for tomorrow." : "Day complete.";
