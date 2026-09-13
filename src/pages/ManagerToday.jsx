@@ -18,8 +18,7 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { useAtreusOrchestrator } from "@/components/ai/useAtreusOrchestrator";
-import { Link } from "react-router-dom";
-import { ChevronRight, MessageSquare, SlidersHorizontal, X, Sun, TrendingUp, ArrowRight, Target, Lightbulb, Sparkles } from "lucide-react";
+import { ChevronRight, MessageSquare, SlidersHorizontal, X, Sun, TrendingUp, Target, Lightbulb, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ToneOnboarding from "@/components/checkin/ToneOnboarding";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
@@ -31,15 +30,12 @@ import UpcomingFrictionCard from "@/components/lead/UpcomingFrictionCard";
 import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
 import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
-import PerformanceGlanceCard from "@/components/lead/PerformanceGlanceCard";
 import TalentScorecard from "@/components/lead/TalentScoreCard";
 import DecisionJournalCard from "@/components/lead/DecisionJournalCard";
-import PerformanceMetricsRow from "@/components/performance/PerformanceMetricsRow";
 
 // Patterns imports
 import IntentLoopCard from "@/components/checkin/IntentLoopCard";
 import WhatsImprovingCard from "@/components/patterns/WhatsImprovingCard";
-import WatchlistCard from "@/components/patterns/WatchlistCard";
 import LeadingPatternCard from "@/components/patterns/LeadingPatternCard";
 import LeadershipNarrativeCard from "@/components/patterns/LeadershipNarrativeCard";
 import SwipeableSections from "@/components/patterns/SwipeableSections";
@@ -578,9 +574,17 @@ export default function ManagerToday() {
 
   const patternsRightColumn = (
     <div className="space-y-4">
-      <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
-      <CheckInTrendDashboard checkIns={mergedCheckIns} assessment={latestAssessment} />
-      <WatchlistCard trends={trends} pulses={recentPulses} goals={goals} onOpenAtreus={openAtreusPatterns} />
+      <TalentScorecard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
+      <ZoneCard
+        title="Reflect"
+        icon={Lightbulb}
+        iconColor="text-violet-500"
+        accentColor="#8b5cf6"
+        collapsible
+        defaultExpanded
+      >
+        {reflectContent}
+      </ZoneCard>
     </div>
   );
 
@@ -656,18 +660,6 @@ export default function ManagerToday() {
       {/* ── Patterns tab (preserved) ── */}
       {activeTab === 'patterns' && (
         <div className="space-y-5">
-          <div className="space-y-3">
-            <div className="flex items-end justify-between px-1">
-              <div>
-                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Performance</p>
-                <p className="text-xs text-slate-500 mt-0.5">Your active goals, KPIs, and OKRs at a glance.</p>
-              </div>
-              <Link to="/my-performance" className="flex items-center gap-1 text-xs font-semibold text-[#0202ff] hover:underline">
-                View Performance <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
-            <PerformanceMetricsRow />
-          </div>
           {/* Mobile: swipeable; Desktop: two columns */}
           <div className="md:hidden">
             <SwipeableSections
