@@ -10,7 +10,7 @@ import {
   PolarGrid, PolarAngleAxis, Radar, CartesianGrid
 } from "recharts";
 import { format, parseISO, subDays } from "date-fns";
-import { TrendingUp, TrendingDown, Minus, Activity, Brain, Target, ExternalLink, Maximize2, X, CheckCircle2, AlertCircle, MinusCircle, Clock, ListTodo } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Activity, Brain, Target, ExternalLink, Maximize2, X, CheckCircle2, AlertCircle, MinusCircle, Clock, ListTodo, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import StreakDisplay from "@/components/rhythm/StreakDisplay";
@@ -153,6 +153,7 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
   const [rangeDays, setRangeDays] = useState(14);
   const [activeMeasures, setActiveMeasures] = useState(new Set(["energy", "confidence", "focus", "load", "growth"]));
   const [expanded, setExpanded] = useState(false);
+  const [dashboardExpanded, setDashboardExpanded] = useState(true);
   const [tab, setTab] = useState("rhythm"); // "rhythm" | "assessment" | "big3"
 
   const toggleMeasure = (key) => {
@@ -273,18 +274,31 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
               <p className="text-[10px] text-muted-foreground">Daily check-in signals · private to you</p>
             </div>
           </div>
-          {hasCheckInData && (
+          <div className="flex items-center gap-2">
+            {hasCheckInData && (
+              <button
+                onClick={() => setExpanded(true)}
+                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                title="Expand chart"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Expand</span>
+              </button>
+            )}
             <button
-              onClick={() => setExpanded(true)}
-              className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-              title="Expand chart"
+              onClick={() => setDashboardExpanded(v => !v)}
+              className="flex items-center text-muted-foreground hover:text-foreground transition-colors"
+              title={dashboardExpanded ? "Collapse" : "Expand"}
             >
-              <Maximize2 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Expand</span>
+              {dashboardExpanded
+                ? <ChevronUp className="w-4 h-4" />
+                : <ChevronDown className="w-4 h-4" />}
             </button>
-          )}
+          </div>
         </div>
 
+        {dashboardExpanded && (
+        <>
         {/* Tab switcher */}
         <div className="flex gap-4 mt-3">
           <button
@@ -312,8 +326,11 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
             <ListTodo className="w-3.5 h-3.5" /> Big 3 History
           </button>
         </div>
+        </>
+        )}
       </div>
 
+      {dashboardExpanded && (
       <CardContent className="px-5 pt-4 pb-5 space-y-5">
 
         {/* ── RHYTHM TAB ── */}
@@ -726,6 +743,7 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
           </>
         )}
       </CardContent>
+      )}
     </Card>
 
     {/* Expanded modal */}
