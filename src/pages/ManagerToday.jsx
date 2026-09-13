@@ -496,16 +496,16 @@ export default function ManagerToday() {
   // ── Zone 3 content (Reflect) ──
   const reflectContent = (
     <>
-      {topPattern && (
-        <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} onDecisionCommitted={refetchDecisions} pendingDecisions={pendingDecisions} />
-      )}
-      <UpcomingFrictionCard trends={trends} goals={goals} pulses={recentPulses} onOpenAtreus={openAtreus} />
       <CheckInTrendDashboard checkIns={(() => {
         const ids = new Set(checkInHistory.map(r => r.check_in_date));
         const hasToday = ids.has(todayET);
         const hasScores = todayRecord && (todayRecord.energy_score != null || todayRecord.confidence_score != null);
         return (!hasToday && hasScores) ? [todayRecord, ...checkInHistory] : checkInHistory;
       })()} assessment={latestAssessment} />
+      <UpcomingFrictionCard trends={trends} goals={goals} pulses={recentPulses} onOpenAtreus={openAtreus} />
+      {topPattern && (
+        <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} onDecisionCommitted={refetchDecisions} pendingDecisions={pendingDecisions} />
+      )}
       {hasHistoricalData && (
         <button
           onClick={() => setShowWeeklyReflection(true)}
