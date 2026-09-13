@@ -4,9 +4,9 @@
  *   1. "My Performance" (→ /my-performance): KPIs list + cascaded org goals
  *   2. "My Development" (→ /my-development): Active Journeys, Active Learning, Experiences
  */
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { TrendingUp, TrendingDown, Minus, Target, ArrowRight, Compass, BookOpen, Sparkles, Trophy } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Target, ArrowRight, Compass, BookOpen, Sparkles, Trophy, ChevronDown, ChevronUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -67,6 +67,7 @@ function SectionLink({ to, label }) {
 
 export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals = [] }) {
   const { user } = useAuth();
+  const [goalsExpanded, setGoalsExpanded] = useState(false);
 
   const { data: devStats = { journeys: 0, learning: 0, experiences: 0 } } = useQuery({
     queryKey: ['dev-stats', user?.email],
@@ -146,21 +147,31 @@ export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals =
 
             {activeGoals.length > 0 && (
               <div>
-                <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-widest mb-1">My Goals</p>
-                <div className="space-y-2">
-                  {activeGoals.slice(0, 3).map(g => (
-                    <div key={g.id}>
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-xs font-medium text-foreground truncate flex-1 mr-2">{g.title}</p>
-                        <span className="text-[10px] text-muted-foreground flex-shrink-0">{g.progress || 0}%</span>
+                <button
+                  className="flex items-center justify-between w-full text-left mb-1"
+                  onClick={() => setGoalsExpanded(v => !v)}
+                >
+                  <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-widest">My Goals</p>
+                  {goalsExpanded
+                    ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                    : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
+                </button>
+                {goalsExpanded && (
+                  <div className="space-y-2">
+                    {activeGoals.slice(0, 3).map(g => (
+                      <div key={g.id}>
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-xs font-medium text-foreground truncate flex-1 mr-2">{g.title}</p>
+                          <span className="text-[10px] text-muted-foreground flex-shrink-0">{g.progress || 0}%</span>
+                        </div>
+                        <Progress value={g.progress || 0} className="h-1" />
                       </div>
-                      <Progress value={g.progress || 0} className="h-1" />
-                    </div>
-                  ))}
-                  {activeGoals.length > 3 && (
-                    <p className="text-[10px] text-muted-foreground">+{activeGoals.length - 3} more active</p>
-                  )}
-                </div>
+                    ))}
+                    {activeGoals.length > 3 && (
+                      <p className="text-[10px] text-muted-foreground">+{activeGoals.length - 3} more active</p>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
