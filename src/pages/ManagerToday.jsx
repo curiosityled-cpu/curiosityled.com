@@ -19,7 +19,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { useAtreusOrchestrator } from "@/components/ai/useAtreusOrchestrator";
 import { Link } from "react-router-dom";
-import { Brain, ChevronRight, MessageSquare, SlidersHorizontal, X, Sun, TrendingUp, ArrowRight, Target } from "lucide-react";
+import { ChevronRight, MessageSquare, SlidersHorizontal, X, Sun, TrendingUp, ArrowRight, Target, Lightbulb, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ToneOnboarding from "@/components/checkin/ToneOnboarding";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
@@ -520,7 +520,7 @@ export default function ManagerToday() {
           className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors group"
         >
           <div className="flex items-center gap-3">
-            <Brain className="w-4 h-4 text-[#0202ff] flex-shrink-0" />
+            <Sparkles className="w-4 h-4 text-[#0202ff] flex-shrink-0" />
             <div className="text-left">
               <p className="text-sm font-semibold text-slate-900">Weekly reflections</p>
               <p className="text-[10px] text-slate-500">Charts, AI narrative, risks, recognition & next steps</p>
@@ -647,7 +647,7 @@ export default function ManagerToday() {
 
             <ZoneCard
               title="Reflect"
-              icon={Brain}
+              icon={Lightbulb}
               iconColor="text-violet-500"
               accentColor="#8b5cf6"
             >
