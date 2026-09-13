@@ -6,7 +6,7 @@
  */
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { TrendingUp, TrendingDown, Minus, Target, ArrowRight, Compass, BookOpen, Sparkles } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Target, ArrowRight, Compass, BookOpen, Sparkles, Trophy } from "lucide-react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -97,7 +97,8 @@ export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals =
     <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
 
       {/* ── Header ──────────────────────────────────────────────────── */}
-      <div className="px-5 pt-4 pb-3 border-b border-border flex items-center justify-between">
+      <div className="px-5 pt-4 pb-3 border-b border-border flex items-center gap-2">
+        <Trophy className="w-3.5 h-3.5 text-[#0202ff]" />
         <p className="text-xs font-bold text-foreground uppercase tracking-widest">Talent Scorecard</p>
       </div>
 

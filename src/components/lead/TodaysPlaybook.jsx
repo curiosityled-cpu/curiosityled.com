@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from "react";
 import {
   Brain, ArrowRight, CheckCircle2, Circle, MinusCircle,
-  BookmarkCheck, ChevronDown, ChevronUp, Flame, AlertTriangle, Target, Pencil, Loader2, X, Plus
+  BookmarkCheck, ChevronDown, ChevronUp, Flame, AlertTriangle, Target, Pencil, Loader2, X, Plus, BookOpen
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -318,8 +318,11 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
     <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
 
       {/* ── Header ──────────────────────────────────────────────────── */}
-      <div className="px-5 pt-4 pb-3 border-b border-border flex items-center justify-between">
-        <p className="text-xs font-bold text-foreground uppercase tracking-widest">Today's Playbook</p>
+      <div className="px-5 pt-4 pb-3 border-b border-border flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <BookOpen className="w-3.5 h-3.5 text-[#0202ff]" />
+          <p className="text-xs font-bold text-foreground uppercase tracking-widest">Today's Playbook</p>
+        </div>
         {big3FromYesterday && (
           <span className="text-[10px] text-[#6c84e8] font-medium bg-[#0202ff]/10 dark:bg-[#0202ff]/15 dark:text-[#8fa4f0] px-2 py-0.5 rounded-full">From last night</span>
         )}
