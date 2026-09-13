@@ -10,6 +10,7 @@ import { TrendingUp, TrendingDown, Minus, Target, ArrowRight, Compass, BookOpen,
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
+import { Progress } from "@/components/ui/progress";
 
 const DIRECTION_ICONS = {
   higher_better: { icon: TrendingUp, color: "text-emerald-600" },
@@ -143,10 +144,23 @@ export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals =
               </div>
             )}
 
-            {activeGoals.length > 0 && !activeCascaded.length && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Target className="w-3 h-3 text-indigo-500" />
-                <span>{activeGoals.length} active goal{activeGoals.length !== 1 ? "s" : ""}</span>
+            {activeGoals.length > 0 && (
+              <div>
+                <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-widest mb-1">My Goals</p>
+                <div className="space-y-2">
+                  {activeGoals.slice(0, 3).map(g => (
+                    <div key={g.id}>
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-xs font-medium text-foreground truncate flex-1 mr-2">{g.title}</p>
+                        <span className="text-[10px] text-muted-foreground flex-shrink-0">{g.progress || 0}%</span>
+                      </div>
+                      <Progress value={g.progress || 0} className="h-1" />
+                    </div>
+                  ))}
+                  {activeGoals.length > 3 && (
+                    <p className="text-[10px] text-muted-foreground">+{activeGoals.length - 3} more active</p>
+                  )}
+                </div>
               </div>
             )}
           </div>

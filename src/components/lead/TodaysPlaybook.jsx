@@ -245,8 +245,6 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
     return decisionDateET < sevenDaysAgoET;
   });
 
-  const activeGoals = (goals || []).filter(g => g.status === "active");
-  const topGoal     = [...activeGoals].sort((a, b) => (b.progress || 0) - (a.progress || 0))[0];
   const move        = buildMove(pulse, trends, goals, assignments);
 
   // Determine the Big 3 to show: today's record first, then fall back to yesterday's.
@@ -364,7 +362,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
         </div>
 
         {/* ── Close the loop sub-card ────────────────────────────────── */}
-        {(outcomePendingDecisions.length > 0 || activeGoals.length > 0 || commitment) && (
+        {(outcomePendingDecisions.length > 0 || commitment) && (
           <div className="bg-card border border-border rounded-2xl px-5 py-4">
             <button className="flex items-center justify-between w-full text-left" onClick={() => setLoopExpanded(v => !v)}>
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Close the loop</p>
@@ -389,30 +387,6 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
                           onOpenAtreus={onOpenAtreus}
                         />
                       ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Goals subsection */}
-                {activeGoals.length > 0 && (
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-[9px] font-bold text-emerald-600/80 uppercase tracking-widest">Goals</p>
-                      <Link to="/my-performance"><span className="text-[10px] text-[#0202ff] font-medium hover:underline">All goals →</span></Link>
-                    </div>
-                    <div className="space-y-2">
-                      {activeGoals.slice(0, 3).map(g => (
-                        <div key={g.id}>
-                          <div className="flex items-center justify-between mb-1">
-                            <p className="text-xs font-medium text-foreground truncate flex-1 mr-2">{g.title}</p>
-                            <span className="text-[10px] text-muted-foreground flex-shrink-0">{g.progress || 0}%</span>
-                          </div>
-                          <Progress value={g.progress || 0} className="h-1" />
-                        </div>
-                      ))}
-                      {activeGoals.length > 3 && (
-                        <p className="text-[10px] text-muted-foreground">+{activeGoals.length - 3} more active</p>
-                      )}
                     </div>
                   </div>
                 )}
