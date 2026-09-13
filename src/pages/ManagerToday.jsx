@@ -28,7 +28,6 @@ import EveningCheckIn from "@/components/checkin/EveningCheckIn";
 import MiddayPriorityLoop from "@/components/checkin/MiddayPriorityLoop";
 import WeeklyRhythmReflection from "@/components/checkin/WeeklyRhythmReflection";
 import UpcomingFrictionCard from "@/components/lead/UpcomingFrictionCard";
-import TopPatternCard from "@/components/lead/TopPatternCard";
 import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
 import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
@@ -313,6 +312,30 @@ export default function ManagerToday() {
     return patterns[0] || null;
   }, [trends, checkInHistory, goals, recentPulses]);
 
+  // Cross-tool patterns: in-app patterns + external signals (Outlook, Google Calendar, HubSpot)
+  // + simulated demo patterns for unconnected tools (Viva, LMS, HRIS, watchdog)
+  const inAppPatternsForCrossTool = useMemo(
+    () => runBpoPatternEngine({ trends, checkIns: checkInHistory, goals, activities: [], pulses: recentPulses }),
+    [trends, checkInHistory, goals, recentPulses]
+  );
+
+  const { data: crossToolData = null } = useQuery({
+    queryKey: ['ml-cross-tool-patterns', user?.email],
+    queryFn: async () => {
+      try {
+        const res = await base44.functions.invoke('getCrossToolPatterns', {
+          inAppPatterns: inAppPatternsForCrossTool,
+        });
+        return res.data?.data || null;
+      } catch { return null; }
+    },
+    enabled: !!user?.email && inAppPatternsForCrossTool.length > 0,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+
   const rankedPatterns = useMemo(() =>
     runBpoPatternEngine({ trends, checkIns: mergedCheckIns, goals, activities, pulses: recentPulses }),
     [trends, mergedCheckIns, goals, activities, recentPulses]
@@ -463,6 +486,7 @@ export default function ManagerToday() {
           pulses={recentPulses}
           pendingDecisions={pendingDecisions}
           topPattern={topPattern}
+          crossToolData={crossToolData}
           onDecisionCommitted={refetchDecisions}
           onDecisionOutcomeSaved={async () => { await refetchDecisions(); }}
           onOpenAtreus={openAtreus}

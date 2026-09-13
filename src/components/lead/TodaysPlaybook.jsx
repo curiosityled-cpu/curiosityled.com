@@ -5,8 +5,8 @@
  */
 import React, { useState, useEffect } from "react";
 import {
-  Brain, ArrowRight, CheckCircle2, Circle, MinusCircle,
-  BookmarkCheck, ChevronDown, ChevronUp, Flame, AlertTriangle, Target, Pencil, Loader2, X, Plus, BookOpen
+  ArrowRight, CheckCircle2, Circle, MinusCircle,
+  ChevronDown, ChevronUp, Flame, AlertTriangle, Target, Pencil, Loader2, X, Plus, BookOpen
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -14,26 +14,8 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import Big3QuickSet from "@/components/lead/Big3QuickSet";
-import TopPatternCard from "@/components/lead/TopPatternCard";
+import TopPatternsMoveCard from "@/components/lead/TopPatternsMoveCard";
 import { toast } from "sonner";
-
-// ─── Next move builder ────────────────────────────────────────────────────────
-function buildMove(pulse, trends, goals, assignments) {
-  if (pulse?.avoidance_flag === "yes")
-    return { move: "Name what you're avoiding.", reason: "5 minutes of honest writing dissolves half the resistance.", atreus: true, atreusMsg: "I flagged that I might be avoiding something today. Can you help me name it and think through a next step?" };
-  if (trends?.overload_pattern_strength > 60 || pulse?.perceived_load === "unsustainable")
-    return { move: "Identify one thing to hand off today.", reason: "Delegation is a leadership act, not a shortcut.", atreus: true, atreusMsg: "I want to think through what I should delegate. Can you help me work through it?" };
-  const stalledGoal = (goals || []).find(g => g.status === "active" && (g.progress || 0) < 25);
-  if (stalledGoal)
-    return { move: `Make one move on "${stalledGoal.title}"`, reason: "Small, specific actions compound. What's the next 20-minute step?", atreus: false, link: "/my-goals" };
-  const nowET = new Date(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()));
-  const overdue = (assignments || []).find(a => a.status === "assigned" && a.due_date && new Date(a.due_date) < nowET);
-  if (overdue)
-    return { move: `Complete: ${overdue.title}`, reason: "This learning is overdue. Even a partial session helps close the loop.", atreus: false, link: "/my-development" };
-  if (trends?.identity_friction_active)
-    return { move: "Reconnect with your leadership identity.", reason: "Your recent signals suggest uncertainty about your role.", atreus: true, atreusMsg: "I've been feeling some uncertainty about my role as a leader. Can you help me think through it?" };
-  return { move: "Prepare one good question for your next 1:1.", reason: "Intentional questions are one of the most consistent differentiators of effective managers.", atreus: true, atreusMsg: "I want to prepare for an upcoming 1:1. Can you help me think through a good coaching question?" };
-}
 
 // ─── Follow-through helpers ───────────────────────────────────────────────────
 function getTodayET() {
@@ -213,12 +195,10 @@ function DecisionLoopItem({ decision, onOutcomeSaved, onOpenAtreus }) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [], trends, goals, assignments, pulses, pendingDecisions = [], topPattern, onDecisionCommitted, onDecisionOutcomeSaved, onOpenAtreus, onRefresh, onBig3Saved, userEmail, isMorningWindow }) {
+export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [], trends, goals, assignments, pulses, pendingDecisions = [], topPattern, crossToolData, onDecisionCommitted, onDecisionOutcomeSaved, onOpenAtreus, onRefresh, onBig3Saved, userEmail, isMorningWindow }) {
   const { user } = useAuth();
   const email = userEmail || user?.email;
 
-  const [moveDone, setMoveDone]       = useState(false);
-  const [committed, setCommitted]     = useState(false);
   const commitment = getMostRecentCommitment(pulses);
   const [ftSelected, setFtSelected]   = useState(null);
   const [ftReflection, setFtReflection] = useState("");
@@ -245,27 +225,12 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
     return decisionDateET < sevenDaysAgoET;
   });
 
-  const move        = buildMove(pulse, trends, goals, assignments);
-
   // Determine the Big 3 to show: today's record first, then fall back to yesterday's.
   // Yesterday's Big 3 were set in last night's evening check-in FOR today — they should
   // show immediately in the morning, not be hidden until the morning check-in is done.
   const todayBig3     = (todayRecord?.big3_priorities || []).filter(p => p?.title);
   const big3          = todayBig3.length > 0 ? todayBig3 : yesterdayBig3.filter(p => p?.title);
   const big3FromYesterday = todayBig3.length === 0 && big3.length > 0;
-
-  const saveCommitment = async () => {
-    if (committed) return;
-    try {
-      await base44.entities.Goal.create({ user_email: email, created_by: email, title: move.move, description: move.reason, status: "active", goal_type: "behavioral_commitment", source: "next_move", progress: 0 });
-      setCommitted(true);
-    } catch {}
-  };
-
-  const handleAtreus = async () => {
-    await saveCommitment();
-    onOpenAtreus?.(move.atreusMsg, null);
-  };
 
   const handleFtSubmit = async () => {
     if (!ftSelected || !commitment) return;
@@ -318,48 +283,22 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
           )}
         </div>
 
-        {/* ── Top pattern (has its own card styling) ─────────────────── */}
-        {topPattern && (
-          <TopPatternCard pattern={topPattern} onOpenAtreus={onOpenAtreus} onDecisionCommitted={onDecisionCommitted} pendingDecisions={pendingDecisions} />
-        )}
-
-        {/* ── One move sub-card ─────────────────────────────────────── */}
-        <div className="bg-card border border-border rounded-2xl px-5 py-4">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">One move</p>
-          {moveDone ? (
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-              <p className="text-sm font-medium text-foreground">Done. That's noted.</p>
+        {/* ── Top 3 Patterns + Best Next Move (cross-tool) ──────────── */}
+        {crossToolData ? (
+          <TopPatternsMoveCard
+            crossToolData={crossToolData}
+            onOpenAtreus={onOpenAtreus}
+            onDecisionCommitted={onDecisionCommitted}
+            pendingDecisions={pendingDecisions}
+          />
+        ) : (
+          <div className="bg-card border border-border rounded-2xl px-5 py-4">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Top 3 Patterns</p>
+            <div className="flex items-center justify-center py-4">
+              <div className="w-5 h-5 border-2 border-slate-200 border-t-[#0202ff] rounded-full animate-spin" />
             </div>
-          ) : (
-            <>
-              <p className="text-sm font-semibold text-foreground leading-snug">{move.move}</p>
-              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{move.reason}</p>
-              {committed && (
-                <div className="flex items-center gap-1.5 mt-2 px-2.5 py-1.5 bg-emerald-50 rounded-lg border border-emerald-100">
-                  <BookmarkCheck className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-                  <p className="text-[10px] text-emerald-700 font-medium">Saved as a commitment</p>
-                </div>
-              )}
-              <div className="flex gap-2 mt-3">
-                {move.atreus ? (
-                  <Button size="sm" className="flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-8" onClick={handleAtreus}>
-                    <Brain className="w-3 h-3 mr-1.5" /> Work on this
-                  </Button>
-                ) : (
-                  <Link to={move.link} className="flex-1" onClick={saveCommitment}>
-                    <Button size="sm" className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-8">
-                      Take action <ArrowRight className="w-3 h-3 ml-1.5" />
-                    </Button>
-                  </Link>
-                )}
-                <Button size="sm" variant="outline" className="text-xs h-8 text-muted-foreground" onClick={() => setMoveDone(true)}>
-                  <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-500" /> Done
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* ── Close the loop sub-card ────────────────────────────────── */}
         {(outcomePendingDecisions.length > 0 || commitment) && (
