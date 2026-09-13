@@ -1,13 +1,12 @@
 /**
- * TalentScoreCard — Combined Performance + Development summary card.
- * Two sections:
+ * TalentScorecard — Combined Performance + Development summary card.
+ * Layout mirrors Today's Playbook: header bar, then bordered sections.
  *   1. "My Performance" (→ /my-performance): KPIs list + cascaded org goals
  *   2. "My Development" (→ /my-development): Active Journeys, Active Learning, Experiences
  */
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BarChart3, Target, TrendingUp, TrendingDown, Minus, ArrowRight, Compass, BookOpen, Sparkles } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { TrendingUp, TrendingDown, Minus, Target, ArrowRight, Compass, BookOpen, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -57,19 +56,15 @@ function KpiRow({ kpi }) {
   );
 }
 
-function SectionHeader({ to, title, subtitle }) {
+function SectionLink({ to, label }) {
   return (
-    <Link to={to} className="flex items-center justify-between hover:bg-muted/30 transition-colors -mx-1 px-1 py-1 rounded-md">
-      <div className="min-w-0">
-        <p className="text-sm font-semibold text-foreground">{title}</p>
-        {subtitle && <p className="text-[10px] text-muted-foreground truncate">{subtitle}</p>}
-      </div>
-      <ArrowRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+    <Link to={to} className="text-[10px] text-[#0202ff] font-medium hover:underline flex-shrink-0">
+      {label} →
     </Link>
   );
 }
 
-export default function TalentScoreCard({ kpis = [], cascadedGoals = [], goals = [] }) {
+export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals = [] }) {
   const { user } = useAuth();
 
   const { data: devStats = { journeys: 0, learning: 0, experiences: 0 } } = useQuery({
@@ -99,76 +94,78 @@ export default function TalentScoreCard({ kpis = [], cascadedGoals = [], goals =
   if (!hasPerfData && !hasDevData) return null;
 
   return (
-    <Card className="shadow-sm border border-border bg-card rounded-2xl overflow-hidden">
-      {/* Card title */}
-      <div className="px-4 pt-4 pb-2 flex items-center gap-2 border-b border-border/60">
-        <div className="w-6 h-6 rounded-lg bg-[#0202ff]/10 border border-[#0202ff]/15 flex items-center justify-center flex-shrink-0">
-          <BarChart3 className="w-3 h-3 text-[#0202ff]" />
-        </div>
-        <p className="text-sm font-semibold text-foreground">Talent Score</p>
+    <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+
+      {/* ── Header ──────────────────────────────────────────────────── */}
+      <div className="px-5 pt-4 pb-3 border-b border-border flex items-center justify-between">
+        <p className="text-xs font-bold text-foreground uppercase tracking-widest">Talent Scorecard</p>
       </div>
 
-      <CardContent className="px-4 pt-3 pb-4 space-y-4">
-        {/* ── My Performance ── */}
-        {hasPerfData && (
-          <div className="space-y-2">
-            <SectionHeader to="/my-performance" title="My Performance" subtitle="KPIs and org goals" />
-            {topKpis.length > 0 && (
-              <div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">KPIs</p>
-                <div className="divide-y divide-border/40">
-                  {topKpis.map(k => <KpiRow key={k.id} kpi={k} />)}
-                </div>
-              </div>
-            )}
-            {activeCascaded.length > 0 && (
-              <div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Org Goals</p>
-                <div className="space-y-1">
-                  {activeCascaded.slice(0, 3).map(g => (
-                    <div key={g.id} className="flex items-center gap-2">
-                      <Target className="w-3 h-3 text-indigo-500 flex-shrink-0" />
-                      <p className="text-xs text-foreground truncate">{g.title}</p>
-                      <span className="text-[10px] text-muted-foreground flex-shrink-0 ml-auto">{g.progress || 0}%</span>
-                    </div>
-                  ))}
-                  {activeCascaded.length > 3 && (
-                    <p className="text-[10px] text-muted-foreground pl-5">+{activeCascaded.length - 3} more</p>
-                  )}
-                </div>
-              </div>
-            )}
-            {activeGoals.length > 0 && !activeCascaded.length && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Target className="w-3 h-3 text-indigo-500" />
-                <span>{activeGoals.length} active goal{activeGoals.length !== 1 ? "s" : ""}</span>
-              </div>
-            )}
+      {/* ── My Performance ──────────────────────────────────────────── */}
+      {hasPerfData && (
+        <div className="px-5 py-4 border-b border-border">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">My Performance</p>
+            <SectionLink to="/my-performance" label="All" />
           </div>
-        )}
 
-        {/* Divider between sections */}
-        {hasPerfData && hasDevData && <div className="border-t border-border/60" />}
-
-        {/* ── My Development ── */}
-        {hasDevData && (
-          <div className="space-y-2">
-            <SectionHeader to="/my-development" title="My Development" subtitle="Journeys, learning and experiences" />
-            <div className="grid grid-cols-3 gap-2">
-              {DEV_STATS.map((s) => {
-                const Icon = s.icon;
-                return (
-                  <div key={s.key} className={`rounded-xl ${s.bg} px-2.5 py-2 text-center`}>
-                    <Icon className={`w-3 h-3 mx-auto mb-1 ${s.color}`} />
-                    <p className={`text-lg font-bold leading-none ${s.color}`}>{devStats[s.key]}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1 leading-tight">{s.label}</p>
-                  </div>
-                );
-              })}
+          {topKpis.length > 0 && (
+            <div className="mb-3">
+              <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-widest mb-1">KPIs</p>
+              <div className="divide-y divide-border/40">
+                {topKpis.map(k => <KpiRow key={k.id} kpi={k} />)}
+              </div>
             </div>
+          )}
+
+          {activeCascaded.length > 0 && (
+            <div>
+              <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-widest mb-1">Org Goals</p>
+              <div className="space-y-1.5">
+                {activeCascaded.slice(0, 3).map(g => (
+                  <div key={g.id} className="flex items-center gap-2">
+                    <Target className="w-3 h-3 text-indigo-500 flex-shrink-0" />
+                    <p className="text-xs text-foreground truncate flex-1">{g.title}</p>
+                    <span className="text-[10px] text-muted-foreground flex-shrink-0">{g.progress || 0}%</span>
+                  </div>
+                ))}
+                {activeCascaded.length > 3 && (
+                  <p className="text-[10px] text-muted-foreground pl-5">+{activeCascaded.length - 3} more</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeGoals.length > 0 && !activeCascaded.length && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Target className="w-3 h-3 text-indigo-500" />
+              <span>{activeGoals.length} active goal{activeGoals.length !== 1 ? "s" : ""}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── My Development ─────────────────────────────────────────── */}
+      {hasDevData && (
+        <div className="px-5 py-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">My Development</p>
+            <SectionLink to="/my-development" label="All" />
           </div>
-        )}
-      </CardContent>
-    </Card>
+          <div className="grid grid-cols-3 gap-2">
+            {DEV_STATS.map((s) => {
+              const Icon = s.icon;
+              return (
+                <div key={s.key} className={`rounded-xl ${s.bg} px-2.5 py-2.5 text-center`}>
+                  <Icon className={`w-3.5 h-3.5 mx-auto mb-1.5 ${s.color}`} />
+                  <p className={`text-lg font-bold leading-none ${s.color}`}>{devStats[s.key]}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1 leading-tight">{s.label}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
