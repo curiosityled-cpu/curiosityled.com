@@ -334,9 +334,6 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
               ))}
             </div>
 
-            {/* Energy signal — derived from the rhythm data in the selected range */}
-            <RhythmEnergySignal stats={stats} variability={variability} rangeDays={rangeDays} />
-
             {/* Stat strip */}
             <div className="grid grid-cols-5 gap-2">
               {stats.map(m => (
@@ -463,6 +460,9 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
             <div className="flex justify-center">
               <StreakDisplay checkIns={checkIns} />
             </div>
+
+            {/* Energy signal — derived from the rhythm data in the selected range */}
+            <RhythmEnergySignal stats={stats} variability={variability} rangeDays={rangeDays} />
           </>
         )}
 
@@ -889,7 +889,6 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
                   </button>
                 ))}
               </div>
-              <RhythmEnergySignal stats={stats} variability={variability} rangeDays={rangeDays} />
               <div className="flex gap-2 flex-wrap">
                 {MEASURES.map(m => {
                   const active = activeMeasures.has(m.key);
@@ -926,6 +925,7 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
               ) : (
                 <p className="text-xs text-muted-foreground text-center py-8">No check-ins in this range.</p>
               )}
+              <RhythmEnergySignal stats={stats} variability={variability} rangeDays={rangeDays} />
             </div>
           )}
         </div>
