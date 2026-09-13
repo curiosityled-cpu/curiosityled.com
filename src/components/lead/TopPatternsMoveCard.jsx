@@ -12,7 +12,7 @@
  * highest-impact action across ALL three patterns.
  */
 import React, { useState } from "react";
-import { AlertTriangle, Users, Zap, ArrowRight, Brain, CheckCircle2, BookmarkCheck, Sparkles } from "lucide-react";
+import { AlertTriangle, Users, Zap, ArrowRight, Brain, CheckCircle2, BookmarkCheck, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -150,6 +150,7 @@ export default function TopPatternsMoveCard({ crossToolData, onOpenAtreus, onDec
   const [autoOpenDecision, setAutoOpenDecision] = useState(false);
   const [committed, setCommitted] = useState(false);
   const [moveDone, setMoveDone] = useState(false);
+  const [patternsExpanded, setPatternsExpanded] = useState(false);
   const { user } = useAuth();
 
   if (!crossToolData || !crossToolData.topPatterns?.length) return null;
@@ -196,9 +197,12 @@ export default function TopPatternsMoveCard({ crossToolData, onOpenAtreus, onDec
     <React.Fragment>
       <div className="bg-card border border-border rounded-2xl px-5 py-4">
         {/* Header */}
-        <div className="flex items-center justify-between mb-3">
+        <button
+          onClick={() => setPatternsExpanded(v => !v)}
+          className="flex items-center justify-between w-full mb-1 group"
+        >
           <div className="flex items-center gap-2">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Top 3 Patterns</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest group-hover:text-foreground transition-colors">Top 3 Patterns</p>
             {(connectedSources.length > 0 || simulatedSources.length > 0) && (
               <span className="text-[9px] text-slate-400">
                 {connectedSources.length > 0 && `${connectedSources.length} connected`}
@@ -207,14 +211,19 @@ export default function TopPatternsMoveCard({ crossToolData, onOpenAtreus, onDec
               </span>
             )}
           </div>
-        </div>
+          {patternsExpanded
+            ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+            : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
+        </button>
 
-        {/* Pattern rows */}
-        <div className="space-y-1.5">
-          {topPatterns.map((pattern, i) => (
-            <PatternRow key={pattern.id} pattern={pattern} rank={i + 1} onOpenDetail={() => handleOpenDetail(pattern)} />
-          ))}
-        </div>
+        {/* Pattern rows (collapsible, collapsed by default) */}
+        {patternsExpanded && (
+          <div className="space-y-1.5 mb-3">
+            {topPatterns.map((pattern, i) => (
+              <PatternRow key={pattern.id} pattern={pattern} rank={i + 1} onOpenDetail={() => handleOpenDetail(pattern)} />
+            ))}
+          </div>
+        )}
 
         {/* Best next move */}
         <div className="mt-3 pt-3 border-t border-slate-100">
