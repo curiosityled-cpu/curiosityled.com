@@ -14,6 +14,7 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import Big3QuickSet from "@/components/lead/Big3QuickSet";
+import TopPatternCard from "@/components/lead/TopPatternCard";
 import { toast } from "sonner";
 
 // ─── Situation builder ────────────────────────────────────────────────────────
@@ -243,7 +244,7 @@ function DecisionLoopItem({ decision, onOutcomeSaved, onOpenAtreus }) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [], trends, goals, assignments, pulses, pendingDecisions = [], onDecisionOutcomeSaved, onOpenAtreus, onRefresh, onBig3Saved, userEmail, isMorningWindow }) {
+export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [], trends, goals, assignments, pulses, pendingDecisions = [], topPattern, onDecisionCommitted, onDecisionOutcomeSaved, onOpenAtreus, onRefresh, onBig3Saved, userEmail, isMorningWindow }) {
   const { user } = useAuth();
   const email = userEmail || user?.email;
 
@@ -365,6 +366,13 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
           </div>
         </div>
       </div>
+
+      {/* ── Top pattern ──────────────────────────────────────────────── */}
+      {topPattern && (
+        <div className="px-5 py-4 border-b border-border">
+          <TopPatternCard pattern={topPattern} onOpenAtreus={onOpenAtreus} onDecisionCommitted={onDecisionCommitted} pendingDecisions={pendingDecisions} />
+        </div>
+      )}
 
       {/* ── One move ─────────────────────────────────────────────────── */}
       <div className="px-5 py-4 border-b border-border">

@@ -462,6 +462,8 @@ export default function ManagerToday() {
           assignments={assignments}
           pulses={recentPulses}
           pendingDecisions={pendingDecisions}
+          topPattern={topPattern}
+          onDecisionCommitted={refetchDecisions}
           onDecisionOutcomeSaved={async () => { await refetchDecisions(); }}
           onOpenAtreus={openAtreus}
           onBig3Saved={(priorities) => {
@@ -496,9 +498,7 @@ export default function ManagerToday() {
   // ── Zone 3 content (Reflect) ──
   const reflectContent = (
     <>
-      {topPattern && (
-        <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} onDecisionCommitted={refetchDecisions} pendingDecisions={pendingDecisions} />
-      )}
+      <HeadlineSignal todayRecord={todayRecord} hasCheckedIn={!!todayRecord} />
       <UpcomingFrictionCard trends={trends} goals={goals} pulses={recentPulses} onOpenAtreus={openAtreus} />
       <CheckInTrendDashboard checkIns={(() => {
         const ids = new Set(checkInHistory.map(r => r.check_in_date));
@@ -604,10 +604,6 @@ export default function ManagerToday() {
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>
           {greeting}, {firstName}.
         </h1>
-        <div className="mt-2">
-          <HeadlineSignal todayRecord={todayRecord} hasCheckedIn={!!todayRecord} />
-        </div>
-
       </div>
 
       {/* ── Tab pills ── */}
