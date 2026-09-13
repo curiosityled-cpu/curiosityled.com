@@ -723,29 +723,6 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
               <ExternalLink className="w-3 h-3 text-[#0202ff] opacity-60 group-hover:opacity-100 transition-opacity" />
             </Link>
 
-            {/* Cross-reference note */}
-            {hasCheckInData && (
-              <div className="p-3 bg-muted/50 rounded-xl border border-border">
-                <div className="flex items-start gap-2">
-                  <Target className="w-3.5 h-3.5 text-[#0202ff] flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-xs font-semibold text-foreground mb-0.5">How this connects to your daily rhythm</p>
-                    <p className="text-[10px] text-muted-foreground leading-relaxed">
-                      {(() => {
-                        const focusAvg = avg(filtered.map(r => r.focus_score).filter(Boolean));
-                        const energyAvg = avg(filtered.map(r => r.energy_score).filter(Boolean));
-                        const weakComp = COMPETENCIES.find(c => (assessment[c.pctKey] ?? 100) < 55);
-                        const parts = [];
-                        if (focusAvg != null) parts.push(`Your focus is averaging ${focusAvg.toFixed(1)}/5 in check-ins`);
-                        if (energyAvg != null) parts.push(`energy is at ${energyAvg.toFixed(1)}/5`);
-                        if (weakComp) parts.push(`your assessment flags ${weakComp.label} as an area to develop`);
-                        return parts.length > 0 ? parts.join(", ") + "." : "Check-in data and assessment results are both being tracked.";
-                      })()}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
           </>
         )}
       </CardContent>
