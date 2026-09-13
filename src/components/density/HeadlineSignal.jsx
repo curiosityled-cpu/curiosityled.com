@@ -14,7 +14,15 @@ export default function HeadlineSignal({ todayRecord, hasCheckedIn }) {
   if (hasCheckedIn && todayRecord) {
     const energy = todayRecord.energy_score;
     const load = todayRecord.load_score;
-    if (energy != null && load != null) {
+    const morningDone = !!todayRecord.morning_completed;
+    const eveningDone = !!todayRecord.evening_completed;
+    const hasScores = energy != null && load != null;
+    const hasBig3 = todayRecord.big3_priorities?.length > 0;
+
+    if (eveningDone) {
+      signal = hasBig3 ? "Day complete — Big 3 set for tomorrow." : "Day complete.";
+      tone = hasBig3 ? "strong" : "steady";
+    } else if (hasScores) {
       if (energy <= 2 || load >= 4) {
         signal = `Heavy day — energy ${energy}, load ${load}`;
         tone = "heavy";
@@ -25,7 +33,10 @@ export default function HeadlineSignal({ todayRecord, hasCheckedIn }) {
         signal = `Steady day — energy ${energy}, load ${load}`;
         tone = "steady";
       }
-    } else if (todayRecord.big3_priorities?.length > 0) {
+    } else if (morningDone) {
+      signal = "Morning set — ready for the day.";
+      tone = "steady";
+    } else if (hasBig3) {
       signal = "Intent is set. Let's hold the shape.";
       tone = "steady";
     }

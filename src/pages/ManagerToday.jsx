@@ -603,13 +603,7 @@ export default function ManagerToday() {
 
       {/* ── Top Bar Rail ── */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-xs font-medium text-slate-500 truncate">{clientOrg?.name || 'Your organization'}</span>
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#0202ff]/10 text-[#0202ff] text-[10px] font-semibold flex-shrink-0">
-            {preset.name} Preset
-          </span>
-        </div>
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
           <button
             onClick={() => setShowSettings(s => !s)}
             className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 transition-colors"
