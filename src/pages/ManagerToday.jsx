@@ -19,7 +19,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { useAtreusOrchestrator } from "@/components/ai/useAtreusOrchestrator";
 import { Link } from "react-router-dom";
-import { Brain, ChevronRight, MessageSquare, SlidersHorizontal, X, Sun, TrendingUp, ArrowRight, Activity, Target } from "lucide-react";
+import { Brain, ChevronRight, MessageSquare, SlidersHorizontal, X, Sun, TrendingUp, ArrowRight, Target } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ToneOnboarding from "@/components/checkin/ToneOnboarding";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
@@ -34,6 +34,7 @@ import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
 import PerformanceGlanceCard from "@/components/lead/PerformanceGlanceCard";
 import DecisionJournalCard from "@/components/lead/DecisionJournalCard";
+import DevelopmentStatsRow from "@/components/practice/DevelopmentStatsRow";
 import PerformanceMetricsRow from "@/components/performance/PerformanceMetricsRow";
 
 // Patterns imports
@@ -95,7 +96,6 @@ export default function ManagerToday() {
   const isCompact = density === 'compact';
   const zoneOpen = (id) => (openZones[id] !== undefined ? openZones[id] : !isCompact);
   const toggleZone = (id) => setOpenZones(prev => ({ ...prev, [id]: !zoneOpen(id) }));
-  const openZone = (id) => setOpenZones(prev => ({ ...prev, [id]: true }));
 
   const todayET = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
@@ -420,22 +420,6 @@ export default function ManagerToday() {
   const greeting = etHour < 12 ? 'Good morning' : etHour < 17 ? 'Good afternoon' : 'Good evening';
   const day = new Date().toLocaleDateString('en-US', { timeZone: 'America/New_York', weekday: 'long', month: 'long', day: 'numeric' });
 
-  const topPriority = (localBig3Override || todayRecord?.big3_priorities)?.[0];
-
-  const nextMove = useMemo(() => {
-    if (showMorningCheckIn) return { label: 'Start morning check-in', zone: 'rhythm' };
-    if (showMiddayLoop) return { label: 'Set midday priorities', zone: 'rhythm' };
-    if (showEveningCheckIn) return { label: 'Complete evening check-in', zone: 'rhythm' };
-    if (allDone) return { label: 'Review your day', zone: 'reflect' };
-    return null;
-  }, [showMorningCheckIn, showMiddayLoop, showEveningCheckIn, allDone]);
-
-  const handleNextMove = () => {
-    if (!nextMove) return;
-    setActiveTab('today');
-    openZone(nextMove.zone);
-  };
-
   // ── Zone summaries (condensed states) ──
   const rhythmSummary = (
     <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
@@ -452,24 +436,15 @@ export default function ManagerToday() {
     </div>
   );
 
-  const systemSummary = topPattern ? (
-    <div className="flex items-center gap-2 text-xs text-slate-500">
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium">{topPattern.bucket || 'Pattern'}</span>
-      <span className="truncate">{topPattern.name}</span>
-    </div>
-  ) : (
-    <p className="text-xs text-slate-400">No active patterns detected yet.</p>
-  );
-
-  const workSummary = (
+  const progressSummary = (
     <div className="flex items-center gap-3 text-xs text-slate-500">
       <span>{goals.length} active goal{goals.length !== 1 ? 's' : ''}</span>
-      {pendingDecisions.length > 0 && <span>· {pendingDecisions.length} decision{pendingDecisions.length !== 1 ? 's' : ''} to review</span>}
+      {assignments.length > 0 && <span>· {assignments.length} in learning</span>}
     </div>
   );
 
   const reflectSummary = hasHistoricalData ? (
-    <p className="text-xs text-slate-500">{checkInHistory.length} day{checkInHistory.length !== 1 ? 's' : ''} of check-in history · Weekly summary ready</p>
+    <p className="text-xs text-slate-500">{checkInHistory.length} day{checkInHistory.length !== 1 ? 's' : ''} of check-in history · Weekly reflections ready</p>
   ) : (
     <p className="text-xs text-slate-400">Check in to build your trend.</p>
   );
@@ -550,30 +525,31 @@ export default function ManagerToday() {
           </div>
         </div>
       )}
+      <DecisionJournalCard />
     </>
   );
 
-  // ── Zone 2 content (What the System Sees) ──
-  const systemContent = (
+  // ── Zone 2 content (Your Progress) ──
+  const progressContent = (
+    <>
+      <DevelopmentStatsRow />
+      <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
+    </>
+  );
+
+  // ── Zone 3 content (Reflect) ──
+  const reflectContent = (
     <>
       {topPattern && (
         <TopPatternCard pattern={topPattern} onOpenAtreus={openAtreus} onDecisionCommitted={refetchDecisions} pendingDecisions={pendingDecisions} />
       )}
       <UpcomingFrictionCard trends={trends} goals={goals} pulses={recentPulses} onOpenAtreus={openAtreus} />
-    </>
-  );
-
-  // ── Zone 3 content (Your Work) ──
-  const workContent = (
-    <>
-      <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
-      <DecisionJournalCard />
-    </>
-  );
-
-  // ── Zone 4 content (Reflect) ──
-  const reflectContent = (
-    <>
+      <CheckInTrendDashboard checkIns={(() => {
+        const ids = new Set(checkInHistory.map(r => r.check_in_date));
+        const hasToday = ids.has(todayET);
+        const hasScores = todayRecord && (todayRecord.energy_score != null || todayRecord.confidence_score != null);
+        return (!hasToday && hasScores) ? [todayRecord, ...checkInHistory] : checkInHistory;
+      })()} assessment={latestAssessment} />
       {hasHistoricalData && (
         <button
           onClick={() => setShowWeeklyReflection(true)}
@@ -582,19 +558,13 @@ export default function ManagerToday() {
           <div className="flex items-center gap-3">
             <Brain className="w-4 h-4 text-[#0202ff] flex-shrink-0" />
             <div className="text-left">
-              <p className="text-sm font-semibold text-slate-900">Weekly rhythm summary</p>
+              <p className="text-sm font-semibold text-slate-900">Weekly reflections</p>
               <p className="text-[10px] text-slate-500">Charts, AI narrative, risks, recognition & next steps</p>
             </div>
           </div>
           <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
         </button>
       )}
-      <CheckInTrendDashboard checkIns={(() => {
-        const ids = new Set(checkInHistory.map(r => r.check_in_date));
-        const hasToday = ids.has(todayET);
-        const hasScores = todayRecord && (todayRecord.energy_score != null || todayRecord.confidence_score != null);
-        return (!hasToday && hasScores) ? [todayRecord, ...checkInHistory] : checkInHistory;
-      })()} assessment={latestAssessment} />
     </>
   );
 
@@ -682,29 +652,6 @@ export default function ManagerToday() {
           <HeadlineSignal todayRecord={todayRecord} hasCheckedIn={!!todayRecord} />
         </div>
 
-        {/* Top priority + next move */}
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-4">
-            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Top priority</p>
-            {topPriority ? (
-              <p className="text-sm font-semibold text-slate-900 leading-snug">{topPriority.title}</p>
-            ) : (
-              <p className="text-sm text-slate-400">No priority set yet</p>
-            )}
-          </div>
-          {nextMove && (
-            <button
-              onClick={handleNextMove}
-              className="bg-[#0202ff] text-white rounded-2xl p-4 flex items-center justify-between hover:bg-[#0101dd] transition-colors text-left"
-            >
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider opacity-80">Next move</p>
-                <p className="text-sm font-semibold">{nextMove.label}</p>
-              </div>
-              <ArrowRight className="w-4 h-4 flex-shrink-0" />
-            </button>
-          )}
-        </div>
       </div>
 
       {/* ── Tab pills ── */}
@@ -712,44 +659,34 @@ export default function ManagerToday() {
         <TabPills activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
 
-      {/* ── Today tab: 4 collapsible zones ── */}
+      {/* ── Today tab: 3 zones (Rhythm + Progress side-by-side, Reflect below) ── */}
       {activeTab === 'today' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-          <CollapsibleZone
-            title="Today's Rhythm"
-            icon={Sun}
-            iconColor="text-amber-400"
-            accentColor="#f59e0b"
-            open={zoneOpen('rhythm')}
-            onToggle={() => toggleZone('rhythm')}
-            summary={rhythmSummary}
-          >
-            {rhythmContent}
-          </CollapsibleZone>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+            <CollapsibleZone
+              title="Today's Rhythm"
+              icon={Sun}
+              iconColor="text-amber-400"
+              accentColor="#f59e0b"
+              open={zoneOpen('rhythm')}
+              onToggle={() => toggleZone('rhythm')}
+              summary={rhythmSummary}
+            >
+              {rhythmContent}
+            </CollapsibleZone>
 
-          <CollapsibleZone
-            title="What the System Sees"
-            icon={Activity}
-            iconColor="text-[#0202ff]"
-            accentColor="#0202ff"
-            open={zoneOpen('system')}
-            onToggle={() => toggleZone('system')}
-            summary={systemSummary}
-          >
-            {systemContent}
-          </CollapsibleZone>
-
-          <CollapsibleZone
-            title="Your Work"
-            icon={Target}
-            iconColor="text-emerald-500"
-            accentColor="#10b981"
-            open={zoneOpen('work')}
-            onToggle={() => toggleZone('work')}
-            summary={workSummary}
-          >
-            {workContent}
-          </CollapsibleZone>
+            <CollapsibleZone
+              title="Your Progress"
+              icon={Target}
+              iconColor="text-emerald-500"
+              accentColor="#10b981"
+              open={zoneOpen('progress')}
+              onToggle={() => toggleZone('progress')}
+              summary={progressSummary}
+            >
+              {progressContent}
+            </CollapsibleZone>
+          </div>
 
           <CollapsibleZone
             title="Reflect"
