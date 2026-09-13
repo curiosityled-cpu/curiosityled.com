@@ -651,6 +651,8 @@ export default function ManagerToday() {
               icon={Lightbulb}
               iconColor="text-violet-500"
               accentColor="#8b5cf6"
+              collapsible
+              defaultExpanded
             >
               {reflectContent}
             </ZoneCard>
