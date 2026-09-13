@@ -3,9 +3,8 @@
  * with an Explore button that opens the full PatternDetailDrawer.
  */
 import React, { useState } from "react";
-import { AlertTriangle, Users, Zap, ArrowRight, FileEdit } from "lucide-react";
+import { AlertTriangle, Users, Zap, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
 import PatternDetailDrawer from "@/components/patterns/PatternDetailDrawer";
 
 const BUCKET_STYLES = {
@@ -51,29 +50,14 @@ export default function TopPatternCard({ pattern, onOpenAtreus, onDecisionCommit
             </div>
           </div>
 
-          <div className="flex flex-col gap-1.5 mt-3">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => { setAutoOpenDecision(false); setDrawerOpen(true); }}
-                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border ${style.border} ${style.text} hover:bg-white/60 transition-colors`}
-              >
-                Explore & get decision support
-                <ArrowRight className="w-3 h-3" />
-              </button>
-              <Link
-                to="/patterns"
-                className="flex items-center justify-center px-3 py-2 rounded-xl text-xs font-medium border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors"
-              >
-                All patterns
-              </Link>
-            </div>
+          <div className="mt-3">
             <button
               onClick={() => { setAutoOpenDecision(true); setDrawerOpen(true); }}
-              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-dashed border-[#0202ff]/30 text-[#0202ff] hover:bg-[#0202ff]/5 transition-colors"
-              title={`Draft a decision related to: ${pattern.name}`}
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border border-dashed border-[#0202ff]/30 text-[#0202ff] hover:bg-[#0202ff]/5 transition-colors"
+              title={`Take action on: ${pattern.name}`}
             >
-              <FileEdit className="w-3 h-3" />
-              Draft a decision related to this pattern
+              <ArrowRight className="w-3 h-3" />
+              Take Action
             </button>
           </div>
         </div>
