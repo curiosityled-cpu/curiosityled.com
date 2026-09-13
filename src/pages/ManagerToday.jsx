@@ -493,14 +493,6 @@ export default function ManagerToday() {
     </>
   );
 
-  // ── Zone 2 content (Your Progress) ──
-  const progressContent = (
-    <>
-      <DevelopmentStatsRow />
-      <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
-    </>
-  );
-
   // ── Zone 3 content (Reflect) ──
   const reflectContent = (
     <>
@@ -626,25 +618,20 @@ export default function ManagerToday() {
       {/* ── Today tab: 3 zones (Rhythm + Progress side-by-side, Reflect below) ── */}
       {activeTab === 'today' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-          <ZoneCard
-            title="Today's Rhythm"
-            icon={Sun}
-            iconColor="text-amber-400"
-            accentColor="#f59e0b"
-          >
+          <div className="space-y-4">
             {rhythmContent}
-          </ZoneCard>
+          </div>
 
           <div className="space-y-4">
+            <PerformanceGlanceCard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
             <ZoneCard
-              title="Your Progress"
+              title="Progress"
               icon={Target}
               iconColor="text-emerald-500"
               accentColor="#10b981"
             >
-              {progressContent}
+              <DevelopmentStatsRow />
             </ZoneCard>
-
             <ZoneCard
               title="Reflect"
               icon={Lightbulb}
