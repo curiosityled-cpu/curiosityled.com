@@ -12,33 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { useAuth } from "@/lib/AuthContext";
 import Big3QuickSet from "@/components/lead/Big3QuickSet";
 import TopPatternsMoveCard from "@/components/lead/TopPatternsMoveCard";
 import { toast } from "sonner";
-
-// ─── Follow-through helpers ───────────────────────────────────────────────────
-function getTodayET() {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
-  }).format(new Date());
-}
-function getMostRecentCommitment(pulses) {
-  const todayStr = getTodayET();
-  for (const p of (pulses || [])) {
-    const pulseDate = p.created_date ? new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(p.created_date)) : null;
-    if (pulseDate === todayStr) continue;
-    if (p.delegation_commitment?.trim()) return { text: p.delegation_commitment, type: "delegation", pulseId: p.id };
-    if (p.focus_intention?.trim())       return { text: p.focus_intention,       type: "intention",  pulseId: p.id };
-  }
-  return null;
-}
-
-const STATUS_OPTS = [
-  { value: "did_it",  label: "Did it",  Icon: CheckCircle2, color: "text-emerald-600", ring: "border-emerald-400 bg-emerald-50" },
-  { value: "partly",  label: "Partly",  Icon: MinusCircle,  color: "text-amber-500",   ring: "border-amber-400 bg-amber-50" },
-  { value: "not_yet", label: "Not yet", Icon: Circle,       color: "text-gray-400",    ring: "border-gray-300 bg-gray-50" },
-];
 
 // ─── Big 3 item with status toggle ───────────────────────────────────────────
 function Big3Item({ item, index, fromYesterday }) {
@@ -196,16 +172,6 @@ function DecisionLoopItem({ decision, onOutcomeSaved, onOpenAtreus }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [], trends, goals, assignments, pulses, pendingDecisions = [], topPattern, crossToolData, onDecisionCommitted, onDecisionOutcomeSaved, onOpenAtreus, onRefresh, onBig3Saved, userEmail, isMorningWindow }) {
-  const { user } = useAuth();
-  const email = userEmail || user?.email;
-
-  const commitment = getMostRecentCommitment(pulses);
-  const [ftSelected, setFtSelected]   = useState(null);
-  const [ftReflection, setFtReflection] = useState("");
-  const [ftSubmitted, setFtSubmitted] = useState(false);
-  const [ftLoading, setFtLoading]     = useState(false);
-  const [ftExpanded, setFtExpanded]   = useState(false);
-
   const [loopExpanded, setLoopExpanded] = useState(true);
   const [playbookExpanded, setPlaybookExpanded] = useState(true);
 
@@ -232,20 +198,6 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
   const todayBig3     = (todayRecord?.big3_priorities || []).filter(p => p?.title);
   const big3          = todayBig3.length > 0 ? todayBig3 : yesterdayBig3.filter(p => p?.title);
   const big3FromYesterday = todayBig3.length === 0 && big3.length > 0;
-
-  const handleFtSubmit = async () => {
-    if (!ftSelected || !commitment) return;
-    setFtLoading(true);
-    await base44.entities.ManagerPulse.create({
-      user_email: email,
-      prompt_type: "follow_up",
-      source: "web",
-      focus_intention: ftReflection || `Follow-through: ${ftSelected} on "${commitment.text}"`,
-      intent_actuals_gap: ftSelected === "did_it" ? "no_gap_detected" : "insufficient_data",
-    }).catch(() => {});
-    setFtLoading(false);
-    setFtSubmitted(true);
-  };
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden">
@@ -309,7 +261,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
         )}
 
         {/* ── Close the loop sub-card ────────────────────────────────── */}
-        {(outcomePendingDecisions.length > 0 || commitment) && (
+        {outcomePendingDecisions.length > 0 && (
           <div className="bg-card border border-border rounded-2xl px-5 py-4">
             <button className="flex items-center justify-between w-full text-left" onClick={() => setLoopExpanded(v => !v)}>
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Close the loop</p>
@@ -338,53 +290,6 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
                   </div>
                 )}
 
-                {/* Commitments (pulse follow-through) subsection */}
-                {commitment && !ftSubmitted && (
-                  <div>
-                    <p className="text-[9px] font-bold text-amber-600/80 uppercase tracking-widest mb-2">Commitments</p>
-                    <button className="flex items-start justify-between w-full text-left gap-2 py-1" onClick={() => setFtExpanded(v => !v)}>
-                      <p className="text-xs font-medium text-foreground line-clamp-1 flex-1">{commitment.text}</p>
-                      {ftExpanded ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
-                    </button>
-                    {ftExpanded && (
-                      <div className="mt-2.5 space-y-2.5">
-                        <p className="text-xs text-muted-foreground">How did it go?</p>
-                        <div className="flex gap-2">
-                          {STATUS_OPTS.map(({ value, label, Icon, color, ring }) => (
-                            <button
-                              key={value}
-                              onClick={() => setFtSelected(value)}
-                              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border text-xs font-medium transition-all ${ftSelected === value ? ring + " " + color : "bg-muted/60 border-border text-muted-foreground hover:bg-muted"}`}
-                            >
-                              <Icon className="w-3.5 h-3.5" /> {label}
-                            </button>
-                          ))}
-                        </div>
-                        {ftSelected && ftSelected !== "did_it" && (
-                          <textarea
-                            placeholder={ftSelected === "partly" ? "What got in the way?" : "What stopped you? No judgment — just useful data."}
-                            value={ftReflection}
-                            onChange={e => setFtReflection(e.target.value)}
-                            className="w-full text-sm text-foreground placeholder:text-muted-foreground bg-muted/50 border border-border rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-[#0202ff]/30"
-                            rows={2}
-                          />
-                        )}
-                        {ftSelected && (
-                          <Button size="sm" className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-8" onClick={handleFtSubmit} disabled={ftLoading}>
-                            {ftLoading ? "Saving…" : "Log this"}
-                          </Button>
-                        )}
-                        <p className="text-[10px] text-muted-foreground italic">This feeds your pattern memory — private to you.</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {ftSubmitted && (
-                  <div className="flex items-center gap-2 text-xs text-emerald-600">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Loop closed. Atreus will learn from this.
-                  </div>
-                )}
               </div>
             )}
           </div>
