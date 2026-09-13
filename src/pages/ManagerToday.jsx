@@ -49,7 +49,7 @@ import BpoWatchRow from "@/components/patterns/BpoWatchRow";
 
 // Density + preset
 import { useManagerPreferences } from "@/hooks/useManagerPreferences";
-import CollapsibleZone from "@/components/density/CollapsibleZone";
+import ZoneCard from "@/components/density/ZoneCard";
 import HeadlineSignal from "@/components/density/HeadlineSignal";
 
 function getFirstName(user) {
@@ -90,10 +90,6 @@ export default function ManagerToday() {
   const [showSettings, setShowSettings] = useState(false);
   const [showWeeklyReflection, setShowWeeklyReflection] = useState(false);
   const [activeTab, setActiveTab] = useState('today');
-  const [openZones, setOpenZones] = useState({});
-
-  const zoneOpen = (id) => (openZones[id] !== undefined ? openZones[id] : true);
-  const toggleZone = (id) => setOpenZones(prev => ({ ...prev, [id]: !zoneOpen(id) }));
 
   const todayET = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
@@ -418,35 +414,6 @@ export default function ManagerToday() {
   const greeting = etHour < 12 ? 'Good morning' : etHour < 17 ? 'Good afternoon' : 'Good evening';
   const day = new Date().toLocaleDateString('en-US', { timeZone: 'America/New_York', weekday: 'long', month: 'long', day: 'numeric' });
 
-  // ── Zone summaries (condensed states) ──
-  const rhythmSummary = (
-    <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
-      {todayRecord?.morning_completed ? (
-        <span className="inline-flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Morning done
-          {todayRecord.energy_score != null && <span className="text-slate-400">· Energy {todayRecord.energy_score}/5</span>}
-        </span>
-      ) : isMorningWindow ? (
-        <span className="inline-flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-400" /> Morning check-in pending</span>
-      ) : null}
-      {todayRecord?.evening_completed && <span className="inline-flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-indigo-400" /> Evening done</span>}
-      {todayRecord?.big3_priorities?.length > 0 && <span>· {todayRecord.big3_priorities.length} priorities set</span>}
-    </div>
-  );
-
-  const progressSummary = (
-    <div className="flex items-center gap-3 text-xs text-slate-500">
-      <span>{goals.length} active goal{goals.length !== 1 ? 's' : ''}</span>
-      {assignments.length > 0 && <span>· {assignments.length} in learning</span>}
-    </div>
-  );
-
-  const reflectSummary = hasHistoricalData ? (
-    <p className="text-xs text-slate-500">{checkInHistory.length} day{checkInHistory.length !== 1 ? 's' : ''} of check-in history · Weekly reflections ready</p>
-  ) : (
-    <p className="text-xs text-slate-400">Check in to build your trend.</p>
-  );
-
   // ── Zone 1 content (Today's Rhythm) ──
   const rhythmContent = (
     <>
@@ -659,42 +626,33 @@ export default function ManagerToday() {
       {/* ── Today tab: 3 zones (Rhythm + Progress side-by-side, Reflect below) ── */}
       {activeTab === 'today' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-          <CollapsibleZone
+          <ZoneCard
             title="Today's Rhythm"
             icon={Sun}
             iconColor="text-amber-400"
             accentColor="#f59e0b"
-            open={zoneOpen('rhythm')}
-            onToggle={() => toggleZone('rhythm')}
-            summary={rhythmSummary}
           >
             {rhythmContent}
-          </CollapsibleZone>
+          </ZoneCard>
 
           <div className="space-y-4">
-            <CollapsibleZone
+            <ZoneCard
               title="Your Progress"
               icon={Target}
               iconColor="text-emerald-500"
               accentColor="#10b981"
-              open={zoneOpen('progress')}
-              onToggle={() => toggleZone('progress')}
-              summary={progressSummary}
             >
               {progressContent}
-            </CollapsibleZone>
+            </ZoneCard>
 
-            <CollapsibleZone
+            <ZoneCard
               title="Reflect"
               icon={Brain}
               iconColor="text-violet-500"
               accentColor="#8b5cf6"
-              open={zoneOpen('reflect')}
-              onToggle={() => toggleZone('reflect')}
-              summary={reflectSummary}
             >
               {reflectContent}
-            </CollapsibleZone>
+            </ZoneCard>
           </div>
         </div>
       )}
