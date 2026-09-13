@@ -1,3 +1,6 @@
+// This file previously contained a markdown guide for Typeform webhook setup.
+// The guide content has been preserved as a comment below.
+/*
 # Typeform Webhook Setup Guide
 
 ## Overview
@@ -210,3 +213,7 @@ const FIELD_MAPPING = {
 // dm_q1: 8, dm_q2: 9, dm_q3: 7
 // Result: decision_making = (8+9+7)/3 = 8 (rounded)
 ``
+*/
+export default async function webhookSetup() {
+  return { status: "ok", message: "Webhook setup guide is documented in this file's comments." };
+}
