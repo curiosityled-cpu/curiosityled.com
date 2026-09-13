@@ -284,189 +284,191 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
   };
 
   return (
-    <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+    <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden">
+
+      {/* ── Accent bar ─────────────────────────────────────────────────── */}
+      <div className="h-0.5 w-full" style={{ backgroundColor: '#0202ff' }} />
 
       {/* ── Header ──────────────────────────────────────────────────── */}
-      <div className="px-5 pt-4 pb-3 border-b border-border flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <BookOpen className="w-3.5 h-3.5 text-[#0202ff]" />
-          <p className="text-xs font-bold text-foreground uppercase tracking-widest">Today's Playbook</p>
-        </div>
+      <div className="flex items-center gap-2.5 px-4 py-3.5">
+        <BookOpen className="w-4 h-4 text-[#0202ff] flex-shrink-0" />
+        <p className="text-sm font-semibold text-slate-900 flex-1">Today's Playbook</p>
         {big3FromYesterday && (
           <span className="text-[10px] text-[#6c84e8] font-medium bg-[#0202ff]/10 dark:bg-[#0202ff]/15 dark:text-[#8fa4f0] px-2 py-0.5 rounded-full">From last night</span>
         )}
       </div>
 
-      {/* ── BIG 3: Hero section (read-only) ──────────────────────────── */}
-      <div className="px-5 py-4 border-b border-border">
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Your Big 3 Priorities</p>
+      {/* ── Content area ─────────────────────────────────────────────── */}
+      <div className="px-4 pb-4 space-y-3 border-t border-slate-100 pt-3">
 
-        {big3.length > 0 ? (
-          <div>
-            {big3.map((p, i) => (
-              <Big3Item key={p.id || i} item={p} index={i} fromYesterday={false} />
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <p className="text-xs text-muted-foreground italic">
-              No priorities were set last night.
-            </p>
-            <Big3QuickSet todayRecord={todayRecord} onSaved={onBig3Saved} />
-          </div>
-        )}
-      </div>
-
-      {/* ── Top pattern ──────────────────────────────────────────────── */}
-      {topPattern && (
-        <div className="px-5 py-4 border-b border-border">
-          <TopPatternCard pattern={topPattern} onOpenAtreus={onOpenAtreus} onDecisionCommitted={onDecisionCommitted} pendingDecisions={pendingDecisions} />
-        </div>
-      )}
-
-      {/* ── One move ─────────────────────────────────────────────────── */}
-      <div className="px-5 py-4 border-b border-border">
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">One move</p>
-        {moveDone ? (
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-            <p className="text-sm font-medium text-foreground">Done. That's noted.</p>
-          </div>
-        ) : (
-          <>
-            <p className="text-sm font-semibold text-foreground leading-snug">{move.move}</p>
-            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{move.reason}</p>
-            {committed && (
-              <div className="flex items-center gap-1.5 mt-2 px-2.5 py-1.5 bg-emerald-50 rounded-lg border border-emerald-100">
-                <BookmarkCheck className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-                <p className="text-[10px] text-emerald-700 font-medium">Saved as a commitment</p>
-              </div>
-            )}
-            <div className="flex gap-2 mt-3">
-              {move.atreus ? (
-                <Button size="sm" className="flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-8" onClick={handleAtreus}>
-                  <Brain className="w-3 h-3 mr-1.5" /> Work on this
-                </Button>
-              ) : (
-                <Link to={move.link} className="flex-1" onClick={saveCommitment}>
-                  <Button size="sm" className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-8">
-                    Take action <ArrowRight className="w-3 h-3 ml-1.5" />
-                  </Button>
-                </Link>
-              )}
-              <Button size="sm" variant="outline" className="text-xs h-8 text-muted-foreground" onClick={() => setMoveDone(true)}>
-                <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-500" /> Done
-              </Button>
+        {/* ── BIG 3 sub-card ─────────────────────────────────────────── */}
+        <div className="bg-card border border-border rounded-2xl px-5 py-4">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Your Big 3 Priorities</p>
+          {big3.length > 0 ? (
+            <div>
+              {big3.map((p, i) => (
+                <Big3Item key={p.id || i} item={p} index={i} fromYesterday={false} />
+              ))}
             </div>
-          </>
-        )}
-      </div>
-
-      {/* ── Unified Close the Loop ───────────────────────────────────── */}
-      {(outcomePendingDecisions.length > 0 || activeGoals.length > 0 || commitment) && (
-        <div className="px-5 py-3 border-b border-border">
-          <button className="flex items-center justify-between w-full text-left" onClick={() => setLoopExpanded(v => !v)}>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Close the loop</p>
-            {loopExpanded
-              ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-              : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
-          </button>
-
-          {loopExpanded && (
-            <div className="mt-3 space-y-4">
-
-              {/* Decisions subsection */}
-              {outcomePendingDecisions.length > 0 && (
-                <div>
-                  <p className="text-[9px] font-bold text-[#0202ff]/70 uppercase tracking-widest mb-2">Decisions (7+ days old)</p>
-                  <div className="space-y-1">
-                    {outcomePendingDecisions.map(d => (
-                      <DecisionLoopItem
-                        key={d.id}
-                        decision={d}
-                        onOutcomeSaved={() => onDecisionOutcomeSaved?.()}
-                        onOpenAtreus={onOpenAtreus}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Goals subsection */}
-              {activeGoals.length > 0 && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-[9px] font-bold text-emerald-600/80 uppercase tracking-widest">Goals</p>
-                    <Link to="/my-performance"><span className="text-[10px] text-[#0202ff] font-medium hover:underline">All goals →</span></Link>
-                  </div>
-                  <div className="space-y-2">
-                    {activeGoals.slice(0, 3).map(g => (
-                      <div key={g.id}>
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="text-xs font-medium text-foreground truncate flex-1 mr-2">{g.title}</p>
-                          <span className="text-[10px] text-muted-foreground flex-shrink-0">{g.progress || 0}%</span>
-                        </div>
-                        <Progress value={g.progress || 0} className="h-1" />
-                      </div>
-                    ))}
-                    {activeGoals.length > 3 && (
-                      <p className="text-[10px] text-muted-foreground">+{activeGoals.length - 3} more active</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Commitments (pulse follow-through) subsection */}
-              {commitment && !ftSubmitted && (
-                <div>
-                  <p className="text-[9px] font-bold text-amber-600/80 uppercase tracking-widest mb-2">Commitments</p>
-                  <button className="flex items-start justify-between w-full text-left gap-2 py-1" onClick={() => setFtExpanded(v => !v)}>
-                    <p className="text-xs font-medium text-foreground line-clamp-1 flex-1">{commitment.text}</p>
-                    {ftExpanded ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
-                  </button>
-                  {ftExpanded && (
-                    <div className="mt-2.5 space-y-2.5">
-                      <p className="text-xs text-muted-foreground">How did it go?</p>
-                      <div className="flex gap-2">
-                        {STATUS_OPTS.map(({ value, label, Icon, color, ring }) => (
-                          <button
-                            key={value}
-                            onClick={() => setFtSelected(value)}
-                            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border text-xs font-medium transition-all ${ftSelected === value ? ring + " " + color : "bg-muted/60 border-border text-muted-foreground hover:bg-muted"}`}
-                          >
-                            <Icon className="w-3.5 h-3.5" /> {label}
-                          </button>
-                        ))}
-                      </div>
-                      {ftSelected && ftSelected !== "did_it" && (
-                        <textarea
-                          placeholder={ftSelected === "partly" ? "What got in the way?" : "What stopped you? No judgment — just useful data."}
-                          value={ftReflection}
-                          onChange={e => setFtReflection(e.target.value)}
-                          className="w-full text-sm text-foreground placeholder:text-muted-foreground bg-muted/50 border border-border rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-[#0202ff]/30"
-                          rows={2}
-                        />
-                      )}
-                      {ftSelected && (
-                        <Button size="sm" className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-8" onClick={handleFtSubmit} disabled={ftLoading}>
-                          {ftLoading ? "Saving…" : "Log this"}
-                        </Button>
-                      )}
-                      <p className="text-[10px] text-muted-foreground italic">This feeds your pattern memory — private to you.</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {ftSubmitted && (
-                <div className="flex items-center gap-2 text-xs text-emerald-600">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Loop closed. Atreus will learn from this.
-                </div>
-              )}
+          ) : (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground italic">
+                No priorities were set last night.
+              </p>
+              <Big3QuickSet todayRecord={todayRecord} onSaved={onBig3Saved} />
             </div>
           )}
         </div>
-      )}
+
+        {/* ── Top pattern (has its own card styling) ─────────────────── */}
+        {topPattern && (
+          <TopPatternCard pattern={topPattern} onOpenAtreus={onOpenAtreus} onDecisionCommitted={onDecisionCommitted} pendingDecisions={pendingDecisions} />
+        )}
+
+        {/* ── One move sub-card ─────────────────────────────────────── */}
+        <div className="bg-card border border-border rounded-2xl px-5 py-4">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">One move</p>
+          {moveDone ? (
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              <p className="text-sm font-medium text-foreground">Done. That's noted.</p>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm font-semibold text-foreground leading-snug">{move.move}</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{move.reason}</p>
+              {committed && (
+                <div className="flex items-center gap-1.5 mt-2 px-2.5 py-1.5 bg-emerald-50 rounded-lg border border-emerald-100">
+                  <BookmarkCheck className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                  <p className="text-[10px] text-emerald-700 font-medium">Saved as a commitment</p>
+                </div>
+              )}
+              <div className="flex gap-2 mt-3">
+                {move.atreus ? (
+                  <Button size="sm" className="flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-8" onClick={handleAtreus}>
+                    <Brain className="w-3 h-3 mr-1.5" /> Work on this
+                  </Button>
+                ) : (
+                  <Link to={move.link} className="flex-1" onClick={saveCommitment}>
+                    <Button size="sm" className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-8">
+                      Take action <ArrowRight className="w-3 h-3 ml-1.5" />
+                    </Button>
+                  </Link>
+                )}
+                <Button size="sm" variant="outline" className="text-xs h-8 text-muted-foreground" onClick={() => setMoveDone(true)}>
+                  <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-500" /> Done
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* ── Close the loop sub-card ────────────────────────────────── */}
+        {(outcomePendingDecisions.length > 0 || activeGoals.length > 0 || commitment) && (
+          <div className="bg-card border border-border rounded-2xl px-5 py-4">
+            <button className="flex items-center justify-between w-full text-left" onClick={() => setLoopExpanded(v => !v)}>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Close the loop</p>
+              {loopExpanded
+                ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
+            </button>
+
+            {loopExpanded && (
+              <div className="mt-3 space-y-4">
+
+                {/* Decisions subsection */}
+                {outcomePendingDecisions.length > 0 && (
+                  <div>
+                    <p className="text-[9px] font-bold text-[#0202ff]/70 uppercase tracking-widest mb-2">Decisions (7+ days old)</p>
+                    <div className="space-y-1">
+                      {outcomePendingDecisions.map(d => (
+                        <DecisionLoopItem
+                          key={d.id}
+                          decision={d}
+                          onOutcomeSaved={() => onDecisionOutcomeSaved?.()}
+                          onOpenAtreus={onOpenAtreus}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Goals subsection */}
+                {activeGoals.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[9px] font-bold text-emerald-600/80 uppercase tracking-widest">Goals</p>
+                      <Link to="/my-performance"><span className="text-[10px] text-[#0202ff] font-medium hover:underline">All goals →</span></Link>
+                    </div>
+                    <div className="space-y-2">
+                      {activeGoals.slice(0, 3).map(g => (
+                        <div key={g.id}>
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-xs font-medium text-foreground truncate flex-1 mr-2">{g.title}</p>
+                            <span className="text-[10px] text-muted-foreground flex-shrink-0">{g.progress || 0}%</span>
+                          </div>
+                          <Progress value={g.progress || 0} className="h-1" />
+                        </div>
+                      ))}
+                      {activeGoals.length > 3 && (
+                        <p className="text-[10px] text-muted-foreground">+{activeGoals.length - 3} more active</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Commitments (pulse follow-through) subsection */}
+                {commitment && !ftSubmitted && (
+                  <div>
+                    <p className="text-[9px] font-bold text-amber-600/80 uppercase tracking-widest mb-2">Commitments</p>
+                    <button className="flex items-start justify-between w-full text-left gap-2 py-1" onClick={() => setFtExpanded(v => !v)}>
+                      <p className="text-xs font-medium text-foreground line-clamp-1 flex-1">{commitment.text}</p>
+                      {ftExpanded ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
+                    </button>
+                    {ftExpanded && (
+                      <div className="mt-2.5 space-y-2.5">
+                        <p className="text-xs text-muted-foreground">How did it go?</p>
+                        <div className="flex gap-2">
+                          {STATUS_OPTS.map(({ value, label, Icon, color, ring }) => (
+                            <button
+                              key={value}
+                              onClick={() => setFtSelected(value)}
+                              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border text-xs font-medium transition-all ${ftSelected === value ? ring + " " + color : "bg-muted/60 border-border text-muted-foreground hover:bg-muted"}`}
+                            >
+                              <Icon className="w-3.5 h-3.5" /> {label}
+                            </button>
+                          ))}
+                        </div>
+                        {ftSelected && ftSelected !== "did_it" && (
+                          <textarea
+                            placeholder={ftSelected === "partly" ? "What got in the way?" : "What stopped you? No judgment — just useful data."}
+                            value={ftReflection}
+                            onChange={e => setFtReflection(e.target.value)}
+                            className="w-full text-sm text-foreground placeholder:text-muted-foreground bg-muted/50 border border-border rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-[#0202ff]/30"
+                            rows={2}
+                          />
+                        )}
+                        {ftSelected && (
+                          <Button size="sm" className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-8" onClick={handleFtSubmit} disabled={ftLoading}>
+                            {ftLoading ? "Saving…" : "Log this"}
+                          </Button>
+                        )}
+                        <p className="text-[10px] text-muted-foreground italic">This feeds your pattern memory — private to you.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {ftSubmitted && (
+                  <div className="flex items-center gap-2 text-xs text-emerald-600">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Loop closed. Atreus will learn from this.
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
