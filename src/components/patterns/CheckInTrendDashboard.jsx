@@ -225,7 +225,7 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
               <Activity className="w-3.5 h-3.5 text-white" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-foreground">Rhythm Trends</p>
+              <p className="text-sm font-semibold text-foreground">Leadership Pulse</p>
               <p className="text-[10px] text-muted-foreground">Daily check-in signals · private to you</p>
             </div>
           </div>
@@ -714,7 +714,7 @@ export default function CheckInTrendDashboard({ checkIns = [], assessment = null
           <div className="flex items-center justify-between px-6 py-4 border-b border-border">
             <div>
               <p className="text-sm font-semibold text-foreground">
-                {tab === "assessment" ? "Leadership Index" : tab === "big3" ? "Big 3 Priority History" : "Rhythm Trends — Daily rhythm"}
+                {tab === "assessment" ? "Leadership Index" : tab === "big3" ? "Big 3 Priority History" : "Leadership Pulse — Daily rhythm"}
               </p>
               <p className="text-[10px] text-muted-foreground">
                 {tab === "assessment" ? "Your competency scores benchmarked against industry data" : tab === "big3" ? "Your daily top 3 priorities and their outcomes" : "1 = low · 3 = baseline · 5 = strong · private to you"}
