@@ -49,7 +49,6 @@ import BpoWatchRow from "@/components/patterns/BpoWatchRow";
 
 // Density + preset
 import { useManagerPreferences } from "@/hooks/useManagerPreferences";
-import DensityToggle from "@/components/density/DensityToggle";
 import CollapsibleZone from "@/components/density/CollapsibleZone";
 import HeadlineSignal from "@/components/density/HeadlineSignal";
 
@@ -87,14 +86,13 @@ export default function ManagerToday() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { openWithContext } = useAtreusChat();
-  const { preset, presetId, density, updateDensity, client: clientOrg } = useManagerPreferences();
+  const { preset, presetId, client: clientOrg } = useManagerPreferences();
   const [showSettings, setShowSettings] = useState(false);
   const [showWeeklyReflection, setShowWeeklyReflection] = useState(false);
   const [activeTab, setActiveTab] = useState('today');
   const [openZones, setOpenZones] = useState({});
 
-  const isCompact = density === 'compact';
-  const zoneOpen = (id) => (openZones[id] !== undefined ? openZones[id] : !isCompact);
+  const zoneOpen = (id) => (openZones[id] !== undefined ? openZones[id] : true);
   const toggleZone = (id) => setOpenZones(prev => ({ ...prev, [id]: !zoneOpen(id) }));
 
   const todayET = new Intl.DateTimeFormat('en-CA', {
@@ -631,7 +629,6 @@ export default function ManagerToday() {
           </span>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
-          <DensityToggle value={density} onChange={updateDensity} />
           <button
             onClick={() => setShowSettings(s => !s)}
             className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 transition-colors"
@@ -661,20 +658,20 @@ export default function ManagerToday() {
 
       {/* ── Today tab: 3 zones (Rhythm + Progress side-by-side, Reflect below) ── */}
       {activeTab === 'today' && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-            <CollapsibleZone
-              title="Today's Rhythm"
-              icon={Sun}
-              iconColor="text-amber-400"
-              accentColor="#f59e0b"
-              open={zoneOpen('rhythm')}
-              onToggle={() => toggleZone('rhythm')}
-              summary={rhythmSummary}
-            >
-              {rhythmContent}
-            </CollapsibleZone>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+          <CollapsibleZone
+            title="Today's Rhythm"
+            icon={Sun}
+            iconColor="text-amber-400"
+            accentColor="#f59e0b"
+            open={zoneOpen('rhythm')}
+            onToggle={() => toggleZone('rhythm')}
+            summary={rhythmSummary}
+          >
+            {rhythmContent}
+          </CollapsibleZone>
 
+          <div className="space-y-4">
             <CollapsibleZone
               title="Your Progress"
               icon={Target}
@@ -686,19 +683,19 @@ export default function ManagerToday() {
             >
               {progressContent}
             </CollapsibleZone>
-          </div>
 
-          <CollapsibleZone
-            title="Reflect"
-            icon={Brain}
-            iconColor="text-violet-500"
-            accentColor="#8b5cf6"
-            open={zoneOpen('reflect')}
-            onToggle={() => toggleZone('reflect')}
-            summary={reflectSummary}
-          >
-            {reflectContent}
-          </CollapsibleZone>
+            <CollapsibleZone
+              title="Reflect"
+              icon={Brain}
+              iconColor="text-violet-500"
+              accentColor="#8b5cf6"
+              open={zoneOpen('reflect')}
+              onToggle={() => toggleZone('reflect')}
+              summary={reflectSummary}
+            >
+              {reflectContent}
+            </CollapsibleZone>
+          </div>
         </div>
       )}
 
