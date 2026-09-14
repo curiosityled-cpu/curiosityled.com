@@ -18,7 +18,7 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { useAtreusOrchestrator } from "@/components/ai/useAtreusOrchestrator";
-import { ChevronRight, MessageSquare, SlidersHorizontal, X, Sun, TrendingUp, Target, Lightbulb, Sparkles } from "lucide-react";
+import { ChevronRight, MessageSquare, SlidersHorizontal, X, TrendingUp, Target, Lightbulb, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ToneOnboarding from "@/components/checkin/ToneOnboarding";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
@@ -34,13 +34,10 @@ import TalentScorecard from "@/components/lead/TalentScoreCard";
 import DecisionJournalCard from "@/components/lead/DecisionJournalCard";
 
 // Patterns imports
-import IntentLoopCard from "@/components/checkin/IntentLoopCard";
 import WhatsImprovingCard from "@/components/patterns/WhatsImprovingCard";
-import LeadingPatternCard from "@/components/patterns/LeadingPatternCard";
 import LeadershipNarrativeCard from "@/components/patterns/LeadershipNarrativeCard";
-import SwipeableSections from "@/components/patterns/SwipeableSections";
-import BpoHeroPatternCard from "@/components/patterns/BpoHeroPatternCard";
 import BpoWatchRow from "@/components/patterns/BpoWatchRow";
+import TopPatternsMoveCard from "@/components/lead/TopPatternsMoveCard";
 
 // Density + preset
 import { useManagerPreferences } from "@/hooks/useManagerPreferences";
@@ -52,31 +49,6 @@ function getFirstName(user) {
   return raw && raw.trim() && !raw.includes('@') ? raw.split(' ')[0] : 'there';
 }
 
-// Tab pill component
-function TabPills({ activeTab, onTabChange }) {
-  return (
-    <div className="flex gap-1 bg-slate-100 rounded-xl p-1 w-fit">
-      {[
-        { id: 'today', label: 'Today', icon: Sun },
-        { id: 'patterns', label: 'Patterns', icon: TrendingUp },
-      ].map(({ id, label, icon: Icon }) => (
-        <button
-          key={id}
-          onClick={() => onTabChange(id)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-            activeTab === id
-              ? 'bg-white text-slate-900 shadow-sm'
-              : 'text-slate-500 hover:text-slate-700'
-          }`}
-        >
-          <Icon className="w-3.5 h-3.5" />
-          {label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 export default function ManagerToday() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -84,7 +56,6 @@ export default function ManagerToday() {
   const { preset, presetId, client: clientOrg } = useManagerPreferences();
   const [showSettings, setShowSettings] = useState(false);
   const [showWeeklyReflection, setShowWeeklyReflection] = useState(false);
-  const [activeTab, setActiveTab] = useState('today');
 
   const todayET = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
@@ -273,23 +244,16 @@ export default function ManagerToday() {
     refetchOnWindowFocus: false,
   });
 
-  // Patterns-specific data
   const { data: activities = [] } = useQuery({
     queryKey: ['ml-activities', user?.email],
     queryFn: async () => { try { return await base44.entities.UserActivity.filter({ user_email: user.email }, '-date', 14); } catch { return []; } },
-    enabled: !!user?.email && activeTab === 'patterns', staleTime: 15 * 60 * 1000,
+    enabled: !!user?.email, staleTime: 15 * 60 * 1000,
   });
 
   const { data: entityCheckIns = [] } = useQuery({
     queryKey: ['daily-checkin-history', user?.email],
     queryFn: async () => { try { return await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-check_in_date', 120); } catch { return []; } },
-    enabled: !!user?.email && activeTab === 'patterns', staleTime: 0,
-  });
-
-  const { data: memory = null } = useQuery({
-    queryKey: ['ml-memory', user?.email],
-    queryFn: async () => { try { const rows = await base44.entities.ManagerMemory.filter({ user_email: user.email }, '-last_synthesized_at', 1); return rows[0] || null; } catch { return null; } },
-    enabled: !!user?.email && activeTab === 'patterns', staleTime: 30 * 60 * 1000,
+    enabled: !!user?.email, staleTime: 0,
   });
 
   const mergedCheckIns = useMemo(() => {
@@ -336,7 +300,6 @@ export default function ManagerToday() {
     runBpoPatternEngine({ trends, checkIns: mergedCheckIns, goals, activities, pulses: recentPulses }),
     [trends, mergedCheckIns, goals, activities, recentPulses]
   );
-  const heroPattern = rankedPatterns[0] || null;
 
   const decisionContextForOrchestrator = topPattern && pendingDecisions.length > 0 ? {
     mode: 'pattern_linked_decision',
@@ -388,11 +351,6 @@ export default function ManagerToday() {
       starterMessage: msg || orchestratorData?.opening_message || "I'd like to reflect on my leadership this week."
     });
   };
-
-  const openAtreusPatterns = (msg) => openWithContext({
-    context: { pageType: 'patterns', user_name: user?.full_name },
-    starterMessage: msg || "Help me understand my recent patterns."
-  });
 
   const { data: kpis = [] } = useQuery({
     queryKey: ['ml-kpis', user?.email],
@@ -543,51 +501,6 @@ export default function ManagerToday() {
     </>
   );
 
-  // ── Patterns tab content (preserved) ──
-  const big3DaysCount = checkInHistory.filter(c => c.big3_priorities?.length > 0).length;
-
-  const patternsLeftColumn = (
-    <div className="space-y-4">
-      {heroPattern ? (
-        <>
-          <BpoHeroPatternCard pattern={heroPattern} onOpenAtreus={openAtreusPatterns} />
-          <BpoWatchRow patterns={rankedPatterns} onOpenAtreus={openAtreusPatterns} />
-        </>
-      ) : (
-        <LeadingPatternCard
-          trends={trends}
-          pulses={recentPulses}
-          goals={goals}
-          recentCheckIns={checkInHistory}
-          recentPulses={recentPulses}
-          onOpenAtreus={openAtreusPatterns}
-        />
-      )}
-      <LeadershipNarrativeCard trends={trends} insight={insight} goals={goals} onOpenAtreus={openAtreusPatterns} />
-      {big3DaysCount >= 5 && (
-        <IntentLoopCard pulses={recentPulses} trends={trends} onOpenAtreus={openAtreusPatterns} />
-      )}
-      <WhatsImprovingCard trends={trends} pulses={recentPulses} goals={goals} />
-      <DecisionJournalCard />
-    </div>
-  );
-
-  const patternsRightColumn = (
-    <div className="space-y-4">
-      <TalentScorecard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
-      <ZoneCard
-        title="Reflect"
-        icon={Lightbulb}
-        iconColor="text-violet-500"
-        accentColor="#8b5cf6"
-        collapsible
-        defaultExpanded
-      >
-        {reflectContent}
-      </ZoneCard>
-    </div>
-  );
-
   return (
     <div className="px-4 py-6 max-w-6xl mx-auto">
       {/* Tone onboarding banner (if needed) */}
@@ -629,54 +542,53 @@ export default function ManagerToday() {
         </div>
       </div>
 
-      {/* ── Tab pills ── */}
-      <div className="mb-4">
-        <TabPills activeTab={activeTab} onTabChange={setActiveTab} />
+      {/* ── Main grid: Rhythm + Patterns (left) | Scorecard + Reflect (right) ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+        <div className="space-y-4">
+          {rhythmContent}
+          <ZoneCard
+            title="Patterns"
+            icon={TrendingUp}
+            iconColor="text-[#0202ff]"
+            accentColor="#0202ff"
+            collapsible
+            defaultExpanded
+          >
+            {crossToolData ? (
+              <TopPatternsMoveCard
+                crossToolData={crossToolData}
+                onOpenAtreus={openAtreus}
+                onDecisionCommitted={refetchDecisions}
+                pendingDecisions={pendingDecisions}
+              />
+            ) : (
+              <div className="bg-card border border-border rounded-2xl px-5 py-4">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Top 3 Patterns</p>
+                <div className="flex items-center justify-center py-4">
+                  <div className="w-5 h-5 border-2 border-slate-200 border-t-[#0202ff] rounded-full animate-spin" />
+                </div>
+              </div>
+            )}
+            <BpoWatchRow patterns={rankedPatterns} onOpenAtreus={openAtreus} />
+            <LeadershipNarrativeCard trends={trends} insight={insight} goals={goals} onOpenAtreus={openAtreus} />
+            <WhatsImprovingCard trends={trends} pulses={recentPulses} goals={goals} />
+          </ZoneCard>
+        </div>
+
+        <div className="space-y-4">
+          <TalentScorecard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
+          <ZoneCard
+            title="Reflect"
+            icon={Lightbulb}
+            iconColor="text-violet-500"
+            accentColor="#8b5cf6"
+            collapsible
+            defaultExpanded
+          >
+            {reflectContent}
+          </ZoneCard>
+        </div>
       </div>
-
-      {/* ── Today tab: 3 zones (Rhythm + Progress side-by-side, Reflect below) ── */}
-      {activeTab === 'today' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-          <div className="space-y-4">
-            {rhythmContent}
-          </div>
-
-          <div className="space-y-4">
-            <TalentScorecard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
-            <ZoneCard
-              title="Reflect"
-              icon={Lightbulb}
-              iconColor="text-violet-500"
-              accentColor="#8b5cf6"
-              collapsible
-              defaultExpanded
-            >
-              {reflectContent}
-            </ZoneCard>
-          </div>
-        </div>
-      )}
-
-      {/* ── Patterns tab (preserved) ── */}
-      {activeTab === 'patterns' && (
-        <div className="space-y-5">
-          {/* Mobile: swipeable; Desktop: two columns */}
-          <div className="md:hidden">
-            <SwipeableSections
-              sections={[
-                { label: "Patterns", content: patternsLeftColumn },
-                { label: "Signals", content: patternsRightColumn },
-              ]}
-            />
-          </div>
-          <div className="hidden md:block">
-            <div className="grid grid-cols-[1fr_400px] gap-6 items-start">
-              <div>{patternsLeftColumn}</div>
-              <div className="sticky top-4">{patternsRightColumn}</div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Weekly reflection modal */}
       <WeeklyRhythmReflection

@@ -14,7 +14,6 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import Big3QuickSet from "@/components/lead/Big3QuickSet";
 import DecisionJournalCard from "@/components/lead/DecisionJournalCard";
-import TopPatternsMoveCard from "@/components/lead/TopPatternsMoveCard";
 import { toast } from "sonner";
 
 // ─── Big 3 item with status toggle ───────────────────────────────────────────
@@ -247,23 +246,6 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
             </div>
           )}
         </div>
-
-        {/* ── Top 3 Patterns + Best Next Move (cross-tool) ──────────── */}
-        {crossToolData ? (
-          <TopPatternsMoveCard
-            crossToolData={crossToolData}
-            onOpenAtreus={onOpenAtreus}
-            onDecisionCommitted={onDecisionCommitted}
-            pendingDecisions={pendingDecisions}
-          />
-        ) : (
-          <div className="bg-card border border-border rounded-2xl px-5 py-4">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Top 3 Patterns</p>
-            <div className="flex items-center justify-center py-4">
-              <div className="w-5 h-5 border-2 border-slate-200 border-t-[#0202ff] rounded-full animate-spin" />
-            </div>
-          </div>
-        )}
 
         {/* ── Close the loop sub-card ────────────────────────────────── */}
         {outcomePendingDecisions.length > 0 && (
