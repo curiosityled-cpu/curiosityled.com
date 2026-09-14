@@ -15,14 +15,12 @@ import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
-  Brain, Users, Layers, ChevronRight, ArrowRight
+  Brain, Users, Layers, ChevronRight
 } from "lucide-react";
 import PracticeFlow from "@/components/practice/PracticeFlow";
 import CoachingFlowsCard from "@/components/practice/CoachingFlowsCard";
 import RequestCoachingCard from "@/components/practice/RequestCoachingCard";
 import WorkoutsSection from "@/components/practice/WorkoutsSection";
-import LeadAlertsSection from "@/components/practice/LeadAlertsSection";
-import DevelopmentStatsRow from "@/components/practice/DevelopmentStatsRow";
 import DecisionJournalOutcomeReview from "@/components/practice/DecisionJournalOutcomeReview";
 import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
 
@@ -161,23 +159,6 @@ export default function ManagerPractice() {
       {/* Command Center layout */}
       {!activeFlow && (
         <div className="space-y-6">
-
-          {/* Development analytics — mirrors top row of My Development */}
-          <div className="space-y-3">
-            <div className="flex items-end justify-between px-1">
-              <div>
-                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Development</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Your active journeys, learning, and experiences.</p>
-              </div>
-              <Link to="/my-development" className="flex items-center gap-1 text-xs font-semibold text-[#0202ff] hover:underline">
-                View Development <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
-            <DevelopmentStatsRow />
-          </div>
-
-          {/* Top row: Lead Alerts (full width) */}
-          <LeadAlertsSection patterns={patterns} onOpenAtreus={openAtreus} />
 
           {/* Main grid: Action zone (left) + Context sidebar (right) */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
