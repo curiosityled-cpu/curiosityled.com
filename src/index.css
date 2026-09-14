@@ -415,3 +415,8 @@
   92%, 94% { opacity: 0.4; }
   93% { opacity: 0; }
 }
+@keyframes hero-wind {
+  0% { transform: translateX(0); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateX(1200px); opacity: 0; }
+}

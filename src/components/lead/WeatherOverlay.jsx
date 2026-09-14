@@ -110,6 +110,36 @@ function CloudOverlay() {
   );
 }
 
+function WindOverlay() {
+  const particles = useMemo(() =>
+    Array.from({ length: 15 }, () => ({
+      top: Math.random() * 100,
+      delay: Math.random() * 3,
+      duration: 1.5 + Math.random() * 1.5,
+      width: 20 + Math.random() * 30,
+      opacity: 0.1 + Math.random() * 0.15,
+    })), []);
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particles.map((p, i) => (
+        <div
+          key={i}
+          className="absolute h-px bg-white"
+          style={{
+            top: `${p.top}%`,
+            left: "-60px",
+            width: `${p.width}px`,
+            opacity: p.opacity,
+            animation: `hero-wind ${p.duration}s linear infinite`,
+            animationDelay: `${p.delay}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 function ThunderstormOverlay() {
   return (
     <>
@@ -122,13 +152,17 @@ function ThunderstormOverlay() {
   );
 }
 
-export default function WeatherOverlay({ condition }) {
-  if (!condition || condition === "clear") return null;
-  if (condition === "rain") return <RainOverlay heavy />;
-  if (condition === "drizzle") return <RainOverlay />;
-  if (condition === "snow") return <SnowOverlay />;
-  if (condition === "fog") return <FogOverlay />;
-  if (condition === "cloudy" || condition === "partly_cloudy") return <CloudOverlay />;
-  if (condition === "thunderstorm") return <ThunderstormOverlay />;
-  return null;
+export default function WeatherOverlay({ condition, windSpeed = 0 }) {
+  const hasWind = windSpeed > 15;
+  return (
+    <>
+      {hasWind && <WindOverlay />}
+      {condition === "rain" && <RainOverlay heavy />}
+      {condition === "drizzle" && <RainOverlay />}
+      {condition === "snow" && <SnowOverlay />}
+      {condition === "fog" && <FogOverlay />}
+      {(condition === "cloudy" || condition === "partly_cloudy") && <CloudOverlay />}
+      {condition === "thunderstorm" && <ThunderstormOverlay />}
+    </>
+  );
 }

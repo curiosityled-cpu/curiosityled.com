@@ -58,12 +58,12 @@ export default function DynamicHeroHeader({ firstName, greeting, day, hour, toda
     const fetchWeather = async (lat, lon) => {
       try {
         const res = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=weather_code,is_day`
+          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=weather_code,is_day,wind_speed_10m`
         );
         const data = await res.json();
         if (cancelled) return;
         const code = data?.current?.weather_code;
-        setWeather({ condition: mapWeatherCode(code), isDay: data?.current?.is_day === 1 });
+        setWeather({ condition: mapWeatherCode(code), isDay: data?.current?.is_day === 1, windSpeed: data?.current?.wind_speed_10m ?? 0 });
       } catch {
         if (!cancelled) setWeather(null);
       }
@@ -93,7 +93,7 @@ export default function DynamicHeroHeader({ firstName, greeting, day, hour, toda
       <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
 
       {/* Weather overlay */}
-      {weather && <WeatherOverlay condition={weather.condition} />}
+      {weather && <WeatherOverlay condition={weather.condition} windSpeed={weather.windSpeed} />}
 
       {/* Birds */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
