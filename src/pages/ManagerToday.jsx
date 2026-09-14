@@ -34,9 +34,7 @@ import TalentScorecard from "@/components/lead/TalentScoreCard";
 import DecisionJournalCard from "@/components/lead/DecisionJournalCard";
 
 // Patterns imports
-import WhatsImprovingCard from "@/components/patterns/WhatsImprovingCard";
 import LeadershipNarrativeCard from "@/components/patterns/LeadershipNarrativeCard";
-import BpoWatchRow from "@/components/patterns/BpoWatchRow";
 import TopPatternsMoveCard from "@/components/lead/TopPatternsMoveCard";
 
 // Density + preset
@@ -244,29 +242,6 @@ export default function ManagerToday() {
     refetchOnWindowFocus: false,
   });
 
-  const { data: activities = [] } = useQuery({
-    queryKey: ['ml-activities', user?.email],
-    queryFn: async () => { try { return await base44.entities.UserActivity.filter({ user_email: user.email }, '-date', 14); } catch { return []; } },
-    enabled: !!user?.email, staleTime: 15 * 60 * 1000,
-  });
-
-  const { data: entityCheckIns = [] } = useQuery({
-    queryKey: ['daily-checkin-history', user?.email],
-    queryFn: async () => { try { return await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-check_in_date', 120); } catch { return []; } },
-    enabled: !!user?.email, staleTime: 0,
-  });
-
-  const mergedCheckIns = useMemo(() => {
-    const map = new Map();
-    entityCheckIns.forEach(r => map.set(r.check_in_date, r));
-    checkInHistory.forEach(r => { if (r.check_in_date) map.set(r.check_in_date, r); });
-    const sorted = Array.from(map.values()).sort((a, b) => b.check_in_date.localeCompare(a.check_in_date));
-    if (!todayRecord) return sorted;
-    const ids = new Set(sorted.map(r => r.check_in_date));
-    const hasScores = todayRecord.energy_score != null || todayRecord.confidence_score != null;
-    return (!ids.has(todayET) && hasScores) ? [todayRecord, ...sorted] : sorted;
-  }, [entityCheckIns, checkInHistory, todayRecord, todayET]);
-
   const topPattern = useMemo(() => {
     const patterns = runBpoPatternEngine({ trends, checkIns: checkInHistory, goals, activities: [], pulses: recentPulses });
     return patterns[0] || null;
@@ -295,11 +270,6 @@ export default function ManagerToday() {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
-
-  const rankedPatterns = useMemo(() =>
-    runBpoPatternEngine({ trends, checkIns: mergedCheckIns, goals, activities, pulses: recentPulses }),
-    [trends, mergedCheckIns, goals, activities, recentPulses]
-  );
 
   const decisionContextForOrchestrator = topPattern && pendingDecisions.length > 0 ? {
     mode: 'pattern_linked_decision',
@@ -569,9 +539,7 @@ export default function ManagerToday() {
                 </div>
               </div>
             )}
-            <BpoWatchRow patterns={rankedPatterns} onOpenAtreus={openAtreus} />
-            <LeadershipNarrativeCard trends={trends} insight={insight} goals={goals} onOpenAtreus={openAtreus} />
-            <WhatsImprovingCard trends={trends} pulses={recentPulses} goals={goals} />
+            <LeadershipNarrativeCard trends={trends} insight={insight} goals={goals} pulses={recentPulses} onOpenAtreus={openAtreus} />
           </ZoneCard>
         </div>
 

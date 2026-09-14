@@ -6,7 +6,7 @@ import React from "react";
 import { TrendingUp, CheckCircle2, Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
-function buildImprovements(trends, pulses, goals) {
+export function buildImprovements(trends, pulses, goals) {
   const gains = [];
 
   // Energy improving

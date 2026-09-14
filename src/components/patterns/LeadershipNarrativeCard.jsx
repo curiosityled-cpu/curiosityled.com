@@ -11,12 +11,13 @@
  *   C. Strengths & development areas (collapsed by default)
  */
 import React, { useState } from "react";
-import { Brain, TrendingUp, AlertCircle, BarChart3, Info, ChevronDown, ChevronUp, MessageSquare } from "lucide-react";
+import { Brain, TrendingUp, AlertCircle, BarChart3, Info, ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { buildImprovements } from "@/components/patterns/WhatsImprovingCard";
 
-export default function LeadershipNarrativeCard({ trends, insight, goals, onOpenAtreus }) {
-  const [showAtreus, setShowAtreus] = useState(false);
+export default function LeadershipNarrativeCard({ trends, insight, goals, pulses = [], onOpenAtreus }) {
   const [showStrengths, setShowStrengths] = useState(false);
+  const [showImprovements, setShowImprovements] = useState(false);
 
   const narrative = trends?.trend_narrative || trends?.summary_28d;
   const computedAt = trends?.last_trend_computed_at;
@@ -40,9 +41,10 @@ export default function LeadershipNarrativeCard({ trends, insight, goals, onOpen
     devItems.push({ text: `${stalled.length === 1 ? 'One active goal has' : `${stalled.length} active goals have`} made little progress. A momentum check may help.`, icon: BarChart3, color: "text-blue-400", tag: "Goal tracker" });
   }
   const hasStrengthDev = strengthItems.length > 0 || devItems.length > 0;
+  const improvements = buildImprovements(trends, pulses, goals);
 
   // If no data at all, show empty state
-  if (!narrative && !hasStrengthDev && dataPoints < 3) {
+  if (!narrative && !hasStrengthDev && improvements.length === 0 && dataPoints < 3) {
     return (
       <Card className="shadow-sm border border-dashed border-border bg-card rounded-2xl">
         <CardContent className="py-8 px-6 text-center">
@@ -80,37 +82,50 @@ export default function LeadershipNarrativeCard({ trends, insight, goals, onOpen
         {narrative && (
           <div className="bg-[#0202ff]/5 border border-[#0202ff]/10 rounded-xl p-3.5 space-y-2">
             <p className="text-sm text-foreground leading-relaxed italic">"{narrative}"</p>
-            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#0202ff]/10 text-[#0202ff]">
-              <Brain className="w-2.5 h-2.5" />
-              Atreus interpretation
-            </span>
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#0202ff]/10 text-[#0202ff]">
+                <Brain className="w-2.5 h-2.5" />
+                Atreus interpretation
+              </span>
+              {onOpenAtreus && (
+                <button
+                  onClick={() => onOpenAtreus("I want to understand the patterns Atreus has noticed about my leadership rhythm lately.")}
+                  className="text-[10px] text-[#0202ff] font-medium hover:underline"
+                >
+                  Talk through this →
+                </button>
+              )}
+            </div>
           </div>
         )}
 
-        {/* Layer B: What Atreus sees — collapsible */}
-        {narrative && (
+        {/* Layer B: What's improving — collapsible */}
+        {improvements.length > 0 && (
           <div>
             <button
-              onClick={() => setShowAtreus(!showAtreus)}
+              onClick={() => setShowImprovements(!showImprovements)}
               className="w-full flex items-center justify-between py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               <span className="flex items-center gap-1.5">
-                <MessageSquare className="w-3 h-3" />
-                What Atreus sees
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                What's improving
               </span>
-              {showAtreus ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              {showImprovements ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </button>
-            {showAtreus && (
-              <div className="bg-muted/50 rounded-xl p-3.5 space-y-2 mt-1">
-                <p className="text-xs text-muted-foreground leading-relaxed">"{narrative}"</p>
-                {onOpenAtreus && (
-                  <button
-                    onClick={() => onOpenAtreus("I want to understand the patterns Atreus has noticed about my leadership rhythm lately.")}
-                    className="text-[10px] text-[#0202ff] font-medium hover:underline"
-                  >
-                    Talk through this with Atreus →
-                  </button>
-                )}
+            {showImprovements && (
+              <div className="space-y-2 mt-1">
+                {improvements.map((gain, i) => (
+                  <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-emerald-50/50 border border-emerald-100">
+                    <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-emerald-500" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-foreground">{gain.label}</p>
+                      <p className="text-[11px] mt-0.5 leading-relaxed text-muted-foreground">{gain.evidence}</p>
+                      <span className="inline-block text-[10px] font-medium px-2 py-0.5 rounded-full mt-1.5 bg-emerald-50 text-emerald-700 border border-emerald-100">
+                        {gain.source}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
