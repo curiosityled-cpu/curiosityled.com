@@ -39,6 +39,21 @@ function getEveningLocal(userEmail) {
   } catch { return null; }
 }
 
+function getTimeOfDay() {
+  const h = parseInt(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', hour: 'numeric', hour12: false
+  }).format(new Date()), 10);
+  if (h >= 5 && h < 12) return 'morning';
+  if (h >= 12 && h < 17) return 'afternoon';
+  return 'evening';
+}
+
+const DEFAULT_SIGNALS = {
+  morning: "Set your morning check-in to calibrate the day.",
+  afternoon: "Check your midday pulse and adjust course.",
+  evening: "Reflect on the day and set tomorrow's intent.",
+};
+
 export default function HeadlineSignal({ todayRecord, hasCheckedIn, userEmail }) {
   // Merge DB record with localStorage fallbacks so the signal reflects
   // the latest check-in even before the query catches up.
@@ -60,7 +75,7 @@ export default function HeadlineSignal({ todayRecord, hasCheckedIn, userEmail })
 
   const hasData = hasCheckedIn || !!morningLocal || !!eveningLocal || !!merged.morning_completed || !!merged.evening_completed;
 
-  let signal = "Set your morning check-in to calibrate the day.";
+  let signal = DEFAULT_SIGNALS[getTimeOfDay()];
   let tone = "neutral";
 
   if (hasData && merged && Object.keys(merged).length > 0) {
