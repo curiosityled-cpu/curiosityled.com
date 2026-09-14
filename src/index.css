@@ -377,3 +377,41 @@
 .dark .cl-dark .text-red-500     { color: hsl(0 62% 65%) !important; }
 .dark .cl-dark .text-red-600     { color: hsl(0 58% 60%) !important; }
 .dark .cl-dark .text-red-700     { color: hsl(0 54% 55%) !important; }
+
+/* ── Hero header animations ─────────────────────────────────────────────── */
+@keyframes hero-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+@keyframes hero-rain {
+  0% { transform: translateY(0); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translateY(400px); opacity: 0; }
+}
+@keyframes hero-snow {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translateY(400px) translateX(30px); opacity: 0; }
+}
+@keyframes hero-fog-drift {
+  0%, 100% { transform: translateX(-20%); }
+  50% { transform: translateX(20%); }
+}
+@keyframes hero-cloud-drift {
+  0% { transform: translateX(0) scale(var(--scale, 1)); }
+  100% { transform: translateX(1200px) scale(var(--scale, 1)); }
+}
+@keyframes hero-bird-fly {
+  0% { transform: translateX(-50px) translateY(0); }
+  50% { transform: translateX(600px) translateY(-15px); }
+  100% { transform: translateX(1200px) translateY(0); }
+}
+@keyframes hero-bird-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+@keyframes hero-lightning {
+  0%, 90%, 100% { opacity: 0; }
+  92%, 94% { opacity: 0.4; }
+  93% { opacity: 0; }
+}

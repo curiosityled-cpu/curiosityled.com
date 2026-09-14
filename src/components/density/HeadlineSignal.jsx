@@ -39,7 +39,7 @@ function getEveningLocal(userEmail) {
   } catch { return null; }
 }
 
-export default function HeadlineSignal({ todayRecord, hasCheckedIn, userEmail }) {
+export default function HeadlineSignal({ todayRecord, hasCheckedIn, userEmail, hour }) {
   // Merge DB record with localStorage fallbacks so the signal reflects
   // the latest check-in even before the query catches up.
   const morningLocal = getMorningLocal(userEmail);
@@ -60,7 +60,15 @@ export default function HeadlineSignal({ todayRecord, hasCheckedIn, userEmail })
 
   const hasData = hasCheckedIn || !!morningLocal || !!eveningLocal || !!merged.morning_completed || !!merged.evening_completed;
 
-  let signal = "Set your morning check-in to calibrate the day.";
+  const currentHour = hour ?? parseInt(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', hour: 'numeric', hour12: false
+  }).format(new Date()), 10);
+  const defaultSignal = currentHour >= 5 && currentHour < 12
+    ? "Set your morning check-in to calibrate the day."
+    : currentHour >= 12 && currentHour < 17
+    ? "Set your Big 3 priorities to anchor the afternoon."
+    : "Complete your evening check-in to close the day with intention.";
+  let signal = defaultSignal;
   let tone = "neutral";
 
   if (hasData && merged && Object.keys(merged).length > 0) {

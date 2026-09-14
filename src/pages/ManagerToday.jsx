@@ -40,7 +40,7 @@ import TopPatternsMoveCard from "@/components/lead/TopPatternsMoveCard";
 // Density + preset
 import { useManagerPreferences } from "@/hooks/useManagerPreferences";
 import ZoneCard from "@/components/density/ZoneCard";
-import HeadlineSignal from "@/components/density/HeadlineSignal";
+import DynamicHeroHeader from "@/components/lead/DynamicHeroHeader";
 
 function getFirstName(user) {
   const raw = user?.display_name || user?.data?.display_name || user?.full_name;
@@ -502,15 +502,14 @@ export default function ManagerToday() {
       </div>
 
       {/* ── Headline Tier Hero ── */}
-      <div className="mb-5">
-        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1">{day}</p>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}>
-          {greeting}, {firstName}.
-        </h1>
-        <div className="mt-2">
-          <HeadlineSignal todayRecord={todayRecord} hasCheckedIn={!!todayRecord} userEmail={user?.email} />
-        </div>
-      </div>
+      <DynamicHeroHeader
+        firstName={firstName}
+        greeting={greeting}
+        day={day}
+        hour={hour}
+        todayRecord={todayRecord}
+        userEmail={user?.email}
+      />
 
       {/* ── Main grid: Rhythm + Patterns (left) | Scorecard + Reflect (right) ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
