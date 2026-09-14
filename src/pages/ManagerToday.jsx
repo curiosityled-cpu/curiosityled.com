@@ -488,19 +488,6 @@ export default function ManagerToday() {
         </div>
       )}
 
-      {/* ── Top Bar Rail ── */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
-          <button
-            onClick={() => setShowSettings(s => !s)}
-            className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 transition-colors"
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Settings</span>
-          </button>
-        </div>
-      </div>
-
       {/* ── Headline Tier Hero ── */}
       <DynamicHeroHeader
         firstName={firstName}
@@ -509,6 +496,7 @@ export default function ManagerToday() {
         hour={hour}
         todayRecord={todayRecord}
         userEmail={user?.email}
+        onSettingsClick={() => setShowSettings(s => !s)}
       />
 
       {/* ── Main grid: Rhythm + Patterns (left) | Scorecard + Reflect (right) ── */}

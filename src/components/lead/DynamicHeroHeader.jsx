@@ -12,6 +12,7 @@
  *   17:00–04:59  → evening  (twilight landscape)
  */
 import React, { useState, useEffect } from "react";
+import { SlidersHorizontal } from "lucide-react";
 import HeadlineSignal from "@/components/density/HeadlineSignal";
 import WeatherOverlay from "@/components/lead/WeatherOverlay";
 
@@ -46,7 +47,7 @@ function Birds({ color }) {
   );
 }
 
-export default function DynamicHeroHeader({ firstName, greeting, day, hour, todayRecord, userEmail }) {
+export default function DynamicHeroHeader({ firstName, greeting, day, hour, todayRecord, userEmail, onSettingsClick }) {
   const [weather, setWeather] = useState(null);
 
   const timeOfDay = hour >= 5 && hour < 12 ? "morning" : hour >= 12 && hour < 17 ? "afternoon" : "evening";
@@ -104,6 +105,17 @@ export default function DynamicHeroHeader({ firstName, greeting, day, hour, toda
           <Birds color={birdColor} />
         </div>
       </div>
+
+      {/* Settings button */}
+      {onSettingsClick && (
+        <button
+          onClick={onSettingsClick}
+          className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/15 backdrop-blur-sm text-white/80 hover:text-white hover:bg-white/25 transition-colors text-xs font-medium"
+        >
+          <SlidersHorizontal className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Settings</span>
+        </button>
+      )}
 
       {/* Content */}
       <div className="relative z-10 px-6 py-5 flex flex-col justify-end" style={{ minHeight: "180px" }}>
