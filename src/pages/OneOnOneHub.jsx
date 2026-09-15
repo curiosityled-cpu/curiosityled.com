@@ -2,20 +2,17 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, Calendar, Clock, ChevronRight, Plus, CheckCircle2,
-  Circle, AlertCircle, CalendarPlus, StickyNote, ArrowRight, Inbox,
-  Sparkles, Loader2, Wand2
+  Circle, AlertCircle, StickyNote, Inbox, Loader2, Wand2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { motion as motion2, AnimatePresence as AnimatePresence2 } from "framer-motion";
 import AttendeeSelector from "@/components/oneonone/AttendeeSelector";
-import ScheduleMeetingModal from "@/components/oneonone/ScheduleMeetingModal";
+import PrepSection from "@/components/oneonone/PrepSection";
+import ScheduleSection from "@/components/oneonone/ScheduleSection";
 import PracticeRolePlay from "@/components/oneonone/PracticeRolePlay";
-import { MessageCircle } from "lucide-react";
 
 // ── Helpers ──
 function formatMeetingDate(dateStr, startTime) {
@@ -42,7 +39,6 @@ function formatRelativeDate(dateStr, startTime) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-// Determine if a calendar event looks like a 1:1 (2 attendees, or title contains "1:1" or "1 on 1")
 function isOneOnOne(event) {
   const title = (event.title || '').toLowerCase();
   const hasKeyword = title.includes('1:1') || title.includes('1 on 1') || title.includes('one on one') || title.includes('1-on-1');
@@ -54,14 +50,10 @@ function isOneOnOne(event) {
 function UpcomingCard({ meeting, record, onPrepare, onOpenRecord }) {
   const hasRecord = !!record;
   const prepStarted = hasRecord && (record.status === 'preparing' || record.agenda_items?.length > 0);
-  const hasNotes = hasRecord && !!record.meeting_notes;
 
   const handleClick = () => {
-    if (hasRecord) {
-      onOpenRecord(record);
-    } else {
-      onPrepare(meeting);
-    }
+    if (hasRecord) onOpenRecord(record);
+    else onPrepare(meeting);
   };
 
   return (
@@ -86,13 +78,10 @@ function UpcomingCard({ meeting, record, onPrepare, onOpenRecord }) {
           {hasRecord && (
             <div className="flex items-center gap-1.5 mt-2 ml-10">
               {prepStarted && <Badge variant="secondary" className="text-[10px] py-0 px-1.5">Prep started</Badge>}
-              {hasNotes && <Badge variant="secondary" className="text-[10px] py-0 px-1.5">Notes added</Badge>}
-              {!prepStarted && !hasNotes && <Badge variant="outline" className="text-[10px] py-0 px-1.5">Scheduled</Badge>}
+              {!prepStarted && <Badge variant="outline" className="text-[10px] py-0 px-1.5">Scheduled</Badge>}
             </div>
           )}
-          {!hasRecord && (
-            <p className="text-xs text-muted-foreground mt-2 ml-10">Tap to start preparing</p>
-          )}
+          {!hasRecord && <p className="text-xs text-muted-foreground mt-2 ml-10">Tap to start preparing</p>}
         </div>
         <ChevronRight className="w-4 h-4 flex-shrink-0 text-muted-foreground group-hover:translate-x-0.5 transition-transform mt-1" />
       </div>
@@ -160,8 +149,8 @@ function PastCard({ record, onOpen }) {
 export default function OneOnOneHub() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [selectedRecord, setSelectedRecord] = useState(null);
-  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [currentRecord, setCurrentRecord] = useState(null); // loaded into Prep + Schedule sections
+  const [debriefRecord, setDebriefRecord] = useState(null);  // past meeting opened for notes/debrief
   const [practiceRecord, setPracticeRecord] = useState(null);
 
   // Fetch the manager's team hierarchy (direct reports + rollup) for the attendee selector.
@@ -185,7 +174,7 @@ export default function OneOnOneHub() {
     return { directReports: direct, rollupReports: rollup };
   }, [hierarchyData, user?.email]);
 
-  // Fetch upcoming calendar events
+  // Fetch upcoming calendar events (to know if a calendar is connected)
   const { data: calendarData, isLoading: loadingCalendar } = useQuery({
     queryKey: ['ooo-upcoming-meetings', user?.email],
     queryFn: async () => {
@@ -197,6 +186,8 @@ export default function OneOnOneHub() {
     enabled: !!user?.email,
     staleTime: 5 * 60 * 1000,
   });
+
+  const calendarConnected = calendarData?.connected ?? false;
 
   // Fetch MeetingRecords where user is the manager
   const { data: records = [], isLoading: loadingRecords } = useQuery({
@@ -214,6 +205,15 @@ export default function OneOnOneHub() {
     staleTime: 60 * 1000,
   });
 
+  // Keep the currentRecord in sync with backend updates
+  useEffect(() => {
+    if (!currentRecord?.id) return;
+    const fresh = records.find(r => r.id === currentRecord.id);
+    if (fresh && JSON.stringify(fresh) !== JSON.stringify(currentRecord)) {
+      setCurrentRecord(fresh);
+    }
+  }, [records, currentRecord?.id]);
+
   // Separate records into upcoming, pending debriefs, and past
   const now = new Date();
   const { upcomingRecords, pendingDebriefs, pastRecords } = useMemo(() => {
@@ -227,7 +227,6 @@ export default function OneOnOneHub() {
       } else if (!r.debrief_completed && (r.meeting_notes || r.discussion_points?.length || r.commitments?.length)) {
         pending.push(r);
       } else if (!r.debrief_completed && meetingDate < now && meetingDate > new Date(now - 7 * 86400000)) {
-        // Recent past without any notes — also needs debrief
         pending.push(r);
       } else {
         past.push(r);
@@ -245,21 +244,82 @@ export default function OneOnOneHub() {
     });
   }, [calendarData, records]);
 
-  // Create or open a record for a calendar event
+  // ── Handlers ──
+  const handleCreate = async (attendee) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const newRecord = await base44.entities.MeetingRecord.create({
+        manager_email: user.email,
+        employee_email: attendee.email || '',
+        attendee_name: attendee.name || '',
+        meeting_date: today,
+        title: attendee.name ? `1:1 with ${attendee.name}` : '1:1 Meeting',
+        status: 'preparing',
+        calendar_source: 'manual',
+        agenda_items: [],
+        commitments: [],
+        recurrence: 'none',
+      });
+      queryClient.invalidateQueries({ queryKey: ['ooo-records', user?.email] });
+      setCurrentRecord(newRecord);
+    } catch (e) {
+      console.error('Error creating meeting record:', e);
+    }
+  };
+
+  const handleUpdate = async (patch) => {
+    if (!currentRecord) return;
+    try {
+      const updated = await base44.entities.MeetingRecord.update(currentRecord.id, patch);
+      setCurrentRecord(prev => ({ ...prev, ...patch, ...updated }));
+      queryClient.invalidateQueries({ queryKey: ['ooo-records', user?.email] });
+    } catch (e) {
+      console.error('Update failed:', e);
+    }
+  };
+
+  const handleSchedule = async ({ date, time, duration, recurrence, addToCalendar }) => {
+    if (!currentRecord) return;
+    const startISO = new Date(`${date}T${time}`).toISOString();
+    const patch = {
+      meeting_date: date,
+      start_time: startISO,
+      duration_minutes: duration,
+      recurrence,
+      status: 'scheduled',
+    };
+
+    if (addToCalendar) {
+      const calRes = await base44.functions.invoke('createOneOnOneCalendarEvent', {
+        attendee_email: currentRecord.employee_email || undefined,
+        attendee_name: currentRecord.attendee_name || '',
+        title: currentRecord.title || `1:1 with ${currentRecord.attendee_name || ''}`,
+        start_time: startISO,
+        duration_minutes: duration,
+        recurrence,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York',
+      });
+      const cal = calRes.data || calRes;
+      if (!cal.success) throw new Error(cal.error || 'Could not create the calendar event. Is your calendar connected?');
+      patch.calendar_event_id = cal.event_id;
+      patch.calendar_source = cal.source;
+      patch.calendar_join_link = cal.join_link || '';
+    }
+
+    const updated = await base44.entities.MeetingRecord.update(currentRecord.id, patch);
+    setCurrentRecord(prev => ({ ...prev, ...patch, ...updated }));
+    queryClient.invalidateQueries({ queryKey: ['ooo-records', user?.email] });
+  };
+
   const handlePrepare = async (event) => {
     if (!event?.id) return;
-    // Check if record already exists
     const existing = records.find(r => r.calendar_event_id === event.id);
-    if (existing) {
-      setSelectedRecord(existing);
-      return;
-    }
-    // Create new record linked to this calendar event
+    if (existing) { setCurrentRecord(existing); return; }
     try {
       const meetingDate = event.start ? new Date(event.start) : new Date();
       const newRecord = await base44.entities.MeetingRecord.create({
         manager_email: user.email,
-        employee_email: '', // Will be filled during prep
+        employee_email: '',
         attendee_name: event.title?.replace(/1:1|1 on 1/i, '').trim() || 'Direct Report',
         meeting_date: meetingDate.toISOString().split('T')[0],
         start_time: event.start,
@@ -269,96 +329,61 @@ export default function OneOnOneHub() {
         status: 'preparing',
         agenda_items: [],
         commitments: [],
+        recurrence: 'none',
       });
       queryClient.invalidateQueries({ queryKey: ['ooo-records', user?.email] });
-      setSelectedRecord(newRecord);
+      setCurrentRecord(newRecord);
     } catch (e) {
       console.error('Error creating meeting record:', e);
     }
   };
 
-  const handleOpenRecord = (record) => setSelectedRecord(record);
+  const handleOpenUpcoming = (record) => setCurrentRecord(record);
+  const handleOpenDebrief = (record) => setDebriefRecord(record);
 
-  // Close record panel
-  const handleCloseRecord = () => {
-    setSelectedRecord(null);
+  const handleNewOneOnOne = () => setCurrentRecord(null);
+
+  const handleCloseDebrief = () => {
+    setDebriefRecord(null);
     queryClient.invalidateQueries({ queryKey: ['ooo-records', user?.email] });
   };
 
   return (
     <div className="max-w-5xl mx-auto px-4 pt-6 pb-10">
       {/* Header */}
-      <div className="pb-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">1:1s</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">Plan, prepare, and debrief your one-on-ones in one place.</p>
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <Button
-              size="sm"
-              variant="outline"
-              className="flex items-center gap-1.5"
-              onClick={() => setScheduleOpen(true)}
-            >
-              <CalendarPlus className="w-4 h-4" /> Schedule
-            </Button>
-            <Button
-              size="sm"
-              className="flex items-center gap-1.5"
-              onClick={() => {
-                // Create a blank manual record
-                const today = new Date().toISOString().split('T')[0];
-                base44.entities.MeetingRecord.create({
-                  manager_email: user.email,
-                  employee_email: '',
-                  attendee_name: 'New 1:1',
-                  meeting_date: today,
-                  title: '1:1 Meeting',
-                  status: 'scheduled',
-                  calendar_source: 'manual',
-                  agenda_items: [],
-                  commitments: [],
-                }).then(r => {
-                  queryClient.invalidateQueries({ queryKey: ['ooo-records', user?.email] });
-                  setSelectedRecord(r);
-                });
-              }}
-            >
-              <Plus className="w-4 h-4" /> New 1:1
-            </Button>
-          </div>
+      <div className="pb-4 flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">1:1s</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Prepare, schedule, and debrief your one-on-ones in one place.</p>
         </div>
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex items-center gap-1.5 flex-shrink-0"
+          onClick={handleNewOneOnOne}
+        >
+          <Plus className="w-4 h-4" /> New 1:1
+        </Button>
       </div>
 
-      {/* Record Workspace Panel */}
-      <AnimatePresence>
-        {selectedRecord && (
-          <RecordWorkspace
-            key={selectedRecord.id}
-            record={selectedRecord}
-            userEmail={user?.email}
-            managerEmail={user?.email}
-            directReports={directReports}
-            rollupReports={rollupReports}
-            onClose={handleCloseRecord}
-            onPractice={(rec) => setPracticeRecord(rec)}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Schedule modal */}
-      <ScheduleMeetingModal
-        open={scheduleOpen}
-        onOpenChange={setScheduleOpen}
-        managerEmail={user?.email}
+      {/* ── Prep Section (top) ── */}
+      <PrepSection
+        record={currentRecord}
         directReports={directReports}
         rollupReports={rollupReports}
-        onCreated={(rec) => {
-          queryClient.invalidateQueries({ queryKey: ['ooo-records', user?.email] });
-          setSelectedRecord(rec);
-        }}
+        onCreate={handleCreate}
+        onUpdate={handleUpdate}
+        onPractice={() => setPracticeRecord(currentRecord)}
       />
+
+      {/* ── Schedule Section (below) ── */}
+      <div className="mt-4">
+        <ScheduleSection
+          record={currentRecord}
+          calendarConnected={calendarConnected}
+          onSave={handleSchedule}
+        />
+      </div>
 
       {/* Practice role-play modal */}
       <PracticeRolePlay
@@ -367,170 +392,123 @@ export default function OneOnOneHub() {
         record={practiceRecord}
       />
 
-      {/* Hub Content */}
-      {!selectedRecord && (
-        <div className="space-y-8">
-          {/* Upcoming 1:1s */}
-          <section className="space-y-3">
-            <div className="flex items-end justify-between px-1">
-              <div>
-                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Upcoming</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Synced from your calendar. Tap to prepare.</p>
-              </div>
-              {!loadingCalendar && !calendarData?.connected && (
-                <Badge variant="outline" className="text-[10px]">Calendar not connected</Badge>
-              )}
+      {/* Debrief / notes panel for past meetings */}
+      <AnimatePresence>
+        {debriefRecord && (
+          <RecordWorkspace
+            key={debriefRecord.id}
+            record={debriefRecord}
+            userEmail={user?.email}
+            managerEmail={user?.email}
+            directReports={directReports}
+            rollupReports={rollupReports}
+            onClose={handleCloseDebrief}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Lists ── */}
+      <div className="mt-8 space-y-8">
+        {/* Upcoming 1:1s */}
+        <section className="space-y-3">
+          <div className="flex items-end justify-between px-1">
+            <div>
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Upcoming</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Synced from your calendar. Tap to prepare.</p>
             </div>
-            {loadingCalendar ? (
-              <div className="space-y-2">
-                {[1, 2].map(i => <div key={i} className="h-20 rounded-2xl bg-muted animate-pulse" />)}
-              </div>
-            ) : upcomingOneOnOnes.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {upcomingOneOnOnes.map((meeting) => (
-                  <UpcomingCard
-                    key={meeting.id}
-                    meeting={meeting}
-                    record={meeting.record}
-                    onPrepare={handlePrepare}
-                    onOpenRecord={handleOpenRecord}
-                  />
-                ))}
-              </div>
-            ) : upcomingRecords.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {upcomingRecords.map((record) => (
-                  <UpcomingCard
-                    key={record.id}
-                    meeting={{ id: record.calendar_event_id, title: record.title, start: record.start_time, start_date: record.meeting_date }}
-                    record={record}
-                    onPrepare={() => handlePrepare({ id: record.calendar_event_id, start: record.start_time, title: record.title })}
-                    onOpenRecord={handleOpenRecord}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-dashed border-border p-8 text-center">
-                <Inbox className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">No upcoming 1:1s found.</p>
-                <p className="text-xs text-muted-foreground/70 mt-0.5">Connect your calendar or create a new 1:1 manually.</p>
-              </div>
+            {!loadingCalendar && !calendarConnected && (
+              <Badge variant="outline" className="text-[10px]">Calendar not connected</Badge>
             )}
-          </section>
-
-          {/* Pending Debriefs */}
-          {pendingDebriefs.length > 0 && (
-            <section className="space-y-3">
-              <div className="px-1">
-                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Pending Debriefs</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Recent meetings that need your notes or follow-up.</p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {pendingDebriefs.map((record) => (
-                  <DebriefCard key={record.id} record={record} onOpen={handleOpenRecord} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Recent History */}
-          {pastRecords.length > 0 && (
-            <section className="space-y-3">
-              <div className="px-1">
-                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Recent History</p>
-              </div>
-              <div className="space-y-2">
-                {pastRecords.map((record) => (
-                  <PastCard key={record.id} record={record} onOpen={handleOpenRecord} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Empty state */}
-          {!loadingCalendar && !loadingRecords && upcomingOneOnOnes.length === 0 && upcomingRecords.length === 0 && pendingDebriefs.length === 0 && pastRecords.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-border p-12 text-center">
-              <Users className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-              <p className="text-sm font-medium text-card-foreground">Your 1:1 hub is ready</p>
-              <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-                When you connect your calendar, upcoming 1:1s will appear here automatically. You can also create a new 1:1 manually to start preparing.
-              </p>
-              <Button className="mt-4" size="sm" onClick={() => {
-                const today = new Date().toISOString().split('T')[0];
-                base44.entities.MeetingRecord.create({
-                  manager_email: user.email,
-                  employee_email: '',
-                  attendee_name: 'New 1:1',
-                  meeting_date: today,
-                  title: '1:1 Meeting',
-                  status: 'scheduled',
-                  calendar_source: 'manual',
-                  agenda_items: [],
-                  commitments: [],
-                }).then(r => {
-                  queryClient.invalidateQueries({ queryKey: ['ooo-records', user?.email] });
-                  setSelectedRecord(r);
-                });
-              }}>
-                <Plus className="w-4 h-4" /> Create your first 1:1
-              </Button>
+          </div>
+          {loadingCalendar ? (
+            <div className="space-y-2">
+              {[1, 2].map(i => <div key={i} className="h-20 rounded-2xl bg-muted animate-pulse" />)}
+            </div>
+          ) : upcomingOneOnOnes.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {upcomingOneOnOnes.map((meeting) => (
+                <UpcomingCard
+                  key={meeting.id}
+                  meeting={meeting}
+                  record={meeting.record}
+                  onPrepare={handlePrepare}
+                  onOpenRecord={handleOpenUpcoming}
+                />
+              ))}
+            </div>
+          ) : upcomingRecords.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {upcomingRecords.map((record) => (
+                <UpcomingCard
+                  key={record.id}
+                  meeting={{ id: record.calendar_event_id, title: record.title, start: record.start_time, start_date: record.meeting_date }}
+                  record={record}
+                  onPrepare={() => handlePrepare({ id: record.calendar_event_id, start: record.start_time, title: record.title })}
+                  onOpenRecord={handleOpenUpcoming}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-border p-8 text-center">
+              <Inbox className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">No upcoming 1:1s found.</p>
+              <p className="text-xs text-muted-foreground/70 mt-0.5">Connect your calendar or prepare a new one above.</p>
             </div>
           )}
-        </div>
-      )}
+        </section>
+
+        {/* Pending Debriefs */}
+        {pendingDebriefs.length > 0 && (
+          <section className="space-y-3">
+            <div className="px-1">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Pending Debriefs</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Recent meetings that need your notes or follow-up.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {pendingDebriefs.map((record) => (
+                <DebriefCard key={record.id} record={record} onOpen={handleOpenDebrief} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Recent History */}
+        {pastRecords.length > 0 && (
+          <section className="space-y-3">
+            <div className="px-1">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Recent History</p>
+            </div>
+            <div className="space-y-2">
+              {pastRecords.map((record) => (
+                <PastCard key={record.id} record={record} onOpen={handleOpenDebrief} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Empty state */}
+        {!loadingCalendar && !loadingRecords && upcomingOneOnOnes.length === 0 && upcomingRecords.length === 0 && pendingDebriefs.length === 0 && pastRecords.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-border p-12 text-center">
+            <Users className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+            <p className="text-sm font-medium text-card-foreground">Your 1:1 hub is ready</p>
+            <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+              Start by choosing who you're meeting with in the Prep section above, then set a date and time below.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-// ── Record Workspace (inline panel for prep / notes / debrief) ──
-function RecordWorkspace({ record, userEmail, managerEmail, directReports, rollupReports, onClose, onPractice }) {
+// ── Record Workspace (inline panel for notes / debrief of past meetings) ──
+function RecordWorkspace({ record, userEmail, managerEmail, directReports, rollupReports, onClose }) {
   const queryClient = useQueryClient();
   const [local, setLocal] = useState(record);
-  const [newAgendaText, setNewAgendaText] = useState('');
   const [newCommitmentText, setNewCommitmentText] = useState('');
   const [saving, setSaving] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiSuggestions, setAiSuggestions] = useState(null);
 
   useEffect(() => { setLocal(record); }, [record]);
-
-  const generateAgendaSuggestions = async () => {
-    setAiLoading(true);
-    setAiSuggestions(null);
-    try {
-      const openCommitments = (local.commitments || []).filter(c => c.status === 'open').map(c => c.action);
-      const prompt = `You are a leadership coach helping a manager prepare for a 1:1 meeting. Suggest 4-5 relevant agenda items.
-
-Meeting: ${local.title || '1:1 Meeting'}
-With: ${local.attendee_name || 'Direct report'}
-Date: ${formatMeetingDate(local.meeting_date, local.start_time)}
-Existing notes: ${local.meeting_notes || 'None yet'}
-Open commitments from last time: ${openCommitments.length ? openCommitments.join('; ') : 'None'}
-
-Return practical, conversational agenda items that a manager would actually discuss — for example: "Review progress on [X]", "Check in on workload and energy", "Discuss upcoming priorities", "Get feedback on my communication style". Keep each item to one short sentence.`;
-
-      const res = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            items: { type: "array", items: { type: "string" } }
-          }
-        }
-      });
-      setAiSuggestions(res.items || []);
-    } catch (e) {
-      console.error('AI agenda suggestions failed:', e);
-    } finally {
-      setAiLoading(false);
-    }
-  };
-
-  const addSuggestedItem = (text) => {
-    const items = [...(local.agenda_items || []), { id: crypto.randomUUID(), text, completed: false }];
-    update({ agenda_items: items });
-    setAiSuggestions(prev => prev?.filter(s => s !== text) || null);
-  };
 
   const update = async (patch) => {
     setSaving(true);
@@ -543,23 +521,6 @@ Return practical, conversational agenda items that a manager would actually disc
     } finally {
       setSaving(false);
     }
-  };
-
-  const addAgendaItem = () => {
-    if (!newAgendaText.trim()) return;
-    const items = [...(local.agenda_items || []), { id: crypto.randomUUID(), text: newAgendaText.trim(), completed: false }];
-    update({ agenda_items: items });
-    setNewAgendaText('');
-  };
-
-  const toggleAgendaItem = (id) => {
-    const items = (local.agenda_items || []).map(i => i.id === id ? { ...i, completed: !i.completed } : i);
-    update({ agenda_items: items });
-  };
-
-  const removeAgendaItem = (id) => {
-    const items = (local.agenda_items || []).filter(i => i.id !== id);
-    update({ agenda_items: items });
   };
 
   const addCommitment = () => {
@@ -588,7 +549,7 @@ Return practical, conversational agenda items that a manager would actually disc
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.2 }}
-      className="space-y-5"
+      className="mt-6 rounded-2xl border border-border bg-card shadow-sm p-5 space-y-5"
     >
       {/* Header bar */}
       <div className="flex items-center justify-between gap-3 pb-3 border-b border-border">
@@ -619,109 +580,12 @@ Return practical, conversational agenda items that a manager would actually disc
         </div>
       </div>
 
-      {/* Attendee field */}
+      {/* Attendee (read-only in debrief) */}
       <div>
-        <div className="flex items-center justify-between">
-          <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">With</label>
-          <button
-            onClick={() => onPractice?.(local)}
-            className="text-[11px] font-medium text-[#0202ff] hover:bg-[#0202ff]/5 px-2 py-1 rounded-md flex items-center gap-1 transition-colors"
-            title="Rehearse this 1:1 with Atreus playing your direct report"
-          >
-            <MessageCircle className="w-3 h-3" /> Practice with Atreus
-          </button>
-        </div>
-        <div className="mt-1">
-          <AttendeeSelector
-            value={{ email: local.employee_email || '', name: local.attendee_name || '', isUser: false }}
-            onChange={(v) => {
-              const patch = { attendee_name: v.name || '', employee_email: v.email || '' };
-              setLocal({ ...local, ...patch });
-              update(patch);
-            }}
-            directReports={directReports}
-            rollupReports={rollupReports}
-          />
-        </div>
-      </div>
-
-      {/* Prep: Agenda Items */}
-      <div>
-        <div className="flex items-center justify-between">
-          <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-            <Calendar className="w-3 h-3" /> Prep Agenda
-          </label>
-          <Button size="sm" variant="ghost" onClick={generateAgendaSuggestions} disabled={aiLoading}
-            className="h-7 text-[11px] text-[#0202ff] hover:bg-[#0202ff]/5 px-2">
-            {aiLoading ? (
-              <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Generating…</>
-            ) : (
-              <><Wand2 className="w-3 h-3 mr-1" /> Suggest agenda</>
-            )}
-          </Button>
-        </div>
-
-        {/* AI suggested agenda items */}
-        <AnimatePresence2>
-          {aiSuggestions && aiSuggestions.length > 0 && (
-            <motion2.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="mt-2 rounded-xl border border-[#0202ff]/20 bg-[#0202ff]/5 dark:bg-[#0202ff]/10 p-3 space-y-1.5">
-                <p className="text-[10px] font-semibold text-[#0202ff] uppercase tracking-wide flex items-center gap-1 mb-1">
-                  <Sparkles className="w-3 h-3" /> Suggested by AI
-                </p>
-                {aiSuggestions.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-2 group">
-                    <Plus className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                    <span className="text-xs text-card-foreground flex-1">{item}</span>
-                    <button onClick={() => addSuggestedItem(item)}
-                      className="text-[10px] font-medium text-[#0202ff] opacity-0 group-hover:opacity-100 transition-opacity">
-                      Add
-                    </button>
-                  </div>
-                ))}
-                <button onClick={() => setAiSuggestions(null)}
-                  className="text-[10px] text-muted-foreground hover:text-foreground mt-1">
-                  Dismiss
-                </button>
-              </div>
-            </motion2.div>
-          )}
-        </AnimatePresence2>
-
-        <div className="mt-2 space-y-1.5">
-          {(local.agenda_items || []).map(item => (
-            <div key={item.id} className="flex items-center gap-2 group">
-              <button onClick={() => toggleAgendaItem(item.id)} className="flex-shrink-0">
-                {item.completed ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Circle className="w-4 h-4 text-muted-foreground" />}
-              </button>
-              <span className={`text-sm flex-1 ${item.completed ? 'line-through text-muted-foreground' : 'text-card-foreground'}`}>
-                {item.text}
-              </span>
-              <button
-                onClick={() => removeAgendaItem(item.id)}
-                className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                Remove
-              </button>
-            </div>
-          ))}
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={newAgendaText}
-              onChange={e => setNewAgendaText(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && addAgendaItem()}
-              placeholder="Add a topic to discuss..."
-              className="flex-1 px-3 py-1.5 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-            <Button size="sm" variant="outline" onClick={addAgendaItem}>Add</Button>
-          </div>
-        </div>
+        <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">With</label>
+        <p className="mt-1 text-sm font-medium text-card-foreground">
+          {local.attendee_name || local.employee_email || '—'}
+        </p>
       </div>
 
       {/* Meeting Notes */}

@@ -20,7 +20,8 @@ export default async function(req) {
       description = '',
       start_time,        // ISO 8601
       duration_minutes = 30,
-      timezone = 'America/New_York'
+      timezone = 'America/New_York',
+      recurrence = 'none' // 'none' | 'weekly' | 'biweekly' | 'monthly'
     } = body;
 
     if (!start_time) return Response.json({ error: 'start_time is required' }, { status: 400 });
@@ -29,6 +30,23 @@ export default async function(req) {
     const end = new Date(start.getTime() + duration_minutes * 60000);
     const startISO = start.toISOString();
     const endISO = end.toISOString();
+
+    // Recurrence rules
+    const gDays = ['SU','MO','TU','WE','TH','FR','SA'];
+    const oDays = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+    const dow = start.getUTCDay();
+    const gcalRecurrence = [];
+    let outlookRecurrence;
+    if (recurrence === 'weekly') {
+      gcalRecurrence.push(`RRULE:FREQ=WEEKLY;BYDAY=${gDays[dow]}`);
+      outlookRecurrence = { pattern: { type: 'weekly', interval: 1, daysOfWeek: [oDays[dow]] }, range: { type: 'noEnd' } };
+    } else if (recurrence === 'biweekly') {
+      gcalRecurrence.push(`RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=${gDays[dow]}`);
+      outlookRecurrence = { pattern: { type: 'weekly', interval: 2, daysOfWeek: [oDays[dow]] }, range: { type: 'noEnd' } };
+    } else if (recurrence === 'monthly') {
+      gcalRecurrence.push('RRULE:FREQ=MONTHLY');
+      outlookRecurrence = { pattern: { type: 'absoluteMonthly', interval: 1, dayOfMonth: start.getUTCDate() }, range: { type: 'noEnd' } };
+    }
 
     const summary = title || '1:1 Meeting';
     const desc = description
@@ -49,7 +67,8 @@ export default async function(req) {
             requestId: crypto.randomUUID(),
             conferenceSolutionKey: { type: 'hangoutsMeet' }
           }
-        }
+        },
+        ...(gcalRecurrence.length ? { recurrence: gcalRecurrence } : {})
       };
       const res = await fetch(
         'https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1&sendUpdates=all',
@@ -84,7 +103,8 @@ export default async function(req) {
           ? [{ emailAddress: { address: attendee_email, name: attendee_name || attendee_email }, type: 'required' }]
           : [],
         isOnlineMeeting: true,
-        onlineMeetingProvider: 'teamsForBusiness'
+        onlineMeetingProvider: 'teamsForBusiness',
+        ...(outlookRecurrence ? { recurrence: outlookRecurrence } : {})
       };
       const res = await fetch('https://graph.microsoft.com/v1.0/me/events', {
         method: 'POST',
