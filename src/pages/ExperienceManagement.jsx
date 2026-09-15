@@ -234,18 +234,18 @@ export default function ExperienceManagement() {
               </div>
             </div>
 
-            {/* Coaching & Consulting Request Triage — merged from Request Triage */}
-            {!isCoachScoped && (
-              <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4">
-                <CoachingRequestTriageBoard />
-              </div>
-            )}
-
             {loadingRequests ? (
               <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-[#0202ff]" /></div>
             ) : (
               <>
                 <RequestStatistics clientId={user?.client_id} refreshTrigger={refreshStats} />
+
+                {/* Development Request Triage — below the analytics */}
+                {!isCoachScoped && (
+                  <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4">
+                    <CoachingRequestTriageBoard />
+                  </div>
+                )}
                 <AdvancedFilters
                   filters={filters}
                   onFilterChange={(key, value) => setFilters({ ...filters, [key]: value })}
