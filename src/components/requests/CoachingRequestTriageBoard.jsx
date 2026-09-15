@@ -117,9 +117,9 @@ export default function CoachingRequestTriageBoard() {
       </div>
 
       {/* Kanban Board */}
-      <div className="grid grid-cols-6 gap-3 overflow-x-auto">
+      <div className="grid gap-3 overflow-x-auto pb-2" style={{ gridTemplateColumns: "repeat(6, minmax(170px, 1fr))" }}>
         {COLUMNS.map(col => (
-          <div key={col.status} className="flex flex-col gap-2 min-w-[180px]">
+          <div key={col.status} className="flex flex-col gap-2 min-w-0">
             <div className="flex items-center justify-between px-2 py-1.5">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{col.label}</span>
               <span className="text-xs text-muted-foreground font-medium">{requestsByStatus[col.status]?.length || 0}</span>

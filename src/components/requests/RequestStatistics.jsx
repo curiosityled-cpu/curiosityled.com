@@ -85,14 +85,14 @@ export default function RequestStatistics({ clientId, refreshTrigger }) {
               className="shrink-0 w-2 h-2 rounded-full"
               style={{ backgroundColor: chip.dot }}
             />
-            <span className="min-w-0 text-[13px] font-semibold text-[#64748b] dark:text-[#94a3b8] whitespace-nowrap">
+            <span className="min-w-0 text-[13px] font-semibold text-[#64748b] dark:text-[#94a3b8] leading-tight">
               {chip.label}
             </span>
-            <span className="ml-auto text-[19px] font-[750] text-[#0f172a] dark:text-[#f8fafc] whitespace-nowrap">
+            <span className="shrink-0 ml-auto text-[19px] font-[750] text-[#0f172a] dark:text-[#f8fafc] whitespace-nowrap">
               {chip.value}
             </span>
             {chip.badge && (
-              <span className="ml-auto px-[7px] py-[3px] rounded-full border border-[#cbd5e1] dark:border-[#475569] text-[#475569] dark:text-[#cbd5e1] text-[11px] font-[650] whitespace-nowrap">
+              <span className="shrink-0 ml-2 px-[7px] py-[3px] rounded-full border border-[#cbd5e1] dark:border-[#475569] text-[#475569] dark:text-[#cbd5e1] text-[11px] font-[650] whitespace-nowrap">
                 {chip.badge}
               </span>
             )}
