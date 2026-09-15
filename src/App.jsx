@@ -31,7 +31,6 @@ import ManagerDetail from './pages/ManagerDetail';
 import CoachWorkspace from './pages/CoachWorkspace';
 import ConsultantWorkspace from './pages/ConsultantWorkspace';
 import RequestSubmit from './pages/RequestSubmit';
-import RequestTriage from './pages/RequestTriage';
 import TalentManager from './pages/TalentManager';
 import TestLanding from './pages/TestLanding';
 
@@ -185,7 +184,7 @@ const AuthenticatedApp = () => {
       <Route path="/coach-workspace" element={<MVPLayout><CoachWorkspace /></MVPLayout>} />
       <Route path="/consultant-workspace" element={<MVPLayout><ConsultantWorkspace /></MVPLayout>} />
       <Route path="/request-submit" element={<MVPLayout><RequestSubmit /></MVPLayout>} />
-      <Route path="/request-triage" element={<MVPLayout><RequestTriage /></MVPLayout>} />
+      <Route path="/request-triage" element={<Navigate to="/DevelopmentManager" replace />} />
       <Route path="/talent-manager" element={<MVPLayout><TalentManager /></MVPLayout>} />
       <Route path="/my-development" element={<MVPLayout><MyDevelopment /></MVPLayout>} />
       <Route path="/experience-overview" element={<MVPLayout><ExperienceOverview /></MVPLayout>} />

@@ -69,7 +69,6 @@ const NAV_CONFIG = {
      { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
      { label: 'Development Manager', path: '/DevelopmentManager', icon: Users },
      { label: 'Goal Manager', path: '/GoalManager', icon: Target },
-     { label: 'Request Triage', path: '/request-triage', icon: ClipboardList },
      { label: 'Talent Manager', path: '/talent-manager', icon: Layers },
      { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 },
      { label: 'User Management', path: '/UserManagement', icon: UserCog },
