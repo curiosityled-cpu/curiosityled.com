@@ -1,12 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/components/useAuth";
-import { 
-  AlertCircle, CheckCircle, Clock, TrendingUp, 
-  AlertTriangle, FileText, Hourglass 
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 
 export default function RequestStatistics({ clientId, refreshTrigger }) {
   const { user } = useAuth();
@@ -32,113 +26,79 @@ export default function RequestStatistics({ clientId, refreshTrigger }) {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {[...Array(8)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <CardHeader className="pb-2">
-              <div className="h-4 bg-gray-200 rounded w-24"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-8 bg-gray-200 rounded w-16"></div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="reqstats-enter mb-6 rounded-[18px] border border-[#e5e7eb] dark:border-[#263248] bg-[#ffffff] dark:bg-[#111827] p-[42px_48px] flex flex-col gap-6 animate-pulse">
+        <div className="rounded-[15px] border border-[#e5e7eb] dark:border-[#334155] bg-[#eef2f7] dark:bg-[#1e293b] h-[200px] lg:h-[284px]" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-[76px] rounded-[11px] bg-[#eef2f7] dark:bg-[#182235]" />
+          ))}
+        </div>
       </div>
     );
   }
 
   if (!stats) return null;
 
-  const statCards = [
+  const chips = [
+    { label: "In Progress", value: stats.in_progress, dot: "#f59e0b" },
+    { label: "Awaiting Approval", value: stats.awaiting_approval, dot: "#38bdf8" },
+    { label: "New Requests", value: stats.new, dot: "#a78bfa" },
     {
-      title: "Total Requests",
-      value: stats.total_requests,
-      icon: FileText,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50"
-    },
-    {
-      title: "Completed",
-      value: stats.completed,
-      subtitle: `${stats.completion_rate_percentage}% rate`,
-      icon: CheckCircle,
-      color: "text-green-600",
-      bgColor: "bg-green-50"
-    },
-    {
-      title: "In Progress",
-      value: stats.in_progress,
-      icon: Hourglass,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50"
-    },
-    {
-      title: "Awaiting Approval",
-      value: stats.awaiting_approval,
-      icon: Clock,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50"
-    },
-    {
-      title: "New Requests",
-      value: stats.new,
-      icon: TrendingUp,
-      color: "text-indigo-600",
-      bgColor: "bg-indigo-50"
-    },
-    {
-      title: "SLA Compliance",
+      label: "SLA Compliance",
       value: `${stats.sla_compliance_percentage}%`,
-      subtitle: `${stats.sla_breaches} breaches`,
-      icon: stats.sla_breaches > 0 ? AlertTriangle : CheckCircle,
-      color: stats.sla_breaches > 0 ? "text-red-600" : "text-green-600",
-      bgColor: stats.sla_breaches > 0 ? "bg-red-50" : "bg-green-50"
+      dot: "#34d399",
+      badge: `${stats.sla_breaches} breaches`
     },
-    {
-      title: "Avg Response Time",
-      value: `${stats.avg_response_time_hours}h`,
-      icon: Clock,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50"
-    },
-    {
-      title: "Stale Tickets",
-      value: stats.stale_tickets,
-      icon: AlertCircle,
-      color: stats.stale_tickets > 0 ? "text-red-600" : "text-gray-600",
-      bgColor: stats.stale_tickets > 0 ? "bg-red-50" : "bg-gray-50"
-    }
+    { label: "Avg Response Time", value: `${stats.avg_response_time_hours}h`, dot: "#f97316" },
+    { label: "Stale Tickets", value: stats.stale_tickets, dot: "#f43f5e" }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      {statCards.map((stat, index) => {
-        const Icon = stat.icon;
-        return (
-          <Card key={index} className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-gray-600">
-                  {stat.title}
-                </CardTitle>
-                <div className={`${stat.bgColor} p-2 rounded-lg`}>
-                  <Icon className={`w-4 h-4 ${stat.color}`} />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline justify-between">
-                <span className="text-2xl font-bold">{stat.value}</span>
-                {stat.subtitle && (
-                  <Badge variant="outline" className="text-xs">
-                    {stat.subtitle}
-                  </Badge>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
+    <div className="reqstats-enter mb-6 rounded-[18px] border border-[#e5e7eb] dark:border-[#263248] bg-[#ffffff] dark:bg-[#111827] p-[42px_48px] flex flex-col gap-6 overflow-hidden shadow-[0_20px_46px_rgba(15,23,42,0.08)] dark:shadow-[0_20px_46px_rgba(15,23,42,0.22)]">
+      {/* Hero — Total Requests */}
+      <div className="relative rounded-[15px] border border-[#e5e7eb] dark:border-[#334155] bg-[linear-gradient(135deg,#ffffff,#f4f5ff)] dark:bg-[linear-gradient(135deg,#1e293b,#172033_68%,#162338)] p-[34px_38px] flex flex-col justify-between gap-6 overflow-hidden min-h-[200px] lg:min-h-[284px]">
+        <div
+          className="reqstats-glow-circle absolute w-[310px] h-[310px] -right-[82px] -top-[144px] rounded-full bg-[#0202ff] dark:bg-[#38bdf8] opacity-10 blur-[2px] pointer-events-none"
+          aria-hidden="true"
+        />
+        <div className="relative text-[#64748b] dark:text-[#94a3b8] text-sm font-semibold tracking-[0.08em] uppercase">
+          Total Requests
+        </div>
+        <div className="relative text-[64px] md:text-[96px] lg:text-[112px] leading-none font-[750] tracking-[-0.075em] text-[#0202ff] dark:text-[#f8fafc]">
+          {stats.total_requests}
+        </div>
+        <div className="relative flex items-center gap-3 text-[#475569] dark:text-[#cbd5e1] text-base font-medium">
+          <span className="block w-[9px] h-[9px] rounded-full bg-[#16a34a] dark:bg-[#34d399] shadow-[0_0_0_5px_rgba(22,163,74,0.12)] dark:shadow-[0_0_0_5px_rgba(52,211,153,0.12)]" />
+          <span>Completed {stats.completed} / {stats.completion_rate_percentage}% rate</span>
+        </div>
+      </div>
+
+      {/* Detail chips */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {chips.map((chip) => (
+          <div
+            key={chip.label}
+            tabIndex={0}
+            className="group rounded-[11px] border border-[#e5e7eb] dark:border-[#334155] bg-[#ffffff] dark:bg-[#182235] min-h-[76px] px-[18px] py-4 flex items-center gap-[11px] cursor-pointer transition-[background-color,border-color,box-shadow,transform] duration-[180ms] ease-out hover:bg-[#f8faff] hover:border-[#0202ff]/30 dark:hover:bg-[#202d43] dark:hover:border-[#4b6684] hover:shadow-[0_7px_18px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_7px_18px_rgba(0,0,0,0.2)] active:bg-[#f0f3fb] dark:active:bg-[#263550] active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-[#0202ff] dark:focus-visible:outline-[#38bdf8]"
+          >
+            <span
+              className="shrink-0 w-2 h-2 rounded-full"
+              style={{ backgroundColor: chip.dot }}
+            />
+            <span className="min-w-0 text-[13px] font-semibold text-[#64748b] dark:text-[#94a3b8] whitespace-nowrap">
+              {chip.label}
+            </span>
+            <span className="ml-auto text-[19px] font-[750] text-[#0f172a] dark:text-[#f8fafc] whitespace-nowrap">
+              {chip.value}
+            </span>
+            {chip.badge && (
+              <span className="ml-auto px-[7px] py-[3px] rounded-full border border-[#cbd5e1] dark:border-[#475569] text-[#475569] dark:text-[#cbd5e1] text-[11px] font-[650] whitespace-nowrap">
+                {chip.badge}
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

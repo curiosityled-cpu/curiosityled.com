@@ -437,3 +437,15 @@
   85% { opacity: 0.5; }
   100% { transform: translateY(-120px) translateX(12px); opacity: 0; }
 }
+
+/* ── Request statistics: hero + chips entrance/glow ─────────────────────── */
+@keyframes reqstats-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes reqstats-glow {
+  0%, 100% { transform: scale(1); opacity: 0.1; }
+  50% { transform: scale(1.14); opacity: 0.16; }
+}
+.reqstats-enter { animation: reqstats-enter 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.reqstats-glow-circle { animation: reqstats-glow 5s ease-in-out infinite; }
