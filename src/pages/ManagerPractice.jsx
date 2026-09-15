@@ -16,7 +16,7 @@ import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
-  Brain, Users, Layers, ChevronRight, SlidersHorizontal, X, Dumbbell,
+  Brain, Users, Layers, ChevronRight, SlidersHorizontal, X,
 } from "lucide-react";
 import PracticeFlow from "@/components/practice/PracticeFlow";
 import CoachingFlowsCard from "@/components/practice/CoachingFlowsCard";
@@ -253,45 +253,38 @@ export default function ManagerPractice() {
             <CoachingFlowsCard onStartFlow={handleStartFlow} />
 
             {/* Leadership Tools */}
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               <div className="px-1 pt-1">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Leadership Tools
-                </p>
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Leadership Tools</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Jump to a structured tool to capture, plan, or review.</p>
               </div>
-              <div className="grid grid-cols-1 gap-2.5">
-                <ActionTile
-                  icon={Brain}
-                  iconBg="bg-rose-50 dark:bg-rose-950/40"
-                  iconColor="text-rose-600"
-                  title="Decision journal"
-                  description="Capture a high-stakes decision and review outcomes later."
-                  to="/decision-journal"
-                />
-                <ActionTile
-                  icon={Users}
-                  iconBg="bg-sky-50 dark:bg-sky-950/40"
-                  iconColor="text-sky-600"
-                  title="1:1 prep & notes"
-                  description="Prepare questions, review commitments, track notes."
-                  to="/one-on-ones"
-                />
-                <ActionTile
-                  icon={Layers}
-                  iconBg="bg-orange-50 dark:bg-orange-950/40"
-                  iconColor="text-orange-600"
-                  title="Delegation planner"
-                  description="Identify what to hand off and set your team up to win."
-                  to="/delegation-planner"
-                />
-                <ActionTile
-                  icon={Dumbbell}
-                  iconBg="bg-violet-50 dark:bg-violet-950/40"
-                  iconColor="text-violet-600"
-                  title="Daily gym"
-                  description="3–7 min exercises tuned to your active patterns."
-                  to="/practice"
-                />
+              <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                <div className="divide-y divide-border">
+                  <ActionTile
+                    icon={Brain}
+                    iconBg="bg-rose-50 dark:bg-rose-950/40"
+                    iconColor="text-rose-600"
+                    title="Decision journal"
+                    description="Capture a high-stakes decision and review outcomes later."
+                    to="/decision-journal"
+                  />
+                  <ActionTile
+                    icon={Users}
+                    iconBg="bg-sky-50 dark:bg-sky-950/40"
+                    iconColor="text-sky-600"
+                    title="1:1 prep & notes"
+                    description="Prepare questions, review commitments, track notes."
+                    to="/one-on-ones"
+                  />
+                  <ActionTile
+                    icon={Layers}
+                    iconBg="bg-orange-50 dark:bg-orange-950/40"
+                    iconColor="text-orange-600"
+                    title="Delegation planner"
+                    description="Identify what to hand off and set your team up to win."
+                    to="/delegation-planner"
+                  />
+                </div>
               </div>
             </div>
 
@@ -373,17 +366,17 @@ export default function ManagerPractice() {
 
 function ActionTile({ icon: Icon, iconBg, iconColor, title, description, to }) {
   const content = (
-    <div className="flex items-center gap-4 p-4 h-full rounded-2xl border border-border bg-card shadow-sm hover:shadow-md transition-all group cursor-pointer active:scale-[0.99]">
-      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
-        <Icon className={`w-5 h-5 ${iconColor}`} />
+    <div className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-muted/40 transition-colors active:bg-muted/60 group">
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
+        <Icon className={`w-4.5 h-4.5 ${iconColor}`} />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-card-foreground">{title}</p>
-        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{description}</p>
+        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{description}</p>
       </div>
       <ChevronRight className="w-4 h-4 flex-shrink-0 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
     </div>
   );
-  if (to) return <Link to={to} className="block h-full">{content}</Link>;
+  if (to) return <Link to={to} className="block">{content}</Link>;
   return content;
 }
