@@ -72,7 +72,11 @@ export default function ManagerPractice() {
     }).format(new Date()),
     10
   );
-  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const greeting = hour < 12
+    ? "Ready for a morning workout"
+    : hour < 17
+      ? "Ready to practice"
+      : "Time for an evening workout";
   const day = new Date().toLocaleDateString("en-US", {
     timeZone: "America/New_York", weekday: "long", month: "long", day: "numeric",
   });
@@ -255,7 +259,7 @@ export default function ManagerPractice() {
                   Leadership Tools
                 </p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 gap-2.5">
                 <ActionTile
                   icon={Brain}
                   iconBg="bg-rose-50 dark:bg-rose-950/40"
