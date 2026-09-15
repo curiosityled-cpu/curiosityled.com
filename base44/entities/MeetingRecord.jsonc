@@ -148,6 +148,14 @@
     "create": {
       "$or": [
         {
+          "data.manager_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "User Level 1"
+          }
+        },
+        {
           "user_condition": {
             "role": "User Level 2"
           }
