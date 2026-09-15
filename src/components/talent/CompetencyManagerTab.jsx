@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Layers, Plus, Edit, Trash2, Search, Filter, CheckCircle, X, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { Layers, Plus, Edit, Trash2, Search, Filter, CheckCircle, X, ChevronDown, ChevronUp, ChevronRight, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
@@ -228,8 +228,20 @@ export default function CompetencyManagerTab() {
   const [editingCompetency, setEditingCompetency] = useState(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [formData, setFormData] = useState(EMPTY_FORM);
+  const [collapsedCategories, setCollapsedCategories] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("competencyCollapsedCategories") || "{}"); }
+    catch { return {}; }
+  });
 
   useEffect(() => { loadCompetencies(); }, []);
+
+  const toggleCategory = (category) => {
+    setCollapsedCategories((prev) => {
+      const next = { ...prev, [category]: !prev[category] };
+      localStorage.setItem("competencyCollapsedCategories", JSON.stringify(next));
+      return next;
+    });
+  };
 
   const loadCompetencies = async () => {
     setLoading(true);
@@ -439,31 +451,50 @@ export default function CompetencyManagerTab() {
             <div className="space-y-8">
               {orderedCategories.map((category) => {
                 const items = grouped[category];
+                const collapsed = collapsedCategories[category];
                 return (
                 <div key={category}>
-                  <div className="flex items-center gap-3 mb-3">
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  <button
+                    type="button"
+                    onClick={() => toggleCategory(category)}
+                    className="flex items-center gap-3 mb-3 w-full text-left group"
+                  >
+                    {collapsed ? <ChevronRight className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground group-hover:text-foreground transition-colors">
                       {category}
                     </h2>
                     <div className="flex-1 h-px bg-border" />
                     <span className="text-xs text-muted-foreground">{items.length}</span>
-                  </div>
-                  <div className="space-y-3">
-                    {items.map((competency, idx) => (
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {!collapsed && (
                       <motion.div
-                        key={competency.id}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: Math.min(idx * 0.04, 0.3) }}
+                        key="content"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2, ease: "easeInOut" }}
+                        className="overflow-hidden"
                       >
-                        <CompetencyCard
-                          competency={competency}
-                          onEdit={() => openEdit(competency)}
-                          onDelete={() => handleDelete(competency.id)}
-                        />
+                        <div className="space-y-3">
+                          {items.map((competency, idx) => (
+                            <motion.div
+                              key={competency.id}
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: Math.min(idx * 0.04, 0.3) }}
+                            >
+                              <CompetencyCard
+                                competency={competency}
+                                onEdit={() => openEdit(competency)}
+                                onDelete={() => handleDelete(competency.id)}
+                              />
+                            </motion.div>
+                          ))}
+                        </div>
                       </motion.div>
-                    ))}
-                  </div>
+                    )}
+                  </AnimatePresence>
                 </div>
                 );
               })}
