@@ -289,22 +289,20 @@ export default function OneOnOneHub() {
       status: 'scheduled',
     };
 
-    if (addToCalendar) {
-      const calRes = await base44.functions.invoke('createOneOnOneCalendarEvent', {
-        attendee_email: currentRecord.employee_email || undefined,
-        attendee_name: currentRecord.attendee_name || '',
-        title: currentRecord.title || `1:1 with ${currentRecord.attendee_name || ''}`,
-        start_time: startISO,
-        duration_minutes: duration,
-        recurrence,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York',
-      });
-      const cal = calRes.data || calRes;
-      if (!cal.success) throw new Error(cal.error || 'Could not create the calendar event. Is your calendar connected?');
-      patch.calendar_event_id = cal.event_id;
-      patch.calendar_source = cal.source;
-      patch.calendar_join_link = cal.join_link || '';
-    }
+    const calRes = await base44.functions.invoke('createOneOnOneCalendarEvent', {
+      attendee_email: currentRecord.employee_email || undefined,
+      attendee_name: currentRecord.attendee_name || '',
+      title: currentRecord.title || `1:1 with ${currentRecord.attendee_name || ''}`,
+      start_time: startISO,
+      duration_minutes: duration,
+      recurrence,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York',
+    });
+    const cal = calRes.data || calRes;
+    if (!cal.success) throw new Error(cal.error || 'Could not create the calendar event. Is your calendar connected?');
+    patch.calendar_event_id = cal.event_id;
+    patch.calendar_source = cal.source;
+    patch.calendar_join_link = cal.join_link || '';
 
     const updated = await base44.entities.MeetingRecord.update(currentRecord.id, patch);
     setCurrentRecord(prev => ({ ...prev, ...patch, ...updated }));

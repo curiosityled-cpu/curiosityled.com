@@ -45,7 +45,7 @@ export default function ScheduleSection({ record, calendarConnected, onSave }) {
   }, [record?.id, record?.start_time, record?.meeting_date, record?.duration_minutes, record?.recurrence, record?.calendar_event_id]);
 
   const hasRecord = !!record;
-  const canSave = hasRecord && date && time && !saving;
+  const canSave = hasRecord && date && time && !saving && calendarConnected;
   const isScheduled = !!record?.start_time;
   const hasCalendarEvent = !!record?.calendar_event_id;
 
@@ -158,35 +158,17 @@ export default function ScheduleSection({ record, calendarConnected, onSave }) {
               </div>
             </div>
 
-            {/* Calendar toggle */}
-            <div className="rounded-xl border border-border bg-muted/30 p-3">
-              <label className="flex items-start gap-3 cursor-pointer">
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={addToCalendar}
-                  onClick={() => setAddToCalendar((v) => !v)}
-                  className={`mt-0.5 w-9 h-5 rounded-full transition-colors flex-shrink-0 relative ${
-                    addToCalendar ? "bg-primary" : "bg-muted-foreground/30"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                      addToCalendar ? "translate-x-4" : ""
-                    }`}
-                  />
-                </button>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-card-foreground flex items-center gap-1.5">
-                    <Video className="w-3.5 h-3.5 text-muted-foreground" /> Also add to my calendar
-                  </p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    {calendarConnected
-                      ? "Creates a real event on your connected Outlook or Google calendar with a video link and invites the attendee."
-                      : "Connect Outlook or Google Calendar in Settings to send a real calendar invite."}
-                  </p>
-                </div>
-              </label>
+            {/* Calendar requirement notice */}
+            <div className={`rounded-xl border p-3 ${calendarConnected ? "border-border bg-muted/30" : "border-amber-300 bg-amber-50/50 dark:bg-amber-950/20"}`}>
+              <p className="text-sm font-medium text-card-foreground flex items-center gap-1.5">
+                <Video className="w-3.5 h-3.5 text-muted-foreground" />
+                {calendarConnected ? "Sends a real calendar invite" : "Calendar connection required"}
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                {calendarConnected
+                  ? "Creates a real event on your connected Outlook or Google calendar with a video link and invites the attendee."
+                  : "Connect Outlook or Google Calendar in Settings to schedule 1:1s. In-app-only scheduling is not available."}
+              </p>
             </div>
 
             {error && <p className="text-xs text-destructive">{error}</p>}
@@ -210,6 +192,8 @@ export default function ScheduleSection({ record, calendarConnected, onSave }) {
                   <>
                     <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Saving…
                   </>
+                ) : !calendarConnected ? (
+                  "Connect calendar to schedule"
                 ) : isScheduled ? (
                   "Update"
                 ) : (
