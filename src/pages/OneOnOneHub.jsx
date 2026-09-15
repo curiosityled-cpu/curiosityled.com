@@ -12,6 +12,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion as motion2, AnimatePresence as AnimatePresence2 } from "framer-motion";
+import AttendeeSelector from "@/components/oneonone/AttendeeSelector";
+import ScheduleMeetingModal from "@/components/oneonone/ScheduleMeetingModal";
+import PracticeRolePlay from "@/components/oneonone/PracticeRolePlay";
+import { MessageCircle } from "lucide-react";
 
 // ── Helpers ──
 function formatMeetingDate(dateStr, startTime) {
@@ -157,6 +161,29 @@ export default function OneOnOneHub() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [practiceRecord, setPracticeRecord] = useState(null);
+
+  // Fetch the manager's team hierarchy (direct reports + rollup) for the attendee selector.
+  const { data: hierarchyData } = useQuery({
+    queryKey: ['ooo-team-hierarchy', user?.email],
+    queryFn: async () => {
+      try {
+        const res = await base44.functions.invoke('getTeamHierarchy', { manager_email: user.email });
+        return res.data?.data || res.data || null;
+      } catch { return null; }
+    },
+    enabled: !!user?.email,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { directReports, rollupReports } = useMemo(() => {
+    const subs = hierarchyData?.subordinates || [];
+    const direct = subs.filter(s => s.manager_email === user.email);
+    const directEmails = new Set(direct.map(d => d.email));
+    const rollup = subs.filter(s => !directEmails.has(s.email));
+    return { directReports: direct, rollupReports: rollup };
+  }, [hierarchyData, user?.email]);
 
   // Fetch upcoming calendar events
   const { data: calendarData, isLoading: loadingCalendar } = useQuery({
@@ -267,30 +294,40 @@ export default function OneOnOneHub() {
             <h1 className="text-2xl font-bold text-foreground">1:1s</h1>
             <p className="text-sm text-muted-foreground mt-0.5">Plan, prepare, and debrief your one-on-ones in one place.</p>
           </div>
-          <Button
-            size="sm"
-            className="flex items-center gap-1.5 flex-shrink-0"
-            onClick={() => {
-              // Create a blank manual record
-              const today = new Date().toISOString().split('T')[0];
-              base44.entities.MeetingRecord.create({
-                manager_email: user.email,
-                employee_email: '',
-                attendee_name: 'New 1:1',
-                meeting_date: today,
-                title: '1:1 Meeting',
-                status: 'scheduled',
-                calendar_source: 'manual',
-                agenda_items: [],
-                commitments: [],
-              }).then(r => {
-                queryClient.invalidateQueries({ queryKey: ['ooo-records', user?.email] });
-                setSelectedRecord(r);
-              });
-            }}
-          >
-            <Plus className="w-4 h-4" /> New 1:1
-          </Button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex items-center gap-1.5"
+              onClick={() => setScheduleOpen(true)}
+            >
+              <CalendarPlus className="w-4 h-4" /> Schedule
+            </Button>
+            <Button
+              size="sm"
+              className="flex items-center gap-1.5"
+              onClick={() => {
+                // Create a blank manual record
+                const today = new Date().toISOString().split('T')[0];
+                base44.entities.MeetingRecord.create({
+                  manager_email: user.email,
+                  employee_email: '',
+                  attendee_name: 'New 1:1',
+                  meeting_date: today,
+                  title: '1:1 Meeting',
+                  status: 'scheduled',
+                  calendar_source: 'manual',
+                  agenda_items: [],
+                  commitments: [],
+                }).then(r => {
+                  queryClient.invalidateQueries({ queryKey: ['ooo-records', user?.email] });
+                  setSelectedRecord(r);
+                });
+              }}
+            >
+              <Plus className="w-4 h-4" /> New 1:1
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -301,10 +338,34 @@ export default function OneOnOneHub() {
             key={selectedRecord.id}
             record={selectedRecord}
             userEmail={user?.email}
+            managerEmail={user?.email}
+            directReports={directReports}
+            rollupReports={rollupReports}
             onClose={handleCloseRecord}
+            onPractice={(rec) => setPracticeRecord(rec)}
           />
         )}
       </AnimatePresence>
+
+      {/* Schedule modal */}
+      <ScheduleMeetingModal
+        open={scheduleOpen}
+        onOpenChange={setScheduleOpen}
+        managerEmail={user?.email}
+        directReports={directReports}
+        rollupReports={rollupReports}
+        onCreated={(rec) => {
+          queryClient.invalidateQueries({ queryKey: ['ooo-records', user?.email] });
+          setSelectedRecord(rec);
+        }}
+      />
+
+      {/* Practice role-play modal */}
+      <PracticeRolePlay
+        open={!!practiceRecord}
+        onOpenChange={(o) => { if (!o) setPracticeRecord(null); }}
+        record={practiceRecord}
+      />
 
       {/* Hub Content */}
       {!selectedRecord && (
@@ -422,7 +483,7 @@ export default function OneOnOneHub() {
 }
 
 // ── Record Workspace (inline panel for prep / notes / debrief) ──
-function RecordWorkspace({ record, userEmail, onClose }) {
+function RecordWorkspace({ record, userEmail, managerEmail, directReports, rollupReports, onClose, onPractice }) {
   const queryClient = useQueryClient();
   const [local, setLocal] = useState(record);
   const [newAgendaText, setNewAgendaText] = useState('');
@@ -560,15 +621,28 @@ Return practical, conversational agenda items that a manager would actually disc
 
       {/* Attendee field */}
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">With</label>
-        <input
-          type="text"
-          value={local.attendee_name || ''}
-          onChange={e => setLocal({ ...local, attendee_name: e.target.value })}
-          onBlur={e => update({ attendee_name: e.target.value })}
-          placeholder="Direct report name"
-          className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-        />
+        <div className="flex items-center justify-between">
+          <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">With</label>
+          <button
+            onClick={() => onPractice?.(local)}
+            className="text-[11px] font-medium text-[#0202ff] hover:bg-[#0202ff]/5 px-2 py-1 rounded-md flex items-center gap-1 transition-colors"
+            title="Rehearse this 1:1 with Atreus playing your direct report"
+          >
+            <MessageCircle className="w-3 h-3" /> Practice with Atreus
+          </button>
+        </div>
+        <div className="mt-1">
+          <AttendeeSelector
+            value={{ email: local.employee_email || '', name: local.attendee_name || '', isUser: false }}
+            onChange={(v) => {
+              const patch = { attendee_name: v.name || '', employee_email: v.email || '' };
+              setLocal({ ...local, ...patch });
+              update(patch);
+            }}
+            directReports={directReports}
+            rollupReports={rollupReports}
+          />
+        </div>
       </div>
 
       {/* Prep: Agenda Items */}
