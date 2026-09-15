@@ -109,9 +109,9 @@ export default function CoachingRequestTriageBoard() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">Coaching & Consulting Request Triage</h3>
+          <h3 className="text-sm font-semibold text-gray-900">Development Request Triage</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Review, approve, and assign coaching & consulting requests for {client?.name || "your organization"}.
+            Review, approve, and assign development requests for your organization, such as coaching or consulting.
           </p>
         </div>
       </div>
