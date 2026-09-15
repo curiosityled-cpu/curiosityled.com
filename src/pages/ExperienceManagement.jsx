@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   Loader2, Map, GraduationCap, Star, Inbox, BarChart2,
-  Search, Plus, Clock, CheckCircle2, XCircle, Eye
+  Search, Plus, Clock, CheckCircle2, XCircle, Eye, Settings
 } from "lucide-react";
 import { useAuth } from "@/components/useAuth";
 import { base44 } from "@/api/base44Client";
@@ -26,8 +26,8 @@ const RequestDetailPanel = lazy(() => import("@/components/requests/RequestDetai
 const RequestSubmissionForm = lazy(() => import("@/components/requests/RequestSubmissionForm"));
 const RequestStatistics = lazy(() => import("@/components/requests/RequestStatistics"));
 const AdvancedFilters = lazy(() => import("@/components/requests/AdvancedFilters"));
-const CoachingRequestAllowlistSettings = lazy(() => import("@/components/requests/CoachingRequestAllowlistSettings"));
 import CoachingRequestTriageBoard from "@/components/requests/CoachingRequestTriageBoard";
+import RequestSettingsDialog from "@/components/requests/RequestSettingsDialog";
 
 const STATUS_BADGE_COLORS = {
   new: 'bg-blue-100 text-blue-800', triaging: 'bg-yellow-100 text-yellow-800',
@@ -81,6 +81,7 @@ export default function ExperienceManagement() {
     status: 'all', priority: 'all', request_type: 'all',
     assigned_to: 'all', approval_status: 'all', has_risks: 'all'
   });
+  const [showRequestSettings, setShowRequestSettings] = useState(false);
 
   useEffect(() => {
     if (section === 'requests' && user) { loadRequests(); loadProgramAdmins(); }
@@ -221,9 +222,16 @@ export default function ExperienceManagement() {
           <Suspense fallback={<div className="flex justify-center p-8"><Loader2 className="w-8 h-8 animate-spin text-[#0202ff]" /></div>}>
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold text-gray-900">Development Requests</h2>
-              <Button onClick={() => setShowSubmitForm(true)} className="bg-[#0202ff] hover:bg-[#0101dd] text-white">
-                <Plus className="w-4 h-4 mr-1.5" /> New Request
-              </Button>
+              <div className="flex items-center gap-2">
+                {!isCoachScoped && user?.client_id && (
+                  <Button variant="outline" size="sm" onClick={() => setShowRequestSettings(true)}>
+                    <Settings className="w-4 h-4 mr-1.5" /> Settings
+                  </Button>
+                )}
+                <Button onClick={() => setShowSubmitForm(true)} className="bg-[#0202ff] hover:bg-[#0101dd] text-white">
+                  <Plus className="w-4 h-4 mr-1.5" /> New Request
+                </Button>
+              </div>
             </div>
 
             {/* Coaching & Consulting Request Triage — merged from Request Triage */}
@@ -231,10 +239,6 @@ export default function ExperienceManagement() {
               <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4">
                 <CoachingRequestTriageBoard />
               </div>
-            )}
-
-            {!isCoachScoped && user?.client_id && (
-              <CoachingRequestAllowlistSettings clientId={user.client_id} />
             )}
 
             {loadingRequests ? (
@@ -298,6 +302,14 @@ export default function ExperienceManagement() {
                 <RequestSubmissionForm onSuccess={() => { setShowSubmitForm(false); loadRequests(); }} onCancel={() => setShowSubmitForm(false)} />
               </DialogContent>
             </Dialog>
+
+            {!isCoachScoped && user?.client_id && (
+              <RequestSettingsDialog
+                open={showRequestSettings}
+                onOpenChange={setShowRequestSettings}
+                clientId={user.client_id}
+              />
+            )}
           </Suspense>
         </motion.div>
       )}

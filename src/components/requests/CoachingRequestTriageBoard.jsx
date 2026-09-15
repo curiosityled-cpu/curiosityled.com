@@ -7,17 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import {
   CategoryBadge, StatusBadge, PriorityBadge,
 } from "@/components/coaching-request/RequestBadges";
 import {
-  Calendar, CheckCircle, XCircle, UserPlus, Settings, Loader2, ArrowRight,
+  Calendar, CheckCircle, XCircle, UserPlus, Loader2, ArrowRight,
 } from "lucide-react";
 
 const COLUMNS = [
@@ -38,10 +37,6 @@ export default function CoachingRequestTriageBoard() {
   const [actionLoading, setActionLoading] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [dialogMode, setDialogMode] = useState(null);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [intakeToggle, setIntakeToggle] = useState(true);
-  const [bypassToggle, setBypassToggle] = useState(true);
-  const [savingSettings, setSavingSettings] = useState(false);
 
   const clientId = user?.client_id;
 
@@ -60,8 +55,6 @@ export default function CoachingRequestTriageBoard() {
       }));
       if (clients.length > 0) {
         setClient(clients[0]);
-        setIntakeToggle(clients[0].settings?.require_intake_conversation ?? true);
-        setBypassToggle(clients[0].settings?.intake_bypass_allowed ?? true);
       }
     } catch (e) {
       console.error("Failed to load triage data:", e);
@@ -99,25 +92,6 @@ export default function CoachingRequestTriageBoard() {
     }
   };
 
-  const saveSettings = async () => {
-    setSavingSettings(true);
-    try {
-      await base44.entities.Client.update(client.id, {
-        settings: {
-          ...(client.settings || {}),
-          require_intake_conversation: intakeToggle,
-          intake_bypass_allowed: bypassToggle,
-        },
-      });
-      setClient({ ...client, settings: { ...(client.settings || {}), require_intake_conversation: intakeToggle, intake_bypass_allowed: bypassToggle } });
-      setSettingsOpen(false);
-    } catch (e) {
-      alert("Failed to save settings: " + e.message);
-    } finally {
-      setSavingSettings(false);
-    }
-  };
-
   const openDialog = (request, mode) => {
     setSelectedRequest(request);
     setDialogMode(mode);
@@ -140,9 +114,6 @@ export default function CoachingRequestTriageBoard() {
             Review, approve, and assign coaching & consulting requests for {client?.name || "your organization"}.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
-          <Settings className="w-4 h-4 mr-2" /> Intake Settings
-        </Button>
       </div>
 
       {/* Kanban Board */}
@@ -191,38 +162,6 @@ export default function CoachingRequestTriageBoard() {
               onSetMode={setDialogMode}
             />
           )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Settings Dialog */}
-      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Intake Conversation Settings</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="font-medium">Require Intake Conversation</Label>
-                <p className="text-xs text-muted-foreground mt-0.5">When on, every request needs an intake conversation before approval.</p>
-              </div>
-              <Switch checked={intakeToggle} onCheckedChange={setIntakeToggle} />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="font-medium">Allow Per-Request Bypass</Label>
-                <p className="text-xs text-muted-foreground mt-0.5">Let Program Admins skip intake on individual requests.</p>
-              </div>
-              <Switch checked={bypassToggle} onCheckedChange={setBypassToggle} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSettingsOpen(false)}>Cancel</Button>
-            <Button onClick={saveSettings} disabled={savingSettings}>
-              {savingSettings && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Save Settings
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

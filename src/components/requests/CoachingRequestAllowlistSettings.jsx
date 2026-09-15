@@ -14,7 +14,7 @@ const ROLE_OPTIONS = [
   "Admin Level 1", "Leadership Coach", "Consultant"
 ];
 
-export default function CoachingRequestAllowlistSettings({ clientId }) {
+export default function CoachingRequestAllowlistSettings({ clientId, embedded = false }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [enabled, setEnabled] = useState(false);
@@ -93,10 +93,107 @@ export default function CoachingRequestAllowlistSettings({ clientId }) {
 
   if (loading) {
     return (
-      <Card>
-        <CardContent className="py-8 text-center text-muted-foreground">Loading...</CardContent>
-      </Card>
+      <div className="py-8 text-center text-muted-foreground text-sm">Loading...</div>
     );
+  }
+
+  const inner = (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <Label>Enable submission allowlist</Label>
+          <p className="text-xs text-muted-foreground mt-1">When enabled, only users matching the criteria below can submit coaching requests.</p>
+        </div>
+        <Switch checked={enabled} onCheckedChange={setEnabled} />
+      </div>
+
+      {enabled && (
+        <>
+          <div>
+            <Label>Allowed Roles</Label>
+            <p className="text-xs text-muted-foreground mb-3">Users with any of these app roles can submit coaching requests.</p>
+            <div className="flex flex-wrap gap-2">
+              {ROLE_OPTIONS.map(role => (
+                <button
+                  key={role}
+                  onClick={() => toggleRole(role)}
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                    allowedRoles.includes(role)
+                      ? "bg-[#0202ff] text-white border-[#0202ff]"
+                      : "bg-card text-muted-foreground border-border hover:bg-muted"
+                  }`}
+                >
+                  {role}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <Label>Allowed Job Titles</Label>
+            <p className="text-xs text-muted-foreground mb-3">Users whose current job title matches can submit coaching requests.</p>
+            <div className="flex gap-2">
+              <Input
+                value={titleInput}
+                onChange={(e) => setTitleInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTitle(); } }}
+                placeholder="e.g. Director, VP, Manager"
+              />
+              <Button type="button" variant="outline" onClick={addTitle}>Add</Button>
+            </div>
+            {allowedTitles.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {allowedTitles.map((t, i) => (
+                  <Badge key={i} variant="secondary" className="gap-1">
+                    {t}
+                    <X className="w-3 h-3 cursor-pointer" onClick={() => setAllowedTitles(prev => prev.filter((_, idx) => idx !== i))} />
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <Label>Allowed Individuals (Email)</Label>
+            <p className="text-xs text-muted-foreground mb-3">Specific email addresses permitted to submit coaching requests.</p>
+            <div className="flex gap-2">
+              <Input
+                type="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addEmail(); } }}
+                placeholder="name@company.com"
+              />
+              <Button type="button" variant="outline" onClick={addEmail}>Add</Button>
+            </div>
+            {allowedEmails.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {allowedEmails.map((em, i) => (
+                  <Badge key={i} variant="secondary" className="gap-1">
+                    {em}
+                    <X className="w-3 h-3 cursor-pointer" onClick={() => setAllowedEmails(prev => prev.filter((_, idx) => idx !== i))} />
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
+            A user is allowed if they match <strong>any</strong> one of the criteria above (role, title, or email).
+          </p>
+        </>
+      )}
+
+      <div className="flex justify-end pt-2 border-t">
+        <Button onClick={save} disabled={saving}>
+          {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : "Save Settings"}
+        </Button>
+      </div>
+    </div>
+  );
+
+  if (embedded) {
+    return inner;
   }
 
   return (
@@ -108,98 +205,7 @@ export default function CoachingRequestAllowlistSettings({ clientId }) {
         </CardTitle>
         <CardDescription>Control who can submit leadership coaching requests for this organization.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <Label>Enable submission allowlist</Label>
-            <p className="text-xs text-muted-foreground mt-1">When enabled, only users matching the criteria below can submit coaching requests.</p>
-          </div>
-          <Switch checked={enabled} onCheckedChange={setEnabled} />
-        </div>
-
-        {enabled && (
-          <>
-            <div>
-              <Label>Allowed Roles</Label>
-              <p className="text-xs text-muted-foreground mb-3">Users with any of these app roles can submit coaching requests.</p>
-              <div className="flex flex-wrap gap-2">
-                {ROLE_OPTIONS.map(role => (
-                  <button
-                    key={role}
-                    onClick={() => toggleRole(role)}
-                    className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                      allowedRoles.includes(role)
-                        ? "bg-[#0202ff] text-white border-[#0202ff]"
-                        : "bg-card text-muted-foreground border-border hover:bg-muted"
-                    }`}
-                  >
-                    {role}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <Label>Allowed Job Titles</Label>
-              <p className="text-xs text-muted-foreground mb-3">Users whose current job title matches can submit coaching requests.</p>
-              <div className="flex gap-2">
-                <Input
-                  value={titleInput}
-                  onChange={(e) => setTitleInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTitle(); } }}
-                  placeholder="e.g. Director, VP, Manager"
-                />
-                <Button type="button" variant="outline" onClick={addTitle}>Add</Button>
-              </div>
-              {allowedTitles.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {allowedTitles.map((t, i) => (
-                    <Badge key={i} variant="secondary" className="gap-1">
-                      {t}
-                      <X className="w-3 h-3 cursor-pointer" onClick={() => setAllowedTitles(prev => prev.filter((_, idx) => idx !== i))} />
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <Label>Allowed Individuals (Email)</Label>
-              <p className="text-xs text-muted-foreground mb-3">Specific email addresses permitted to submit coaching requests.</p>
-              <div className="flex gap-2">
-                <Input
-                  type="email"
-                  value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addEmail(); } }}
-                  placeholder="name@company.com"
-                />
-                <Button type="button" variant="outline" onClick={addEmail}>Add</Button>
-              </div>
-              {allowedEmails.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {allowedEmails.map((em, i) => (
-                    <Badge key={i} variant="secondary" className="gap-1">
-                      {em}
-                      <X className="w-3 h-3 cursor-pointer" onClick={() => setAllowedEmails(prev => prev.filter((_, idx) => idx !== i))} />
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
-              A user is allowed if they match <strong>any</strong> one of the criteria above (role, title, or email).
-            </p>
-          </>
-        )}
-
-        <div className="flex justify-end pt-2 border-t">
-          <Button onClick={save} disabled={saving}>
-            {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : "Save Settings"}
-          </Button>
-        </div>
-      </CardContent>
+      <CardContent>{inner}</CardContent>
     </Card>
   );
 }
