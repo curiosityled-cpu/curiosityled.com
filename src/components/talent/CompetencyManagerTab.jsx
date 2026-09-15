@@ -311,9 +311,15 @@ export default function CompetencyManagerTab() {
     return matchesSearch && matchesCategory;
   });
 
-  const categories = [...new Set(competencies.map((c) => c.category).filter(Boolean))];
-
   const CATEGORY_ORDER = ["Tactical", "Self Leadership", "People Leadership", "Situational Intelligence"];
+
+  const categories = [
+    ...CATEGORY_ORDER.filter((cat) => competencies.some((c) => c.category === cat)),
+    ...[...new Set(competencies.map((c) => c.category).filter(Boolean))]
+      .filter((cat) => !CATEGORY_ORDER.includes(cat) && cat !== "Uncategorized")
+      .sort(),
+    ...(competencies.some((c) => c.category === "Uncategorized") ? ["Uncategorized"] : []),
+  ];
 
   const grouped = filteredCompetencies.reduce((acc, c) => {
     const cat = c.category || "Uncategorized";
