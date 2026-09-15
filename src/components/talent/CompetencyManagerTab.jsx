@@ -313,12 +313,23 @@ export default function CompetencyManagerTab() {
 
   const categories = [...new Set(competencies.map((c) => c.category).filter(Boolean))];
 
+  const CATEGORY_ORDER = ["Tactical", "Self Leadership", "People Leadership", "Situational Intelligence"];
+
   const grouped = filteredCompetencies.reduce((acc, c) => {
     const cat = c.category || "Uncategorized";
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(c);
     return acc;
   }, {});
+
+  // Render categories in the fixed order above, then any others alphabetically, then Uncategorized last
+  const orderedCategories = [
+    ...CATEGORY_ORDER.filter((cat) => grouped[cat]),
+    ...Object.keys(grouped)
+      .filter((cat) => !CATEGORY_ORDER.includes(cat) && cat !== "Uncategorized")
+      .sort(),
+    ...(grouped["Uncategorized"] ? ["Uncategorized"] : []),
+  ];
 
   return (
     <div className="space-y-5">
@@ -420,7 +431,9 @@ export default function CompetencyManagerTab() {
             </div>
           ) : (
             <div className="space-y-8">
-              {Object.entries(grouped).map(([category, items]) => (
+              {orderedCategories.map((category) => {
+                const items = grouped[category];
+                return (
                 <div key={category}>
                   <div className="flex items-center gap-3 mb-3">
                     <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -446,7 +459,8 @@ export default function CompetencyManagerTab() {
                     ))}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
