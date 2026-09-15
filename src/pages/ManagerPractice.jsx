@@ -21,7 +21,6 @@ import PracticeFlow from "@/components/practice/PracticeFlow";
 import CoachingFlowsCard from "@/components/practice/CoachingFlowsCard";
 import RequestCoachingCard from "@/components/practice/RequestCoachingCard";
 import WorkoutsSection from "@/components/practice/WorkoutsSection";
-import DecisionJournalOutcomeReview from "@/components/practice/DecisionJournalOutcomeReview";
 import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
 
 const FLOW_KEYS = {
@@ -198,7 +197,6 @@ export default function ManagerPractice() {
                     to="/delegation-planner"
                   />
                 </div>
-                <DecisionJournalOutcomeReview />
               </div>
 
               {/* Request Support — formal coaching request submission */}
