@@ -1,144 +1,222 @@
 /**
  * ManagerPractice — The active coaching studio.
  * Route: /practice
- * Single-scroll, intent-driven layout:
- *   1. Lead alerts (patterns/risks from the Lead page)
- *   2. Take Action (coaching flows + workouts + leadership tools)
- *   3. Leadership Pulse (progress summary → /my-performance, /my-development)
+ *
+ * Redesigned to mirror the Lead page (/today) visual rhythm:
+ *   - Animated "training room at dusk + energy pulse" hero with inline streak ring
+ *   - Two-column grid: action zone (left) | context sidebar (right)
+ *   - Prescribed-practice card (pattern → recommended workout)
+ *   - Recent sessions log with all-time history
  */
 import React, { useState, useMemo } from "react";
-// ManagerPractice — coaching hub
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
-  Brain, Users, Layers, ChevronRight
+  Brain, Users, Layers, ChevronRight, SlidersHorizontal, X, Dumbbell,
 } from "lucide-react";
 import PracticeFlow from "@/components/practice/PracticeFlow";
 import CoachingFlowsCard from "@/components/practice/CoachingFlowsCard";
 import RequestCoachingCard from "@/components/practice/RequestCoachingCard";
 import WorkoutsSection from "@/components/practice/WorkoutsSection";
+import PracticeHeroHeader from "@/components/practice/PracticeHeroHeader";
+import PrescribedPracticeCard from "@/components/practice/PrescribedPracticeCard";
+import PracticeSessionsLog from "@/components/practice/PracticeSessionsLog";
 import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
+import CheckInSettings from "@/components/checkin/CheckInSettings";
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle,
+} from "@/components/ui/sheet";
 
-const FLOW_KEYS = {
-  Prepare: 'prepare',
-  Debrief: 'debrief',
-  'Work through something': 'work_through',
-  Reflect: 'reflect',
-};
+function getFirstName(user) {
+  const raw = user?.display_name || user?.data?.display_name || user?.full_name;
+  return raw && raw.trim() && !raw.includes("@") ? raw.split(" ")[0] : "there";
+}
 
-function SectionLabel({ children, hint }) {
+function isPracticeSession(p) {
+  const focus = (p.focus_intention || "").toLowerCase();
   return (
-    <div className="px-1 pt-1">
-      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{children}</p>
-      {hint && <p className="text-xs text-muted-foreground mt-0.5">{hint}</p>}
-    </div>
+    focus.startsWith("workout completed") ||
+    focus.startsWith("practice session") ||
+    focus.startsWith("flow completed") ||
+    p.prompt_type === "practice_session"
   );
 }
 
-function ActionTile({ icon: Icon, iconBg, iconColor, title, subtitle, description, prompt, to, onStartFlow }) {
-  const { openWithContext } = useAtreusChat();
-  const flowKey = FLOW_KEYS[title];
-
-  const handleClick = () => {
-    if (flowKey && onStartFlow) {
-      onStartFlow(flowKey);
-    } else if (prompt) {
-      openWithContext({ context: { pageType: 'practice' }, starterMessage: prompt });
-    }
-  };
-
-  const content = (
-    <div className="flex items-center gap-4 p-4 h-full rounded-2xl border border-border bg-card shadow-sm hover:shadow-md transition-all group cursor-pointer active:scale-[0.99]">
-      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
-        <Icon className={`w-5 h-5 ${iconColor}`} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-card-foreground">{title}</p>
-        {subtitle && <p className="text-[10px] font-medium mt-0.5 text-muted-foreground">{subtitle}</p>}
-        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{description}</p>
-      </div>
-      <ChevronRight className="w-4 h-4 flex-shrink-0 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
-    </div>
-  );
-
-  if (to) return <Link to={to} className="block h-full">{content}</Link>;
-  return <button className="w-full h-full text-left" onClick={handleClick}>{content}</button>;
+function startOfWeekET() {
+  // Monday as start of week, in America/New_York
+  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
+  const day = now.getDay(); // 0 = Sun
+  const diff = day === 0 ? 6 : day - 1;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - diff);
+  monday.setHours(0, 0, 0, 0);
+  return monday;
 }
 
 export default function ManagerPractice() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { openWithContext } = useAtreusChat();
   const [activeFlow, setActiveFlow] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showSessions, setShowSessions] = useState(false);
 
-  const openAtreus = (msg) => openWithContext({ context: { pageType: 'practice', user_name: user?.full_name }, starterMessage: msg });
+  const firstName = getFirstName(user);
+  const hour = parseInt(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/New_York", hour: "numeric", hour12: false,
+    }).format(new Date()),
+    10
+  );
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const day = new Date().toLocaleDateString("en-US", {
+    timeZone: "America/New_York", weekday: "long", month: "long", day: "numeric",
+  });
 
   // ── Data queries ──
   const { data: goals = [] } = useQuery({
-    queryKey: ['mp-goals', user?.email],
+    queryKey: ["mp-goals", user?.email],
     queryFn: async () => {
       try {
-        const r = await base44.entities.Goal.filter({ user_email: user.email }, '-created_date', 20);
+        const r = await base44.entities.Goal.filter({ user_email: user.email }, "-created_date", 20);
         if (r.length) return r;
-        return await base44.entities.Goal.filter({ created_by: user.email }, '-created_date', 20);
+        return await base44.entities.Goal.filter({ created_by: user.email }, "-created_date", 20);
       } catch { return []; }
     },
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
-  const { data: assignments = [] } = useQuery({
-    queryKey: ['mp-assignments', user?.email],
-    queryFn: async () => { try { return await base44.entities.AssignedLearning.filter({ user_email: user.email }, '-created_date', 10); } catch { return []; } },
-    enabled: !!user?.email, staleTime: 5 * 60 * 1000,
-  });
-
   const { data: pulses = [] } = useQuery({
-    queryKey: ['mp-pulses', user?.email],
-    queryFn: async () => { try { return await base44.entities.ManagerPulse.filter({ user_email: user.email }, '-created_date', 30); } catch { return []; } },
+    queryKey: ["mp-pulses", user?.email],
+    queryFn: async () => {
+      try { return await base44.entities.ManagerPulse.filter({ user_email: user.email }, "-created_date", 30); }
+      catch { return []; }
+    },
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
   const { data: trends = null } = useQuery({
-    queryKey: ['mp-trends', user?.email],
-    queryFn: async () => { try { const r = await base44.entities.ManagerTrends.filter({ user_email: user.email }, '-last_trend_computed_at', 1); return r[0] || null; } catch { return null; } },
+    queryKey: ["mp-trends", user?.email],
+    queryFn: async () => {
+      try { const r = await base44.entities.ManagerTrends.filter({ user_email: user.email }, "-last_trend_computed_at", 1); return r[0] || null; }
+      catch { return null; }
+    },
     enabled: !!user?.email, staleTime: 30 * 60 * 1000,
   });
 
   const { data: insight = null } = useQuery({
-    queryKey: ['mp-insight', user?.email],
+    queryKey: ["mp-insight", user?.email],
     queryFn: async () => {
-      try { const rows = await base44.entities.AssessmentInsights.filter({ user_email: user.email }, '-created_date', 1); return rows[0] || null; } catch { return null; }
+      try { const rows = await base44.entities.AssessmentInsights.filter({ user_email: user.email }, "-created_date", 1); return rows[0] || null; }
+      catch { return null; }
     },
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
   const { data: checkIns = [] } = useQuery({
-    queryKey: ['mp-checkins', user?.email],
-    queryFn: async () => { try { return await base44.entities.DailyCheckIn.filter({ user_email: user.email }, '-check_in_date', 30); } catch { return []; } },
+    queryKey: ["mp-checkins", user?.email],
+    queryFn: async () => {
+      try { return await base44.entities.DailyCheckIn.filter({ user_email: user.email }, "-check_in_date", 30); }
+      catch { return []; }
+    },
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
-  // ── Pattern engine for Lead alerts ──
-  const patterns = useMemo(() => {
-    return runBpoPatternEngine({ trends, checkIns, goals, activities: [], pulses });
-  }, [trends, checkIns, goals, pulses]);
+  // ── Pattern engine (active BPO patterns) ──
+  const bpoPatterns = useMemo(
+    () => runBpoPatternEngine({ trends, checkIns, goals, activities: [], pulses }),
+    [trends, checkIns, goals, pulses]
+  );
+
+  // ── Cross-tool patterns (connected stack) ──
+  const { data: crossToolData = null } = useQuery({
+    queryKey: ["mp-cross-tool-patterns", user?.email],
+    queryFn: async () => {
+      try {
+        const res = await base44.functions.invoke("getCrossToolPatterns", {
+          inAppPatterns: bpoPatterns,
+        });
+        return res.data?.data || null;
+      } catch { return null; }
+    },
+    enabled: !!user?.email && bpoPatterns.length > 0,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+
+  // ── Practice sessions (for streak ring + consistency fallback) ──
+  const { data: sessions = [] } = useQuery({
+    queryKey: ["mp-sessions", user?.email],
+    queryFn: async () => {
+      try {
+        const all = await base44.entities.ManagerPulse.filter(
+          { user_email: user.email }, "-created_date", 100
+        );
+        return all.filter(isPracticeSession);
+      } catch { return []; }
+    },
+    enabled: !!user?.email, staleTime: 60 * 1000,
+  });
+
+  const weekStart = useMemo(() => startOfWeekET(), []);
+  const weekCount = useMemo(
+    () => sessions.filter((s) => new Date(s.created_date) >= weekStart).length,
+    [sessions, weekStart]
+  );
+
+  // recentSessionIds: derive workout ids from recent session focus_intention text
+  const recentSessionIds = useMemo(() => {
+    const ids = new Set();
+    const knownTitles = [
+      "delegation audit", "hard conversation prep", "energy drain map",
+      "commitment review", "leadership identity anchor", "decision capture",
+      "team pulse check", "pattern interrupt",
+    ];
+    sessions.slice(0, 10).forEach((s) => {
+      const focus = (s.focus_intention || "").toLowerCase();
+      const colonIdx = focus.indexOf(":");
+      const title = colonIdx >= 0 ? focus.slice(colonIdx + 1).trim() : "";
+      knownTitles.forEach((kt) => {
+        if (title.includes(kt)) ids.add(kt.replace(/\s+/g, "_"));
+      });
+    });
+    return [...ids];
+  }, [sessions]);
+
+  // ── Hero status pill ──
+  const statusText = useMemo(() => {
+    if (weekCount === 0) return "No sessions yet this week — pick a workout and start a streak.";
+    if (weekCount >= 5) return `${weekCount} sessions this week — strong consistency. Keep it going.`;
+    return `${weekCount} session${weekCount === 1 ? "" : "s"} this week — keep the rhythm.`;
+  }, [weekCount]);
 
   const handleStartFlow = (flowKey) => {
     setActiveFlow(flowKey);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleSessionLogged = () => {
+    queryClient.invalidateQueries({ queryKey: ["mp-sessions", user?.email] });
+    queryClient.invalidateQueries({ queryKey: ["practice-sessions", user?.email] });
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 pt-6 pb-10">
-
-      {/* Header */}
-      <div className="pb-4">
-        <h1 className="text-2xl font-bold text-foreground">Practice</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Prepare, work through, and move the needle on your leadership.</p>
-      </div>
+    <div className="px-4 py-6 max-w-6xl mx-auto">
+      {/* ── Animated hero ── */}
+      <PracticeHeroHeader
+        firstName={firstName}
+        greeting={greeting}
+        day={day}
+        statusText={statusText}
+        weekCount={weekCount}
+        onSettingsClick={() => setShowSettings((s) => !s)}
+        onStreakClick={() => setShowSessions(true)}
+      />
 
       {/* Active flow overlay — full width, dismissible */}
       <AnimatePresence>
@@ -155,68 +233,153 @@ export default function ManagerPractice() {
         )}
       </AnimatePresence>
 
-      {/* Command Center layout */}
+      {/* ── Main grid: Action zone (left) | Context sidebar (right) ── */}
       {!activeFlow && (
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+          {/* Left — Action zone */}
+          <div className="space-y-4">
+            <PrescribedPracticeCard
+              crossToolData={crossToolData}
+              bpoPatterns={bpoPatterns}
+              trends={trends}
+              recentSessionIds={recentSessionIds}
+              onSessionLogged={handleSessionLogged}
+            />
 
-          {/* Main grid: Action zone (left) + Context sidebar (right) */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <CoachingFlowsCard onStartFlow={handleStartFlow} />
 
-            {/* Left / center — Action zone */}
-            <div className="lg:col-span-2 space-y-6">
-
-              {/* Coaching Flows — scrollable list with expandable popups */}
-              <CoachingFlowsCard onStartFlow={handleStartFlow} />
-
-              {/* Leadership Tools */}
-              <div className="space-y-3">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Leadership Tools</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <ActionTile
-                    icon={Brain}
-                    iconBg="bg-rose-50 dark:bg-rose-950/40"
-                    iconColor="text-rose-600"
-                    title="Decision journal"
-                    description="Capture a high-stakes decision — context, confidence, risks — and review outcomes later."
-                    to="/decision-journal"
-                  />
-                  <ActionTile
-                    icon={Users}
-                    iconBg="bg-sky-50 dark:bg-sky-950/40"
-                    iconColor="text-sky-600"
-                    title="1:1 prep & notes"
-                    description="Prepare questions, review commitments, and track conversation notes."
-                    to="/one-on-ones"
-                  />
-                  <ActionTile
-                    icon={Layers}
-                    iconBg="bg-orange-50 dark:bg-orange-950/40"
-                    iconColor="text-orange-600"
-                    title="Delegation planner"
-                    description="Identify what to hand off and how to set your team up for success."
-                    to="/delegation-planner"
-                  />
-                </div>
+            {/* Leadership Tools */}
+            <div className="space-y-2.5">
+              <div className="px-1 pt-1">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Leadership Tools
+                </p>
               </div>
-
-              {/* Request Support — formal coaching request submission */}
-              <RequestCoachingCard />
-            </div>
-
-            {/* Right — Context sidebar */}
-            <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-20 lg:self-start">
-              {/* Daily Gym */}
-              <div className="space-y-2">
-                <div className="px-1">
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Daily Gym</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">3–7 min exercises personalised to your active patterns and goals.</p>
-                </div>
-                <WorkoutsSection goals={goals} trends={trends} insight={insight} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <ActionTile
+                  icon={Brain}
+                  iconBg="bg-rose-50 dark:bg-rose-950/40"
+                  iconColor="text-rose-600"
+                  title="Decision journal"
+                  description="Capture a high-stakes decision and review outcomes later."
+                  to="/decision-journal"
+                />
+                <ActionTile
+                  icon={Users}
+                  iconBg="bg-sky-50 dark:bg-sky-950/40"
+                  iconColor="text-sky-600"
+                  title="1:1 prep & notes"
+                  description="Prepare questions, review commitments, track notes."
+                  to="/one-on-ones"
+                />
+                <ActionTile
+                  icon={Layers}
+                  iconBg="bg-orange-50 dark:bg-orange-950/40"
+                  iconColor="text-orange-600"
+                  title="Delegation planner"
+                  description="Identify what to hand off and set your team up to win."
+                  to="/delegation-planner"
+                />
+                <ActionTile
+                  icon={Dumbbell}
+                  iconBg="bg-violet-50 dark:bg-violet-950/40"
+                  iconColor="text-violet-600"
+                  title="Daily gym"
+                  description="3–7 min exercises tuned to your active patterns."
+                  to="/practice"
+                />
               </div>
             </div>
+
+            {/* Request Support */}
+            <RequestCoachingCard />
+          </div>
+
+          {/* Right — Context sidebar */}
+          <div className="space-y-4 md:sticky md:top-20 md:self-start">
+            <div className="space-y-2">
+              <div className="px-1 pt-1">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Daily Gym
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  3–7 min exercises personalised to your active patterns and goals.
+                </p>
+              </div>
+              <WorkoutsSection goals={goals} trends={trends} insight={insight} />
+            </div>
+
+            <PracticeSessionsLog />
           </div>
         </div>
       )}
+
+      {/* ── Sessions drawer (opened from the streak ring) ── */}
+      <Sheet open={showSessions} onOpenChange={setShowSessions}>
+        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="text-left">Practice sessions</SheetTitle>
+          </SheetHeader>
+          <div className="px-4 pb-8">
+            <PracticeSessionsLog />
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* ── Settings slide-out ── */}
+      <AnimatePresence>
+        {showSettings && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/30 z-40"
+              onClick={() => setShowSettings(false)}
+            />
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-background z-50 overflow-y-auto shadow-2xl"
+            >
+              <div className="sticky top-0 bg-background border-b border-border px-5 py-4 flex items-center justify-between z-10">
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="w-4 h-4 text-[#0202ff]" />
+                  <p className="text-sm font-semibold text-foreground">Atreus settings</p>
+                </div>
+                <button
+                  onClick={() => setShowSettings(false)}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-5">
+                <CheckInSettings />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
+}
+
+function ActionTile({ icon: Icon, iconBg, iconColor, title, description, to }) {
+  const content = (
+    <div className="flex items-center gap-4 p-4 h-full rounded-2xl border border-border bg-card shadow-sm hover:shadow-md transition-all group cursor-pointer active:scale-[0.99]">
+      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
+        <Icon className={`w-5 h-5 ${iconColor}`} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-card-foreground">{title}</p>
+        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{description}</p>
+      </div>
+      <ChevronRight className="w-4 h-4 flex-shrink-0 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+    </div>
+  );
+  if (to) return <Link to={to} className="block h-full">{content}</Link>;
+  return content;
 }
