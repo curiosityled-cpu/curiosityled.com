@@ -27,6 +27,7 @@ const RequestSubmissionForm = lazy(() => import("@/components/requests/RequestSu
 const RequestStatistics = lazy(() => import("@/components/requests/RequestStatistics"));
 const AdvancedFilters = lazy(() => import("@/components/requests/AdvancedFilters"));
 const CoachingRequestAllowlistSettings = lazy(() => import("@/components/requests/CoachingRequestAllowlistSettings"));
+import CoachingRequestTriageBoard from "@/components/requests/CoachingRequestTriageBoard";
 
 const STATUS_BADGE_COLORS = {
   new: 'bg-blue-100 text-blue-800', triaging: 'bg-yellow-100 text-yellow-800',
@@ -224,6 +225,13 @@ export default function ExperienceManagement() {
                 <Plus className="w-4 h-4 mr-1.5" /> New Request
               </Button>
             </div>
+
+            {/* Coaching & Consulting Request Triage — merged from Request Triage */}
+            {!isCoachScoped && (
+              <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4">
+                <CoachingRequestTriageBoard />
+              </div>
+            )}
 
             {!isCoachScoped && user?.client_id && (
               <CoachingRequestAllowlistSettings clientId={user.client_id} />
