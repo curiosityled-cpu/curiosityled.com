@@ -289,7 +289,11 @@ export default function OneOnOneHub() {
       status: 'scheduled',
     };
 
+    const hasExistingEvent = !!currentRecord.calendar_event_id;
     const calRes = await base44.functions.invoke('createOneOnOneCalendarEvent', {
+      action: hasExistingEvent ? 'update' : 'create',
+      event_id: hasExistingEvent ? currentRecord.calendar_event_id : undefined,
+      calendar_source: hasExistingEvent ? currentRecord.calendar_source : undefined,
       attendee_email: currentRecord.employee_email || undefined,
       attendee_name: currentRecord.attendee_name || '',
       title: currentRecord.title || `1:1 with ${currentRecord.attendee_name || ''}`,
@@ -341,6 +345,28 @@ export default function OneOnOneHub() {
 
   const handleNewOneOnOne = () => setCurrentRecord(null);
 
+  const [cancelling, setCancelling] = useState(false);
+  const handleCancel = async () => {
+    if (!currentRecord) return;
+    setCancelling(true);
+    try {
+      if (currentRecord.calendar_event_id && currentRecord.calendar_source) {
+        await base44.functions.invoke('createOneOnOneCalendarEvent', {
+          action: 'delete',
+          event_id: currentRecord.calendar_event_id,
+          calendar_source: currentRecord.calendar_source,
+        });
+      }
+      await base44.entities.MeetingRecord.delete(currentRecord.id);
+      queryClient.invalidateQueries({ queryKey: ['ooo-records', user?.email] });
+      setCurrentRecord(null);
+    } catch (e) {
+      console.error('Cancel failed:', e);
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   const handleCloseDebrief = () => {
     setDebriefRecord(null);
     queryClient.invalidateQueries({ queryKey: ['ooo-records', user?.email] });
@@ -380,6 +406,8 @@ export default function OneOnOneHub() {
           record={currentRecord}
           calendarConnected={calendarConnected}
           onSave={handleSchedule}
+          onCancel={handleCancel}
+          cancelling={cancelling}
         />
       </div>
 

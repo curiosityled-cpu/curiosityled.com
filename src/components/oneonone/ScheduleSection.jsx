@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CalendarClock, Clock, Repeat, Video, Loader2, CheckCircle2, ExternalLink } from "lucide-react";
+import { CalendarClock, Clock, Repeat, Video, Loader2, CheckCircle2, ExternalLink, Trash2 } from "lucide-react";
 
 const RECURRENCE_OPTIONS = [
   { value: "none", label: "One-time" },
@@ -20,7 +20,7 @@ const RECURRENCE_OPTIONS = [
  *  - calendarConnected: boolean
  *  - onSave({ date, time, duration, recurrence, addToCalendar })
  */
-export default function ScheduleSection({ record, calendarConnected, onSave }) {
+export default function ScheduleSection({ record, calendarConnected, onSave, onCancel, cancelling }) {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [duration, setDuration] = useState(30);
@@ -185,8 +185,29 @@ export default function ScheduleSection({ record, calendarConnected, onSave }) {
               </a>
             )}
 
-            {/* Save */}
-            <div className="flex items-center justify-end gap-2 pt-1">
+            {/* Save / Cancel */}
+            <div className="flex items-center justify-between gap-2 pt-1">
+              {isScheduled ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onCancel}
+                  disabled={cancelling}
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  {cancelling ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Cancelling…
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4 mr-1.5" /> Cancel 1:1
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <span />
+              )}
               <Button onClick={handleSave} disabled={!canSave} className="min-w-[120px]">
                 {saving ? (
                   <>
