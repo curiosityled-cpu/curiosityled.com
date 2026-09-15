@@ -79,20 +79,20 @@ export default function RequestStatistics({ clientId, refreshTrigger }) {
           <div
             key={chip.label}
             tabIndex={0}
-            className="group rounded-[11px] border border-[#e5e7eb] dark:border-[#334155] bg-[#ffffff] dark:bg-[#182235] min-h-[76px] px-[18px] py-4 flex items-center gap-[11px] cursor-pointer transition-[background-color,border-color,box-shadow,transform] duration-200 ease-out hover:bg-[#f8faff] hover:border-[#0202ff]/30 dark:hover:bg-[#202d43] dark:hover:border-[#4b6684] hover:shadow-[0_7px_18px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_7px_18px_rgba(0,0,0,0.2)] active:bg-[#f0f3fb] dark:active:bg-[#263550] active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-[#0202ff] dark:focus-visible:outline-[#38bdf8]"
+            className="group rounded-[11px] border border-[#e5e7eb] dark:border-[#334155] bg-[#ffffff] dark:bg-[#182235] min-h-[76px] px-[18px] py-4 flex items-center gap-[11px] cursor-pointer transition-[background-color,border-color,box-shadow,transform] duration-[180ms] ease-out hover:bg-[#f8faff] hover:border-[#0202ff]/30 dark:hover:bg-[#202d43] dark:hover:border-[#4b6684] hover:shadow-[0_7px_18px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_7px_18px_rgba(0,0,0,0.2)] active:bg-[#f0f3fb] dark:active:bg-[#263550] active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-[#0202ff] dark:focus-visible:outline-[#38bdf8]"
           >
             <span
               className="shrink-0 w-2 h-2 rounded-full"
               style={{ backgroundColor: chip.dot }}
             />
-            <span className="min-w-0 text-[13px] font-semibold text-[#64748b] dark:text-[#94a3b8] leading-tight">
+            <span className="min-w-0 text-[13px] font-semibold text-[#64748b] dark:text-[#94a3b8] whitespace-nowrap">
               {chip.label}
             </span>
-            <span className="shrink-0 ml-auto text-[19px] font-[750] text-[#0f172a] dark:text-[#f8fafc] whitespace-nowrap">
+            <span className="ml-auto text-[19px] font-[750] text-[#0f172a] dark:text-[#f8fafc] whitespace-nowrap">
               {chip.value}
             </span>
             {chip.badge && (
-              <span className="shrink-0 ml-2 px-[7px] py-[3px] rounded-full border border-[#cbd5e1] dark:border-[#475569] text-[#475569] dark:text-[#cbd5e1] text-[11px] font-[650] whitespace-nowrap">
+              <span className="ml-auto px-[7px] py-[3px] rounded-full border border-[#cbd5e1] dark:border-[#475569] text-[#475569] dark:text-[#cbd5e1] text-[11px] font-[650] whitespace-nowrap">
                 {chip.badge}
               </span>
             )}
