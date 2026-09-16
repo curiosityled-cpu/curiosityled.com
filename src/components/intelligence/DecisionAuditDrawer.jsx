@@ -244,14 +244,15 @@ export default function DecisionAuditDrawer({ decision, onClose, onSave, userEma
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-          <div>
+        <div className="px-6 py-4 border-b border-border flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Decision Quality Audit — {rubric.label}</p>
-            <p className="text-sm text-card-foreground font-medium mt-0.5 truncate">{auditData.decision_text || 'New entry'}</p>
+            <p className="text-sm text-card-foreground font-medium mt-0.5 break-words line-clamp-2">{auditData.decision_text || 'New entry'}</p>
           </div>
           <button
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors p-1 -mr-1 rounded-md hover:bg-muted"
+            aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
