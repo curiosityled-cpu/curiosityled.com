@@ -42,16 +42,9 @@ const FLOWS = {
         hint: "Naming the risk is often half the preparation.",
         type: "textarea",
       },
-      {
-        id: "move",
-        question: "What's one specific thing you'll do differently because of this prep?",
-        placeholder: "e.g. Open with the impact, not the behavior. Ask one question before giving my view…",
-        hint: "This becomes your planned move — it's saved privately.",
-        type: "textarea",
-      },
     ],
     buildAtreusMsg: (responses) =>
-      `I've just prepped for an upcoming conversation. Here's my context:\n\nSituation: ${responses.context}\nWhat I want: ${responses.goal}\nRisk I'm watching: ${responses.risk}\nPlanned move: ${responses.move}\n\nCan you help me sharpen this and think through anything I might have missed?`,
+      `I've just prepped for an upcoming conversation. Here's my context:\n\nSituation: ${responses.context}\nWhat I want: ${responses.goal}\nRisk I'm watching: ${responses.risk}\n\nCan you help me sharpen this and think through anything I might have missed? Once we've talked it through, I'll capture the one specific thing I'll do differently.`,
   },
 
   debrief: {
@@ -173,6 +166,12 @@ export default function PracticeFlow({ flowKey, onClose }) {
 
   const [debriefScheduled, setDebriefScheduled] = useState(false);
 
+  // Post-coaching commitment capture (prepare flow only)
+  const [phase, setPhase] = useState('atreus_ready'); // 'atreus_ready' | 'commitment'
+  const [commitment, setCommitment] = useState('');
+  const [commitmentSaving, setCommitmentSaving] = useState(false);
+  const [commitmentSaved, setCommitmentSaved] = useState(false);
+
   const flow = FLOWS[flowKey];
   if (!flow) return null;
 
@@ -230,7 +229,115 @@ export default function PracticeFlow({ flowKey, onClose }) {
     }, 400);
   };
 
+  const handleSaveCommitment = async () => {
+    if (!commitment.trim()) return;
+    setCommitmentSaving(true);
+    await base44.entities.ManagerPulse.create({
+      user_email: user?.email,
+      prompt_type: 'follow_up',
+      source: 'web',
+      focus_intention: `Planned move: ${commitment}`.slice(0, 500),
+      description: `Commitment captured after Prepare coaching flow.\n\nMove: ${commitment}`.slice(0, 1000),
+    }).catch(() => {});
+    setCommitmentSaving(false);
+    setCommitmentSaved(true);
+  };
+
   if (done) {
+    // Prepare flow: two-phase completion — Atreus ready, then commitment capture.
+    if (flowKey === 'prepare' && phase === 'atreus_ready') {
+      return (
+        <div className="rounded-2xl border border-border p-6 text-center space-y-3 bg-card">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto bg-muted border border-border">
+            <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+          </div>
+          <p className="text-base font-semibold text-foreground">Saved — Atreus is ready</p>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Your context is saved privately. Atreus has the full picture and is ready to coach you through it.
+          </p>
+          {debriefScheduled && (
+            <div className="flex items-start gap-2 rounded-xl px-3 py-2.5 text-left bg-muted border border-border">
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#0202ff] flex-shrink-0 mt-0.5" />
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                A <strong className="text-foreground">debrief prompt</strong> has been scheduled for later today — you'll see it when you check in after the moment has passed.
+              </p>
+            </div>
+          )}
+          <div className="flex justify-center gap-2 pt-1">
+            <Button size="sm" variant="outline" className="text-xs" onClick={onClose}>
+              Back to Practice
+            </Button>
+            <Button
+              size="sm"
+              className="text-xs h-8 gap-1.5 bg-[#0202ff] hover:bg-[#0101dd] text-white"
+              onClick={() => setPhase('commitment')}
+            >
+              <Brain className="w-3.5 h-3.5" /> Capture my commitment
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    // Prepare flow phase 2 — capture the planned move after coaching.
+    if (flowKey === 'prepare' && phase === 'commitment') {
+      return (
+        <div className="rounded-2xl border border-border p-6 space-y-4 bg-card">
+          <div className="text-center space-y-2">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto bg-muted border border-border">
+              <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+            </div>
+            <p className="text-base font-semibold text-foreground">What's your one specific move?</p>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Now that you've talked it through with Atreus, name the one thing you'll do differently. It's saved privately.
+            </p>
+          </div>
+
+          {commitmentSaved ? (
+            <div className="flex items-start gap-2 rounded-xl px-3 py-3 bg-muted border border-border">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                <strong className="text-foreground">Commitment saved.</strong> Atreus will track this and follow up.
+              </p>
+            </div>
+          ) : (
+            <>
+              <textarea
+                placeholder="e.g. Open with the impact, not the behavior. Ask one question before giving my view…"
+                value={commitment}
+                onChange={(e) => setCommitment(e.target.value)}
+                className="w-full text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 leading-relaxed rounded-xl px-4 py-3 bg-background text-foreground border border-border placeholder:text-muted-foreground"
+                rows={4}
+                autoFocus
+              />
+              <div className="flex items-center justify-between">
+                <Button size="sm" variant="ghost" className="text-xs text-muted-foreground" onClick={onClose}>
+                  Skip for now
+                </Button>
+                <Button
+                  size="sm"
+                  className="text-xs h-8 gap-1.5 bg-[#0202ff] hover:bg-[#0101dd] text-white"
+                  onClick={handleSaveCommitment}
+                  disabled={!commitment.trim() || commitmentSaving}
+                >
+                  {commitmentSaving ? 'Saving…' : (<><CheckCircle2 className="w-3.5 h-3.5" /> Save commitment</>)}
+                </Button>
+              </div>
+            </>
+          )}
+
+          {commitmentSaved && (
+            <div className="flex justify-end pt-1">
+              <Button size="sm" variant="outline" className="text-xs" onClick={onClose}>
+                Back to Practice
+              </Button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // All other flows: existing single done screen.
     return (
       <div className="rounded-2xl border border-border p-6 text-center space-y-3 bg-card">
         <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto bg-muted border border-border">
