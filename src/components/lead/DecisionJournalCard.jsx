@@ -11,8 +11,8 @@ export default function DecisionJournalCard() {
       <div className="flex items-center gap-3">
         <PenLine className="w-4 h-4 text-[#0202ff] flex-shrink-0" />
         <div className="text-left">
-          <p className="text-sm font-semibold text-slate-900">Decision journal</p>
-          <p className="text-[10px] text-slate-500">Capture decisions, review outcomes later</p>
+          <p className="text-sm font-semibold text-slate-900">Leadership Support Tool</p>
+          <p className="text-[10px] text-slate-500">Think through a moment, review outcomes later</p>
         </div>
       </div>
       <ChevronRight className="w-3.5 h-3.5 text-slate-400" />

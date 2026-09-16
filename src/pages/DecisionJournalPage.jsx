@@ -110,11 +110,11 @@ Be practical, thoughtful, and grounded. Use the manager's own language where pos
   };
 
   const handleSave = async () => {
-    if (!form.title.trim()) { toast.error("Describe the decision"); return; }
+    if (!form.title.trim()) { toast.error("Describe what you're thinking through"); return; }
     setSaving(true);
     try {
       await onSave(form);
-      toast.success("Decision captured — you can review the outcome in a few days.");
+      toast.success("Captured — you can review the outcome in a few days.");
     } catch {
       toast.error("Failed to save");
     } finally {
@@ -129,7 +129,7 @@ Be practical, thoughtful, and grounded. Use the manager's own language where pos
           <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center">
             <FileText className="w-3.5 h-3.5 text-white" />
           </div>
-          <p className="text-sm font-semibold text-gray-900">Smart Decision Assistant</p>
+          <p className="text-sm font-semibold text-gray-900">Smart Thinking Assistant</p>
         </div>
         <CardContent className="px-5 py-4 space-y-3">
           <div className="space-y-1.5">
@@ -171,16 +171,16 @@ Be practical, thoughtful, and grounded. Use the manager's own language where pos
         <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center">
           <FileText className="w-3.5 h-3.5 text-white" />
         </div>
-        <p className="text-sm font-semibold text-gray-900">Capture a decision</p>
+        <p className="text-sm font-semibold text-gray-900">Capture your thinking</p>
       </div>
       <CardContent className="px-5 py-4 space-y-4">
         <button
           onClick={() => setUseAI(true)}
           className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
         >
-          <Sparkles className="w-4 h-4" /> Use Smart Decision Assistant
+          <Sparkles className="w-4 h-4" /> Use Smart Thinking Assistant
         </button>
-        <p className="text-xs text-gray-600 text-center">Let AI help you think through this decision</p>
+        <p className="text-xs text-gray-600 text-center">Let AI help you think this through</p>
 
         <div className="relative my-3">
           <div className="absolute inset-0 flex items-center">
@@ -192,7 +192,7 @@ Be practical, thoughtful, and grounded. Use the manager's own language where pos
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-gray-600">What decision are you facing? *</label>
+          <label className="text-xs font-semibold text-gray-600">What are you thinking through? *</label>
           <Input
             placeholder="e.g., Whether to promote Sarah or bring in an external candidate"
             value={form.title}
@@ -279,7 +279,7 @@ Be practical, thoughtful, and grounded. Use the manager's own language where pos
             onClick={handleSave}
             disabled={saving || !form.title.trim()}
           >
-            {saving ? 'Saving…' : 'Capture decision'}
+            {saving ? 'Saving…' : 'Capture your thinking'}
           </Button>
         </div>
       </CardContent>
@@ -398,11 +398,11 @@ function DecisionCard({ decision, onLogOutcome, onEdit, onReview }) {
       {expanded && editing && editForm && (
         <div className="px-4 pb-4 pt-3 space-y-3 border-t border-border">
           <div className="flex items-center justify-between mb-1">
-            <p className="text-xs font-semibold text-foreground">Edit decision</p>
+            <p className="text-xs font-semibold text-foreground">Edit entry</p>
             <button onClick={() => { setEditing(false); setEditForm(null); }} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
           </div>
           <div className="space-y-1">
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Decision *</label>
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Thinking through *</label>
             <Input value={editForm.title} onChange={e => setEditForm({ ...editForm, title: e.target.value })} className="text-sm" />
           </div>
           <div className="space-y-1">
@@ -454,7 +454,7 @@ function DecisionCard({ decision, onLogOutcome, onEdit, onReview }) {
               onClick={startEdit}
               className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-[#0202ff] transition-colors"
             >
-              <Pencil className="w-3 h-3" /> Edit decision
+              <Pencil className="w-3 h-3" /> Edit entry
             </button>
           </div>
           {decision.rationale && (
@@ -716,15 +716,15 @@ export default function DecisionJournalPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="pt-1">
-          <h1 className="text-2xl font-bold text-foreground">Decision Journal</h1>
-          <p className="text-sm text-muted-foreground mt-1">Capture high-stakes decisions. Review outcomes. Learn your patterns.</p>
+          <h1 className="text-2xl font-bold text-foreground">Leadership Support Tool</h1>
+          <p className="text-sm text-muted-foreground mt-1">Think through leadership moments. Review outcomes. Learn your patterns.</p>
         </div>
         <Button
           size="sm"
           className="bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5 mt-2"
           onClick={() => setShowForm(true)}
         >
-          <Plus className="w-4 h-4" /> Capture decision
+          <Plus className="w-4 h-4" /> Capture your thinking
         </Button>
       </div>
 
@@ -733,7 +733,7 @@ export default function DecisionJournalPage() {
         <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-amber-50 border border-amber-200">
           <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
           <p className="text-xs text-amber-700 font-medium">
-            {pendingCount} decision{pendingCount > 1 ? 's are' : ' is'} awaiting an outcome — tap any to log how it went
+            {pendingCount} leadership moment{pendingCount > 1 ? 's are' : ' is'} awaiting an outcome — tap any to log how it went
           </p>
         </div>
       )}
@@ -765,7 +765,7 @@ export default function DecisionJournalPage() {
       {decisions.length > 0 && !showForm && (
         <div className="flex items-center gap-2 pt-2">
           <FileText className="w-4 h-4 text-muted-foreground" />
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Your Decisions</h2>
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Your Thinking Log</h2>
         </div>
       )}
 
@@ -778,12 +778,12 @@ export default function DecisionJournalPage() {
         <Card className="shadow-sm border border-dashed border-border rounded-2xl">
           <CardContent className="py-12 px-6 text-center">
             <FileText className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-            <p className="text-sm font-semibold text-card-foreground mb-1">No decisions logged yet</p>
+            <p className="text-sm font-semibold text-card-foreground mb-1">No entries yet</p>
             <p className="text-xs text-muted-foreground max-w-xs mx-auto mb-4 leading-relaxed">
-              Capture important decisions as you face them — context, confidence level, and assumptions. Come back in a few days to review outcomes and spot patterns.
+              Capture leadership moments as you face them — context, confidence level, and assumptions. Come back in a few days to review outcomes and spot patterns.
             </p>
             <Button size="sm" onClick={() => setShowForm(true)} className="bg-[#0202ff] hover:bg-[#0101dd] text-white">
-              <Plus className="w-3.5 h-3.5 mr-1.5" /> Capture your first decision
+              <Plus className="w-3.5 h-3.5 mr-1.5" /> Capture your first entry
             </Button>
           </CardContent>
         </Card>
@@ -814,7 +814,7 @@ export default function DecisionJournalPage() {
 // ── Inline analytics component ────────────────────────────────────────────────
 
 const GAP_LABELS = {
-  frame: 'Problem Framing', alternatives: 'Evaluating Alternatives',
+  frame: 'Situational Framing', alternatives: 'Evaluating Alternatives',
   information: 'Evidence Quality', tradeoffs: 'Making Trade-offs Explicit',
   reasoning: 'Pre-Mortem / Logic', commitment: 'Execution Commitment',
 };
@@ -885,7 +885,7 @@ function DecisionAnalyticsInline({ decisions, user }) {
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <TrendingUp className="w-4 h-4 text-[#0202ff]" />
-        <h2 className="text-base font-bold text-foreground">Decision Patterns</h2>
+        <h2 className="text-base font-bold text-foreground">Your Patterns</h2>
       </div>
 
       {/* Stats row */}
@@ -943,7 +943,7 @@ function DecisionAnalyticsInline({ decisions, user }) {
       {(patterns.strongFraming > 0 || patterns.strongCommitment > 0) && (
         <div className="space-y-2">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Decision Strengths
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Decision Quality Strengths
           </p>
           {patterns.strongFraming > 0 && (
             <div className="px-3 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200">
@@ -963,7 +963,7 @@ function DecisionAnalyticsInline({ decisions, user }) {
       {topGaps.length === 0 && auditedDecisions.length === 0 && (
         <div className="flex items-center gap-2 px-3 py-3 rounded-xl bg-muted/40 border border-dashed border-border">
           <Target className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />
-          <p className="text-xs text-muted-foreground">Run a decision audit on any committed decision to see competency development patterns here.</p>
+          <p className="text-xs text-muted-foreground">Run a decision quality audit on any committed entry to see competency development patterns here.</p>
         </div>
       )}
     </div>

@@ -138,7 +138,7 @@ function DecisionLoopItem({ decision, onOutcomeSaved, onOpenAtreus }) {
       </button>
       {expanded && (
         <div className="mt-2.5 space-y-2.5">
-          <p className="text-xs text-muted-foreground">How did this decision go?</p>
+          <p className="text-xs text-muted-foreground">How did this play out?</p>
           <div className="grid grid-cols-2 gap-1.5">
             {DECISION_OUTCOMES.map(({ value, label, Icon, color, ring }) => (
               <button
@@ -263,7 +263,7 @@ export default function TodaysPlaybook({ pulse, todayRecord, yesterdayBig3 = [],
                 {/* Decisions subsection */}
                 {outcomePendingDecisions.length > 0 && (
                   <div>
-                    <p className="text-[9px] font-bold text-[#0202ff]/70 uppercase tracking-widest mb-2">Decisions (7+ days old)</p>
+                    <p className="text-[9px] font-bold text-[#0202ff]/70 uppercase tracking-widest mb-2">Entries (7+ days old)</p>
                     <div className="space-y-1">
                       {outcomePendingDecisions.map(d => (
                         <DecisionLoopItem

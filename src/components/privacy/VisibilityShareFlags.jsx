@@ -53,8 +53,8 @@ const TOGGLE_ITEMS = [
   },
   {
     key: "share_decision_lessons",
-    label: "Share Decision Journal Lessons with my manager",
-    sub: "Share completed post-mortems or outcomes of critical choices from your Decision Journal with my manager for coaching insights.",
+    label: "Share Leadership Support lessons with my manager",
+    sub: "Share completed reviews or outcomes of critical choices from your Leadership Support Tool with my manager for coaching insights.",
     icon: BookOpen,
     iconColor: "text-amber-500",
     defaultOn: false,

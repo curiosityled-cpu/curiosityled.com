@@ -229,7 +229,7 @@ export default function DecisionAuditDrawer({ decision, onClose, onSave, userEma
         // Gap analysis is non-blocking
       }
 
-      toast.success('Decision audit saved — you\'re ready to commit.');
+      toast.success('Decision quality audit saved — you\'re ready to commit.');
       onSave?.(auditData);
       onClose();
     } catch (error) {
@@ -246,8 +246,8 @@ export default function DecisionAuditDrawer({ decision, onClose, onSave, userEma
         {/* Header */}
         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Decision Audit — {rubric.label}</p>
-            <p className="text-sm text-card-foreground font-medium mt-0.5 truncate">{auditData.decision_text || 'New decision'}</p>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Decision Quality Audit — {rubric.label}</p>
+            <p className="text-sm text-card-foreground font-medium mt-0.5 truncate">{auditData.decision_text || 'New entry'}</p>
           </div>
           <button
             onClick={onClose}

@@ -89,7 +89,7 @@ export default function DecisionJournal() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="w-5 h-5" />
-            Decision Journal
+            Leadership Support Tool
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -108,11 +108,11 @@ export default function DecisionJournal() {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <FileText className="w-5 h-5" />
-              Decision Journal
+              Leadership Support Tool
             </CardTitle>
             <Button size="sm" variant="outline" onClick={() => setShowForm(true)} className="gap-1">
               <Plus className="w-4 h-4" />
-              Log Decision
+              Capture your thinking
             </Button>
           </div>
         </CardHeader>
@@ -122,7 +122,7 @@ export default function DecisionJournal() {
             <div className="text-center py-8">
               <FileText className="w-8 h-8 mx-auto mb-2 opacity-30" />
               <p className="text-sm text-gray-500">
-                No decisions logged yet. Start capturing complex decisions to track outcomes and patterns.
+                No entries yet. Start capturing leadership moments to track outcomes and patterns.
               </p>
             </div>
           ) : (
@@ -160,13 +160,13 @@ export default function DecisionJournal() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="w-5 h-5" />
-              Log a Leadership Decision
+              Think through a leadership moment
             </DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">What decision are you facing?</label>
+              <label className="text-sm font-medium">What are you thinking through?</label>
               <Input
                 placeholder="e.g., Whether to promote Sarah or bring in external candidate"
                 value={formData.decision}
@@ -210,7 +210,7 @@ export default function DecisionJournal() {
                 onMouseEnter={(e) => !submitting && (e.currentTarget.style.backgroundColor = '#0101dd')}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#0202ff')}
               >
-                {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Logging...</> : "Log Decision"}
+                {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : "Capture your thinking"}
               </Button>
             </div>
           </form>

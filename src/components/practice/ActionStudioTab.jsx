@@ -106,13 +106,13 @@ export default function ActionStudioTab({ onStartFlow }) {
 
       {/* Decision Center */}
       <div className="space-y-2.5">
-        <SectionLabel>Decision Center</SectionLabel>
+        <SectionLabel>Leadership Support</SectionLabel>
         <FlowTile
           icon={Brain}
           iconBg="bg-rose-50 dark:bg-rose-950/40"
           iconColor="text-rose-600"
-          title="Decision journal"
-          description="Capture a high-stakes decision — context, confidence, risks — and review outcomes later."
+          title="Leadership Support Tool"
+          description="Think through a high-stakes moment — context, confidence, risks — and review outcomes later."
           to="/decision-journal"
         />
         <DecisionJournalOutcomeReview />

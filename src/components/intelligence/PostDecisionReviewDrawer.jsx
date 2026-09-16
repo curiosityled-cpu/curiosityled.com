@@ -86,7 +86,7 @@ export default function PostDecisionReviewDrawer({ decision, onClose, onSave }) 
         process_quality_still_sound: reviewData.process_quality_still_sound,
         would_repeat: reviewData.would_repeat,
       });
-      toast.success('Review saved — you have completed your decision loop.');
+      toast.success('Review saved — you have completed your decision quality loop.');
       onSave?.();
       onClose();
     } catch (error) {
@@ -199,7 +199,7 @@ export default function PostDecisionReviewDrawer({ decision, onClose, onSave }) 
         {/* Header */}
         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Post-Decision Review</p>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Decision Quality Review</p>
             <p className="text-sm text-card-foreground font-medium mt-0.5 truncate">{decision?.decision_text || 'Decision'}</p>
           </div>
           <button

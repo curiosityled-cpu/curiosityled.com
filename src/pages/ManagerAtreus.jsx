@@ -25,7 +25,7 @@ function SectionHeader({ title, subtitle }) {
 const GUIDED_JOURNEYS = [
   { label: "Make sense of my week", prompt: "Help me reflect on this week as a manager. What went well, what was hard, and what should I carry forward?", icon: BookOpen, color: "text-blue-600 bg-blue-50 border-blue-100", tag: "Weekly reflection" },
   { label: "Understand a recurring pattern", prompt: "I want to explore a pattern I keep noticing in myself as a leader. Can you help me understand it better?", icon: Brain, color: "text-purple-600 bg-purple-50 border-purple-100", tag: "Pattern exploration" },
-  { label: "Work through a decision", prompt: "I have a complex decision to make. Help me think through the considerations, tradeoffs, and what might be influencing my thinking.", icon: Lightbulb, color: "text-amber-600 bg-amber-50 border-amber-100", tag: "Decision support" },
+  { label: "Think through a leadership moment", prompt: "I have a leadership moment to think through. Help me work through the considerations, tradeoffs, and what might be influencing my thinking.", icon: Lightbulb, color: "text-amber-600 bg-amber-50 border-amber-100", tag: "Leadership support" },
   { label: "Prepare for a difficult moment", prompt: "I have something coming up that feels difficult — a conversation, a decision, or a situation I'm dreading. Help me prepare.", icon: Target, color: "text-emerald-600 bg-emerald-50 border-emerald-100", tag: "Situational prep" },
   { label: "Explore what's weighing on me", prompt: "Something has been sitting on me as a leader. I'm not sure exactly what it is. Can we explore it together?", icon: MessageSquare, color: "text-rose-600 bg-rose-50 border-rose-100", tag: "Open reflection" },
 ];

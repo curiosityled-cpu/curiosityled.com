@@ -422,7 +422,7 @@ Generate a well-structured decision for them to capture in their decision journa
           <div className="space-y-3 border-t border-border pt-4">
             <div className="flex items-center gap-2">
               <Lightbulb className="w-4 h-4 text-[#0202ff]" />
-              <p className="text-sm font-semibold text-gray-900">Decision support</p>
+              <p className="text-sm font-semibold text-gray-900">Leadership support</p>
             </div>
 
             {/* Step 1: trigger */}
@@ -432,14 +432,14 @@ Generate a well-structured decision for them to capture in their decision journa
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-[#0202ff]/30 bg-[#0202ff]/5 text-[#0202ff] text-sm font-medium hover:bg-[#0202ff]/10 transition-colors"
               >
                 <Lightbulb className="w-3.5 h-3.5" />
-                What should I decide this week?
+                What should I think through this week?
               </button>
             )}
 
             {loadingAi && (
               <div className="flex items-center justify-center gap-2 py-4">
                 <Loader2 className="w-4 h-4 animate-spin text-[#0202ff]" />
-                <p className="text-xs text-gray-500">Generating decision options…</p>
+                <p className="text-xs text-gray-500">Generating options…</p>
               </div>
             )}
 
@@ -492,7 +492,7 @@ Generate a well-structured decision for them to capture in their decision journa
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <FileText className="w-3.5 h-3.5 text-[#0202ff]" />
-                    <p className="text-xs font-semibold text-gray-800">Capture your decision</p>
+                    <p className="text-xs font-semibold text-gray-800">Capture your thinking</p>
                   </div>
                   <button onClick={resetDecisionFlow} className="p-1 rounded hover:bg-red-50 transition-colors">
                     <X className="w-3.5 h-3.5 text-gray-400" />
@@ -509,13 +509,13 @@ Generate a well-structured decision for them to capture in their decision journa
                   {loadingAiAssist
                     ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     : <Sparkles className="w-3.5 h-3.5" />}
-                  {loadingAiAssist ? 'Generating draft…' : 'Use Smart Decision Assistant'}
+                  {loadingAiAssist ? 'Generating draft…' : 'Use Smart Thinking Assistant'}
                 </button>
-                <p className="text-[10px] text-gray-400 text-center -mt-1">Let AI help you structure this decision clearly</p>
+                <p className="text-[10px] text-gray-400 text-center -mt-1">Let AI help you structure your thinking clearly</p>
 
                 {/* Decision title */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-semibold text-gray-600 uppercase tracking-wide">What decision are you facing? *</label>
+                  <label className="text-[10px] font-semibold text-gray-600 uppercase tracking-wide">What are you thinking through? *</label>
                   <Input
                     placeholder="e.g., Whether to restructure weekly 1:1s to reduce reactive load"
                     value={form.title}
@@ -614,7 +614,7 @@ Generate a well-structured decision for them to capture in their decision journa
                   onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#0202ff')}
                 >
                   {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                  {saving ? 'Saving…' : 'Commit to this decision'}
+                  {saving ? 'Saving…' : 'Commit to this'}
                 </Button>
                 <p className="text-[10px] text-gray-400 text-center">This will appear in Close the Loop on your Today page so you can track how it went.</p>
               </div>
@@ -625,7 +625,7 @@ Generate a well-structured decision for them to capture in their decision journa
               <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 flex items-start gap-3">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-semibold text-emerald-800">Decision committed</p>
+                  <p className="text-sm font-semibold text-emerald-800">Entry committed</p>
                   <p className="text-xs text-emerald-700 mt-0.5 leading-snug">
                     Check back on your Today page — you'll see it in the Close the Loop section to capture how it went.
                   </p>

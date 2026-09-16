@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 
 // Friendly label for each DQ gap dimension
 const GAP_LABELS = {
-  frame:        'Problem Framing',
+  frame:        'Situational Framing',
   alternatives: 'Evaluating Alternatives',
   information:  'Evidence Quality',
   tradeoffs:    'Making Trade-offs Explicit',
@@ -183,16 +183,16 @@ export default function DecisionQualityAnalytics() {
       {/* Header */}
       <div>
         <Link to="/decision-journal" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mb-3">
-          <ArrowLeft className="w-3 h-3" /> Back to Decision Journal
+          <ArrowLeft className="w-3 h-3" /> Back to Leadership Support Tool
         </Link>
         <h1 className="text-2xl font-bold text-foreground">Decision Quality Analytics</h1>
-        <p className="text-sm text-muted-foreground mt-1">Audit patterns mapped to your leadership competency development</p>
+        <p className="text-sm text-muted-foreground mt-1">Decision-making quality patterns mapped to your leadership competency development</p>
       </div>
 
       {/* Overview stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'Total Decisions', value: patterns.total },
+          { label: 'Total Entries', value: patterns.total },
           { label: 'Audited', value: patterns.audited },
           { label: 'Outcomes Logged', value: patterns.withOutcome },
           { label: 'Avg DQI', value: `${patterns.avgDQI}/5` },
@@ -219,10 +219,10 @@ export default function DecisionQualityAnalytics() {
             <CardContent className="py-8 text-center">
               <Target className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
               <p className="text-sm text-muted-foreground">
-                No audit data yet. Run a Decision Audit on any committed decision to generate competency insights.
+                No audit data yet. Run a decision quality audit on any committed entry to generate competency insights.
               </p>
               <Link to="/decision-journal" className="text-xs text-[#0202ff] mt-2 inline-block hover:underline">
-                → Go to Decision Journal
+                → Go to Leadership Support Tool
               </Link>
             </CardContent>
           </Card>
@@ -257,7 +257,7 @@ export default function DecisionQualityAnalytics() {
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-emerald-600" />
-            <h2 className="text-lg font-bold text-foreground">Decision Strengths</h2>
+            <h2 className="text-lg font-bold text-foreground">Decision Quality Strengths</h2>
           </div>
           {patterns.strongFraming > 0 && (
             <StrengthCard

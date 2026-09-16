@@ -264,8 +264,8 @@ export default function ManagerPractice() {
                     icon={Brain}
                     iconBg="bg-rose-50 dark:bg-rose-950/40"
                     iconColor="text-rose-600"
-                    title="Decision journal"
-                    description="Capture a high-stakes decision and review outcomes later."
+                    title="Leadership Support Tool"
+                    description="Think through a high-stakes moment and review outcomes later."
                     to="/decision-journal"
                   />
                   <ActionTile
