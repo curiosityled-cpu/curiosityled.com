@@ -45,8 +45,16 @@ const FLOWS = {
     ],
     commitmentPrompt: "What's one specific thing you'll do differently because of this prep?",
     commitmentPlaceholder: "e.g. Open with the impact, not the behavior. Ask one question before giving my view…",
+    buildCoachingFlow: (responses) => ({
+      flow: 'prepare',
+      title: 'Prepare',
+      scenario: responses.context,
+      goal: responses.goal,
+      risk: responses.risk,
+      practice_eligible: true,
+    }),
     buildAtreusMsg: (responses) =>
-      `I've just prepped for an upcoming conversation. Here's my context:\n\nSituation: ${responses.context}\nWhat I want: ${responses.goal}\nRisk I'm watching: ${responses.risk}\n\nCan you help me sharpen this and think through anything I might have missed? Once we've talked it through, I'll capture the one specific thing I'll do differently.`,
+      `I've just prepped for an upcoming conversation. Here's my context:\n\nSituation: ${responses.context}\nWhat I want: ${responses.goal}\nRisk I'm watching: ${responses.risk}\n\nCoach me through this — ask me one thing at a time and help me sharpen it. If it'd help, we can practice the conversation for real at some point. I'll capture my one specific move afterward.`,
   },
 
   debrief: {
@@ -80,8 +88,16 @@ const FLOWS = {
     ],
     commitmentPrompt: "What's one thing you'd do differently next time?",
     commitmentPlaceholder: "e.g. Start with the impact, not the story. Set up the outcome before the meeting…",
+    buildCoachingFlow: (responses) => ({
+      flow: 'debrief',
+      title: 'Debrief',
+      what_happened: responses.what_happened,
+      surprising: responses.surprised,
+      pulled_off: responses.pulled_off,
+      practice_eligible: true,
+    }),
     buildAtreusMsg: (responses) =>
-      `I just debriefed something that happened. Here's what I captured:\n\nWhat happened: ${responses.what_happened}\nWhat surprised me: ${responses.surprised}\nWhere I got pulled off: ${responses.pulled_off}\n\nHelp me understand what this reveals about my patterns. Once we've talked it through, I'll capture the one thing I'd do differently next time.`,
+      `I just debriefed something that happened. Here's what I captured:\n\nWhat happened: ${responses.what_happened}\nWhat surprised me: ${responses.surprised}\nWhere I got pulled off: ${responses.pulled_off}\n\nCoach me through what this reveals — one question at a time. If it's useful, we can replay the conversation or practice a do-over. I'll capture the one thing I'd do differently next time afterward.`,
   },
 
   work_through: {
@@ -108,8 +124,15 @@ const FLOWS = {
     ],
     commitmentPrompt: "What's the smallest possible step that would move this forward?",
     commitmentPlaceholder: "e.g. Write down the one thing I actually need to decide. Send the first sentence of that message. Say it out loud to someone…",
+    buildCoachingFlow: (responses) => ({
+      flow: 'work_through',
+      title: 'Work through something',
+      stuck: responses.stuck,
+      real_block: responses.real_block,
+      practice_eligible: true,
+    }),
     buildAtreusMsg: (responses) =>
-      `I'm working through something. Here's where I am:\n\nWhat I'm stuck on: ${responses.stuck}\nWhat I think is in the way: ${responses.real_block}\n\nCan you help me think this through more clearly? Once we've talked it through, I'll capture the smallest step I can take to move forward.`,
+      `I'm working through something. Here's where I am:\n\nWhat I'm stuck on: ${responses.stuck}\nWhat I think is in the way: ${responses.real_block}\n\nCoach me through this — one question at a time, help me see it more clearly. If there's a conversation in here I'm avoiding, we can practice it. I'll capture the smallest step I can take afterward.`,
   },
 
   reflect: {
@@ -136,8 +159,15 @@ const FLOWS = {
     ],
     commitmentPrompt: "What's one thing you want to carry forward intentionally?",
     commitmentPlaceholder: "e.g. Block that Thursday morning. Keep giving direct feedback. Delegate before I overload…",
+    buildCoachingFlow: (responses) => ({
+      flow: 'reflect',
+      title: 'Reflect',
+      went_well: responses.went_well,
+      surprising: responses.surprising,
+      practice_eligible: false,
+    }),
     buildAtreusMsg: (responses) =>
-      `I just completed a leadership reflection. Here's what I captured:\n\nWhat went well: ${responses.went_well}\nWhat surprised me: ${responses.surprising}\n\nHelp me understand what patterns this touches. Once we've talked it through, I'll capture the one thing I want to carry forward intentionally.`,
+      `I just completed a leadership reflection. Here's what I captured:\n\nWhat went well: ${responses.went_well}\nWhat surprised me: ${responses.surprising}\n\nCoach me through what patterns this touches — one question at a time. I'll capture the one thing I want to carry forward afterward.`,
   },
 };
 
@@ -207,10 +237,11 @@ export default function PracticeFlow({ flowKey, onClose }) {
     setSaving(false);
     setDone(true);
 
-    // Open Atreus with full context
+    // Open Atreus with full coaching-flow context so it runs a true coaching
+    // conversation (and can offer an authentic role-play when relevant).
     setTimeout(() => {
       openWithContext({
-        context: { pageType: 'practice', flow: flowKey },
+        context: { pageType: 'practice', coaching_flow: flow.buildCoachingFlow(responses) },
         starterMessage: flow.buildAtreusMsg(responses),
       });
     }, 400);

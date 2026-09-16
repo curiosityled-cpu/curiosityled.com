@@ -141,6 +141,46 @@ function formatConvMemory(convMemory) {
   return parts.join('\n\n');
 }
 
+function formatCoachingFlowContext(cf) {
+  if (!cf || !cf.flow) return null;
+  const parts = [];
+  parts.push(`COACHING FLOW CONTEXT — ${cf.title || cf.flow}:`);
+  parts.push(`The manager just completed a structured ${cf.title || cf.flow} flow in the Practice studio. They captured their context privately. Your job now is to run a genuine coaching conversation — not to answer a single question and stop.`);
+
+  const details = [];
+  if (cf.scenario) details.push(`Situation: ${cf.scenario}`);
+  if (cf.goal) details.push(`What they want: ${cf.goal}`);
+  if (cf.risk) details.push(`Risk they're watching: ${cf.risk}`);
+  if (cf.what_happened) details.push(`What happened: ${cf.what_happened}`);
+  if (cf.surprising) details.push(`What surprised them: ${cf.surprising}`);
+  if (cf.pulled_off) details.push(`Where they got pulled off course: ${cf.pulled_off}`);
+  if (cf.stuck) details.push(`What they're stuck on: ${cf.stuck}`);
+  if (cf.real_block) details.push(`What they think is in the way: ${cf.real_block}`);
+  if (cf.went_well) details.push(`What went well: ${cf.went_well}`);
+  if (details.length) parts.push(details.join('\n'));
+
+  parts.push(`COACHING MODE RULES:`);
+  parts.push(`- Ask ONE focused question at a time. Wait for their answer. Never stack multiple questions.`);
+  parts.push(`- Reflect what you hear before moving on. Go deeper, not wider. Follow their thread, not yours.`);
+  parts.push(`- Do not rush to advice, fixes, or a commitment. They will capture their own commitment afterward. Your job is to help them think — not to hand them an answer.`);
+  parts.push(`- Keep it conversational and real. This is a coaching dialogue, not a form or a lecture.`);
+
+  if (cf.practice_eligible) {
+    const persona = cf.persona || 'the other person';
+    parts.push(`PRACTICE COMPONENT (offer when relevant — or when they ask):`);
+    parts.push(`This flow involves a real conversation they are preparing for, replaying, or avoiding. Once you've coached enough to understand the situation, OFFER to practice it with them. For example: "Would it help to try this conversation for real? I can play ${persona} and we can run it."`);
+    parts.push(`Offer once, naturally. If they decline or just want to talk, drop it and keep coaching. If they accept — or if they ask to practice — enter PRACTICE MODE:`);
+    parts.push(`- Adopt the persona of ${persona} fully and stay in character. Respond as that person realistically would — with their likely reactions, resistance, questions, emotions, and pushback. Make it feel like the real conversation, not a scripted drill.`);
+    parts.push(`- Ground the role-play in the scenario details they shared. If you don't know who the person is or how they tend to react, ask the manager to briefly describe who you're playing before you start — then become them.`);
+    parts.push(`- Do NOT break character to coach while in practice. Let the conversation unfold naturally. If they say "pause", "stop", "okay that's enough", or step out of the scenario, drop out of character.`);
+    parts.push(`- When practice ends, switch back to COACH MODE and debrief the practice briefly: what worked, what surprised them, what they'd adjust next time. Ground it in what actually happened in the role-play, not generic feedback.`);
+  } else {
+    parts.push(`This is a reflection flow. There is no practice component — run a reflective coaching conversation. Help them notice patterns and find something worth carrying forward.`);
+  }
+
+  return parts.join('\n');
+}
+
 function formatDecisionContext(decisionContext) {
   if (!decisionContext) return null;
   const parts = [];
@@ -206,6 +246,8 @@ export function buildAtreusSystemPrompt({ toneMode, riskScore = 0, trends = null
     trendBlock ? trendBlock : null,
 
     decisionBlock ? decisionBlock : null,
+
+    formatCoachingFlowContext(pageContext?.coaching_flow),
 
     pageContext && Object.keys(pageContext).length > 0
       ? `CURRENT CONTEXT:\n${JSON.stringify(pageContext, null, 2)}`

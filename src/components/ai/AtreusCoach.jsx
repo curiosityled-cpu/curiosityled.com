@@ -682,6 +682,7 @@ export default function AtreusCoach({
       user_role: context?.userRole || appRole,
       visible_data: context?.visible_data_summary,
       cross_session: crossSessionData,
+      coaching_flow: context?.coaching_flow,
     };
 
     return buildAtreusSystemPrompt({ toneMode, riskScore, trends, memory, pageContext, userName, convMemory });
