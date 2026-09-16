@@ -43,6 +43,8 @@ const FLOWS = {
         type: "textarea",
       },
     ],
+    commitmentPrompt: "What's one specific thing you'll do differently because of this prep?",
+    commitmentPlaceholder: "e.g. Open with the impact, not the behavior. Ask one question before giving my view…",
     buildAtreusMsg: (responses) =>
       `I've just prepped for an upcoming conversation. Here's my context:\n\nSituation: ${responses.context}\nWhat I want: ${responses.goal}\nRisk I'm watching: ${responses.risk}\n\nCan you help me sharpen this and think through anything I might have missed? Once we've talked it through, I'll capture the one specific thing I'll do differently.`,
   },
@@ -75,16 +77,11 @@ const FLOWS = {
         hint: "Honest reflection here feeds your pattern memory.",
         type: "textarea",
       },
-      {
-        id: "next_time",
-        question: "What's one thing you'd do differently next time?",
-        placeholder: "e.g. Start with the impact, not the story. Set up the outcome before the meeting…",
-        hint: "One specific change beats five general ones.",
-        type: "textarea",
-      },
     ],
+    commitmentPrompt: "What's one thing you'd do differently next time?",
+    commitmentPlaceholder: "e.g. Start with the impact, not the story. Set up the outcome before the meeting…",
     buildAtreusMsg: (responses) =>
-      `I just debriefed something that happened. Here's what I captured:\n\nWhat happened: ${responses.what_happened}\nWhat surprised me: ${responses.surprised}\nWhere I got pulled off: ${responses.pulled_off}\nWhat I'd do next time: ${responses.next_time}\n\nHelp me understand what this reveals about my patterns and whether there's something useful I should carry forward.`,
+      `I just debriefed something that happened. Here's what I captured:\n\nWhat happened: ${responses.what_happened}\nWhat surprised me: ${responses.surprised}\nWhere I got pulled off: ${responses.pulled_off}\n\nHelp me understand what this reveals about my patterns. Once we've talked it through, I'll capture the one thing I'd do differently next time.`,
   },
 
   work_through: {
@@ -108,16 +105,11 @@ const FLOWS = {
         hint: "Be honest with yourself — even if the answer feels uncomfortable.",
         type: "textarea",
       },
-      {
-        id: "smallest_step",
-        question: "What's the smallest possible step that would move this forward?",
-        placeholder: "e.g. Write down the one thing I actually need to decide. Send the first sentence of that message. Say it out loud to someone…",
-        hint: "Smallest is the key word — avoid the urge to solve it all at once.",
-        type: "textarea",
-      },
     ],
+    commitmentPrompt: "What's the smallest possible step that would move this forward?",
+    commitmentPlaceholder: "e.g. Write down the one thing I actually need to decide. Send the first sentence of that message. Say it out loud to someone…",
     buildAtreusMsg: (responses) =>
-      `I'm working through something. Here's where I am:\n\nWhat I'm stuck on: ${responses.stuck}\nWhat I think is in the way: ${responses.real_block}\nSmallest step I can see: ${responses.smallest_step}\n\nCan you help me think this through more clearly and find a concrete next move?`,
+      `I'm working through something. Here's where I am:\n\nWhat I'm stuck on: ${responses.stuck}\nWhat I think is in the way: ${responses.real_block}\n\nCan you help me think this through more clearly? Once we've talked it through, I'll capture the smallest step I can take to move forward.`,
   },
 
   reflect: {
@@ -141,16 +133,11 @@ const FLOWS = {
         hint: "Surprises often contain the most useful signal.",
         type: "textarea",
       },
-      {
-        id: "carry_forward",
-        question: "What's one thing you want to carry forward intentionally?",
-        placeholder: "e.g. Block that Thursday morning. Keep giving direct feedback. Delegate before I overload…",
-        hint: "This becomes part of your commitment pattern.",
-        type: "textarea",
-      },
     ],
+    commitmentPrompt: "What's one thing you want to carry forward intentionally?",
+    commitmentPlaceholder: "e.g. Block that Thursday morning. Keep giving direct feedback. Delegate before I overload…",
     buildAtreusMsg: (responses) =>
-      `I just completed a leadership reflection. Here's what I captured:\n\nWhat went well: ${responses.went_well}\nWhat surprised me: ${responses.surprising}\nWhat I want to carry forward: ${responses.carry_forward}\n\nHelp me understand what patterns this touches and whether there's anything worth paying attention to as I move forward.`,
+      `I just completed a leadership reflection. Here's what I captured:\n\nWhat went well: ${responses.went_well}\nWhat surprised me: ${responses.surprising}\n\nHelp me understand what patterns this touches. Once we've talked it through, I'll capture the one thing I want to carry forward intentionally.`,
   },
 };
 
@@ -236,16 +223,18 @@ export default function PracticeFlow({ flowKey, onClose }) {
       user_email: user?.email,
       prompt_type: 'follow_up',
       source: 'web',
-      focus_intention: `Planned move: ${commitment}`.slice(0, 500),
-      description: `Commitment captured after Prepare coaching flow.\n\nMove: ${commitment}`.slice(0, 1000),
+      focus_intention: `${flow.title} commitment: ${commitment}`.slice(0, 500),
+      description: `Commitment captured after ${flow.title} coaching flow.\n\n${flow.commitmentPrompt}\n${commitment}`.slice(0, 1000),
     }).catch(() => {});
     setCommitmentSaving(false);
     setCommitmentSaved(true);
   };
 
   if (done) {
-    // Prepare flow: two-phase completion — Atreus ready, then commitment capture.
-    if (flowKey === 'prepare' && phase === 'atreus_ready') {
+    const hasCommitment = !!flow.commitmentPrompt;
+
+    // Phase 1 — Atreus ready. (Shown to all flows; commitment-aware flows add a CTA.)
+    if (phase === 'atreus_ready') {
       return (
         <div className="rounded-2xl border border-border p-6 text-center space-y-3 bg-card">
           <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto bg-muted border border-border">
@@ -267,29 +256,31 @@ export default function PracticeFlow({ flowKey, onClose }) {
             <Button size="sm" variant="outline" className="text-xs" onClick={onClose}>
               Back to Practice
             </Button>
-            <Button
-              size="sm"
-              className="text-xs h-8 gap-1.5 bg-[#0202ff] hover:bg-[#0101dd] text-white"
-              onClick={() => setPhase('commitment')}
-            >
-              <Brain className="w-3.5 h-3.5" /> Capture my commitment
-            </Button>
+            {hasCommitment && (
+              <Button
+                size="sm"
+                className="text-xs h-8 gap-1.5 bg-[#0202ff] hover:bg-[#0101dd] text-white"
+                onClick={() => setPhase('commitment')}
+              >
+                <Brain className="w-3.5 h-3.5" /> Capture my commitment
+              </Button>
+            )}
           </div>
         </div>
       );
     }
 
-    // Prepare flow phase 2 — capture the planned move after coaching.
-    if (flowKey === 'prepare' && phase === 'commitment') {
+    // Phase 2 — capture the commitment after coaching.
+    if (hasCommitment && phase === 'commitment') {
       return (
         <div className="rounded-2xl border border-border p-6 space-y-4 bg-card">
           <div className="text-center space-y-2">
             <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto bg-muted border border-border">
               <CheckCircle2 className="w-6 h-6 text-emerald-500" />
             </div>
-            <p className="text-base font-semibold text-foreground">What's your one specific move?</p>
+            <p className="text-base font-semibold text-foreground">{flow.commitmentPrompt}</p>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Now that you've talked it through with Atreus, name the one thing you'll do differently. It's saved privately.
+              Now that you've talked it through with Atreus, name your commitment. It's saved privately.
             </p>
           </div>
 
@@ -303,7 +294,7 @@ export default function PracticeFlow({ flowKey, onClose }) {
           ) : (
             <>
               <textarea
-                placeholder="e.g. Open with the impact, not the behavior. Ask one question before giving my view…"
+                placeholder={flow.commitmentPlaceholder || ''}
                 value={commitment}
                 onChange={(e) => setCommitment(e.target.value)}
                 className="w-full text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 leading-relaxed rounded-xl px-4 py-3 bg-background text-foreground border border-border placeholder:text-muted-foreground"
@@ -337,7 +328,7 @@ export default function PracticeFlow({ flowKey, onClose }) {
       );
     }
 
-    // All other flows: existing single done screen.
+    // Fallback (flows without a commitment prompt): existing single done screen.
     return (
       <div className="rounded-2xl border border-border p-6 text-center space-y-3 bg-card">
         <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto bg-muted border border-border">
