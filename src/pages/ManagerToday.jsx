@@ -193,7 +193,7 @@ export default function ManagerToday() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
-  const { data: tonePref = null } = useQuery({
+  const { data: tonePref = null, isPending: tonePending } = useQuery({
     queryKey: ['ml-tone', user?.email],
     queryFn: async () => {
       try {
@@ -339,7 +339,10 @@ export default function ManagerToday() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
-  const needsToneOnboarding = tonePref === null;
+  // Only surface tone onboarding once the preference query has resolved —
+  // otherwise the banner flashes on every load while tonePref is still null
+  // during the initial fetch (the "old-style Atreus settings" flash).
+  const needsToneOnboarding = !tonePending && tonePref === null;
   const firstName = getFirstName(user);
   const hour = parseInt(new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/New_York', hour: 'numeric', hour12: false
