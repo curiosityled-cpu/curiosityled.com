@@ -6,13 +6,12 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { Shield, Clock, MessageSquare, Pencil, ChevronDown, ChevronUp, Zap, BellOff, Sun, Moon, Repeat, SlidersHorizontal, Layers } from "lucide-react";
+import { Shield, Clock, MessageSquare, Pencil, ChevronDown, ChevronUp, Zap, BellOff, Sun, Moon, Repeat, SlidersHorizontal } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import ToneOnboarding from "./ToneOnboarding";
 import { useManagerPreferences } from "@/hooks/useManagerPreferences";
-import DensityToggle from "@/components/density/DensityToggle";
 import { PRESET_LIST } from "@/lib/checkInPresets";
 
 const TONE_LABELS = {
@@ -47,7 +46,7 @@ const DND_DAYS = [
 
 export default function CheckInSettings() {
   const { user } = useAuth();
-  const { preset, presetId, orgPresetId, userPresetOverride, density, updateDensity, updatePresetOverride } = useManagerPreferences();
+  const { preset, presetId, orgPresetId, userPresetOverride, updatePresetOverride } = useManagerPreferences();
   const [tonePref, setTonePref] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editingTone, setEditingTone] = useState(false);
@@ -166,20 +165,6 @@ export default function CheckInSettings() {
               </button>
             );
           })}
-        </div>
-      </div>
-
-      {/* UI density */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="px-5 pt-5 pb-2 flex items-center gap-2">
-          <Layers className="w-4 h-4 text-[#0202ff]" />
-          <p className="text-sm font-semibold text-gray-900">Page density</p>
-        </div>
-        <div className="px-5 pb-5">
-          <p className="text-xs text-gray-500 mb-3">
-            Compact shows a calm headline with collapsed detail sections. Detailed shows everything expanded.
-          </p>
-          <DensityToggle value={density} onChange={updateDensity} />
         </div>
       </div>
 
