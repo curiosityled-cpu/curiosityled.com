@@ -115,11 +115,19 @@ export async function buildPatternBriefs(
  * - to_create: briefs not already covered by an active workout (capped to keep active <= 3).
  * - to_expire: active recs whose source pattern is quiet, or that are 7-day unstarted.
  */
+export interface DiffOptions {
+  maxActive?: number;
+  unstartedExpiryDays?: number;
+}
+
 export async function diffActiveWorkouts(
   base44: any,
   userEmail: string,
   briefs: PatternBrief[],
+  options?: DiffOptions,
 ): Promise<{ to_create: PatternBrief[]; to_expire: any[]; active_count: number }> {
+  const maxActive = options?.maxActive ?? 3;
+  const unstartedExpiryDays = options?.unstartedExpiryDays ?? 7;
   // Fetch all conversational_module recommendations for the user
   let recs: any[] = [];
   try {
@@ -163,7 +171,7 @@ export async function diffActiveWorkouts(
     }
     if (r.status === 'pending') {
       const generated = r.generated_date ? new Date(r.generated_date).getTime() : 0;
-      if (generated && (now - generated) > 7 * 86400000) {
+      if (generated && (now - generated) > unstartedExpiryDays * 86400000) {
         to_expire.push({ recommendation_id: r.id, module_id: r.resource_id, reason: 'unstarted_7d' });
       }
     }
@@ -174,7 +182,7 @@ export async function diffActiveWorkouts(
 
   // Cap active at 3 (accounting for expirations)
   const remainingActive = activeRecs.length - to_expire.length;
-  const allowedCreate = Math.max(0, 3 - remainingActive);
+  const allowedCreate = Math.max(0, maxActive - remainingActive);
   const to_create = uncovered.slice(0, allowedCreate);
 
   return { to_create, to_expire, active_count: activeRecs.length };

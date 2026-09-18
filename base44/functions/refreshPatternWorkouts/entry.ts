@@ -58,11 +58,31 @@ export default async function(req: Request): Promise<Response> {
           goals = await svc.entities.Goal.filter({ created_by: userEmail, status: 'active' }, '-created_date', 20);
         } catch { goals = []; }
 
+        // Load workout preferences (refresh frequency, caps, type filter)
+        let workoutPrefs: any = {};
+        try {
+          const prefs = await svc.entities.UserPreference.filter({ user_email: userEmail }, null, 1);
+          workoutPrefs = prefs[0]?.workout_preferences || {};
+        } catch { /* defaults */ }
+
+        const refreshFreq = workoutPrefs.refresh_frequency || 'nightly';
+        // Respect refresh frequency by day of week (America/New_York)
+        const etWeekday = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'short' }).format(new Date());
+        if (refreshFreq === 'manual') continue;
+        if (refreshFreq === 'weekly' && etWeekday !== 'Mon') continue;
+        if (refreshFreq === 'twice_weekly' && etWeekday !== 'Mon' && etWeekday !== 'Thu') continue;
+
+        const maxActive = workoutPrefs.max_active_workouts || 3;
+        const expiryDays = workoutPrefs.unstarted_expiry_days || 7;
+        const prefType = workoutPrefs.preferred_workout_type || 'both';
+
         const userObj = { email: userEmail, app_role: 'manager' };
-        const briefs = await buildPatternBriefs(svc, userObj, trends, goals);
+        let briefs = await buildPatternBriefs(svc, userObj, trends, goals);
+        if (prefType === 'skill') briefs = briefs.filter((b) => b.type === 'skill');
+        if (prefType === 'task') briefs = briefs.filter((b) => b.type === 'task');
         if (briefs.length === 0) continue;
 
-        const diff = await diffActiveWorkouts(svc, userEmail, briefs);
+        const diff = await diffActiveWorkouts(svc, userEmail, briefs, { maxActive, unstartedExpiryDays: expiryDays });
 
         // Expire stale workouts
         for (const ex of diff.to_expire) {

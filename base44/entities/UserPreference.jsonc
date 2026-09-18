@@ -107,6 +107,50 @@
       ],
       "description": "User's personal check-in preset override (overrides org default)"
     },
+    "workout_preferences": {
+      "type": "object",
+      "description": "Preferences controlling the pattern-driven workout engine on the Practice page",
+      "properties": {
+        "refresh_frequency": {
+          "type": "string",
+          "enum": [
+            "nightly",
+            "twice_weekly",
+            "weekly",
+            "manual"
+          ],
+          "default": "nightly",
+          "description": "How often new workouts are generated from active patterns"
+        },
+        "max_active_workouts": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 5,
+          "default": 3,
+          "description": "Maximum number of unstarted workouts kept active at once"
+        },
+        "unstarted_expiry_days": {
+          "type": "number",
+          "enum": [
+            3,
+            7,
+            14
+          ],
+          "default": 7,
+          "description": "Days before an unstarted workout is auto-expired"
+        },
+        "preferred_workout_type": {
+          "type": "string",
+          "enum": [
+            "skill",
+            "task",
+            "both"
+          ],
+          "default": "both",
+          "description": "Whether to prioritize skill-building workouts, task-based workouts, or both"
+        }
+      }
+    },
     "description": {
       "type": "string",
       "maxLength": 1000,

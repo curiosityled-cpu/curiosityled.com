@@ -26,7 +26,7 @@ import PracticeHeroHeader from "@/components/practice/PracticeHeroHeader";
 import PrescribedPracticeCard from "@/components/practice/PrescribedPracticeCard";
 import PracticeSessionsLog from "@/components/practice/PracticeSessionsLog";
 import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
-import CheckInSettings from "@/components/checkin/CheckInSettings";
+import PracticeSettings from "@/components/practice/PracticeSettings";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
@@ -344,7 +344,7 @@ export default function ManagerPractice() {
               <div className="sticky top-0 bg-background border-b border-border px-5 py-4 flex items-center justify-between z-10">
                 <div className="flex items-center gap-2">
                   <SlidersHorizontal className="w-4 h-4 text-[#0202ff]" />
-                  <p className="text-sm font-semibold text-foreground">Atreus settings</p>
+                  <p className="text-sm font-semibold text-foreground">Practice Settings</p>
                 </div>
                 <button
                   onClick={() => setShowSettings(false)}
@@ -354,7 +354,7 @@ export default function ManagerPractice() {
                 </button>
               </div>
               <div className="p-5">
-                <CheckInSettings />
+                <PracticeSettings />
               </div>
             </motion.div>
           </>
