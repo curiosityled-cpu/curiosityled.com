@@ -6,8 +6,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   Loader2, Map, GraduationCap, Star, Inbox, BarChart2,
-  Search, Plus, Clock, CheckCircle2, XCircle, Eye, Settings
+  Search, Plus, Clock, CheckCircle2, XCircle, Eye, Settings, Dumbbell
 } from "lucide-react";
+import PracticeHubTab from "@/components/practice/PracticeHubTab";
 import { useAuth } from "@/components/useAuth";
 import { base44 } from "@/api/base44Client";
 import { format } from "date-fns";
@@ -47,11 +48,13 @@ const TABS = [
   { id: 'journeys', label: 'Journeys', icon: Map },
   { id: 'programs', label: 'Learning', icon: GraduationCap },
   { id: 'experiences', label: 'Experiences', icon: Star },
+  { id: 'practice', label: 'Practice', icon: Dumbbell },
   { id: 'requests', label: 'Requests', icon: Inbox },
 ];
 
 const COACH_TABS = (isConsultant) => [
   { id: 'experiences', label: 'Experiences', icon: Star },
+  { id: 'practice', label: 'Practice', icon: Dumbbell },
   { id: 'requests', label: 'My Requests', icon: Inbox },
   { id: 'coach_analytics', label: isConsultant ? 'Experience Analytics' : 'Coaching Analytics', icon: BarChart2 },
 ];
@@ -213,6 +216,13 @@ export default function ExperienceManagement() {
       {section === 'coach_analytics' && (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <CoachAnalyticsTab user={user} coacheeEmails={coacheeEmails} />
+        </motion.div>
+      )}
+
+      {/* ── PRACTICE HUB ── */}
+      {section === 'practice' && (
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <PracticeHubTab user={user} />
         </motion.div>
       )}
 

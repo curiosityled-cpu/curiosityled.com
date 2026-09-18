@@ -141,8 +141,43 @@ function formatConvMemory(convMemory) {
   return parts.join('\n\n');
 }
 
+function formatWorkoutFlowContext(cf) {
+  const parts = [];
+  parts.push(`WORKOUT CONTEXT — ${cf.title}:`);
+  parts.push(`This is a structured leadership workout. The manager is here to ${cf.workout_type === 'task' ? 'work through a real situation' : 'build the skill'}: ${cf.competency}.`);
+  parts.push(`Run the workout step-by-step using the conversation structure below. Do NOT dump all steps at once. Advance one step at a time, judging the manager's responses against each step's success_criteria.`);
+
+  parts.push(`\nCONVERSATION STRUCTURE (${cf.steps.length} steps):`);
+  cf.steps.forEach((s, i) => {
+    parts.push(`\nStep ${i + 1} [${s.step_type}] — ${s.step_id}`);
+    if (s.content) parts.push(`  Atreus opens with: ${s.content}`);
+    if (s.learning_objective) parts.push(`  Objective: ${s.learning_objective}`);
+    if (s.coaching_notes) parts.push(`  Coaching notes: ${s.coaching_notes}`);
+    if (s.success_criteria) parts.push(`  Advance when: ${s.success_criteria}`);
+    if (s.step_type === 'knowledge_check' && s.knowledge_check) {
+      const kc = s.knowledge_check;
+      parts.push(`  QUIZ: ${kc.question}`);
+      (kc.options || []).forEach((opt, idx) => parts.push(`    ${String.fromCharCode(65 + idx)}. ${opt}`));
+      parts.push(`  Correct answer: ${String.fromCharCode(65 + (kc.correct_answer_index || 0))}. ${kc.explanation || ''}`);
+      parts.push(`  Present the question and lettered options conversationally. Wait for the manager's answer. Then reveal the correct answer and the explanation.`);
+    }
+  });
+
+  parts.push(`\nWORKOUT RULES:`);
+  parts.push(`- Ask ONE question at a time. Wait for the answer. Reflect briefly before moving to the next step.`);
+  parts.push(`- For scenario steps: offer to role-play the situation in character. If they accept, adopt the persona of the other person and stay in character until they step out. Offer once, naturally.`);
+  parts.push(`- For knowledge_check steps: present the quiz conversationally (question + lettered options), wait for their answer, then reveal the correct answer and explanation.`);
+  parts.push(`- For the summary step: ask for exactly ONE concrete commitment — one specific move they will make today. Help them make it specific and doable. Do not accept vague answers.`);
+  parts.push(`- Keep the whole workout to 3-7 minutes. Be concise, warm, and human.`);
+  if (cf.practice_eligible) {
+    parts.push(`\nThis workout includes a scenario step. When you reach it, offer to practice it for real. If they accept, enter role-play mode and stay in character until they say "pause" or step out of the scenario.`);
+  }
+  return parts.join('\n');
+}
+
 function formatCoachingFlowContext(cf) {
   if (!cf || !cf.flow) return null;
+  if (cf.flow === 'workout') return formatWorkoutFlowContext(cf);
   const parts = [];
   parts.push(`COACHING FLOW CONTEXT — ${cf.title || cf.flow}:`);
   parts.push(`The manager just completed a structured ${cf.title || cf.flow} flow in the Practice studio. They captured their context privately. Your job now is to run a genuine coaching conversation — not to answer a single question and stop.`);

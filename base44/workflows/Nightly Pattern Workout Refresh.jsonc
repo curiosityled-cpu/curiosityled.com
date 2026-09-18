@@ -1,0 +1,45 @@
+{
+  "name": "Nightly Pattern Workout Refresh",
+  "description": "Each night, refreshes pattern-driven workouts for eligible users: generates new workouts from strong patterns, expires stale ones (pattern quiet or 7-day unstarted), and caps the active list at 3.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 1 * * *",
+      "one_time_date": null,
+      "timezone": "America/New_York",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "nightly_pattern_workout_refresh",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "refresh_workouts": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "refreshPatternWorkouts",
+            "args": {}
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Refresh pattern workouts",
+            "description": "Generate new workouts, expire stale ones"
+          }
+        }
+      }
+    ]
+  }
+}
