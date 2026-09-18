@@ -578,7 +578,7 @@ export default function ManagerToday() {
               <div className="sticky top-0 bg-background border-b border-border px-5 py-4 flex items-center justify-between z-10">
                 <div className="flex items-center gap-2">
                   <SlidersHorizontal className="w-4 h-4 text-[#0202ff]" />
-                  <p className="text-sm font-semibold text-foreground">Atreus settings</p>
+                  <p className="text-sm font-semibold text-foreground">Lead Settings</p>
                 </div>
                 <button onClick={() => setShowSettings(false)} className="text-muted-foreground hover:text-foreground transition-colors">
                   <X className="w-5 h-5" />
