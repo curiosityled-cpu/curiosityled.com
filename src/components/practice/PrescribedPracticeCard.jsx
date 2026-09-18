@@ -1,24 +1,29 @@
 /**
- * PrescribedPracticeCard — the Practice-page equivalent of TopPatternsMoveCard.
+ * PrescribedPracticeCard — the Practice-page "best next move" row.
  *
- * Surfaces ONE recommended workout, derived in priority order:
- *   1. Connected-stack patterns (getCrossToolPatterns) — "prescribed for: <pattern>"
- *   2. Active BPO patterns/trends (runBpoPatternEngine) — pattern → matching workout
- *   3. Streak / consistency gap fallback — a workout the user hasn't done recently
+ * Prescribes ONE workout, in priority order:
+ *   1. The top generated workout (pattern-driven ConversationalLearningModule)
+ *      whose source_pattern_id matches the user's top active pattern.
+ *   2. A static-library workout theme-matched to the top pattern (fallback when
+ *      no generated workout targets the top pattern).
+ *   3. A consistency-gap workout (a static one not done recently).
  *
- * Styled like the Lead page's "best next move" row. Starting it opens Atreus with
- * the workout prompt; marking done logs a ManagerPulse practice session (which
- * feeds the sessions log + streak ring).
+ * Starting a generated workout opens Atreus with the workout coaching_flow;
+ * marking it done runs completeWorkout (logs session, marks recommendation
+ * accepted, awards points). Static workouts keep the lightweight log behavior.
  */
-import React, { useMemo, useState } from "react";
-import { Sparkles, Brain, CheckCircle2, ArrowRight, Dumbbell } from "lucide-react";
+import React, { useMemo, useState, useEffect } from "react";
+import { Sparkles, Brain, CheckCircle2, ArrowRight, Dumbbell, Target, Zap, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
+import {
+  loadActiveWorkouts, buildWorkoutCoachingFlow, buildWorkoutStarterMessage, completeWorkout,
+} from "@/components/practice/workoutUtils";
 
-// Re-export the exercise library shape so the prescription can map a pattern → workout.
-// Kept in sync with WorkoutsSection's EXERCISE_LIBRARY themes.
+// ── Static fallback library (theme-matched to the top pattern when no
+// generated workout targets it) ────────────────────────────────────────────
 const PRESCRIPTION_LIBRARY = [
   {
     id: "delegation_audit",
@@ -86,7 +91,17 @@ const PRESCRIPTION_LIBRARY = [
   },
 ];
 
-// Map a cross-tool / BPO pattern name → matching workout themes
+// Map a cross-tool / BPO pattern name → the pattern_id used by the workout
+// engine (buildPatternBriefs). Used to match generated workouts to patterns.
+function patternNameToId(name) {
+  const n = (name || "").toLowerCase();
+  if (n.includes("identity")) return "identity_friction";
+  if (n.includes("overload")) return "overload";
+  if (n.includes("delegat")) return "delegation_gap";
+  if (n.includes("confidence")) return "declining_confidence";
+  return null;
+}
+
 function patternToThemes(pattern) {
   const name = (pattern.name || "").toLowerCase();
   const bucket = (pattern.bucket || "").toLowerCase();
@@ -123,76 +138,132 @@ export default function PrescribedPracticeCard({
   const { user } = useAuth();
   const { openWithContext } = useAtreusChat();
   const [done, setDone] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [activeWorkouts, setActiveWorkouts] = useState([]);
+
+  // Load the user's active pattern-driven workouts (generated modules)
+  useEffect(() => {
+    if (!user?.email) return;
+    let mounted = true;
+    (async () => {
+      try {
+        const w = await loadActiveWorkouts(user.email);
+        if (mounted) setActiveWorkouts(w);
+      } catch { /* ignore */ }
+    })();
+    return () => { mounted = false; };
+  }, [user?.email]);
 
   const prescription = useMemo(() => {
-    // 1. Connected-stack patterns
-    const crossToolPattern = crossToolData?.topPatterns?.[0];
-    if (crossToolPattern) {
-      const best = [...PRESCRIPTION_LIBRARY]
-        .map((w) => ({ workout: w, score: scoreWorkoutForPattern(w, crossToolPattern) }))
-        .sort((a, b) => b.score - a.score)[0];
-      if (best && best.score > 0) {
+    // Ranked active patterns (cross-tool first, then in-app BPO), each tagged
+    // with the workout-engine pattern_id it maps to.
+    const rankedPatterns = [
+      ...(crossToolData?.topPatterns || []),
+      ...(bpoPatterns || []),
+    ]
+      .map((p) => ({ ...p, _pid: patternNameToId(p.name) }));
+
+    // 1. Top generated workout impacting the top pattern that has a match.
+    for (const p of rankedPatterns) {
+      if (!p._pid) continue;
+      const matches = activeWorkouts.filter((w) => w.module?.source_pattern_id === p._pid);
+      if (matches.length > 0) {
+        const top = matches.sort(
+          (a, b) => (b.recommendation?.relevance_score || 0) - (a.recommendation?.relevance_score || 0)
+        )[0];
         return {
-          workout: best.workout,
-          source: "pattern",
-          patternName: crossToolPattern.name,
-          sourceLabel: crossToolPattern.sourceLabel || "Connected stack",
+          kind: "generated",
+          module: top.module,
+          recommendation: top.recommendation,
+          patternName: p.name,
+          sourceLabel: p.sourceLabel || "Pattern-driven",
         };
       }
     }
 
-    // 2. Active BPO patterns
-    const topBpo = bpoPatterns?.[0];
-    if (topBpo) {
+    // 2. Static-library workout theme-matched to the top pattern.
+    const topPattern = rankedPatterns[0];
+    if (topPattern) {
       const best = [...PRESCRIPTION_LIBRARY]
-        .map((w) => ({ workout: w, score: scoreWorkoutForPattern(w, topBpo) }))
+        .map((w) => ({ workout: w, score: scoreWorkoutForPattern(w, topPattern) }))
         .sort((a, b) => b.score - a.score)[0];
       if (best && best.score > 0) {
         return {
+          kind: "static",
           workout: best.workout,
-          source: "pattern",
-          patternName: topBpo.name,
-          sourceLabel: "Active pattern",
+          patternName: topPattern.name,
+          sourceLabel: topPattern.sourceLabel || "Active pattern",
         };
       }
     }
 
-    // 3. Streak / consistency gap fallback — a workout not done recently
+    // 3. Consistency-gap fallback — a static workout not done recently.
     const notDoneRecently = PRESCRIPTION_LIBRARY.filter(
       (w) => !recentSessionIds.includes(w.id)
     );
     const fallback = notDoneRecently[0] || PRESCRIPTION_LIBRARY[0];
     return {
+      kind: "consistency",
       workout: fallback,
-      source: "consistency",
       patternName: null,
       sourceLabel: "Consistency",
     };
-  }, [crossToolData, bpoPatterns, trends, recentSessionIds]);
+  }, [crossToolData, bpoPatterns, activeWorkouts, recentSessionIds]);
 
   if (!prescription) return null;
-  const { workout, source, patternName, sourceLabel } = prescription;
+
+  const isGenerated = prescription.kind === "generated";
+  const staticWorkout = prescription.kind !== "generated" ? prescription.workout : null;
+  const module = isGenerated ? prescription.module : null;
+
+  const title = isGenerated ? module.title : staticWorkout.title;
+  const description = isGenerated ? module.description : staticWorkout.description;
+  const duration = isGenerated
+    ? (module.estimated_duration_minutes ? `${module.estimated_duration_minutes} min` : "")
+    : staticWorkout.duration;
+  const patternName = prescription.patternName;
+  const sourceLabel = prescription.sourceLabel;
+  const isPattern = prescription.kind === "generated" || prescription.kind === "static";
 
   const handleStart = () => {
-    openWithContext({
-      context: { pageType: "practice", exercise: workout.id, prescribed_for: patternName },
-      starterMessage: workout.prompt,
-    });
+    if (isGenerated) {
+      openWithContext({
+        context: { pageType: "practice", coaching_flow: buildWorkoutCoachingFlow(module) },
+        starterMessage: buildWorkoutStarterMessage(module),
+      });
+    } else {
+      openWithContext({
+        context: { pageType: "practice", exercise: staticWorkout.id, prescribed_for: patternName },
+        starterMessage: staticWorkout.prompt,
+      });
+    }
   };
 
   const handleDone = async () => {
-    if (done) return;
-    setDone(true);
+    if (done || busy) return;
+    setBusy(true);
     try {
-      await base44.entities.ManagerPulse.create({
-        user_email: user?.email,
-        prompt_type: "practice_session",
-        source: "web",
-        focus_intention: `Workout completed: ${workout.title}`.slice(0, 500),
-      });
+      if (isGenerated) {
+        await completeWorkout({
+          user,
+          module,
+          recommendationId: prescription.recommendation?.id,
+          commitment: "",
+        });
+      } else {
+        await base44.entities.ManagerPulse.create({
+          user_email: user?.email,
+          prompt_type: "practice_session",
+          source: "web",
+          focus_intention: `Workout completed: ${staticWorkout.title}`.slice(0, 500),
+        });
+      }
+      setDone(true);
       onSessionLogged?.();
     } catch {
       // non-blocking
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -212,6 +283,9 @@ export default function PrescribedPracticeCard({
     );
   }
 
+  const typeLabel = isGenerated ? (module.workout_type === "task" ? "Real task" : "Skill") : null;
+  const TypeIcon = isGenerated ? (module.workout_type === "task" ? Target : Zap) : null;
+
   return (
     <div className="bg-card border border-border rounded-2xl px-5 py-4">
       {/* Header */}
@@ -227,7 +301,7 @@ export default function PrescribedPracticeCard({
 
       {/* Prescription */}
       <div className="bg-gradient-to-br from-[#0202ff]/5 to-transparent rounded-xl px-4 py-3.5 border border-[#0202ff]/10">
-        {source === "pattern" && patternName && (
+        {isPattern && patternName && (
           <div className="flex items-center gap-1.5 mb-2">
             <Sparkles className="w-3 h-3 text-[#0202ff] flex-shrink-0" />
             <p className="text-[10px] font-medium text-[#0202ff] leading-snug">
@@ -235,7 +309,7 @@ export default function PrescribedPracticeCard({
             </p>
           </div>
         )}
-        {source === "consistency" && (
+        {prescription.kind === "consistency" && (
           <div className="flex items-center gap-1.5 mb-2">
             <Sparkles className="w-3 h-3 text-amber-500 flex-shrink-0" />
             <p className="text-[10px] font-medium text-amber-600 leading-snug">
@@ -245,11 +319,29 @@ export default function PrescribedPracticeCard({
         )}
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-card-foreground leading-tight">{workout.title}</p>
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <p className="text-sm font-bold text-card-foreground leading-tight">{title}</p>
+              {isGenerated && (
+                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border inline-flex items-center gap-1 ${module.workout_type === "task" ? "bg-amber-50 text-amber-700 border-amber-100" : "bg-[#0202ff]/5 text-[#0202ff] border-[#0202ff]/15"}`}>
+                  <TypeIcon className="w-2.5 h-2.5" /> {typeLabel}
+                </span>
+              )}
+            </div>
             <p className="text-[11px] text-muted-foreground leading-relaxed mt-1">
-              {workout.description}
+              {description}
             </p>
-            <p className="text-[10px] text-muted-foreground/70 mt-1.5">{workout.duration}</p>
+            <div className="flex items-center gap-2 mt-1.5">
+              {duration && (
+                <p className="text-[10px] text-muted-foreground/70 inline-flex items-center gap-0.5">
+                  <Clock className="w-2.5 h-2.5" /> {duration}
+                </p>
+              )}
+              {isGenerated && prescription.recommendation?.recommendation_reason && (
+                <p className="text-[10px] text-muted-foreground/70 italic line-clamp-1">
+                  {prescription.recommendation.recommendation_reason}
+                </p>
+              )}
+            </div>
           </div>
         </div>
         <div className="flex gap-2 mt-3">
@@ -257,6 +349,7 @@ export default function PrescribedPracticeCard({
             size="sm"
             className="flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-8"
             onClick={handleStart}
+            disabled={busy}
           >
             <Brain className="w-3 h-3 mr-1.5" /> Start with Atreus <ArrowRight className="w-3 h-3 ml-1.5" />
           </Button>
@@ -265,8 +358,9 @@ export default function PrescribedPracticeCard({
             variant="outline"
             className="text-xs h-8 text-muted-foreground"
             onClick={handleDone}
+            disabled={busy}
           >
-            <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-500" /> Done
+            <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-500" /> {busy ? "Saving…" : "Done"}
           </Button>
         </div>
       </div>
