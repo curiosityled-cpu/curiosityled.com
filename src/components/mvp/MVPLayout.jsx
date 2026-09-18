@@ -238,14 +238,16 @@ function MVPLayoutInner({ children }) {
         to={{ pathname: navPathname, search: navSearch ? `?${navSearch}` : '' }}
         onClick={() => setMobileOpen(false)}
         title={!showLabel ? item.label : undefined}
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+        className={`flex items-center gap-2.5 rounded-lg font-medium transition-all ${
+          indent ? 'px-2.5 py-1.5 text-xs' : 'px-3 py-2.5 text-sm'
+        } ${
           isActive ? 'bg-[#0202ff] text-white shadow-sm' : ''
         } ${!showLabel ? 'justify-center' : ''}`}
         style={!isActive ? { color: 'hsl(var(--muted-foreground))' } : {}}
         onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'hsl(var(--muted))'; e.currentTarget.style.color = 'hsl(var(--foreground))'; }}}
         onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'hsl(var(--muted-foreground))'; }}}>
-        <Icon className="w-4 h-4 flex-shrink-0" />
-        {showLabel && <span className="flex-1">{item.label}</span>}
+        <Icon className={`flex-shrink-0 ${indent ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
+        {showLabel && <span className="flex-1 truncate">{item.label}</span>}
         {showLabel && isActive && <ChevronRight className="w-3 h-3" />}
       </Link>
     );
