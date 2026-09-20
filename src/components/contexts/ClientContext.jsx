@@ -47,15 +47,19 @@ export const ClientProvider = ({ children }) => {
         const age = Date.now() - parseInt(cacheTimestamp);
         if (age < 5 * 60 * 1000) { // 5 minutes
           const cachedData = JSON.parse(cached);
-          setClient(cachedData.client || null);
-          setStats(cachedData.stats || {
-            total_users: 0,
-            total_goals: 0,
-            total_assessments: 0,
-            total_learning_assigned: 0
-          });
-          setLoading(false);
-          return;
+          // A cached null client is treated as a miss — it was likely caused
+          // by a transient fetch error and should not block the UI for 5 min.
+          if (cachedData.client) {
+            setClient(cachedData.client);
+            setStats(cachedData.stats || {
+              total_users: 0,
+              total_goals: 0,
+              total_assessments: 0,
+              total_learning_assigned: 0
+            });
+            setLoading(false);
+            return;
+          }
         }
       }
 
@@ -76,9 +80,12 @@ export const ClientProvider = ({ children }) => {
         setClient(contextData.client);
         setStats(contextData.stats);
         
-        // Cache the result
-        sessionStorage.setItem(cacheKey, JSON.stringify(contextData));
-        sessionStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
+        // Only cache non-null clients — caching a null (from a transient
+        // rate-limit or fetch error) would hide the client for 5 minutes.
+        if (contextData.client) {
+          sessionStorage.setItem(cacheKey, JSON.stringify(contextData));
+          sessionStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
+        }
       } else {
         setClient(null);
         setStats({
