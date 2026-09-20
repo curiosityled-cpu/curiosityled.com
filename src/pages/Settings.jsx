@@ -14,12 +14,13 @@ import DeleteAccountDialog from "@/components/mobile/DeleteAccountDialog";
 import {
   Bell, Mail, MessageSquare, Loader2, Settings as SettingsIcon,
   Sparkles, CheckCircle2, Info, ArrowLeft, Zap, Shield, Paintbrush,
-  Users, Eye, FileText
+  Users, Eye, FileText, Building2
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { Link, useLocation } from "react-router-dom";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
+import OrgSettingsTab from "@/components/settings/org/OrgSettingsTab";
 import CalendarConsentCard from "@/components/checkin/CalendarConsentCard";
 import OrgVisibilityPanel from "@/components/privacy/OrgVisibilityPanel";
 import VisibilityShareFlags from "@/components/privacy/VisibilityShareFlags";
@@ -195,6 +196,9 @@ export default function Settings() {
             {isAdmin && (
               <TabsTrigger value="platform"><SettingsIcon className="w-4 h-4 mr-2" />Platform</TabsTrigger>
             )}
+            {isSuperAdmin && (
+              <TabsTrigger value="organization"><Building2 className="w-4 h-4 mr-2" />Organization</TabsTrigger>
+            )}
             <TabsTrigger value="notifications"><Bell className="w-4 h-4 mr-2" />Notifications</TabsTrigger>
             <TabsTrigger value="checkin"><MessageSquare className="w-4 h-4 mr-2" />Atreus</TabsTrigger>
             <TabsTrigger value="privacy-visibility"><Shield className="w-4 h-4 mr-2" />Privacy & Data</TabsTrigger>
@@ -234,6 +238,13 @@ export default function Settings() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+          )}
+
+          {/* ── Organization (Super Admin only) ── */}
+          {isSuperAdmin && (
+            <TabsContent value="organization">
+              <OrgSettingsTab />
             </TabsContent>
           )}
 

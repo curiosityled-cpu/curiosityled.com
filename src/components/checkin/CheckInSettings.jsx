@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import ToneOnboarding from "./ToneOnboarding";
 import { useManagerPreferences } from "@/hooks/useManagerPreferences";
+import { useOrgLock } from "@/components/settings/org/useOrgLock";
+import { LockBadge } from "@/components/settings/org/OrgControls";
 import { PRESET_LIST } from "@/lib/checkInPresets";
 
 const TONE_LABELS = {
@@ -46,7 +48,9 @@ const DND_DAYS = [
 
 export default function CheckInSettings() {
   const { user } = useAuth();
+  const { isLocked } = useOrgLock();
   const { preset, presetId, orgPresetId, userPresetOverride, updatePresetOverride } = useManagerPreferences();
+  const presetLocked = isLocked("check_in_preset");
   const [tonePref, setTonePref] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editingTone, setEditingTone] = useState(false);
@@ -135,8 +139,9 @@ export default function CheckInSettings() {
           <p className="text-sm font-semibold text-gray-900">Check-in preset</p>
         </div>
         <div className="px-5 pb-5 space-y-2">
-          <p className="text-xs text-gray-500 mb-2">
-            Your organization uses the <span className="font-semibold">{PRESET_LIST.find(p => p.id === orgPresetId)?.name || 'Balance'}</span> preset. Keep the org default or choose your own.
+          <p className="text-xs text-gray-500 mb-2 flex items-center gap-2 flex-wrap">
+            <span>Your organization uses the <span className="font-semibold">{PRESET_LIST.find(p => p.id === orgPresetId)?.name || 'Balance'}</span> preset. Keep the org default or choose your own.</span>
+            {presetLocked && <LockBadge />}
           </p>
           {PRESET_LIST.map((p) => {
             const isSelected = presetId === p.id;
@@ -145,10 +150,11 @@ export default function CheckInSettings() {
             return (
               <button
                 key={p.id}
-                onClick={() => updatePresetOverride(showingOrgDefault ? null : (p.id === orgPresetId ? null : p.id))}
+                disabled={presetLocked}
+                onClick={() => presetLocked ? null : updatePresetOverride(showingOrgDefault ? null : (p.id === orgPresetId ? null : p.id))}
                 className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all ${
                   isSelected ? 'border-[#0202ff] bg-[#0202ff]/5' : 'border-gray-200 hover:border-gray-300 bg-gray-50'
-                }`}
+                } ${presetLocked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${isSelected ? 'border-[#0202ff] bg-[#0202ff]' : 'border-gray-300'}`}>
