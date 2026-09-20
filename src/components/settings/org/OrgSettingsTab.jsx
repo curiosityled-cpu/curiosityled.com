@@ -20,37 +20,11 @@ import ReportingSection from "./ReportingSection";
 
 export default function OrgSettingsTab() {
   const { user, isSuperAdmin } = useAuth();
-  const { client, refreshContext } = useClient();
+  const { client, loading, refreshContext } = useClient();
   const [settings, setSettings] = useState(null);
   const [selectedCompetencyIds, setSelectedCompetencyIds] = useState([]);
   const [competenciesConfigured, setCompetenciesConfigured] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [loadError, setLoadError] = useState(false);
-
-  // Fallback: if ClientContext has no client (e.g. getClientContext hit a
-  // rate limit and returned null), fetch the client record directly.
-  useEffect(() => {
-    let cancelled = false;
-    async function loadClientDirectly() {
-      if (client || !user?.client_id) return;
-      try {
-        const clients = await base44.entities.Client.filter({ id: user.client_id });
-        if (cancelled) return;
-        const c = clients[0];
-        if (c) {
-          setSettings(c.settings || {});
-          setSelectedCompetencyIds(c.selected_competency_ids || []);
-          setCompetenciesConfigured(c.competencies_configured || false);
-        } else {
-          setLoadError(true);
-        }
-      } catch (e) {
-        if (!cancelled) setLoadError(true);
-      }
-    }
-    loadClientDirectly();
-    return () => { cancelled = true; };
-  }, [client, user?.client_id]);
 
   useEffect(() => {
     if (client) {
@@ -71,12 +45,17 @@ export default function OrgSettingsTab() {
     );
   }
 
-  if (loadError) {
+  // ClientContext finished loading but no client was returned
+  if (!loading && !client) {
     return (
       <Alert>
         <Lock className="w-4 h-4" />
         <AlertDescription>
-          Could not load your organization. Try refreshing the page, or contact support if the problem persists.
+          Could not load your organization.{" "}
+          <button onClick={() => refreshContext()} className="underline font-medium">
+            Try again
+          </button>
+          {" "}or contact support if the problem persists.
         </AlertDescription>
       </Alert>
     );

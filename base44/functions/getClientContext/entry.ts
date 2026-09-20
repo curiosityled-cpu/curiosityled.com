@@ -33,10 +33,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Fetch client data using regular entity access
+    // Fetch client data using service role to bypass RLS (this is a backend
+    // function that legitimately needs to return the user's own client record)
     let client = null;
     try {
-      const clients = await base44.entities.Client.filter({ id: user.client_id });
+      const clients = await base44.asServiceRole.entities.Client.filter({ id: user.client_id });
       client = clients.length > 0 ? clients[0] : null;
     } catch (error) {
       console.error('Error fetching client:', error);
