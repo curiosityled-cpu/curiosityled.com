@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Layers, Check, Loader2, Settings, Lock } from "lucide-react";
-import { useAuth } from "@/components/useAuth";
+import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
 export default function CoreCompetenciesCard() {
-  const { isSuperAdmin, user } = useAuth();
+  const { user } = useAuth();
+  const appRole = user?.app_role || user?.data?.app_role || user?.role;
+  const isSuperAdmin = appRole === "Super Administrator";
   const [competencies, setCompetencies] = useState([]);
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -31,7 +33,7 @@ export default function CoreCompetenciesCard() {
       })
       .finally(() => !cancelled && setLoading(false));
     return () => { cancelled = true; };
-  }, [isSuperAdmin, user?.client_id, user?.data?.client_id]);
+  }, [isSuperAdmin, user?.client_id, user?.data?.client_id, user?.app_role, user?.data?.app_role, user?.role]);
 
   if (!isSuperAdmin) return null;
 
