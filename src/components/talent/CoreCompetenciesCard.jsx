@@ -1,14 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Layers, Check, Loader2, Settings, Lock } from "lucide-react";
+import { Layers, Check, Loader2, Settings, Lock, Eye } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+
+const ADMIN_ROLES = [
+  "Admin Level 1",
+  "Admin Level 2",
+  "Super Administrator",
+  "Platform Admin",
+  "Partner Business Administrator",
+  "admin",
+];
 
 export default function CoreCompetenciesCard() {
   const { user } = useAuth();
   const appRole = user?.app_role || user?.data?.app_role || user?.role;
   const isSuperAdmin = appRole === "Super Administrator";
+  const isAdmin = ADMIN_ROLES.includes(appRole);
   const [competencies, setCompetencies] = useState([]);
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -16,7 +26,7 @@ export default function CoreCompetenciesCard() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!isSuperAdmin) return;
+    if (!isAdmin) return;
     let cancelled = false;
     const clientId = user?.client_id || user?.data?.client_id;
     Promise.all([
@@ -33,9 +43,9 @@ export default function CoreCompetenciesCard() {
       })
       .finally(() => !cancelled && setLoading(false));
     return () => { cancelled = true; };
-  }, [isSuperAdmin, user?.client_id, user?.data?.client_id, user?.app_role, user?.data?.app_role, user?.role]);
+  }, [isAdmin, user?.client_id, user?.data?.client_id, user?.app_role, user?.data?.app_role, user?.role]);
 
-  if (!isSuperAdmin) return null;
+  if (!isAdmin) return null;
 
   const toggle = async (id) => {
     if (!client) return;
@@ -59,6 +69,83 @@ export default function CoreCompetenciesCard() {
     }
   };
 
+  // Read-only view for non-Super admins: only the selected competencies + Situational Intelligence
+  if (!isSuperAdmin) {
+    const siCompetencies = competencies.filter(
+      (c) => (c.category || "").toLowerCase() === "situational intelligence"
+    );
+    const selectedRows = competencies.filter((c) => selectedIds.includes(c.id));
+    const readOnlyRows = [
+      ...selectedRows,
+      ...siCompetencies.filter((si) => !selectedRows.some((s) => s.id === si.id)),
+    ];
+
+    return (
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <div className="flex items-center justify-between gap-2 px-5 py-3 border-b border-border bg-muted/30">
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-muted-foreground" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Core Competencies
+            </span>
+            <span className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+              <Eye className="w-2.5 h-2.5" /> Read only
+            </span>
+          </div>
+        </div>
+
+        <div className="p-5 space-y-3">
+          <p className="text-sm text-muted-foreground">
+            These are the core competencies your organization measures against. They power development, assessments, and reporting across the platform.
+          </p>
+
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : !client ? (
+            <p className="text-sm text-muted-foreground italic py-4">
+              No client organization linked to your account.
+            </p>
+          ) : readOnlyRows.length === 0 ? (
+            <p className="text-sm text-muted-foreground italic py-4">
+              Core competencies have not been configured yet. A Super Administrator can set them up.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {readOnlyRows.map((c) => {
+                const isSI = (c.category || "").toLowerCase() === "situational intelligence";
+                return (
+                  <div
+                    key={c.id}
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-[#0202ff] bg-[#0202ff]/5"
+                  >
+                    <div className="w-4 h-4 rounded border-2 flex-shrink-0 flex items-center justify-center border-[#0202ff] bg-[#0202ff]">
+                      <Check className="w-2.5 h-2.5 text-white" />
+                    </div>
+                    <span className="text-sm text-[#0202ff] font-medium">
+                      {c.name || c.title || c.id}
+                    </span>
+                    {isSI && (
+                      <span className="ml-auto text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                        Always included
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <p className="text-xs text-muted-foreground pt-1">
+            {readOnlyRows.length} core competencies. Contact a Super Administrator to change this selection.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Super Admin: full editable selection interface
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
       <div className="flex items-center justify-between gap-2 px-5 py-3 border-b border-border bg-muted/30">
