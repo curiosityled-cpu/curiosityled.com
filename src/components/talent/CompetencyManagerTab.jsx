@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Layers, Plus, Edit, Trash2, Search, Filter, CheckCircle, X, ChevronDown, ChevronUp, ChevronRight, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import CoreCompetenciesCard from "./CoreCompetenciesCard";
 
 const EMPTY_FORM = {
   name: "", field_key: "", category: "", definition: "",
@@ -351,6 +352,9 @@ export default function CompetencyManagerTab() {
 
   return (
     <div className="space-y-5">
+      {/* Super Admin: Core competency selection */}
+      <CoreCompetenciesCard />
+
       {/* Filters & Actions — bordered section with header bar */}
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="flex items-center gap-2 px-5 py-3 border-b border-border bg-muted/30">
