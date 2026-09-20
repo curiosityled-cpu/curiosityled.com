@@ -2,43 +2,52 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Layers, Check, Loader2, Settings, Lock } from "lucide-react";
 import { useAuth } from "@/components/useAuth";
-import { useClient } from "@/components/contexts/ClientContext";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
 export default function CoreCompetenciesCard() {
-  const { isSuperAdmin } = useAuth();
-  const { client, refreshContext } = useClient();
+  const { isSuperAdmin, user } = useAuth();
   const [competencies, setCompetencies] = useState([]);
+  const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    base44.entities.Competency.list()
-      .then((rows) => setCompetencies(rows || []))
-      .catch(() => setCompetencies([]))
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    if (client) setSelectedIds(client.selected_competency_ids || []);
-  }, [client]);
+    if (!isSuperAdmin) return;
+    let cancelled = false;
+    const clientId = user?.client_id || user?.data?.client_id;
+    Promise.all([
+      base44.entities.Competency.list().catch(() => []),
+      clientId
+        ? base44.entities.Client.get(clientId).catch(() => null)
+        : Promise.resolve(null),
+    ])
+      .then(([rows, cli]) => {
+        if (cancelled) return;
+        setCompetencies(rows || []);
+        setClient(cli);
+        setSelectedIds(cli?.selected_competency_ids || []);
+      })
+      .finally(() => !cancelled && setLoading(false));
+    return () => { cancelled = true; };
+  }, [isSuperAdmin, user?.client_id, user?.data?.client_id]);
 
   if (!isSuperAdmin) return null;
 
   const toggle = async (id) => {
+    if (!client) return;
     const next = selectedIds.includes(id)
       ? selectedIds.filter((x) => x !== id)
       : [...selectedIds, id];
     setSelectedIds(next);
     setSaving(true);
     try {
-      await base44.entities.Client.update(client.id, {
+      const updated = await base44.entities.Client.update(client.id, {
         selected_competency_ids: next,
         competencies_configured: next.length > 0,
       });
-      await refreshContext();
+      setClient(updated);
       toast.success("Core competencies updated");
     } catch (e) {
       toast.error("Failed to update core competencies");
@@ -78,6 +87,10 @@ export default function CoreCompetenciesCard() {
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
           </div>
+        ) : !client ? (
+          <p className="text-sm text-muted-foreground italic py-4">
+            No client organization linked to your account.
+          </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
             {competencies.map((c) => {
