@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/useAuth';
 
-const ClientContext = createContext(null);
+export const ClientContext = createContext(null);
 
 export const ClientProvider = ({ children }) => {
   const { user, loading: authLoading } = useAuth();
