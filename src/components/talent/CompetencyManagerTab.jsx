@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import CoreCompetenciesCard from "./CoreCompetenciesCard";
 import CompetencyImportCard from "./CompetencyImportCard";
+import AdditionalCompetenciesCard from "./AdditionalCompetenciesCard";
 import { useAuth } from "@/lib/AuthContext";
 
 const EMPTY_FORM = {
@@ -240,7 +241,6 @@ export default function CompetencyManagerTab() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
-  const [filterType, setFilterType] = useState("all");
   const [editingCompetency, setEditingCompetency] = useState(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [formData, setFormData] = useState(EMPTY_FORM);
@@ -336,11 +336,7 @@ export default function CompetencyManagerTab() {
       c.definition?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.key_components?.some((kc) => kc.name?.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory = filterCategory === "all" || c.category === filterCategory;
-    const matchesType =
-      filterType === "all" ||
-      (filterType === "core" && c.is_platform_default) ||
-      (filterType === "org_specific" && !c.is_platform_default);
-    return matchesSearch && matchesCategory && matchesType;
+    return matchesSearch && matchesCategory;
   });
 
   const CATEGORY_ORDER = ["Tactical", "Self Leadership", "People Leadership", "Situational Intelligence"];
@@ -377,38 +373,15 @@ export default function CompetencyManagerTab() {
       {/* AI-powered import from CSV/Excel/PDF */}
       <CompetencyImportCard competencies={competencies} onCreated={loadCompetencies} />
 
-      {/* Edit Dialog */}
-      <Dialog
-        open={!!editingCompetency}
-        onOpenChange={(open) => { if (!open) { setEditingCompetency(null); setFormData(EMPTY_FORM); } }}
-      >
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit: {editingCompetency?.name}</DialogTitle>
-          </DialogHeader>
-          <CompetencyForm
-            formData={formData}
-            setFormData={setFormData}
-            onSubmit={handleUpdate}
-            submitLabel="Save Changes"
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* Competency Library — filter, search, and full list in one card */}
+      {/* Filters & Actions — bordered section with header bar */}
       <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <div className="flex items-center justify-between gap-2 px-5 py-3 border-b border-border bg-muted/30">
-          <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Competency Library
-            </span>
-          </div>
-          <span className="text-xs text-muted-foreground">{filteredCompetencies.length} shown</span>
+        <div className="flex items-center gap-2 px-5 py-3 border-b border-border bg-muted/30">
+          <Filter className="w-4 h-4 text-muted-foreground" />
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Filter & Search
+          </span>
         </div>
-
-        {/* Filter & Search row */}
-        <div className="p-5 border-b border-border">
+        <div className="p-5">
           <div className="flex flex-col md:flex-row gap-3 items-center">
             <div className="relative flex-1 w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -419,17 +392,6 @@ export default function CompetencyManagerTab() {
                 className="pl-10"
               />
             </div>
-            <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-full md:w-[180px]">
-                <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="core">Core (Platform)</SelectItem>
-                <SelectItem value="org_specific">Org Specific</SelectItem>
-              </SelectContent>
-            </Select>
             <Select value={filterCategory} onValueChange={setFilterCategory}>
               <SelectTrigger className="w-full md:w-[210px]">
                 <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
@@ -466,6 +428,37 @@ export default function CompetencyManagerTab() {
             </Dialog>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Edit Dialog */}
+      <Dialog
+        open={!!editingCompetency}
+        onOpenChange={(open) => { if (!open) { setEditingCompetency(null); setFormData(EMPTY_FORM); } }}
+      >
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit: {editingCompetency?.name}</DialogTitle>
+          </DialogHeader>
+          <CompetencyForm
+            formData={formData}
+            setFormData={setFormData}
+            onSubmit={handleUpdate}
+            submitLabel="Save Changes"
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Competency Library — bordered section with header bar */}
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <div className="flex items-center justify-between gap-2 px-5 py-3 border-b border-border bg-muted/30">
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-muted-foreground" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Core Competencies
+            </span>
+          </div>
+          <span className="text-xs text-muted-foreground">{filteredCompetencies.length} shown</span>
         </div>
 
         <div className="p-5">
@@ -535,6 +528,13 @@ export default function CompetencyManagerTab() {
         </div>
       </div>
 
+      {/* Additional (non-core) competencies for this client */}
+      <AdditionalCompetenciesCard
+        competencies={competencies}
+        onEdit={openEdit}
+        onDelete={handleDelete}
+        canEdit={canCreate}
+      />
     </div>
   );
 }
