@@ -8,7 +8,6 @@ import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
 import GoalsSection from "./GoalsSection";
-import CompetencySection from "./CompetencySection";
 import AssessmentSection from "./AssessmentSection";
 import CoachingSection from "./CoachingSection";
 import CheckInRhythmSection from "./CheckInRhythmSection";
@@ -121,17 +120,6 @@ export default function OrgSettingsTab() {
 
       <SuperAdminSection label="performance & goals settings">
         <GoalsSection {...sharedProps} />
-      </SuperAdminSection>
-      <SuperAdminSection label="core competency settings">
-        <CompetencySection
-          selectedIds={selectedCompetencyIds}
-          onSelectCompetencies={setSelectedCompetencyIds}
-          competenciesConfigured={competenciesConfigured}
-          onMarkConfigured={setCompetenciesConfigured}
-          locks={locks}
-          toggleLock={toggleLock}
-          canLock={isSuperAdmin}
-        />
       </SuperAdminSection>
       <SuperAdminSection label="assessment settings">
         <AssessmentSection {...sharedProps} />

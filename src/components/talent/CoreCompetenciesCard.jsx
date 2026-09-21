@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Layers, Check, Loader2, Settings, Lock } from "lucide-react";
+import { Layers, Check, Loader2, Lock, Unlock } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
@@ -37,6 +36,26 @@ export default function CoreCompetenciesCard() {
 
   if (!isSuperAdmin) return null;
 
+  const competencySetLocked = client?.settings?.locks?.competency_set;
+
+  const toggleLock = async () => {
+    if (!client) return;
+    const currentLocks = client.settings?.locks || {};
+    const nextLocks = { ...currentLocks, competency_set: !currentLocks.competency_set };
+    setSaving(true);
+    try {
+      const updated = await base44.entities.Client.update(client.id, {
+        settings: { ...client.settings, locks: nextLocks },
+      });
+      setClient(updated);
+      toast.success(nextLocks.competency_set ? "Competency set locked" : "Competency set unlocked");
+    } catch (e) {
+      toast.error("Failed to update lock");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const toggle = async (id) => {
     if (!client) return;
     const next = selectedIds.includes(id)
@@ -71,13 +90,20 @@ export default function CoreCompetenciesCard() {
             <Lock className="w-2.5 h-2.5" /> Super Admin
           </span>
         </div>
-        <Link
-          to="/Settings"
-          className="flex items-center gap-1.5 text-xs font-medium text-[#0202ff] hover:opacity-80"
+        <button
+          type="button"
+          onClick={toggleLock}
+          disabled={saving || !client}
+          className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md transition-colors disabled:opacity-60 ${
+            competencySetLocked
+              ? "text-[#0202ff] bg-[#0202ff]/10"
+              : "text-muted-foreground hover:bg-muted"
+          }`}
+          title={competencySetLocked ? "Org override ON — users cannot change this" : "Lock as org override"}
         >
-          <Settings className="w-3.5 h-3.5" />
-          Competency Settings
-        </Link>
+          {competencySetLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+          {competencySetLocked ? "Locked" : "Lock"}
+        </button>
       </div>
 
       <div className="p-5 space-y-3">
