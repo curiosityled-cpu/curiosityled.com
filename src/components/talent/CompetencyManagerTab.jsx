@@ -12,7 +12,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import CoreCompetenciesCard from "./CoreCompetenciesCard";
 import CompetencyImportCard from "./CompetencyImportCard";
-import AdditionalCompetenciesCard from "./AdditionalCompetenciesCard";
 import { useAuth } from "@/lib/AuthContext";
 
 const EMPTY_FORM = {
@@ -26,6 +25,8 @@ const CATEGORY_COLORS = {
   "People Leadership": "bg-green-100 text-green-700 border-green-200",
   "Situational Intelligence": "bg-blue-100 text-[#0202ff] border-blue-200",
 };
+
+const CATEGORY_ORDER = ["Tactical", "Self Leadership", "People Leadership", "Situational Intelligence"];
 
 function KeyComponentsEditor({ components, onChange }) {
   const add = () => onChange([...components, { name: "", weight: 0 }]);
@@ -232,6 +233,92 @@ function CompetencyCard({ competency, onEdit, onDelete, canEdit }) {
   );
 }
 
+function CompetencySection({ title, items, collapsedCategories, onToggleCategory, onEdit, onDelete, canEditFn, emptyMessage }) {
+  const grouped = items.reduce((acc, c) => {
+    const cat = c.category || "Uncategorized";
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(c);
+    return acc;
+  }, {});
+
+  const orderedCategories = [
+    ...CATEGORY_ORDER.filter((cat) => grouped[cat]),
+    ...Object.keys(grouped)
+      .filter((cat) => !CATEGORY_ORDER.includes(cat) && cat !== "Uncategorized")
+      .sort(),
+    ...(grouped["Uncategorized"] ? ["Uncategorized"] : []),
+  ];
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-3">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{title}</h2>
+        <div className="flex-1 h-px bg-border" />
+        <span className="text-xs text-muted-foreground">{items.length}</span>
+      </div>
+      {items.length === 0 ? (
+        <div className="py-8 text-center">
+          <Layers className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {orderedCategories.map((category) => {
+            const catItems = grouped[category];
+            const collapsed = collapsedCategories[category];
+            return (
+              <div key={category}>
+                <button
+                  type="button"
+                  onClick={() => onToggleCategory(category)}
+                  className="flex items-center gap-3 mb-3 w-full text-left group"
+                >
+                  {collapsed ? <ChevronRight className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground group-hover:text-foreground transition-colors">
+                    {category}
+                  </h3>
+                  <div className="flex-1 h-px bg-border" />
+                  <span className="text-xs text-muted-foreground">{catItems.length}</span>
+                </button>
+                <AnimatePresence initial={false}>
+                  {!collapsed && (
+                    <motion.div
+                      key="content"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2, ease: "easeInOut" }}
+                      className="overflow-hidden"
+                    >
+                      <div className="space-y-3">
+                        {catItems.map((competency, idx) => (
+                          <motion.div
+                            key={competency.id}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: Math.min(idx * 0.04, 0.3) }}
+                          >
+                            <CompetencyCard
+                              competency={competency}
+                              onEdit={() => onEdit(competency)}
+                              onDelete={() => onDelete(competency.id)}
+                              canEdit={canEditFn(competency)}
+                            />
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function CompetencyManagerTab() {
   const { user } = useAuth();
   const appRole = user?.app_role || user?.data?.app_role || user?.role;
@@ -339,8 +426,6 @@ export default function CompetencyManagerTab() {
     return matchesSearch && matchesCategory;
   });
 
-  const CATEGORY_ORDER = ["Tactical", "Self Leadership", "People Leadership", "Situational Intelligence"];
-
   const categories = [
     ...CATEGORY_ORDER.filter((cat) => competencies.some((c) => c.category === cat)),
     ...[...new Set(competencies.map((c) => c.category).filter(Boolean))]
@@ -349,21 +434,9 @@ export default function CompetencyManagerTab() {
     ...(competencies.some((c) => c.category === "Uncategorized") ? ["Uncategorized"] : []),
   ];
 
-  const grouped = filteredCompetencies.reduce((acc, c) => {
-    const cat = c.category || "Uncategorized";
-    if (!acc[cat]) acc[cat] = [];
-    acc[cat].push(c);
-    return acc;
-  }, {});
-
-  // Render categories in the fixed order above, then any others alphabetically, then Uncategorized last
-  const orderedCategories = [
-    ...CATEGORY_ORDER.filter((cat) => grouped[cat]),
-    ...Object.keys(grouped)
-      .filter((cat) => !CATEGORY_ORDER.includes(cat) && cat !== "Uncategorized")
-      .sort(),
-    ...(grouped["Uncategorized"] ? ["Uncategorized"] : []),
-  ];
+  const clientId = user?.client_id || user?.data?.client_id;
+  const coreCompetencies = filteredCompetencies.filter((c) => c.is_platform_default);
+  const orgSpecificCompetencies = filteredCompetencies.filter((c) => !c.is_platform_default && c.client_id === clientId);
 
   return (
     <div className="space-y-5">
@@ -373,15 +446,38 @@ export default function CompetencyManagerTab() {
       {/* AI-powered import from CSV/Excel/PDF */}
       <CompetencyImportCard competencies={competencies} onCreated={loadCompetencies} />
 
-      {/* Filters & Actions — bordered section with header bar */}
+      {/* Edit Dialog */}
+      <Dialog
+        open={!!editingCompetency}
+        onOpenChange={(open) => { if (!open) { setEditingCompetency(null); setFormData(EMPTY_FORM); } }}
+      >
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit: {editingCompetency?.name}</DialogTitle>
+          </DialogHeader>
+          <CompetencyForm
+            formData={formData}
+            setFormData={setFormData}
+            onSubmit={handleUpdate}
+            submitLabel="Save Changes"
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Competency Library — single card with filter, core + org-specific sections */}
       <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <div className="flex items-center gap-2 px-5 py-3 border-b border-border bg-muted/30">
-          <Filter className="w-4 h-4 text-muted-foreground" />
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Filter & Search
-          </span>
+        <div className="flex items-center justify-between gap-2 px-5 py-3 border-b border-border bg-muted/30">
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-muted-foreground" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Competency Library
+            </span>
+          </div>
+          <span className="text-xs text-muted-foreground">{filteredCompetencies.length} shown</span>
         </div>
-        <div className="p-5">
+
+        <div className="p-5 space-y-5">
+          {/* Filter & Search */}
           <div className="flex flex-col md:flex-row gap-3 items-center">
             <div className="relative flex-1 w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -428,40 +524,7 @@ export default function CompetencyManagerTab() {
             </Dialog>
             )}
           </div>
-        </div>
-      </div>
 
-      {/* Edit Dialog */}
-      <Dialog
-        open={!!editingCompetency}
-        onOpenChange={(open) => { if (!open) { setEditingCompetency(null); setFormData(EMPTY_FORM); } }}
-      >
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit: {editingCompetency?.name}</DialogTitle>
-          </DialogHeader>
-          <CompetencyForm
-            formData={formData}
-            setFormData={setFormData}
-            onSubmit={handleUpdate}
-            submitLabel="Save Changes"
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* Competency Library — bordered section with header bar */}
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <div className="flex items-center justify-between gap-2 px-5 py-3 border-b border-border bg-muted/30">
-          <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Core Competencies
-            </span>
-          </div>
-          <span className="text-xs text-muted-foreground">{filteredCompetencies.length} shown</span>
-        </div>
-
-        <div className="p-5">
           {loading ? (
             <div className="flex items-center justify-center py-16">
               <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#0202ff" }} />
@@ -473,68 +536,33 @@ export default function CompetencyManagerTab() {
             </div>
           ) : (
             <div className="space-y-8">
-              {orderedCategories.map((category) => {
-                const items = grouped[category];
-                const collapsed = collapsedCategories[category];
-                return (
-                <div key={category}>
-                  <button
-                    type="button"
-                    onClick={() => toggleCategory(category)}
-                    className="flex items-center gap-3 mb-3 w-full text-left group"
-                  >
-                    {collapsed ? <ChevronRight className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground group-hover:text-foreground transition-colors">
-                      {category}
-                    </h2>
-                    <div className="flex-1 h-px bg-border" />
-                    <span className="text-xs text-muted-foreground">{items.length}</span>
-                  </button>
-                  <AnimatePresence initial={false}>
-                    {!collapsed && (
-                      <motion.div
-                        key="content"
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2, ease: "easeInOut" }}
-                        className="overflow-hidden"
-                      >
-                        <div className="space-y-3">
-                          {items.map((competency, idx) => (
-                            <motion.div
-                              key={competency.id}
-                              initial={{ opacity: 0, y: 8 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: Math.min(idx * 0.04, 0.3) }}
-                            >
-                              <CompetencyCard
-                                competency={competency}
-                                onEdit={() => openEdit(competency)}
-                                onDelete={() => handleDelete(competency.id)}
-                                canEdit={isPlatformAdmin || !competency.is_platform_default}
-                              />
-                            </motion.div>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-                );
-              })}
+              {/* Core Competencies section */}
+              <CompetencySection
+                title="Core Competencies"
+                items={coreCompetencies}
+                collapsedCategories={collapsedCategories}
+                onToggleCategory={toggleCategory}
+                onEdit={openEdit}
+                onDelete={handleDelete}
+                canEditFn={(c) => isPlatformAdmin || !c.is_platform_default}
+                emptyMessage="No core competencies match your filters"
+              />
+
+              {/* Organization Specific Competencies section */}
+              <CompetencySection
+                title="Organization Specific Competencies"
+                items={orgSpecificCompetencies}
+                collapsedCategories={collapsedCategories}
+                onToggleCategory={toggleCategory}
+                onEdit={openEdit}
+                onDelete={handleDelete}
+                canEditFn={() => canCreate}
+                emptyMessage="No organization specific competencies yet — import from a file or create custom competencies"
+              />
             </div>
           )}
         </div>
       </div>
-
-      {/* Additional (non-core) competencies for this client */}
-      <AdditionalCompetenciesCard
-        competencies={competencies}
-        onEdit={openEdit}
-        onDelete={handleDelete}
-        canEdit={canCreate}
-      />
     </div>
   );
 }
