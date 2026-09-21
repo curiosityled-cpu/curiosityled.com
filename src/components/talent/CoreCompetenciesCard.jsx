@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Layers, Check, Loader2, Lock, Unlock, Sparkles, X } from "lucide-react";
+import { Layers, Check, Loader2, Lock, Unlock, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { useClient } from "@/components/contexts/ClientContext";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+import CompetencyAiAssistDialog from "@/components/talent/CompetencyAiAssistDialog";
 
 export default function CoreCompetenciesCard() {
   const { user } = useAuth();
@@ -13,8 +14,7 @@ export default function CoreCompetenciesCard() {
   const [competencies, setCompetencies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [aiRunning, setAiRunning] = useState(false);
-  const [aiReasoning, setAiReasoning] = useState(null);
+  const [showAiDialog, setShowAiDialog] = useState(false);
 
   const selectedIds = client?.selected_competency_ids || [];
 
@@ -79,69 +79,20 @@ export default function CoreCompetenciesCard() {
     }
   };
 
-  const runAiAssist = async () => {
-    if (!client) return;
-    setAiRunning(true);
-    setAiReasoning(null);
+  const applyAiRecommendation = async (ids) => {
+    if (!client || !ids || ids.length === 0) return;
+    setSaving(true);
     try {
-      const catalog = competencies.map((c) => ({
-        id: c.id,
-        name: c.name,
-        category: c.category,
-        definition: c.definition,
-        is_platform_default: !!c.is_platform_default,
-      }));
-      const prompt = `You are an expert leadership development consultant for the "Curiosity Led" platform.
-A client organization needs help selecting their core competencies — the 3-5 competencies (plus Situational Intelligence) they will measure every leader against.
-
-Client context:
-- Organization name: ${client.name || "Unknown"}
-- Industry: ${client.industry || "Unknown"}
-- Company size: ${client.company_size || "Unknown"}
-- Primary contact role: ${client.contact_name || "Unknown"}
-
-Available competencies (JSON):
-${JSON.stringify(catalog)}
-
-Select the most relevant 3-5 competencies PLUS "Situational Intelligence" if present. Prefer a balanced mix across categories (Tactical, Self Leadership, People Leadership, Situational Intelligence). Return ONLY a JSON object with:
-- recommended_competency_ids: array of competency IDs from the catalog above
-- reasoning: a concise 2-3 sentence explanation of why this mix fits this organization`;
-
-      const res = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            recommended_competency_ids: {
-              type: "array",
-              items: { type: "string" },
-            },
-            reasoning: { type: "string" },
-          },
-          required: ["recommended_competency_ids", "reasoning"],
-        },
-      });
-
-      const recommended = (res?.recommended_competency_ids || []).filter((id) =>
-        competencies.some((c) => c.id === id)
-      );
-      if (recommended.length === 0) {
-        toast.error("AI could not match recommendations to the competency catalog");
-        setAiRunning(false);
-        return;
-      }
-
       await base44.entities.Client.update(client.id, {
-        selected_competency_ids: recommended,
+        selected_competency_ids: ids,
         competencies_configured: true,
       });
       await refreshContext();
-      setAiReasoning(res?.reasoning || null);
-      toast.success(`AI selected ${recommended.length} competencies`);
+      toast.success(`Applied ${ids.length} AI-recommended competencies`);
     } catch (e) {
-      toast.error("AI assist failed to complete");
+      toast.error("Failed to apply AI recommendation");
     } finally {
-      setAiRunning(false);
+      setSaving(false);
     }
   };
 
@@ -213,13 +164,13 @@ Select the most relevant 3-5 competencies PLUS "Situational Intelligence" if pre
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={runAiAssist}
-            disabled={saving || aiRunning || !client || loading || clientLoading}
+            onClick={() => setShowAiDialog(true)}
+            disabled={saving || !client || loading || clientLoading}
             className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md text-[#0202ff] bg-[#0202ff]/10 hover:bg-[#0202ff]/20 transition-colors disabled:opacity-50"
-            title="Let AI recommend competencies based on your organization's context"
+            title="Guided AI flow to recommend competencies based on your organization's context"
           >
-            {aiRunning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-            {aiRunning ? "AI selecting..." : "AI Assist"}
+            <Sparkles className="w-3.5 h-3.5" />
+            AI Assist
           </button>
           <button
             type="button"
@@ -243,23 +194,6 @@ Select the most relevant 3-5 competencies PLUS "Situational Intelligence" if pre
           Pick the 3–5 competencies (plus Situational Intelligence) your organization measures against. These power development, assessments, and reporting across the platform.
         </p>
 
-        {aiReasoning && (
-          <div className="flex items-start gap-2 p-3 rounded-lg border border-[#0202ff]/20 bg-[#0202ff]/5">
-            <Sparkles className="w-4 h-4 text-[#0202ff] flex-shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#0202ff] mb-1">AI Recommendation</p>
-              <p className="text-xs text-foreground leading-relaxed">{aiReasoning}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setAiReasoning(null)}
-              className="text-muted-foreground hover:text-foreground flex-shrink-0"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
-
         {loading || clientLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
@@ -282,6 +216,15 @@ Select the most relevant 3-5 competencies PLUS "Situational Intelligence" if pre
           {saving && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}
         </div>
       </div>
+
+      <CompetencyAiAssistDialog
+        open={showAiDialog}
+        onOpenChange={setShowAiDialog}
+        client={client}
+        competencies={competencies}
+        currentlySelectedIds={selectedIds}
+        onApply={applyAiRecommendation}
+      />
     </div>
   );
 }
