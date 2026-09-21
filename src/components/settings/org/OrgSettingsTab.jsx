@@ -19,7 +19,7 @@ import GamificationSection from "./GamificationSection";
 import ReportingSection from "./ReportingSection";
 
 export default function OrgSettingsTab() {
-  const { user, isSuperAdmin, isHRAdmin } = useAuth();
+  const { user, isSuperAdmin } = useAuth();
   const { client, loading, refreshContext } = useClient();
   const [settings, setSettings] = useState(null);
   const [selectedCompetencyIds, setSelectedCompetencyIds] = useState([]);
@@ -34,12 +34,12 @@ export default function OrgSettingsTab() {
     }
   }, [client]);
 
-  if (!isSuperAdmin && !isHRAdmin) {
+  if (!isSuperAdmin) {
     return (
       <Alert>
         <Lock className="w-4 h-4" />
         <AlertDescription>
-          Organization settings are only available to Super Administrators and HR Administrators.
+          Organization settings are only available to Super Administrators.
         </AlertDescription>
       </Alert>
     );
@@ -130,12 +130,12 @@ export default function OrgSettingsTab() {
       />
       <AssessmentSection {...sharedProps} />
       <CoachingSection {...sharedProps} />
-      {isSuperAdmin && <CheckInRhythmSection {...sharedProps} />}
-      {isSuperAdmin && <NotificationsSection {...sharedProps} />}
-      {isSuperAdmin && <IntegrationsSection {...sharedProps} />}
-      {isSuperAdmin && <PrivacySection {...sharedProps} />}
-      {isSuperAdmin && <GamificationSection {...sharedProps} />}
-      {isSuperAdmin && <ReportingSection {...sharedProps} />}
+      <CheckInRhythmSection {...sharedProps} />
+      <NotificationsSection {...sharedProps} />
+      <IntegrationsSection {...sharedProps} />
+      <PrivacySection {...sharedProps} />
+      <GamificationSection {...sharedProps} />
+      <ReportingSection {...sharedProps} />
     </div>
   );
 }
