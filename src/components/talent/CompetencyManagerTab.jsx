@@ -11,6 +11,8 @@ import { Layers, Plus, Edit, Trash2, Search, Filter, CheckCircle, X, ChevronDown
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import CoreCompetenciesCard from "./CoreCompetenciesCard";
+import CompetencyImportCard from "./CompetencyImportCard";
+import AdditionalCompetenciesCard from "./AdditionalCompetenciesCard";
 import { useAuth } from "@/lib/AuthContext";
 
 const EMPTY_FORM = {
@@ -368,6 +370,9 @@ export default function CompetencyManagerTab() {
       {/* Super Admin: Core competency selection */}
       <CoreCompetenciesCard />
 
+      {/* AI-powered import from CSV/Excel/PDF */}
+      <CompetencyImportCard competencies={competencies} onCreated={loadCompetencies} />
+
       {/* Filters & Actions — bordered section with header bar */}
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="flex items-center gap-2 px-5 py-3 border-b border-border bg-muted/30">
@@ -522,6 +527,14 @@ export default function CompetencyManagerTab() {
           )}
         </div>
       </div>
+
+      {/* Additional (non-core) competencies for this client */}
+      <AdditionalCompetenciesCard
+        competencies={competencies}
+        onEdit={openEdit}
+        onDelete={handleDelete}
+        canEdit={canCreate}
+      />
     </div>
   );
 }
