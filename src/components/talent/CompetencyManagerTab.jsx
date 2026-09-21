@@ -11,10 +11,11 @@ import { Layers, Plus, Edit, Trash2, Search, Filter, CheckCircle, X, ChevronDown
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import CoreCompetenciesCard from "./CoreCompetenciesCard";
+import { useAuth } from "@/lib/AuthContext";
 
 const EMPTY_FORM = {
   name: "", field_key: "", category: "", definition: "",
-  key_components: [], is_platform_default: true,
+  key_components: [], is_platform_default: false,
 };
 
 const CATEGORY_COLORS = {
@@ -139,7 +140,7 @@ function CompetencyForm({ formData, setFormData, onSubmit, submitLabel }) {
   );
 }
 
-function CompetencyCard({ competency, onEdit, onDelete }) {
+function CompetencyCard({ competency, onEdit, onDelete, canEdit }) {
   const [expanded, setExpanded] = useState(false);
   const components = competency.key_components || [];
   const categoryColor = CATEGORY_COLORS[competency.category] || "bg-gray-100 text-gray-700 border-gray-200";
@@ -202,18 +203,26 @@ function CompetencyCard({ competency, onEdit, onDelete }) {
               </div>
             )}
           </div>
-          <div className="flex gap-1 flex-shrink-0">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
-              <Edit className="w-4 h-4 text-muted-foreground" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-red-400 hover:text-red-600 hover:bg-red-50"
-              onClick={onDelete}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
+          <div className="flex gap-1 flex-shrink-0 items-center">
+            {canEdit ? (
+              <>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
+                  <Edit className="w-4 h-4 text-muted-foreground" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-red-400 hover:text-red-600 hover:bg-red-50"
+                  onClick={onDelete}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </>
+            ) : (
+              <Badge variant="outline" className="text-[10px] text-muted-foreground border-muted">
+                Platform Default
+              </Badge>
+            )}
           </div>
         </div>
       </CardContent>
@@ -222,6 +231,10 @@ function CompetencyCard({ competency, onEdit, onDelete }) {
 }
 
 export default function CompetencyManagerTab() {
+  const { user } = useAuth();
+  const appRole = user?.app_role || user?.data?.app_role || user?.role;
+  const isPlatformAdmin = appRole === "Platform Admin";
+  const canCreate = isPlatformAdmin || ["Admin Level 1", "Super Administrator", "Partner Business Administrator"].includes(appRole);
   const [competencies, setCompetencies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -268,7 +281,7 @@ export default function CompetencyManagerTab() {
   const handleCreate = async () => {
     if (!validateWeights()) return;
     try {
-      await base44.entities.Competency.create(formData);
+      await base44.entities.Competency.create({ ...formData, is_platform_default: false, client_id: user?.client_id || user?.data?.client_id });
       toast.success("Competency created");
       setShowCreateDialog(false);
       setFormData(EMPTY_FORM);
@@ -386,6 +399,7 @@ export default function CompetencyManagerTab() {
                 ))}
               </SelectContent>
             </Select>
+            {canCreate && (
             <Dialog
               open={showCreateDialog}
               onOpenChange={(open) => { setShowCreateDialog(open); if (!open) setFormData(EMPTY_FORM); }}
@@ -407,6 +421,7 @@ export default function CompetencyManagerTab() {
                 />
               </DialogContent>
             </Dialog>
+            )}
           </div>
         </div>
       </div>
@@ -492,6 +507,7 @@ export default function CompetencyManagerTab() {
                                 competency={competency}
                                 onEdit={() => openEdit(competency)}
                                 onDelete={() => handleDelete(competency.id)}
+                                canEdit={isPlatformAdmin || !competency.is_platform_default}
                               />
                             </motion.div>
                           ))}

@@ -127,17 +127,22 @@
         }
       ]
     },
-    "write": {
+    "create": {
       "$or": [
         {
           "$and": [
             {
               "user_condition": {
-                "role": "Admin Level 2"
+                "role": "Admin Level 1"
               }
             },
             {
               "data.client_id": "{{user.client_id}}"
+            },
+            {
+              "data.is_platform_default": {
+                "$ne": true
+              }
             }
           ]
         },
@@ -150,6 +155,139 @@
             },
             {
               "data.client_id": "{{user.client_id}}"
+            },
+            {
+              "data.is_platform_default": {
+                "$ne": true
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            },
+            {
+              "data.is_platform_default": {
+                "$ne": true
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.client_id}}"
+            },
+            {
+              "data.is_platform_default": {
+                "$ne": true
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.client_id}}"
+            },
+            {
+              "data.is_platform_default": {
+                "$ne": true
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            },
+            {
+              "data.is_platform_default": {
+                "$ne": true
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.client_id}}"
+            },
+            {
+              "data.is_platform_default": {
+                "$ne": true
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.client_id}}"
+            },
+            {
+              "data.is_platform_default": {
+                "$ne": true
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            },
+            {
+              "data.is_platform_default": {
+                "$ne": true
+              }
             }
           ]
         },
