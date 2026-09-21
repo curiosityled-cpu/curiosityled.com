@@ -112,28 +112,46 @@
     "definition"
   ],
   "rls": {
-    "read": {},
+    "read": {
+      "$or": [
+        {
+          "data.is_platform_default": true
+        },
+        {
+          "data.client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
     "write": {
       "$or": [
         {
-          "user_condition": {
-            "role": "Admin Level 2"
-          },
-          "client_id": "{{user.client_id}}"
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.client_id}}"
+            }
+          ]
         },
         {
-          "user_condition": {
-            "role": "Super Administrator"
-          },
-          "client_id": "{{user.client_id}}"
-        },
-        {
-          "user_condition": {
-            "role": "Partner Business Administrator"
-          },
-          "client_id": {
-            "$in": "{{user.partner_client_ids}}"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.client_id}}"
+            }
+          ]
         },
         {
           "user_condition": {
