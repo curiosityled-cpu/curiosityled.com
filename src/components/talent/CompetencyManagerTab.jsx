@@ -116,11 +116,19 @@ function CompetencyForm({ formData, setFormData, onSubmit, submitLabel }) {
       </div>
       <div>
         <label className="text-sm font-medium mb-1.5 block">Category</label>
-        <Input
+        <Select
           value={formData.category}
-          onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-          placeholder="e.g., Tactical, Self Leadership, People Leadership"
-        />
+          onValueChange={(value) => setFormData({ ...formData, category: value })}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Tactical">Tactical</SelectItem>
+            <SelectItem value="Self Leadership">Self Leadership</SelectItem>
+            <SelectItem value="People Leadership">People Leadership</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <div>
         <label className="text-sm font-medium mb-1.5 block">Definition</label>
