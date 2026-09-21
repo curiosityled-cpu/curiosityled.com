@@ -22,7 +22,7 @@ const InsightsOverview = lazy(() => import("../components/dashboard/InsightsOver
 const PlatformAdminDashboard = lazy(() => import("../components/dashboard/PlatformAdminDashboard"));
 const EnterpriseAnalytics = lazy(() => import("@/components/analytics/EnterpriseAnalytics"));
 const ExperienceAnalytics = lazy(() => import("./ExperienceAnalytics"));
-const AssessmentAnalytics = lazy(() => import("./AssessmentAnalytics"));
+const AssessmentAnalytics = lazy(() => import("./AssessmentAnalyticsDashboard"));
 const LearningAnalyticsDashboard = lazy(() => import("./LearningAnalyticsDashboard"));
 const ReportBuilder = lazy(() => import("./ReportBuilder"));
 const Insights = lazy(() => import("./Insights"));
