@@ -203,13 +203,16 @@
     "user_email"
   ],
   "rls": {
+    "read": {
+      "data.user_email": "{{user.email}}"
+    },
     "write": {
       "$or": [
         {
-          "user_email": "{{user.email}}"
+          "data.user_email": "{{user.email}}"
         },
         {
-          "source": "system"
+          "data.source": "system"
         }
       ]
     }
