@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Layers, Check, Loader2, Lock, Unlock } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
+import { useClient } from "@/components/contexts/ClientContext";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
@@ -8,26 +9,19 @@ export default function CoreCompetenciesCard() {
   const { user } = useAuth();
   const appRole = user?.app_role || user?.data?.app_role || user?.role;
   const isSuperAdmin = appRole === "Super Administrator";
+  const { client, loading: clientLoading, refreshContext } = useClient();
   const [competencies, setCompetencies] = useState([]);
-  const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedIds, setSelectedIds] = useState([]);
   const [saving, setSaving] = useState(false);
+
+  const selectedIds = client?.selected_competency_ids || [];
 
   useEffect(() => {
     if (!isSuperAdmin) return;
     let cancelled = false;
-    Promise.all([
-      base44.entities.Competency.list().catch(() => []),
-      base44.functions.invoke("getClientContext").catch(() => null),
-    ])
-      .then(([rows, res]) => {
-        if (cancelled) return;
-        const cli = res?.data?.data?.client || res?.data?.client || null;
-        setCompetencies(rows || []);
-        setClient(cli);
-        setSelectedIds(cli?.selected_competency_ids || []);
-      })
+    base44.entities.Competency.list()
+      .then((rows) => { if (!cancelled) setCompetencies(rows || []); })
+      .catch(() => {})
       .finally(() => !cancelled && setLoading(false));
     return () => { cancelled = true; };
   }, [isSuperAdmin, user?.app_role, user?.data?.app_role, user?.role]);
@@ -42,10 +36,10 @@ export default function CoreCompetenciesCard() {
     const nextLocks = { ...currentLocks, competency_set: !currentLocks.competency_set };
     setSaving(true);
     try {
-      const updated = await base44.entities.Client.update(client.id, {
+      await base44.entities.Client.update(client.id, {
         settings: { ...client.settings, locks: nextLocks },
       });
-      setClient(updated);
+      await refreshContext();
       toast.success(nextLocks.competency_set ? "Competency set locked" : "Competency set unlocked");
     } catch (e) {
       toast.error("Failed to update lock");
@@ -59,18 +53,16 @@ export default function CoreCompetenciesCard() {
     const next = selectedIds.includes(id)
       ? selectedIds.filter((x) => x !== id)
       : [...selectedIds, id];
-    setSelectedIds(next);
     setSaving(true);
     try {
-      const updated = await base44.entities.Client.update(client.id, {
+      await base44.entities.Client.update(client.id, {
         selected_competency_ids: next,
         competencies_configured: next.length > 0,
       });
-      setClient(updated);
+      await refreshContext();
       toast.success("Core competencies updated");
     } catch (e) {
       toast.error("Failed to update core competencies");
-      setSelectedIds(client.selected_competency_ids || []);
     } finally {
       setSaving(false);
     }
@@ -109,7 +101,7 @@ export default function CoreCompetenciesCard() {
           Pick the 3–5 competencies (plus Situational Intelligence) your organization measures against. These power development, assessments, and reporting across the platform.
         </p>
 
-        {loading ? (
+        {loading || clientLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
           </div>

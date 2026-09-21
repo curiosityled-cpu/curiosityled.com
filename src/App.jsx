@@ -185,7 +185,7 @@ const AuthenticatedApp = () => {
       <Route path="/consultant-workspace" element={<MVPLayout><ConsultantWorkspace /></MVPLayout>} />
       <Route path="/request-submit" element={<MVPLayout><RequestSubmit /></MVPLayout>} />
       <Route path="/request-triage" element={<Navigate to="/DevelopmentManager" replace />} />
-      <Route path="/talent-manager" element={<MVPLayout><TalentManager /></MVPLayout>} />
+      <Route path="/talent-manager" element={<MVPLayout><ContextProviders><TalentManager /></ContextProviders></MVPLayout>} />
       <Route path="/my-development" element={<MVPLayout><MyDevelopment /></MVPLayout>} />
       <Route path="/experience-overview" element={<MVPLayout><ExperienceOverview /></MVPLayout>} />
       <Route path="/report-builder-mvp" element={<MVPLayout><ReportBuilderMVP /></MVPLayout>} />
