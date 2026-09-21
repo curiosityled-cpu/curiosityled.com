@@ -17,6 +17,7 @@ import IntegrationsSection from "./IntegrationsSection";
 import PrivacySection from "./PrivacySection";
 import GamificationSection from "./GamificationSection";
 import ReportingSection from "./ReportingSection";
+import SuperAdminSection from "./SuperAdminSection";
 
 export default function OrgSettingsTab() {
   const { user, isSuperAdmin } = useAuth();
@@ -95,7 +96,7 @@ export default function OrgSettingsTab() {
   };
 
   const locks = settings.locks || {};
-  const sharedProps = { settings, update, locks, toggleLock, canLock: true };
+  const sharedProps = { settings, update, locks, toggleLock, canLock: isSuperAdmin };
 
   return (
     <div className="space-y-6">
@@ -118,24 +119,44 @@ export default function OrgSettingsTab() {
         </Button>
       </div>
 
-      <GoalsSection {...sharedProps} />
-      <CompetencySection
-        selectedIds={selectedCompetencyIds}
-        onSelectCompetencies={setSelectedCompetencyIds}
-        competenciesConfigured={competenciesConfigured}
-        onMarkConfigured={setCompetenciesConfigured}
-        locks={locks}
-        toggleLock={toggleLock}
-        canLock
-      />
-      <AssessmentSection {...sharedProps} />
-      <CoachingSection {...sharedProps} />
-      <CheckInRhythmSection {...sharedProps} />
-      <NotificationsSection {...sharedProps} />
-      <IntegrationsSection {...sharedProps} />
-      <PrivacySection {...sharedProps} />
-      <GamificationSection {...sharedProps} />
-      <ReportingSection {...sharedProps} />
+      <SuperAdminSection label="performance & goals settings">
+        <GoalsSection {...sharedProps} />
+      </SuperAdminSection>
+      <SuperAdminSection label="core competency settings">
+        <CompetencySection
+          selectedIds={selectedCompetencyIds}
+          onSelectCompetencies={setSelectedCompetencyIds}
+          competenciesConfigured={competenciesConfigured}
+          onMarkConfigured={setCompetenciesConfigured}
+          locks={locks}
+          toggleLock={toggleLock}
+          canLock={isSuperAdmin}
+        />
+      </SuperAdminSection>
+      <SuperAdminSection label="assessment settings">
+        <AssessmentSection {...sharedProps} />
+      </SuperAdminSection>
+      <SuperAdminSection label="coaching settings">
+        <CoachingSection {...sharedProps} />
+      </SuperAdminSection>
+      <SuperAdminSection label="check-in rhythm settings">
+        <CheckInRhythmSection {...sharedProps} />
+      </SuperAdminSection>
+      <SuperAdminSection label="notification settings">
+        <NotificationsSection {...sharedProps} />
+      </SuperAdminSection>
+      <SuperAdminSection label="integration settings">
+        <IntegrationsSection {...sharedProps} />
+      </SuperAdminSection>
+      <SuperAdminSection label="privacy & visibility settings">
+        <PrivacySection {...sharedProps} />
+      </SuperAdminSection>
+      <SuperAdminSection label="gamification settings">
+        <GamificationSection {...sharedProps} />
+      </SuperAdminSection>
+      <SuperAdminSection label="reporting settings">
+        <ReportingSection {...sharedProps} />
+      </SuperAdminSection>
     </div>
   );
 }
