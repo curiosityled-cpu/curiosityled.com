@@ -17,22 +17,20 @@ export default function CoreCompetenciesCard() {
   useEffect(() => {
     if (!isSuperAdmin) return;
     let cancelled = false;
-    const clientId = user?.client_id || user?.data?.client_id;
     Promise.all([
       base44.entities.Competency.list().catch(() => []),
-      clientId
-        ? base44.entities.Client.get(clientId).catch(() => null)
-        : Promise.resolve(null),
+      base44.functions.invoke("getClientContext").catch(() => null),
     ])
-      .then(([rows, cli]) => {
+      .then(([rows, res]) => {
         if (cancelled) return;
+        const cli = res?.data?.client ?? res?.client ?? null;
         setCompetencies(rows || []);
         setClient(cli);
         setSelectedIds(cli?.selected_competency_ids || []);
       })
       .finally(() => !cancelled && setLoading(false));
     return () => { cancelled = true; };
-  }, [isSuperAdmin, user?.client_id, user?.data?.client_id, user?.app_role, user?.data?.app_role, user?.role]);
+  }, [isSuperAdmin, user?.app_role, user?.data?.app_role, user?.role]);
 
   if (!isSuperAdmin) return null;
 

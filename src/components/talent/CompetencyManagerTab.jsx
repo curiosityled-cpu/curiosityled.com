@@ -202,19 +202,27 @@ function CompetencyCard({ competency, onEdit, onDelete }) {
               </div>
             )}
           </div>
-          <div className="flex gap-1 flex-shrink-0">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
-              <Edit className="w-4 h-4 text-muted-foreground" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-red-400 hover:text-red-600 hover:bg-red-50"
-              onClick={onDelete}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
+          {competency.is_platform_default ? (
+            <div className="flex-shrink-0">
+              <Badge variant="outline" className="text-xs text-muted-foreground border-muted">
+                System
+              </Badge>
+            </div>
+          ) : (
+            <div className="flex gap-1 flex-shrink-0">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
+                <Edit className="w-4 h-4 text-muted-foreground" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-red-400 hover:text-red-600 hover:bg-red-50"
+                onClick={onDelete}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
