@@ -166,39 +166,43 @@
   ],
   "rls": {
     "create": {
-      "$or": [
+      "$and": [
         {
           "data.manager_email": "{{user.email}}"
         },
         {
-          "user_condition": {
-            "role": "User Level 1"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "User Level 2"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Admin Level 1"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Admin Level 2"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Super Administrator"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Platform Admin"
-          }
+          "$or": [
+            {
+              "user_condition": {
+                "role": "User Level 1"
+              }
+            },
+            {
+              "user_condition": {
+                "role": "User Level 2"
+              }
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "user_condition": {
+                "role": "Platform Admin"
+              }
+            }
+          ]
         }
       ]
     },

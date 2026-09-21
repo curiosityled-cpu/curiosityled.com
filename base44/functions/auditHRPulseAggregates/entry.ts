@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    const allPulses = await base44.entities.ManagerPulse.filter({}, null, 1000).catch(() => []);
+    const allPulses = await base44.asServiceRole.entities.ManagerPulse.filter({}, null, 1000).catch(() => []);
 
     if (allPulses.length === 0) {
       return Response.json({ audit_result: 'no_data' });

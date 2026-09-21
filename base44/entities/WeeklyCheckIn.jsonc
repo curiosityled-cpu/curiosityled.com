@@ -77,14 +77,25 @@
   ],
   "rls": {
     "create": {
-      "user_condition": {
-        "role": {
-          "$in": [
-            "User Level 1",
-            "User Level 2"
+      "$and": [
+        {
+          "data.employee_email": "{{user.email}}"
+        },
+        {
+          "$or": [
+            {
+              "user_condition": {
+                "role": "User Level 1"
+              }
+            },
+            {
+              "user_condition": {
+                "role": "User Level 2"
+              }
+            }
           ]
         }
-      }
+      ]
     },
     "read": {
       "$or": [

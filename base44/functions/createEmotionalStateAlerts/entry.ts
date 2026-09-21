@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     }
 
     const alerts = [];
-    const recentPulses = await base44.entities.ManagerPulse.filter({ user_email }, '-created_date', 14);
+    const recentPulses = await base44.asServiceRole.entities.ManagerPulse.filter({ user_email }, '-created_date', 14);
 
     if (recentPulses.length < 3) {
       return Response.json({ message: 'Not enough data for trends' });
