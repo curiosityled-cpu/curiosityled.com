@@ -95,9 +95,7 @@
   ],
   "rls": {
     "create": {
-      "user_condition": {
-        "role": "user"
-      }
+      "data.email": "{{user.email}}"
     },
     "read": {
       "$or": [
@@ -105,11 +103,39 @@
           "data.email": "{{user.email}}"
         },
         {
-          "data.client_id": "{{user.data.client_id}}"
+          "$and": [
+            {
+              "$or": [
+                {
+                  "user_condition": {
+                    "role": "Analyst"
+                  }
+                },
+                {
+                  "user_condition": {
+                    "role": "Admin Level 1"
+                  }
+                },
+                {
+                  "user_condition": {
+                    "role": "Admin Level 2"
+                  }
+                },
+                {
+                  "user_condition": {
+                    "role": "Super Administrator"
+                  }
+                }
+              ]
+            },
+            {
+              "data.client_id": "{{user.client_id}}"
+            }
+          ]
         },
         {
           "user_condition": {
-            "role": "admin"
+            "role": "Platform Admin"
           }
         }
       ]
@@ -120,16 +146,62 @@
           "data.email": "{{user.email}}"
         },
         {
+          "$and": [
+            {
+              "$or": [
+                {
+                  "user_condition": {
+                    "role": "Admin Level 2"
+                  }
+                },
+                {
+                  "user_condition": {
+                    "role": "Super Administrator"
+                  }
+                }
+              ]
+            },
+            {
+              "data.client_id": "{{user.client_id}}"
+            }
+          ]
+        },
+        {
           "user_condition": {
-            "role": "admin"
+            "role": "Platform Admin"
           }
         }
       ]
     },
     "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "$and": [
+            {
+              "$or": [
+                {
+                  "user_condition": {
+                    "role": "Admin Level 2"
+                  }
+                },
+                {
+                  "user_condition": {
+                    "role": "Super Administrator"
+                  }
+                }
+              ]
+            },
+            {
+              "data.client_id": "{{user.client_id}}"
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
     }
   }
 }
