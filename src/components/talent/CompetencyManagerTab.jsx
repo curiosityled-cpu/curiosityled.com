@@ -455,7 +455,7 @@ export default function CompetencyManagerTab() {
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-muted-foreground" />
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Competency Library
+              Core Competencies
             </span>
           </div>
           <span className="text-xs text-muted-foreground">{filteredCompetencies.length} shown</span>

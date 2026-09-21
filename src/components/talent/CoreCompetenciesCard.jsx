@@ -74,7 +74,7 @@ export default function CoreCompetenciesCard() {
         <div className="flex items-center gap-2">
           <Layers className="w-4 h-4 text-muted-foreground" />
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Core Competencies
+            Organizational Competency Settings
           </span>
           <span className="flex items-center gap-1 text-[10px] font-medium text-[#0202ff] bg-[#0202ff]/10 px-2 py-0.5 rounded-full">
             <Lock className="w-2.5 h-2.5" /> Super Admin
