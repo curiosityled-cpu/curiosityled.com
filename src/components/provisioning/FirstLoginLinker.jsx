@@ -59,9 +59,12 @@ export default function FirstLoginLinker() {
       const errorData = err.response?.data || {};
       const errorMsg = errorData.error || err.message || '';
       
-      if (errorMsg.includes('PROFILE_NOT_PROVISIONED')) {
-        setError('Your profile has not been provisioned yet. Please contact your administrator.');
-        sessionStorage.setItem(linkCheckKey, 'checked_not_found');
+      if (errorMsg.includes('PROFILE_NOT_PROVISIONED') ||
+          errorMsg.includes('No provisioned profile found') ||
+          errorMsg.includes('No UserProfile found')) {
+        // Not pre-provisioned via CSV — normal signup. Silently skip; this user
+        // was never part of a provisioning batch, so there's nothing to link.
+        sessionStorage.setItem(linkCheckKey, 'checked_not_provisioned');
       } else if (errorMsg.includes('AMBIGUOUS_TENANT')) {
         setError('Multiple profiles found. Please contact your administrator to resolve this issue.');
         sessionStorage.setItem(linkCheckKey, 'checked_ambiguous');
