@@ -99,9 +99,6 @@ export default function Login() {
             </Button>
           </form>
         </div>
-        <p className="text-center text-sm text-gray-500 mt-6">
-          Don't have an account? <Link to="/register" className="hover:underline font-medium" style={{ color: BRAND_BLUE }}>Request access</Link>
-        </p>
       </div>
     </div>
   );
