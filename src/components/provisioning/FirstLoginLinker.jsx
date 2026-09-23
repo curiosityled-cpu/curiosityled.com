@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useAuth } from "@/components/useAuth";
+import { useAuth } from "@/lib/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
