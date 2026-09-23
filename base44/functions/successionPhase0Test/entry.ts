@@ -75,6 +75,18 @@ export default async function(req: Request): Promise<Response> {
     }
 
     // ── Test 2: Authorized internal append access (via private audit writer) ─
+    // Record the count of existing phase0_test_executed events BEFORE we create
+    // one, so Test 6 can verify no EXTRA events were created during this run.
+    let preTestEventCount = 0;
+    try {
+      const existing = await base44.asServiceRole.entities.SuccessionAuditEvent.filter({
+        action_type: "phase0_test_executed",
+      });
+      preTestEventCount = existing.length;
+    } catch {
+      // ignore — if this fails, Test 6 will be less precise but still functional
+    }
+
     let createdEventId: string | null = null;
     try {
       const event = await writeSuccessionAuditEvent({
@@ -92,6 +104,51 @@ export default async function(req: Request): Promise<Response> {
     } catch (error) {
       recordTest("authorized_internal_append_access", false, {
         error: (error as Error).message,
+      });
+    }
+
+    // ── Test 2b: Cannot create audit event via ordinary SDK (RLS create rule) ───
+    // The create rule requires role "__succession_audit_writer_only__" which no
+    // app user has. This test verifies the create rule is enforced in the real
+    // backend function context (createClientFromRequest), unlike exec_tool which
+    // bypasses RLS.
+    try {
+      await base44.entities.SuccessionAuditEvent.create({
+        client_id: client_id || "test-fabricated",
+        action_type: "rls_create_test_should_fail",
+        timestamp: new Date().toISOString(),
+      });
+      recordTest("cannot_create_audit_event", false, {
+        error: "Create succeeded — RLS create rule NOT enforced!",
+      });
+    } catch (error) {
+      recordTest("cannot_create_audit_event", true, {
+        denied: true,
+        error: (error as Error).message,
+        note: "Create denied (RLS create rule enforced — only audit writer may create)",
+      });
+    }
+
+    // ── Test 2c: Cannot create grant via ordinary SDK (control-plane RLS) ──────
+    // The create rule requires role "__succession_control_plane_only__" which no
+    // app user has. This test verifies the control-plane create rule is enforced.
+    try {
+      await base44.entities.CrossTenantAccessGrant.create({
+        client_id: "test-fabricated",
+        grantee_profile_id: "test-fabricated",
+        purpose_category: "customer_support",
+        reason: "rls_create_test_should_fail",
+        requested_at: new Date().toISOString(),
+        requested_by_profile_id: "test-fabricated",
+      });
+      recordTest("cannot_create_grant", false, {
+        error: "Create succeeded — control-plane RLS create rule NOT enforced!",
+      });
+    } catch (error) {
+      recordTest("cannot_create_grant", true, {
+        denied: true,
+        error: (error as Error).message,
+        note: "Create denied (control-plane RLS enforced — only grant functions may create)",
       });
     }
 
@@ -164,21 +221,26 @@ export default async function(req: Request): Promise<Response> {
     );
 
     // ── Test 6: No shell-load audit events ────────────────────────────────────
-    // This test confirms that opening this function does NOT produce audit
-    // events except the one we explicitly wrote in Test 2. We check that the
-    // only event with action_type "phase0_test_executed" is the one we just
-    // created (not duplicated by shell load).
+    // Verifies that this test run created exactly ONE new phase0_test_executed
+    // event (the one from Test 2). If more than one new event appears, something
+    // other than our explicit write created an audit event during this run.
+    // Previous test runs' events are accounted for via preTestEventCount.
     try {
-      const recentEvents = await base44.asServiceRole.entities.SuccessionAuditEvent.filter({
+      const allTestEvents = await base44.asServiceRole.entities.SuccessionAuditEvent.filter({
         action_type: "phase0_test_executed",
       });
-      const shellLoadEvents = recentEvents.filter(
-        (e: any) => e.id !== createdEventId
-      );
+      const newEventsThisRun = allTestEvents.length - preTestEventCount;
       recordTest(
         "no_shell_load_audit_events",
-        shellLoadEvents.length === 0,
-        { extra_events: shellLoadEvents.length, note: "No audit events written on shell load" }
+        newEventsThisRun === 1,
+        {
+          pre_run_count: preTestEventCount,
+          post_run_count: allTestEvents.length,
+          new_this_run: newEventsThisRun,
+          note: newEventsThisRun === 1
+            ? "Exactly one event created (our explicit write) — no shell-load events"
+            : `${newEventsThisRun} events created this run — expected 1`,
+        }
       );
     } catch (error) {
       recordTest("no_shell_load_audit_events", true, {
