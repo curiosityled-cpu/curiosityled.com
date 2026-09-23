@@ -83,6 +83,11 @@ const AuthenticatedApp = () => {
   // Public landing pages accessible to unauthenticated visitors.
   // Reads from useLocation() so navigation between public pages re-renders
   // immediately (window.location.pathname is not reactive).
+  const PUBLIC_PATHS = new Set([
+    '/', '/LandingPage', '/bpo', '/healthcare', '/coaching',
+    '/PrivacyPolicy', '/TermsOfService', '/diagnostic', '/bpo-diagnostic',
+    '/radar-label-sample', '/testlanding'
+  ]);
   const PublicLanding = () => {
     const path = useLocation().pathname;
     if (path === '/bpo') return <LandingBPO />;
@@ -92,7 +97,10 @@ const AuthenticatedApp = () => {
     if (path === '/TermsOfService') return <TermsOfService />;
     if (path === '/diagnostic') return <OfferPage />;
     if (path === '/bpo-diagnostic') return <BpoOfferPage />;
-    return <LandingPage />;
+    if (PUBLIC_PATHS.has(path)) return <LandingPage />;
+    // Non-public path visited while unauthenticated — redirect to the landing
+    // page so analytics tracks '/', not the internal route the visitor can't see.
+    return <Navigate to="/" replace />;
   };
 
   // Handle authentication errors
