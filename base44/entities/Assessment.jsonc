@@ -105,6 +105,23 @@
         {
           "$and": [
             {
+              "user_condition": {
+                "role": "User Level 2"
+              }
+            },
+            {
+              "data.email": {
+                "$in": "{{user.data.subordinate_emails}}"
+              }
+            },
+            {
+              "data.client_id": "{{user.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
               "$or": [
                 {
                   "user_condition": {

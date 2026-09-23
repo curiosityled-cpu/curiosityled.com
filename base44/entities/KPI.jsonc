@@ -14,6 +14,10 @@
       "type": "string",
       "description": "Department or business unit this KPI belongs to"
     },
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the user who owns this KPI. When set, scopes the KPI to that individual (team-scoped when the owner is a team member). Null/omitted for org-wide shared KPIs."
+    },
     "current_value": {
       "type": "number",
       "description": "Current actual value of the KPI"
@@ -89,31 +93,79 @@
     "read": {
       "$or": [
         {
-          "visibility": "shared"
+          "data.visibility": "shared"
         },
         {
           "created_by": "{{user.email}}"
         },
         {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "Analyst",
-                "Admin Level 1",
-                "Admin Level 2",
-                "Super Administrator"
+          "$and": [
+            {
+              "user_condition": {
+                "role": "User Level 2"
+              }
+            },
+            {
+              "$or": [
+                {
+                  "data.owner_email": "{{user.email}}"
+                },
+                {
+                  "data.owner_email": {
+                    "$in": "{{user.data.subordinate_emails}}"
+                  }
+                }
               ]
+            },
+            {
+              "data.client_id": "{{user.client_id}}"
             }
-          },
-          "client_id": "{{user.client_id}}"
+          ]
         },
         {
-          "user_condition": {
-            "role": "Partner Business Administrator"
-          },
-          "client_id": {
-            "$in": "{{user.partner_client_ids}}"
-          }
+          "$and": [
+            {
+              "$or": [
+                {
+                  "user_condition": {
+                    "role": "Analyst"
+                  }
+                },
+                {
+                  "user_condition": {
+                    "role": "Admin Level 1"
+                  }
+                },
+                {
+                  "user_condition": {
+                    "role": "Admin Level 2"
+                  }
+                },
+                {
+                  "user_condition": {
+                    "role": "Super Administrator"
+                  }
+                }
+              ]
+            },
+            {
+              "data.client_id": "{{user.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            },
+            {
+              "data.client_id": {
+                "$in": "{{user.data.partner_client_ids}}"
+              }
+            }
+          ]
         },
         {
           "user_condition": {
@@ -128,24 +180,42 @@
           "created_by": "{{user.email}}"
         },
         {
-          "user_condition": {
-            "role": "Admin Level 2"
-          },
-          "client_id": "{{user.client_id}}"
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.client_id}}"
+            }
+          ]
         },
         {
-          "user_condition": {
-            "role": "Super Administrator"
-          },
-          "client_id": "{{user.client_id}}"
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.client_id}}"
+            }
+          ]
         },
         {
-          "user_condition": {
-            "role": "Partner Business Administrator"
-          },
-          "client_id": {
-            "$in": "{{user.partner_client_ids}}"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            },
+            {
+              "data.client_id": {
+                "$in": "{{user.data.partner_client_ids}}"
+              }
+            }
+          ]
         },
         {
           "user_condition": {
