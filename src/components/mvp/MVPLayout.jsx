@@ -17,6 +17,7 @@ import AtreusCoach from "@/components/ai/AtreusCoach";
 import { AuthProvider as FullAuthProvider } from "@/components/useAuth";
 import { AtreusProvider, useAtreusChat } from "@/components/ai/AtreusContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import FirstLoginLinker from "@/components/provisioning/FirstLoginLinker";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -550,6 +551,7 @@ function MVPLayoutInner({ children }) {
           </div>
         )}
         <ErrorBoundary>{children}</ErrorBoundary>
+        <FirstLoginLinker />
       </main>
 
       {/* Floating Atreus Button — always accessible */}

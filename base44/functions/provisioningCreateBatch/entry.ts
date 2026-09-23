@@ -24,6 +24,34 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required', requestId }, { status: 403 });
     }
 
+    // Role hierarchy — admin can only assign roles at or below their own rank
+    const ROLE_RANK = {
+      'User Level 1': 1,
+      'User Level 2': 2,
+      'Analyst': 3,
+      'HRBP': 3,
+      'Leadership Coach': 3,
+      'Consultant': 3,
+      'Admin Level 1': 4,
+      'Admin Level 2': 5,
+      'Super Administrator': 6,
+      'Partner Business Administrator': 7,
+      'Platform Admin': 8,
+    };
+    const VALID_ROLES = Object.keys(ROLE_RANK);
+    const adminRank = ROLE_RANK[user.app_role] ?? 0;
+
+    // Normalize legacy CSV values to the real enum
+    const normalizeAppRole = (raw) => {
+      if (!raw) return null;
+      const lower = raw.toLowerCase().trim();
+      if (lower === 'user') return 'User Level 1';
+      if (lower === 'admin') return 'Admin Level 2';
+      // Match case-insensitively against the enum
+      const match = VALID_ROLES.find(r => r.toLowerCase() === lower);
+      return match || raw.trim();
+    };
+
     const body = await req.json();
     const { sourceSystem = 'MANUAL', fileName, records, strictRoles = false, requireDepartment = false, disallowPublicEmailDomains = true } = body;
 
@@ -86,8 +114,13 @@ Deno.serve(async (req) => {
         errors.push({ field: 'lastName', message: 'Last name is required' });
       }
 
-      if (!record.appRole || !['user', 'admin'].includes(record.appRole.toLowerCase())) {
-        errors.push({ field: 'appRole', message: 'appRole must be "user" or "admin"' });
+      const normalizedRole = normalizeAppRole(record.appRole);
+      if (!normalizedRole || !VALID_ROLES.includes(normalizedRole)) {
+        errors.push({ field: 'appRole', message: `appRole must be one of: ${VALID_ROLES.join(', ')}` });
+      } else if (ROLE_RANK[normalizedRole] > adminRank) {
+        errors.push({ field: 'appRole', message: `ROLE_ABOVE_YOUR_LEVEL: You cannot assign "${normalizedRole}" (your role is "${user.app_role}")` });
+      } else {
+        record.appRole = normalizedRole; // store normalized so validRecords picks it up
       }
 
       if (requireDepartment && !record.department) {
@@ -129,7 +162,7 @@ Deno.serve(async (req) => {
           email: record.email.toLowerCase().trim(),
           firstName: record.firstName.trim(),
           lastName: record.lastName.trim(),
-          appRole: record.appRole.toLowerCase(),
+          appRole: record.appRole,
           department: record.department?.trim() || null,
           managerEmail: record.managerEmail?.toLowerCase().trim() || null,
           customRoles: record.customRoles || [],
@@ -141,6 +174,7 @@ Deno.serve(async (req) => {
     // Create batch
     const batch = await base44.asServiceRole.entities.ProvisioningBatch.create({
       tenant_id: tenantId,
+      uploaded_by_email: user.email,
       source_system: sourceSystem,
       file_name: fileName || 'manual_upload.csv',
       total_rows: records.length,
@@ -157,6 +191,8 @@ Deno.serve(async (req) => {
         batch_id: batch.id,
         tenant_id: tenantId,
         email: record.email,
+        first_name: record.firstName,
+        last_name: record.lastName,
         profile_payload: record,
         validation_status: 'VALID',
         apply_status: 'PENDING',

@@ -28,6 +28,7 @@ import BulkUserEditCSV from "../components/users/BulkUserEditCSV";
 import CreateRoleModal from "../components/roles/CreateRoleModal";
 import BulkRoleActions from "../components/roles/BulkRoleActions";
 import PermissionDependencyViewer from "../components/roles/PermissionDependencyViewer";
+import ProvisionUsersCard from "../components/provisioning/ProvisionUsersCard";
 
 const ROLE_COLORS = [
   '#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444',
@@ -360,6 +361,13 @@ function UserManagement() {
             </Button>
           </div>
         </div>
+
+        {/* Provision Users card */}
+        {(isSuperAdmin || isPlatformAdmin || isPartnerBusinessAdmin) && (
+          <div className="mb-6">
+            <ProvisionUsersCard currentUser={currentUser} onProvisioned={loadData} />
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit mb-6">

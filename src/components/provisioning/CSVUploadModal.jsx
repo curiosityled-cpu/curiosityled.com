@@ -76,10 +76,9 @@ export default function CSVUploadModal({ open, onOpenChange, onSuccess }) {
         else if (mappedHeader === 'customRoles' && value) {
           record[mappedHeader] = value.split(';').map(r => r.trim()).filter(Boolean);
         }
-        // Handle appRole normalization
+        // Handle appRole — pass the enum value through unchanged (backend normalizes legacy user/admin)
         else if (mappedHeader === 'appRole' && value) {
-          // Convert "User" or "Admin" to lowercase
-          record[mappedHeader] = value.toLowerCase();
+          record[mappedHeader] = value;
         }
         else if (value) {
           record[mappedHeader] = value;
@@ -148,7 +147,7 @@ export default function CSVUploadModal({ open, onOpenChange, onSuccess }) {
         <DialogHeader>
           <DialogTitle>Upload CSV File</DialogTitle>
           <DialogDescription>
-            Upload a CSV file with user data. Required columns: email, firstName, lastName, appRole (user/admin).
+            Upload a CSV file with user data. Required columns: email, firstName, lastName, appRole (full role enum, e.g. "User Level 2", "Analyst", "Admin Level 1"; legacy "user"/"admin" still accepted).
             Optional: department, managerEmail, customRoles (semicolon-separated).
           </DialogDescription>
         </DialogHeader>
