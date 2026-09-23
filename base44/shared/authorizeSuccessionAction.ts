@@ -186,11 +186,19 @@ export async function authorizeSuccessionAction(
 }
 
 function getCallerClearance(auth: BootstrapAuthContext): string {
-  // Platform Admins get the highest clearance; tenant admins get highly_confidential;
-  // others get standard. This is a Phase 0 default — per-role clearance mapping
+  // Phase 0 default clearance mapping. Platform Admin status alone does NOT
+  // grant legally_restricted access — that requires an explicit additional
+  // authorization path not yet implemented. Platform Admins get
+  // highly_confidential (same as tenant admins). Per-role clearance mapping
   // will be refined in later phases.
-  if (auth.isPlatformAdmin) return "legally_restricted";
-  const adminRoles = ["Super Administrator", "Admin Level 2", "Admin Level 1"];
+  const adminRoles = [
+    "Platform Admin",
+    "Platform Administrator",
+    "admin",
+    "Super Administrator",
+    "Admin Level 2",
+    "Admin Level 1",
+  ];
   if (adminRoles.includes(auth.role)) return "highly_confidential";
   if (auth.role === "HRBP") return "confidential";
   return "standard";

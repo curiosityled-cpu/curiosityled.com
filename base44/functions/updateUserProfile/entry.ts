@@ -36,7 +36,23 @@ Deno.serve(async (req) => {
         const isHRAdmin = ['Admin Level 2', 'Super Administrator', 'Platform Admin', 'Partner Business Administrator'].includes(currentUser.app_role);
 
         // Fields that only HR admins can update
-        const restrictedFields = ['email', 'full_name'];
+        // Includes security-critical tenant/role fields that must never be
+        // self-editable by ordinary users (Phase 0 succession security).
+        const restrictedFields = [
+            'email',
+            'full_name',
+            'client_id',
+            'partner_client_ids',
+            'partner_id',
+            'app_role',
+            'custom_role_id',
+            'managed_program_ids',
+            'subordinate_emails',
+            'account_status',
+            'account_expires_at',
+            'license_type',
+            'is_uat_tester'
+        ];
         
         // Build update object based on permissions
         const updateData = {};
