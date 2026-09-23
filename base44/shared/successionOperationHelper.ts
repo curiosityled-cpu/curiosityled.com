@@ -160,6 +160,22 @@ export async function failOperation(
 }
 
 /**
+ * Set an operation to recovery_required after domain mutations may have occurred.
+ * Does NOT release any locks — the lock must be left for recovery or manual clearing.
+ */
+export async function setOperationRecoveryRequired(
+  base44: any,
+  operation_id: string,
+  reason: string
+): Promise<void> {
+  await base44.asServiceRole.entities.SuccessionOperation.update(operation_id, {
+    status: "failed",
+    error_code: "recovery_required",
+    integrity_status: "quarantined",
+  });
+}
+
+/**
  * Quarantine an operation (duplicate detected, ambiguous result, etc.).
  */
 export async function quarantineOperation(
