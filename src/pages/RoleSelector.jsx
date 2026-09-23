@@ -112,6 +112,15 @@ function RoleSelector() {
   const [selectedRole, setSelectedRole] = useState(user?.app_role || "User Level 1");
   const [updating, setUpdating] = useState(false);
 
+  // Only show roles that can be self-assigned via setMyRole.
+  // Privileged roles (Admin Level 2, Super Administrator, Platform Admin,
+  // Partner Business Administrator) require admin-gated User Management.
+  const selfServiceRoleIds = [
+    'User Level 1', 'User Level 2', 'Analyst', 'Executive', 'HRBP',
+    'Admin Level 1', 'Leadership Coach', 'Consultant'
+  ];
+  const selectableRoles = roles.filter((r) => selfServiceRoleIds.includes(r.id));
+
   const currentUserRole = roles.find((r) => r.id === user?.app_role);
   const CurrentRoleIcon = currentUserRole?.icon || Shield;
 
@@ -129,11 +138,12 @@ function RoleSelector() {
           window.location.reload();
         }, 1000);
       } else {
-        toast.error(response.data?.error || 'Failed to update role');
+        toast.error(result?.error || 'Failed to update role');
       }
     } catch (error) {
       console.error('Error updating role:', error);
-      toast.error('Failed to update role');
+      const errorMsg = error?.data?.error || error?.message || 'Failed to update role';
+      toast.error(errorMsg);
     } finally {
       setUpdating(false);
     }
@@ -208,7 +218,7 @@ function RoleSelector() {
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
                   <SelectContent>
-                    {roles.map((role) => (
+                    {selectableRoles.map((role) => (
                       <SelectItem key={role.id} value={role.id}>
                         <div className="flex items-center gap-2">
                           <role.icon className="h-4 w-4 text-gray-500" />
@@ -263,7 +273,7 @@ function RoleSelector() {
               </Button>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-                {roles.map((role) => (
+                {selectableRoles.map((role) => (
                   <div
                     key={role.id}
                     className={`p-3 rounded-lg border-2 transition-all ${

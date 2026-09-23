@@ -611,10 +611,34 @@ function LayoutContent({ children }) {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-80">
                           <div className="px-3 py-2 border-b">
-                            <p className="font-semibold text-sm">Notifications</p>
-                            {unreadCount > 0 && (
-                              <p className="text-xs text-gray-500">{unreadCount} unread</p>
-                            )}
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-semibold text-sm">Notifications</p>
+                                {unreadCount > 0 && (
+                                  <p className="text-xs text-gray-500">{unreadCount} unread</p>
+                                )}
+                              </div>
+                              {unreadCount > 0 && (
+                                <button
+                                  className="text-xs font-medium select-none hover:underline disabled:opacity-50"
+                                  style={{ color: '#0202ff' }}
+                                  onClick={async () => {
+                                    try {
+                                      const updates = recentNotifications
+                                        .filter(n => !n.is_read)
+                                        .map(n => base44.entities.Notification.update(n.id, { is_read: true }));
+                                      await Promise.all(updates);
+                                      setUnreadCount(0);
+                                      setRecentNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+                                    } catch (err) {
+                                      console.error('Error marking all as read:', err);
+                                    }
+                                  }}
+                                >
+                                  Mark all as read
+                                </button>
+                              )}
+                            </div>
                           </div>
                           
                           {recentNotifications.length === 0 ? (
@@ -690,10 +714,34 @@ function LayoutContent({ children }) {
                             </DrawerTrigger>
                             <DrawerContent>
                             <DrawerHeader>
-                              <DrawerTitle>Notifications</DrawerTitle>
-                              {unreadCount > 0 && (
-                                <p className="text-xs text-gray-500">{unreadCount} unread</p>
-                              )}
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <DrawerTitle>Notifications</DrawerTitle>
+                                  {unreadCount > 0 && (
+                                    <p className="text-xs text-gray-500">{unreadCount} unread</p>
+                                  )}
+                                </div>
+                                {unreadCount > 0 && (
+                                  <button
+                                    className="text-xs font-medium select-none hover:underline disabled:opacity-50"
+                                    style={{ color: '#0202ff' }}
+                                    onClick={async () => {
+                                      try {
+                                        const updates = recentNotifications
+                                          .filter(n => !n.is_read)
+                                          .map(n => base44.entities.Notification.update(n.id, { is_read: true }));
+                                        await Promise.all(updates);
+                                        setUnreadCount(0);
+                                        setRecentNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+                                      } catch (err) {
+                                        console.error('Error marking all as read:', err);
+                                      }
+                                    }}
+                                  >
+                                    Mark all as read
+                                  </button>
+                                )}
+                              </div>
                             </DrawerHeader>
                             <div className="px-4 pb-8 max-h-[60vh] overflow-y-auto">
                               {recentNotifications.length === 0 ? (
