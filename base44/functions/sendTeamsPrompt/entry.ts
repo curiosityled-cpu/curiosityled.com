@@ -9,6 +9,7 @@
  * Phase 2+: Real Teams Adaptive Card delivery via Graph API
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { isInternalCall } from '../../shared/urlValidation.ts';
 
 // ─── Inlined tone engine (mirror of applyTone — avoids inter-function auth issues) ───
 
@@ -299,12 +300,20 @@ Deno.serve(async (req) => {
 
     const user = await base44.auth.me();
 
-    // Allow unauthenticated service-role calls when force=true and user_email is explicit
-    if (!user && !(isForced && body.user_email)) {
+    // Security: Require either an authenticated session matching the target
+    // user, or an internal automation secret. The force+user_email bypass
+    // allowed anonymous callers to send arbitrary prompts to any user.
+    const internalCall = isInternalCall(req);
+
+    if (!user && !internalCall) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const targetEmail = body.user_email || user?.email;
+
+    if (!internalCall && user && targetEmail.toLowerCase() !== user.email.toLowerCase()) {
+      return Response.json({ error: 'Forbidden — you can only send prompts to yourself.' }, { status: 403 });
+    }
     const forcePromptType = body.prompt_type || null; // allow explicit override
     const now = new Date();
 

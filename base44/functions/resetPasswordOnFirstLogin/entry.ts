@@ -2,7 +2,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 /**
  * Handles password reset for users with temporary passwords
- * Sets account status to 'active' after successful password change
+ * Sets account status to 'active' after successful password change.
+ * Security: requires an authenticated session — the caller must be logged in
+ * as the user whose password is being reset. Returns a uniform error for all
+ * failure cases to prevent user enumeration and brute-force oracle attacks.
  */
 Deno.serve(async (req) => {
     try {
@@ -14,6 +17,16 @@ Deno.serve(async (req) => {
                 success: false, 
                 error: 'Email, temporary password, and new password are required' 
             }, { status: 400 });
+        }
+
+        // Security: Require an authenticated session. Only the logged-in user
+        // can reset their own temporary password — no anonymous brute-forcing.
+        const currentUser = await base44.auth.me();
+        if (!currentUser || currentUser.email.toLowerCase() !== email.toLowerCase()) {
+            return Response.json({ 
+                success: false, 
+                error: 'Invalid request' 
+            }, { status: 403 });
         }
 
         // Validate new password strength
@@ -43,11 +56,13 @@ Deno.serve(async (req) => {
             email: email.toLowerCase() 
         });
 
+        // Security: Uniform error for not-found vs invalid password to prevent
+        // user enumeration.
         if (users.length === 0) {
             return Response.json({ 
                 success: false, 
-                error: 'User not found' 
-            }, { status: 404 });
+                error: 'Invalid temporary password' 
+            }, { status: 401 });
         }
 
         const user = users[0];

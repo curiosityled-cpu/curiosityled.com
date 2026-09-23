@@ -1,29 +1,36 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { isInternalCall } from '../../shared/urlValidation.ts';
 
 /**
  * Automated function to unlock accounts that have passed their lock expiry time.
  * This should be run as a scheduled automation every 5-10 minutes.
+ * Security: Requires internal automation secret for scheduled runs, or
+ * Platform Admin auth for manual runs. Never auto-unlocks accounts without
+ * a lock expiry timestamp.
  */
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
-    // Check if there's an authenticated user (manual call vs automation)
+    // Security: Require either internal automation secret or admin auth.
+    // Anonymous callers must never be able to defeat admin account lockouts.
+    const internalCall = isInternalCall(req);
     let user = null;
     try {
       user = await base44.auth.me();
     } catch (error) {
-      // No user context - this is expected for scheduled automations
       user = null;
     }
 
-    // If there's a user (manual call), verify admin access
-    if (user && user.app_role !== 'Platform Admin') {
-      return Response.json({ error: 'Forbidden: Admin access required for manual execution.' }, { status: 403 });
+    if (!internalCall) {
+      if (!user) {
+        return Response.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      if (user.app_role !== 'Platform Admin') {
+        return Response.json({ error: 'Forbidden: Admin access required for manual execution.' }, { status: 403 });
+      }
     }
-
-    // If user is null (automation) or is a Platform Admin, proceed.
 
     const now = new Date().toISOString();
 
@@ -31,8 +38,11 @@ Deno.serve(async (req) => {
     const allUsers = await base44.asServiceRole.entities.User.list();
     const lockedUsers = allUsers.filter(u => u.account_status === 'locked');
 
+    // Security: Only unlock accounts that have a lock expiry that has passed.
+    // Accounts locked without an expiry (admin-locked-for-cause) are never
+    // auto-unlocked.
     const usersToUnlock = lockedUsers.filter(user => {
-      if (!user.locked_until) return true; // Unlock if no expiry set
+      if (!user.locked_until) return false; // Never auto-unlock without expiry
       return new Date(user.locked_until) <= new Date(); // Unlock if expiry passed
     });
 

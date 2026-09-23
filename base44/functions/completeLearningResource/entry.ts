@@ -27,7 +27,16 @@ Deno.serve(async (req) => {
     const resource = resources[0];
 
     // Update assigned learning status if provided
+    // Security: Verify the AssignedLearning record belongs to the caller
+    // before marking it complete (prevent IDOR on other users' learning).
     if (assigned_learning_id) {
+      const assignedRecords = await base44.asServiceRole.entities.AssignedLearning.filter({
+        id: assigned_learning_id,
+        user_email: user.email
+      });
+      if (assignedRecords.length === 0) {
+        return Response.json({ error: 'Assigned learning not found or does not belong to you.' }, { status: 403 });
+      }
       await base44.asServiceRole.entities.AssignedLearning.update(assigned_learning_id, {
         status: 'completed',
         completion_date: new Date().toISOString()

@@ -19,25 +19,25 @@ Deno.serve(async (req) => {
         // experiences. Production role management happens via User Management.
         const { role } = await req.json();
 
-        const validRoles = [
+        // Self-service role preview is limited to non-privileged roles only.
+        // Platform Admin, Super Administrator, Partner Business Administrator,
+        // and Admin Level 2 can NEVER be self-assigned — they require admin
+        // gating via User Management. (Security: prevent privilege escalation.)
+        const selfServiceRoles = [
             'User Level 1',
-            'User Level 2', 
+            'User Level 2',
             'Analyst',
             'Executive',
             'HRBP',
             'Admin Level 1',
             'Leadership Coach',
-            'Consultant',
-            'Admin Level 2',
-            'Super Administrator',
-            'Partner Business Administrator',
-            'Platform Admin'
+            'Consultant'
         ];
 
-        if (!validRoles.includes(role)) {
-            return Response.json({ 
-                error: 'Invalid role. Must be one of: ' + validRoles.join(', ')
-            }, { status: 400 });
+        if (!selfServiceRoles.includes(role)) {
+            return Response.json({
+                error: 'This role cannot be self-assigned. Contact an administrator.'
+            }, { status: 403 });
         }
 
         const oldRole = user.app_role;

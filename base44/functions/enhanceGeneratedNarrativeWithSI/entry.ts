@@ -14,7 +14,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { user_email, trend_period = '28d' } = await req.json();
+    const { trend_period = '28d' } = await req.json();
+
+    // Security: Ignore any client-supplied user_email — always scope reads to
+    // the authenticated caller to prevent IDOR on other users' private trend data.
+    const user_email = user.email;
 
     const [trendRows, assessmentRows] = await Promise.all([
       base44.entities.ManagerTrends.filter({ user_email }, '-last_trend_computed_at', 1),

@@ -22,6 +22,25 @@ Deno.serve(async (req) => {
             }, { status: 403 });
         }
 
+        const isPlatformAdmin = currentUser.app_role === 'Platform Admin';
+
+        // Roles that a client-level admin (Admin Level 2) may assign — never
+        // platform-level or partner-level roles. Super Administrators may assign
+        // up to their own level. Platform Admin is unrestricted.
+        const adminLevel2Assignable = [
+            'User Level 1', 'User Level 2', 'Analyst', 'HRBP',
+            'Admin Level 1', 'Leadership Coach', 'Consultant'
+        ];
+        const superAdminAssignable = [
+            ...adminLevel2Assignable, 'Admin Level 2', 'Super Administrator', 'Partner Business Administrator'
+        ];
+
+        function getAssignableRoles(callerRole) {
+            if (callerRole === 'Platform Admin') return null; // unrestricted
+            if (callerRole === 'Super Administrator') return superAdminAssignable;
+            return adminLevel2Assignable; // Admin Level 2, Partner BA
+        }
+
         const { users } = await req.json();
         
         if (!users || !Array.isArray(users)) {
@@ -57,6 +76,40 @@ Deno.serve(async (req) => {
                 if (!existingUser) {
                     results.notFound.push({ user: userData, reason: 'User not found in system' });
                     continue;
+                }
+
+                // Security: Tenant scoping — non-Platform-Admins can only
+                // configure users within their own client (or partner-managed
+                // clients for Partner Business Administrators).
+                if (!isPlatformAdmin) {
+                    const isPartnerBA = currentUser.app_role === 'Partner Business Administrator';
+                    const callerClientIds = isPartnerBA
+                        ? (currentUser.partner_client_ids || [])
+                        : [currentUser.client_id];
+                    if (!callerClientIds.includes(existingUser.client_id)) {
+                        results.failed.push({ user: userData, reason: 'Cross-tenant update denied' });
+                        continue;
+                    }
+                }
+
+                // Security: Restrict which app_role values this caller may assign.
+                const assignableRoles = getAssignableRoles(currentUser.app_role);
+                if (userData.app_role && assignableRoles && !assignableRoles.includes(userData.app_role)) {
+                    results.failed.push({ user: userData, reason: `Not permitted to assign role: ${userData.app_role}` });
+                    continue;
+                }
+
+                // Security: Non-Platform-Admins cannot change client_id or partner_id
+                // (cross-tenant reassignment).
+                if (!isPlatformAdmin) {
+                    if (userData.client_id !== undefined && userData.client_id !== existingUser.client_id) {
+                        results.failed.push({ user: userData, reason: 'Cross-tenant client_id change denied' });
+                        continue;
+                    }
+                    if (userData.partner_id !== undefined && userData.partner_id !== existingUser.partner_id) {
+                        results.failed.push({ user: userData, reason: 'partner_id change denied' });
+                        continue;
+                    }
                 }
 
                 // Build update data - include all fields that are provided

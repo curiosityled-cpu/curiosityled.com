@@ -28,6 +28,17 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Automation is not active' }, { status: 400 });
     }
 
+    // Security: Only admins or the automation's owner may execute it.
+    // This prevents any user from firing privileged actions (emails, entity
+    // writes, function calls) stored in automations they don't own.
+    const adminRoles = ['Admin Level 2', 'Super Administrator', 'Partner Business Administrator', 'Platform Admin'];
+    if (!adminRoles.includes(user.app_role)) {
+      const ownerEmail = automation.created_by_email || automation.owner_email;
+      if (ownerEmail !== user.email) {
+        return Response.json({ error: 'Forbidden — you do not have permission to execute this automation.' }, { status: 403 });
+      }
+    }
+
     const results = [];
     let allSuccessful = true;
 

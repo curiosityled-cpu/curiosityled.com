@@ -9,8 +9,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { program_id, user_email } = await req.json();
-    const targetUserEmail = user_email || user.email;
+    const { program_id } = await req.json();
+    // Security: Points are always awarded to the authenticated caller —
+    // client-supplied user_email is ignored to prevent points farming.
+    const targetUserEmail = user.email;
 
     if (!program_id) {
       return Response.json({ error: 'program_id is required' }, { status: 400 });

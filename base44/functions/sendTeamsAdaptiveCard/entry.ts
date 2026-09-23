@@ -12,6 +12,7 @@
  * Falls back gracefully to in-app notification if Teams delivery fails.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { isInternalCall } from '../../shared/urlValidation.ts';
 
 // ─── Get Graph API access token via client credentials ────────────────────────
 
@@ -169,18 +170,28 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
-    // Allow service-role calls (no user session) when user_email is provided in payload
     const payload = await req.json().catch(() => ({}));
-    if (!user && !payload.user_email) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
     const { prompt, user_email } = payload;
 
-    // Accept service-role calls (no user session) when user_email is explicit
+    // Security: Require either an authenticated session matching the target
+    // user, or an internal automation secret. Anonymous callers must never
+    // be able to send arbitrary cards/prompts to any user.
+    const internalCall = isInternalCall(req);
+
+    if (!user && !internalCall) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // The target email must match the authenticated user, unless this is an
+    // internal automation call (which is server-side only and trusted).
     const targetEmail = user_email || user?.email;
 
     if (!targetEmail) {
       return Response.json({ error: 'user_email required for service-role calls' }, { status: 400 });
+    }
+
+    if (!internalCall && user && targetEmail.toLowerCase() !== user.email.toLowerCase()) {
+      return Response.json({ error: 'Forbidden — you can only send prompts to yourself.' }, { status: 403 });
     }
 
     if (!prompt) {

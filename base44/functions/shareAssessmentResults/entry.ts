@@ -10,10 +10,19 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'insight_id and recipient_emails are required' }, { status: 400 });
   }
 
+  // Security: Load via the user-scoped client (respects RLS), then verify
+  // ownership. The asServiceRole fallback is removed — it bypassed RLS and
+  // allowed any user to read any other user's assessment insights.
   const insights = await base44.entities.AssessmentInsights.filter({ assessment_id: insight_id });
-  const insight = insights[0] || await base44.asServiceRole.entities.AssessmentInsights.get('AssessmentInsights', insight_id);
+  const insight = insights[0];
 
   if (!insight) return Response.json({ error: 'Insight not found' }, { status: 404 });
+
+  // Security: Only the insight owner (or an authorized admin/coach) may share it.
+  const isAdmin = ['Platform Admin', 'Super Administrator', 'Admin Level 2'].includes(user.app_role);
+  if (insight.user_email !== user.email && !isAdmin) {
+    return Response.json({ error: 'Forbidden — you can only share your own assessment results.' }, { status: 403 });
+  }
 
   const strengths = (insight.top_strengths || []).map(s => `<li style="margin-bottom:6px;">${s}</li>`).join('');
   const growthAreas = (insight.development_areas || []).map(d => `<li style="margin-bottom:6px;">${d}</li>`).join('');

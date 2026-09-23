@@ -15,6 +15,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'userEmail is required' }, { status: 400 });
     }
 
+    // Security: admin-or-self authorization — only the user themselves or an
+    // admin can view a full activity timeline with login/assessment data.
+    const isAdmin = ['Platform Admin', 'Super Administrator', 'Partner Business Administrator', 'Admin Level 2'].includes(user.app_role);
+    if (!isAdmin && user.email !== userEmail) {
+      return Response.json({ error: 'Forbidden — you can only view your own data.' }, { status: 403 });
+    }
+
     // Get target user
     const allUsers = await base44.asServiceRole.entities.User.list();
     const targetUser = allUsers.find(u => u.email === userEmail);

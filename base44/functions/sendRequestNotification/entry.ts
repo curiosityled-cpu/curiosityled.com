@@ -28,6 +28,28 @@ Deno.serve(async (req) => {
 
     const request = requests[0];
 
+    // Security: Only allow recipients who are participants on the request
+    // (requested_by or assigned_to) or verified app users. The caller must be
+    // a participant or an admin on the request.
+    const isAdmin = ['Platform Admin', 'Super Administrator', 'Admin Level 2', 'Partner Business Administrator'].includes(user.app_role);
+    const isParticipant = request.requested_by_email === user.email ||
+        (request.assigned_to_email && request.assigned_to_email === user.email) ||
+        (request.sponsor_email && request.sponsor_email === user.email);
+    if (!isAdmin && !isParticipant) {
+      return Response.json({ error: 'Forbidden — you must be a participant on this request to send notifications.' }, { status: 403 });
+    }
+
+    // Security: Restrict recipient to emails associated with the request.
+    const allowedRecipients = new Set([
+      request.requested_by_email,
+      request.assigned_to_email,
+      request.sponsor_email
+    ].filter(Boolean).map(e => e.toLowerCase().trim()));
+
+    if (!allowedRecipients.has(recipient_email.toLowerCase().trim())) {
+      return Response.json({ error: 'Recipient must be a participant on this request.' }, { status: 403 });
+    }
+
     // Build email content based on notification type
     let subject = '';
     let body = '';

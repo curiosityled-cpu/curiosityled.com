@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { validateExternalUrl } from '../../shared/urlValidation.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -15,6 +16,12 @@ Deno.serve(async (req) => {
 
     if (!fileUrl) {
       return Response.json({ error: 'No file URL provided' }, { status: 400 });
+    }
+
+    // Security: Validate URL to prevent SSRF — block internal/private hosts.
+    const urlCheck = validateExternalUrl(fileUrl);
+    if (!urlCheck.valid) {
+      return Response.json({ error: `Invalid fileUrl: ${urlCheck.error}` }, { status: 400 });
     }
 
     // Fetch CSV content from URL with timeout

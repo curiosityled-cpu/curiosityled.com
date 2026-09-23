@@ -1713,9 +1713,9 @@ async function processFileAttachments(base44, attachments) {
 // CSV Parser
 async function parseCSVFile(fileUrl) {
   try {
-    const response = await fetch(fileUrl);
-    const text = await response.text();
-    
+    const { validateExternalUrl } = await import('../../shared/urlValidation.ts');
+    const _c = validateExternalUrl(fileUrl); if (!_c.valid) throw new Error('Invalid file URL: ' + _c.error);
+    const response = await fetch(fileUrl); const text = await response.text();
     const lines = text.split('\n').filter(line => line.trim());
     if (lines.length === 0) {
       throw new Error('CSV file is empty');

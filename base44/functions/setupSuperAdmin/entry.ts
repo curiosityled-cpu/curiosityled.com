@@ -14,8 +14,13 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized - Please log in first' }, { status: 401 });
         }
 
+        // Security: Only existing Platform Admins can promote another user.
+        if (user.app_role !== 'Platform Admin') {
+            return Response.json({ error: 'Forbidden — only Platform Admins can run this setup.' }, { status: 403 });
+        }
+
         // Update user's role to Super Administrator using service role
-        await base44.asServiceRole.entities.User.update(user.id, { 
+        await base44.asServiceRole.entities.User.update(user.id, {
             app_role: 'Admin Level 3'
         });
 
