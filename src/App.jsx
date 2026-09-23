@@ -32,6 +32,7 @@ import CoachWorkspace from './pages/CoachWorkspace';
 import ConsultantWorkspace from './pages/ConsultantWorkspace';
 import RequestSubmit from './pages/RequestSubmit';
 import TalentManager from './pages/TalentManager';
+import SuccessionWorkspace from './pages/SuccessionWorkspace';
 import TestLanding from './pages/TestLanding';
 
 import LeadershipIntelligenceHub from './pages/LeadershipIntelligenceHub';
@@ -172,6 +173,7 @@ const AuthenticatedApp = () => {
       <Route path="/request-submit" element={<MVPLayout><RequestSubmit /></MVPLayout>} />
       <Route path="/request-triage" element={<Navigate to="/DevelopmentManager" replace />} />
       <Route path="/talent-manager" element={<MVPLayout><ContextProviders><TalentManager /></ContextProviders></MVPLayout>} />
+      <Route path="/succession" element={<MVPLayout><ContextProviders><SuccessionWorkspace /></ContextProviders></MVPLayout>} />
       <Route path="/my-development" element={<MVPLayout><MyDevelopment /></MVPLayout>} />
       <Route path="/experience-overview" element={<MVPLayout><ExperienceOverview /></MVPLayout>} />
       <Route path="/report-builder-mvp" element={<MVPLayout><ReportBuilderMVP /></MVPLayout>} />

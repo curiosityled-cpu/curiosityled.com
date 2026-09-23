@@ -1,0 +1,87 @@
+{
+  "name": "SuccessionAuditEvent",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side from the authenticated actor \u2014 never accepted from frontend input."
+    },
+    "actor_profile_id": {
+      "type": "string",
+      "description": "The acting user's profile/user ID at time of action. Derived server-side by the private audit writer."
+    },
+    "actor_email": {
+      "type": "string",
+      "description": "Email of the actor for audit readability. Derived server-side."
+    },
+    "actor_role": {
+      "type": "string",
+      "description": "The actor's app role at time of action. Derived server-side."
+    },
+    "actor_context_type": {
+      "type": "string",
+      "enum": [
+        "tenant",
+        "platform_operator",
+        "partner",
+        "system",
+        "denied"
+      ],
+      "description": "Which identity context the actor operated under."
+    },
+    "action_type": {
+      "type": "string",
+      "description": "The audit action type (e.g. denied_action, grant_requested, partner_validate_accessed, phase0_test_executed, bootstrap_resolved)."
+    },
+    "target_entity_type": {
+      "type": "string",
+      "description": "Entity type of the target record (if applicable)."
+    },
+    "target_entity_id": {
+      "type": "string",
+      "description": "ID of the target record (if applicable)."
+    },
+    "target_user_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the target user (if applicable)."
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Arbitrary structured metadata for the audit event."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the event occurred. Set server-side by the audit writer."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "standard",
+      "description": "Standardized confidentiality level for this audit event."
+    }
+  },
+  "required": [
+    "client_id",
+    "action_type",
+    "timestamp"
+  ],
+  "rls": {
+    "read": {
+      "data.client_id": "{{user.client_id}}"
+    },
+    "create": {
+      "user_condition": {
+        "role": "__succession_audit_writer_only__"
+      }
+    },
+    "update": false,
+    "delete": false
+  }
+}

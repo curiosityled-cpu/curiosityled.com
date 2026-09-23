@@ -200,6 +200,31 @@ export const USER_PERMISSIONS = [
   'experiences.take'
 ];
 
+// Succession Module Permissions
+export const SUCCESSION_PERMISSIONS = [
+  'succession.cycles.view',
+  'succession.cycles.manage',
+  'succession.roles.view',
+  'succession.roles.manage',
+  'succession.candidates.view',
+  'succession.candidates.manage',
+  'succession.evidence.view',
+  'succession.evidence.attest',
+  'succession.calibration.view',
+  'succession.calibration.manage',
+  'succession.readiness.propose',
+  'succession.readiness.ratify',
+  'succession.governance.view',
+  'succession.governance.manage',
+  'succession.monitor.view',
+  'succession.monitor.manage',
+  'succession.export',
+  // Add-on / restricted-scope permissions
+  'succession.view_executive_aggregate',
+  'succession.compliance_view',
+  'succession.partner_aggregate_view'
+];
+
 // Predefined Add-on Role Templates
 export const ADDON_ROLE_TEMPLATES = [
   {
@@ -279,7 +304,8 @@ export const PERMISSION_CATEGORIES = [
   { key: 'learning', label: 'Learning', description: 'Learning assignments and progress' },
   { key: 'settings', label: 'Settings', description: 'System settings and configuration' },
   { key: 'billing', label: 'Billing', description: 'Billing and subscription management' },
-  { key: 'roles', label: 'Roles', description: 'Role management and assignment' }
+  { key: 'roles', label: 'Roles', description: 'Role management and assignment' },
+  { key: 'succession', label: 'Succession', description: 'Succession management: cycles, roles, candidates, evidence, calibration, readiness, governance, and monitoring' }
 ];
 
 // Base role permission mappings (existing from useAuth)
@@ -333,7 +359,9 @@ export const BASE_ROLE_PERMISSIONS = {
     'experiences.create_forms',
     'experiences.create_assessments',
     'experiences.deploy',
-    'experiences.view_analytics'
+    'experiences.view_analytics',
+    // Succession — partner aggregate access (aggregate-only, read-only)
+    'succession.partner_aggregate_view'
   ],
   'Leadership Coach': [
     // Inherits all Program Admin (Admin Level 1) capabilities

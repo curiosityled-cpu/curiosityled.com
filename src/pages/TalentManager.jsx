@@ -3,6 +3,7 @@ import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Sparkles } from "lucide-react";
 import CompetencyManagerTab from "@/components/talent/CompetencyManagerTab";
+import SuccessionLaunchCard from "@/components/succession/SuccessionLaunchCard";
 
 export default function TalentManager() {
   const [activeTab, setActiveTab] = useState("competency-manager");
@@ -26,11 +27,20 @@ export default function TalentManager() {
           >
             Competency Manager
           </TabsTrigger>
-          {/* Future tabs will be added here */}
+          <TabsTrigger
+            value="succession"
+            className="data-[state=active]:bg-[#0202ff] data-[state=active]:text-white data-[state=active]:shadow-sm"
+          >
+            Succession
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="competency-manager" className="mt-5 focus-visible:outline-none">
           <CompetencyManagerTab />
+        </TabsContent>
+
+        <TabsContent value="succession" className="mt-5 focus-visible:outline-none">
+          <SuccessionLaunchCard />
         </TabsContent>
       </Tabs>
     </MVPPageLayout>

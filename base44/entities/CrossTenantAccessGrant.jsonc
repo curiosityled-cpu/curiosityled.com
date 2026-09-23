@@ -1,0 +1,183 @@
+{
+  "name": "CrossTenantAccessGrant",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "TARGET tenant ID \u2014 the customer whose data the grantee may access. This is the sole partition key. Control-plane record: no ordinary entity CRUD is exposed; only explicitly authorized service-role grant functions may touch it."
+    },
+    "grantee_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the user granted cross-tenant access."
+    },
+    "grantee_home_client_id": {
+      "type": "string",
+      "description": "Optional: the grantee's home client ID for audit context only."
+    },
+    "data_domain": {
+      "type": "string",
+      "default": "succession",
+      "description": "Data domain this grant covers."
+    },
+    "permitted_resource_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Entity types the grantee may access."
+    },
+    "permitted_record_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Specific record IDs the grantee may access (empty = all within permitted_resource_types)."
+    },
+    "permitted_actions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "read_metadata",
+          "read_record",
+          "troubleshoot"
+        ]
+      },
+      "default": [],
+      "description": "Permitted actions. NO 'export' is permitted in the first release."
+    },
+    "purpose_category": {
+      "type": "string",
+      "enum": [
+        "customer_support",
+        "security_incident",
+        "migration",
+        "legal_hold",
+        "data_correction"
+      ],
+      "description": "The purpose category for this grant request."
+    },
+    "reason": {
+      "type": "string",
+      "description": "Human-readable reason for the grant."
+    },
+    "ticket_or_incident_id": {
+      "type": "string",
+      "description": "Associated ticket or incident ID."
+    },
+    "requested_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the grant was requested."
+    },
+    "requested_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the requesting platform operator."
+    },
+    "approved_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the approver."
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the grant was approved."
+    },
+    "starts_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When grant access begins."
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When grant access expires."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "requested",
+        "approved",
+        "active",
+        "expired",
+        "revoked",
+        "denied"
+      ],
+      "default": "requested",
+      "description": "Grant lifecycle status. 'active' is NOT reachable until the grant workflow + dedicated read function pass security testing and the server-side feature flag is enabled."
+    },
+    "revoked_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the revoker."
+    },
+    "revoked_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the grant was revoked."
+    },
+    "revocation_reason": {
+      "type": "string",
+      "description": "Reason for revocation."
+    },
+    "customer_authorizer_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the customer-side authorizer."
+    },
+    "customer_authorized_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the customer authorized the grant."
+    },
+    "emergency_access": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is an emergency access grant."
+    },
+    "post_access_review_status": {
+      "type": "string",
+      "enum": [
+        "not_required",
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "not_required",
+      "description": "Post-access review status."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential",
+      "description": "Standardized confidentiality level for this grant record."
+    }
+  },
+  "required": [
+    "client_id",
+    "grantee_profile_id",
+    "purpose_category",
+    "reason",
+    "requested_at",
+    "requested_by_profile_id"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "__succession_control_plane_only__"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "__succession_control_plane_only__"
+      }
+    },
+    "update": false,
+    "delete": false
+  }
+}
