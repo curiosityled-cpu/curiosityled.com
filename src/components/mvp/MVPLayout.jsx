@@ -359,8 +359,33 @@ function MVPLayoutInner({ children }) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="top" align="end" className="w-72">
                   <div className="px-3 py-2 border-b">
-                    <p className="font-semibold text-sm">Notifications</p>
-                    {unreadCount > 0 && <p className="text-xs text-muted-foreground">{unreadCount} unread</p>}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-sm">Notifications</p>
+                        {unreadCount > 0 && <p className="text-xs text-muted-foreground">{unreadCount} unread</p>}
+                      </div>
+                      {unreadCount > 0 && (
+                        <button
+                          className="text-xs font-medium hover:underline disabled:opacity-50"
+                          style={{ color: '#0202ff' }}
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              const updates = recentNotifications
+                                .filter(n => !n.is_read)
+                                .map(n => base44.entities.Notification.update(n.id, { is_read: true }));
+                              await Promise.all(updates);
+                              setUnreadCount(0);
+                              setRecentNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+                            } catch (err) {
+                              console.error('Error marking all as read:', err);
+                            }
+                          }}
+                        >
+                          Mark all as read
+                        </button>
+                      )}
+                    </div>
                   </div>
                   {recentNotifications.length === 0 ?
                 <div className="px-3 py-6 text-center text-muted-foreground text-sm">No notifications yet</div> :
@@ -424,7 +449,32 @@ function MVPLayoutInner({ children }) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="right" align="end" className="w-72">
-                  <div className="px-3 py-2 border-b"><p className="font-semibold text-sm">Notifications</p></div>
+                  <div className="px-3 py-2 border-b">
+                    <div className="flex items-center justify-between">
+                      <p className="font-semibold text-sm">Notifications</p>
+                      {unreadCount > 0 && (
+                        <button
+                          className="text-xs font-medium hover:underline disabled:opacity-50"
+                          style={{ color: '#0202ff' }}
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              const updates = recentNotifications
+                                .filter(n => !n.is_read)
+                                .map(n => base44.entities.Notification.update(n.id, { is_read: true }));
+                              await Promise.all(updates);
+                              setUnreadCount(0);
+                              setRecentNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+                            } catch (err) {
+                              console.error('Error marking all as read:', err);
+                            }
+                          }}
+                        >
+                          Mark all as read
+                        </button>
+                      )}
+                    </div>
+                  </div>
                   {recentNotifications.length === 0 ?
                 <div className="px-3 py-4 text-center text-muted-foreground text-sm">No notifications yet</div> :
                 recentNotifications.map((n) =>
