@@ -1,0 +1,88 @@
+{
+  "name": "SnapshotIntegrityIncident",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side."
+    },
+    "snapshot_id": {
+      "type": "string",
+      "description": "EffectiveBlueprintSnapshot ID with the anomaly"
+    },
+    "detected_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the anomaly was detected"
+    },
+    "detected_by_operation_id": {
+      "type": "string",
+      "description": "SuccessionOperation that detected the anomaly"
+    },
+    "anomaly_type": {
+      "type": "string",
+      "enum": [
+        "hash_mismatch",
+        "count_mismatch",
+        "missing_requirements",
+        "unexpected_mutation"
+      ],
+      "description": "Type of integrity anomaly"
+    },
+    "expected_hash": {
+      "type": "string",
+      "description": "Expected requirements_content_hash"
+    },
+    "actual_hash": {
+      "type": "string",
+      "description": "Actual hash computed on re-verification"
+    },
+    "expected_count": {
+      "type": "number"
+    },
+    "actual_count": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "under_review",
+        "resolved",
+        "dismissed"
+      ],
+      "default": "open",
+      "description": "Incident lifecycle status"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    },
+    "operational_use_blocked": {
+      "type": "boolean",
+      "default": true,
+      "description": "When true, the snapshot is blocked from use in candidacy, evidence, calibration, readiness and other downstream operations. The snapshot is preserved unchanged."
+    }
+  },
+  "required": [
+    "client_id",
+    "snapshot_id",
+    "anomaly_type"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "__succession_control_plane_only__"
+      }
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "name": "SuccessionCycle",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side \u2014 never accepted from frontend input."
+    },
+    "cycle_key": {
+      "type": "string",
+      "description": "Unique cycle identifier within the tenant (e.g. '2026-Q4-succession'). Uniqueness-checked."
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable cycle name"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "framing",
+        "focus",
+        "blueprint",
+        "discover",
+        "evidence",
+        "deliberate",
+        "accelerate",
+        "transition",
+        "monitor",
+        "closed"
+      ],
+      "default": "framing",
+      "description": "Current stage in the nine-stage succession cycle"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the cycle was started"
+    },
+    "closed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the cycle was closed"
+    },
+    "created_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the cycle creator. Derived server-side."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential",
+      "description": "Standardized confidentiality level."
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "pending_validation",
+      "description": "Integrity envelope status. New uniqueness-checked records begin pending_validation; excluded from operational reads until active."
+    },
+    "quarantine_reason": {
+      "type": "string",
+      "description": "Reason code if quarantined"
+    },
+    "quarantined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quarantined_by_operation_id": {
+      "type": "string"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "pending"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "cycle_key",
+    "name"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

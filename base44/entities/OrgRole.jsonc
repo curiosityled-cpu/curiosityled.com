@@ -1,0 +1,119 @@
+{
+  "name": "OrgRole",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side."
+    },
+    "cycle_id": {
+      "type": "string",
+      "description": "SuccessionCycle ID this role belongs to"
+    },
+    "title": {
+      "type": "string",
+      "description": "Role title (e.g. 'VP of Engineering')"
+    },
+    "role_identifier": {
+      "type": "string",
+      "description": "Job code or system identifier"
+    },
+    "level": {
+      "type": "string",
+      "description": "Organizational level"
+    },
+    "current_blueprint_id": {
+      "type": "string",
+      "description": "ID of the currently approved RoleSuccessBlueprint for this role. Null if none approved."
+    },
+    "blueprint_approval_revision": {
+      "type": "number",
+      "default": 0,
+      "description": "Monotonic revision counter, incremented on each approved blueprint."
+    },
+    "blueprint_approval_lock_token": {
+      "type": "string",
+      "description": "Opaque lock token. Null/absent = unlocked. Acquired via CAS before blueprint approval mutations."
+    },
+    "blueprint_approval_lock_expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the lock lease expires. An expired lock enters recovery \u2014 it is NOT auto-acquired by a different operation."
+    },
+    "blueprint_approval_lock_operation_id": {
+      "type": "string",
+      "description": "SuccessionOperation ID holding the lock."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "active"
+    },
+    "quarantine_reason": {
+      "type": "string"
+    },
+    "quarantined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quarantined_by_operation_id": {
+      "type": "string"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "pending"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "cycle_id",
+    "title"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

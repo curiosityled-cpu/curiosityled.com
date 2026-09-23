@@ -1,0 +1,136 @@
+{
+  "name": "EffectiveBlueprintSnapshot",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side."
+    },
+    "org_role_id": {
+      "type": "string",
+      "description": "OrgRole ID this snapshot is for"
+    },
+    "blueprint_id": {
+      "type": "string",
+      "description": "RoleSuccessBlueprint ID this snapshot was generated from"
+    },
+    "blueprint_revision": {
+      "type": "number",
+      "description": "OrgRole.blueprint_approval_revision at generation time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "building",
+        "generated",
+        "generation_failed",
+        "operationally_blocked"
+      ],
+      "default": "building",
+      "description": "Only 'building' may move to 'generation_failed'. A 'generated' snapshot is never mutated \u2014 inconsistency creates a SnapshotIntegrityIncident and blocks operational use."
+    },
+    "expected_requirement_count": {
+      "type": "number",
+      "description": "Number of requirements expected to be in the snapshot"
+    },
+    "generated_requirement_count": {
+      "type": "number",
+      "description": "Actual number of requirements generated"
+    },
+    "requirements_content_hash": {
+      "type": "string",
+      "description": "SHA-256 of the canonicalized requirement set \u2014 immutability proof"
+    },
+    "generation_operation_id": {
+      "type": "string",
+      "description": "SuccessionOperation that generated this snapshot"
+    },
+    "generation_completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "requirements_snapshot": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "description": "Materialized requirement set at generation time. Immutable after generation."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "pending_validation"
+    },
+    "quarantine_reason": {
+      "type": "string"
+    },
+    "quarantined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quarantined_by_operation_id": {
+      "type": "string"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "pending"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "org_role_id",
+    "blueprint_id"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

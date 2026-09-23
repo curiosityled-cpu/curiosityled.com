@@ -1,0 +1,126 @@
+{
+  "name": "RoleSuccessBlueprint",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side."
+    },
+    "org_role_id": {
+      "type": "string",
+      "description": "OrgRole ID this blueprint defines success for"
+    },
+    "version_label": {
+      "type": "string",
+      "description": "Version label (e.g. 'v1', 'v2-revised')"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "submitted",
+        "approved",
+        "rejected",
+        "superseded"
+      ],
+      "default": "draft",
+      "description": "Approval lifecycle. The blueprint approval postcondition is exactly one status=approved AND is_current=true blueprint matching OrgRole.current_blueprint_id."
+    },
+    "is_current": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is the current approved blueprint for the OrgRole. Only one may be current at a time."
+    },
+    "submitted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "approved_by_profile_id": {
+      "type": "string"
+    },
+    "approved_via_operation_id": {
+      "type": "string",
+      "description": "SuccessionOperation that performed the approval"
+    },
+    "content": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Structured blueprint content (competencies, expectations, success criteria)"
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "pending_validation"
+    },
+    "quarantine_reason": {
+      "type": "string"
+    },
+    "quarantined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quarantined_by_operation_id": {
+      "type": "string"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "pending"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "org_role_id",
+    "version_label"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

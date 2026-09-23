@@ -1,0 +1,107 @@
+{
+  "name": "SuccessionOperation",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side."
+    },
+    "operation_id": {
+      "type": "string",
+      "description": "Caller-assigned operation ID. Combined with client_id + function_name forms the operation identity (the idempotency key). payload_hash validates a retry but does NOT replace operation_id."
+    },
+    "function_name": {
+      "type": "string",
+      "description": "Name of the succession function this operation tracks"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "in_progress",
+        "completed",
+        "failed",
+        "abandoned"
+      ],
+      "default": "pending",
+      "description": "Domain execution status. Separate from integrity_status. A successful operation is status=completed AND integrity_status=active."
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "pending_validation",
+      "description": "Integrity envelope status. Separate from domain status."
+    },
+    "payload_hash": {
+      "type": "string",
+      "description": "SHA-256 of the canonicalized payload. Validates a retry \u2014 same operation_id with a different payload_hash must be rejected."
+    },
+    "actor_profile_id": {
+      "type": "string",
+      "description": "Actor's profile ID. Derived server-side."
+    },
+    "actor_email": {
+      "type": "string",
+      "description": "Actor's email. Derived server-side."
+    },
+    "actor_context_type": {
+      "type": "string",
+      "enum": [
+        "tenant",
+        "platform_operator",
+        "partner",
+        "system",
+        "denied"
+      ],
+      "description": "Actor identity context. Derived server-side."
+    },
+    "lease_token": {
+      "type": "string",
+      "description": "Opaque lease token for abandoned-operation recovery"
+    },
+    "lease_expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the lease expires. An expired lease enters recovery \u2014 a different operation may NOT auto-acquire it."
+    },
+    "attempt_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of execution attempts"
+    },
+    "last_heartbeat_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last heartbeat timestamp during execution"
+    },
+    "error_code": {
+      "type": "string",
+      "description": "Error code if the operation failed"
+    },
+    "audit_event_id": {
+      "type": "string",
+      "description": "Logical audit event this operation is bound to. A retry finding the domain action complete but no logical audit event must write/repair the audit obligation before returning success."
+    },
+    "result_summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Minimum-necessary non-sensitive result fields only. No payload, no actor PII, no domain records."
+    }
+  },
+  "required": [
+    "client_id",
+    "operation_id",
+    "function_name"
+  ],
+  "rls": {
+    "read": false,
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

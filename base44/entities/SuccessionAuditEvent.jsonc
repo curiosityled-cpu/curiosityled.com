@@ -65,6 +65,27 @@
       ],
       "default": "standard",
       "description": "Standardized confidentiality level for this audit event."
+    },
+    "operation_id": {
+      "type": "string",
+      "description": "SuccessionOperation ID this event is bound to. At-least-once delivery: duplicate physical events are preserved and collapsed logically by (operation_id, event_key) in audit reports."
+    },
+    "event_key": {
+      "type": "string",
+      "description": "Deterministic logical key for deduplication. Same logical action across retries produces the same event_key. Physical duplicates preserved; logical collapse in reports."
+    },
+    "event_type": {
+      "type": "string",
+      "description": "Type of audit event (e.g. operation_started, domain_action_completed, integrity_quarantined, integrity_resolved)."
+    },
+    "target_record_id": {
+      "type": "string",
+      "description": "ID of the specific target record affected by this event."
+    },
+    "attempt_number": {
+      "type": "number",
+      "default": 1,
+      "description": "Execution attempt number that produced this event. Used for at-least-once deduplication."
     }
   },
   "required": [

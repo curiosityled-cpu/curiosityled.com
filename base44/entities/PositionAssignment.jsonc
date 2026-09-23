@@ -1,0 +1,139 @@
+{
+  "name": "PositionAssignment",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side."
+    },
+    "org_position_id": {
+      "type": "string",
+      "description": "OrgPosition ID this assignment fills"
+    },
+    "user_profile_id": {
+      "type": "string",
+      "description": "UserProfile ID of the assignee"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of the assignee"
+    },
+    "assignment_type": {
+      "type": "string",
+      "enum": [
+        "primary",
+        "acting",
+        "interim"
+      ],
+      "description": "Type of position assignment"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Assignment start date (inclusive). Backdated assignments prohibited unless correction_of_assignment_id is set."
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Assignment end date (inclusive by default). Must be on or after start_date."
+    },
+    "end_date_inclusive": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether end_date is inclusive. Always true in Phase 1."
+    },
+    "assignment_timezone": {
+      "type": "string",
+      "description": "Configured tenant business timezone at record time, used for temporal state derivation."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "active",
+        "expired",
+        "cancelled",
+        "corrected"
+      ],
+      "default": "scheduled",
+      "description": "Derived from start/end dates using assignment_timezone. 'cancelled' permitted only before start_date."
+    },
+    "correction_of_assignment_id": {
+      "type": "string",
+      "description": "Back-reference to an erroneous assignment this record corrects. Required for backdated assignments. The original record is never mutated."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "active"
+    },
+    "quarantine_reason": {
+      "type": "string"
+    },
+    "quarantined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quarantined_by_operation_id": {
+      "type": "string"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "pending"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "org_position_id",
+    "user_profile_id",
+    "assignment_type",
+    "start_date"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}
