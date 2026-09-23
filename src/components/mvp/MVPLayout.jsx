@@ -9,7 +9,7 @@ import {
   Brain, Target, Home, BarChart2, Users, LogOut, Menu, X,
   ChevronRight, ChevronLeft, Bell, User, ArrowLeft,
   Settings, Shield, UserCog, Dumbbell, Sun, Moon, ChevronDown, FolderOpen,
-  ClipboardList, Layers } from "lucide-react";
+  ClipboardList, Layers, Network } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -67,6 +67,7 @@ const NAV_CONFIG = {
    { label: 'Practice', path: '/practice', icon: Dumbbell },
    { label: 'Administration', icon: FolderOpen, group: true, children: [
      { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
+     { label: 'Team Rollup', path: '/team', icon: Network },
      { label: 'Development Manager', path: '/DevelopmentManager', icon: Users },
      { label: 'Goal Manager', path: '/GoalManager', icon: Target },
      { label: 'Talent Manager', path: '/talent-manager', icon: Layers },
@@ -76,15 +77,18 @@ const NAV_CONFIG = {
 
   analyst: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
+  { label: 'Team', path: '/team', icon: Users },
   { label: 'Goal Manager', path: '/GoalManager', icon: Target },
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }],
 
   executive: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
+  { label: 'Team', path: '/team', icon: Users },
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }],
 
   hrbp: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
+  { label: 'My Portfolio', path: '/team', icon: Users },
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }]
 
 };

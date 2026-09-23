@@ -50,7 +50,7 @@ export default function TeamSummaryCards({ aggregates, teamSize }) {
         icon={Calendar}
         label="Check-ins"
         value={`${checkins.participation_pct || 0}%`}
-        sub={`${checkins.total_submitted || 0} submitted · ${teamSize} on team`}
+        sub={`${checkins.total_submitted || 0} submitted · ${teamSize} in scope`}
         accent="bg-purple-600"
       />
     </div>
