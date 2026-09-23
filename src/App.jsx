@@ -59,6 +59,11 @@ import DecisionQualityAnalytics from './pages/DecisionQualityAnalytics';
 import Insights from './pages/Insights';
 import ReportBuilder from './pages/ReportBuilder';
 import { ContextProviders } from '@/components/contexts/ContextProviders';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -69,7 +74,7 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   : <>{children}</>;
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin, user } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, isAuthenticated, user } = useAuth();
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -78,44 +83,6 @@ const AuthenticatedApp = () => {
         <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
       </div>
     );
-  }
-
-  // Public landing pages accessible to unauthenticated visitors.
-  // Reads from useLocation() so navigation between public pages re-renders
-  // immediately (window.location.pathname is not reactive).
-  const PUBLIC_PATHS = new Set([
-    '/', '/LandingPage', '/bpo', '/healthcare', '/coaching',
-    '/PrivacyPolicy', '/TermsOfService', '/diagnostic', '/bpo-diagnostic',
-    '/radar-label-sample', '/testlanding'
-  ]);
-  const PublicLanding = () => {
-    const path = useLocation().pathname;
-    if (path === '/bpo') return <LandingBPO />;
-    if (path === '/healthcare') return <LandingHealthcare />;
-    if (path === '/coaching') return <LandingCoaching />;
-    if (path === '/PrivacyPolicy') return <PrivacyPolicy />;
-    if (path === '/TermsOfService') return <TermsOfService />;
-    if (path === '/diagnostic') return <OfferPage />;
-    if (path === '/bpo-diagnostic') return <BpoOfferPage />;
-    if (PUBLIC_PATHS.has(path)) return <LandingPage />;
-    // Non-public path visited while unauthenticated — redirect to the landing
-    // page so analytics tracks '/', not the internal route the visitor can't see.
-    return <Navigate to="/" replace />;
-  };
-
-  // Handle authentication errors
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      // Show the appropriate landing page for unauthenticated users
-      return <PublicLanding />;
-    }
-  }
-
-  // If not authenticated and no error, show landing page
-  if (!isAuthenticated && !authError) {
-    return <PublicLanding />;
   }
 
   // Redirect root based on MVP role
@@ -131,8 +98,17 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
+      {/* Auth routes — public, no auth required */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+
+      {/* Public landing pages — no auth required */}
       <Route path="/" element={
-        !mvpRole ? (
+        !isAuthenticated ? (
+          <LandingPage />
+        ) : !mvpRole ? (
           <LandingPage />
         ) : (user?.app_role || user?.data?.app_role || user?.role) === 'Consultant' ? (
           <Navigate to="/experience-workspace" replace />
@@ -161,6 +137,8 @@ const AuthenticatedApp = () => {
       <Route path="/radar-label-sample" element={<RadarLabelSample />} />
       <Route path="/testlanding" element={<TestLanding />} />
 
+      {/* Protected app routes — auth required, unauthenticated users redirect to /login */}
+      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
       {/* Redirect old ExperienceManagement URL to new DevelopmentManager */}
       <Route path="/ExperienceManagement" element={<Navigate to="/DevelopmentManager" replace />} />
 
@@ -242,6 +220,7 @@ const AuthenticatedApp = () => {
         />
       ))}
       <Route path="*" element={<PageNotFound />} />
+      </Route>
     </Routes>
   );
 };
