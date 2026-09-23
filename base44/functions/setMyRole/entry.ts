@@ -19,10 +19,17 @@ Deno.serve(async (req) => {
         // experiences. Production role management happens via User Management.
         const { role } = await req.json();
 
-        // Self-service role preview is limited to non-privileged roles only.
-        // Platform Admin, Super Administrator, Partner Business Administrator,
-        // and Admin Level 2 can NEVER be self-assigned — they require admin
-        // gating via User Management. (Security: prevent privilege escalation.)
+        // Privileged users (Platform Admin, Super Administrator, Partner Business
+        // Administrator) can self-assign ANY role via the Role Selector — they are
+        // the only users with access to this page, and the feature exists for
+        // testing/demoing different experiences. Regular users are limited to a
+        // non-privileged allowlist to prevent privilege escalation.
+        const privilegedRoles = [
+            'Platform Admin',
+            'Super Administrator',
+            'Partner Business Administrator'
+        ];
+
         const selfServiceRoles = [
             'User Level 1',
             'User Level 2',
@@ -34,7 +41,16 @@ Deno.serve(async (req) => {
             'Consultant'
         ];
 
-        if (!selfServiceRoles.includes(role)) {
+        const isPrivilegedUser = privilegedRoles.includes(user.app_role);
+        const allSelectableRoles = [...selfServiceRoles, ...privilegedRoles, 'Admin Level 2'];
+
+        if (!allSelectableRoles.includes(role)) {
+            return Response.json({
+                error: 'Invalid role selection.'
+            }, { status: 400 });
+        }
+
+        if (!isPrivilegedUser && !selfServiceRoles.includes(role)) {
             return Response.json({
                 error: 'This role cannot be self-assigned. Contact an administrator.'
             }, { status: 403 });

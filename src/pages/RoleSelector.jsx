@@ -112,14 +112,17 @@ function RoleSelector() {
   const [selectedRole, setSelectedRole] = useState(user?.app_role || "User Level 1");
   const [updating, setUpdating] = useState(false);
 
-  // Only show roles that can be self-assigned via setMyRole.
-  // Privileged roles (Admin Level 2, Super Administrator, Platform Admin,
-  // Partner Business Administrator) require admin-gated User Management.
+  // Privileged users (Platform Admin, Super Admin, Partner BA) can select any
+  // role; regular users are limited to the self-service allowlist server-side.
+  const privilegedRoles = ['Platform Admin', 'Super Administrator', 'Partner Business Administrator'];
   const selfServiceRoleIds = [
     'User Level 1', 'User Level 2', 'Analyst', 'Executive', 'HRBP',
     'Admin Level 1', 'Leadership Coach', 'Consultant'
   ];
-  const selectableRoles = roles.filter((r) => selfServiceRoleIds.includes(r.id));
+  const isPrivilegedUser = privilegedRoles.includes(user?.app_role);
+  const selectableRoles = isPrivilegedUser
+    ? roles
+    : roles.filter((r) => selfServiceRoleIds.includes(r.id));
 
   const currentUserRole = roles.find((r) => r.id === user?.app_role);
   const CurrentRoleIcon = currentUserRole?.icon || Shield;
