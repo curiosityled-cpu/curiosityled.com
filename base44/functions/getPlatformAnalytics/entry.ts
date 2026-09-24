@@ -127,11 +127,20 @@ Deno.serve(async (req) => {
       activityLogs: activityLogs?.length || 0
     });
 
+    // Security: Strip credential fields before returning — temporary
+    // passwords and reset tokens must never be exposed to mid-tier admins.
+    const SENSITIVE_FIELDS = ['temporary_password', 'must_reset_password', 'password_hash', 'reset_token'];
+    const safeUsers = scopedUsers.map(u => {
+      const safe = { ...u };
+      for (const f of SENSITIVE_FIELDS) delete safe[f];
+      return safe;
+    });
+
     // Return the scoped data
     return Response.json({
       success: true,
       data: {
-        users: scopedUsers,
+        users: safeUsers,
         organizations: scopedClients,
         assessments: scopedAssessments,
         goals: scopedGoals,

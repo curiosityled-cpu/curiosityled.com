@@ -11,6 +11,14 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
+    // Security: Only managers and admins may read the app-connected calendar's
+    // events (titles, attendees). Without this, any authenticated user could
+    // see the shared calendar's meeting details.
+    const mgrRoles = ['User Level 2', 'User Level 3', 'Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Partner Business Administrator', 'Platform Admin'];
+    if (!mgrRoles.includes(user.app_role)) {
+      return Response.json({ error: 'Forbidden — only managers and admins may view calendar events' }, { status: 403 });
+    }
+
     const now = new Date().toISOString();
     const weekAhead = new Date(Date.now() + 7 * 86400000).toISOString();
     let events = [];

@@ -6,10 +6,16 @@
  */
 
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.31";
+import { authorizeScheduledTask } from "../../shared/scheduledTaskAuth.ts";
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
+    // Security: Require internal secret or admin credentials — without this,
+    // anonymous callers could trigger platform-wide notification fan-out.
+    const auth = await authorizeScheduledTask(req, base44);
+    if (!auth.authorized) return auth.response;
 
     const now = new Date();
     const window48hStart = now.toISOString();

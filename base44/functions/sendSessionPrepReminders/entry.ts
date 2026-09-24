@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
 
 /**
  * sendSessionPrepReminders
@@ -9,6 +10,11 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
+
+    // Security: Require internal secret or admin credentials — without this,
+    // anonymous callers could trigger platform-wide email/notification fan-out.
+    const auth = await authorizeScheduledTask(req, base44);
+    if (!auth.authorized) return auth.response;
 
     const now = new Date();
     const windowStart = new Date(now.getTime() + 20 * 60 * 60 * 1000).toISOString(); // 20h from now

@@ -46,6 +46,16 @@ Deno.serve(async (req) => {
 
         const targetUser = targetUsers[0];
 
+        // Security: For managers (not self, not admin), verify the target is
+        // actually their direct report. Without this, any User Level 2/3 can
+        // post messages to any user's Slack webhook (impersonation/phishing).
+        if (!isSelf && !isAdmin) {
+            const subs = currentUser.subordinate_emails || currentUser.data?.subordinate_emails || [];
+            if (targetUser.manager_email !== currentUser.email && !subs.includes(user_email)) {
+                return Response.json({ success: false, error: 'Forbidden — target is not your direct report' }, { status: 403 });
+            }
+        }
+
         if (!targetUser.slack_webhook_url) {
             return Response.json({
                 success: false,

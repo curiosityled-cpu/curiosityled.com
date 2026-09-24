@@ -9,6 +9,7 @@
  * in-product ManagerCheckIn surfaces the closing question.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { isInternalCall } from '../../shared/urlValidation.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -21,8 +22,14 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
 
-    // Support both direct call (with user_email) and entity automation payload
-    const targetEmail = body.user_email || body.data?.user_email || user.email;
+    // Security: Ignore client-supplied user_email for user calls — always
+    // use the authenticated caller's email. This prevents tampering with
+    // other users' private pulse/overload data. Entity-automation calls
+    // pass the internal secret and may specify a target user_email.
+    const isInternal = isInternalCall(req);
+    const targetEmail = isInternal
+      ? (body.user_email || body.data?.user_email || user.email)
+      : user.email;
     const originalPulseId = body.pulse_id || body.data?.id || null;
     const now = new Date();
 

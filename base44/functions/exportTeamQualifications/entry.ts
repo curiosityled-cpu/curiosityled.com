@@ -16,8 +16,24 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { subordinate_emails = [], format = 'csv' } = await req.json();
-    
+    const body = await req.json();
+    const { format = 'csv' } = body;
+
+    // Security: Derive subordinate list server-side — never trust
+    // client-supplied subordinate_emails for non-admin callers.
+    const adminRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin'];
+    let subordinate_emails;
+    if (adminRoles.includes(user.app_role)) {
+      subordinate_emails = body.subordinate_emails || [];
+    } else {
+      // Managers: use their own subordinate_emails, or query by manager_email
+      subordinate_emails = user.subordinate_emails || user.data?.subordinate_emails || [];
+      if (subordinate_emails.length === 0) {
+        const directReports = await base44.asServiceRole.entities.User.filter({ manager_email: user.email });
+        subordinate_emails = directReports.map(u => u.email).filter(Boolean);
+      }
+    }
+
     // Get team qualifications
     const [certifications, assessments, users] = await Promise.all([
       base44.entities.Certification.filter({

@@ -183,11 +183,21 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Rate limiting: prevent abuse of this public endpoint (5 reports/hour per email).
+    // Rate limiting: prevent abuse of this public endpoint.
+    // Per-email: 5 reports/hour. Per-IP: 20/hour (blocks email bombing from one source).
     const rlKey = String(lead_info.email || '').toLowerCase();
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || req.headers.get('x-real-ip') || 'unknown';
+    const ipKey = `ip:${clientIp}`;
     const now = Date.now();
     if (!globalThis._diagRateLimit) globalThis._diagRateLimit = new Map();
     const rl = globalThis._diagRateLimit;
+    const ipRlEntry = (rl.get(ipKey) || []).filter(t => now - t < 3600000);
+    if (ipRlEntry.length >= 20) {
+      return Response.json({ error: 'Rate limit exceeded. Please try again later.' }, { status: 429 });
+    }
+    ipRlEntry.push(now);
+    rl.set(ipKey, ipRlEntry);
     const rlEntry = (rl.get(rlKey) || []).filter(t => now - t < 3600000);
     if (rlEntry.length >= 5) {
       return Response.json({ error: 'Rate limit exceeded. Please try again later.' }, { status: 429 });
@@ -237,38 +247,24 @@ Deno.serve(async (req) => {
       const uploadResult = await base44.asServiceRole.integrations.Core.UploadFile({ file });
       pdf_url = uploadResult.file_url;
 
-      // ── Send email via Resend (only if we have a PDF to attach) ──
+      // ── Send email via Core.SendEmail (with platform abuse controls) ──
       try {
         const pdfBase64 = arrayBufferToBase64(pdfBytes);
         const emailHtml = buildEmailHtml(lead_info, pdf_url, variant);
-        const emailResponse = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: "Curiosity Led <no-reply@curiosityled.com>",
-            to: [lead_info.email],
-            subject: vcfg.emailSubject,
-            html: emailHtml,
-            attachments: [
-              {
-                filename: isBpo ? "bpo-leadership-report.pdf" : "leadership-reboot-blueprint.pdf",
-                content: pdfBase64,
-              },
-            ],
-          }),
+        await base44.asServiceRole.integrations.Core.SendEmail({
+          to: lead_info.email,
+          subject: vcfg.emailSubject,
+          html: emailHtml,
+          attachments: [{
+            filename: isBpo ? "bpo-leadership-report.pdf" : "leadership-reboot-blueprint.pdf",
+            content: pdfBase64,
+          }],
         });
-        if (emailResponse.ok) {
-          // Mark blueprint sent only on a successful email delivery
-          await base44.asServiceRole.entities.Prospect.update(prospect.id, {
-            lead_status: "blueprint_sent",
-            blueprint_sent_at: new Date().toISOString(),
-          });
-        } else {
-          console.warn("Email send failed:", await emailResponse.text());
-        }
+        // Mark blueprint sent only on a successful email delivery
+        await base44.asServiceRole.entities.Prospect.update(prospect.id, {
+          lead_status: "blueprint_sent",
+          blueprint_sent_at: new Date().toISOString(),
+        });
       } catch (emailErr) {
         console.warn("Email send error:", emailErr.message);
       }

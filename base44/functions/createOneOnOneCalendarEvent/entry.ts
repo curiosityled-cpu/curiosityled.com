@@ -16,6 +16,14 @@ export default async function(req) {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
+    // Security: Only managers and admins may create/update/delete calendar
+    // events on the app-connected calendar. Without this, any authenticated
+    // user could destroy meetings or send calendar-invite spam.
+    const mgrRoles = ['User Level 2', 'User Level 3', 'Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Partner Business Administrator', 'Platform Admin'];
+    if (!mgrRoles.includes(user.app_role)) {
+      return Response.json({ error: 'Forbidden — only managers and admins may manage calendar events' }, { status: 403 });
+    }
+
     const body = await req.json();
     const {
       action = 'create',
@@ -34,6 +42,21 @@ export default async function(req) {
     // ── DELETE ──────────────────────────────────────────────────────────────
     if (action === 'delete') {
       if (!event_id || !calendar_source) return Response.json({ error: 'event_id and calendar_source are required to delete' }, { status: 400 });
+      // Security: Verify the caller owns this event before deleting.
+      // Non-admins may only delete events they created (manager_email match).
+      if (user.app_role !== 'Platform Admin') {
+        const meetings = await base44.asServiceRole.entities.MeetingRecord.filter(
+          { calendar_event_id: event_id, calendar_source }, '-created_date', 1
+        ).catch(() => []);
+        const meeting = meetings[0];
+        if (meeting && meeting.manager_email !== user.email) {
+          return Response.json({ error: 'Forbidden — you can only delete events you created' }, { status: 403 });
+        }
+        if (!meeting) {
+          // No matching MeetingRecord — cannot verify ownership; deny for safety
+          return Response.json({ error: 'Forbidden — cannot verify event ownership' }, { status: 403 });
+        }
+      }
       if (calendar_source === 'google') {
         try {
           const { accessToken } = await base44.asServiceRole.connectors.getConnection('googlecalendar');

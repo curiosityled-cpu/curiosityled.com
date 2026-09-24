@@ -7,10 +7,17 @@
  * - Does not spam: skips if a decision check-in notification was created in the last 7 days for this user
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
+    // Security: Require internal secret or admin credentials — without this,
+    // anonymous callers could trigger platform-wide notification fan-out.
+    const auth = await authorizeScheduledTask(req, base44);
+    if (!auth.authorized) return auth.response;
+
     const serviceBase44 = base44.asServiceRole;
 
     const now = new Date();

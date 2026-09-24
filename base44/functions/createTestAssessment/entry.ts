@@ -20,6 +20,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'User not authenticated' }, { status: 401 });
     }
 
+    // Security: Restrict to Platform Admin — any authenticated user could
+    // otherwise fabricate leadership assessment scores that feed analytics,
+    // rankings, succession readiness, and gamification point flows.
+    if (user.app_role !== 'Platform Admin') {
+      return Response.json({ error: 'Forbidden — Platform Admin only' }, { status: 403 });
+    }
+
     const body = await req.json();
     const scenario = body.scenario || 'average';
 
