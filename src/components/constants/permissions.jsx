@@ -332,7 +332,18 @@ export const BASE_ROLE_PERMISSIONS = {
     'experiences.create_forms',
     'experiences.create_assessments',
     'experiences.deploy',
-    'experiences.view_analytics'
+    'experiences.view_analytics',
+    // Succession Module — full access for Super Administrators
+    'succession.cycles.view', 'succession.cycles.manage',
+    'succession.roles.view', 'succession.roles.manage',
+    'succession.candidates.view', 'succession.candidates.manage',
+    'succession.evidence.view', 'succession.evidence.attest',
+    'succession.calibration.view', 'succession.calibration.manage',
+    'succession.readiness.propose', 'succession.readiness.ratify',
+    'succession.governance.view', 'succession.governance.manage',
+    'succession.monitor.view', 'succession.monitor.manage',
+    'succession.export',
+    'succession.view_executive_aggregate', 'succession.compliance_view', 'succession.partner_aggregate_view'
     // NOTE: Team permissions removed - Super Admins need Team Leader Add-on for team view
     // NOTE: Personal dashboard permissions removed - Super Admins need User Add-on to see their own progress
   ],
