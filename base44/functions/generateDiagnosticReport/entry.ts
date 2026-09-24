@@ -173,7 +173,8 @@ Deno.serve(async (req) => {
       const prospectId = url.searchParams.get('prospect_id');
       const html = (msg: string) => new Response(`<html><body style="font-family:Arial,sans-serif;padding:40px"><h2>${msg}</h2></body></html>`, { status: 200, headers: { 'Content-Type': 'text/html' } });
       if (!token || !prospectId) return new Response('<html><body><h2>Invalid verification link.</h2></body></html>', { status: 400, headers: { 'Content-Type': 'text/html' } });
-      const secret = Deno.env.get('PUBLIC_REQUEST_TOKEN_SECRET') || Deno.env.get('INTERNAL_FUNCTION_SECRET') || 'fallback';
+      const secret = Deno.env.get('PUBLIC_REQUEST_TOKEN_SECRET') || Deno.env.get('INTERNAL_FUNCTION_SECRET');
+      if (!secret) return new Response('<html><body><h2>Verification is not configured. Contact the site administrator.</h2></body></html>', { status: 500, headers: { 'Content-Type': 'text/html' } });
       const expected = await hmacHex(prospectId, secret);
       if (!timingSafeHexEqual(token, expected)) return new Response('<html><body><h2>Invalid or expired verification link.</h2></body></html>', { status: 403, headers: { 'Content-Type': 'text/html' } });
       const prospects = await base44.asServiceRole.entities.Prospect.filter({ id: prospectId });
@@ -305,7 +306,9 @@ Deno.serve(async (req) => {
       // verification link, preventing this public endpoint from sending
       // platform-branded emails to arbitrary unverified addresses.
       try {
-        const verifyToken = await hmacHex(prospect.id, Deno.env.get('PUBLIC_REQUEST_TOKEN_SECRET') || Deno.env.get('INTERNAL_FUNCTION_SECRET') || 'fallback');
+        const verifySecret = Deno.env.get('PUBLIC_REQUEST_TOKEN_SECRET') || Deno.env.get('INTERNAL_FUNCTION_SECRET');
+        if (!verifySecret) throw new Error('Verification signing secret not configured');
+        const verifyToken = await hmacHex(prospect.id, verifySecret);
         await base44.asServiceRole.entities.Prospect.update(prospect.id, {
           blueprint_pdf_url: pdf_url,
           diagnostic_variant: variant,

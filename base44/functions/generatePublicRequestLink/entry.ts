@@ -15,7 +15,19 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
-    const { client_id, custom_message, expires_in_days } = await req.json();
+    const { client_id: requested_client_id, custom_message, expires_in_days } = await req.json();
+
+    // Security: Non-Platform-Admin callers may only mint tokens for their own tenant.
+    let client_id = requested_client_id;
+    if (user.app_role !== 'Platform Admin') {
+      if (!user.client_id) {
+        return Response.json({ error: 'Your account has no tenant scope — cannot generate links.' }, { status: 403 });
+      }
+      if (client_id && client_id !== user.client_id) {
+        return Response.json({ error: 'You can only generate links for your own organization.' }, { status: 403 });
+      }
+      client_id = user.client_id;
+    }
 
     if (!client_id) {
       return Response.json({ error: 'client_id is required' }, { status: 400 });

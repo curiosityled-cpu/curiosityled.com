@@ -116,6 +116,30 @@ export default async function(req) {
 
     const isUpdate = action === 'update';
 
+    // Security: Verify ownership for update action (same as delete).
+    if (isUpdate && user.app_role !== 'Platform Admin') {
+      if (!event_id || !calendar_source) return Response.json({ error: 'event_id and calendar_source are required to update' }, { status: 400 });
+      const meetings = await base44.asServiceRole.entities.MeetingRecord.filter(
+        { calendar_event_id: event_id, calendar_source }, '-created_date', 1
+      ).catch(() => []);
+      const meeting = meetings[0];
+      if (!meeting || meeting.manager_email !== user.email) {
+        return Response.json({ error: 'Forbidden — you can only update events you created' }, { status: 403 });
+      }
+    }
+
+    // Security: Validate attendee_email is a platform user (prevent external invite spam).
+    if (attendee_email && user.app_role !== 'Platform Admin') {
+      const attendeeUsers = await base44.asServiceRole.entities.User.filter({ email: attendee_email }).catch(() => []);
+      if (attendeeUsers.length === 0) {
+        return Response.json({ error: 'Forbidden — attendee must be a platform user' }, { status: 403 });
+      }
+      const attendee = attendeeUsers[0];
+      if (attendee.client_id !== user.client_id) {
+        return Response.json({ error: 'Forbidden — attendee must be in your organization' }, { status: 403 });
+      }
+    }
+
     // 1) Try Google Calendar
     try {
       const { accessToken } = await base44.asServiceRole.connectors.getConnection('googlecalendar');

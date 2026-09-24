@@ -152,6 +152,19 @@ Deno.serve(async (req) => {
             }, { status: 403 });
         }
 
+        // Security: Admins (non-Platform-Admin) must be scoped to their own tenant.
+        if (isAdmin && !isCreatingForSelf && currentUser.app_role !== 'Platform Admin') {
+            const targetUsers = await base44.asServiceRole.entities.User.filter({
+                email: notificationData.user_email
+            });
+            if (targetUsers.length === 0) {
+                return Response.json({ success: false, error: 'Target user not found in the system' }, { status: 404 });
+            }
+            if (targetUsers[0].client_id !== currentUser.client_id) {
+                return Response.json({ success: false, error: 'Forbidden - You can only create notifications for users in your organization' }, { status: 403 });
+            }
+        }
+
         // Manager authorization
         if (isManager && !isAdmin && !isCreatingForSelf) {
             const targetUsers = await base44.asServiceRole.entities.User.filter({

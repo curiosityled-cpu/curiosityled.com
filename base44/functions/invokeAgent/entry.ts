@@ -992,20 +992,12 @@ async function executeInviteUser(base44, user, params) {
   };
 
   const sdkRole = roleMapping[role] || 'user';
-
-  // Check permissions - only certain roles can invite
+  const canInvite = ['User Level 2','User Level 3','Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'].includes(user.app_role);
+  if (!canInvite) throw { message: 'Only managers and admins may invite users.', code: 'PERMISSION_DENIED', retryable: false };
   const canInviteAdmin = ['Admin Level 2', 'Super Administrator', 'Platform Admin'].includes(user.app_role);
   const requestedRoleIsAdmin = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin'].includes(role);
-
-  if (requestedRoleIsAdmin && !canInviteAdmin) {
-    throw { 
-      message: 'You do not have permission to invite admin users. Only HR Admins and Super Admins can invite admins.',
-      code: 'PERMISSION_DENIED',
-      retryable: false
-    };
-  }
-
-  // Use the Base44 invite function with SDK role
+  if (requestedRoleIsAdmin && !canInviteAdmin) throw { message: 'You do not have permission to invite admin users. Only HR Admins and Super Admins can invite admins.', code: 'PERMISSION_DENIED', retryable: false };
+  if (!canInviteAdmin) { const ex = await base44.asServiceRole.entities.User.filter({ email }).catch(() => []); if (ex.length > 0 && ex[0].client_id !== user.client_id) throw { message: 'You can only invite users within your own organization.', code: 'PERMISSION_DENIED', retryable: false }; }
   await base44.users.inviteUser(email, sdkRole);
 
   return {

@@ -1,19 +1,18 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
 
 Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
-        const user = await base44.auth.me();
 
-        if (!user) {
-            return Response.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        // Security: restrict this maintenance function to internal automation or Platform Admin.
+        const authz = await authorizeScheduledTask(req, base44);
+        if (!authz.authorized) return authz.response;
 
-        // Parse request body for batch configuration
-        const body = await req.json().catch(() => ({}));
-        const batchSize = body.batchSize || 50; // Process 50 resources at a time
-        const delayMs = body.delayMs || 2000; // 2 second delay between batches
-        const startFrom = body.startFrom || 0; // Resume from a specific index
+        // Batch parameters are server-controlled (not caller-controlled) to prevent DoS.
+        const batchSize = 50;
+        const delayMs = 2000;
+        const startFrom = 0;
 
         // Thumbnail mappings by resource type
         const thumbnailsByType = {
