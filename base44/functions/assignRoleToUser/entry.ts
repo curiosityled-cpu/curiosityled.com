@@ -37,6 +37,24 @@ Deno.serve(async (req) => {
 
     const role = roles[0];
 
+    // Security: Role-rank restriction — prevent lower-tier admins from
+    // assigning high-privilege custom roles (e.g. 'Platform Administrator
+    // Add-on' with impersonation/billing permissions). Only Platform Admin
+    // may assign roles whose permissions include platform-level privileges.
+    // Ported from assignAddonRole to close the privilege-escalation gap.
+    const PLATFORM_PERMISSIONS = [
+      'users.impersonate', 'billing.manage', 'platform.admin',
+      'users.delete', 'clients.delete', 'security.manage'
+    ];
+    const rolePermissions = role.permissions || [];
+    const hasPlatformPermission = rolePermissions.some(p =>
+      PLATFORM_PERMISSIONS.includes(p) ||
+      (typeof p === 'string' && (p.startsWith('platform.') || p.startsWith('users.impersonate') || p === 'billing.manage'))
+    );
+    if (hasPlatformPermission && currentUser.app_role !== 'Platform Admin') {
+      return Response.json({ error: 'Only Platform Admins may assign roles with platform-level privileges.' }, { status: 403 });
+    }
+
     // Apply role-based access control
     if (currentUser.app_role === 'Super Administrator' && currentUser.client_id) {
       if (targetUser.client_id !== currentUser.client_id) {

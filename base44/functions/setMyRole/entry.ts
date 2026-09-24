@@ -36,12 +36,16 @@ Deno.serve(async (req) => {
             }, { status: 403 });
         }
 
-        // Privileged users may switch between any of these roles for demo/testing.
-        const allSelectableRoles = [...privilegedRoles, 'Admin Level 2', 'User Level 1', 'User Level 2', 'Leadership Coach', 'Consultant'];
+        // Security: Privileged users may switch to LOWER-privilege roles only for
+        // demo/preview purposes. Platform Admin is never self-assignable — it can
+        // only be granted by an existing Platform Admin through user management.
+        // This prevents vertical privilege escalation (e.g. a Partner Business
+        // Administrator elevating themselves to Platform Admin).
+        const allSelectableRoles = ['Admin Level 2', 'User Level 1', 'User Level 2', 'Leadership Coach', 'Consultant'];
 
         if (!allSelectableRoles.includes(role)) {
             return Response.json({
-                error: 'Invalid role selection.'
+                error: 'Invalid role selection. Platform Admin can only be granted by an existing Platform Admin via User Management.'
             }, { status: 400 });
         }
 

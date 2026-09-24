@@ -28,16 +28,19 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Automation is not active' }, { status: 400 });
     }
 
-    // Security: Only admins or the automation's owner may execute it.
-    // This prevents any user from firing privileged actions (emails, entity
-    // writes, function calls) stored in automations they don't own.
+    // Security: Only admins may execute automations. The previous owner-or-admin
+    // check let any user fire privileged actions (entity writes, function
+    // invocations, emails) stored in automations they own, using the service
+    // role to bypass entity RLS and user-update permission checks.
     const adminRoles = ['Admin Level 2', 'Super Administrator', 'Partner Business Administrator', 'Platform Admin'];
     if (!adminRoles.includes(user.app_role)) {
-      const ownerEmail = automation.created_by_email || automation.owner_email;
-      if (ownerEmail !== user.email) {
-        return Response.json({ error: 'Forbidden — you do not have permission to execute this automation.' }, { status: 403 });
-      }
+      return Response.json({ error: 'Forbidden — only administrators may execute automations.' }, { status: 403 });
     }
+
+    // Security: Entity allowlist — only safe, non-privilege-bearing entities
+    // may be written via automation. The User entity (and any entity with
+    // role/permission fields) is explicitly excluded.
+    const ALLOWED_ENTITIES = ['Notification', 'AssignedLearning', 'Goal', 'MeetingRecord', 'DevelopmentRequest'];
 
     const results = [];
     let allSuccessful = true;
@@ -50,6 +53,9 @@ Deno.serve(async (req) => {
         switch (action.action_type) {
           case 'update_entity':
             if (action.action_config?.entity_name && action.action_config?.entity_id && action.action_config?.data) {
+              if (!ALLOWED_ENTITIES.includes(action.action_config.entity_name)) {
+                throw new Error(`Entity "${action.action_config.entity_name}" is not permitted in automations`);
+              }
               const Entity = base44.asServiceRole.entities[action.action_config.entity_name];
               if (Entity) {
                 actionResult = await Entity.update(action.action_config.entity_id, action.action_config.data);
@@ -59,6 +65,9 @@ Deno.serve(async (req) => {
 
           case 'create_entity':
             if (action.action_config?.entity_name && action.action_config?.data) {
+              if (!ALLOWED_ENTITIES.includes(action.action_config.entity_name)) {
+                throw new Error(`Entity "${action.action_config.entity_name}" is not permitted in automations`);
+              }
               const Entity = base44.asServiceRole.entities[action.action_config.entity_name];
               if (Entity) {
                 actionResult = await Entity.create(action.action_config.data);

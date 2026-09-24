@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveUserScope, isUserInScope } from '../../shared/userScope.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -14,6 +15,8 @@ Deno.serve(async (req) => {
     if (!allowedRoles.includes(user.app_role)) {
       return Response.json({ error: 'Forbidden: Insufficient permissions' }, { status: 403 });
     }
+
+    const scope = resolveUserScope(user);
 
     const { userId, licenseType } = await req.json();
 
@@ -32,6 +35,11 @@ Deno.serve(async (req) => {
 
     if (!targetUser) {
       return Response.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Security: Tenant scoping — Super Admin can only manage licenses in their org
+    if (!isUserInScope(targetUser, scope)) {
+      return Response.json({ error: 'Access denied — user not in your organization' }, { status: 403 });
     }
 
     // Update user license

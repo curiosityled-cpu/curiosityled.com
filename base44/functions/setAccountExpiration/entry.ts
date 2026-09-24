@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveUserScope, attachPartnerClientIds, isUserInScope } from '../../shared/userScope.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -15,6 +16,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Insufficient permissions' }, { status: 403 });
     }
 
+    const scope = resolveUserScope(user);
+    if (scope.role === 'Partner Business Administrator') {
+      const clients = await base44.asServiceRole.entities.Client.list();
+      attachPartnerClientIds(scope, clients);
+    }
+
     const { userId, expirationDate, accountType, notifyUser = true } = await req.json();
 
     if (!userId) {
@@ -27,6 +34,11 @@ Deno.serve(async (req) => {
 
     if (!targetUser) {
       return Response.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Security: Tenant scoping — target must be in caller's scope
+    if (!isUserInScope(targetUser, scope)) {
+      return Response.json({ error: 'Access denied — user not in your organization' }, { status: 403 });
     }
 
     // Validate expiration date if provided

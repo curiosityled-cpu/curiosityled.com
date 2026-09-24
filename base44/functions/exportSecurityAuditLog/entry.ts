@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveUserScope, attachPartnerClientIds, isUserInScope } from '../../shared/userScope.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -12,6 +13,12 @@ Deno.serve(async (req) => {
     // Only admins can export security logs
     if (!['Platform Admin', 'Super Administrator', 'Partner Business Administrator', 'Admin Level 2'].includes(currentUser.app_role)) {
       return Response.json({ error: 'Forbidden: Insufficient permissions' }, { status: 403 });
+    }
+
+    const scope = resolveUserScope(currentUser);
+    if (scope.role === 'Partner Business Administrator') {
+      const clients = await base44.asServiceRole.entities.Client.list();
+      attachPartnerClientIds(scope, clients);
     }
 
     const { userEmail, startDate, endDate, includeLoginHistory = true, includeActivityLog = true } = await req.json();
@@ -87,6 +94,10 @@ Deno.serve(async (req) => {
     const allUsers = await base44.asServiceRole.entities.User.list();
     const user = allUsers.find(u => u.email === userEmail);
     if (user) {
+      // Security: Tenant scoping — reject targets outside caller's scope
+      if (!isUserInScope(user, scope)) {
+        return Response.json({ error: 'Forbidden — user not in your organization.' }, { status: 403 });
+      }
       auditData.user_info = {
         email: user.email,
         full_name: user.full_name,

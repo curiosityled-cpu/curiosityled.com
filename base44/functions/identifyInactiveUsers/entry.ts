@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveUserScope, attachPartnerClientIds, filterUsersByScope } from '../../shared/userScope.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -15,6 +16,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Insufficient permissions' }, { status: 403 });
     }
 
+    const scope = resolveUserScope(user);
+
     const { inactiveDays = 30, includeNeverLoggedIn = true } = await req.json();
 
     const now = new Date();
@@ -23,8 +26,16 @@ Deno.serve(async (req) => {
     // Get all users
     const allUsers = await base44.asServiceRole.entities.User.list();
 
+    // Security: Tenant scoping — filter to caller's tenant/partner scope
+    // before computing inactivity. Prevents cross-tenant PII exposure.
+    if (scope.role === 'Partner Business Administrator') {
+      const clients = await base44.asServiceRole.entities.Client.list();
+      attachPartnerClientIds(scope, clients);
+    }
+    const scopedUsers = filterUsersByScope(allUsers, scope);
+
     // Identify inactive users
-    const inactiveUsers = allUsers.filter(u => {
+    const inactiveUsers = scopedUsers.filter(u => {
       // Skip suspended/locked accounts
       if (u.account_status === 'suspended' || u.account_status === 'locked') {
         return false;

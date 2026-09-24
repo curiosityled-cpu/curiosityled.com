@@ -34,11 +34,15 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'Missing assessment_id' }, { status: 400 });
     }
 
-    // Security: For manual (non-automation) calls, require authentication or internal secret.
-    if (!event) {
+    // Security: Authenticate every caller. The previous code skipped auth
+    // when an `event` key was present, letting anonymous callers trigger LLM
+    // generation and overwrite AssessmentInsights for any assessment. Now
+    // all callers — automation or manual — must present the internal secret
+    // or a valid user session.
+    const isInternal = req.headers.get('x-internal-secret') === Deno.env.get('INTERNAL_FUNCTION_SECRET');
+    if (!isInternal) {
       const currentUser = await base44.auth.me().catch(() => null);
-      const isInternal = req.headers.get('x-internal-secret') === Deno.env.get('INTERNAL_FUNCTION_SECRET');
-      if (!currentUser && !isInternal) {
+      if (!currentUser) {
         return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
     }

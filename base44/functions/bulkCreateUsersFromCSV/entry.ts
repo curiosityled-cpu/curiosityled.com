@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveUserScope, attachPartnerClientIds, isUserInScope, canAssignRole } from '../../shared/userScope.ts';
 
 /**
  * Bulk creates/updates users from CSV data
@@ -34,6 +35,12 @@ Deno.serve(async (req) => {
                 success: false, 
                 error: 'Forbidden - Only administrators can bulk manage users' 
             }, { status: 403 });
+        }
+
+        const scope = resolveUserScope(currentUser);
+        if (scope.role === 'Partner Business Administrator') {
+            const clientsList = await base44.asServiceRole.entities.Client.list();
+            attachPartnerClientIds(scope, clientsList);
         }
 
         const { users, updateDuplicates, duplicateUsers } = await req.json();
@@ -215,6 +222,28 @@ Deno.serve(async (req) => {
                         continue;
                     }
 
+                    // Security: Tenant scoping — reject cross-tenant updates.
+                    // Without this, an Admin Level 2 of tenant A could update
+                    // users of tenant B (role grants, manager reassignment,
+                    // client_id changes) via the duplicate-update path.
+                    if (!isUserInScope(existingUser, scope)) {
+                        results.failed.push({ user: userData, reason: 'Cross-tenant update denied' });
+                        continue;
+                    }
+
+                    // Security: Non-Platform-Admin callers cannot change
+                    // client_id or partner_id (tenant reassignment).
+                    if (!scope.isPlatformAdmin) {
+                        if (userData.client_id !== undefined && userData.client_id !== existingUser.client_id) {
+                            results.failed.push({ user: userData, reason: 'Only Platform Admins can reassign users to a different client' });
+                            continue;
+                        }
+                        if (userData.partner_id !== undefined && userData.partner_id !== existingUser.partner_id) {
+                            results.failed.push({ user: userData, reason: 'Only Platform Admins can reassign users to a different partner' });
+                            continue;
+                        }
+                    }
+
                     // Validate required fields for update
                     const fullNameStr = userData.full_name ? String(userData.full_name).trim() : '';
                     if (!fullNameStr) {
@@ -252,11 +281,10 @@ Deno.serve(async (req) => {
                         continue;
                     }
 
-                    // Security: Prevent role escalation — only Platform Admins can assign
-                    // Super Administrator or Platform Admin roles via bulk update.
-                    const elevatedRoles = ['Super Administrator', 'Platform Admin'];
-                    if (userData.app_role && elevatedRoles.includes(appRoleStr) && currentUser.app_role !== 'Platform Admin') {
-                        results.failed.push({ user: userData, reason: 'Only Platform Admins can assign Super Administrator or Platform Admin roles' });
+                    // Security: Prevent role escalation — use shared rank check.
+                    // A caller may never assign a role at or above their own tier.
+                    if (userData.app_role && !canAssignRole(currentUser.app_role, appRoleStr)) {
+                        results.failed.push({ user: userData, reason: 'Insufficient privileges to assign this role' });
                         continue;
                     }
 

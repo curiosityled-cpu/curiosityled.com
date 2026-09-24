@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveUserScope, attachPartnerClientIds, isUserInScope } from '../../shared/userScope.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -22,12 +23,26 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden — you can only view your own data.' }, { status: 403 });
     }
 
+    const scope = resolveUserScope(user);
+
     // Get target user
     const allUsers = await base44.asServiceRole.entities.User.list();
     const targetUser = allUsers.find(u => u.email === userEmail);
 
     if (!targetUser) {
       return Response.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Security: Tenant scoping — admin callers can only access users in
+    // their own tenant/partner scope. Prevents cross-tenant PII exposure.
+    if (isAdmin) {
+      if (scope.role === 'Partner Business Administrator') {
+        const clients = await base44.asServiceRole.entities.Client.list();
+        attachPartnerClientIds(scope, clients);
+      }
+      if (!isUserInScope(targetUser, scope)) {
+        return Response.json({ error: 'Forbidden — user not in your organization.' }, { status: 403 });
+      }
     }
 
     // Fetch all engagement data in parallel

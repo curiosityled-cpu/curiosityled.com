@@ -1,4 +1,3 @@
-
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
 
 Deno.serve(async (req) => {
@@ -24,6 +23,11 @@ Deno.serve(async (req) => {
         details: 'This endpoint requires admin or organizational leadership privileges'
       }, { status: 403 });
     }
+
+    // Security: Tenant scoping for Admin Level 1/2 — these roles must only
+    // see their own tenant's data, not platform-wide enrollment rows.
+    const isPlatformAdmin = user.app_role === 'Platform Admin';
+    const needsTenantScope = ['Admin Level 1', 'Admin Level 2'].includes(user.app_role) && user.client_id;
 
     console.log('Fetching platform journey analytics for:', user.email, 'Role:', user.app_role);
 
@@ -100,14 +104,27 @@ Deno.serve(async (req) => {
       learningResources: learningResources?.length || 0
     });
 
+    // Security: Apply tenant scoping for Admin Level 1/2 before analytics
+    let scopedEnrollments = enrollments;
+    let scopedUsers = users;
+    let scopedAssessments = assessments;
+    let scopedGoals = goals;
+    if (needsTenantScope) {
+      scopedUsers = users.filter(u => u.client_id === user.client_id);
+      const clientUserEmails = new Set(scopedUsers.map(u => u.email));
+      scopedEnrollments = enrollments.filter(e => clientUserEmails.has(e.user_email));
+      scopedAssessments = assessments.filter(a => clientUserEmails.has(a.email));
+      scopedGoals = goals.filter(g => g.created_by && clientUserEmails.has(g.created_by));
+    }
+
     // Calculate comprehensive analytics
     const analytics = calculateJourneyAnalytics({
       journeys: Array.isArray(journeys) ? journeys : [],
-      enrollments: Array.isArray(enrollments) ? enrollments : [],
-      users: Array.isArray(users) ? users : [],
+      enrollments: Array.isArray(scopedEnrollments) ? scopedEnrollments : [],
+      users: Array.isArray(scopedUsers) ? scopedUsers : [],
       clients: Array.isArray(clients) ? clients : [],
-      assessments: Array.isArray(assessments) ? assessments : [],
-      goals: Array.isArray(goals) ? goals : [],
+      assessments: Array.isArray(scopedAssessments) ? scopedAssessments : [],
+      goals: Array.isArray(scopedGoals) ? scopedGoals : [],
       learningResources: Array.isArray(learningResources) ? learningResources : []
     });
 

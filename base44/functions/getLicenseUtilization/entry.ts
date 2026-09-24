@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveUserScope, attachPartnerClientIds, filterUsersByScope } from '../../shared/userScope.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -15,20 +16,30 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Insufficient permissions' }, { status: 403 });
     }
 
+    const scope = resolveUserScope(user);
+    if (scope.role === 'Partner Business Administrator') {
+      const clients = await base44.asServiceRole.entities.Client.list();
+      attachPartnerClientIds(scope, clients);
+    }
+
     // Get all users
     const allUsers = await base44.asServiceRole.entities.User.list();
+
+    // Security: Tenant scoping — filter to caller's scope before counting.
+    // Prevents cross-tenant seat/license data exposure.
+    const scopedUsers = filterUsersByScope(allUsers, scope);
 
     // Count by license type
     const utilization = {
       full: 0,
       limited: 0,
       view_only: 0,
-      total: allUsers.length,
+      total: scopedUsers.length,
       active: 0,
       suspended: 0
     };
 
-    allUsers.forEach(u => {
+    scopedUsers.forEach(u => {
       const licenseType = u.license_type || 'full';
       utilization[licenseType] = (utilization[licenseType] || 0) + 1;
 
@@ -41,7 +52,7 @@ Deno.serve(async (req) => {
 
     // Calculate utilization by client
     const byClient = {};
-    allUsers.forEach(u => {
+    scopedUsers.forEach(u => {
       if (u.client_id) {
         if (!byClient[u.client_id]) {
           byClient[u.client_id] = { full: 0, limited: 0, view_only: 0, total: 0 };

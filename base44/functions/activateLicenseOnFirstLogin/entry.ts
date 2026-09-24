@@ -33,6 +33,17 @@ Deno.serve(async (req) => {
             });
         }
 
+        // Security: Only activate from pre-activation states. Suspended or
+        // locked accounts must NOT be reactivated via this self-service endpoint
+        // — that would let users defeat admin-imposed suspensions/lockouts.
+        const preActivationStates = ['pending', 'invited', null, undefined];
+        if (!preActivationStates.includes(user.account_status)) {
+            return Response.json({ 
+                success: false, 
+                error: 'Your account cannot be self-activated. Please contact your administrator.'
+            }, { status: 403 });
+        }
+
         // Activate the license
         await base44.asServiceRole.entities.User.update(user.id, {
             account_status: 'active',

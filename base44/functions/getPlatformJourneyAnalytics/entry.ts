@@ -45,6 +45,16 @@ Deno.serve(async (req) => {
       }, { status: 403 });
     }
 
+    // Security: Admin Level 1/2 and Partner BA must be scoped to their own
+    // tenant/partner. Without this, they see platform-wide enrollment rows.
+    const isPlatformAdmin = user.app_role === 'Platform Admin';
+    const isPartnerBA = user.app_role === 'Partner Business Administrator';
+    let partnerClientIds: string[] = [];
+    if (isPartnerBA) {
+      const allClients = await base44.asServiceRole.entities.Client.list();
+      partnerClientIds = allClients.filter(c => c.partner_id === user.partner_id).map(c => c.id);
+    }
+
     console.log('Fetching platform journey analytics for:', user.email, 'Role:', user.app_role);
 
     // Helper function to safely fetch with timeout
@@ -153,6 +163,41 @@ Deno.serve(async (req) => {
     let filteredCoachingEngagements = coachingEngagements;
     let filteredCoachingSessions = coachingSessions;
     let scopeLabel = 'Platform';
+
+    // Security: Tenant scoping for Admin Level 1/2 and Partner BA —
+    // these roles must only see their own tenant's data, not platform-wide.
+    if (['Admin Level 1', 'Admin Level 2'].includes(user.app_role) && user.client_id) {
+      filteredUsers = users.filter(u => u.client_id === user.client_id);
+      const clientUserEmails = new Set(filteredUsers.map(u => u.email));
+      filteredEnrollments = enrollments.filter(e => clientUserEmails.has(e.user_email));
+      filteredAssessments = assessments.filter(a => clientUserEmails.has(a.email));
+      filteredGoals = goals.filter(g => g.created_by && clientUserEmails.has(g.created_by));
+      filteredPrograms = programs.filter(p => p.client_id === user.client_id);
+      filteredCohorts = cohorts.filter(c => c.client_id === user.client_id);
+      filteredClasses = classes.filter(c => c.client_id === user.client_id);
+      filteredCoachingEngagements = coachingEngagements.filter(ce => ce.client_id === user.client_id);
+      filteredCoachingSessions = coachingSessions.filter(cs => {
+        const engagement = coachingEngagements.find(ce => ce.id === cs.engagement_id);
+        return engagement && engagement.client_id === user.client_id;
+      });
+      const client = clients.find(c => c.id === user.client_id);
+      scopeLabel = client?.name || 'Organization';
+    } else if (isPartnerBA && partnerClientIds.length > 0) {
+      filteredUsers = users.filter(u => partnerClientIds.includes(u.client_id));
+      const partnerUserEmails = new Set(filteredUsers.map(u => u.email));
+      filteredEnrollments = enrollments.filter(e => partnerUserEmails.has(e.user_email));
+      filteredAssessments = assessments.filter(a => partnerUserEmails.has(a.email));
+      filteredGoals = goals.filter(g => g.created_by && partnerUserEmails.has(g.created_by));
+      filteredPrograms = programs.filter(p => partnerClientIds.includes(p.client_id));
+      filteredCohorts = cohorts.filter(c => partnerClientIds.includes(c.client_id));
+      filteredClasses = classes.filter(c => partnerClientIds.includes(c.client_id));
+      filteredCoachingEngagements = coachingEngagements.filter(ce => partnerClientIds.includes(ce.client_id));
+      filteredCoachingSessions = coachingSessions.filter(cs => {
+        const engagement = coachingEngagements.find(ce => ce.id === cs.engagement_id);
+        return engagement && partnerClientIds.includes(engagement.client_id);
+      });
+      scopeLabel = 'Partner Clients';
+    }
 
     if (user.app_role === 'User Level 2') {
       // Manager - filter to vertical (all subordinates up to 10 levels deep)

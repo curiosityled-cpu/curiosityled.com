@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveUserScope, attachPartnerClientIds, isUserInScope } from '../../shared/userScope.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -12,6 +13,12 @@ Deno.serve(async (req) => {
     // Only admins can bulk update status
     if (!['Platform Admin', 'Super Administrator', 'Partner Business Administrator', 'Admin Level 2'].includes(currentUser.app_role)) {
       return Response.json({ error: 'Forbidden: Insufficient permissions' }, { status: 403 });
+    }
+
+    const scope = resolveUserScope(currentUser);
+    if (scope.role === 'Partner Business Administrator') {
+      const clients = await base44.asServiceRole.entities.Client.list();
+      attachPartnerClientIds(scope, clients);
     }
 
     const { userIds, status, reason } = await req.json();
@@ -38,6 +45,12 @@ Deno.serve(async (req) => {
         }
 
         const targetUser = targetUsers[0];
+
+        // Security: Tenant scoping — target must be in caller's scope
+        if (!isUserInScope(targetUser, scope)) {
+          results.failed.push({ userId, error: 'Access denied — user not in your organization' });
+          continue;
+        }
 
         // Skip if trying to suspend yourself
         if (targetUser.email === currentUser.email) {
