@@ -34,7 +34,9 @@ import { writeDeniedReferenceEvent } from "../../shared/successionCrossTenantVal
 export default async function(req: Request): Promise<Response> {
   const base44 = createClientFromRequest(req);
   const body = await req.json().catch(() => ({}));
-  const { operation_id, blueprint_id, org_role_id, critical_role_id, __fail_at } = body;
+  const { operation_id, blueprint_id, org_role_id, critical_role_id } = body;
+  // NOTE: __fail_at failure injection has been REMOVED from production code.
+  // It was development-only and must never be activatable from a request body.
 
   if (!operation_id || !blueprint_id || !org_role_id) {
     return Response.json({ error: "operation_id, blueprint_id, org_role_id required (critical_role_id optional)" }, { status: 400 });
@@ -277,11 +279,6 @@ export default async function(req: Request): Promise<Response> {
     // ── 6. Compute content hash (integrity payload) ────────────────────
     const content_hash = await computePayloadHash(requirements_snapshot);
 
-    // ── FAILURE INJECTION: before_parent_creation ──────────────────────
-    if (__fail_at === "before_parent_creation") {
-      throw new Error("INJECTED_FAILURE:before_parent_creation");
-    }
-
     // ── 7. Create parent snapshot in 'building' status (NOT yet published) ──
     const snapshot = await base44.asServiceRole.entities.EffectiveBlueprintSnapshot.create({
       client_id: auth.client_id,
@@ -299,11 +296,6 @@ export default async function(req: Request): Promise<Response> {
       integrity_status: "pending_validation",
     });
     parentSnapshotId = snapshot.id;
-
-    // ── FAILURE INJECTION: after_parent_building ───────────────────────
-    if (__fail_at === "after_parent_building") {
-      throw new Error("INJECTED_FAILURE:after_parent_building");
-    }
 
     // ── 8. Create EffectiveRequirementSnapshot child records ────────────
     const frozen_at = new Date().toISOString();
@@ -360,15 +352,6 @@ export default async function(req: Request): Promise<Response> {
           integrity_status: "active",
         });
         childRecords.push(child);
-
-        // ── FAILURE INJECTION: after_first_child ───────────────────────
-        if (__fail_at === "after_first_child" && childRecords.length === 1) {
-          throw new Error("INJECTED_FAILURE:after_first_child");
-        }
-        // ── FAILURE INJECTION: midway_children ─────────────────────────
-        if (__fail_at === "midway_children" && childRecords.length === Math.floor(expected_count / 2)) {
-          throw new Error("INJECTED_FAILURE:midway_children");
-        }
       } catch (err) {
         childCreationFailed = true;
         childCreationError = (err as Error).message;
@@ -400,11 +383,6 @@ export default async function(req: Request): Promise<Response> {
         detail: childCreationFailed ? `Child creation failed: ${childCreationError}` : "Child count mismatch",
         expected: expected_count, created: childRecords.length,
       }, { status: 500 });
-    }
-
-    // ── FAILURE INJECTION: after_all_children_before_hash ─────────────
-    if (__fail_at === "after_all_children_before_hash") {
-      throw new Error("INJECTED_FAILURE:after_all_children_before_hash");
     }
 
     // ── 10. Verify child hash against parent integrity payload ──────────
@@ -444,11 +422,6 @@ export default async function(req: Request): Promise<Response> {
       }, { status: 500 });
     }
 
-    // ── FAILURE INJECTION: after_verification_before_publication ──────
-    if (__fail_at === "after_verification_before_publication") {
-      throw new Error("INJECTED_FAILURE:after_verification_before_publication");
-    }
-
     // ── 11. Publish parent as 'generated' (only after full verification) ──
     await base44.asServiceRole.entities.EffectiveBlueprintSnapshot.update(snapshot.id, {
       status: "generated",
@@ -456,11 +429,6 @@ export default async function(req: Request): Promise<Response> {
       generation_completed_at: new Date().toISOString(),
       integrity_status: "active",
     });
-
-    // ── FAILURE INJECTION: during_audit_writing ───────────────────────
-    if (__fail_at === "during_audit_writing") {
-      throw new Error("INJECTED_FAILURE:during_audit_writing");
-    }
 
     const auditEvent = await writeSuccessionAuditEvent({
       base44, action_type: "snapshot_generated",

@@ -503,7 +503,10 @@ export const BASE_ROLE_PERMISSIONS = {
     'experiences.create_journey',
     'experiences.create_onboarding',
     'experiences.deploy',
-    'experiences.view_analytics'
+    'experiences.view_analytics',
+    // Succession Module — Admin Level 1 (Program Manager) can manage cycles, roles, requirements
+    'succession.cycles.view', 'succession.cycles.manage',
+    'succession.roles.view', 'succession.roles.manage'
   ],
   'Executive': [
     'analytics.view_client',
