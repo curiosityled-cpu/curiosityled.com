@@ -14,7 +14,8 @@ import { createOrAttachOperation, beginOperationExecution, completeOperation, fa
 export default async function(req: Request): Promise<Response> {
   const base44 = createClientFromRequest(req);
   const body = await req.json().catch(() => ({}));
-  const { operation_id, prior_requirement_id, requirement_text, blueprint_id } = body;
+  const { operation_id, prior_requirement_id, requirement_text, blueprint_id,
+    base_requirement_id, base_blueprint_id, base_blueprint_version_number } = body;
 
   if (!operation_id || !prior_requirement_id || !requirement_text) {
     return Response.json({ error: "operation_id, prior_requirement_id, requirement_text required" }, { status: 400 });
@@ -60,10 +61,17 @@ export default async function(req: Request): Promise<Response> {
     const prior = priorReqs[0];
 
     // Create new revision — prior record preserved unchanged
+    // Carry forward modification_type and base binding from prior, allowing override
+    // for base_requirement_id / base_blueprint_id / base_blueprint_version_number when
+    // the canonical requirement was itself revised in the new blueprint version.
     const newRevision = await base44.asServiceRole.entities.CriticalRoleRequirement.create({
       client_id: auth.client_id,
       org_role_id: prior.org_role_id,
       critical_role_id: prior.critical_role_id,
+      modification_type: prior.modification_type,
+      base_requirement_id: base_requirement_id !== undefined ? base_requirement_id : prior.base_requirement_id,
+      base_blueprint_id: base_blueprint_id || prior.base_blueprint_id,
+      base_blueprint_version_number: base_blueprint_version_number !== undefined ? base_blueprint_version_number : prior.base_blueprint_version_number,
       requirement_text,
       status: "draft",
       applicability_status: "applicable",

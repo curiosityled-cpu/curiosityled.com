@@ -83,14 +83,20 @@ export default async function(req: Request): Promise<Response> {
       return Response.json({ error: "Destination blueprint must be draft. Approved blueprints are immutable." }, { status: 409 });
     }
 
-    // Verify destination blueprint is for the same OrgRole as the prior
-    if (destBlueprint.org_role_id !== prior.org_role_id) {
+    // Verify destination blueprint is for the same OrgRole as the prior requirement's blueprint
+    const priorBlueprints = await base44.asServiceRole.entities.RoleSuccessBlueprint.filter({ id: prior.blueprint_id, client_id: auth.client_id });
+    if (priorBlueprints.length === 0) {
+      await failOperation(base44, opResult.operation.id, "prior_blueprint_not_found");
+      return Response.json({ error: "Prior requirement's blueprint not found" }, { status: 404 });
+    }
+    if (destBlueprint.org_role_id !== priorBlueprints[0].org_role_id) {
       await failOperation(base44, opResult.operation.id, "blueprint_role_mismatch");
       return Response.json({ error: "Destination blueprint must be for the same OrgRole as the prior requirement" }, { status: 409 });
     }
 
     // Get the source blueprint version (the OrgRole's blueprint_approval_revision at the time the prior was approved)
-    const orgRoles = await base44.asServiceRole.entities.OrgRole.filter({ id: prior.org_role_id, client_id: auth.client_id });
+    const priorOrgRoleId = priorBlueprints[0].org_role_id;
+    const orgRoles = await base44.asServiceRole.entities.OrgRole.filter({ id: priorOrgRoleId, client_id: auth.client_id });
     const sourceBlueprintVersion = orgRoles.length > 0 ? (orgRoles[0].blueprint_approval_revision || 0) : 0;
 
     // Create new revision under the destination draft blueprint
