@@ -21,20 +21,12 @@ import { writeDeniedReferenceEvent } from "../../shared/successionCrossTenantVal
  *     Set the operation to recovery_required. Verify the state. If unambiguous,
  *     complete or safely reverse. If ambiguous, quarantine and require human resolution.
  *
- * Failure-injection points (for testing only, via __fail_at parameter):
- *   1. "after_lock_acquire" — immediately after lock acquisition
- *   2. "after_precondition_verify" — after verifying expected state
- *   3. "after_approve_blueprint" — after approving the submitted blueprint
- *   4. "after_supersede_prior" — after superseding the former current blueprint
- *   5. "before_update_pointer" — before updating OrgRole.current_blueprint_id
- *   6. "after_pointer_before_revision" — after pointer update but before revision increment
- *   7. "after_revision_before_audit" — after revision increment but before audit
- *   8. "during_lock_release" — during lock release
+ * NOTE: __fail_at failure injection has been REMOVED from production code.
  */
 export default async function(req: Request): Promise<Response> {
   const base44 = createClientFromRequest(req);
   const body = await req.json().catch(() => ({}));
-  const { operation_id, blueprint_id, org_role_id, expected_revision, __fail_at } = body;
+  const { operation_id, blueprint_id, org_role_id, expected_revision } = body;
 
   if (!operation_id || !blueprint_id || !org_role_id || expected_revision === undefined) {
     return Response.json({ error: "operation_id, blueprint_id, org_role_id, expected_revision required" }, { status: 400 });
@@ -136,11 +128,6 @@ export default async function(req: Request): Promise<Response> {
 
     lock_token = lockResult.lock_token!;
 
-    // ── FAILURE INJECTION POINT 1: after_lock_acquire ─────────────────
-    if (__fail_at === "after_lock_acquire") {
-      throw new Error("INJECTED_FAILURE:after_lock_acquire");
-    }
-
     // 2. VERIFY precondition — reconfirm ownership
     const owns = await reconfirmLockOwnership(base44, org_role_id, lock_token, opResult.operation.id);
     if (!owns) {
@@ -148,11 +135,6 @@ export default async function(req: Request): Promise<Response> {
       await releaseOrgRoleLock(base44, org_role_id, lock_token, opResult.operation.id);
       await failOperation(base44, opResult.operation.id, "lock_ownership_lost");
       return Response.json({ error: "Lock ownership lost before mutation" }, { status: 409 });
-    }
-
-    // ── FAILURE INJECTION POINT 2: after_precondition_verify ──────────
-    if (__fail_at === "after_precondition_verify") {
-      throw new Error("INJECTED_FAILURE:after_precondition_verify");
     }
 
     // ── DOMAIN MUTATIONS BEGIN ─────────────────────────────────────────
@@ -164,41 +146,12 @@ export default async function(req: Request): Promise<Response> {
     });
     priorCurrentIds = priorCurrent.filter(p => p.id !== blueprint_id).map(p => p.id);
 
-    // ── FAILURE INJECTION POINT 4: after_supersede_prior ───────────────
-    // (injected BEFORE superseding so we can test the "after" case)
-    if (__fail_at === "after_supersede_prior") {
-      // Actually supersede first, then fail
-      for (const pb of priorCurrent) {
-        if (pb.id !== blueprint_id) {
-          await base44.asServiceRole.entities.RoleSuccessBlueprint.update(pb.id, {
-            is_current: false, status: "superseded",
-          });
-        }
-      }
-      throw new Error("INJECTED_FAILURE:after_supersede_prior");
-    }
-
     for (const pb of priorCurrent) {
       if (pb.id !== blueprint_id) {
         await base44.asServiceRole.entities.RoleSuccessBlueprint.update(pb.id, {
           is_current: false, status: "superseded",
         });
       }
-    }
-
-    // ── FAILURE INJECTION POINT 5: before_update_pointer ──────────────
-    // (after superseding, before approving the new blueprint)
-    if (__fail_at === "before_update_pointer") {
-      // Approve the blueprint first, then fail before pointer update
-      await base44.asServiceRole.entities.RoleSuccessBlueprint.update(blueprint_id, {
-        status: "approved", is_current: true,
-        approved_at: new Date().toISOString(),
-        approved_by_profile_id: auth.profile_id,
-        approved_via_operation_id: opResult.operation.id,
-        integrity_status: "active",
-      });
-      blueprintApproved = true;
-      throw new Error("INJECTED_FAILURE:before_update_pointer");
     }
 
     // 3b. Approve the new blueprint
@@ -211,32 +164,17 @@ export default async function(req: Request): Promise<Response> {
     });
     blueprintApproved = true;
 
-    // ── FAILURE INJECTION POINT 3: after_approve_blueprint ────────────
-    if (__fail_at === "after_approve_blueprint") {
-      throw new Error("INJECTED_FAILURE:after_approve_blueprint");
-    }
-
     // 3c. Update OrgRole.current_blueprint_id
     await base44.asServiceRole.entities.OrgRole.update(org_role_id, {
       current_blueprint_id: blueprint_id,
     });
     pointerUpdated = true;
 
-    // ── FAILURE INJECTION POINT 6: after_pointer_before_revision ───────
-    if (__fail_at === "after_pointer_before_revision") {
-      throw new Error("INJECTED_FAILURE:after_pointer_before_revision");
-    }
-
     // 3d. Increment revision
     await base44.asServiceRole.entities.OrgRole.update(org_role_id, {
       blueprint_approval_revision: expected_revision + 1,
     });
     revisionIncremented = true;
-
-    // ── FAILURE INJECTION POINT 7: after_revision_before_audit ─────────
-    if (__fail_at === "after_revision_before_audit") {
-      throw new Error("INJECTED_FAILURE:after_revision_before_audit");
-    }
 
     // 3e. Approve all eligible RoleRequirements attached to this blueprint
     //     (atomic with blueprint approval — derived effectiveness strategy)
@@ -295,11 +233,6 @@ export default async function(req: Request): Promise<Response> {
     }
 
     // 5. RELEASE lock — requires matching token AND operation_id
-    // ── FAILURE INJECTION POINT 8: during_lock_release ─────────────────
-    if (__fail_at === "during_lock_release") {
-      throw new Error("INJECTED_FAILURE:during_lock_release");
-    }
-
     const released = await releaseOrgRoleLock(base44, org_role_id, lock_token, opResult.operation.id);
 
     const auditEvent = await writeSuccessionAuditEvent({
