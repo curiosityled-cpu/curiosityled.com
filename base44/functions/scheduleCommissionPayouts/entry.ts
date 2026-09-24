@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
 
 /**
  * Automated Commission Payout Scheduler
@@ -9,16 +10,9 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
-    // This should be called by a scheduled task, not requiring user auth
-    // For manual testing, allow platform admins
-    try {
-      const user = await base44.auth.me();
-      if (user && !['Platform Admin', 'Super Administrator'].includes(user.app_role)) {
-        return Response.json({ error: 'Unauthorized' }, { status: 401 });
-      }
-    } catch {
-      // No user session - this is a scheduled task, continue
-    }
+    // Security: Only internal automation or admin may invoke scheduled tasks.
+    const _auth = await authorizeScheduledTask(req, base44);
+    if (!_auth.authorized) return _auth.response;
 
     const { dryRun = false } = await req.json().catch(() => ({ dryRun: false }));
 

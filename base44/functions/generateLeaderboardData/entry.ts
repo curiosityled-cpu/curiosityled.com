@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { isInternalCall } from '../../shared/urlValidation.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -7,6 +8,21 @@ Deno.serve(async (req) => {
 
     if (!scope || !metric_type) {
       return Response.json({ error: 'scope and metric_type are required' }, { status: 400 });
+    }
+
+    // Security: Require authentication; scope non-admin callers to their own client.
+    const internalCall = isInternalCall(req);
+    let callerUser = null;
+    try { callerUser = await base44.auth.me(); } catch (_) { /* may be internal */ }
+    if (!internalCall && !callerUser) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const adminRoles = ['Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'];
+    const effectiveClientId = (internalCall || (callerUser && adminRoles.includes(callerUser.app_role)))
+      ? client_id
+      : (callerUser?.client_id || null);
+    if (!internalCall && !adminRoles.includes(callerUser?.app_role) && !effectiveClientId) {
+      return Response.json({ error: 'Forbidden — cannot determine client scope' }, { status: 403 });
     }
 
     let leaderboard = [];
@@ -28,7 +44,7 @@ Deno.serve(async (req) => {
     if (metric_type === 'total_points') {
       // Get users with their points
       let query = {};
-      if (client_id) query.client_id = client_id;
+      if (effectiveClientId) query.client_id = effectiveClientId;
       if (filter_config?.role) query.app_role = filter_config.role;
       if (filter_config?.department) query.department = filter_config.department;
 

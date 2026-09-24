@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
 
 /**
  * Backend function to process scheduled forms
@@ -12,6 +13,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
+    // Security: Only internal automation or admin may invoke scheduled tasks.
+    const _auth = await authorizeScheduledTask(req, base44);
+    if (!_auth.authorized) return _auth.response;
 
     // Get all published forms with scheduling
     const forms = await base44.asServiceRole.entities.CustomForm.filter({

@@ -35,6 +35,12 @@ Deno.serve(async (req) => {
     const submission = submissions[0];
     const responses = submission.user_responses || [];
 
+    // Security: Verify the caller owns this submission or is an admin.
+    const adminRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin'];
+    if (submission.user_email !== user.email && !adminRoles.includes(user.app_role)) {
+      return Response.json({ error: 'Forbidden — you do not own this submission' }, { status: 403 });
+    }
+
     if (responses.length === 0) {
       return Response.json({ error: 'No responses to score' }, { status: 400 });
     }

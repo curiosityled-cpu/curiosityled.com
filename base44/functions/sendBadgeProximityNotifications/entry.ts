@@ -1,8 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
+    // Security: Only internal automation or admin may invoke scheduled tasks.
+    const _auth = await authorizeScheduledTask(req, base44);
+    if (!_auth.authorized) return _auth.response;
 
     const allUsers = await base44.asServiceRole.entities.User.list();
     let notificationsSent = 0;

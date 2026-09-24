@@ -10,10 +10,15 @@
  * Idempotent: won't re-send if a reminder was already sent for that session today.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
+    // Security: Only internal automation or admin may invoke scheduled tasks.
+    const _auth = await authorizeScheduledTask(req, base44);
+    if (!_auth.authorized) return _auth.response;
 
     // Determine which check-in window this run is for based on ET hour
     const body = await req.json().catch(() => ({}));

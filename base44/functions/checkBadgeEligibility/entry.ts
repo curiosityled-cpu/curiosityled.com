@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { isInternalCall } from '../../shared/urlValidation.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -7,6 +8,18 @@ Deno.serve(async (req) => {
 
     if (!user_email || !badge_template_id) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Security: Require authenticated self-access or internal automation.
+    const internalCall = isInternalCall(req);
+    let callerUser = null;
+    try { callerUser = await base44.auth.me(); } catch (_) { /* may be internal */ }
+    if (!internalCall) {
+      if (!callerUser) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+      const adminRoles = ['Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'];
+      if (callerUser.email !== user_email && !adminRoles.includes(callerUser.app_role)) {
+        return Response.json({ error: 'Forbidden — can only check your own badges' }, { status: 403 });
+      }
     }
 
     // Get badge template

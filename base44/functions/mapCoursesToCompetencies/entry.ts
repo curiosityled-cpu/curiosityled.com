@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
 
 // All competencies from the PDF competency model
 const COMPETENCY_MODEL = [
@@ -220,6 +221,9 @@ function mapSkillsToCompetencies(skills) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    // Security: Only internal automation or Platform Admin may mass-update competency mappings.
+    const auth = await authorizeScheduledTask(req, base44);
+    if (!auth.authorized) return auth.response;
     // Fetch all LinkedIn Learning courses imported from CSV
     let updated = 0;
     let skipped = 0;

@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
 
 /**
  * Scheduled function to process overdue assigned learning
@@ -9,6 +10,10 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
         
+        // Security: Only internal automation or admin may invoke scheduled tasks.
+        const _auth = await authorizeScheduledTask(req, base44);
+        if (!_auth.authorized) return _auth.response;
+
         const now = new Date();
         const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
         

@@ -28,6 +28,16 @@ Deno.serve(async (req) => {
 
     const request = requests[0];
 
+    // Security: Verify the caller is the requester, assignee, or an admin
+    // scoped to the request's client_id.
+    const adminRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Partner Business Administrator', 'Platform Admin'];
+    const isRequester = request.requested_by_email === user.email;
+    const isAssignee = request.assigned_to_email === user.email;
+    const isAdminForTenant = adminRoles.includes(user.app_role) && (!request.client_id || request.client_id === user.client_id);
+    if (!isRequester && !isAssignee && !isAdminForTenant) {
+      return Response.json({ error: 'Forbidden — you do not have access to this request' }, { status: 403 });
+    }
+
     // Calculate end time
     const startTime = new Date(meeting_date);
     const endTime = new Date(startTime.getTime() + meeting_duration_minutes * 60000);

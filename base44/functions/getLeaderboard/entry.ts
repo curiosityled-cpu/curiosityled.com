@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { isInternalCall } from '../../shared/urlValidation.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -7,6 +8,14 @@ Deno.serve(async (req) => {
 
     if (!leaderboard_template_id) {
       return Response.json({ error: 'leaderboard_template_id is required' }, { status: 400 });
+    }
+
+    // Security: Require authentication.
+    const internalCall = isInternalCall(req);
+    let callerUser = null;
+    try { callerUser = await base44.auth.me(); } catch (_) { /* may be internal */ }
+    if (!internalCall && !callerUser) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get leaderboard template

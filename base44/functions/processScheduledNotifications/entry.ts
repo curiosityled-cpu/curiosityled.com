@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
 
 /**
  * Processes notifications that are scheduled to be sent
@@ -9,7 +10,10 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
         
-        // This is a system function, uses service role
+        // Security: Only internal automation or admin may invoke scheduled tasks.
+        const _auth = await authorizeScheduledTask(req, base44);
+        if (!_auth.authorized) return _auth.response;
+
         const now = new Date().toISOString();
         
         // Get all pending notifications that are due

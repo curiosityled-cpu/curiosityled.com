@@ -8,10 +8,16 @@
  *    → creates a "Close the Loop" Notification for the evening check-in
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
+    // Security: Only internal automation or admin may invoke scheduled tasks.
+    const _auth = await authorizeScheduledTask(req, base44);
+    if (!_auth.authorized) return _auth.response;
+
     const serviceBase44 = base44.asServiceRole;
 
     const now = new Date();

@@ -4,6 +4,32 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
  * Production-ready secure backend function to create notifications for any user
  * Implements comprehensive validation, sanitization, authorization, and multi-channel dispatch
  */
+
+// HTML-escape user-supplied content before embedding in email bodies to prevent XSS.
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// Validate action_url is a relative app path or an https URL (no javascript: or data: schemes).
+function isValidActionUrl(url) {
+    if (!url) return true; // optional field
+    const trimmed = String(url).trim();
+    if (!trimmed) return true;
+    // Relative paths are safe (app-internal navigation)
+    if (trimmed.startsWith('/')) return true;
+    try {
+        const parsed = new URL(trimmed);
+        return parsed.protocol === 'https:';
+    } catch {
+        return false;
+    }
+}
+
 Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
@@ -89,6 +115,14 @@ Deno.serve(async (req) => {
                 }, { status: 400 });
             }
             scheduledFor = date.toISOString();
+        }
+
+        // Validate action_url scheme to prevent javascript:/data: injection in email links
+        if (notificationData.action_url && !isValidActionUrl(notificationData.action_url)) {
+            return Response.json({
+                success: false,
+                error: 'Invalid action_url — must be a relative path or https URL'
+            }, { status: 400 });
         }
 
         // String length validation
@@ -216,11 +250,11 @@ Deno.serve(async (req) => {
                         subject: notificationData.title,
                         body: `
                             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                                <h2>${notificationData.title}</h2>
-                                <p>${notificationData.message}</p>
+                                <h2>${escapeHtml(notificationData.title)}</h2>
+                                <p>${escapeHtml(notificationData.message)}</p>
                                 ${notificationData.action_url ? `
                                     <p style="margin-top: 20px;">
-                                        <a href="${notificationData.action_url}" 
+                                        <a href="${escapeHtml(notificationData.action_url)}" 
                                            style="display: inline-block; background-color: #2563eb; color: white; 
                                                   padding: 12px 24px; text-decoration: none; border-radius: 6px; 
                                                   font-weight: bold;">

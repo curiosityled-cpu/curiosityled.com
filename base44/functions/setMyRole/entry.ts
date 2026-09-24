@@ -39,7 +39,6 @@ Deno.serve(async (req) => {
         const selfServiceRoles = [
             'User Level 1',
             'User Level 2',
-            'Analyst',
             'Leadership Coach',
             'Consultant'
         ];

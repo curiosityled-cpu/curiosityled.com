@@ -27,6 +27,11 @@ Deno.serve(async (req) => {
     const isAdmin = ['Platform Admin', 'Super Administrator'].includes(user.app_role);
     const isPartner = user.partner_id;
 
+    // Security: Reject callers who are neither admin nor partner.
+    if (!isAdmin && !isPartner) {
+      return Response.json({ error: 'Forbidden — admin or partner access required' }, { status: 403 });
+    }
+
     // Set partnerId based on user role
     let targetPartnerId = partnerId;
     if (isPartner && !isAdmin) {

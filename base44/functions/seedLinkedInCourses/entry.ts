@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
 
 const COURSES = [
   // Situational Intelligence
@@ -129,6 +130,10 @@ const COURSES = [
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
+    // Security: Only internal automation or Platform Admin may wipe/rewrite the catalog.
+    const auth = await authorizeScheduledTask(req, base44);
+    if (!auth.authorized) return auth.response;
 
     // Delete all existing LinkedIn Learning records first
     const existing = await base44.asServiceRole.entities.LearningResource.filter({ provider: "LinkedIn Learning" }, null, 100);

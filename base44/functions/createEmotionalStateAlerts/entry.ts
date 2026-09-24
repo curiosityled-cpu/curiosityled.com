@@ -5,10 +5,16 @@
  * Creates notifications when thresholds are breached.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
+    // Security: Only internal automation or admin may invoke scheduled tasks.
+    const _auth = await authorizeScheduledTask(req, base44);
+    if (!_auth.authorized) return _auth.response;
+
     const { user_email } = await req.json();
 
     if (!user_email) {

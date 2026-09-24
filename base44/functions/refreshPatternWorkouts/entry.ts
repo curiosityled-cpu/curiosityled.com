@@ -13,18 +13,15 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.48';
 import { generateWorkoutModule, attachAssets, WORKOUT_DEFAULTS } from '../../shared/workoutGenerator.ts';
 import { buildPatternBriefs, diffActiveWorkouts } from '../../shared/patternBriefs.ts';
+import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
 
 export default async function(req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Guard: if a real user is calling this endpoint directly, require admin.
-    try {
-      const user = await base44.auth.me();
-      if (user && !['Admin Level 2', 'Super Administrator', 'Platform Admin'].includes(user.app_role || user.role)) {
-        return Response.json({ error: 'Forbidden' }, { status: 403 });
-      }
-    } catch { /* no user token — workflow invocation, proceed */ }
+    // Security: Only internal automation or admin may invoke scheduled tasks.
+    const _auth = await authorizeScheduledTask(req, base44);
+    if (!_auth.authorized) return _auth.response;
 
     const svc = base44.asServiceRole;
     const sevenDaysAgo = new Date(Date.now() - 7 * 86400000);

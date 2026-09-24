@@ -9,17 +9,15 @@
  * Can also be called directly with a user_email payload.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // This function is called by scheduled automation (no user context)
-    // OR by an admin directly. Allow both paths.
-    const user = await base44.auth.me().catch(() => null);
-    if (user && user.app_role !== 'Platform Admin' && user.app_role !== 'Super Administrator' && user.role !== 'admin') {
-      return Response.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    // Security: Only internal automation or admin may invoke scheduled tasks.
+    const _auth = await authorizeScheduledTask(req, base44);
+    if (!_auth.authorized) return _auth.response;
 
     const body = await req.json().catch(() => ({}));
     const targetEmail = body.user_email || null;
