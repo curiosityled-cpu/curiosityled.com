@@ -5,6 +5,7 @@ import { writeSuccessionAuditEvent } from "../../shared/successionAuditWriter.ts
 import { createOrAttachOperation, beginOperationExecution, completeOperation, failOperation, quarantineOperation, setOperationRecoveryRequired } from "../../shared/successionOperationHelper.ts";
 import { acquireOrgRoleLock, reconfirmLockOwnership, releaseOrgRoleLock } from "../../shared/successionLockHelper.ts";
 import { quarantineRecords } from "../../shared/successionIntegrityHelper.ts";
+import { writeDeniedReferenceEvent } from "../../shared/successionCrossTenantValidation.ts";
 
 /**
  * POST /successionApproveBlueprint
@@ -82,6 +83,7 @@ export default async function(req: Request): Promise<Response> {
     // Read the blueprint — cross-tenant validated
     const blueprints = await base44.asServiceRole.entities.RoleSuccessBlueprint.filter({ id: blueprint_id, client_id: auth.client_id });
     if (blueprints.length === 0) {
+      await writeDeniedReferenceEvent(base44, auth, "RoleSuccessBlueprint", blueprint_id, "cross_tenant_or_not_found");
       await failOperation(base44, opResult.operation.id, "blueprint_not_found");
       return Response.json({ error: "Blueprint not found" }, { status: 404 });
     }
@@ -114,6 +116,7 @@ export default async function(req: Request): Promise<Response> {
     // Read OrgRole — cross-tenant validated
     const roles = await base44.asServiceRole.entities.OrgRole.filter({ id: org_role_id, client_id: auth.client_id });
     if (roles.length === 0) {
+      await writeDeniedReferenceEvent(base44, auth, "OrgRole", org_role_id, "cross_tenant_or_not_found");
       await failOperation(base44, opResult.operation.id, "org_role_not_found");
       return Response.json({ error: "OrgRole not found" }, { status: 404 });
     }

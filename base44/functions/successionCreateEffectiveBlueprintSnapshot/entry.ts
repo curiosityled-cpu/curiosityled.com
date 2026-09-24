@@ -4,6 +4,7 @@ import { authorizeSuccessionAction } from "../../shared/authorizeSuccessionActio
 import { writeSuccessionAuditEvent } from "../../shared/successionAuditWriter.ts";
 import { createOrAttachOperation, beginOperationExecution, completeOperation, failOperation } from "../../shared/successionOperationHelper.ts";
 import { computePayloadHash } from "../../shared/successionPayloadCanonical.ts";
+import { writeDeniedReferenceEvent } from "../../shared/successionCrossTenantValidation.ts";
 
 /**
  * POST /successionCreateEffectiveBlueprintSnapshot
@@ -74,6 +75,7 @@ export default async function(req: Request): Promise<Response> {
     // ── 1. Validate blueprint is approved and current ────────────────────
     const blueprints = await base44.asServiceRole.entities.RoleSuccessBlueprint.filter({ id: blueprint_id, client_id: auth.client_id });
     if (blueprints.length === 0 || blueprints[0].status !== "approved" || !blueprints[0].is_current) {
+      await writeDeniedReferenceEvent(base44, auth, "RoleSuccessBlueprint", blueprint_id, "cross_tenant_or_not_found");
       await failOperation(base44, opResult.operation.id, "blueprint_not_current_approved");
       return Response.json({ error: "Blueprint must be current and approved" }, { status: 409 });
     }
@@ -84,6 +86,7 @@ export default async function(req: Request): Promise<Response> {
 
     const roles = await base44.asServiceRole.entities.OrgRole.filter({ id: org_role_id, client_id: auth.client_id });
     if (roles.length === 0) {
+      await writeDeniedReferenceEvent(base44, auth, "OrgRole", org_role_id, "cross_tenant_or_not_found");
       await failOperation(base44, opResult.operation.id, "org_role_not_found");
       return Response.json({ error: "OrgRole not found" }, { status: 404 });
     }

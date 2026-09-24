@@ -3,6 +3,7 @@ import { bootstrapSuccessionAuth } from "../../shared/successionAuthBootstrap.ts
 import { authorizeSuccessionAction } from "../../shared/authorizeSuccessionAction.ts";
 import { writeSuccessionAuditEvent } from "../../shared/successionAuditWriter.ts";
 import { createOrAttachOperation, beginOperationExecution, completeOperation, failOperation } from "../../shared/successionOperationHelper.ts";
+import { writeDeniedReferenceEvent } from "../../shared/successionCrossTenantValidation.ts";
 
 /**
  * POST /successionCreateRoleRequirement — create a tenant-scoped role requirement.
@@ -29,6 +30,7 @@ export default async function(req: Request): Promise<Response> {
       id: blueprint_id, client_id: auth.client_id,
     });
     if (blueprints.length === 0) {
+      await writeDeniedReferenceEvent(base44, auth, "RoleSuccessBlueprint", blueprint_id, "cross_tenant_or_not_found");
       await failOperation(base44, opResult.operation.id, "blueprint_not_found");
       return Response.json({ error: "Parent blueprint not found" }, { status: 404 });
     }
