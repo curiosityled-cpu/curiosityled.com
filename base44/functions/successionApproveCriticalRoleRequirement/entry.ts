@@ -11,7 +11,7 @@ export default async function(req: Request): Promise<Response> {
   if (!operation_id || !requirement_id) return Response.json({ error: "operation_id, requirement_id required" }, { status: 400 });
   const auth = await bootstrapSuccessionAuth(base44);
   if (!auth.client_id) return Response.json({ error: "Tenant resolution failed" }, { status: 403 });
-  const authz = await authorizeSuccessionAction({ base44, auth, action: "successionApproveCriticalRoleRequirement", target_client_id: auth.client_id, required_permission: "succession.readiness.ratify" });
+  const authz = await authorizeSuccessionAction({ base44, auth, action: "successionApproveCriticalRoleRequirement", target_client_id: auth.client_id, required_permission: "succession.critical_role_requirements.approve", explicit_permission_only: true });
   if (!authz.allowed) return Response.json({ error: authz.denied_reason }, { status: 403 });
   const opResult = await createOrAttachOperation({ base44, client_id: auth.client_id, operation_id, function_name: "successionApproveCriticalRoleRequirement", payload: { requirement_id }, actor_profile_id: auth.profile_id, actor_email: auth.email, actor_context_type: auth.isPlatformAdmin ? "platform_operator" : "tenant" });
   if (opResult.rejected_payload_mismatch) return Response.json({ error: "operation_id payload mismatch" }, { status: 409 });

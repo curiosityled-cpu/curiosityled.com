@@ -29,6 +29,11 @@ export interface AuthorizeParams {
   // auth.client_id. For cross-tenant, it differs and requires a grant.
   target_client_id?: string;
   required_permission?: string;
+  // When true, the permission check requires an EXACT match in auth.permissions.
+  // Platform Admin bypass and the "*" wildcard are BOTH disabled. Use this for
+  // tenant-scoped approval actions where Platform Admin must NOT hold standing
+  // approval authority (separation of platform and tenant governance).
+  explicit_permission_only?: boolean;
   required_confidentiality_clearance?: string;
   target_entity_type?: string;
   target_entity_id?: string;
@@ -42,10 +47,14 @@ export async function authorizeSuccessionAction(
 
   // ── 1. Permission check ──────────────────────────────────────────────────
   if (params.required_permission) {
-    const hasPermission =
-      auth.isPlatformAdmin ||
-      auth.permissions.includes(params.required_permission) ||
-      auth.permissions.includes("*");
+    // explicit_permission_only: require an exact grant. No Platform Admin
+    // bypass, no "*" wildcard. Used for tenant-scoped approvals where the
+    // platform operator must not hold standing approval authority.
+    const hasPermission = params.explicit_permission_only
+      ? auth.permissions.includes(params.required_permission)
+      : (auth.isPlatformAdmin ||
+         auth.permissions.includes(params.required_permission) ||
+         auth.permissions.includes("*"));
     if (!hasPermission) {
       await writeSuccessionAuditEvent({
         base44,

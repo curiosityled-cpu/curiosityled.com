@@ -40,7 +40,8 @@ export default async function(req: Request): Promise<Response> {
   const authz = await authorizeSuccessionAction({
     base44, auth, action: "successionApproveBlueprint",
     target_client_id: auth.client_id,
-    required_permission: "succession.readiness.ratify",
+    required_permission: "succession.blueprints.approve",
+    explicit_permission_only: true,
   });
   if (!authz.allowed) {
     return Response.json({ error: authz.denied_reason }, { status: 403 });

@@ -46,7 +46,7 @@ export default function CriticalRolesView() {
 
   const canManage = hasPermission("succession.roles.manage");
   const canView = hasPermission("succession.roles.view");
-  const canApprove = hasPermission("succession.readiness.ratify");
+  const canApprove = hasPermission("succession.critical_role_requirements.approve");
 
   const [approvedBlueprint, setApprovedBlueprint] = useState(null);
   const [approvedRequirements, setApprovedRequirements] = useState([]);

@@ -43,7 +43,7 @@ export default function BlueprintsView() {
 
   const canManage = hasPermission("succession.roles.manage");
   const canView = hasPermission("succession.roles.view");
-  const canApprove = hasPermission("succession.readiness.ratify");
+  const canApprove = hasPermission("succession.blueprints.approve");
 
   const fetchCycles = useCallback(async () => {
     try { const data = await invoke("successionListCycles", {}); setCycles(data?.cycles || []); } catch {}

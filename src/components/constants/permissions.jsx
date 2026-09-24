@@ -206,6 +206,12 @@ export const SUCCESSION_PERMISSIONS = [
   'succession.cycles.manage',
   'succession.roles.view',
   'succession.roles.manage',
+  // Phase 1 approval permissions — granted to Admin Level 2 and Super Administrator only.
+  // Admin Level 1 may draft and submit (via succession.roles.manage) but may NOT approve.
+  // Platform Admin receives NO standing tenant approval permission.
+  // succession.readiness.ratify is RESERVED for the future Deliberate/readiness phase.
+  'succession.blueprints.approve',
+  'succession.critical_role_requirements.approve',
   'succession.candidates.view',
   'succession.candidates.manage',
   'succession.evidence.view',
@@ -336,6 +342,8 @@ export const BASE_ROLE_PERMISSIONS = {
     // Succession Module — full access for Super Administrators
     'succession.cycles.view', 'succession.cycles.manage',
     'succession.roles.view', 'succession.roles.manage',
+    'succession.blueprints.approve',
+    'succession.critical_role_requirements.approve',
     'succession.candidates.view', 'succession.candidates.manage',
     'succession.evidence.view', 'succession.evidence.attest',
     'succession.calibration.view', 'succession.calibration.manage',
@@ -454,7 +462,12 @@ export const BASE_ROLE_PERMISSIONS = {
     // Leadership Index Assessment Permissions (HR Admin role)
     'leadership_index.assign',
     'leadership_index.approve_requests',
-    'leadership_index.view_analytics'
+    'leadership_index.view_analytics',
+    // Succession Module — Admin Level 2 (Tenant Admin) can approve blueprints and CRRs
+    'succession.cycles.view', 'succession.cycles.manage',
+    'succession.roles.view', 'succession.roles.manage',
+    'succession.blueprints.approve',
+    'succession.critical_role_requirements.approve'
   ],
   'Admin Level 1': [
     // Class Management
