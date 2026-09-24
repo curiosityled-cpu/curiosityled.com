@@ -5,7 +5,14 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     
     // This function can be called by email forwarding services or scheduled jobs
-    const { from_email, subject, body, attachments, client_id } = await req.json();
+    const requestBody = await req.json();
+    // Security: Require internal secret for email parsing (called by email forwarding services).
+    const internalSecret = req.headers.get('x-internal-secret') || requestBody.internal_secret;
+    if (internalSecret !== Deno.env.get('INTERNAL_FUNCTION_SECRET')) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { from_email, subject, body, attachments, client_id } = requestBody;
 
     if (!from_email || !subject || !body || !client_id) {
       return Response.json({ 

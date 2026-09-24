@@ -22,6 +22,12 @@ Deno.serve(async (req) => {
             }, { status: 401 });
         }
 
+        // Security: Only managers and admins can cascade goals to other users.
+        const allowedRoles = ['User Level 2', 'User Level 3', 'Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Partner Business Administrator', 'Platform Admin'];
+        if (!allowedRoles.includes(currentUser.app_role)) {
+            return Response.json({ success: false, error: 'Only managers and administrators can cascade goals' }, { status: 403 });
+        }
+
         const { goal_id, target_emails, goalTemplate, targetCriteria, assignedBy, cascadeGoalId } = await req.json();
         
         // Support both new format (goal_id + target_emails) and legacy format

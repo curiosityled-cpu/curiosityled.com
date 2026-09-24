@@ -11,6 +11,19 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
         const { email, temporaryPassword, newPassword } = await req.json();
+
+        // SHA-256 hash for secure temp password comparison (supports hashed storage).
+        async function sha256(text) {
+            const encoder = new TextEncoder();
+            const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(text));
+            return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        function constantTimeCompare(a, b) {
+            if (a.length !== b.length) return false;
+            let result = 0;
+            for (let i = 0; i < a.length; i++) result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+            return result === 0;
+        }
         
         if (!email || !temporaryPassword || !newPassword) {
             return Response.json({ 
@@ -67,8 +80,13 @@ Deno.serve(async (req) => {
 
         const user = users[0];
 
-        // Verify temporary password matches
-        if (user.temporary_password !== temporaryPassword) {
+        // Verify temporary password: supports both hashed storage (new) and
+        // plaintext storage (legacy), using constant-time comparison.
+        const inputHash = await sha256(temporaryPassword);
+        const storedValue = user.temporary_password || '';
+        const hashMatches = constantTimeCompare(inputHash, storedValue);
+        const plaintextMatches = constantTimeCompare(temporaryPassword, storedValue);
+        if (!hashMatches && !plaintextMatches) {
             return Response.json({ 
                 success: false, 
                 error: 'Invalid temporary password' 

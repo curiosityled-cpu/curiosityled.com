@@ -252,6 +252,14 @@ Deno.serve(async (req) => {
                         continue;
                     }
 
+                    // Security: Prevent role escalation — only Platform Admins can assign
+                    // Super Administrator or Platform Admin roles via bulk update.
+                    const elevatedRoles = ['Super Administrator', 'Platform Admin'];
+                    if (userData.app_role && elevatedRoles.includes(appRoleStr) && currentUser.app_role !== 'Platform Admin') {
+                        results.failed.push({ user: userData, reason: 'Only Platform Admins can assign Super Administrator or Platform Admin roles' });
+                        continue;
+                    }
+
                     // Validate start_date if provided
                     const startDateStr = userData.start_date ? String(userData.start_date).trim() : null;
                     if (startDateStr) {

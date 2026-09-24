@@ -183,6 +183,18 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Rate limiting: prevent abuse of this public endpoint (5 reports/hour per email).
+    const rlKey = String(lead_info.email || '').toLowerCase();
+    const now = Date.now();
+    if (!globalThis._diagRateLimit) globalThis._diagRateLimit = new Map();
+    const rl = globalThis._diagRateLimit;
+    const rlEntry = (rl.get(rlKey) || []).filter(t => now - t < 3600000);
+    if (rlEntry.length >= 5) {
+      return Response.json({ error: 'Rate limit exceeded. Please try again later.' }, { status: 429 });
+    }
+    rlEntry.push(now);
+    rl.set(rlKey, rlEntry);
+
     // ── Create Prospect FIRST (lead capture must never be blocked by PDF/email failures) ──
     const prospect = await base44.asServiceRole.entities.Prospect.create({
       name: lead_info.name || "",

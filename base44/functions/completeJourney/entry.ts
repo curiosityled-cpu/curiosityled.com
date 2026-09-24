@@ -27,6 +27,16 @@ Deno.serve(async (req) => {
 
     const journey = journeys[0];
 
+    // Idempotency: check if points already awarded for this journey (prevents double-awarding)
+    const existingTx = await base44.asServiceRole.entities.PointTransaction.filter({
+      user_email: targetUserEmail,
+      related_entity_type: 'LearningJourney',
+      related_entity_id: journey_id
+    });
+    if (existingTx.length > 0) {
+      return Response.json({ success: true, already_completed: true, journey, points_awarded: 0, badge_awarded: false });
+    }
+
     // Award gamification points
     try {
       await base44.asServiceRole.functions.invoke('awardPoints', {

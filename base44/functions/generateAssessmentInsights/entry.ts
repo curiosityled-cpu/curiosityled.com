@@ -34,6 +34,15 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'Missing assessment_id' }, { status: 400 });
     }
 
+    // Security: For manual (non-automation) calls, require authentication or internal secret.
+    if (!event) {
+      const currentUser = await base44.auth.me().catch(() => null);
+      const isInternal = req.headers.get('x-internal-secret') === Deno.env.get('INTERNAL_FUNCTION_SECRET');
+      if (!currentUser && !isInternal) {
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      }
+    }
+
     console.log(`[AssessmentInsights] START — assessment: ${assessmentId}`);
 
     // ── 1. Guard: check existing record first (idempotency) ───

@@ -72,41 +72,20 @@ function updateWorkflowState(context, updates) {
 // Rate limiting storage (in-memory, resets on function restart)
 const rateLimitStore = new Map();
 
-function checkRateLimit(userEmail) {
-  const now = Date.now();
-  const userLimits = rateLimitStore.get(userEmail) || { calls: [], actions: [] };
-  
-  // Clean old entries (older than 1 hour)
-  userLimits.calls = userLimits.calls.filter(t => now - t < 3600000);
-  userLimits.actions = userLimits.actions.filter(t => now - t < 3600000);
-  
-  // Check limits: 60 calls per hour, 30 actions per hour
-  if (userLimits.calls.length >= 60) {
-    throw { 
-      message: 'Rate limit exceeded: Too many requests. Please wait before trying again.',
-      code: 'RATE_LIMIT_EXCEEDED',
-      retryable: true
-    };
-  }
-  
-  if (userLimits.actions.length >= 30) {
-    throw {
-      message: 'Action limit exceeded: Too many actions performed. Please wait before trying again.',
-      code: 'ACTION_LIMIT_EXCEEDED',
-      retryable: true
-    };
-  }
-  
-  // Add current call
-  userLimits.calls.push(now);
-  rateLimitStore.set(userEmail, userLimits);
+async function sha256(data) {
+  const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(data));
+  return Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
-
+function checkRateLimit(userEmail) {
+  const now = Date.now(), l = rateLimitStore.get(userEmail) || { calls: [], actions: [] };
+  l.calls = l.calls.filter(t => now - t < 36e5); l.actions = l.actions.filter(t => now - t < 36e5);
+  if (l.calls.length >= 60) throw { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED', retryable: true };
+  if (l.actions.length >= 30) throw { message: 'Action limit exceeded', code: 'ACTION_LIMIT_EXCEEDED', retryable: true };
+  l.calls.push(now); rateLimitStore.set(userEmail, l);
+}
 function recordAction(userEmail) {
-  const now = Date.now();
-  const userLimits = rateLimitStore.get(userEmail) || { calls: [], actions: [] };
-  userLimits.actions.push(now);
-  rateLimitStore.set(userEmail, userLimits);
+  const now = Date.now(), l = rateLimitStore.get(userEmail) || { calls: [], actions: [] };
+  l.actions.push(now); rateLimitStore.set(userEmail, l);
 }
 
 Deno.serve(async (req) => {
@@ -121,19 +100,16 @@ Deno.serve(async (req) => {
     // Check rate limits
     checkRateLimit(user.email);
 
-    const { prompt, context, tool_call, confirmed, conversation_id, file_attachments } = await req.json();
-
-    // Fetch conversation context for workflow state if conversation_id provided
+    const { prompt, context, tool_call, confirmed, confirmation_token, conversation_id, file_attachments } = await req.json();
     let conversationContext = null;
     if (conversation_id) {
       const conversations = await base44.entities.Conversation.filter({ id: conversation_id });
-      if (conversations.length > 0) {
-        conversationContext = conversations[0].context || {};
-      }
+      if (conversations.length > 0) conversationContext = conversations[0].context || {};
     }
-
-    // If this is a confirmation callback (user approved an action)
+    // Security: verify server-side confirmation token to prevent bypass
     if (confirmed && tool_call) {
+      const expected = await sha256(user.email + ':' + tool_call.tool_name + ':' + JSON.stringify(tool_call.parameters || {}) + ':' + Deno.env.get('INTERNAL_FUNCTION_SECRET'));
+      if (!confirmation_token || confirmation_token !== expected) return Response.json({ error: 'Invalid confirmation token' }, { status: 403 });
       return await executeAgentAction(base44, user, tool_call);
     }
 
@@ -350,13 +326,8 @@ Return structured JSON with your analysis.`;
       // Determine confirmation level based on tool
       const confirmationLevel = getConfirmationLevel(tool_name);
 
-      return Response.json({
-        status: "needs_confirmation",
-        tool_call: { tool_name, parameters },
-        confirmation_message: `I'd like to ${tool_name.replace(/([A-Z])/g, ' $1').toLowerCase()} for you. Please review the details.`,
-        proposed_changes: proposedChanges,
-        confirmationLevel: confirmationLevel
-      });
+      const ct = await sha256(user.email + ':' + tool_name + ':' + JSON.stringify(parameters) + ':' + Deno.env.get('INTERNAL_FUNCTION_SECRET'));
+      return Response.json({ status: "needs_confirmation", tool_call: { tool_name, parameters }, confirmation_token: ct, confirmation_message: `I'd like to ${tool_name.replace(/([A-Z])/g, ' $1').toLowerCase()} for you. Please review the details.`, proposed_changes: proposedChanges, confirmationLevel: confirmationLevel });
     }
 
     // Step 4: Execute directly if no confirmation needed
@@ -1024,7 +995,7 @@ async function executeInviteUser(base44, user, params) {
 
   // Check permissions - only certain roles can invite
   const canInviteAdmin = ['Admin Level 2', 'Super Administrator', 'Platform Admin'].includes(user.app_role);
-  const requestedRoleIsAdmin = ['Admin Level 1', 'Admin Level 2'].includes(role);
+  const requestedRoleIsAdmin = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin'].includes(role);
 
   if (requestedRoleIsAdmin && !canInviteAdmin) {
     throw { 
@@ -1047,24 +1018,13 @@ async function executeInviteUser(base44, user, params) {
 
 async function executeSendEmail(base44, user, params) {
   const { to, subject, body, fromName } = params;
-
-  // Send emails to all recipients
-  const emailPromises = to.map(recipientEmail =>
-    base44.integrations.Core.SendEmail({
-      from_name: fromName || user.full_name,
-      to: recipientEmail,
-      subject: subject,
-      body: body
-    })
-  );
-
-  await Promise.all(emailPromises);
-
-  return {
-    message: `Email sent to ${to.length} recipient(s)`,
-    recipients: to,
-    count: to.length
-  };
+  // Security: restrict recipients to self + subordinates (admins: anyone)
+  const adminRoles = ['Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'];
+  const subs = user.subordinate_emails || user.data?.subordinate_emails || [];
+  const allowed = adminRoles.includes(user.app_role) ? to : to.filter(e => e === user.email || subs.includes(e));
+  if (!allowed.length) return { message: 'No permission to email those recipients.' };
+  await Promise.all(allowed.map(e => base44.integrations.Core.SendEmail({ from_name: fromName || user.full_name, to: e, subject, body })));
+  return { message: `Email sent to ${allowed.length} recipient(s)`, recipients: allowed, count: allowed.length };
 }
 
 async function executeBulkAssignLearning(base44, user, params) {

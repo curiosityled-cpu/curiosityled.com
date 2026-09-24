@@ -9,7 +9,16 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        // Security: Only managers and admins can assign learning to other users.
+        const mgrRoles = ['User Level 2', 'User Level 3', 'Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Partner Business Administrator', 'Platform Admin'];
+        if (!mgrRoles.includes(user.app_role)) {
+            return Response.json({ error: 'Only managers and administrators can assign learning', success: false }, { status: 403 });
+        }
+
         const { learningResourceId, userEmails, assignedBy, priority, dueDate, notes } = await req.json();
+
+        // Security: assignedBy must be the authenticated caller — ignore client-supplied value.
+        const actualAssignedBy = user.email;
 
         if (!learningResourceId || !Array.isArray(userEmails) || userEmails.length === 0) {
             return Response.json({ 
@@ -38,7 +47,7 @@ Deno.serve(async (req) => {
             const assignment = await base44.asServiceRole.entities.AssignedLearning.create({
                 user_email: userEmail,
                 learning_resource_id: learningResourceId,
-                assigned_by: assignedBy,
+                assigned_by: actualAssignedBy,
                 title: resource.title,
                 description: notes || resource.description,
                 priority: priority || 'medium',
@@ -54,7 +63,7 @@ Deno.serve(async (req) => {
                 user_email: userEmail,
                 type: 'learning_assigned',
                 title: 'New Learning Resource Assigned',
-                message: `${assignedBy} assigned you: ${resource.title}`,
+                message: `${actualAssignedBy} assigned you: ${resource.title}`,
                 status: 'pending',
                 priority: priority || 'medium',
                 action_url: `/LearningLibrary`,

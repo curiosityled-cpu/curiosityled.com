@@ -37,6 +37,10 @@ Deno.serve(async (req) => {
       if (assignedRecords.length === 0) {
         return Response.json({ error: 'Assigned learning not found or does not belong to you.' }, { status: 403 });
       }
+      // Idempotency: skip if already completed (prevents double-awarding points)
+      if (assignedRecords[0].status === 'completed') {
+        return Response.json({ success: true, already_completed: true, resource, points_awarded: 0 });
+      }
       await base44.asServiceRole.entities.AssignedLearning.update(assigned_learning_id, {
         status: 'completed',
         completion_date: new Date().toISOString()

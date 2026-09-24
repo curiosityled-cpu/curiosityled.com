@@ -25,6 +25,15 @@ Deno.serve(async (req) => {
             }, { status: 400 });
         }
 
+        // Security: Require the caller to be the target user, their manager, or an admin.
+        const isSelf = user_email.toLowerCase() === currentUser.email.toLowerCase();
+        const adminRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin'];
+        const isAdmin = adminRoles.includes(currentUser.app_role);
+        const isManager = ['User Level 2', 'User Level 3'].includes(currentUser.app_role);
+        if (!isSelf && !isAdmin && !isManager) {
+            return Response.json({ success: false, error: 'Forbidden — can only send to yourself or your direct reports' }, { status: 403 });
+        }
+
         // Get target user's Slack webhook URL
         const targetUsers = await base44.asServiceRole.entities.User.filter({ email: user_email });
         

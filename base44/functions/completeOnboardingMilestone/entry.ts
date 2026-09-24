@@ -23,6 +23,16 @@ Deno.serve(async (req) => {
     }
 
     const plan = plans[0];
+
+    // Security: Only the assigned user, their manager, or an admin can complete milestones.
+    const isAssignee = plan.assigned_to_email === user.email;
+    const isAdmin = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin'].includes(user.app_role);
+    const subordinates = user.subordinate_emails || user.data?.subordinate_emails || [];
+    const isManager = ['User Level 2', 'User Level 3'].includes(user.app_role) && subordinates.includes(plan.assigned_to_email);
+    if (!isAssignee && !isAdmin && !isManager) {
+      return Response.json({ error: 'You do not have permission to complete milestones for this plan.' }, { status: 403 });
+    }
+
     const milestones = plan.milestones || [];
     
     if (milestone_index >= milestones.length) {

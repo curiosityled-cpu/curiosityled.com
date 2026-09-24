@@ -27,6 +27,16 @@ Deno.serve(async (req) => {
 
     const program = programs[0];
 
+    // Idempotency: check if points already awarded for this program (prevents double-awarding)
+    const existingTx = await base44.asServiceRole.entities.PointTransaction.filter({
+      user_email: targetUserEmail,
+      related_entity_type: 'Program',
+      related_entity_id: program_id
+    });
+    if (existingTx.length > 0) {
+      return Response.json({ success: true, already_completed: true, program, points_awarded: 0, badge_awarded: false });
+    }
+
     // Award gamification points
     try {
       await base44.asServiceRole.functions.invoke('awardPoints', {
