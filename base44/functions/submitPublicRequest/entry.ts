@@ -45,7 +45,10 @@ Deno.serve(async (req) => {
           return Response.json({ error: accessResult.reason || 'You are not authorized to submit coaching requests.' }, { status: 403 });
         }
       } catch (e) {
-        console.log('Allowlist check skipped:', e.message);
+        // Fail closed: if the allowlist validator errors, reject the submission
+        // rather than letting it bypass the per-client coaching_support restriction.
+        console.error('Allowlist check failed (failing closed):', e.message);
+        return Response.json({ error: 'Unable to verify submission authorization. Please try again later.' }, { status: 503 });
       }
     }
 

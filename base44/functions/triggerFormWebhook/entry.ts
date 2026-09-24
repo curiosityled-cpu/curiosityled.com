@@ -1,4 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { validateExternalUrl } from '../../shared/urlValidation.ts';
+
+const ADMIN_ROLES = ['Platform Admin', 'Super Administrator', 'Admin Level 1', 'Admin Level 2'];
 
 Deno.serve(async (req) => {
   try {
@@ -25,6 +28,17 @@ Deno.serve(async (req) => {
     }
 
     const form = forms[0];
+
+    // Ownership check: only the form creator or a tenant admin may trigger its webhooks.
+    // CustomForm RLS allows any authenticated user to create forms, so we must enforce
+    // ownership here to prevent a user from firing webhooks on another user's form.
+    const isOwner = form.created_by === user.email;
+    const isAdmin = ADMIN_ROLES.includes(user.app_role);
+    const sameTenant = form.client_id && form.client_id === user.client_id;
+    if (!isOwner && !(isAdmin && sameTenant)) {
+      return Response.json({ error: 'Forbidden - you do not have permission to trigger webhooks for this form' }, { status: 403 });
+    }
+
     const webhooks = form.config?.webhooks || [];
 
     // Filter active webhooks that subscribe to this event
@@ -48,9 +62,21 @@ Deno.serve(async (req) => {
       data: data || {}
     };
 
-    // Trigger webhooks in parallel
+    // Validate each webhook URL to prevent SSRF before making any request.
+    const validWebhooks = [];
+    const blockedWebhooks = [];
+    for (const webhook of activeWebhooks) {
+      const urlCheck = validateExternalUrl(webhook.url);
+      if (!urlCheck.valid) {
+        blockedWebhooks.push({ status: 'blocked', error: urlCheck.error });
+      } else {
+        validWebhooks.push(webhook);
+      }
+    }
+
+    // Trigger valid webhooks in parallel
     const results = await Promise.allSettled(
-      activeWebhooks.map(webhook => 
+      validWebhooks.map(webhook =>
         fetch(webhook.url, {
           method: 'POST',
           headers: {
@@ -70,13 +96,19 @@ Deno.serve(async (req) => {
     return Response.json({
       success: true,
       webhooks_triggered: results.length,
+      webhooks_blocked: blockedWebhooks.length,
       successful,
       failed,
-      details: results.map((r, idx) => ({
-        webhook_url: activeWebhooks[idx].url,
-        status: r.status === 'fulfilled' ? 'success' : 'failed',
-        error: r.status === 'rejected' ? r.reason.message : null
-      }))
+      // Do not echo webhook URLs back to the caller — prevents using this
+      // endpoint as a reachability probe against arbitrary hosts.
+      details: [
+        ...blockedWebhooks,
+        ...results.map((r) => ({
+          status: r.status === 'fulfilled' ? 'success' : 'failed',
+          http_status: r.status === 'fulfilled' ? r.value.status : null,
+          error: r.status === 'rejected' ? r.reason.message : null
+        }))
+      ]
     });
 
   } catch (error) {

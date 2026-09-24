@@ -1,15 +1,24 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { isInternalCall } from '../../shared/urlValidation.ts';
 
 /**
  * This function should be called by Base44's authentication system or a webhook
  * to log login attempts. It tracks successful logins, failed attempts, and account locks.
- * 
- * NOTE: This is a placeholder for integration with Base44's auth system.
- * In production, this would be triggered automatically on login events.
+ *
+ * SECURITY: This endpoint performs privileged account-state mutations (lockout,
+ * counter reset) and writes audit/session records. It MUST only be callable by
+ * the platform auth system via INTERNAL_FUNCTION_SECRET — never by anonymous
+ * clients, who could otherwise lock arbitrary users out or reset brute-force
+ * counters. See isInternalCall in shared/urlValidation.ts.
  */
 
 Deno.serve(async (req) => {
   try {
+    // Gate: reject all direct/anonymous client calls.
+    if (!isInternalCall(req)) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const base44 = createClientFromRequest(req);
     
     const { 
