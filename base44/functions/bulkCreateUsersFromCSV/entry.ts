@@ -357,7 +357,7 @@ Deno.serve(async (req) => {
         console.error('Bulk user operation failed:', error);
         return Response.json({ 
             success: false, 
-            error: error.message 
+            error: 'An error occurred during processing.'
         }, { status: 500 });
     }
 });

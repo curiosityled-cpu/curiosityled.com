@@ -30,6 +30,27 @@ Deno.serve(async (req) => {
 
     const targetUser = targetUsers[0];
 
+    // Security: Tenant scoping — verify the target user belongs to the
+    // caller's client (or partner's clients). This mirrors assignRoleToUser
+    // and prevents cross-tenant role assignment.
+    if (user.app_role === 'Super Administrator' && user.client_id) {
+      if (targetUser.client_id !== user.client_id) {
+        return Response.json({ success: false, error: 'Access denied — target user is not in your organization.' }, { status: 403 });
+      }
+    } else if (user.app_role === 'Partner Business Administrator' && user.partner_id) {
+      const allClients = await base44.asServiceRole.entities.Client.list();
+      const partnerClientIds = allClients
+        .filter(c => c.partner_id === user.partner_id)
+        .map(c => c.id);
+      if (!partnerClientIds.includes(targetUser.client_id)) {
+        return Response.json({ success: false, error: 'Access denied — target user is not in your partner clients.' }, { status: 403 });
+      }
+    } else if (user.app_role === 'Admin Level 2' && user.client_id) {
+      if (targetUser.client_id !== user.client_id) {
+        return Response.json({ success: false, error: 'Access denied — target user is not in your organization.' }, { status: 403 });
+      }
+    }
+
     // Handle remove action
     if (action === 'remove') {
       await base44.asServiceRole.entities.User.update(user_id, {
@@ -65,6 +86,26 @@ Deno.serve(async (req) => {
     }
 
     const customRole = customRoles[0];
+
+    // Security: Role-rank restriction — prevent lower-tier admins from
+    // assigning high-privilege add-on roles (e.g. 'Platform Administrator
+    // Add-on' with impersonation/billing permissions). Only Platform Admin
+    // may assign roles whose permissions include platform-level privileges.
+    const PLATFORM_PERMISSIONS = [
+      'users.impersonate', 'billing.manage', 'platform.admin',
+      'users.delete', 'clients.delete', 'security.manage'
+    ];
+    const rolePermissions = customRole.permissions || [];
+    const hasPlatformPermission = rolePermissions.some(p =>
+      PLATFORM_PERMISSIONS.includes(p) ||
+      (typeof p === 'string' && (p.startsWith('platform.') || p.startsWith('users.impersonate') || p === 'billing.manage'))
+    );
+    if (hasPlatformPermission && user.app_role !== 'Platform Admin') {
+      return Response.json({
+        success: false,
+        error: 'Only Platform Admins may assign add-on roles with platform-level privileges.'
+      }, { status: 403 });
+    }
 
     // Update user's custom_role_id
     await base44.asServiceRole.entities.User.update(user_id, {
@@ -103,9 +144,9 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Error assigning addon role:', error);
-    return Response.json({ 
-      success: false, 
-      error: error.message 
+    return Response.json({
+      success: false,
+      error: 'Failed to assign add-on role.'
     }, { status: 500 });
   }
 });

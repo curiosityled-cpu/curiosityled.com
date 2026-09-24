@@ -18,10 +18,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'No Stripe customer found' }, { status: 400 });
     }
 
+    // Security: Derive redirect base from server-side config (APP_URL env var).
+    const appUrl = Deno.env.get('APP_URL')?.replace(/\/$/, '') || 'https://curiosity-led.base44.app';
+
     // Create Stripe Customer Portal session for managing subscription
     const session = await stripe.billingPortal.sessions.create({
       customer: user.stripe_customer_id,
-      return_url: `${req.headers.get('origin') || 'https://curiosityled.base44.io'}/Billing`,
+      return_url: `${appUrl}/Billing`,
     });
 
     return Response.json({ url: session.url });

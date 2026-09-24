@@ -19,17 +19,37 @@ Deno.serve(async (req) => {
 
         const { assessmentId } = await req.json();
         if (!assessmentId) {
-            return new Response(JSON.stringify({ 
-                success: false, 
-                error: 'Assessment ID is required' 
-            }), { 
+            return new Response(JSON.stringify({
+                success: false,
+                error: 'Assessment ID is required'
+            }), {
                 status: 400,
                 headers: { 'Content-Type': 'application/json' }
             });
         }
 
+        // Security: Verify the caller owns the assessment (or is an admin)
+        // before running analysis on it. This prevents any authenticated user
+        // from triggering AI analysis on arbitrary assessment IDs and reading
+        // other users' leadership scores/profiles.
+        const ADMIN_ROLES = ['Platform Admin', 'Super Administrator', 'Admin Level 1', 'Admin Level 2'];
+        const isAdmin = ADMIN_ROLES.includes(user.app_role);
+
+        if (!isAdmin) {
+            const assessments = await base44.entities.Assessment.filter({ id: assessmentId });
+            if (assessments.length === 0 || assessments[0].email !== user.email) {
+                return new Response(JSON.stringify({
+                    success: false,
+                    error: 'Assessment not found or you do not have permission to analyze it.'
+                }), {
+                    status: 403,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
+        }
+
         console.log(`Starting analysis for assessment: ${assessmentId} by user: ${user.email}`);
-        
+
         // Use the service role to invoke the agent
         const analysisResult = await base44.asServiceRole.agents.invoke('assessmentAnalyzer', {
             prompt: `Analyze the assessment record with ID ${assessmentId} and generate the full leadership report.`,
@@ -49,10 +69,10 @@ Deno.serve(async (req) => {
             headers: { 'Content-Type': 'application/json' },
         });
     } catch (error) {
-        console.error(`Error running analysis:`, error.message);
-        return new Response(JSON.stringify({ 
-            success: false, 
-            error: error.message 
+        console.error(`Error running analysis:`, error.message, error.stack);
+        return new Response(JSON.stringify({
+            success: false,
+            error: 'An unexpected error occurred while running analysis.'
         }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },

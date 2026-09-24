@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { escapeHtml } from '../../shared/safeResponses.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -53,21 +54,36 @@ Deno.serve(async (req) => {
     // Build email content based on notification type
     let subject = '';
     let body = '';
-    const appUrl = 'https://your-app.base44.com'; // Update with actual app URL
+    const appUrl = 'https://curiosity-led.base44.app';
+
+    // Security: HTML-escape all user-supplied / request-derived values before
+    // interpolation into the email body to prevent XSS / content spoofing.
+    const safeTitle = escapeHtml(request.title);
+    const safeType = escapeHtml(request.request_type?.replace(/_/g, ' ') || '');
+    const safePriority = escapeHtml(request.priority?.toUpperCase() || '');
+    const safeRequestedBy = escapeHtml(request.requested_by_email || '');
+    const safeDescription = escapeHtml(request.description || '');
+    const safeStatus = escapeHtml(request.status?.replace(/_/g, ' ').toUpperCase() || '');
+    const safeCustomMessage = escapeHtml(custom_message || '');
+    const safeAssignedTo = escapeHtml(request.assigned_to_email || 'System');
+    const safeApprovalStatus = escapeHtml(request.approval_status?.toUpperCase() || '');
+    const safeDueDate = escapeHtml(request.due_date || '');
+    const safeBudget = request.budget_amount ? escapeHtml(request.budget_amount.toLocaleString()) : '';
+    const safeEffort = escapeHtml(request.estimated_effort_hours || 'N/A');
 
     switch (notification_type) {
       case 'new_request':
         subject = `New Development Request: ${request.title}`;
         body = `
           <h2>New Development Request Submitted</h2>
-          <p><strong>Title:</strong> ${request.title}</p>
-          <p><strong>Type:</strong> ${request.request_type.replace(/_/g, ' ')}</p>
-          <p><strong>Priority:</strong> ${request.priority.toUpperCase()}</p>
-          <p><strong>Requested by:</strong> ${request.requested_by_email}</p>
+          <p><strong>Title:</strong> ${safeTitle}</p>
+          <p><strong>Type:</strong> ${safeType}</p>
+          <p><strong>Priority:</strong> ${safePriority}</p>
+          <p><strong>Requested by:</strong> ${safeRequestedBy}</p>
           <p><strong>Description:</strong></p>
-          <p>${request.description}</p>
-          ${request.budget_amount ? `<p><strong>Budget:</strong> $${request.budget_amount.toLocaleString()}</p>` : ''}
-          ${request.due_date ? `<p><strong>Due Date:</strong> ${request.due_date}</p>` : ''}
+          <p>${safeDescription}</p>
+          ${safeBudget ? `<p><strong>Budget:</strong> $${safeBudget}</p>` : ''}
+          ${safeDueDate ? `<p><strong>Due Date:</strong> ${safeDueDate}</p>` : ''}
           <p><a href="${appUrl}/RequestDashboard">View Request Dashboard</a></p>
         `;
         break;
@@ -76,13 +92,13 @@ Deno.serve(async (req) => {
         subject = `You've been assigned: ${request.title}`;
         body = `
           <h2>Request Assigned to You</h2>
-          <p><strong>Title:</strong> ${request.title}</p>
-          <p><strong>Type:</strong> ${request.request_type.replace(/_/g, ' ')}</p>
-          <p><strong>Priority:</strong> ${request.priority.toUpperCase()}</p>
-          <p><strong>Requested by:</strong> ${request.requested_by_email}</p>
+          <p><strong>Title:</strong> ${safeTitle}</p>
+          <p><strong>Type:</strong> ${safeType}</p>
+          <p><strong>Priority:</strong> ${safePriority}</p>
+          <p><strong>Requested by:</strong> ${safeRequestedBy}</p>
           <p><strong>Description:</strong></p>
-          <p>${request.description}</p>
-          ${request.due_date ? `<p><strong>Due Date:</strong> ${request.due_date}</p>` : ''}
+          <p>${safeDescription}</p>
+          ${safeDueDate ? `<p><strong>Due Date:</strong> ${safeDueDate}</p>` : ''}
           <p><a href="${appUrl}/RequestDashboard">View Request Dashboard</a></p>
         `;
         break;
@@ -91,10 +107,10 @@ Deno.serve(async (req) => {
         subject = `Request Status Updated: ${request.title}`;
         body = `
           <h2>Request Status Changed</h2>
-          <p><strong>Title:</strong> ${request.title}</p>
-          <p><strong>New Status:</strong> ${request.status.replace(/_/g, ' ').toUpperCase()}</p>
-          <p><strong>Priority:</strong> ${request.priority.toUpperCase()}</p>
-          ${custom_message ? `<p><strong>Notes:</strong> ${custom_message}</p>` : ''}
+          <p><strong>Title:</strong> ${safeTitle}</p>
+          <p><strong>New Status:</strong> ${safeStatus}</p>
+          <p><strong>Priority:</strong> ${safePriority}</p>
+          ${safeCustomMessage ? `<p><strong>Notes:</strong> ${safeCustomMessage}</p>` : ''}
           <p><a href="${appUrl}/RequestDashboard">View Request Dashboard</a></p>
         `;
         break;
@@ -103,13 +119,13 @@ Deno.serve(async (req) => {
         subject = `Approval Required: ${request.title}`;
         body = `
           <h2>Request Requires Your Approval</h2>
-          <p><strong>Title:</strong> ${request.title}</p>
-          <p><strong>Type:</strong> ${request.request_type.replace(/_/g, ' ')}</p>
-          <p><strong>Requested by:</strong> ${request.requested_by_email}</p>
-          <p><strong>Budget:</strong> $${request.budget_amount?.toLocaleString() || 'N/A'}</p>
-          <p><strong>Estimated Effort:</strong> ${request.estimated_effort_hours || 'N/A'} hours</p>
+          <p><strong>Title:</strong> ${safeTitle}</p>
+          <p><strong>Type:</strong> ${safeType}</p>
+          <p><strong>Requested by:</strong> ${safeRequestedBy}</p>
+          <p><strong>Budget:</strong> $${safeBudget || 'N/A'}</p>
+          <p><strong>Estimated Effort:</strong> ${safeEffort} hours</p>
           <p><strong>Description:</strong></p>
-          <p>${request.description}</p>
+          <p>${safeDescription}</p>
           <p><a href="${appUrl}/RequestDashboard">Review & Approve</a></p>
         `;
         break;
@@ -119,9 +135,9 @@ Deno.serve(async (req) => {
         subject = `Request ${decision}: ${request.title}`;
         body = `
           <h2>Approval Decision Made</h2>
-          <p><strong>Title:</strong> ${request.title}</p>
-          <p><strong>Decision:</strong> ${decision.toUpperCase()}</p>
-          <p><strong>Approval Status:</strong> ${request.approval_status.toUpperCase()}</p>
+          <p><strong>Title:</strong> ${safeTitle}</p>
+          <p><strong>Decision:</strong> ${escapeHtml(decision.toUpperCase())}</p>
+          <p><strong>Approval Status:</strong> ${safeApprovalStatus}</p>
           <p><a href="${appUrl}/RequestDashboard">View Request Details</a></p>
         `;
         break;
@@ -130,9 +146,9 @@ Deno.serve(async (req) => {
         subject = `Coaching Request Update: ${request.title}`;
         body = `
           <h2>Coaching Request Update</h2>
-          <p><strong>Title:</strong> ${request.title}</p>
+          <p><strong>Title:</strong> ${safeTitle}</p>
           <p>Your coaching request was not approved at this time.</p>
-          ${custom_message ? `<p><strong>Reason:</strong> ${custom_message}</p>` : ''}
+          ${safeCustomMessage ? `<p><strong>Reason:</strong> ${safeCustomMessage}</p>` : ''}
           <p>If you have questions, please contact your Program Administrator.</p>
           <p><a href="${appUrl}/DevelopmentManager">View Request Details</a></p>
         `;
@@ -142,8 +158,8 @@ Deno.serve(async (req) => {
         subject = `Request Completed: ${request.title}`;
         body = `
           <h2>Request Completed Successfully</h2>
-          <p><strong>Title:</strong> ${request.title}</p>
-          <p><strong>Completed by:</strong> ${request.assigned_to_email || 'System'}</p>
+          <p><strong>Title:</strong> ${safeTitle}</p>
+          <p><strong>Completed by:</strong> ${safeAssignedTo}</p>
           <p>Your request has been completed. Please review the outcome and provide feedback if needed.</p>
           <p><a href="${appUrl}/RequestDashboard">View Request Details</a></p>
         `;
@@ -153,9 +169,9 @@ Deno.serve(async (req) => {
         subject = `⚠️ SLA Breach Alert: ${request.title}`;
         body = `
           <h2>SLA Breach Detected</h2>
-          <p><strong>Title:</strong> ${request.title}</p>
-          <p><strong>Status:</strong> ${request.status.replace(/_/g, ' ').toUpperCase()}</p>
-          <p><strong>Created:</strong> ${new Date(request.created_date).toLocaleDateString()}</p>
+          <p><strong>Title:</strong> ${safeTitle}</p>
+          <p><strong>Status:</strong> ${safeStatus}</p>
+          <p><strong>Created:</strong> ${escapeHtml(new Date(request.created_date).toLocaleDateString())}</p>
           <p>This request has not received a response within the 72-hour SLA window.</p>
           <p><strong>Action Required:</strong> Please review and respond immediately.</p>
           <p><a href="${appUrl}/RequestDashboard">View Request Dashboard</a></p>
@@ -181,6 +197,6 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Notification error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Failed to send notification.' }, { status: 500 });
   }
 });

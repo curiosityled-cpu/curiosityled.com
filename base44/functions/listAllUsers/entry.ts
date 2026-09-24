@@ -39,16 +39,26 @@ Deno.serve(async (req) => {
 
     console.log('Returning', users.length, 'users');
 
-    return Response.json({ 
+    // Security: Strip credential-related fields from all user records.
+    // temporary_password and must_reset_password must never be exposed in
+    // API responses — they enable account takeover of onboarding-stage users.
+    const SENSITIVE_FIELDS = ['temporary_password', 'must_reset_password', 'password_hash', 'reset_token'];
+    const safeUsers = (users || []).map(u => {
+      const safe = { ...u };
+      for (const field of SENSITIVE_FIELDS) delete safe[field];
+      return safe;
+    });
+
+    return Response.json({
       success: true,
-      users: users || [] 
+      users: safeUsers
     });
 
   } catch (error) {
     console.error('Error listing users:', error);
-    return Response.json({ 
+    return Response.json({
       success: false,
-      error: error.message || 'Failed to list users',
+      error: 'Failed to list users',
       users: []
     }, { status: 200 }); // Return 200 to prevent UI crash
   }

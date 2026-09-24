@@ -1065,35 +1065,15 @@ async function executeBulkAssignLearning(base44, user, params) {
   }
 
   let targetEmails = [];
-
-  // Determine target users based on targetType
-  switch(targetType) {
-    case 'team':
-      // Get user's direct reports
-      targetEmails = user.subordinate_emails || [];
-      break;
-    
-    case 'division':
-      // Get all users in user's division (would need division data)
-      const divisionUsers = await base44.asServiceRole.entities.User.filter({
-        client_id: user.client_id,
-        division: user.division
-      });
-      targetEmails = divisionUsers.map(u => u.email);
-      break;
-    
-    case 'specific_users':
-      targetEmails = userEmails;
-      break;
-    
-    case 'all_users':
-      // Get all users in organization
-      const allUsers = await base44.asServiceRole.entities.User.filter({
-        client_id: user.client_id
-      });
-      targetEmails = allUsers.map(u => u.email);
-      break;
-  }
+  // Security: role gate (mirrors executeAssignLearning) + admin-only 'all_users'.
+  const mgrRoles = ['User Level 2','User Level 3','Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'];
+  if (!mgrRoles.includes(user.app_role)) return { message: 'You do not have permission to bulk-assign learning.' };
+  const adminOnly = ['Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'];
+  if (targetType === 'all_users' && !adminOnly.includes(user.app_role)) return { message: 'Only admins may assign learning to all users.' };
+  if (targetType === 'team') targetEmails = user.subordinate_emails || [];
+  else if (targetType === 'specific_users') targetEmails = userEmails;
+  else if (targetType === 'all_users') { const all = await base44.asServiceRole.entities.User.filter({ client_id: user.client_id }); targetEmails = all.map(u => u.email); }
+  else if (targetType === 'division') { const div = await base44.asServiceRole.entities.User.filter({ client_id: user.client_id, division: user.division }); targetEmails = div.map(u => u.email); }
 
   if (targetEmails.length === 0) {
     throw new Error('No target users found for bulk assignment');

@@ -145,10 +145,9 @@ Deno.serve(async (req) => {
     console.error('Error in getPlatformAnalytics:', error);
     
     // Return a structured error response
-    return Response.json({ 
+    return Response.json({
       success: false,
-      error: error.message || 'Failed to fetch platform analytics',
-      details: error.stack || 'Unknown error',
+      error: 'Failed to fetch platform analytics',
       data: {
         users: [],
         organizations: [],

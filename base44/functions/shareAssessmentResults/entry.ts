@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { escapeHtml } from '../../shared/safeResponses.ts';
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
@@ -8,6 +9,27 @@ Deno.serve(async (req) => {
   const { insight_id, recipient_emails, sender_name } = await req.json();
   if (!insight_id || !recipient_emails?.length) {
     return Response.json({ error: 'insight_id and recipient_emails are required' }, { status: 400 });
+  }
+
+  // Security: cap the number of recipients per request to prevent bulk
+  // spam / open-relay abuse.
+  const MAX_RECIPIENTS = 10;
+  const recipients = Array.isArray(recipient_emails) ? recipient_emails : [recipient_emails];
+  if (recipients.length > MAX_RECIPIENTS) {
+    return Response.json({ error: `Cannot share with more than ${MAX_RECIPIENTS} recipients at once.` }, { status: 400 });
+  }
+
+  // Security: Restrict recipients to registered app users only. This prevents
+  // the platform from being used as an open mail relay to arbitrary external
+  // addresses for phishing.
+  const normalizedRecipients = recipients.map(e => e.trim().toLowerCase()).filter(Boolean);
+  const registeredUsers = await base44.asServiceRole.entities.User.filter({
+    email: { $in: normalizedRecipients }
+  });
+  const registeredEmails = new Set(registeredUsers.map(u => u.email.toLowerCase()));
+  const validRecipients = normalizedRecipients.filter(e => registeredEmails.has(e));
+  if (validRecipients.length === 0) {
+    return Response.json({ error: 'Recipients must be registered users of the platform.' }, { status: 403 });
   }
 
   // Security: Load via the user-scoped client (respects RLS), then verify
@@ -24,23 +46,29 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'Forbidden — you can only share your own assessment results.' }, { status: 403 });
   }
 
-  const strengths = (insight.top_strengths || []).map(s => `<li style="margin-bottom:6px;">${s}</li>`).join('');
-  const growthAreas = (insight.development_areas || []).map(d => `<li style="margin-bottom:6px;">${d}</li>`).join('');
+  // Security: HTML-escape all interpolated values to prevent XSS / content
+  // spoofing inside the branded email.
+  const strengths = (insight.top_strengths || []).map(s => `<li style="margin-bottom:6px;">${escapeHtml(s)}</li>`).join('');
+  const growthAreas = (insight.development_areas || []).map(d => `<li style="margin-bottom:6px;">${escapeHtml(d)}</li>`).join('');
   const topRec = insight.recommendations?.[0] || '';
+  const safeSenderName = escapeHtml(sender_name || user.full_name);
+  const safeArchetype = escapeHtml(insight.archetype || '');
+  const safeSummary = escapeHtml(insight.summary || '');
+  const safeTopRec = escapeHtml(topRec);
 
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a2e;">
       <div style="background: #0202ff; padding: 32px 40px; border-radius: 12px 12px 0 0;">
         <h1 style="color: white; margin: 0; font-size: 24px;">Leadership Assessment Results</h1>
-        <p style="color: rgba(255,255,255,0.85); margin: 8px 0 0;">${sender_name || user.full_name} has shared their results with you</p>
+        <p style="color: rgba(255,255,255,0.85); margin: 8px 0 0;">${safeSenderName} has shared their results with you</p>
       </div>
       <div style="background: white; padding: 32px 40px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
         ${insight.archetype ? `
         <div style="background: #f0f0ff; border-left: 4px solid #0202ff; padding: 16px 20px; border-radius: 8px; margin-bottom: 24px;">
           <p style="margin: 0 0 4px; font-size: 12px; color: #0202ff; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Leadership Archetype</p>
-          <p style="margin: 0; font-size: 22px; font-weight: 700; color: #1a1a2e;">${insight.archetype}</p>
+          <p style="margin: 0; font-size: 22px; font-weight: 700; color: #1a1a2e;">${safeArchetype}</p>
         </div>` : ''}
-        ${insight.summary ? `<p style="color: #4b5563; line-height: 1.7; margin-bottom: 24px;">${insight.summary}</p>` : ''}
+        ${insight.summary ? `<p style="color: #4b5563; line-height: 1.7; margin-bottom: 24px;">${safeSummary}</p>` : ''}
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
           ${strengths ? `
           <div style="background: #f9fafb; padding: 16px; border-radius: 8px;">
@@ -56,7 +84,7 @@ Deno.serve(async (req) => {
         ${topRec ? `
         <div style="background: #fffbeb; border: 1px solid #fde68a; padding: 16px 20px; border-radius: 8px;">
           <p style="margin: 0 0 6px; font-size: 12px; font-weight: 600; color: #92400e; text-transform: uppercase; letter-spacing: 0.05em;">⚡ Focus This Week</p>
-          <p style="margin: 0; color: #1a1a2e; font-size: 14px; line-height: 1.6;">${topRec}</p>
+          <p style="margin: 0; color: #1a1a2e; font-size: 14px; line-height: 1.6;">${safeTopRec}</p>
         </div>` : ''}
         <p style="margin-top: 32px; font-size: 12px; color: #9ca3af; text-align: center;">Powered by Curiosity Led Leadership Platform</p>
       </div>
@@ -64,13 +92,13 @@ Deno.serve(async (req) => {
   `;
 
   const results = [];
-  for (const email of recipient_emails) {
+  for (const email of validRecipients) {
     await base44.asServiceRole.integrations.Core.SendEmail({
-      to: email.trim(),
+      to: email,
       subject: `${sender_name || user.full_name}'s Leadership Assessment Results`,
       body: html,
     });
-    results.push(email.trim());
+    results.push(email);
   }
 
   return Response.json({ success: true, sent_to: results });

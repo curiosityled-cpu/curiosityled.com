@@ -24,6 +24,16 @@ Deno.serve(async (req) => {
 
     const goal = goals[0];
 
+    // Idempotency: if the goal is already archived, do not re-award points.
+    if (goal.status === 'archived') {
+      return Response.json({
+        success: true,
+        goal,
+        points_awarded: 0,
+        already_completed: true
+      });
+    }
+
     // Authorization: only the goal owner, an assignee/member, the coach, or an admin may complete it.
     const ADMIN_ROLES = ['Platform Admin', 'Super Administrator', 'Admin Level 1', 'Admin Level 2'];
     const assignees = goal.assigned_to_emails || [];
@@ -68,6 +78,6 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Error completing goal:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Failed to complete goal.' }, { status: 500 });
   }
 });

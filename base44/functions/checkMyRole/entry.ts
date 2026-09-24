@@ -19,9 +19,9 @@ Deno.serve(async (req) => {
     });
 
   } catch (error) {
-    return Response.json({ 
-      error: error.message,
-      stack: error.stack 
+    console.error('Error in checkMyRole:', error);
+    return Response.json({
+      error: 'An unexpected error occurred.'
     }, { status: 500 });
   }
 });

@@ -85,8 +85,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error importing questions:', error);
     return Response.json({ 
-      error: error.message,
-      stack: error.stack 
+      error: 'Failed to import assessment questions.'
     }, { status: 500 });
   }
 });

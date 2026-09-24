@@ -1,4 +1,3 @@
-
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
 import Stripe from 'npm:stripe@17.4.0';
 
@@ -54,8 +53,8 @@ Deno.serve(async (req) => {
     const price = await stripe.prices.retrieve(price_id);
     const sessionMode = mode || (price.type === 'recurring' ? 'subscription' : 'payment');
 
-    // Get origin for redirect URLs
-    const origin = req.headers.get('origin') || 'https://curiosityled.base44.io';
+    // Security: Derive redirect base from server-side config (APP_URL env var).
+    const appUrl = Deno.env.get('APP_URL')?.replace(/\/$/, '') || 'https://curiosity-led.base44.app';
 
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
@@ -67,8 +66,8 @@ Deno.serve(async (req) => {
         },
       ],
       mode: sessionMode,
-      success_url: `${origin}/BusinessManager?success=true&session_id={CHECKOUT_SESSION_ID}&org_id=${org.id}`,
-      cancel_url: `${origin}/BusinessManager?canceled=true&org_id=${org.id}`,
+      success_url: `${appUrl}/BusinessManager?success=true&session_id={CHECKOUT_SESSION_ID}&org_id=${org.id}`,
+      cancel_url: `${appUrl}/BusinessManager?canceled=true&org_id=${org.id}`,
       metadata: {
         organization_id: org.id,
         organization_slug: org.slug,

@@ -11,9 +11,24 @@ Deno.serve(async (req) => {
 
     // For Analyst role, fetch organizational data instead of personal data
     if (user.app_role === 'Analyst') {
-      const allUsers = user.client_id 
-        ? await base44.asServiceRole.entities.User.filter({ client_id: user.client_id })
-        : await base44.asServiceRole.entities.User.list();
+      // Security: Fail closed — a client-less Analyst must NOT receive
+      // platform-wide (cross-tenant) data. Require a client_id; return empty
+      // metrics instead of unscoped data.
+      if (!user.client_id) {
+        return Response.json({
+          success: true,
+          data: {
+            user: { email: user.email, full_name: user.full_name, app_role: user.app_role },
+            assessment: { latest: null, hasAssessment: false, orgAverage: 0 },
+            goals: { all: [], active: [], completed: [], atRisk: [], metrics: { total: 0, activeCount: 0, completedCount: 0, atRiskCount: 0, successRate: 0 } },
+            learning: { all: [], pending: [], completed: [], metrics: { total: 0, pendingCount: 0, completedCount: 0, completionRate: 0 } },
+            team: null,
+            isAnalyst: true,
+            organizationMetrics: { totalUsers: 0, avgLeadershipScore: 0, totalGoals: 0, totalLearning: 0 }
+          }
+        });
+      }
+      const allUsers = await base44.asServiceRole.entities.User.filter({ client_id: user.client_id });
 
       const userEmails = allUsers.map(u => u.email);
 
@@ -226,9 +241,9 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Error loading dashboard data:', error);
-    return Response.json({ 
-      success: false, 
-      error: error.message 
+    return Response.json({
+      success: false,
+      error: 'Failed to load dashboard data.'
     }, { status: 500 });
   }
 });

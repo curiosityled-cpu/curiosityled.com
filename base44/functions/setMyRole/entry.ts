@@ -14,48 +14,35 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // The Role Selector is a self-service testing/demo feature: any
-        // authenticated user may change their own app_role to preview different
-        // experiences. Production role management happens via User Management.
         const { role } = await req.json();
 
-        // Privileged users (Platform Admin, Super Administrator, Partner Business
-        // Administrator) can self-assign ANY role via the Role Selector — they are
-        // the only users with access to this page, and the feature exists for
-        // testing/demoing different experiences. Regular users are limited to a
-        // non-privileged allowlist to prevent privilege escalation.
+        // Security: Self-service role changes are restricted to privileged users
+        // (Platform Admin, Super Administrator, Partner Business Administrator)
+        // who already hold elevated access and use the Role Selector only to
+        // preview different experiences. Regular users CANNOT self-assign any
+        // role — doing so enabled vertical privilege escalation (e.g. a User
+        // Level 1 granting themselves 'User Level 2' to access team data,
+        // bulk assignment, and other manager-gated functions). Production role
+        // management for regular users happens via admin-only User Management.
         const privilegedRoles = [
             'Platform Admin',
             'Super Administrator',
             'Partner Business Administrator'
         ];
 
-        // Security: Only truly non-privileged roles are self-serviceable.
-        // Admin Level 1, Executive, and HRBP were removed because they grant
-        // elevated capabilities across other backend functions (bulk assignment,
-        // team hierarchy, user listing, etc.). Privileged users (Platform Admin,
-        // Super Administrator, Partner Business Administrator) can still self-assign
-        // any role via the Role Selector for demo/testing purposes.
-        const selfServiceRoles = [
-            'User Level 1',
-            'User Level 2',
-            'Leadership Coach',
-            'Consultant'
-        ];
+        if (!privilegedRoles.includes(user.app_role)) {
+            return Response.json({
+                error: 'Self-service role changes are not available. Contact an administrator to update your role.'
+            }, { status: 403 });
+        }
 
-        const isPrivilegedUser = privilegedRoles.includes(user.app_role);
-        const allSelectableRoles = [...selfServiceRoles, ...privilegedRoles, 'Admin Level 2'];
+        // Privileged users may switch between any of these roles for demo/testing.
+        const allSelectableRoles = [...privilegedRoles, 'Admin Level 2', 'User Level 1', 'User Level 2', 'Leadership Coach', 'Consultant'];
 
         if (!allSelectableRoles.includes(role)) {
             return Response.json({
                 error: 'Invalid role selection.'
             }, { status: 400 });
-        }
-
-        if (!isPrivilegedUser && !selfServiceRoles.includes(role)) {
-            return Response.json({
-                error: 'This role cannot be self-assigned. Contact an administrator.'
-            }, { status: 403 });
         }
 
         const oldRole = user.app_role;
@@ -90,8 +77,8 @@ Deno.serve(async (req) => {
 
     } catch (error) {
         console.error('Error updating role:', error);
-        return Response.json({ 
-            error: error.message 
+        return Response.json({
+            error: 'An unexpected error occurred while updating your role.'
         }, { status: 500 });
     }
 });

@@ -93,15 +93,29 @@ Deno.serve(async (req) => {
             }, { status: 401 });
         }
 
-        // Update user: set new password, clear temp password, activate account
+        // Security: We cannot change the platform credential from a backend
+        // function (no server-side changePassword API). Instead we INVALIDATE
+        // the temporary password so it can no longer be used, then trigger the
+        // platform's secure password-reset flow so the user sets a real
+        // credential through the verified reset-token mechanism. The
+        // newPassword from the request body is NOT used — it is discarded —
+        // because storing or applying it here would bypass the platform's
+        // password hashing and token verification.
         await base44.asServiceRole.entities.User.update(user.id, {
             account_status: 'active',
-            must_reset_password: false,
+            must_reset_password: true,
             temporary_password: null,
             license_activated_at: new Date().toISOString(),
-            invitation_accepted_at: new Date().toISOString(),
-            password_changed_at: new Date().toISOString()
+            invitation_accepted_at: new Date().toISOString()
         });
+
+        // Trigger the platform password-reset flow so the user receives a
+        // secure, token-bound reset link via email.
+        try {
+            await base44.auth.resetPasswordRequest(email);
+        } catch (resetError) {
+            console.warn('resetPasswordRequest failed (user should use Forgot Password page):', resetError.message);
+        }
 
         // Log activity
         try {
@@ -111,7 +125,7 @@ Deno.serve(async (req) => {
                 action_type: 'USER_ACCOUNT_ACTIVATED',
                 target_user_email: email,
                 metadata: {
-                    activation_method: 'password_reset',
+                    activation_method: 'temp_password_invalidated',
                     activated_by: 'self'
                 }
             });
@@ -119,16 +133,17 @@ Deno.serve(async (req) => {
             console.warn('Failed to create activity log:', logError.message);
         }
 
-        return Response.json({ 
+        return Response.json({
             success: true,
-            message: 'Password updated and account activated successfully'
+            message: 'Your temporary password has been invalidated. Check your email for a secure link to set your new password, or use the Forgot Password page.',
+            must_set_password: true
         });
 
     } catch (error) {
         console.error('Error resetting password:', error);
-        return Response.json({ 
-            success: false, 
-            error: error.message 
+        return Response.json({
+            success: false,
+            error: 'An unexpected error occurred during password reset.'
         }, { status: 500 });
     }
 });

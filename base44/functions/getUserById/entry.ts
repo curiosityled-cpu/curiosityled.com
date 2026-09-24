@@ -49,16 +49,21 @@ Deno.serve(async (req) => {
       }
     }
 
-    return Response.json({ 
+    // Security: Strip credential-related fields from the user record.
+    const SENSITIVE_FIELDS = ['temporary_password', 'must_reset_password', 'password_hash', 'reset_token'];
+    const safeUser = { ...targetUser };
+    for (const field of SENSITIVE_FIELDS) delete safeUser[field];
+
+    return Response.json({
       success: true,
-      user: targetUser
+      user: safeUser
     });
 
   } catch (error) {
     console.error('Error getting user:', error);
-    return Response.json({ 
+    return Response.json({
       success: false,
-      error: error.message 
+      error: 'Failed to get user.'
     }, { status: 500 });
   }
 });

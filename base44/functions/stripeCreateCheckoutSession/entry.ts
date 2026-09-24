@@ -128,8 +128,10 @@ Deno.serve(async (req) => {
     const price = await stripe.prices.retrieve(price_id);
     const sessionMode = mode || (price.type === 'recurring' ? 'subscription' : 'payment');
 
-    // Get the origin for redirect URLs
-    const origin = req.headers.get('origin') || 'https://curiosityled.base44.io';
+    // Security: Derive redirect base from server-side config (APP_URL env var)
+    // rather than the attacker-controlled Origin header — prevents open
+    // redirect to look-alike domains after payment.
+    const appUrl = Deno.env.get('APP_URL')?.replace(/\/$/, '') || 'https://curiosity-led.base44.app';
 
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
@@ -141,8 +143,8 @@ Deno.serve(async (req) => {
         },
       ],
       mode: sessionMode,
-      success_url: `${origin}/Billing?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/Billing?canceled=true`,
+      success_url: `${appUrl}/Billing?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/Billing?canceled=true`,
       metadata: metadata
     });
 
@@ -153,9 +155,8 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Error creating checkout session:', error);
-    return Response.json({ 
-      error: error.message || 'Failed to create checkout session',
-      details: error.stack
+    return Response.json({
+      error: 'Failed to create checkout session.'
     }, { status: 500 });
   }
 });

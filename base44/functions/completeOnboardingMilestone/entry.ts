@@ -41,6 +41,20 @@ Deno.serve(async (req) => {
 
     const milestone = milestones[milestone_index];
 
+    // Idempotency: skip if the milestone is already completed (prevents
+    // re-awarding points on repeated calls).
+    if (milestone.status === 'completed') {
+      const completedCount = milestones.filter(m => m.status === 'completed').length;
+      const completionPercentage = Math.round((completedCount / milestones.length) * 100);
+      return Response.json({
+        success: true,
+        milestone,
+        already_completed: true,
+        points_awarded: 0,
+        completion_percentage: completionPercentage
+      });
+    }
+
     // Update milestone status
     milestones[milestone_index] = {
       ...milestone,
@@ -84,6 +98,6 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Error completing milestone:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Failed to complete milestone.' }, { status: 500 });
   }
 });

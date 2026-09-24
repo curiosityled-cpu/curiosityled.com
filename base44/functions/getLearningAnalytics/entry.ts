@@ -248,8 +248,7 @@ Deno.serve(async (req) => {
     console.error('Error in getLearningAnalytics:', error);
     return Response.json({
       success: false,
-      error: error.message || 'Failed to fetch learning analytics',
-      details: error.stack
+      error: 'Failed to fetch learning analytics'
     }, { status: 500 });
   }
 });

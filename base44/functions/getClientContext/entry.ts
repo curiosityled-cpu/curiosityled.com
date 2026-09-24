@@ -102,8 +102,7 @@ Deno.serve(async (req) => {
     // Return a graceful response even on error
     return Response.json({
       success: true,
-      error: error.message || 'Failed to fetch client context',
-      details: error.stack,
+      error: 'Failed to fetch client context',
       data: {
         client: null,
         stats: {

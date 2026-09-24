@@ -45,6 +45,27 @@ Deno.serve(async (req) => {
         status: 'completed',
         completion_date: new Date().toISOString()
       });
+    } else {
+      // Security/Idempotency: Points are only awarded when a valid AssignedLearning
+      // record is provided and verified. Without this, any user could farm
+      // unlimited points by repeatedly calling this endpoint with a public
+      // resource ID and no assignment. Admins are exempted but still checked
+      // for an existing PointTransaction to prevent re-awarding.
+      const ADMIN_ROLES = ['Platform Admin', 'Super Administrator', 'Admin Level 1', 'Admin Level 2'];
+      if (!ADMIN_ROLES.includes(user.app_role)) {
+        return Response.json({
+          error: 'An assigned learning record is required to earn points for completing a resource.'
+        }, { status: 400 });
+      }
+      // Admins: check for existing point transaction to prevent re-award.
+      const existingTx = await base44.asServiceRole.entities.PointTransaction.filter({
+        user_email: user.email,
+        related_entity_type: 'LearningResource',
+        related_entity_id: learning_resource_id
+      });
+      if (existingTx.length > 0) {
+        return Response.json({ success: true, already_completed: true, resource, points_awarded: 0 });
+      }
     }
 
     // Award gamification points
@@ -85,6 +106,6 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Error completing learning resource:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Failed to complete learning resource.' }, { status: 500 });
   }
 });
