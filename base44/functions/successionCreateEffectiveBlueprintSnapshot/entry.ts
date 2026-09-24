@@ -269,10 +269,10 @@ export default async function(req: Request): Promise<Response> {
     const expected_count = effectiveRequirements.length;
     const requirements_snapshot = effectiveRequirements;
 
-    // ── 6. Compute content hash ─────────────────────────────────────────
+    // ── 6. Compute content hash (integrity payload) ────────────────────
     const content_hash = await computePayloadHash(requirements_snapshot);
 
-    // ── 7. Create snapshot in 'building' status ─────────────────────────
+    // ── 7. Create parent snapshot in 'building' status (NOT yet published) ──
     const snapshot = await base44.asServiceRole.entities.EffectiveBlueprintSnapshot.create({
       client_id: auth.client_id,
       org_role_id, blueprint_id,
@@ -280,18 +280,144 @@ export default async function(req: Request): Promise<Response> {
       blueprint_revision: role.blueprint_approval_revision,
       status: "building",
       expected_requirement_count: expected_count,
-      generated_requirement_count: requirements_snapshot.length,
+      generated_requirement_count: 0, // Updated after children verified
       requirements_content_hash: content_hash,
       generation_operation_id: opResult.operation.id,
       generated_at: new Date().toISOString(),
-      requirements_snapshot,
+      requirements_snapshot, // Redundant integrity payload — verified against child hash
       confidentiality_level: "confidential",
       integrity_status: "pending_validation",
     });
 
-    // Transition to 'generated'
+    // ── 8. Create EffectiveRequirementSnapshot child records ────────────
+    const frozen_at = new Date().toISOString();
+    const childRecords: any[] = [];
+    let childCreationFailed = false;
+    let childCreationError: string | null = null;
+
+    for (const er of effectiveRequirements) {
+      const requirement_key = `${er.source_type}-${er.source_requirement_id}`;
+
+      // Determine requirement_type from source
+      let requirement_type = "other";
+      if (er.source_type === "canonical") {
+        const sourceReq = canonicalById[er.source_requirement_id];
+        if (sourceReq?.requirement_type) requirement_type = sourceReq.requirement_type;
+      } else if (er.base_requirement_id) {
+        const baseReq = canonicalById[er.base_requirement_id];
+        if (baseReq?.requirement_type) requirement_type = baseReq.requirement_type;
+      }
+
+      // Frozen title/description from the original source record
+      let frozen_title = er.effective_language;
+      let frozen_description = "";
+      if (er.source_type === "canonical") {
+        const sourceReq = canonicalById[er.source_requirement_id];
+        frozen_title = sourceReq?.requirement_text || er.effective_language;
+        frozen_description = sourceReq?.requirement_detail || "";
+      } else {
+        const sourceCRR = positionReqs.find((p: any) => p.id === er.source_requirement_id);
+        frozen_title = sourceCRR?.requirement_text || er.effective_language;
+        frozen_description = sourceCRR?.requirement_detail || "";
+      }
+
+      try {
+        const child = await base44.asServiceRole.entities.EffectiveRequirementSnapshot.create({
+          client_id: auth.client_id,
+          effective_blueprint_snapshot_id: snapshot.id,
+          requirement_key,
+          requirement_type,
+          source_type: er.source_type,
+          source_requirement_id: er.source_requirement_id,
+          base_requirement_id: er.base_requirement_id || null,
+          base_blueprint_id: er.base_blueprint_id,
+          base_blueprint_version_number: er.base_blueprint_version_number,
+          modification_type: er.modification_type,
+          frozen_title,
+          frozen_description,
+          effective_language: er.effective_language,
+          effective_level: er.effective_level || null,
+          applicability_status: er.applicability_status,
+          exception_approval_status: er.exception_approval_status,
+          frozen_at,
+          confidentiality_level: "confidential",
+          integrity_status: "active",
+        });
+        childRecords.push(child);
+      } catch (err) {
+        childCreationFailed = true;
+        childCreationError = (err as Error).message;
+        break;
+      }
+    }
+
+    // ── 9. Verify child count ───────────────────────────────────────────
+    if (childCreationFailed || childRecords.length !== expected_count) {
+      await base44.asServiceRole.entities.EffectiveBlueprintSnapshot.update(snapshot.id, {
+        status: "generation_failed",
+        generated_requirement_count: childRecords.length,
+        integrity_status: "quarantined",
+        quarantine_reason: childCreationFailed
+          ? `Child creation failed: ${childCreationError}`
+          : `Child count mismatch: expected ${expected_count}, created ${childRecords.length}`,
+      });
+      await failOperation(base44, opResult.operation.id, "child_creation_failed");
+      await writeSuccessionAuditEvent({
+        base44, action_type: "snapshot_generation_failed",
+        target_entity_type: "EffectiveBlueprintSnapshot", target_entity_id: snapshot.id,
+        metadata: { reason: childCreationFailed ? "child_creation_error" : "child_count_mismatch",
+          expected: expected_count, created: childRecords.length, error: childCreationError },
+        operation_id, event_key: { action: "snapshot_failed", snapshot_id: snapshot.id, operation_id },
+        event_type: "operation_failed", target_record_id: snapshot.id, attempt_number: 1,
+      });
+      return Response.json({
+        error: "SNAPSHOT_GENERATION_FAILED",
+        detail: childCreationFailed ? `Child creation failed: ${childCreationError}` : "Child count mismatch",
+        expected: expected_count, created: childRecords.length,
+      }, { status: 500 });
+    }
+
+    // ── 10. Verify child hash against parent integrity payload ──────────
+    const childHashInput = childRecords.map((c: any) => ({
+      source_type: c.source_type,
+      source_requirement_id: c.source_requirement_id,
+      base_requirement_id: c.base_requirement_id,
+      base_blueprint_id: c.base_blueprint_id,
+      base_blueprint_version_number: c.base_blueprint_version_number,
+      modification_type: c.modification_type,
+      effective_language: c.effective_language,
+      effective_level: c.effective_level,
+      applicability_status: c.applicability_status,
+      exception_approval_status: c.exception_approval_status,
+    }));
+    const child_hash = await computePayloadHash(childHashInput);
+
+    if (child_hash !== content_hash) {
+      await base44.asServiceRole.entities.EffectiveBlueprintSnapshot.update(snapshot.id, {
+        status: "generation_failed",
+        generated_requirement_count: childRecords.length,
+        integrity_status: "quarantined",
+        quarantine_reason: `Child hash mismatch: parent=${content_hash}, children=${child_hash}`,
+      });
+      await failOperation(base44, opResult.operation.id, "child_hash_mismatch");
+      await writeSuccessionAuditEvent({
+        base44, action_type: "snapshot_generation_failed",
+        target_entity_type: "EffectiveBlueprintSnapshot", target_entity_id: snapshot.id,
+        metadata: { reason: "child_hash_mismatch", parent_hash: content_hash, child_hash },
+        operation_id, event_key: { action: "snapshot_failed", snapshot_id: snapshot.id, operation_id },
+        event_type: "operation_failed", target_record_id: snapshot.id, attempt_number: 1,
+      });
+      return Response.json({
+        error: "SNAPSHOT_GENERATION_FAILED",
+        detail: "Child record hash does not match parent integrity payload hash",
+        parent_hash: content_hash, child_hash,
+      }, { status: 500 });
+    }
+
+    // ── 11. Publish parent as 'generated' (only after full verification) ──
     await base44.asServiceRole.entities.EffectiveBlueprintSnapshot.update(snapshot.id, {
       status: "generated",
+      generated_requirement_count: childRecords.length,
       generation_completed_at: new Date().toISOString(),
       integrity_status: "active",
     });
@@ -300,22 +426,25 @@ export default async function(req: Request): Promise<Response> {
       base44, action_type: "snapshot_generated",
       target_entity_type: "EffectiveBlueprintSnapshot", target_entity_id: snapshot.id,
       metadata: {
-        blueprint_id, expected_count, generated_count: requirements_snapshot.length,
-        content_hash, canonical_count: canonicalReqs.length, position_specific_count: positionReqs.length,
+        blueprint_id, expected_count, generated_count: childRecords.length,
+        content_hash, child_hash, canonical_count: canonicalReqs.length,
+        position_specific_count: positionReqs.length, child_records_created: childRecords.length,
       },
       operation_id, event_key: { action: "snapshot_generated", snapshot_id: snapshot.id },
       event_type: "domain_action_completed", target_record_id: snapshot.id, attempt_number: 1,
     });
 
     await completeOperation(base44, opResult.operation.id, auditEvent?.id || null, {
-      snapshot_id: snapshot.id, status: "generated", requirement_count: requirements_snapshot.length,
+      snapshot_id: snapshot.id, status: "generated", requirement_count: childRecords.length,
+      child_records_created: childRecords.length,
     });
 
     return Response.json({
       operation_id, snapshot_id: snapshot.id, status: "generated",
       expected_requirement_count: expected_count,
-      generated_requirement_count: requirements_snapshot.length,
+      generated_requirement_count: childRecords.length,
       requirements_content_hash: content_hash,
+      child_record_count: childRecords.length,
       canonical_count: canonicalReqs.length,
       position_specific_count: positionReqs.length,
     });

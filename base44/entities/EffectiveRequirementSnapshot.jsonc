@@ -11,6 +11,21 @@
       "type": "string",
       "description": "EffectiveBlueprintSnapshot ID this requirement belongs to. Required."
     },
+    "requirement_key": {
+      "type": "string",
+      "description": "Stable deterministic key for this requirement within the snapshot (e.g. 'canonical-<source_id>' or 'position-<source_id>'). Used for child-record hash canonicalization."
+    },
+    "requirement_type": {
+      "type": "string",
+      "enum": [
+        "competency",
+        "experience",
+        "credential",
+        "outcome",
+        "other"
+      ],
+      "description": "The requirement type from the source RoleRequirement. For position-specific requirements without a distinct type, inherits from the base requirement or defaults to 'other'."
+    },
     "source_type": {
       "type": "string",
       "enum": [
@@ -46,6 +61,14 @@
       ],
       "description": "For position_specific: mirrors the CriticalRoleRequirement.modification_type. For canonical: 'canonical'."
     },
+    "frozen_title": {
+      "type": "string",
+      "description": "The frozen requirement title (original requirement_text from the source). Immutable after generation."
+    },
+    "frozen_description": {
+      "type": "string",
+      "description": "The frozen requirement description (original requirement_detail from the source). Immutable after generation."
+    },
     "effective_language": {
       "type": "string",
       "description": "The effective requirement text after merging canonical and position-specific language."
@@ -75,6 +98,11 @@
       "default": "none",
       "description": "Approval status of any exception. 'none' for canonical requirements without exceptions."
     },
+    "frozen_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this child record was frozen (snapshot generation time). Immutable after generation."
+    },
     "confidentiality_level": {
       "type": "string",
       "enum": [
@@ -99,6 +127,8 @@
   "required": [
     "client_id",
     "effective_blueprint_snapshot_id",
+    "requirement_key",
+    "requirement_type",
     "source_type",
     "source_requirement_id",
     "effective_language",
