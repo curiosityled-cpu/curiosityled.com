@@ -2,13 +2,13 @@
 
 **Date:** 2026-09-24
 **Status:** ✅ Complete
-**Scope:** V4 blueprint versioning, requirement revision tracing, CriticalRoleRequirement revision support, Snapshot 4 generation
+**Scope:** V4 blueprint versioning, requirement revision tracing, CriticalRoleRequirement revision support, Snapshot 4 generation, SoD UI wiring
 
 ---
 
 ## Summary
 
-This checkpoint validates the full V4 revision lifecycle: creating revised canonical requirements and CriticalRoleRequirements under a new blueprint version, binding them to the exact V4 blueprint via `source_blueprint_id` / `base_blueprint_id` + `base_blueprint_version_number`, and generating Snapshot 4 from the merged effective blueprint.
+This checkpoint validates the full V4 revision lifecycle: creating revised canonical requirements and CriticalRoleRequirements under a new blueprint version, binding them to the exact V4 blueprint via `source_blueprint_id` / `base_blueprint_id` + `base_blueprint_version_number`, generating Snapshot 4 from the merged effective blueprint, and wiring separation-of-duties into the UI.
 
 ---
 
@@ -24,6 +24,11 @@ This checkpoint validates the full V4 revision lifecycle: creating revised canon
 - **Root cause:** The function only created the revision with `requirement_text`, `revises_requirement_id`, and `revision_number` — it did not carry forward the modification type or base binding fields.
 - **Fix:** Carry forward `modification_type` from the prior CRR. Carry forward `base_requirement_id`, `base_blueprint_id`, and `base_blueprint_version_number` from the prior CRR, allowing caller override (for V4, the base bindings are updated to point to V4 canonical requirements).
 
+### 3. `successionApproveCriticalRoleRequirement` — missing separation-of-duties enforcement
+- **Symptom:** A user could approve a CRR they themselves submitted, violating separation of duties.
+- **Root cause:** The function did not compare `submitted_by_profile_id` with the approver's `profile_id`.
+- **Fix:** Added a SoD check: if `req.submitted_by_profile_id === auth.profile_id`, the function fails the operation with `separation_of_duties_violation` and returns a 409 error.
+
 ---
 
 ## V4 Workflow Execution
@@ -37,10 +42,10 @@ This checkpoint validates the full V4 revision lifecycle: creating revised canon
 | # | Type | Text (abbreviated) | Source |
 |---|------|--------------------|--------|
 | 1 | competency | Strong stakeholder communication... | V4 new (6ab56947ed4e1276e1798af9) |
-| 2 | experience | Minimum 10 years engineering leadership... | V4 revision of V3 req (6ab569455978d17cc3ec4d57), revises 6ab5623a... |
-| 3 | credential | Bachelor's degree in CS or equivalent... | V4 revision of V3 req (6ab5691f72c2006b154adb92), revises 6ab5623a... |
-| 4 | outcome | Track record of enterprise-scale delivery... | V4 revision of V3 req (6ab5691f793762f26778ab52), revises 6ab5623a... |
-| 5 | competency | Demonstrated ability to lead cross-functional teams... | V4 revision of V3 req (6ab5691f88ce81dd7b52c8f2), revises 6ab5623a... |
+| 2 | experience | Minimum 10 years engineering leadership... | V4 revision of V3 req (6ab569455978d17cc3ec4d57) |
+| 3 | credential | Bachelor's degree in CS or equivalent... | V4 revision of V3 req (6ab5691f72c2006b154adb92) |
+| 4 | outcome | Track record of enterprise-scale delivery... | V4 revision of V3 req (6ab5691f793762f26778ab52) |
+| 5 | competency | Demonstrated ability to lead cross-functional teams... | V4 revision of V3 req (6ab5691f88ce81dd7b52c8f2) |
 | 6 | credential | Master's degree in Business Administration preferred... | V4 new (6ab5691f6c3565e496f45429) |
 
 ### V4 Blueprint Approval
@@ -96,6 +101,7 @@ This checkpoint validates the full V4 revision lifecycle: creating revised canon
 - **Snapshot ID:** `6ab563645e99e8f6b1a3352d`
 - **Status:** `generated` (unchanged)
 - **Blueprint:** V3 (`6ab562394535569d357a91cd`), revision 1
+- **Expected/Genderated count:** 1/1 ✅ (correct — only 1 CRR was applicable at V3 generation time)
 - **Requirements content hash:** `13d51481d348cd37b2511cd298ef1db0935049f84c22be187471c79dfd9df588` (unchanged)
 - **Result:** Snapshot 3 remains immutable after V4 approval ✅
 
@@ -110,12 +116,27 @@ This checkpoint validates the full V4 revision lifecycle: creating revised canon
 
 ---
 
+## Separation of Duties — UI Wiring
+
+### Backend Enforcement
+- **Blueprint approval** (`successionApproveBlueprint`): Already enforces SoD — rejects if `submitted_by_profile_id === auth.profile_id`.
+- **CRR approval** (`successionApproveCriticalRoleRequirement`): **NEW** — now enforces SoD with the same check.
+
+### UI Wiring
+- **BlueprintsView:** The `BlueprintRow` component receives `userId` from `useAuth()`. If `blueprint.submitted_by_profile_id === userId`, the Approve button is disabled and "You submitted this" is displayed.
+- **CriticalRolesView:** The `RequirementRow` component receives `userId` from `useAuth()`. If `requirement.submitted_by_profile_id === userId`, the Approve button is disabled and "You submitted this" is displayed.
+
+---
+
 ## Validation Summary
 
 | Check | Result |
 |-------|--------|
 | V4 blueprint created and approved | ✅ |
-| Separation of duties enforced (submitter ≠ approver) | ✅ |
+| Separation of duties enforced — blueprint (backend) | ✅ |
+| Separation of duties enforced — CRR (backend) | ✅ NEW |
+| Separation of duties wired — blueprint (UI) | ✅ NEW |
+| Separation of duties wired — CRR (UI) | ✅ NEW |
 | V3 blueprint superseded, V4 current | ✅ |
 | V3 canonical requirements superseded (immutable) | ✅ |
 | V3 CRRs marked stale_for_future_snapshots | ✅ |
@@ -132,12 +153,12 @@ This checkpoint validates the full V4 revision lifecycle: creating revised canon
 
 ## Open Items
 
-1. **UI wiring for separation of duties** — The backend enforces SoD (submitter ≠ approver); the UI should surface this constraint to users (disable "Approve" button for the submitter, show explanation).
-2. **UI controls for Critical Roles** — The CriticalRolesView needs controls for designating, pausing, removing, and managing CriticalRoleRequirements (create/submit/approve/revise).
-3. **Snapshot 3 count discrepancy** — Snapshot 3 reports expected_count=1 / generated_count=1 but contains 7 requirements in requirements_snapshot. This is a display-field bug from the V3 generation run; the hash and requirements array are correct. Investigate the count fields in a follow-up.
+1. ~~**UI wiring for separation of duties**~~ — ✅ **DONE.** Both backend functions enforce SoD, and both UI views disable the Approve button for the submitter.
+2. **UI controls for Critical Roles** — The CriticalRolesView designation UI is still a placeholder. Needs controls for designating (criticality_level, governance_tier, continuity_urgency), pausing, removing, and managing CriticalRoleRequirements (create/submit/approve/revise with modification_type and base binding).
+3. ~~**Snapshot 3 count discrepancy**~~ — ✅ **RESOLVED.** Snapshot 3 legitimately has 1 requirement (only the tech-stack CRR was applicable at V3 generation time). Counts match (1=1), hash is correct, snapshot is immutable. The earlier "discrepancy" was a verification-code mapping bug.
 
 ---
 
 ## Conclusion
 
-The V4 revision lifecycle is fully functional: canonical requirements and CriticalRoleRequirements can be revised under a new blueprint version with full source tracing, the effective blueprint snapshot correctly merges V4 canonical requirements with V4 position-specific requirements, and prior snapshots remain immutable. The succession module's integrity guarantees (separation of duties, revision tracing, snapshot immutability, stale-marking) are enforced end-to-end.
+The V4 revision lifecycle is fully functional: canonical requirements and CriticalRoleRequirements can be revised under a new blueprint version with full source tracing, the effective blueprint snapshot correctly merges V4 canonical requirements with V4 position-specific requirements, prior snapshots remain immutable, and separation of duties is now enforced both in the backend and wired into the UI for both blueprint and CRR approval workflows.

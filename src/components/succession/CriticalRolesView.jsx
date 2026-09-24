@@ -28,7 +28,8 @@ import { Label } from "@/components/ui/label";
  */
 export default function CriticalRolesView() {
   const { invoke, loading, error, clearError } = useSuccessionApi();
-  const { hasPermission } = useAuth();
+  const { hasPermission, user } = useAuth();
+  const userId = user?.id;
   const [cycles, setCycles] = useState([]);
   const [selectedCycleId, setSelectedCycleId] = useState(null);
   const [roles, setRoles] = useState([]);
@@ -175,6 +176,7 @@ export default function CriticalRolesView() {
                  requirement={req}
                  canManage={canManage}
                  loading={loading}
+                 userId={userId}
                  onApprove={() => handleApproveRequirement(req.id)}
                  onReturn={() => handleReturnRequirement(req.id)}
                />
@@ -186,7 +188,9 @@ export default function CriticalRolesView() {
   );
 }
 
-function RequirementRow({ requirement, canManage, loading, onApprove, onReturn }) {
+function RequirementRow({ requirement, canManage, loading, userId, onApprove, onReturn }) {
+  // Separation of duties: disallow approving a requirement you submitted.
+  const isSubmitter = userId && requirement.submitted_by_profile_id && requirement.submitted_by_profile_id === userId;
   return (
     <div className="border border-gray-200 rounded-lg p-3 bg-white">
       <div className="flex items-start justify-between gap-3">
@@ -200,11 +204,21 @@ function RequirementRow({ requirement, canManage, loading, onApprove, onReturn }
             {requirement.applicability_status !== "applicable" && (
               <span className="text-xs text-gray-400">{requirement.applicability_status}</span>
             )}
+            {isSubmitter && requirement.status === "submitted" && (
+              <span className="text-xs text-gray-400 italic">You submitted this</span>
+            )}
           </div>
         </div>
         {canManage && requirement.status === "submitted" && (
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={onApprove} disabled={loading}>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs"
+              onClick={onApprove}
+              disabled={loading || isSubmitter}
+              title={isSubmitter ? "Separation of duties: you cannot approve a requirement you submitted" : undefined}
+            >
               <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Approve
             </Button>
             <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={onReturn} disabled={loading}>

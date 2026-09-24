@@ -30,7 +30,8 @@ import { Textarea } from "@/components/ui/textarea";
  */
 export default function BlueprintsView() {
   const { invoke, loading, error, clearError } = useSuccessionApi();
-  const { hasPermission } = useAuth();
+  const { hasPermission, user } = useAuth();
+  const userId = user?.id;
   const [cycles, setCycles] = useState([]);
   const [selectedCycleId, setSelectedCycleId] = useState(null);
   const [roles, setRoles] = useState([]);
@@ -173,6 +174,7 @@ export default function BlueprintsView() {
                    blueprint={bp}
                    canManage={canManage}
                    loading={loading}
+                   userId={userId}
                    onApprove={() => handleApproveBlueprint(bp.id, bp.blueprint_approval_revision || 0)}
                    readOnly={bp.status === "approved"}
                  />
@@ -253,7 +255,9 @@ export default function BlueprintsView() {
   );
 }
 
-function BlueprintRow({ blueprint, canManage, loading, onApprove, readOnly }) {
+function BlueprintRow({ blueprint, canManage, loading, userId, onApprove, readOnly }) {
+  // Separation of duties: disallow approving a blueprint you submitted.
+  const isSubmitter = userId && blueprint.submitted_by_profile_id && blueprint.submitted_by_profile_id === userId;
   return (
     <div className="border border-gray-200 rounded-lg p-3 bg-white">
       <div className="flex items-center justify-between gap-3">
@@ -271,9 +275,19 @@ function BlueprintRow({ blueprint, canManage, loading, onApprove, readOnly }) {
             {blueprint.status}
           </span>
           {canManage && blueprint.status === "submitted" && (
-            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={onApprove} disabled={loading}>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs"
+              onClick={onApprove}
+              disabled={loading || isSubmitter}
+              title={isSubmitter ? "Separation of duties: you cannot approve a blueprint you submitted" : undefined}
+            >
               <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Approve
             </Button>
+          )}
+          {isSubmitter && blueprint.status === "submitted" && (
+            <span className="text-xs text-gray-400 italic">You submitted this</span>
           )}
         </div>
       </div>
