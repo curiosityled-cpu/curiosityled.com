@@ -843,56 +843,37 @@ async function executeGenerateReport(base44, user, params) {
 
 async function executeCreateReminder(base44, user, params) {
   const { title, message, scheduledFor, recipientEmails = [user.email], priority = 'medium', relatedEntityType, relatedEntityId } = params;
-
+  // Security: Only managers/admins may send reminders to other users.
+  const mgrRoles = ['User Level 2','User Level 3','Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'];
+  const isMgr = mgrRoles.includes(user.app_role);
+  const targetEmails = isMgr ? recipientEmails : recipientEmails.filter(e => e === user.email);
+  if (targetEmails.length === 0) return { message: 'You do not have permission to send reminders to other users.' };
   const createdNotifications = [];
-
-  for (const email of recipientEmails) {
+  for (const email of targetEmails) {
     const notification = await base44.asServiceRole.entities.Notification.create({
-      user_email: email,
-      type: 'reminder',
-      title: title,
-      message: message,
-      scheduled_for: scheduledFor,
-      priority: priority,
-      status: 'pending',
-      related_entity_type: relatedEntityType || null,
-      related_entity_id: relatedEntityId || null
+      user_email: email, type: 'reminder', title, message, scheduled_for: scheduledFor, priority, status: 'pending',
+      related_entity_type: relatedEntityType || null, related_entity_id: relatedEntityId || null
     });
     createdNotifications.push(notification);
   }
-
-  return {
-    message: `Created ${createdNotifications.length} reminder(s) scheduled for ${new Date(scheduledFor).toLocaleString()}`,
-    notification_ids: createdNotifications.map(n => n.id),
-    count: createdNotifications.length
-  };
+  return { message: `Created ${createdNotifications.length} reminder(s) scheduled for ${new Date(scheduledFor).toLocaleString()}`, notification_ids: createdNotifications.map(n => n.id), count: createdNotifications.length };
 }
 
 async function executeAssignLearning(base44, user, params) {
   const { learningResourceId, resourceTitle, userEmails, dueDate, priority = 'medium', notes } = params;
-
+  // Security: Only managers/admins may assign learning to others.
+  const mgrRoles = ['User Level 2','User Level 3','Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'];
+  if (!mgrRoles.includes(user.app_role)) return { message: 'You do not have permission to assign learning to other users.' };
   const assignments = [];
-
   for (const email of userEmails) {
     const assignment = await base44.asServiceRole.entities.AssignedLearning.create({
-      user_email: email,
-      learning_resource_id: learningResourceId,
-      assigned_by: user.email,
-      title: resourceTitle || 'Learning Assignment',
-      description: notes || `Assigned by ${user.full_name} via Atreus`,
-      priority: priority,
-      due_date: dueDate || null,
-      status: 'assigned',
-      client_id: user.client_id
+      user_email: email, learning_resource_id: learningResourceId, assigned_by: user.email,
+      title: resourceTitle || 'Learning Assignment', description: notes || `Assigned by ${user.full_name} via Atreus`,
+      priority, due_date: dueDate || null, status: 'assigned', client_id: user.client_id
     });
     assignments.push(assignment);
   }
-
-  return {
-    message: `Successfully assigned "${resourceTitle}" to ${assignments.length} user(s)`,
-    assignment_ids: assignments.map(a => a.id),
-    count: assignments.length
-  };
+  return { message: `Successfully assigned "${resourceTitle}" to ${assignments.length} user(s)`, assignment_ids: assignments.map(a => a.id), count: assignments.length };
 }
 
 async function executeCreateGoal(base44, user, params) {
@@ -2481,48 +2462,33 @@ Make it actionable and specific.`;
 
 async function executeBulkUpdateRequestStatus(base44, user, params) {
   const { requestIds, newStatus, note } = params;
-
+  // Security: Only admins may bulk-update development request statuses.
+  const adminRoles = ['Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'];
+  if (!adminRoles.includes(user.app_role)) return { message: 'You do not have permission to update development requests.' };
   for (const id of requestIds) {
     await base44.asServiceRole.entities.DevelopmentRequest.update(id, {
-      status: newStatus,
-      notes: note ? `${note}\n(Updated by ${user.full_name} via Atreus)` : undefined,
+      status: newStatus, notes: note ? `${note}\n(Updated by ${user.full_name} via Atreus)` : undefined,
       updated_date: new Date().toISOString()
     });
   }
-
-  return {
-    message: `Updated ${requestIds.length} request(s) to status: ${newStatus}`,
-    count: requestIds.length
-  };
+  return { message: `Updated ${requestIds.length} request(s) to status: ${newStatus}`, count: requestIds.length };
 }
 
 async function executeAssignRequestToUser(base44, user, params) {
   const { requestId, assigneeEmail, priority, dueDate } = params;
-
+  // Security: Only admins may reassign development requests.
+  const adminRoles = ['Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'];
+  if (!adminRoles.includes(user.app_role)) return { message: 'You do not have permission to assign development requests.' };
   await base44.asServiceRole.entities.DevelopmentRequest.update(requestId, {
-    assigned_to: assigneeEmail,
-    priority: priority,
-    due_date: dueDate,
-    status: 'assigned',
-    updated_date: new Date().toISOString()
+    assigned_to: assigneeEmail, priority, due_date: dueDate, status: 'assigned', updated_date: new Date().toISOString()
   });
-
-  // Notify assignee
   await base44.asServiceRole.entities.Notification.create({
-    user_email: assigneeEmail,
-    type: 'reminder',
-    title: 'New Request Assigned',
+    user_email: assigneeEmail, type: 'reminder', title: 'New Request Assigned',
     message: `${user.full_name} has assigned you a development request${priority ? ` (Priority: ${priority})` : ''}`,
-    scheduled_for: new Date().toISOString(),
-    priority: priority || 'medium',
-    related_entity_type: 'DevelopmentRequest',
-    related_entity_id: requestId
+    scheduled_for: new Date().toISOString(), priority: priority || 'medium',
+    related_entity_type: 'DevelopmentRequest', related_entity_id: requestId
   });
-
-  return {
-    message: `Assigned request to ${assigneeEmail}${priority ? ` with ${priority} priority` : ''}`,
-    assigned: true
-  };
+  return { message: `Assigned request to ${assigneeEmail}${priority ? ` with ${priority} priority` : ''}`, assigned: true };
 }
 
 // ==================== ADVANCED GOALS EXECUTION FUNCTIONS ====================

@@ -1,4 +1,3 @@
-
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
 import { jsPDF } from 'npm:jspdf@2.5.1';
 
@@ -9,6 +8,16 @@ Deno.serve(async (req) => {
         const user = await base44.auth.me();
         if (!user) {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Security: Only admin/analyst/org-leader roles may generate custom reports.
+        // Regular employees must not be able to export org-wide PII and assessment scores.
+        const reportAllowedRoles = [
+            'Analyst', 'Admin Level 1', 'Admin Level 2',
+            'Super Administrator', 'Partner Business Administrator', 'Platform Admin'
+        ];
+        if (!reportAllowedRoles.includes(user.app_role)) {
+            return Response.json({ error: 'Forbidden — insufficient permissions to generate custom reports' }, { status: 403 });
         }
 
         const { report_config, output_format } = await req.json();

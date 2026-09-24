@@ -15,6 +15,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'request_id is required' }, { status: 400 });
     }
 
+    // Security: Only admin roles may triage development requests.
+    const triageRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Partner Business Administrator', 'Platform Admin'];
+    if (!triageRoles.includes(user.app_role)) {
+      return Response.json({ error: 'Forbidden — admin access required to triage requests' }, { status: 403 });
+    }
+
     // Fetch the request
     const requests = await base44.asServiceRole.entities.DevelopmentRequest.filter({ id: request_id });
     
@@ -23,6 +29,11 @@ Deno.serve(async (req) => {
     }
 
     const request = requests[0];
+
+    // Security: Verify the caller's tenant matches the request's tenant.
+    if (user.app_role !== 'Platform Admin' && request.client_id !== user.client_id) {
+      return Response.json({ error: 'Forbidden — request belongs to a different client' }, { status: 403 });
+    }
 
     // Auto-determine if approval is needed based on thresholds
     let requiresApproval = false;

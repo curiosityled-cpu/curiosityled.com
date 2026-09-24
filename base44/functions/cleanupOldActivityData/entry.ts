@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
 
 /**
  * Automated Data Retention Cleanup
@@ -10,20 +11,11 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
-    // For scheduled tasks, use service role directly (no user auth needed)
-    // For manual calls, check admin permissions
-    let isScheduledTask = true;
-    try {
-      const user = await base44.auth.me();
-      if (user) {
-        isScheduledTask = false;
-        // Manual call - verify admin
-        if (user.app_role !== 'Platform Admin' && user.app_role !== 'Super Administrator') {
-          return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
-        }
-      }
-    } catch {
-      // No user context = scheduled task, continue
+    // Security: Gate behind internal secret or admin credentials.
+    // Anonymous callers must never be able to trigger mass deletion.
+    const auth = await authorizeScheduledTask(req, base44);
+    if (!auth.authorized) {
+      return auth.response;
     }
 
     const now = new Date();

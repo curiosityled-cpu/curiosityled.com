@@ -943,6 +943,10 @@ function generatePDF(report, scores, leadInfo, variant = "general") {
 }
 
 // ── Email HTML ──
+function escapeHtml(str) {
+  return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
 function buildEmailHtml(leadInfo, pdfUrl, variant = "general") {
   const isBpo = variant === "bpo";
   const heading = isBpo ? "Your BPO Leadership Diagnostic Report" : "Your 90-Day Leadership Support Reboot Blueprint";
@@ -950,13 +954,14 @@ function buildEmailHtml(leadInfo, pdfUrl, variant = "general") {
     ? "Your BPO Leadership Diagnostic report is ready. Based on your answers, we've assembled a tailored 90-day action plan covering your scores, your primary risk pattern, and concrete next steps."
     : "Your Leadership Reboot Diagnostic report is ready. Based on your answers, we've assembled a tailored 90-day plan covering your score, your top two growth blocks, and concrete next steps.";
   const footerLabel = isBpo ? "BPO Leadership Diagnostic" : "Leadership Support Diagnostic";
+  const safeName = escapeHtml(leadInfo.name);
   return `
     <html>
       <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; color: #0a0a0a;">
         <div style="border-top: 4px solid #0202ff; padding-top: 30px;">
           <p style="font-size: 12px; font-weight: 600; letter-spacing: 0.15em; color: #0202ff; text-transform: uppercase;">Curiosity Led</p>
           <h1 style="font-size: 26px; font-weight: 700; margin: 16px 0 8px;">${heading}</h1>
-          <p style="font-size: 16px; color: #666; margin: 0 0 24px;">Hi ${leadInfo.name || "there"},</p>
+          <p style="font-size: 16px; color: #666; margin: 0 0 24px;">Hi ${safeName || "there"},</p>
           <p style="font-size: 15px; line-height: 1.6; color: #444;">
             ${bodyText}
           </p>

@@ -9,6 +9,11 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        // Security: Only Platform Admin may mass-delete career path records.
+        if (user.app_role !== 'Platform Admin') {
+            return Response.json({ error: 'Forbidden — Platform Admin access required' }, { status: 403 });
+        }
+
         // Get all roles and career paths
         const roles = await base44.asServiceRole.entities.Role.list();
         const careerPaths = await base44.asServiceRole.entities.CareerPath.list();

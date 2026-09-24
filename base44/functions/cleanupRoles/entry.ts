@@ -9,6 +9,11 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        // Security: Only Platform Admin may mass-delete role records.
+        if (user.app_role !== 'Platform Admin') {
+            return Response.json({ error: 'Forbidden — Platform Admin access required' }, { status: 403 });
+        }
+
         const { duplicateBy = 'title_exact', keep = 'most_complete' } = await req.json();
 
         const roles = await base44.entities.Role.list();

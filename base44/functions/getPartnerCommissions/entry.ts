@@ -19,10 +19,19 @@ Deno.serve(async (req) => {
     const isAdmin = ['Platform Admin', 'Super Administrator'].includes(user.app_role);
     const isPartner = user.partner_id;
 
+    // Security: Require admin or partner role to access commission data.
+    if (!isAdmin && !isPartner) {
+      return Response.json({ error: 'Forbidden — admin or partner access required' }, { status: 403 });
+    }
+
     // Build query
     let query = {};
 
     if (partnerId) {
+      // Security: Non-admin partners may only query their own partner_id.
+      if (!isAdmin && partnerId !== user.partner_id) {
+        return Response.json({ error: 'Forbidden — cannot access another partner\'s commissions' }, { status: 403 });
+      }
       query.partner_id = partnerId;
     } else if (isPartner && !isAdmin) {
       // Partners can only see their own commissions

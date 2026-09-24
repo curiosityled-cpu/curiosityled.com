@@ -42,6 +42,12 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        // Security: Only Platform Admin may prune competencies — this destroys
+        // core configuration data that assessments and career paths depend on.
+        if (user.app_role !== 'Platform Admin') {
+            return Response.json({ error: 'Forbidden — Platform Admin access required' }, { status: 403 });
+        }
+
         const allCompetencies = await base44.entities.Competency.list();
         
         const competenciesToDelete = allCompetencies.filter(

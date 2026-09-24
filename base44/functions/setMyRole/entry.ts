@@ -30,13 +30,16 @@ Deno.serve(async (req) => {
             'Partner Business Administrator'
         ];
 
+        // Security: Only truly non-privileged roles are self-serviceable.
+        // Admin Level 1, Executive, and HRBP were removed because they grant
+        // elevated capabilities across other backend functions (bulk assignment,
+        // team hierarchy, user listing, etc.). Privileged users (Platform Admin,
+        // Super Administrator, Partner Business Administrator) can still self-assign
+        // any role via the Role Selector for demo/testing purposes.
         const selfServiceRoles = [
             'User Level 1',
             'User Level 2',
             'Analyst',
-            'Executive',
-            'HRBP',
-            'Admin Level 1',
             'Leadership Coach',
             'Consultant'
         ];
