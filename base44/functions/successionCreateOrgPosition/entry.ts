@@ -3,6 +3,7 @@ import { bootstrapSuccessionAuth } from "../../shared/successionAuthBootstrap.ts
 import { authorizeSuccessionAction } from "../../shared/authorizeSuccessionAction.ts";
 import { writeSuccessionAuditEvent } from "../../shared/successionAuditWriter.ts";
 import { createOrAttachOperation, beginOperationExecution, completeOperation, failOperation } from "../../shared/successionOperationHelper.ts";
+import { validateSameTenantReference, writeDeniedReferenceEvent } from "../../shared/successionCrossTenantValidation.ts";
 
 /** POST /successionCreateOrgPosition — create a position for an org role */
 export default async function(req: Request): Promise<Response> {
@@ -18,6 +19,13 @@ export default async function(req: Request): Promise<Response> {
   if (opResult.is_duplicate) return Response.json({ operation_id, status: opResult.operation.status, note: "duplicate attached" });
   try {
     await beginOperationExecution(base44, opResult.operation.id);
+    // Cross-tenant validation: verify org_role belongs to caller's tenant
+    const orgRole = await validateSameTenantReference(base44, "OrgRole", org_role_id, auth.client_id);
+    if (!orgRole) {
+      await writeDeniedReferenceEvent(base44, auth, "OrgRole", org_role_id, "cross_tenant_or_not_found");
+      await failOperation(base44, opResult.operation.id, "org_role_not_found");
+      return Response.json({ error: "OrgRole not found" }, { status: 404 });
+    }
     const position = await base44.asServiceRole.entities.OrgPosition.create({ client_id: auth.client_id, org_role_id, title, position_identifier, is_active: true, confidentiality_level: "confidential", integrity_status: "pending_validation" });
     const auditEvent = await writeSuccessionAuditEvent({ base44, action_type: "org_position_created", target_entity_type: "OrgPosition", target_entity_id: position.id, metadata: { org_role_id, title }, operation_id, event_key: { action: "org_position_created", position_id: position.id }, event_type: "domain_action_completed", target_record_id: position.id, attempt_number: 1 });
     await completeOperation(base44, opResult.operation.id, auditEvent?.id || null, { position_id: position.id });

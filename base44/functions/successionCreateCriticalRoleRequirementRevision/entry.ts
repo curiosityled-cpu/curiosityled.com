@@ -52,7 +52,7 @@ export default async function(req: Request): Promise<Response> {
   try {
     await beginOperationExecution(base44, opResult.operation.id);
 
-    const priorReqs = await base44.asServiceRole.entities.CriticalRoleRequirement.filter({ id: prior_requirement_id });
+    const priorReqs = await base44.asServiceRole.entities.CriticalRoleRequirement.filter({ id: prior_requirement_id, client_id: auth.client_id });
     if (priorReqs.length === 0) {
       await failOperation(base44, opResult.operation.id, "prior_requirement_not_found");
       return Response.json({ error: "Prior requirement not found" }, { status: 404 });

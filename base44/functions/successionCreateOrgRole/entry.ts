@@ -3,6 +3,7 @@ import { bootstrapSuccessionAuth } from "../../shared/successionAuthBootstrap.ts
 import { authorizeSuccessionAction } from "../../shared/authorizeSuccessionAction.ts";
 import { writeSuccessionAuditEvent } from "../../shared/successionAuditWriter.ts";
 import { createOrAttachOperation, beginOperationExecution, completeOperation, failOperation } from "../../shared/successionOperationHelper.ts";
+import { validateSameTenantReference, writeDeniedReferenceEvent } from "../../shared/successionCrossTenantValidation.ts";
 
 /**
  * POST /successionCreateOrgRole
@@ -48,6 +49,14 @@ export default async function(req: Request): Promise<Response> {
 
   try {
     await beginOperationExecution(base44, opResult.operation.id);
+
+    // Cross-tenant validation: verify cycle belongs to caller's tenant
+    const cycle = await validateSameTenantReference(base44, "SuccessionCycle", cycle_id, auth.client_id);
+    if (!cycle) {
+      await writeDeniedReferenceEvent(base44, auth, "SuccessionCycle", cycle_id, "cross_tenant_or_not_found");
+      await failOperation(base44, opResult.operation.id, "cycle_not_found");
+      return Response.json({ error: "Cycle not found" }, { status: 404 });
+    }
 
     const orgRole = await base44.asServiceRole.entities.OrgRole.create({
       client_id: auth.client_id,

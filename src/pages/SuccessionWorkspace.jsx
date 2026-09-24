@@ -16,6 +16,11 @@ import {
   Building2,
   Sparkles,
 } from "lucide-react";
+import CyclesView from "@/components/succession/CyclesView";
+import RolesView from "@/components/succession/RolesView";
+import CandidatesView from "@/components/succession/CandidatesView";
+import EvidenceView from "@/components/succession/EvidenceView";
+import CalibrationView from "@/components/succession/CalibrationView";
 
 const SUB_VIEWS = [
   { key: "cycles", label: "Cycles", icon: Repeat },
@@ -28,6 +33,7 @@ const SUB_VIEWS = [
   { key: "my-succession", label: "My Succession", icon: User },
 ];
 
+const PHASE_1_VIEWS = ["cycles", "roles", "candidates", "evidence", "calibration"];
 const PHASE_0_VIEWS = ["governance", "monitor"];
 
 export default function SuccessionWorkspace() {
@@ -43,9 +49,9 @@ export default function SuccessionWorkspace() {
       title="Succession Management"
       subtitle="Frame critical roles, discover successors, calibrate readiness, and manage transitions with human-led governance and strict tenant isolation."
       action={
-        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0202ff]/5 border border-[#0202ff]/15">
-          <Sparkles className="w-3.5 h-3.5 text-[#0202ff]" />
-          <span className="text-xs font-medium text-[#0202ff]">Phase 0 — Architecture Initialized</span>
+        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200">
+          <Lock className="w-3.5 h-3.5 text-amber-600" />
+          <span className="text-xs font-medium text-amber-700">Phase 1 — Development Only (Non-Production)</span>
         </div>
       }
     >
@@ -73,7 +79,9 @@ export default function SuccessionWorkspace() {
 
       {/* Content area */}
       <div className="mt-5">
-        {PHASE_0_VIEWS.includes(activeView) ? (
+        {PHASE_1_VIEWS.includes(activeView) ? (
+          <Phase1View viewKey={activeView} />
+        ) : PHASE_0_VIEWS.includes(activeView) ? (
           <Phase0View viewKey={activeView} />
         ) : (
           <LaterPhaseEmptyState viewKey={activeView} />
@@ -81,6 +89,15 @@ export default function SuccessionWorkspace() {
       </div>
     </MVPPageLayout>
   );
+}
+
+function Phase1View({ viewKey }) {
+  if (viewKey === "cycles") return <CyclesView />;
+  if (viewKey === "roles") return <RolesView />;
+  if (viewKey === "candidates") return <CandidatesView />;
+  if (viewKey === "evidence") return <EvidenceView />;
+  if (viewKey === "calibration") return <CalibrationView />;
+  return <LaterPhaseEmptyState viewKey={viewKey} />;
 }
 
 function Phase0View({ viewKey }) {
