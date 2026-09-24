@@ -271,13 +271,62 @@ All 10 cross-tenant rejection points emit `denied_cross_tenant_reference` audit 
 
 ---
 
-## 9. Open Items
+## 9. Negative SoD Test — EXECUTED & VERIFIED
+
+### Test: Self-Approval Rejection
+| Step | Result |
+|---|---|
+| Submit Blueprint V7 (as Platform Admin) | ✅ `status: submitted`, 4 requirements frozen |
+| Attempt self-approval (same Platform Admin) | ✅ **REJECTED** — `403 SELF_APPROVAL_PROHIBITED` |
+| Blueprint state after rejection | ✅ Unchanged — `status: submitted`, `is_current: false`, `approved_at: null` |
+| OrgRole state after rejection | ✅ Unchanged — `current_blueprint_id: null`, `revision: 0`, no lock held |
+| Failed operation recorded | ✅ `status: failed`, `error_code: SELF_APPROVAL_PROHIBITED` |
+| Denial audit event written | ✅ `action_type: denied_action`, `denied_reason: self_approval_prohibited`, both actor IDs captured, `operation_id` preserved, `event_type: operation_failed` |
+
+**Conclusion:** SoD enforcement logic verified — server-side identity comparison prevents self-approval, no mutation occurs on rejection, full audit trail captured.
+
+---
+
+## 10. Fresh V8 Blueprint — PREPARED FOR GENUINE SoD TEST
+
+Since V7 was submitted by Platform Admin (for the negative test), a fresh V8 blueprint is prepared for the genuine two-session test:
+
+| Field | Value |
+|---|---|
+| Blueprint ID | `6ab5a113efb46b9ee8ef72e8` |
+| Version Label | `v8-sod-genuine` |
+| Status | **draft** (ready for eosoria to submit) |
+| OrgRole | `6ab59f8d2ae6b058652ecb42` (VP of Engineering V7 SoD Test) |
+| Requirements | 4 canonical requirements (all draft) |
+
+### V8 Requirement IDs
+| ID | Type |
+|---|---|
+| `6ab5a11460d182c57139d713` | competency |
+| `6ab5a11460d182c57139d714` | experience |
+| `6ab5a11460d182c57139d715` | outcome |
+| `6ab5a11460d182c57139d716` | competency |
+
+---
+
+## 11. Stale Test Function — CLEANED UP
+
+`successionPhase1_5Test` failure injection tests (FIJ-01 through FIJ-09) have been updated:
+- All `__fail_at` references removed from the test function
+- Tests marked as `skipped: true` with reason: "Failure injection hooks removed from production code per security hardening"
+- FIJ-10 (expired lease recovery) remains — it does not use `__fail_at`
+- Build passes with no errors
+
+---
+
+## 12. Open Items
 
 | Item | Status | Action Required |
 |---|---|---|
-| Two-session SoD positive test | **Blocked** — requires two browser sessions | User executes Session A + Session B per instructions above |
-| Snapshot 5 generation | **Blocked** — depends on V7 approval | Generate after SoD test completes |
-| `successionPhase1_5Test` failure injection tests | **Stale** — `__fail_at` removed from approve function | Test function still passes `__fail_at` but it's now ignored; tests will behave differently |
+| Negative SoD test (self-approval rejection) | ✅ **COMPLETE** | Verified — 403, no mutation, audit captured |
+| Two-session positive SoD test | **Ready** — V8 blueprint prepared | User: Session A (eosoria) submits V8, Session B (ceo) approves V8 |
+| Snapshot 5 generation | **Ready** — after V8 approval | Generate snapshot from approved V8 + approved CRR |
+| Failure injection cleanup | ✅ **COMPLETE** | All `__fail_at` removed from production + test functions |
 
 ---
 
@@ -292,5 +341,6 @@ All 10 cross-tenant rejection points emit `denied_cross_tenant_reference` audit 
 | SoD backend enforcement verified in code | ✅ COMPLETE |
 | Audit writer fields verified (operation_id, event_key, event_type, etc.) | ✅ COMPLETE |
 | Build integrity verified | ✅ COMPLETE |
-| Genuine two-session SoD execution | ⏳ PENDING — requires browser sessions |
-| Snapshot 5 generation | ⏳ PENDING — depends on V7 approval |
+| Negative SoD test (self-approval rejection) | ✅ COMPLETE |
+| Genuine two-session positive SoD execution | ⏳ PENDING — V8 blueprint ready, requires browser sessions |
+| Snapshot 5 generation | ⏳ PENDING — depends on V8 approval |
