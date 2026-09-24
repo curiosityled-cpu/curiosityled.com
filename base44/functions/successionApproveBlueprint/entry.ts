@@ -86,6 +86,31 @@ export default async function(req: Request): Promise<Response> {
       return Response.json({ error: "Blueprint not found" }, { status: 404 });
     }
 
+    // ── SEPARATION OF DUTIES: submitter ≠ approver ──────────────────────
+    // submitted_by_profile_id comes from the stored blueprint record.
+    // approver_profile_id comes from authenticated server context.
+    // Request-body identity fields are never read — only server-derived auth.
+    const submitted_by = blueprints[0].submitted_by_profile_id;
+    if (submitted_by && submitted_by === auth.profile_id) {
+      await failOperation(base44, opResult.operation.id, "SELF_APPROVAL_PROHIBITED");
+      await writeSuccessionAuditEvent({
+        base44, action_type: "denied_action",
+        target_entity_type: "RoleSuccessBlueprint", target_entity_id: blueprint_id,
+        metadata: {
+          action: "successionApproveBlueprint",
+          denied_reason: "self_approval_prohibited",
+          submitted_by_profile_id: submitted_by,
+          approver_profile_id: auth.profile_id,
+        },
+        operation_id, event_key: { action: "self_approval_denied", blueprint_id, operation_id },
+        event_type: "operation_failed", target_record_id: blueprint_id, attempt_number: 1,
+      });
+      return Response.json({
+        error: "SELF_APPROVAL_PROHIBITED",
+        detail: "The submitter and approver must be different users.",
+      }, { status: 403 });
+    }
+
     // Read OrgRole — cross-tenant validated
     const roles = await base44.asServiceRole.entities.OrgRole.filter({ id: org_role_id, client_id: auth.client_id });
     if (roles.length === 0) {
@@ -210,7 +235,21 @@ export default async function(req: Request): Promise<Response> {
       throw new Error("INJECTED_FAILURE:after_revision_before_audit");
     }
 
-    // 3e. Mark previously approved CriticalRoleRequirements as stale
+    // 3e. Approve all eligible RoleRequirements attached to this blueprint
+    //     (atomic with blueprint approval — derived effectiveness strategy)
+    const eligibleReqs = await base44.asServiceRole.entities.RoleRequirement.filter({
+      client_id: auth.client_id, blueprint_id,
+      status: "submitted", integrity_status: "active",
+    });
+    for (const req of eligibleReqs) {
+      await base44.asServiceRole.entities.RoleRequirement.update(req.id, {
+        status: "approved",
+        approved_at: new Date().toISOString(),
+        approved_by_profile_id: auth.profile_id,
+      });
+    }
+
+    // 3f. Mark previously approved CriticalRoleRequirements as stale
     const priorRequirements = await base44.asServiceRole.entities.CriticalRoleRequirement.filter({
       org_role_id, status: "approved", applicability_status: "applicable",
     });

@@ -7,7 +7,10 @@ import { createOrAttachOperation, beginOperationExecution, completeOperation, fa
 /**
  * POST /successionReturnBlueprint
  * Returns a SUBMITTED RoleSuccessBlueprint back to draft status for re-authoring.
- * Does NOT mutate approved/superseded blueprints — those are immutable.
+ * Does NOT mutate approved/superseded/withdrawn blueprints — those are immutable.
+ *
+ * On return, all RoleRequirements attached to this blueprint are reopened
+ * (status set back to "draft") so they can be edited again.
  */
 export default async function(req: Request): Promise<Response> {
   const base44 = createClientFromRequest(req);
@@ -26,9 +29,28 @@ export default async function(req: Request): Promise<Response> {
     if (blueprints.length === 0) { await failOperation(base44, opResult.operation.id, "blueprint_not_found"); return Response.json({ error: "Blueprint not found" }, { status: 404 }); }
     const bp = blueprints[0];
     if (bp.status !== "submitted") { await failOperation(base44, opResult.operation.id, "cannot_return_non_submitted"); return Response.json({ error: "Only submitted blueprints can be returned to draft." }, { status: 409 }); }
-    await base44.asServiceRole.entities.RoleSuccessBlueprint.update(blueprint_id, { status: "draft" });
-    const auditEvent = await writeSuccessionAuditEvent({ base44, action_type: "blueprint_returned_to_draft", target_entity_type: "RoleSuccessBlueprint", target_entity_id: blueprint_id, metadata: { org_role_id: bp.org_role_id }, operation_id, event_key: { action: "blueprint_returned", blueprint_id }, event_type: "domain_action_completed", target_record_id: blueprint_id, attempt_number: 1 });
-    await completeOperation(base44, opResult.operation.id, auditEvent?.id || null, { blueprint_id, status: "draft" });
-    return Response.json({ operation_id, blueprint_id, status: "draft" });
+
+    // Return blueprint to draft
+    await base44.asServiceRole.entities.RoleSuccessBlueprint.update(blueprint_id, {
+      status: "draft",
+      submitted_at: null,
+      submitted_by_profile_id: null,
+    });
+
+    // Reopen all RoleRequirements (submitted → draft)
+    const requirements = await base44.asServiceRole.entities.RoleRequirement.filter({
+      client_id: auth.client_id, blueprint_id, status: "submitted", integrity_status: "active",
+    });
+    for (const req of requirements) {
+      await base44.asServiceRole.entities.RoleRequirement.update(req.id, {
+        status: "draft",
+        submitted_at: null,
+        submitted_by_profile_id: null,
+      });
+    }
+
+    const auditEvent = await writeSuccessionAuditEvent({ base44, action_type: "blueprint_returned_to_draft", target_entity_type: "RoleSuccessBlueprint", target_entity_id: blueprint_id, metadata: { org_role_id: bp.org_role_id, requirements_reopened: requirements.length }, operation_id, event_key: { action: "blueprint_returned", blueprint_id }, event_type: "domain_action_completed", target_record_id: blueprint_id, attempt_number: 1 });
+    await completeOperation(base44, opResult.operation.id, auditEvent?.id || null, { blueprint_id, status: "draft", requirements_reopened: requirements.length });
+    return Response.json({ operation_id, blueprint_id, status: "draft", requirements_reopened: requirements.length });
   } catch (error) { await failOperation(base44, opResult.operation.id, "return_blueprint_failed"); return Response.json({ error: (error as Error).message }, { status: 500 }); }
 }
