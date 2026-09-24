@@ -80,7 +80,7 @@ export default async function(req: Request): Promise<Response> {
     // Merge canonical + position-specific (same logic as preview)
     const effectiveRequirements = canonicalReqs.map((r: any) => ({
       source_type: "canonical", source_requirement_id: r.id,
-      base_requirement_id: r.id, base_blueprint_id: blueprint.id, base_blueprint_version_number: role.blueprint_approval_revision,
+      base_requirement_id: r.id, base_blueprint_id: blueprint_id, base_blueprint_version_number: role.blueprint_approval_revision,
       modification_type: "canonical", effective_language: r.requirement_text, effective_level: r.requirement_detail || null,
       applicability_status: "applicable", exception_approval_status: "none",
     }));
@@ -89,7 +89,7 @@ export default async function(req: Request): Promise<Response> {
       if (pr.modification_type === "new_requirement") {
         effectiveRequirements.push({
           source_type: "position_specific", source_requirement_id: pr.id,
-          base_requirement_id: null, base_blueprint_id: blueprint.id, base_blueprint_version_number: role.blueprint_approval_revision,
+          base_requirement_id: null, base_blueprint_id: blueprint_id, base_blueprint_version_number: role.blueprint_approval_revision,
           modification_type: "new_requirement", effective_language: pr.requirement_text, effective_level: pr.requirement_detail || null,
           applicability_status: "applicable", exception_approval_status: "none",
         });
