@@ -50,7 +50,7 @@ export default function OverviewView() {
       const roleCount = rolesRes?.org_roles?.length || 0;
       const positionCount = positionsRes?.positions?.length || 0;
       const blueprintCount = blueprintsRes?.blueprints?.length || 0;
-      const snapshotCount = snapshotsRes?.incidents?.length || 0;
+      const incidentCount = snapshotsRes?.incidents?.length || 0;
 
       setCounts({
         cycles: cycleCount,
@@ -58,7 +58,7 @@ export default function OverviewView() {
         positions: positionCount,
         criticalRoles: 0,
         blueprints: blueprintCount,
-        snapshots: snapshotCount,
+        snapshots: incidentCount,
       });
 
       const steps = [
@@ -67,7 +67,7 @@ export default function OverviewView() {
         { label: "Create positions", done: positionCount > 0 },
         { label: "Designate critical roles", done: false },
         { label: "Draft and approve blueprints", done: blueprintCount > 0 },
-        { label: "Generate effective snapshots", done: snapshotCount > 0 },
+        { label: "No open integrity incidents", done: incidentCount === 0 && blueprintCount > 0 },
       ];
       setSetupSteps(steps);
     } catch {
@@ -128,7 +128,7 @@ export default function OverviewView() {
           <CountCard icon={Building2} label="Positions" value={counts.positions} />
           <CountCard icon={Shield} label="Critical Roles" value={counts.criticalRoles} />
           <CountCard icon={FileText} label="Blueprints" value={counts.blueprints} />
-          <CountCard icon={Camera} label="Snapshots" value={counts.snapshots} />
+          <CountCard icon={Camera} label="Integrity Incidents" value={counts.snapshots} />
         </div>
       </SuccessionSection>
 

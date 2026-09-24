@@ -130,14 +130,24 @@ export default function CriticalRolesView() {
 
       {selectedRoleId && selectedRole && (
         <SuccessionSection icon={Shield} title="Critical Role Designation">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <DesignationCard label="Criticality" value={selectedRole.confidentiality_level || "standard"} />
-            <DesignationCard label="Governance Tier" value={selectedRole.integrity_status || "active"} />
-            <DesignationCard label="Continuity Urgency" value={selectedRole.resolution_status || "pending"} />
+          <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600" />
+              <p className="text-sm font-medium text-amber-800">Designation not yet available</p>
+            </div>
+            <p className="text-xs text-amber-700 mt-1.5">
+              criticality_level, governance_tier and continuity_urgency are not yet defined on the
+              role schema, and no designation backend function is deployed. This screen cannot
+              designate this OrgPosition as a critical role within the active cycle until those are
+              added. The fields previously shown here (confidentiality_level, integrity_status,
+              resolution_status) are integrity metadata, not criticality dimensions, and have been
+              removed to avoid misrepresentation.
+            </p>
           </div>
           <div className="mt-3 p-3 rounded-lg bg-gray-50 border border-gray-200">
             <p className="text-xs text-gray-500">
-              These attributes are shown separately. No composite score or automatic ranking is computed.
+              When available, criticality_level, governance_tier and continuity_urgency will be shown
+              separately. No composite score or automatic ranking will be computed.
             </p>
           </div>
         </SuccessionSection>
@@ -172,15 +182,6 @@ export default function CriticalRolesView() {
            </div>}
         </SuccessionSection>
       )}
-    </div>
-  );
-}
-
-function DesignationCard({ label, value }) {
-  return (
-    <div className="border border-gray-200 rounded-lg p-3 bg-white">
-      <p className="text-xs text-gray-500 uppercase tracking-wider">{label}</p>
-      <p className="text-sm font-medium text-gray-900 mt-1 capitalize">{value}</p>
     </div>
   );
 }
