@@ -1,8 +1,8 @@
 # Phase 1 V4 Revision, Snapshot 4 & Acceptance Checkpoint
 
 **Date:** 2026-09-24
-**Status:** ✅ Complete
-**Scope:** V4 blueprint versioning, requirement revision tracing, CRR revision support, Snapshot 4 generation, SoD enforcement (backend + UI), Critical Role lifecycle, snapshot immutability proof, contaminated-data register
+**Status:** ✅ Complete (Phase 1 backend acceptance; UI runtime tests deferred)
+**Scope:** V4 blueprint versioning, requirement revision tracing, CRR revision support, Snapshot 4 generation, SoD enforcement (backend + UI), Critical Role lifecycle, snapshot immutability proof, contaminated-data register, audit writer bug fix, cross-tenant rejection audit events, snapshot generation failure injection
 
 ---
 
@@ -223,6 +223,85 @@ The following synthetic test records were created with manually altered `submitt
 
 ---
 
+## Audit Writer Bug Fix — Critical
+
+### Bug
+`successionAuditWriter.ts` silently dropped `event_key`, `event_type`, `operation_id`, `target_record_id`, and `attempt_number` from ALL audit events. Every audit event written before this fix is missing these fields.
+
+### Evidence
+- Old audit event `6ab566c917b9f738294fe572` (snapshot_generation_failed): `event_type=null, operation_id=null, event_key=null`
+- New audit events (after fix): all fields populated correctly ✅
+
+### Fix
+Updated `writeSuccessionAuditEvent` to accept and persist all fields: `operation_id`, `event_key`, `event_type`, `target_record_id`, `attempt_number`. All 10 cross-tenant denial call sites updated to pass `operation_id` for deterministic retry deduplication.
+
+---
+
+## Cross-Tenant Rejection Audit Events
+
+All 10 cross-tenant rejection points in succession backend functions now emit `denied_cross_tenant_reference` audit events with `operation_id` for retry deduplication.
+
+### Test Results (10 endpoints)
+| Endpoint | Foreign ID Response | Nonexistent ID Response | Indistinguishable | Mutation |
+|----------|-------------------|----------------------|------------------|----------|
+| successionGetBlueprint | 404 | 404 | ✅ | None |
+| successionGetOrgRole | 404 | 404 | ✅ | None |
+| successionGetCycle | 404 | 404 | ✅ | None |
+| successionGetCriticalRole | 404 | 404 | ✅ | None |
+| successionGetSnapshot | 404 | 404 | ✅ | None |
+| successionListCriticalRoleRequirements | 404 | 404 | ✅ | None |
+| successionListSnapshotIntegrityIncidents | 404 | 404 | ✅ | None |
+| successionListPositionAssignments | 404 | 404 | ✅ | None |
+| successionListPositionChanges | 404 | 404 | ✅ | None |
+| successionCreateEffectiveBlueprintSnapshot | 409 | 409 | ✅ | None |
+
+### Retry Collapse
+Duplicate `operation_id` returns "duplicate attached" without creating a second audit event ✅
+
+### Tenant B Isolation
+Tenant B records unchanged after all 10 tests ✅
+
+---
+
+## Snapshot Generation Failure Injection
+
+7 failure injection points added to `successionCreateEffectiveBlueprintSnapshot` to test snapshot generation reliability. Each point throws an `INJECTED_FAILURE` error, and the catch block quarantines any building-status parent.
+
+### Test Results (7 injection points)
+| Injection Point | Response | Parent Status | Parent Integrity | Children | Audit Event | Operation |
+|----------------|----------|---------------|-----------------|----------|-------------|-----------|
+| before_parent_creation | 500 | N/A (no parent) | N/A | 0 | N/A | failed |
+| after_parent_building | 500 | generation_failed | quarantined | 0 | ✅ written | failed |
+| after_first_child | 500 | generation_failed | quarantined | 1 | ✅ written | failed |
+| midway_children | 500 | generation_failed | quarantined | 3 | ✅ written | failed |
+| after_all_children_before_hash | 500 | generation_failed | quarantined | 6 | ✅ written | failed |
+| after_verification_before_publication | 500 | generation_failed | quarantined | 6 | ✅ written | failed |
+| during_audit_writing | 500 | generation_failed | quarantined | 6 | ✅ written | failed |
+
+### Key Findings
+- **before_parent_creation:** No parent created, no quarantine needed ✅
+- **after_parent_building through midway_children:** Parent quarantined via child-count verification path (detailed error with expected/created counts) ✅
+- **after_all_children_before_hash through during_audit_writing:** Parent quarantined via catch block (generic error) ✅
+- **All 6 quarantined parents:** status=generation_failed, integrity_status=quarantined, quarantine_reason populated ✅
+- **All 6 audit events:** action_type=snapshot_generation_failed, event_type=operation_failed, operation_id and event_key populated ✅
+- **All 7 operations:** status=failed, error_code populated ✅
+- **No orphaned children:** All 22 child records are linked to quarantined parents ✅
+- **No operational snapshots created:** Zero snapshots reached status=generated ✅
+
+### Test Artifacts (6 quarantined snapshots)
+| Snapshot ID | Injection Point | Children |
+|-------------|----------------|----------|
+| 6ab59838ceca27638371b6f9 | after_parent_building | 0 |
+| 6ab5983df7dbe883e2ac3626 | after_first_child | 1 |
+| 6ab59842471632c76d116362 | midway_children | 3 |
+| 6ab598472dbf1388966bbe2e | after_all_children_before_hash | 6 |
+| 6ab5984e8fda7dec44a90961 | after_verification_before_publication | 6 |
+| 6ab598548d408d9ac78481db | during_audit_writing | 6 |
+
+All test artifacts are quarantined and excluded from operational reads. Preserved as failure injection evidence.
+
+---
+
 ## Validation Summary
 
 | Check | Result |
@@ -255,6 +334,15 @@ The following synthetic test records were created with manually altered `submitt
 | Critical Role re-designation after removal succeeds | ✅ NEW |
 | Critical Role audit trail (5 events for lifecycle test) | ✅ NEW |
 | Contaminated test data registered and preserved as evidence | ✅ NEW |
+| Audit writer bug fixed — event_key/event_type/operation_id now persisted | ✅ NEW |
+| Cross-tenant rejection audit events (10 endpoints) — all emit denied_cross_tenant_reference | ✅ NEW |
+| Cross-tenant rejection indistinguishability (404 vs 404) — all 10 endpoints | ✅ NEW |
+| Cross-tenant rejection retry collapse (operation_id dedup) — verified | ✅ NEW |
+| Cross-tenant rejection — Tenant B records unchanged after all 10 tests | ✅ NEW |
+| Snapshot failure injection — 7 injection points all quarantine correctly | ✅ NEW |
+| Snapshot failure injection — no operational snapshots created from failures | ✅ NEW |
+| Snapshot failure injection — all 6 quarantined parents have audit events | ✅ NEW |
+| Snapshot failure injection — no orphaned child records | ✅ NEW |
 
 ---
 
@@ -263,10 +351,15 @@ The following synthetic test records were created with manually altered `submitt
 1. ~~**UI wiring for separation of duties**~~ — ✅ **DONE.** Both backend functions enforce SoD, and both UI views disable the Approve button for the submitter.
 2. ~~**UI controls for Critical Roles**~~ — ✅ **DONE.** CriticalRoleDesignationForm and CriticalRoleRow components implemented; CriticalRolesView refactored with functional designation and lifecycle controls.
 3. ~~**Snapshot 3 count discrepancy**~~ — ✅ **RESOLVED.** The prior "discrepancy" was a verification-code mapping bug that confused Snapshot 1 (revision 1, 1 requirement, quarantined) with Snapshot 3 (revision 3, 6 requirements, active). Snapshot 3 has 6 requirements, counts match (6=6), hash is correct, and the snapshot is immutable. Corrected in this document.
-4. **Two-person SoD positive test** — Deferred. Requires a second authenticated user with succession permissions. The enforcement mechanism (self-approval rejection, body-override ignoring) is proven; the positive two-person path is not yet tested with real distinct users.
+4. ~~**Audit writer bug**~~ — ✅ **DONE.** `successionAuditWriter.ts` was silently dropping `event_key`, `event_type`, `operation_id`, `target_record_id`, and `attempt_number` from ALL audit events. Fixed to accept and persist all fields. All 10 cross-tenant denial call sites updated to pass `operation_id`.
+5. ~~**Cross-tenant rejection audit events**~~ — ✅ **DONE.** All 10 cross-tenant rejection points now emit `denied_cross_tenant_reference` audit events with `operation_id` for retry deduplication. Indistinguishability verified (404 vs 404), retry collapse verified, Tenant B isolation verified.
+6. ~~**Snapshot failure injection**~~ — ✅ **DONE.** 7 failure injection points added to `successionCreateEffectiveBlueprintSnapshot`. All 7 tests passed: every parent correctly quarantined, no operational snapshots created, all audit events written, no orphaned children.
+7. **Two-person SoD positive test** — Deferred. Requires a second authenticated user with succession permissions. The enforcement mechanism (self-approval rejection, body-override ignoring) is proven; the positive two-person path is not yet tested with real distinct users.
+8. **Fresh Snapshot 5 generation** — Deferred. Requires two-user SoD (submitter ≠ approver) to create an uncontaminated approved blueprint. All current Tenant A blueprints are quarantined due to prior self-approval contamination.
+9. **Runtime UI tests** — Deferred. Critical Role and CRR UI browser tests to be run via the Testing Agent.
 
 ---
 
 ## Conclusion
 
-The V4 revision lifecycle is fully functional: canonical requirements and CriticalRoleRequirements can be revised under a new blueprint version with full source tracing, the effective blueprint snapshot correctly merges V4 canonical requirements with V4 position-specific requirements, all prior snapshots remain immutable (proven via hash recomputation), separation of duties is enforced in both backend and UI for both blueprint and CRR approval workflows, the Critical Role designation lifecycle works end-to-end with correct audit trailing, and all contaminated synthetic test data has been registered and preserved as evidence only.
+The V4 revision lifecycle is fully functional: canonical requirements and CriticalRoleRequirements can be revised under a new blueprint version with full source tracing, the effective blueprint snapshot correctly merges V4 canonical requirements with V4 position-specific requirements, all prior snapshots remain immutable (proven via hash recomputation), separation of duties is enforced in both backend and UI for both blueprint and CRR approval workflows, the Critical Role designation lifecycle works end-to-end with correct audit trailing, all contaminated synthetic test data has been registered and preserved as evidence only, the critical audit writer bug has been fixed (all audit fields now persisted), all 10 cross-tenant rejection points emit denied-reference audit events with operation_id for retry deduplication, and snapshot generation reliability is proven via 7 failure injection tests — every failure path correctly quarantines the parent snapshot with zero operational snapshots created.
