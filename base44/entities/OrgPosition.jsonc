@@ -1,6 +1,7 @@
 {
   "name": "OrgPosition",
   "type": "object",
+  "description": "A specific position in the organizational structure, instantiating an OrgRole. Includes reports_to_position_id for hierarchy. Position changes are recorded as immutable OrgPositionChange records, not by mutating the position.",
   "properties": {
     "client_id": {
       "type": "string",
@@ -18,10 +19,18 @@
       "type": "string",
       "description": "Position code or system identifier. Uniqueness-checked within tenant."
     },
+    "reports_to_position_id": {
+      "type": "string",
+      "description": "OrgPosition ID this position reports to. Null for top-level positions. Must belong to the same tenant."
+    },
     "is_active": {
       "type": "boolean",
       "default": true,
-      "description": "Whether this position is currently active in the org"
+      "description": "Whether this position is currently active in the org. Deactivation is recorded via OrgPositionChange."
+    },
+    "replaced_by_position_id": {
+      "type": "string",
+      "description": "If this position was replaced, the ID of the replacement position. Set by successionReplaceOrgPosition."
     },
     "confidentiality_level": {
       "type": "string",
@@ -79,11 +88,10 @@
     "title"
   ],
   "rls": {
-    "create": false,
     "read": {
       "$or": [
         {
-          "data.client_id": "{{user.data.client_id}}"
+          "data.client_id": "{{user.client_id}}"
         },
         {
           "user_condition": {
@@ -92,6 +100,7 @@
         }
       ]
     },
+    "create": false,
     "update": false,
     "delete": false
   }

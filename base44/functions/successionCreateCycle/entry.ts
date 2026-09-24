@@ -57,7 +57,8 @@ export default async function(req: Request): Promise<Response> {
     const cycle = await base44.asServiceRole.entities.SuccessionCycle.create({
       client_id: auth.client_id,
       cycle_key, name,
-      status: "framing",
+      status: "draft",
+      process_stage: "frame",
       started_at: new Date().toISOString(),
       created_by_profile_id: auth.profile_id,
       confidentiality_level: "confidential",

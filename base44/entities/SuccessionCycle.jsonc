@@ -1,6 +1,7 @@
 {
   "name": "SuccessionCycle",
   "type": "object",
+  "description": "A succession planning cycle for a tenant. Lifecycle status (draft/active/paused/closed/archived) is SEPARATE from process_stage (the nine-stage methodology). updateDraftCycle may only modify draft-cycle fields; successionChangeCycleStatus handles lifecycle transitions. Process stage advancement is NOT done via updateDraftCycle.",
   "properties": {
     "client_id": {
       "type": "string",
@@ -17,7 +18,19 @@
     "status": {
       "type": "string",
       "enum": [
-        "framing",
+        "draft",
+        "active",
+        "paused",
+        "closed",
+        "archived"
+      ],
+      "default": "draft",
+      "description": "Lifecycle status. draft = being configured. active = in use. paused = temporarily halted. closed = completed. archived = retained for history. Transitions via successionChangeCycleStatus only."
+    },
+    "process_stage": {
+      "type": "string",
+      "enum": [
+        "frame",
         "focus",
         "blueprint",
         "discover",
@@ -25,21 +38,34 @@
         "deliberate",
         "accelerate",
         "transition",
-        "monitor",
-        "closed"
+        "monitor"
       ],
-      "default": "framing",
-      "description": "Current stage in the nine-stage succession cycle"
+      "default": "frame",
+      "description": "Nine-stage methodology progress. Separate from lifecycle status. Advanced via a dedicated process-stage function, NOT via updateDraftCycle."
+    },
+    "process_stage_changed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the process stage was last advanced. Set server-side."
+    },
+    "process_stage_changed_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the user who last advanced the process stage. Derived server-side."
     },
     "started_at": {
       "type": "string",
       "format": "date-time",
-      "description": "When the cycle was started"
+      "description": "When the cycle was started (status moved to active)."
     },
     "closed_at": {
       "type": "string",
       "format": "date-time",
-      "description": "When the cycle was closed"
+      "description": "When the cycle was closed."
+    },
+    "archived_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the cycle was archived."
     },
     "created_by_profile_id": {
       "type": "string",
@@ -53,8 +79,7 @@
         "highly_confidential",
         "legally_restricted"
       ],
-      "default": "confidential",
-      "description": "Standardized confidentiality level."
+      "default": "confidential"
     },
     "integrity_status": {
       "type": "string",
@@ -68,8 +93,7 @@
       "description": "Integrity envelope status. New uniqueness-checked records begin pending_validation; excluded from operational reads until active."
     },
     "quarantine_reason": {
-      "type": "string",
-      "description": "Reason code if quarantined"
+      "type": "string"
     },
     "quarantined_at": {
       "type": "string",
@@ -101,14 +125,14 @@
   "required": [
     "client_id",
     "cycle_key",
-    "name"
+    "name",
+    "status"
   ],
   "rls": {
-    "create": false,
     "read": {
       "$or": [
         {
-          "data.client_id": "{{user.data.client_id}}"
+          "data.client_id": "{{user.client_id}}"
         },
         {
           "user_condition": {
@@ -117,6 +141,7 @@
         }
       ]
     },
+    "create": false,
     "update": false,
     "delete": false
   }

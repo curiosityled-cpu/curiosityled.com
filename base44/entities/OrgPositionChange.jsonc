@@ -1,0 +1,103 @@
+{
+  "name": "OrgPositionChange",
+  "type": "object",
+  "description": "Immutable audit record of a structural change to an OrgPosition (creation, replacement, deactivation, reactivation). The OrgPosition record itself is updated for active/is_active, but the full change history is preserved here. Append-only \u2014 never updated or deleted.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side."
+    },
+    "org_position_id": {
+      "type": "string",
+      "description": "The OrgPosition ID that changed."
+    },
+    "change_type": {
+      "type": "string",
+      "enum": [
+        "created",
+        "replaced",
+        "deactivated",
+        "reactivated",
+        "reports_to_changed"
+      ],
+      "description": "The type of structural change."
+    },
+    "previous_position_id": {
+      "type": "string",
+      "description": "For 'replaced' changes, the ID of the position being replaced."
+    },
+    "new_position_id": {
+      "type": "string",
+      "description": "For 'replaced' changes, the ID of the replacement position."
+    },
+    "previous_reports_to_position_id": {
+      "type": "string",
+      "description": "For 'reports_to_changed', the prior reports_to_position_id."
+    },
+    "new_reports_to_position_id": {
+      "type": "string",
+      "description": "For 'reports_to_changed', the new reports_to_position_id."
+    },
+    "changed_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the user who made the change. Derived server-side."
+    },
+    "changed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the change occurred. Set server-side."
+    },
+    "reason": {
+      "type": "string",
+      "description": "Human-readable reason for the change."
+    },
+    "operation_id": {
+      "type": "string",
+      "description": "SuccessionOperation ID that recorded this change."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "client_id",
+    "org_position_id",
+    "change_type",
+    "changed_by_profile_id",
+    "changed_at"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

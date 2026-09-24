@@ -1,0 +1,124 @@
+{
+  "name": "EffectiveRequirementSnapshot",
+  "type": "object",
+  "description": "A single materialized requirement within an EffectiveBlueprintSnapshot. Preserves source tracing (canonical vs position-specific), effective language, effective level, applicability, and exception approval. Immutable after the parent snapshot is generated.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side."
+    },
+    "effective_blueprint_snapshot_id": {
+      "type": "string",
+      "description": "EffectiveBlueprintSnapshot ID this requirement belongs to. Required."
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "canonical",
+        "position_specific"
+      ],
+      "description": "canonical = drawn from a RoleRequirement on the approved RoleSuccessBlueprint. position_specific = drawn from an approved CriticalRoleRequirement."
+    },
+    "source_requirement_id": {
+      "type": "string",
+      "description": "The ID of the source RoleRequirement or CriticalRoleRequirement."
+    },
+    "base_requirement_id": {
+      "type": "string",
+      "description": "For position_specific requirements, the canonical RoleRequirement ID the modification/exception binds to. Null for new position-specific requirements and canonical requirements."
+    },
+    "base_blueprint_id": {
+      "type": "string",
+      "description": "The RoleSuccessBlueprint ID from which the base requirement was drawn."
+    },
+    "base_blueprint_version_number": {
+      "type": "number",
+      "description": "The OrgRole.blueprint_approval_revision at which the base was approved."
+    },
+    "modification_type": {
+      "type": "string",
+      "enum": [
+        "new_requirement",
+        "modification",
+        "approved_exception",
+        "not_applicable",
+        "canonical"
+      ],
+      "description": "For position_specific: mirrors the CriticalRoleRequirement.modification_type. For canonical: 'canonical'."
+    },
+    "effective_language": {
+      "type": "string",
+      "description": "The effective requirement text after merging canonical and position-specific language."
+    },
+    "effective_level": {
+      "type": "string",
+      "description": "The effective proficiency level or detail after merging."
+    },
+    "applicability_status": {
+      "type": "string",
+      "enum": [
+        "applicable",
+        "not_applicable",
+        "excepted"
+      ],
+      "default": "applicable",
+      "description": "Whether this requirement applies to the position, is determined not applicable, or has an approved exception."
+    },
+    "exception_approval_status": {
+      "type": "string",
+      "enum": [
+        "none",
+        "approved",
+        "pending",
+        "rejected"
+      ],
+      "default": "none",
+      "description": "Approval status of any exception. 'none' for canonical requirements without exceptions."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "client_id",
+    "effective_blueprint_snapshot_id",
+    "source_type",
+    "source_requirement_id",
+    "effective_language",
+    "applicability_status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.client_id": "{{user.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

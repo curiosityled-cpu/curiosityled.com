@@ -1,23 +1,86 @@
 {
   "name": "CriticalRole",
   "type": "object",
+  "description": "Cycle-specific designation of an OrgPosition as critical for succession planning. One non-removed CriticalRole per client_id + cycle_id + org_position_id (enforced by successionDesignateCriticalRole). This is NOT a platform-default catalog entity \u2014 it is a tenant-scoped, cycle-bound designation.",
   "properties": {
     "client_id": {
       "type": "string",
-      "description": "Canonical tenant ID. Null for platform defaults."
+      "description": "Canonical tenant ID (sole partition key). Derived server-side \u2014 never accepted from frontend input."
     },
-    "name": {
+    "cycle_id": {
       "type": "string",
-      "description": "Critical role name"
+      "description": "SuccessionCycle ID this designation belongs to. Required."
     },
-    "description": {
+    "org_position_id": {
       "type": "string",
-      "description": "Description of the critical role"
+      "description": "OrgPosition ID being designated as critical. Required. Must belong to the same tenant and cycle's role library."
     },
-    "is_platform_default": {
-      "type": "boolean",
-      "default": false,
-      "description": "Whether this is a platform-wide default critical role"
+    "criticality_level": {
+      "type": "string",
+      "enum": [
+        "critical",
+        "high",
+        "moderate"
+      ],
+      "default": "high",
+      "description": "How critical this position is to organizational continuity."
+    },
+    "governance_tier": {
+      "type": "string",
+      "enum": [
+        "executive",
+        "senior",
+        "operational"
+      ],
+      "default": "senior",
+      "description": "Governance tier determines approval workflow depth."
+    },
+    "continuity_urgency": {
+      "type": "string",
+      "enum": [
+        "immediate",
+        "short_term",
+        "long_term"
+      ],
+      "default": "short_term",
+      "description": "How urgently a successor must be identified."
+    },
+    "designation_reason": {
+      "type": "string",
+      "description": "Human-readable reason for designating this position as critical."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "designated",
+        "active",
+        "paused",
+        "removed"
+      ],
+      "default": "designated",
+      "description": "Designation lifecycle. 'designated' = newly created. 'active' = in use for succession planning. 'paused' = temporarily inactive. 'removed' = logically deleted (retained for audit)."
+    },
+    "designated_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the user who designated this role. Derived server-side."
+    },
+    "designated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the designation was created. Set server-side."
+    },
+    "status_changed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the status was last changed. Set server-side."
+    },
+    "status_changed_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the user who last changed the status. Derived server-side."
+    },
+    "status_change_reason": {
+      "type": "string",
+      "description": "Reason for the last status change (pause/remove)."
     },
     "confidentiality_level": {
       "type": "string",
@@ -27,7 +90,8 @@
         "highly_confidential",
         "legally_restricted"
       ],
-      "default": "standard"
+      "default": "confidential",
+      "description": "Standardized confidentiality level."
     },
     "integrity_status": {
       "type": "string",
@@ -37,7 +101,8 @@
         "quarantined",
         "resolved"
       ],
-      "default": "active"
+      "default": "pending_validation",
+      "description": "Integrity envelope status. New designations begin pending_validation; excluded from operational reads until active."
     },
     "quarantine_reason": {
       "type": "string"
@@ -70,17 +135,22 @@
     }
   },
   "required": [
-    "name"
+    "client_id",
+    "cycle_id",
+    "org_position_id",
+    "criticality_level",
+    "governance_tier",
+    "continuity_urgency",
+    "designation_reason",
+    "status",
+    "designated_by_profile_id",
+    "designated_at"
   ],
   "rls": {
-    "create": false,
     "read": {
       "$or": [
         {
-          "data.is_platform_default": true
-        },
-        {
-          "data.client_id": "{{user.data.client_id}}"
+          "data.client_id": "{{user.client_id}}"
         },
         {
           "user_condition": {
@@ -89,6 +159,7 @@
         }
       ]
     },
+    "create": false,
     "update": false,
     "delete": false
   }

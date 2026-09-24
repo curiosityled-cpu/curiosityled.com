@@ -1,6 +1,7 @@
 {
   "name": "EffectiveBlueprintSnapshot",
   "type": "object",
+  "description": "Immutable snapshot of the effective blueprint for a role or critical role, merging canonical RoleRequirements with applicable approved CriticalRoleRequirements. References the approved RoleSuccessBlueprint at an exact version, and optionally a CriticalRole for position-specific snapshots. A 'generated' snapshot is never mutated \u2014 inconsistency creates a SnapshotIntegrityIncident.",
   "properties": {
     "client_id": {
       "type": "string",
@@ -9,6 +10,10 @@
     "org_role_id": {
       "type": "string",
       "description": "OrgRole ID this snapshot is for"
+    },
+    "critical_role_id": {
+      "type": "string",
+      "description": "CriticalRole ID this snapshot is for, if position-specific. Null for role-level snapshots. When set, the snapshot merges canonical RoleRequirements with the CriticalRole's approved CriticalRoleRequirements."
     },
     "blueprint_id": {
       "type": "string",
@@ -27,7 +32,7 @@
         "operationally_blocked"
       ],
       "default": "building",
-      "description": "Only 'building' may move to 'generation_failed'. A 'generated' snapshot is never mutated \u2014 inconsistency creates a SnapshotIntegrityIncident and blocks operational use."
+      "description": "Only 'building' may move to 'generation_failed'. A 'generated' snapshot is never mutated."
     },
     "expected_requirement_count": {
       "type": "number",
@@ -59,7 +64,7 @@
         "type": "object",
         "additionalProperties": true
       },
-      "description": "Materialized requirement set at generation time. Immutable after generation."
+      "description": "Materialized requirement set at generation time. Each entry includes source tracing (canonical vs position-specific), effective language, effective level, applicability, and exception approval. Immutable after generation."
     },
     "confidentiality_level": {
       "type": "string",
@@ -117,11 +122,10 @@
     "blueprint_id"
   ],
   "rls": {
-    "create": false,
     "read": {
       "$or": [
         {
-          "data.client_id": "{{user.data.client_id}}"
+          "data.client_id": "{{user.client_id}}"
         },
         {
           "user_condition": {
@@ -130,6 +134,7 @@
         }
       ]
     },
+    "create": false,
     "update": false,
     "delete": false
   }

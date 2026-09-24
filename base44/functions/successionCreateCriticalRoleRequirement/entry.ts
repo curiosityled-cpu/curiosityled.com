@@ -12,9 +12,9 @@ import { validateSameTenantReference, writeDeniedReferenceEvent } from "../../sh
 export default async function(req: Request): Promise<Response> {
   const base44 = createClientFromRequest(req);
   const body = await req.json().catch(() => ({}));
-  const { operation_id, org_role_id, critical_role_id, requirement_text } = body;
+  const { operation_id, org_role_id, critical_role_id, requirement_text, modification_type, base_requirement_id, base_blueprint_id, base_blueprint_version_number, requirement_detail } = body;
 
-  if (!operation_id || !org_role_id || !requirement_text) {
+  if (!operation_id || !org_role_id || !requirement_text || !modification_type) {
     return Response.json({ error: "operation_id, org_role_id, requirement_text required" }, { status: 400 });
   }
 
@@ -35,7 +35,7 @@ export default async function(req: Request): Promise<Response> {
   const opResult = await createOrAttachOperation({
     base44, client_id: auth.client_id, operation_id,
     function_name: "successionCreateCriticalRoleRequirement",
-    payload: { org_role_id, critical_role_id, requirement_text },
+    payload: { org_role_id, critical_role_id, requirement_text, modification_type, base_requirement_id, base_blueprint_id, base_blueprint_version_number },
     actor_profile_id: auth.profile_id, actor_email: auth.email,
     actor_context_type: auth.isPlatformAdmin ? "platform_operator" : "tenant",
   });
@@ -58,9 +58,21 @@ export default async function(req: Request): Promise<Response> {
       return Response.json({ error: "OrgRole not found" }, { status: 404 });
     }
 
+    // Validate base tracing for modification/exception/not_applicable types
+    if (["modification", "approved_exception", "not_applicable"].includes(modification_type)) {
+      if (!base_requirement_id || !base_blueprint_id || base_blueprint_version_number === undefined) {
+        await failOperation(base44, opResult.operation.id, "missing_base_tracing");
+        return Response.json({ error: "modification, approved_exception, and not_applicable require base_requirement_id, base_blueprint_id, and base_blueprint_version_number" }, { status: 400 });
+      }
+    }
+
     const requirement = await base44.asServiceRole.entities.CriticalRoleRequirement.create({
       client_id: auth.client_id,
-      org_role_id, critical_role_id, requirement_text,
+      org_role_id, critical_role_id, requirement_text, requirement_detail: requirement_detail || null,
+      modification_type,
+      base_requirement_id: base_requirement_id || null,
+      base_blueprint_id: base_blueprint_id || null,
+      base_blueprint_version_number: base_blueprint_version_number ?? null,
       status: "draft",
       applicability_status: "applicable",
       revision_number: 1,

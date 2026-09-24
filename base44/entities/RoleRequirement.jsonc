@@ -1,27 +1,89 @@
 {
   "name": "RoleRequirement",
   "type": "object",
+  "description": "Canonical store for the role standard, belonging to a RoleSuccessBlueprint. Supports requirement types: competency, experience, credential, outcome, other. This is the general blueprint requirement store \u2014 CriticalRoleRequirement must NOT replace it. Approved requirements are immutable; changes create a new revision.",
   "properties": {
     "client_id": {
       "type": "string",
-      "description": "Canonical tenant ID. Null for platform defaults."
+      "description": "Canonical tenant ID (sole partition key). Derived server-side."
     },
-    "name": {
+    "blueprint_id": {
       "type": "string",
-      "description": "Requirement name"
+      "description": "RoleSuccessBlueprint ID this requirement belongs to. Required. The blueprint owns the canonical requirement set."
     },
-    "description": {
+    "requirement_type": {
       "type": "string",
-      "description": "Description of the requirement"
+      "enum": [
+        "competency",
+        "experience",
+        "credential",
+        "outcome",
+        "other"
+      ],
+      "description": "The type of requirement. competency = behavioral/technical competency. experience = required experience. credential = certification/qualification. outcome = required track record of outcomes. other = custom."
     },
-    "category": {
+    "requirement_text": {
       "type": "string",
-      "description": "Requirement category"
+      "description": "The requirement statement. Required."
     },
-    "is_platform_default": {
-      "type": "boolean",
-      "default": false,
-      "description": "Whether this is a platform-wide default requirement"
+    "requirement_detail": {
+      "type": "string",
+      "description": "Optional elaboration of the requirement (e.g. proficiency level, specific credential name)."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "submitted",
+        "approved",
+        "rejected",
+        "withdrawn"
+      ],
+      "default": "draft",
+      "description": "Approval lifecycle. Approved requirements are immutable \u2014 modifications create a new revision via revises_requirement_id."
+    },
+    "revision_number": {
+      "type": "number",
+      "default": 1,
+      "description": "Revision number. New revisions increment this. revises_requirement_id links to the prior revision."
+    },
+    "revises_requirement_id": {
+      "type": "string",
+      "description": "ID of the prior requirement revision this one replaces. Null for the first revision."
+    },
+    "submitted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "submitted_by_profile_id": {
+      "type": "string"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "approved_by_profile_id": {
+      "type": "string"
+    },
+    "rejected_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "rejected_by_profile_id": {
+      "type": "string"
+    },
+    "rejection_reason": {
+      "type": "string"
+    },
+    "withdrawn_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "withdrawn_by_profile_id": {
+      "type": "string"
+    },
+    "withdrawal_reason": {
+      "type": "string"
     },
     "confidentiality_level": {
       "type": "string",
@@ -31,7 +93,7 @@
         "highly_confidential",
         "legally_restricted"
       ],
-      "default": "standard"
+      "default": "confidential"
     },
     "integrity_status": {
       "type": "string",
@@ -74,17 +136,17 @@
     }
   },
   "required": [
-    "name"
+    "client_id",
+    "blueprint_id",
+    "requirement_type",
+    "requirement_text",
+    "status"
   ],
   "rls": {
-    "create": false,
     "read": {
       "$or": [
         {
-          "data.is_platform_default": true
-        },
-        {
-          "data.client_id": "{{user.data.client_id}}"
+          "data.client_id": "{{user.client_id}}"
         },
         {
           "user_condition": {
@@ -93,6 +155,7 @@
         }
       ]
     },
+    "create": false,
     "update": false,
     "delete": false
   }

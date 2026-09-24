@@ -15,10 +15,10 @@ import { computePayloadHash } from "../../shared/successionPayloadCanonical.ts";
 export default async function(req: Request): Promise<Response> {
   const base44 = createClientFromRequest(req);
   const body = await req.json().catch(() => ({}));
-  const { operation_id, blueprint_id, org_role_id } = body;
+  const { operation_id, blueprint_id, org_role_id, critical_role_id } = body;
 
   if (!operation_id || !blueprint_id || !org_role_id) {
-    return Response.json({ error: "operation_id, blueprint_id, org_role_id required" }, { status: 400 });
+    return Response.json({ error: "operation_id, blueprint_id, org_role_id required (critical_role_id optional)" }, { status: 400 });
   }
 
   const auth = await bootstrapSuccessionAuth(base44);
@@ -38,7 +38,7 @@ export default async function(req: Request): Promise<Response> {
   const opResult = await createOrAttachOperation({
     base44, client_id: auth.client_id, operation_id,
     function_name: "successionCreateEffectiveBlueprintSnapshot",
-    payload: { blueprint_id, org_role_id },
+    payload: { blueprint_id, org_role_id, critical_role_id },
     actor_profile_id: auth.profile_id, actor_email: auth.email,
     actor_context_type: auth.isPlatformAdmin ? "platform_operator" : "tenant",
   });
@@ -67,16 +67,46 @@ export default async function(req: Request): Promise<Response> {
     }
     const role = roles[0];
 
-    // Gather applicable requirements (applicability_status=applicable only)
-    const requirements = await base44.asServiceRole.entities.CriticalRoleRequirement.filter({
-      org_role_id, applicability_status: "applicable", status: "approved",
-      integrity_status: "active",
+    // Gather canonical RoleRequirements from the approved blueprint
+    const canonicalReqs = await base44.asServiceRole.entities.RoleRequirement.filter({
+      client_id: auth.client_id, blueprint_id, status: "approved", integrity_status: "active",
     });
 
-    const expected_count = requirements.length;
-    const requirements_snapshot = requirements.map((r: any) => ({
-      id: r.id, requirement_text: r.requirement_text, revision_number: r.revision_number,
+    // Gather applicable approved CriticalRoleRequirements (position-specific, optionally for a critical role)
+    const critFilter: any = { client_id: auth.client_id, org_role_id, status: "approved", applicability_status: "applicable", integrity_status: "active" };
+    if (critical_role_id) critFilter.critical_role_id = critical_role_id;
+    const positionReqs = await base44.asServiceRole.entities.CriticalRoleRequirement.filter(critFilter);
+
+    // Merge canonical + position-specific (same logic as preview)
+    const effectiveRequirements = canonicalReqs.map((r: any) => ({
+      source_type: "canonical", source_requirement_id: r.id,
+      base_requirement_id: r.id, base_blueprint_id: blueprint.id, base_blueprint_version_number: role.blueprint_approval_revision,
+      modification_type: "canonical", effective_language: r.requirement_text, effective_level: r.requirement_detail || null,
+      applicability_status: "applicable", exception_approval_status: "none",
     }));
+
+    for (const pr of positionReqs) {
+      if (pr.modification_type === "new_requirement") {
+        effectiveRequirements.push({
+          source_type: "position_specific", source_requirement_id: pr.id,
+          base_requirement_id: null, base_blueprint_id: blueprint.id, base_blueprint_version_number: role.blueprint_approval_revision,
+          modification_type: "new_requirement", effective_language: pr.requirement_text, effective_level: pr.requirement_detail || null,
+          applicability_status: "applicable", exception_approval_status: "none",
+        });
+      } else if (pr.modification_type === "modification") {
+        const idx = effectiveRequirements.findIndex(e => e.source_requirement_id === pr.base_requirement_id);
+        if (idx >= 0) { effectiveRequirements[idx] = { ...effectiveRequirements[idx], source_type: "position_specific", source_requirement_id: pr.id, modification_type: "modification", effective_language: pr.requirement_text, effective_level: pr.requirement_detail || effectiveRequirements[idx].effective_level }; }
+      } else if (pr.modification_type === "approved_exception") {
+        const idx = effectiveRequirements.findIndex(e => e.source_requirement_id === pr.base_requirement_id);
+        if (idx >= 0) { effectiveRequirements[idx].exception_approval_status = "approved"; effectiveRequirements[idx].applicability_status = "excepted"; effectiveRequirements[idx].effective_language += ` [EXCEPTION: ${pr.requirement_text}]`; }
+      } else if (pr.modification_type === "not_applicable") {
+        const idx = effectiveRequirements.findIndex(e => e.source_requirement_id === pr.base_requirement_id);
+        if (idx >= 0) { effectiveRequirements[idx].applicability_status = "not_applicable"; effectiveRequirements[idx].exception_approval_status = "approved"; }
+      }
+    }
+
+    const expected_count = effectiveRequirements.length;
+    const requirements_snapshot = effectiveRequirements;
 
     // Compute content hash
     const content_hash = await computePayloadHash(requirements_snapshot);
@@ -85,6 +115,7 @@ export default async function(req: Request): Promise<Response> {
     const snapshot = await base44.asServiceRole.entities.EffectiveBlueprintSnapshot.create({
       client_id: auth.client_id,
       org_role_id, blueprint_id,
+      critical_role_id: critical_role_id || null,
       blueprint_revision: role.blueprint_approval_revision,
       status: "building",
       expected_requirement_count: expected_count,
