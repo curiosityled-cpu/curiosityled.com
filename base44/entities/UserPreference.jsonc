@@ -165,7 +165,7 @@
       "data.user_email": "{{user.email}}"
     },
     "read": {
-      "user_email": "{{user.email}}"
+      "data.user_email": "{{user.email}}"
     },
     "update": null,
     "delete": null

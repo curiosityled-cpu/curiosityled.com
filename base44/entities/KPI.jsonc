@@ -109,6 +109,9 @@
               }
             },
             {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
               "$or": [
                 {
                   "data.owner_email": "{{user.email}}"
@@ -119,40 +122,54 @@
                   }
                 }
               ]
-            },
-            {
-              "data.client_id": "{{user.client_id}}"
             }
           ]
         },
         {
           "$and": [
             {
-              "$or": [
-                {
-                  "user_condition": {
-                    "role": "Analyst"
-                  }
-                },
-                {
-                  "user_condition": {
-                    "role": "Admin Level 1"
-                  }
-                },
-                {
-                  "user_condition": {
-                    "role": "Admin Level 2"
-                  }
-                },
-                {
-                  "user_condition": {
-                    "role": "Super Administrator"
-                  }
-                }
-              ]
+              "user_condition": {
+                "role": "Analyst"
+              }
             },
             {
-              "data.client_id": "{{user.client_id}}"
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
             }
           ]
         },

@@ -112,10 +112,10 @@
     "read": {
       "$or": [
         {
-          "is_platform_default": true
+          "data.is_platform_default": true
         },
         {
-          "client_id": "{{user.client_id}}"
+          "data.client_id": "{{user.data.client_id}}"
         },
         {
           "user_condition": {

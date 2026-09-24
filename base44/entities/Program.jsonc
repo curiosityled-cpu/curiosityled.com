@@ -285,51 +285,81 @@
     "read": {
       "$or": [
         {
-          "manager_emails": {
+          "data.manager_emails": {
             "$in": [
               "{{user.email}}"
             ]
           }
         },
         {
-          "primary_manager_email": "{{user.email}}"
+          "data.primary_manager_email": "{{user.email}}"
         },
         {
-          "program_manager_email": "{{user.email}}"
+          "data.program_manager_email": "{{user.email}}"
         },
         {
-          "participant_emails": {
+          "data.participant_emails": {
             "$in": [
               "{{user.email}}"
             ]
           }
         },
         {
-          "sponsor_email": "{{user.email}}"
+          "data.sponsor_email": "{{user.email}}"
         },
         {
-          "visibility": "open_enrollment",
-          "client_id": "{{user.client_id}}"
+          "data.visibility": "open_enrollment",
+          "data.client_id": "{{user.data.client_id}}"
         },
         {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "Analyst",
-                "Admin Level 2",
-                "Super Administrator"
-              ]
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Analyst"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
             }
-          },
-          "client_id": "{{user.client_id}}"
+          ]
         },
         {
-          "user_condition": {
-            "role": "Partner Business Administrator"
-          },
-          "client_id": {
-            "$in": "{{user.partner_client_ids}}"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            },
+            {
+              "data.client_id": {
+                "$in": "{{user.data.partner_client_ids}}"
+              }
+            }
+          ]
         },
         {
           "user_condition": {

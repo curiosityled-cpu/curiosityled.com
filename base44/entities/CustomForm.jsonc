@@ -276,43 +276,79 @@
           "created_by": "{{user.email}}"
         },
         {
-          "assigned_to_emails": {
+          "data.assigned_to_emails": {
             "$in": [
               "{{user.email}}"
             ]
           }
         },
         {
-          "public_access_enabled": true,
-          "status": "published"
+          "data.public_access_enabled": true,
+          "data.status": "published"
         },
         {
-          "user_condition": {
-            "role": "Admin Level 1"
-          },
-          "program_id": {
-            "$in": "{{user.managed_program_ids}}"
-          }
-        },
-        {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "Analyst",
-                "Admin Level 2",
-                "Super Administrator"
-              ]
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.program_id": {
+                "$in": "{{user.data.managed_program_ids}}"
+              }
             }
-          },
-          "client_id": "{{user.client_id}}"
+          ]
         },
         {
-          "user_condition": {
-            "role": "Partner Business Administrator"
-          },
-          "client_id": {
-            "$in": "{{user.partner_client_ids}}"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Analyst"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            },
+            {
+              "data.client_id": {
+                "$in": "{{user.data.partner_client_ids}}"
+              }
+            }
+          ]
         },
         {
           "user_condition": {

@@ -96,7 +96,7 @@
     "read": {
       "$or": [
         {
-          "client_id": "{{user.client_id}}"
+          "data.client_id": "{{user.data.client_id}}"
         },
         {
           "user_condition": {

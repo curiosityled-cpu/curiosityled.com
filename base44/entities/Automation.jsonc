@@ -133,24 +133,58 @@
           "created_by": "{{user.email}}"
         },
         {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "Admin Level 1",
-                "Admin Level 2",
-                "Super Administrator",
-                "Platform Admin"
-              ]
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
             }
-          },
-          "client_id": "{{user.client_id}}"
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            },
+            {
+              "data.client_id": {
+                "$in": "{{user.data.partner_client_ids}}"
+              }
+            }
+          ]
         },
         {
           "user_condition": {
-            "role": "Partner Business Administrator"
-          },
-          "client_id": {
-            "$in": "{{user.partner_client_ids}}"
+            "role": "Platform Admin"
           }
         }
       ]

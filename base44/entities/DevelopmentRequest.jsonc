@@ -301,38 +301,62 @@
     "read": {
       "$or": [
         {
-          "requested_by_email": "{{user.email}}"
+          "data.requested_by_email": "{{user.email}}"
         },
         {
-          "assigned_to_email": "{{user.email}}"
+          "data.assigned_to_email": "{{user.email}}"
         },
         {
-          "visibility": "public",
-          "user_condition": {
-            "role": "Admin Level 1"
-          },
-          "client_id": "{{user.client_id}}",
-          "assigned_to_email": null
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.visibility": "public"
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "data.assigned_to_email": null
+            }
+          ]
         },
         {
-          "approval_chain": {
+          "data.approval_chain": {
             "$elemMatch": {
               "approver_email": "{{user.email}}"
             }
           }
         },
         {
-          "user_condition": {
-            "role": "Admin Level 1"
-          },
-          "client_id": "{{user.client_id}}",
-          "assigned_to_email": "{{user.email}}"
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "data.assigned_to_email": "{{user.email}}"
+            }
+          ]
         },
         {
-          "user_condition": {
-            "role": "Admin Level 2"
-          },
-          "client_id": "{{user.client_id}}"
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
         },
         {
           "user_condition": {

@@ -85,12 +85,12 @@
       "$or": [
         {
           "user_condition": {
-            "role": {
-              "$in": [
-                "Super Administrator",
-                "Platform Admin"
-              ]
-            }
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
           }
         }
       ]

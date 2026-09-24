@@ -573,41 +573,41 @@
     "read": {
       "$or": [
         {
-          "id": "{{user.client_id}}"
+          "id": "{{user.data.client_id}}"
         },
         {
           "user_condition": {
-            "$or": [
-              {
-                "role": {
-                  "$in": [
-                    "Super Administrator",
-                    "Platform Admin",
-                    "Platform Administrator",
-                    "admin"
-                  ]
-                }
-              },
-              {
-                "app_role": {
-                  "$in": [
-                    "Super Administrator",
-                    "Platform Admin",
-                    "Platform Administrator",
-                    "admin"
-                  ]
-                }
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
               }
-            ]
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Partner Business Administrator"
-          },
-          "id": {
-            "$in": "{{user.partner_client_ids}}"
-          }
+            },
+            {
+              "id": {
+                "$in": "{{user.data.partner_client_ids}}"
+              }
+            }
+          ]
         }
       ]
     },

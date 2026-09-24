@@ -93,35 +93,57 @@
     "read": {
       "$or": [
         {
-          "user_email": "{{user.email}}"
+          "data.user_email": "{{user.email}}"
         },
         {
-          "user_condition": {
-            "role": "User Level 2"
-          },
-          "user_email": {
-            "$in": "{{user.subordinate_emails}}"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "User Level 2"
+              }
+            },
+            {
+              "data.user_email": {
+                "$in": "{{user.data.subordinate_emails}}"
+              }
+            }
+          ]
         },
         {
-          "user_condition": {
-            "role": "Admin Level 1"
-          },
-          "user_email": {
-            "$in": "{{user.managed_user_emails}}"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
         },
         {
-          "user_condition": {
-            "role": "Analyst"
-          },
-          "client_id": "{{user.client_id}}"
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Analyst"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
         },
         {
-          "user_condition": {
-            "role": "Admin Level 2"
-          },
-          "client_id": "{{user.client_id}}"
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
         },
         {
           "user_condition": {
@@ -129,12 +151,18 @@
           }
         },
         {
-          "user_condition": {
-            "role": "Partner Business Administrator"
-          },
-          "client_id": {
-            "$in": "{{user.partner_client_ids}}"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            },
+            {
+              "data.client_id": {
+                "$in": "{{user.data.partner_client_ids}}"
+              }
+            }
+          ]
         },
         {
           "user_condition": {
@@ -142,16 +170,40 @@
           }
         },
         {
-          "is_private": false,
-          "user_condition": {
-            "role": {
-              "$in": [
-                "User Level 2",
-                "Admin Level 1",
-                "Analyst"
-              ]
+          "$and": [
+            {
+              "data.is_private": false
+            },
+            {
+              "user_condition": {
+                "role": "User Level 2"
+              }
             }
-          }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.is_private": false
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.is_private": false
+            },
+            {
+              "user_condition": {
+                "role": "Analyst"
+              }
+            }
+          ]
         }
       ]
     },

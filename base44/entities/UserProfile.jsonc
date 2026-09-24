@@ -107,19 +107,43 @@
     "read": {
       "$or": [
         {
-          "base44_user_id": "{{user.id}}"
+          "data.base44_user_id": "{{user.id}}"
         },
         {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "Admin Level 2",
-                "Super Administrator",
-                "Platform Admin"
-              ]
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.tenant_id": "{{user.data.client_id}}"
             }
-          },
-          "tenant_id": "{{user.client_id}}"
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.tenant_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Platform Admin"
+              }
+            },
+            {
+              "data.tenant_id": "{{user.data.client_id}}"
+            }
+          ]
         }
       ]
     },

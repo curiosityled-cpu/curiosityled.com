@@ -110,26 +110,40 @@
     "read": {
       "$or": [
         {
-          "user_email": "{{user.email}}"
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "User Level 2"
+              }
+            },
+            {
+              "data.user_email": {
+                "$in": "{{user.data.subordinate_emails}}"
+              }
+            }
+          ]
         },
         {
           "user_condition": {
-            "role": "User Level 2"
-          },
-          "user_email": {
-            "$in": "{{user.subordinate_emails}}"
+            "role": "Analyst"
           }
         },
         {
           "user_condition": {
-            "role": {
-              "$in": [
-                "Analyst",
-                "Admin Level 1",
-                "Admin Level 2",
-                "Super Administrator"
-              ]
-            }
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
           }
         },
         {

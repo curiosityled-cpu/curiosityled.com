@@ -53,17 +53,9 @@
       }
     },
     "read": {
-      "$or": [
-        {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "Platform Admin"
-              ]
-            }
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "Platform Admin"
+      }
     },
     "update": null,
     "delete": null

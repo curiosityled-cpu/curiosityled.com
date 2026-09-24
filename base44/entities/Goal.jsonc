@@ -257,72 +257,122 @@
     "read": {
       "$or": [
         {
-          "visibility": "shared"
+          "data.visibility": "shared"
         },
         {
           "created_by": "{{user.email}}"
         },
         {
-          "assigned_to_emails": {
+          "data.assigned_to_emails": {
             "$in": [
               "{{user.email}}"
             ]
           }
         },
         {
-          "members": {
+          "data.members": {
             "$elemMatch": {
               "user_email": "{{user.email}}"
             }
           }
         },
         {
-          "coach_email": "{{user.email}}"
+          "data.coach_email": "{{user.email}}"
         },
         {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "Analyst",
-                "Admin Level 2",
-                "Super Administrator"
-              ]
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Analyst"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
             }
-          },
-          "client_id": "{{user.client_id}}"
+          ]
         },
         {
-          "user_condition": {
-            "role": "User Level 2"
-          },
-          "created_by": {
-            "$in": "{{user.subordinate_emails}}"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
         },
         {
-          "user_condition": {
-            "role": "Admin Level 1"
-          },
-          "program_id": {
-            "$in": "{{user.managed_program_ids}}"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
         },
         {
-          "user_condition": {
-            "role": "Admin Level 1"
-          },
-          "coaching_engagement_id": {
-            "$exists": true
-          },
-          "coach_email": "{{user.email}}"
+          "$and": [
+            {
+              "user_condition": {
+                "role": "User Level 2"
+              }
+            },
+            {
+              "created_by": {
+                "$in": "{{user.data.subordinate_emails}}"
+              }
+            }
+          ]
         },
         {
-          "user_condition": {
-            "role": "Partner Business Administrator"
-          },
-          "client_id": {
-            "$in": "{{user.partner_client_ids}}"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.program_id": {
+                "$in": "{{user.data.managed_program_ids}}"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.coaching_engagement_id": {
+                "$exists": true
+              }
+            },
+            {
+              "data.coach_email": "{{user.email}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            },
+            {
+              "data.client_id": {
+                "$in": "{{user.data.partner_client_ids}}"
+              }
+            }
+          ]
         },
         {
           "user_condition": {

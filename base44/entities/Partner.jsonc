@@ -139,7 +139,7 @@
     "read": {
       "$or": [
         {
-          "id": "{{user.partner_id}}"
+          "id": "{{user.data.partner_id}}"
         },
         {
           "user_condition": {

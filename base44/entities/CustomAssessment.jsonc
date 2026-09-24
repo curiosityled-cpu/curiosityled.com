@@ -111,43 +111,67 @@
           "created_by": "{{user.email}}"
         },
         {
-          "access_mode": "open",
-          "status": "published",
-          "client_id": "{{user.client_id}}"
+          "data.access_mode": "open",
+          "data.status": "published",
+          "data.client_id": "{{user.data.client_id}}"
         },
         {
-          "assigned_user_emails": {
+          "data.assigned_user_emails": {
             "$in": [
               "{{user.email}}"
             ]
           },
-          "status": "published"
+          "data.status": "published"
         },
         {
-          "user_condition": {
-            "role": "Admin Level 1"
-          },
-          "client_id": "{{user.client_id}}"
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
         },
         {
-          "user_condition": {
-            "role": "Admin Level 2"
-          },
-          "client_id": "{{user.client_id}}"
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
         },
         {
-          "user_condition": {
-            "role": "Super Administrator"
-          },
-          "client_id": "{{user.client_id}}"
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
         },
         {
-          "user_condition": {
-            "role": "Partner Business Administrator"
-          },
-          "client_id": {
-            "$in": "{{user.partner_client_ids}}"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            },
+            {
+              "data.client_id": {
+                "$in": "{{user.data.partner_client_ids}}"
+              }
+            }
+          ]
         },
         {
           "user_condition": {

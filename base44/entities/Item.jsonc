@@ -86,7 +86,7 @@
           "created_by": "{{user.email}}"
         },
         {
-          "assignees": {
+          "data.assignees": {
             "$elemMatch": {
               "user_email": "{{user.email}}"
             }

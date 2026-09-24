@@ -90,7 +90,7 @@
     "read": {
       "$or": [
         {
-          "suggested_by_email": "{{user.email}}"
+          "data.suggested_by_email": "{{user.email}}"
         },
         {
           "user_condition": {

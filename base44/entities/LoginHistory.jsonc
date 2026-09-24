@@ -69,18 +69,26 @@
     "read": {
       "$or": [
         {
-          "user_email": "{{user.email}}"
+          "data.user_email": "{{user.email}}"
         },
         {
           "user_condition": {
-            "role": {
-              "$in": [
-                "Admin Level 2",
-                "Super Administrator",
-                "Partner Business Administrator",
-                "Platform Admin"
-              ]
-            }
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
           }
         }
       ]
