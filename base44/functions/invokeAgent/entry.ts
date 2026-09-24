@@ -909,8 +909,8 @@ async function executeScheduleCalendarEvent(base44, user, params) {
 }
 
 async function executeCascadeGoal(base44, user, params) {
-  const { goalId, userEmails, customizePerUser = false } = params;
-
+  const { goalId, userEmails: rawUserEmails, customizePerUser = false } = params;
+  const _isAdmin = ['Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'].includes(user.app_role); if (!['User Level 2','User Level 3','Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'].includes(user.app_role)) return { message: 'You do not have permission to cascade goals.' };
   // Fetch the original goal with fuzzy matching
   let originalGoals = [];
   try {
@@ -935,8 +935,8 @@ async function executeCascadeGoal(base44, user, params) {
   }
 
   const originalGoal = originalGoals[0];
-
-  // Create cascaded goals for each user
+  if (!_isAdmin && originalGoal.created_by !== user.email) return { message: 'You can only cascade your own goals.' };
+  let userEmails = !_isAdmin ? (rawUserEmails || []).filter(e => (user.subordinate_emails || user.data?.subordinate_emails || []).includes(e) || e === user.email) : rawUserEmails; if (!userEmails.length) return { message: 'Target users must be your direct reports.' };
   const cascadedGoals = [];
   for (const email of userEmails) {
     const cascadedGoal = await base44.asServiceRole.entities.Goal.create({
@@ -1533,7 +1533,7 @@ Design a cohesive badge structure with names, descriptions, criteria, and point 
 
 async function executeCreateCompetition(base44, user, params) {
   const { competitionName, description, competitionType, startDate, endDate, criteriaMetric, participantEmails = [], rewards = [] } = params;
-
+  if (!['Admin Level 1','Admin Level 2','Super Administrator','Platform Admin'].includes(user.app_role)) return { message: 'Only administrators may create competitions.' };
   // Create the competition
   const competition = await base44.asServiceRole.entities.Competition.create({
     client_id: user.client_id,
@@ -3561,7 +3561,7 @@ Suggest:
 // ==================== CERTIFICATION & EXTERNAL ASSESSMENT EXECUTION FUNCTIONS ====================
 async function executeVerifyCertification(base44, user, params) {
   const { userEmail, certificationName, issuingBody, verificationUrl } = params;
-
+  if (!['Admin Level 1','Admin Level 2','Super Administrator','Platform Admin'].includes(user.app_role)) return { message: 'Only administrators may verify certifications.' };
   // Get client_id: try target user first, then admin, then use 'default'
   let clientId = null;
   try {
@@ -3609,7 +3609,7 @@ async function executeVerifyCertification(base44, user, params) {
 
 async function executeProcessExternalAssessment(base44, user, params) {
   const { userEmail, assessmentType, fileUrl, keyFindings } = params;
-
+  if (!['Admin Level 1','Admin Level 2','Super Administrator','Platform Admin'].includes(user.app_role)) return { message: 'Only administrators may process external assessments.' };
   // Get client_id: try target user first, then admin, then use 'default'
   let clientId = null;
   try {

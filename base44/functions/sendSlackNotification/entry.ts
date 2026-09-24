@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { validateExternalUrl } from '../../shared/urlValidation.ts';
 
 /**
  * Sends a notification to Slack via webhook
@@ -60,6 +61,15 @@ Deno.serve(async (req) => {
             return Response.json({
                 success: false,
                 error: 'Slack webhook URL not configured for this user'
+            }, { status: 400 });
+        }
+
+        // Security: validate the webhook URL to prevent SSRF.
+        const urlCheck = validateExternalUrl(targetUser.slack_webhook_url);
+        if (!urlCheck.valid) {
+            return Response.json({
+                success: false,
+                error: 'Slack webhook URL is not allowed: ' + urlCheck.error
             }, { status: 400 });
         }
 
@@ -151,8 +161,7 @@ Deno.serve(async (req) => {
         // All retries failed
         return Response.json({
             success: false,
-            error: 'Failed to send Slack notification after 3 attempts',
-            details: lastError
+            error: 'Failed to send Slack notification after 3 attempts'
         }, { status: 500 });
 
     } catch (error) {

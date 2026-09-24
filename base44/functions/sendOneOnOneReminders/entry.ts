@@ -10,16 +10,15 @@
  */
 
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.25";
+import { authorizeScheduledTask } from "../../shared/scheduledTaskAuth.ts";
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Verify admin or scheduled call
-    const user = await base44.auth.me().catch(() => null);
-    if (user && user.role !== "admin" && user.app_role !== "Platform Admin") {
-      return Response.json({ error: "Forbidden" }, { status: 403 });
-    }
+    // Security: require internal automation secret or admin session.
+    const authz = await authorizeScheduledTask(req, base44);
+    if (!authz.authorized) return authz.response;
 
     const now = new Date();
 

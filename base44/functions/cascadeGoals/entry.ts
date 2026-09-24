@@ -28,6 +28,9 @@ Deno.serve(async (req) => {
             return Response.json({ success: false, error: 'Only managers and administrators can cascade goals' }, { status: 403 });
         }
 
+        const adminRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Partner Business Administrator', 'Platform Admin'];
+        const isAdmin = adminRoles.includes(currentUser.app_role);
+
         const { goal_id, target_emails, goalTemplate, targetCriteria, assignedBy, cascadeGoalId } = await req.json();
         
         // Support both new format (goal_id + target_emails) and legacy format
@@ -44,6 +47,10 @@ Deno.serve(async (req) => {
                 }, { status: 404 });
             }
             sourceGoal = sourceGoal[0];
+            // Security: verify the caller owns the source goal or is an admin.
+            if (!isAdmin && sourceGoal.created_by !== currentUser.email) {
+                return Response.json({ success: false, error: 'Forbidden — you can only cascade your own goals' }, { status: 403 });
+            }
             targetEmails = target_emails;
         } else if (goalTemplate && targetCriteria) {
             // Legacy format: use goalTemplate
@@ -103,6 +110,12 @@ Deno.serve(async (req) => {
             targetUsers = await base44.asServiceRole.entities.User.filter(userFilter);
         }
         
+        // Security: scope target users to caller's direct reports for non-admin managers.
+        if (!isAdmin) {
+            const subs = currentUser.subordinate_emails || currentUser.data?.subordinate_emails || [];
+            targetUsers = targetUsers.filter(u => subs.includes(u.email) || u.email === currentUser.email);
+        }
+
         if (targetUsers.length === 0) {
             return Response.json({
                 success: false,

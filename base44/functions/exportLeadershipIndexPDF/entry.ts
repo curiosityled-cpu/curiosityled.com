@@ -23,6 +23,14 @@ Deno.serve(async (req) => {
     }
 
     const submission = submissions[0];
+
+    // Security: ownership check — only the submission owner or an admin may export.
+    const adminRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin'];
+    const isAdmin = adminRoles.includes(user.app_role);
+    if (!isAdmin && submission.user_email !== user.email) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const doc = new jsPDF();
     
     let yPos = 20;
