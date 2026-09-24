@@ -27,6 +27,13 @@ Deno.serve(async (req) => {
 
     const program = programs[0];
 
+    // Security: verify the program belongs to the caller's organization before
+    // awarding completion points. Prevents cross-tenant points farming by
+    // enumerating program IDs. Platform Admin is exempt.
+    if (user.app_role !== 'Platform Admin' && program.client_id && program.client_id !== user.client_id) {
+      return Response.json({ error: 'This program is not in your organization' }, { status: 403 });
+    }
+
     // Idempotency: check if points already awarded for this program (prevents double-awarding)
     const existingTx = await base44.asServiceRole.entities.PointTransaction.filter({
       user_email: targetUserEmail,

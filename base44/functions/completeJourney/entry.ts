@@ -27,6 +27,19 @@ Deno.serve(async (req) => {
 
     const journey = journeys[0];
 
+    // Security: verify the caller is enrolled in this journey before awarding
+    // completion points. Prevents points farming by enumerating journey IDs.
+    const enrollments = await base44.asServiceRole.entities.JourneyEnrollment.filter({
+      journey_id: journey_id,
+      user_email: targetUserEmail,
+    });
+    const activeEnrollment = enrollments.find(e =>
+      ['enrolled', 'active', 'completed', 'in_progress'].includes(e.status)
+    );
+    if (!activeEnrollment) {
+      return Response.json({ error: 'You are not enrolled in this journey' }, { status: 403 });
+    }
+
     // Idempotency: check if points already awarded for this journey (prevents double-awarding)
     const existingTx = await base44.asServiceRole.entities.PointTransaction.filter({
       user_email: targetUserEmail,

@@ -9,18 +9,30 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const payload = await req.json();
-    const { client_id, program_admin_email, date_from, date_to } = payload || {};
+    // Security: restrict to admin/triage roles.
+    const adminRoles = ['Platform Admin', 'Super Administrator', 'Admin Level 2', 'Admin Level 1', 'Analyst', 'Partner Business Administrator'];
+    if (!adminRoles.includes(user.app_role)) {
+      return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
+    }
 
-    // Fetch all requests for the client
+    const payload = await req.json();
+    const { program_admin_email, date_from, date_to } = payload || {};
+    const requestedClientId = payload?.client_id;
+
+    // Security: force the client scope from the caller's identity — never
+    // trust a request-supplied client_id. Platform Admin may query any client;
+    // all other roles are restricted to their own client.
+    const effectiveClientId = user.app_role === 'Platform Admin' ? (requestedClientId || null) : user.client_id;
+
     let allRequests;
-    if (client_id) {
-      allRequests = await base44.asServiceRole.entities.DevelopmentRequest.filter({ client_id });
-    } else if (program_admin_email) {
+    if (effectiveClientId) {
+      allRequests = await base44.asServiceRole.entities.DevelopmentRequest.filter({ client_id: effectiveClientId });
+    } else if (user.app_role === 'Platform Admin' && program_admin_email) {
       allRequests = await base44.asServiceRole.entities.DevelopmentRequest.filter({ assigned_to_email: program_admin_email });
-    } else {
-      // No filters, get all accessible requests
+    } else if (user.app_role === 'Platform Admin') {
       allRequests = await base44.asServiceRole.entities.DevelopmentRequest.list();
+    } else {
+      allRequests = [];
     }
 
     // Filter by date range if provided

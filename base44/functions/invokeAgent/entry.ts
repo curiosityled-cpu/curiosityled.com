@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
-
+import { getOrgEmails } from '../../shared/orgScope.ts';
 /**
  * Atreus Agent - Central Intelligence & Action Executor
  * Handles natural language intent detection and secure platform action execution
@@ -817,8 +817,7 @@ async function executeCreateReminder(base44, user, params) {
   // Security: Only managers/admins may send reminders to other users.
   const mgrRoles = ['User Level 2','User Level 3','Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'];
   const isMgr = mgrRoles.includes(user.app_role);
-  const targetEmails = isMgr ? recipientEmails : recipientEmails.filter(e => e === user.email);
-  if (targetEmails.length === 0) return { message: 'You do not have permission to send reminders to other users.' };
+  const orgEmails = await getOrgEmails(base44, user), targetEmails = (isMgr ? recipientEmails : [user.email]).filter(e => e === user.email || orgEmails.has(e)); if (!targetEmails.length) return { message: 'You do not have permission to send reminders to other users.' };
   const createdNotifications = [];
   for (const email of targetEmails) {
     const notification = await base44.asServiceRole.entities.Notification.create({
@@ -835,8 +834,8 @@ async function executeAssignLearning(base44, user, params) {
   // Security: Only managers/admins may assign learning to others.
   const mgrRoles = ['User Level 2','User Level 3','Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'];
   if (!mgrRoles.includes(user.app_role)) return { message: 'You do not have permission to assign learning to other users.' };
-  const assignments = [];
-  for (const email of userEmails) {
+  const assignments = [], orgEmails = await getOrgEmails(base44, user);
+  for (const email of userEmails.filter(e => orgEmails.has(e))) {
     const assignment = await base44.asServiceRole.entities.AssignedLearning.create({
       user_email: email, learning_resource_id: learningResourceId, assigned_by: user.email,
       title: resourceTitle || 'Learning Assignment', description: notes || `Assigned by ${user.full_name} via Atreus`,
@@ -883,9 +882,10 @@ async function executeScheduleCalendarEvent(base44, user, params) {
     status: 'pending'
   });
 
-  // Create notifications for all attendees
+  // Security: restrict attendees to caller's org (prevents cross-tenant spoofing)
+  const orgEmails = await getOrgEmails(base44, user);
   const attendeeNotifications = [];
-  for (const email of attendeeEmails) {
+  for (const email of attendeeEmails.filter(e => e === user.email || orgEmails.has(e))) {
     if (email !== user.email) {
       const attendeeNotif = await base44.asServiceRole.entities.Notification.create({
         user_email: email,

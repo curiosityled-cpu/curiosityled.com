@@ -3,6 +3,12 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    // Security: require an authenticated session — this endpoint previously
+    // returned internal email template HTML to any unauthenticated caller.
+    const user = await base44.auth.me().catch(() => null);
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const { template_key, variables = {} } = await req.json();
 
     if (!template_key) {

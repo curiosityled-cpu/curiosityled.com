@@ -1,5 +1,20 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 import { jsPDF } from 'npm:jspdf@2.5.2';
+import { getAppUrl } from '../../shared/safeResponses.ts';
+
+// HMAC-SHA256 hex helper for signed verification tokens.
+async function hmacHex(data: string, secret: string): Promise<string> {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(data));
+  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function timingSafeHexEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
 
 // Reframed as capabilities (outer edge = ideal/mature state).
 const CONSTRUCT_LABELS_PDF = {
@@ -147,6 +162,44 @@ async function pushProspectToHubspot(base44, leadInfo, scores) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
+    // ── Email verification redemption (GET ?verify_token=...&prospect_id=...) ──
+    // The full report is only emailed after the recipient clicks a signed
+    // verification link. This prevents the public endpoint from being used to
+    // send platform-branded emails to arbitrary unverified addresses.
+    if (req.method === 'GET') {
+      const url = new URL(req.url);
+      const token = url.searchParams.get('verify_token');
+      const prospectId = url.searchParams.get('prospect_id');
+      const html = (msg: string) => new Response(`<html><body style="font-family:Arial,sans-serif;padding:40px"><h2>${msg}</h2></body></html>`, { status: 200, headers: { 'Content-Type': 'text/html' } });
+      if (!token || !prospectId) return new Response('<html><body><h2>Invalid verification link.</h2></body></html>', { status: 400, headers: { 'Content-Type': 'text/html' } });
+      const secret = Deno.env.get('PUBLIC_REQUEST_TOKEN_SECRET') || Deno.env.get('INTERNAL_FUNCTION_SECRET') || 'fallback';
+      const expected = await hmacHex(prospectId, secret);
+      if (!timingSafeHexEqual(token, expected)) return new Response('<html><body><h2>Invalid or expired verification link.</h2></body></html>', { status: 403, headers: { 'Content-Type': 'text/html' } });
+      const prospects = await base44.asServiceRole.entities.Prospect.filter({ id: prospectId });
+      const prospect = prospects[0];
+      if (!prospect) return new Response('<html><body><h2>Verification link not found.</h2></body></html>', { status: 404, headers: { 'Content-Type': 'text/html' } });
+      if (prospect.lead_status === 'blueprint_sent') return html('Your report has already been sent. Check your email.');
+      const variant = prospect.diagnostic_variant || 'general';
+      const vcfgV = VARIANT_CONFIG[variant] || VARIANT_CONFIG.general;
+      const pdfUrlV = prospect.blueprint_pdf_url || null;
+      const leadInfoV = { name: prospect.name, email: prospect.email, organization: prospect.organization || '' };
+      try {
+        await base44.asServiceRole.integrations.Core.SendEmail({
+          to: prospect.email,
+          subject: vcfgV.emailSubject,
+          html: buildEmailHtml(leadInfoV, pdfUrlV, variant),
+        });
+        await base44.asServiceRole.entities.Prospect.update(prospect.id, {
+          lead_status: 'blueprint_sent',
+          blueprint_sent_at: new Date().toISOString(),
+        });
+      } catch (e) {
+        console.warn('Verify-path email send failed:', e.message);
+      }
+      return html('Verified! Your leadership report is on its way to your inbox.');
+    }
+
     let body = await req.json();
     // Handle wrapped payloads from different callers
     if (body.data) body = body.data;
@@ -247,26 +300,30 @@ Deno.serve(async (req) => {
       const uploadResult = await base44.asServiceRole.integrations.Core.UploadFile({ file });
       pdf_url = uploadResult.file_url;
 
-      // ── Send email via Core.SendEmail (with platform abuse controls) ──
+      // ── Send a verification email (NOT the full report) ──
+      // The full report is only emailed after the recipient clicks a signed
+      // verification link, preventing this public endpoint from sending
+      // platform-branded emails to arbitrary unverified addresses.
       try {
-        const pdfBase64 = arrayBufferToBase64(pdfBytes);
-        const emailHtml = buildEmailHtml(lead_info, pdf_url, variant);
+        const verifyToken = await hmacHex(prospect.id, Deno.env.get('PUBLIC_REQUEST_TOKEN_SECRET') || Deno.env.get('INTERNAL_FUNCTION_SECRET') || 'fallback');
+        await base44.asServiceRole.entities.Prospect.update(prospect.id, {
+          blueprint_pdf_url: pdf_url,
+          diagnostic_variant: variant,
+        });
+        const verifyLink = `${getAppUrl()}/functions/generateDiagnosticReport?verify_token=${verifyToken}&prospect_id=${prospect.id}`;
         await base44.asServiceRole.integrations.Core.SendEmail({
           to: lead_info.email,
-          subject: vcfg.emailSubject,
-          html: emailHtml,
-          attachments: [{
-            filename: isBpo ? "bpo-leadership-report.pdf" : "leadership-reboot-blueprint.pdf",
-            content: pdfBase64,
-          }],
+          subject: 'Confirm your email to receive your leadership report',
+          html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+            <h2 style="color:#1e40af">Confirm your email</h2>
+            <p>Hi ${escapeHtml(lead_info.name || 'there')},</p>
+            <p>Please confirm your email address to receive your ${escapeHtml(vcfg.pdfFooter)}.</p>
+            <p><a href="${verifyLink}" style="display:inline-block;background-color:#2563eb;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;font-weight:bold">Confirm &amp; Send My Report</a></p>
+            <p style="color:#6b7280;font-size:14px">If you did not request this report, you can ignore this email.</p>
+          </div>`,
         });
-        // Mark blueprint sent only on a successful email delivery
-        await base44.asServiceRole.entities.Prospect.update(prospect.id, {
-          lead_status: "blueprint_sent",
-          blueprint_sent_at: new Date().toISOString(),
-        });
-      } catch (emailErr) {
-        console.warn("Email send error:", emailErr.message);
+      } catch (verifyErr) {
+        console.warn('Verification email send error:', verifyErr.message);
       }
     } catch (e) {
       pdfError = e.message;

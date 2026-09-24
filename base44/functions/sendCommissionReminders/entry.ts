@@ -1,13 +1,21 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
 
 /**
  * Send Commission Reminder Notifications
  * Reminds platform admins about pending commission approvals
  * Reminds partners about upcoming payouts
+ *
+ * Security: gated behind authorizeScheduledTask (internal secret or admin
+ * session) — previously any anonymous caller could trigger bulk email fan-out.
  */
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
+    // Security: reject anonymous callers.
+    const auth = await authorizeScheduledTask(req, base44);
+    if (!auth.authorized) return auth.response;
 
     const { type = 'approval_reminder' } = await req.json().catch(() => ({ type: 'approval_reminder' }));
 

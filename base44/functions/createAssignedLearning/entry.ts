@@ -40,10 +40,29 @@ Deno.serve(async (req) => {
             }, { status: 404 });
         }
 
+        // Security: validate that all target users belong to the caller's
+        // organization before creating assignments. Prevents managers from
+        // assigning learning to arbitrary users across tenant boundaries.
+        const allUsers = await base44.asServiceRole.entities.User.list();
+        const allowedEmails = new Set(
+          allUsers
+            .filter(u => user.app_role === 'Platform Admin' || u.client_id === user.client_id)
+            .map(u => u.email)
+        );
+        const validEmails = userEmails.filter(e => allowedEmails.has(e));
+        const invalidEmails = userEmails.filter(e => !allowedEmails.has(e));
+        if (validEmails.length === 0) {
+            return Response.json({
+                error: 'No target users are in your organization',
+                success: false,
+                invalid_emails: invalidEmails
+            }, { status: 403 });
+        }
+
         const createdAssignments = [];
 
-        // Create assignment for each user
-        for (const userEmail of userEmails) {
+        // Create assignment for each valid user
+        for (const userEmail of validEmails) {
             const assignment = await base44.asServiceRole.entities.AssignedLearning.create({
                 user_email: userEmail,
                 learning_resource_id: learningResourceId,
@@ -74,8 +93,9 @@ Deno.serve(async (req) => {
 
         return Response.json({
             success: true,
-            message: `Successfully assigned learning to ${userEmails.length} user(s)`,
-            assignments: createdAssignments
+            message: `Successfully assigned learning to ${createdAssignments.length} user(s)${invalidEmails.length > 0 ? ` (${invalidEmails.length} skipped - outside your organization)` : ''}`,
+            assignments: createdAssignments,
+            skipped_emails: invalidEmails
         });
 
     } catch (error) {

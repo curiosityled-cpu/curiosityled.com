@@ -15,6 +15,17 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Security: prevent self-awards (points farming) and require the recipient
+    // to be in the same organization as the sender.
+    if (recipient_email.toLowerCase() === user.email.toLowerCase()) {
+      return Response.json({ error: 'You cannot award points to yourself' }, { status: 400 });
+    }
+    const recipients = await base44.asServiceRole.entities.User.filter({ email: recipient_email });
+    const recipient = recipients[0];
+    if (!recipient || (user.app_role !== 'Platform Admin' && recipient.client_id !== user.client_id)) {
+      return Response.json({ error: 'Recipient not found in your organization' }, { status: 403 });
+    }
+
     // Get gamification settings
     const settings = await base44.asServiceRole.entities.GamificationSettings.filter({
       client_id: user.client_id
