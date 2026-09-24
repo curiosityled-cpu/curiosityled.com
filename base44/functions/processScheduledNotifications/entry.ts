@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
 import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
+import { escapeHtml, isValidActionUrl } from '../../shared/safeResponses.ts';
 
 /**
  * Processes notifications that are scheduled to be sent
@@ -83,17 +84,23 @@ Deno.serve(async (req) => {
 
                 // Email dispatch
                 if (typePrefs.email || isCritical) {
+                    // Security: escape notification content before interpolating
+                    // into HTML, and validate the action URL scheme, to prevent
+                    // stored-HTML injection / phishing from user-authored messages.
+                    const safeTitle = escapeHtml(notification.title);
+                    const safeMessage = escapeHtml(notification.message);
+                    const safeActionUrl = isValidActionUrl(notification.action_url) ? escapeHtml(notification.action_url) : '';
                     dispatchPromises.push(
                         base44.asServiceRole.integrations.invoke('Core', 'SendEmail', {
                             to: notification.user_email,
                             subject: notification.title,
                             body: `
                                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                                    <h2 style="color: #1e40af;">${notification.title}</h2>
-                                    <p style="color: #374151; line-height: 1.6;">${notification.message}</p>
-                                    ${notification.action_url ? `
+                                    <h2 style="color: #1e40af;">${safeTitle}</h2>
+                                    <p style="color: #374151; line-height: 1.6;">${safeMessage}</p>
+                                    ${safeActionUrl ? `
                                         <p style="margin-top: 30px;">
-                                            <a href="${notification.action_url}" 
+                                            <a href="${safeActionUrl}" 
                                                style="display: inline-block; background-color: #2563eb; color: white; 
                                                       padding: 14px 28px; text-decoration: none; border-radius: 6px; 
                                                       font-weight: bold; font-size: 16px;">

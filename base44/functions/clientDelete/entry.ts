@@ -5,14 +5,20 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
-    if (!user || user.app_role !== 'Super Administrator') {
-      return Response.json({ error: 'Unauthorized - Super Administrator only' }, { status: 403 });
+    if (!user || !['Super Administrator', 'Platform Admin'].includes(user.app_role)) {
+      return Response.json({ error: 'Unauthorized - Super Administrator or Platform Admin only' }, { status: 403 });
     }
 
     const { client_id } = await req.json();
 
     if (!client_id) {
       return Response.json({ error: 'Missing client_id' }, { status: 400 });
+    }
+
+    // Security: a Super Administrator may only delete their own organization.
+    // Platform Admin retains cross-tenant access.
+    if (user.app_role === 'Super Administrator' && user.client_id && client_id !== user.client_id) {
+      return Response.json({ error: 'Forbidden - you can only delete your own organization' }, { status: 403 });
     }
 
     // Check if client has users

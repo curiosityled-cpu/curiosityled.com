@@ -24,12 +24,19 @@ Deno.serve(async (req) => {
     // Get all users with service role for admin access
     let allUsers = await base44.asServiceRole.entities.User.list();
 
-    // Filter by client_id if provided and user is not Platform Admin
-    if (client_id && currentUser.app_role !== 'Platform Admin') {
-      allUsers = allUsers.filter(u => u.client_id === client_id);
-    } else if (currentUser.app_role !== 'Platform Admin' && currentUser.app_role !== 'Super Administrator') {
-      // For Partner Business Admin, filter by their associated clients
-      allUsers = allUsers.filter(u => u.client_id === currentUser.client_id);
+    // Security: derive scope from the authenticated caller — never trust a
+    // request-supplied client_id, which previously let admins enumerate other
+    // tenants' users. Platform Admin retains full access.
+    if (currentUser.app_role !== 'Platform Admin') {
+      if (currentUser.app_role === 'Partner Business Administrator' && currentUser.partner_id) {
+        const clients = await base44.asServiceRole.entities.Client.list();
+        const partnerClientIds = clients.filter(c => c.partner_id === currentUser.partner_id).map(c => c.id);
+        allUsers = allUsers.filter(u => partnerClientIds.includes(u.client_id));
+      } else if (currentUser.client_id) {
+        allUsers = allUsers.filter(u => u.client_id === currentUser.client_id);
+      } else {
+        allUsers = [];
+      }
     }
 
     // Filter by division if provided

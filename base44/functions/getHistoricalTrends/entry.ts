@@ -53,6 +53,12 @@ Deno.serve(async (req) => {
     // Fetch snapshots from the date range
     let snapshots = await base44.asServiceRole.entities.AnalyticsSnapshot.list('-snapshot_date');
     
+    // Security: scope snapshots to the caller's tenant. Platform Admin sees all;
+    // every other role only sees their own organization's historical analytics.
+    if (user.app_role !== 'Platform Admin') {
+      snapshots = snapshots.filter(s => s.client_id === user.client_id);
+    }
+    
     // Filter by date range
     snapshots = snapshots.filter(s => 
       s.snapshot_date >= dateRange.start && s.snapshot_date <= dateRange.end

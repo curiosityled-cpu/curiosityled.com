@@ -32,8 +32,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'You can only query your own team hierarchy' }, { status: 403 });
     }
     
-    // For Analyst, verify manager is in their organization
-    if (currentUser.app_role === 'Analyst' && currentUser.client_id) {
+    // Security: verify the target manager belongs to the caller's organization.
+    // User Level 2 is restricted to their own hierarchy above. Analysts and all
+    // tenant-scoped admins (Admin Level 1/2, Super Administrator, Partner BA)
+    // may only query managers within their own tenant. Platform Admin is exempt.
+    if (currentUser.app_role !== 'Platform Admin' && currentUser.app_role !== 'User Level 2') {
       const allUsers = await base44.asServiceRole.entities.User.list();
       const managerUser = allUsers.find(u => u.email === manager_email);
       if (!managerUser || managerUser.client_id !== currentUser.client_id) {

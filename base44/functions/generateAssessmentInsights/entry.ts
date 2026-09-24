@@ -45,6 +45,18 @@ Deno.serve(async (req) => {
       if (!currentUser) {
         return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       }
+      // Security: manual retries are restricted to the assessment owner or an
+      // admin. This prevents any authenticated user from regenerating (and
+      // overwriting) insights for arbitrary assessment IDs and from draining
+      // LLM credits on other users' assessments.
+      const adminRoles = ['Platform Admin', 'Super Administrator', 'Admin Level 2', 'Admin Level 1', 'Analyst'];
+      if (!adminRoles.includes(currentUser.app_role)) {
+        const assess = await base44.asServiceRole.entities.Assessment.filter({ id: assessmentId });
+        const assessment = assess[0];
+        if (!assessment || assessment.email !== currentUser.email) {
+          return Response.json({ success: false, error: 'Forbidden - you can only regenerate your own assessment insights' }, { status: 403 });
+        }
+      }
     }
 
     console.log(`[AssessmentInsights] START — assessment: ${assessmentId}`);

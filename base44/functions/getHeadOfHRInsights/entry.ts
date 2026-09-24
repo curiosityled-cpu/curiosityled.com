@@ -24,10 +24,24 @@ export default async function(req) {
       return Response.json({ error: "Forbidden — Head of HR access required" }, { status: 403 });
     }
 
-    // 1. Fetch ALL active portfolio assignments across all HRBPs
-    const allPortfolios = await base44.asServiceRole.entities.HRBPPortfolio.filter({
+    // 1. Fetch active portfolio assignments, scoped to the caller's tenant.
+    //    Security: tenant-scoped roles (Admin Level 2, Super Administrator,
+    //    Partner Business Administrator) must only see their own organization's
+    //    portfolios, managers and signals. Platform Admin sees all.
+    let allPortfolios = await base44.asServiceRole.entities.HRBPPortfolio.filter({
       status: "active",
     });
+    if (userRole !== "Platform Admin") {
+      if (userRole === "Partner Business Administrator" && user.partner_id) {
+        const clients = await base44.asServiceRole.entities.Client.list();
+        const partnerClientIds = clients.filter((c) => c.partner_id === user.partner_id).map((c) => c.id);
+        allPortfolios = allPortfolios.filter((p) => partnerClientIds.includes(p.client_id));
+      } else if (user.client_id) {
+        allPortfolios = allPortfolios.filter((p) => p.client_id === user.client_id);
+      } else {
+        allPortfolios = [];
+      }
+    }
 
     // 2. Group by HRBP email
     const hrbpMap = {};
@@ -66,7 +80,10 @@ export default async function(req) {
     let explicitManagers = [];
     if (explicitEmailArray.length > 0) {
       const allUsers = await base44.asServiceRole.entities.User.list(500);
-      explicitManagers = resolveExplicitManagers(allUsers, explicitEmailArray);
+      const scopedAllUsers = userRole === "Platform Admin"
+        ? allUsers
+        : allUsers.filter((u) => u.client_id === user.client_id);
+      explicitManagers = resolveExplicitManagers(scopedAllUsers, explicitEmailArray);
     }
 
     // Resolve BU managers
@@ -89,7 +106,10 @@ export default async function(req) {
     const managerBundles = allManagers.map((m) => buildManagerBundle(m, signals));
 
     // 6. Fetch all interventions (for HRBP engagement metric)
-    const allInterventions = await base44.asServiceRole.entities.HRBPIntervention.list(500);
+    let allInterventions = await base44.asServiceRole.entities.HRBPIntervention.list(500);
+    if (userRole !== "Platform Admin") {
+      allInterventions = allInterventions.filter((i) => i.client_id === user.client_id);
+    }
 
     // 7. Group managers by HRBP and by department (for heat map)
     const managersByHrbp = {};

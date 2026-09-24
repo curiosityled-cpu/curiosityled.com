@@ -68,6 +68,24 @@ Deno.serve(async (req) => {
       // Org Leader or Analyst: scope to their organization
       scopedUsers = allUsers.filter(u => u.client_id === user.client_id);
       scopeLabel = 'Organization';
+    } else if (user.app_role !== 'Platform Admin') {
+      // Security: tenant-scoped admins (Admin Level 2, Super Administrator,
+      // Partner Business Administrator) and any other non-platform role must
+      // only see their own organization's leaders. Partner BA sees their
+      // partner's clients. Previously these roles received the full platform-
+      // wide user list, exposing every tenant's HR data.
+      if (user.app_role === 'Partner Business Administrator' && user.partner_id) {
+        const clients = await base44.asServiceRole.entities.Client.list();
+        const partnerClientIds = clients.filter(c => c.partner_id === user.partner_id).map(c => c.id);
+        scopedUsers = allUsers.filter(u => partnerClientIds.includes(u.client_id));
+        scopeLabel = 'Partner Clients';
+      } else if (user.client_id) {
+        scopedUsers = allUsers.filter(u => u.client_id === user.client_id);
+        scopeLabel = 'Organization';
+      } else {
+        scopedUsers = [];
+        scopeLabel = 'No Organization';
+      }
     }
 
     // Apply additional filters if provided

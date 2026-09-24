@@ -1,4 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { canAssignRole } from '../../shared/userScope.ts';
+import { escapeHtml, getAppUrl } from '../../shared/safeResponses.ts';
 
 /**
  * Creates a new user manually with validation and welcome email
@@ -30,6 +32,22 @@ Deno.serve(async (req) => {
             }, { status: 400 });
         }
 
+        // Security: whitelist the assignable role via rank check. A tenant admin
+        // must never mint a Platform Admin or any role at/above their own tier.
+        const requestedRole = userData.app_role || 'User Level 1';
+        if (!canAssignRole(currentUser.app_role, requestedRole)) {
+            return Response.json({
+                success: false,
+                error: 'You do not have permission to assign this role'
+            }, { status: 403 });
+        }
+
+        // Security: force the new user's tenant to the caller's tenant for
+        // non-Platform-Admin creators — prevents creating users in other tenants.
+        const forcedClientId = currentUser.app_role === 'Platform Admin'
+            ? (userData.client_id || currentUser.client_id)
+            : currentUser.client_id;
+
         // Check for duplicate email
         const existing = await base44.asServiceRole.entities.User.filter({ 
             email: userData.email.toLowerCase() 
@@ -42,11 +60,23 @@ Deno.serve(async (req) => {
             }, { status: 409 });
         }
 
-        // Create user
-        const newUser = await base44.asServiceRole.entities.User.create(userData);
+        // Security: build the create payload from explicit, validated fields
+        // instead of spreading client-controlled userData into a service-role
+        // User.create (which previously let callers set app_role/client_id).
+        const newUser = await base44.asServiceRole.entities.User.create({
+            email: userData.email.toLowerCase(),
+            full_name: userData.full_name,
+            app_role: requestedRole,
+            client_id: forcedClientId,
+            department: userData.department || null,
+            current_role: userData.current_role || null,
+            manager_email: userData.manager_email || null,
+            partner_id: currentUser.app_role === 'Platform Admin' ? (userData.partner_id || null) : null,
+        });
 
-        // Get login URL
-        const loginUrl = req.headers.get('origin') || 'https://app.curiosityled.com';
+        // Security: derive the login URL from server-side APP_URL config, never
+        // from the attacker-controlled Origin header (prevents phishing links).
+        const loginUrl = getAppUrl();
 
         // Send welcome email
         await base44.asServiceRole.integrations.invoke('Core', 'SendEmail', {
@@ -54,14 +84,14 @@ Deno.serve(async (req) => {
             subject: "Welcome to Curiosity Led! Your Leadership Journey Awaits",
             body: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <h2 style="color: #1e40af;">Hello ${userData.full_name},</h2>
+                    <h2 style="color: #1e40af;">Hello ${escapeHtml(userData.full_name)},</h2>
                     <p>Welcome to Curiosity Led! We're excited to have you on board.</p>
-                    <p>Your account has been set up with the role: <strong>${userData.app_role}</strong>.</p>
+                    <p>Your account has been set up with the role: <strong>${escapeHtml(requestedRole)}</strong>.</p>
                     
                     <div style="background-color: #eff6ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                        <p style="margin: 5px 0;"><strong>Your Username:</strong> ${userData.email}</p>
-                        <p style="margin: 5px 0;"><strong>Department:</strong> ${userData.department}</p>
-                        <p style="margin: 5px 0;"><strong>Current Role:</strong> ${userData.current_role}</p>
+                        <p style="margin: 5px 0;"><strong>Your Username:</strong> ${escapeHtml(userData.email)}</p>
+                        <p style="margin: 5px 0;"><strong>Department:</strong> ${escapeHtml(userData.department)}</p>
+                        <p style="margin: 5px 0;"><strong>Current Role:</strong> ${escapeHtml(userData.current_role)}</p>
                     </div>
                     
                     <p>To get started, please log in here:</p>
