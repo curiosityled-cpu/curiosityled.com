@@ -45,15 +45,51 @@ export async function authorizeSuccessionAction(
   const { base44, auth, action } = params;
   const target_client_id = params.target_client_id || auth.client_id || null;
 
+  // ── 0. Platform Admin denial (Phase 1) ───────────────────────────────────
+  // Platform Admin must have ZERO standing customer succession access.
+  // The CrossTenantAccessGrant mechanism is disabled in Phase 1, so there is
+  // no authorized path for Platform Admin to read, list, create, mutate, or
+  // approve succession data — not even for the tenant matching its user
+  // record's client_id. This denial runs BEFORE the permission check, tenant
+  // scope check, wildcard check, and role bypass. It cannot be overridden by
+  // client_id match, wildcard permission, role bypass, or support purpose.
+  if (auth.isPlatformAdmin) {
+    await writeSuccessionAuditEvent({
+      base44,
+      action_type: "denied_action",
+      target_entity_type: params.target_entity_type,
+      target_entity_id: params.target_entity_id,
+      metadata: {
+        action,
+        denied_reason: "platform_admin_standing_access_denied_phase1",
+        actor_role: auth.role,
+        actor_email: auth.email,
+        actor_client_id: auth.client_id,
+        target_client_id,
+      },
+      client_id_override: target_client_id || undefined,
+      actor_context_type_override: "platform_operator",
+    });
+    return {
+      allowed: false,
+      denied_reason:
+        "Platform Admin has no standing succession access in Phase 1. Cross-tenant grants are disabled.",
+      target_client_id: target_client_id || undefined,
+    };
+  }
+
   // ── 1. Permission check ──────────────────────────────────────────────────
   if (params.required_permission) {
     // explicit_permission_only: require an exact grant. No Platform Admin
     // bypass, no "*" wildcard. Used for tenant-scoped approvals where the
     // platform operator must not hold standing approval authority.
+    // Platform Admin is denied at the top of this function (step 0), so
+    // auth.isPlatformAdmin is always false here. The wildcard "*" is honored
+    // for non-approval actions; explicit_permission_only disables it for
+    // approval actions where an exact grant is required.
     const hasPermission = params.explicit_permission_only
       ? auth.permissions.includes(params.required_permission)
-      : (auth.isPlatformAdmin ||
-         auth.permissions.includes(params.required_permission) ||
+      : (auth.permissions.includes(params.required_permission) ||
          auth.permissions.includes("*"));
     if (!hasPermission) {
       await writeSuccessionAuditEvent({
