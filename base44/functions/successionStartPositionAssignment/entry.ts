@@ -4,6 +4,7 @@ import { authorizeSuccessionAction } from "../../shared/authorizeSuccessionActio
 import { writeSuccessionAuditEvent } from "../../shared/successionAuditWriter.ts";
 import { createOrAttachOperation, beginOperationExecution, completeOperation, failOperation } from "../../shared/successionOperationHelper.ts";
 import { validateSameTenantReference, writeDeniedReferenceEvent } from "../../shared/successionCrossTenantValidation.ts";
+import { hasDateArrived } from "../../shared/successionTimezoneHelper.ts";
 
 /**
  * POST /successionStartPositionAssignment
@@ -27,10 +28,9 @@ export default async function(req: Request): Promise<Response> {
     const assignment = await validateSameTenantReference(base44, "PositionAssignment", assignment_id, auth.client_id);
     if (!assignment) { await writeDeniedReferenceEvent(base44, auth, "PositionAssignment", assignment_id, "cross_tenant_or_not_found"); await failOperation(base44, opResult.operation.id, "assignment_not_found"); return Response.json({ error: "Assignment not found" }, { status: 404 }); }
     if (assignment.status !== "scheduled") { await failOperation(base44, opResult.operation.id, "cannot_start_non_scheduled"); return Response.json({ error: `Cannot start assignment with status ${assignment.status}. Only scheduled assignments can be started.` }, { status: 409 }); }
-    // Verify start_date has arrived
-    const now = new Date();
-    const startDate = new Date(assignment.start_date);
-    if (startDate > now) { await failOperation(base44, opResult.operation.id, "start_date_not_arrived"); return Response.json({ error: "Cannot start assignment before its start_date" }, { status: 409 }); }
+    // Verify start_date has arrived using the assignment's configured timezone
+    const tzCheck = hasDateArrived(assignment.start_date, assignment.assignment_timezone);
+    if (!tzCheck.arrived) { await failOperation(base44, opResult.operation.id, "start_date_not_arrived"); return Response.json({ error: `Cannot start assignment before its start_date (timezone: ${tzCheck.timezone}${tzCheck.fell_back ? ", fallback" : ""})` }, { status: 409 }); }
     await base44.asServiceRole.entities.PositionAssignment.update(assignment_id, { status: "active" });
     const auditEvent = await writeSuccessionAuditEvent({ base44, action_type: "assignment_started", target_entity_type: "PositionAssignment", target_entity_id: assignment_id, metadata: { org_position_id: assignment.org_position_id, user_profile_id: assignment.user_profile_id }, operation_id, event_key: { action: "assignment_started", assignment_id }, event_type: "domain_action_completed", target_record_id: assignment_id, attempt_number: 1 });
     await completeOperation(base44, opResult.operation.id, auditEvent?.id || null, { assignment_id, status: "active" });

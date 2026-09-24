@@ -37,10 +37,11 @@
         "submitted",
         "approved",
         "rejected",
-        "withdrawn"
+        "withdrawn",
+        "superseded"
       ],
       "default": "draft",
-      "description": "Approval lifecycle. Approved requirements are immutable \u2014 modifications create a new revision via revises_requirement_id."
+      "description": "Approval lifecycle. Approved requirements are immutable \u2014 modifications create a new revision via revises_requirement_id. superseded = replaced by a newer revision."
     },
     "revision_number": {
       "type": "number",
@@ -50,6 +51,14 @@
     "revises_requirement_id": {
       "type": "string",
       "description": "ID of the prior requirement revision this one replaces. Null for the first revision."
+    },
+    "source_blueprint_id": {
+      "type": "string",
+      "description": "For revisions: the RoleSuccessBlueprint ID from which the prior requirement was drawn. Null for first revision."
+    },
+    "source_blueprint_version": {
+      "type": "number",
+      "description": "For revisions: the OrgRole.blueprint_approval_revision at which the prior requirement was approved. Null for first revision."
     },
     "submitted_at": {
       "type": "string",
