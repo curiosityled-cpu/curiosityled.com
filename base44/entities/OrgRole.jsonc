@@ -22,6 +22,15 @@
       "type": "string",
       "description": "Organizational level"
     },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive"
+      ],
+      "default": "active",
+      "description": "Role lifecycle status. active = in use for succession planning. inactive = retired from planning. Toggled via successionSetOrgRoleStatus."
+    },
     "current_blueprint_id": {
       "type": "string",
       "description": "ID of the currently approved RoleSuccessBlueprint for this role. Null if none approved."
