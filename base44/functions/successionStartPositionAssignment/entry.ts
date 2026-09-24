@@ -28,9 +28,12 @@ export default async function(req: Request): Promise<Response> {
     const assignment = await validateSameTenantReference(base44, "PositionAssignment", assignment_id, auth.client_id);
     if (!assignment) { await writeDeniedReferenceEvent(base44, auth, "PositionAssignment", assignment_id, "cross_tenant_or_not_found"); await failOperation(base44, opResult.operation.id, "assignment_not_found"); return Response.json({ error: "Assignment not found" }, { status: 404 }); }
     if (assignment.status !== "scheduled") { await failOperation(base44, opResult.operation.id, "cannot_start_non_scheduled"); return Response.json({ error: `Cannot start assignment with status ${assignment.status}. Only scheduled assignments can be started.` }, { status: 409 }); }
-    // Verify start_date has arrived using the assignment's configured timezone
-    const tzCheck = hasDateArrived(assignment.start_date, assignment.assignment_timezone);
-    if (!tzCheck.arrived) { await failOperation(base44, opResult.operation.id, "start_date_not_arrived"); return Response.json({ error: `Cannot start assignment before its start_date (timezone: ${tzCheck.timezone}${tzCheck.fell_back ? ", fallback" : ""})` }, { status: 409 }); }
+    // Verify start_date has arrived using the assignment's configured timezone (strict — no fallback)
+    if (!assignment.assignment_timezone) { await failOperation(base44, opResult.operation.id, "tenant_timezone_required"); return Response.json({ error: "TENANT_TIMEZONE_REQUIRED", message: "Assignment has no configured timezone." }, { status: 400 }); }
+    let tzCheck;
+    try { tzCheck = hasDateArrived(assignment.start_date, assignment.assignment_timezone); }
+    catch (e) { await failOperation(base44, opResult.operation.id, "invalid_timezone"); return Response.json({ error: "INVALID_TIMEZONE", message: (e as Error).message }, { status: 400 }); }
+    if (!tzCheck.arrived) { await failOperation(base44, opResult.operation.id, "start_date_not_arrived"); return Response.json({ error: `Cannot start assignment before its start_date (timezone: ${tzCheck.timezone})` }, { status: 409 }); }
     await base44.asServiceRole.entities.PositionAssignment.update(assignment_id, { status: "active" });
     const auditEvent = await writeSuccessionAuditEvent({ base44, action_type: "assignment_started", target_entity_type: "PositionAssignment", target_entity_id: assignment_id, metadata: { org_position_id: assignment.org_position_id, user_profile_id: assignment.user_profile_id }, operation_id, event_key: { action: "assignment_started", assignment_id }, event_type: "domain_action_completed", target_record_id: assignment_id, attempt_number: 1 });
     await completeOperation(base44, opResult.operation.id, auditEvent?.id || null, { assignment_id, status: "active" });

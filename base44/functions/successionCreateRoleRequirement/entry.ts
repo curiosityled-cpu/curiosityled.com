@@ -19,7 +19,7 @@ export default async function(req: Request): Promise<Response> {
   try {
     await beginOperationExecution(base44, opResult.operation.id);
     const requirement = await base44.asServiceRole.entities.RoleRequirement.create({ client_id: auth.client_id, blueprint_id, requirement_type, requirement_text, requirement_detail: requirement_detail || null, status: "draft", revision_number: 1, revises_requirement_id: null, confidentiality_level: "confidential", integrity_status: "active" });
-    const auditEvent = await writeSuccessionAuditEvent({ base44, action_type: "role_requirement_created", target_entity_type: "RoleRequirement", target_entity_id: requirement.id, metadata: { name }, operation_id, event_key: { action: "role_requirement_created", requirement_id: requirement.id }, event_type: "domain_action_completed", target_record_id: requirement.id, attempt_number: 1 });
+    const auditEvent = await writeSuccessionAuditEvent({ base44, action_type: "role_requirement_created", target_entity_type: "RoleRequirement", target_entity_id: requirement.id, metadata: { requirement_type, blueprint_id }, operation_id, event_key: { action: "role_requirement_created", requirement_id: requirement.id }, event_type: "domain_action_completed", target_record_id: requirement.id, attempt_number: 1 });
     await completeOperation(base44, opResult.operation.id, auditEvent?.id || null, { requirement_id: requirement.id });
     return Response.json({ operation_id, requirement_id: requirement.id });
   } catch (error) { await failOperation(base44, opResult.operation.id, "create_role_requirement_failed"); return Response.json({ error: (error as Error).message }, { status: 500 }); }

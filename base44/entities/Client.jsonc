@@ -112,6 +112,10 @@
       "default": false,
       "description": "Whether the organization has configured their core competencies"
     },
+    "business_timezone": {
+      "type": "string",
+      "description": "Authoritative tenant business timezone (IANA identifier, e.g. 'America/New_York'). Used for all date-only assignment semantics in succession planning. Required for date-sensitive succession writes \u2014 missing timezone rejects with TENANT_TIMEZONE_REQUIRED, invalid identifier rejects with INVALID_TIMEZONE. Never inferred from user browser or personal location."
+    },
     "settings": {
       "type": "object",
       "properties": {

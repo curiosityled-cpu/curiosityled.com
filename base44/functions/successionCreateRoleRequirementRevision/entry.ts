@@ -109,10 +109,11 @@ export default async function(req: Request): Promise<Response> {
       integrity_status: "active",
     });
 
-    // Mark prior as superseded (preserved, not mutated in content)
-    await base44.asServiceRole.entities.RoleRequirement.update(prior_requirement_id, {
-      status: "superseded",
-    });
+    // PRESERVE the source requirement unchanged — do NOT mutate or mark as superseded.
+    // The source belongs to an approved or superseded historical blueprint and is immutable.
+    // Historical supersession is derived from the parent blueprint relationship, not by
+    // mutating the source requirement. The new revision simply links to it via
+    // revises_requirement_id and records source_blueprint_id + source_blueprint_version.
 
     const auditEvent = await writeSuccessionAuditEvent({
       base44, action_type: "role_requirement_revision_created",

@@ -59,10 +59,30 @@ export default async function(req: Request): Promise<Response> {
   try {
     await beginOperationExecution(base44, opResult.operation.id);
 
-    // Validate assignment rules
+    // Resolve the tenant business timezone from the Client record — NOT from the
+    // request body or the user's browser. This is the authoritative timezone for
+    // all date-sensitive succession writes.
+    const clients = await base44.asServiceRole.entities.Client.filter({ id: auth.client_id });
+    const tenantTimezone = clients.length > 0 ? clients[0].business_timezone : null;
+
+    if (!tenantTimezone) {
+      await failOperation(base44, opResult.operation.id, "tenant_timezone_required");
+      return Response.json({ error: "TENANT_TIMEZONE_REQUIRED", message: "Tenant business timezone is not configured. Configure business_timezone on the Client record before creating assignments." }, { status: 400 });
+    }
+
+    // Validate the timezone identifier — no silent fallback
+    let validTimezone = tenantTimezone;
+    try {
+      new Intl.DateTimeFormat("en-US", { timeZone: tenantTimezone });
+    } catch {
+      await failOperation(base44, opResult.operation.id, "invalid_timezone");
+      return Response.json({ error: "INVALID_TIMEZONE", message: `Tenant business timezone '${tenantTimezone}' is not a valid IANA timezone identifier.` }, { status: 400 });
+    }
+
+    // Validate assignment rules using the resolved tenant timezone
     const validation = validateAssignment({
       start_date, end_date,
-      assignment_timezone: assignment_timezone || "America/New_York",
+      assignment_timezone: validTimezone,
       correction_of_assignment_id: body.correction_of_assignment_id,
       is_cancellation,
     });
@@ -78,7 +98,7 @@ export default async function(req: Request): Promise<Response> {
       assignment_type,
       start_date, end_date,
       end_date_inclusive: true,
-      assignment_timezone: assignment_timezone || "America/New_York",
+      assignment_timezone: validTimezone,
       status: validation.derived_status,
       correction_of_assignment_id: body.correction_of_assignment_id || null,
       confidentiality_level: "confidential",

@@ -30,8 +30,11 @@ export default async function(req: Request): Promise<Response> {
     if (assignment.status !== "active") { await failOperation(base44, opResult.operation.id, "cannot_end_non_active"); return Response.json({ error: `Cannot end assignment with status ${assignment.status}. Only active assignments can be ended.` }, { status: 409 }); }
     // Validate end_date is on or after start_date (inclusive end-date rule)
     if (isEndDateOnOrBeforeStart(assignment.start_date, end_date)) { await failOperation(base44, opResult.operation.id, "end_before_start"); return Response.json({ error: "end_date must be on or after start_date" }, { status: 400 }); }
-    // Derive new status using the assignment's configured timezone
-    const derived = deriveAssignmentStatus(assignment.start_date, end_date, assignment.assignment_timezone);
+    // Derive new status using the assignment's configured timezone (strict — no fallback)
+    if (!assignment.assignment_timezone) { await failOperation(base44, opResult.operation.id, "tenant_timezone_required"); return Response.json({ error: "TENANT_TIMEZONE_REQUIRED", message: "Assignment has no configured timezone." }, { status: 400 }); }
+    let derived;
+    try { derived = deriveAssignmentStatus(assignment.start_date, end_date, assignment.assignment_timezone); }
+    catch (e) { await failOperation(base44, opResult.operation.id, "invalid_timezone"); return Response.json({ error: "INVALID_TIMEZONE", message: (e as Error).message }, { status: 400 }); }
     const derivedStatus = derived.status;
     await base44.asServiceRole.entities.PositionAssignment.update(assignment_id, { end_date, end_date_inclusive: true, status: derivedStatus });
     const auditEvent = await writeSuccessionAuditEvent({ base44, action_type: "assignment_ended", target_entity_type: "PositionAssignment", target_entity_id: assignment_id, metadata: { org_position_id: assignment.org_position_id, user_profile_id: assignment.user_profile_id, end_date, derived_status: derivedStatus, reason }, operation_id, event_key: { action: "assignment_ended", assignment_id }, event_type: "domain_action_completed", target_record_id: assignment_id, attempt_number: 1 });

@@ -51,7 +51,7 @@ export function validateAssignment(input: AssignmentValidationInput): Assignment
     errors.push("cancellation_after_start_date_not_permitted");
   }
 
-  // Derive temporal status using assignment_timezone
+  // Derive temporal status using assignment_timezone (no fallback — caller must validate)
   let derived_status = "scheduled";
   if (errors.length === 0) {
     if (input.is_cancellation) {
