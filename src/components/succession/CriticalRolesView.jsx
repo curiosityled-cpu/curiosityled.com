@@ -6,10 +6,15 @@ import {
   Plus,
   CheckCircle2,
   RotateCcw,
+  GitBranch,
+  AlertCircle,
 } from "lucide-react";
 import { useSuccessionApi } from "./useSuccessionApi";
+import { base44 } from "@/api/base44Client";
 import CriticalRoleDesignationForm from "./CriticalRoleDesignationForm";
 import CriticalRoleRow from "./CriticalRoleRow";
+import CreateCRRForm from "./CreateCRRForm";
+import CreateCRRRevisionForm from "./CreateCRRRevisionForm";
 import {
   SuccessionSection,
   SuccessionLoading,
@@ -18,8 +23,6 @@ import {
 } from "./SuccessionSection";
 import { useAuth } from "@/components/useAuth";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 
 /**
  * CriticalRolesView — Cycle-specific critical role designations.
@@ -43,6 +46,12 @@ export default function CriticalRolesView() {
 
   const canManage = hasPermission("succession.roles.manage");
   const canView = hasPermission("succession.roles.view");
+  const canApprove = hasPermission("succession.readiness.ratify");
+
+  const [approvedBlueprint, setApprovedBlueprint] = useState(null);
+  const [approvedRequirements, setApprovedRequirements] = useState([]);
+  const [showReviseReq, setShowReviseReq] = useState(null);
+  const [criticalRoleForReq, setCriticalRoleForReq] = useState(null);
 
   const fetchCycles = useCallback(async () => {
     try { const data = await invoke("successionListCycles", {}); setCycles(data?.cycles || []); } catch {}
@@ -87,15 +96,54 @@ export default function CriticalRolesView() {
 
   useEffect(() => { if (selectedRoleId) fetchRequirements(); else setRequirements([]); }, [fetchRequirements, selectedRoleId]);
 
+  // Load the current approved blueprint and its canonical requirements for
+  // base-requirement binding (modification/exception/not_applicable CRRs).
+  useEffect(() => {
+    if (!selectedRoleId) { setApprovedBlueprint(null); setApprovedRequirements([]); return; }
+    (async () => {
+      try {
+        const data = await invoke("successionListBlueprints", { org_role_id: selectedRoleId });
+        const current = (data?.blueprints || []).find((b) => b.status === "approved" && b.is_current);
+        setApprovedBlueprint(current || null);
+        if (current) {
+          const reqs = await base44.entities.RoleRequirement.filter({
+            blueprint_id: current.id,
+            status: "approved",
+          }, "-created_date", 50);
+          setApprovedRequirements(reqs || []);
+        } else {
+          setApprovedRequirements([]);
+        }
+      } catch {
+        setApprovedBlueprint(null);
+        setApprovedRequirements([]);
+      }
+    })();
+  }, [selectedRoleId, invoke]);
+
   const handleCreateRequirement = async (formData) => {
     const opId = `req-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     try {
       await invoke("successionCreateCriticalRoleRequirement", {
         operation_id: opId,
         org_role_id: selectedRoleId,
-        requirement_text: formData.requirement_text,
+        critical_role_id: criticalRoleForReq || null,
+        ...formData,
       });
       setShowCreateReq(false);
+      setCriticalRoleForReq(null);
+      await fetchRequirements();
+    } catch {}
+  };
+
+  const handleCreateRevision = async (formData) => {
+    const opId = `req-rev-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    try {
+      await invoke("successionCreateCriticalRoleRequirementRevision", {
+        operation_id: opId,
+        ...formData,
+      });
+      setShowReviseReq(null);
       await fetchRequirements();
     } catch {}
   };
@@ -238,7 +286,13 @@ export default function CriticalRolesView() {
           )}
         >
           {showCreateReq && canManage && (
-            <CreateRequirementForm onSubmit={handleCreateRequirement} loading={loading} onCancel={() => setShowCreateReq(false)} />
+            <CreateCRRForm
+              onSubmit={handleCreateRequirement}
+              loading={loading}
+              onCancel={() => { setShowCreateReq(false); setCriticalRoleForReq(null); }}
+              approvedRequirements={approvedRequirements}
+              approvedBlueprint={approvedBlueprint}
+            />
           )}
           {loading && requirements.length === 0 ? <SuccessionLoading /> :
            requirements.length === 0 ? <SuccessionEmpty icon={Shield} title="No requirements defined" subtitle="Define position-specific requirements for this critical role." /> :
@@ -248,10 +302,16 @@ export default function CriticalRolesView() {
                  key={req.id}
                  requirement={req}
                  canManage={canManage}
+                 canApprove={canApprove}
                  loading={loading}
                  userId={userId}
                  onApprove={() => handleApproveRequirement(req.id)}
                  onReturn={() => handleReturnRequirement(req.id)}
+                 onRevise={() => setShowReviseReq(req.id)}
+                 showReviseForm={showReviseReq === req.id}
+                 onReviseSubmit={handleCreateRevision}
+                 onReviseCancel={() => setShowReviseReq(null)}
+                 approvedBlueprint={approvedBlueprint}
                />
              ))}
            </div>}
@@ -261,63 +321,74 @@ export default function CriticalRolesView() {
   );
 }
 
-function RequirementRow({ requirement, canManage, loading, userId, onApprove, onReturn }) {
+function RequirementRow({ requirement, canManage, canApprove, loading, userId, onApprove, onReturn, onRevise, showReviseForm, onReviseSubmit, onReviseCancel, approvedBlueprint }) {
   // Separation of duties: disallow approving a requirement you submitted.
   const isSubmitter = userId && requirement.submitted_by_profile_id && requirement.submitted_by_profile_id === userId;
+  const isStale = requirement.applicability_status === "stale_for_future_snapshots";
+  const isSuperseded = requirement.applicability_status === "superseded";
+  const canRevise = canManage && (requirement.status === "approved" || isStale);
+
   return (
     <div className="border border-gray-200 rounded-lg p-3 bg-white">
+      {showReviseForm && (
+        <CreateCRRRevisionForm
+          priorRequirement={requirement}
+          approvedBlueprint={approvedBlueprint}
+          onSubmit={onReviseSubmit}
+          loading={loading}
+          onCancel={onReviseCancel}
+        />
+      )}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-sm text-gray-700">{requirement.requirement_text}</p>
-          <div className="flex items-center gap-2 mt-1.5">
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             <span className={`text-xs px-2 py-0.5 rounded-full ${requirement.status === "approved" ? "bg-green-50 text-green-700" : requirement.status === "submitted" ? "bg-amber-50 text-amber-700" : "bg-gray-100 text-gray-500"}`}>
               {requirement.status}
             </span>
             <span className="text-xs text-gray-400">Rev {requirement.revision_number || 1}</span>
-            {requirement.applicability_status !== "applicable" && (
-              <span className="text-xs text-gray-400">{requirement.applicability_status}</span>
+            <span className="text-xs text-gray-400 capitalize">{requirement.modification_type?.replace(/_/g, " ") || "new"}</span>
+            {isStale && (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" /> Stale
+              </span>
+            )}
+            {isSuperseded && (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Superseded</span>
+            )}
+            {requirement.base_requirement_id && (
+              <span className="text-xs text-gray-400">Base: {requirement.base_requirement_id.slice(-8)}</span>
             )}
             {isSubmitter && requirement.status === "submitted" && (
               <span className="text-xs text-gray-400 italic">You submitted this</span>
             )}
           </div>
         </div>
-        {canManage && requirement.status === "submitted" && (
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs"
-              onClick={onApprove}
-              disabled={loading || isSubmitter}
-              title={isSubmitter ? "Separation of duties: you cannot approve a requirement you submitted" : undefined}
-            >
-              <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Approve
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {canApprove && requirement.status === "submitted" && (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                onClick={onApprove}
+                disabled={loading || isSubmitter}
+                title={isSubmitter ? "Separation of duties: you cannot approve a requirement you submitted" : undefined}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Approve
+              </Button>
+              <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={onReturn} disabled={loading}>
+                <RotateCcw className="w-3.5 h-3.5 mr-1" /> Return
+              </Button>
+            </>
+          )}
+          {canRevise && !showReviseForm && (
+            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={onRevise} disabled={loading}>
+              <GitBranch className="w-3.5 h-3.5 mr-1" /> Revise
             </Button>
-            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={onReturn} disabled={loading}>
-              <RotateCcw className="w-3.5 h-3.5 mr-1" /> Return
-            </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
-  );
-}
-
-function CreateRequirementForm({ onSubmit, loading, onCancel }) {
-  const [requirementText, setRequirementText] = useState("");
-  const handleSubmit = (e) => { e.preventDefault(); if (!requirementText) return; onSubmit({ requirement_text: requirementText }); };
-  return (
-    <form onSubmit={handleSubmit} className="border border-gray-200 rounded-lg p-4 mb-4 bg-gray-50/50">
-      <div>
-        <Label className="text-xs text-gray-600">Requirement Text *</Label>
-        <Textarea className="mt-1 text-sm" placeholder="Describe what this critical role must be able to do..." value={requirementText}
-          onChange={(e) => setRequirementText(e.target.value)} required rows={3} />
-      </div>
-      <div className="flex gap-2 mt-3">
-        <Button type="submit" size="sm" disabled={loading || !requirementText}>Create Requirement</Button>
-        <Button type="button" size="sm" variant="ghost" onClick={onCancel}>Cancel</Button>
-      </div>
-    </form>
   );
 }

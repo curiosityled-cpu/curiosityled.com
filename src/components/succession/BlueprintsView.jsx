@@ -43,6 +43,7 @@ export default function BlueprintsView() {
 
   const canManage = hasPermission("succession.roles.manage");
   const canView = hasPermission("succession.roles.view");
+  const canApprove = hasPermission("succession.readiness.ratify");
 
   const fetchCycles = useCallback(async () => {
     try { const data = await invoke("successionListCycles", {}); setCycles(data?.cycles || []); } catch {}
@@ -101,7 +102,7 @@ export default function BlueprintsView() {
   const handleCreateRequirement = async (formData) => {
     const opId = `req-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     try {
-      await invoke("successionCreateCriticalRoleRequirement", {
+      await invoke("successionCreateRoleRequirement", {
         operation_id: opId,
         org_role_id: selectedRoleId,
         requirement_text: formData.requirement_text,
@@ -173,6 +174,7 @@ export default function BlueprintsView() {
                    key={bp.id}
                    blueprint={bp}
                    canManage={canManage}
+                   canApprove={canApprove}
                    loading={loading}
                    userId={userId}
                    onApprove={() => handleApproveBlueprint(bp.id, bp.blueprint_approval_revision || 0)}
@@ -255,7 +257,7 @@ export default function BlueprintsView() {
   );
 }
 
-function BlueprintRow({ blueprint, canManage, loading, userId, onApprove, readOnly }) {
+function BlueprintRow({ blueprint, canManage, canApprove, loading, userId, onApprove, readOnly }) {
   // Separation of duties: disallow approving a blueprint you submitted.
   const isSubmitter = userId && blueprint.submitted_by_profile_id && blueprint.submitted_by_profile_id === userId;
   return (
@@ -274,7 +276,7 @@ function BlueprintRow({ blueprint, canManage, loading, userId, onApprove, readOn
           <span className={`text-xs px-2 py-0.5 rounded-full ${blueprint.status === "approved" ? "bg-green-50 text-green-700" : blueprint.status === "submitted" ? "bg-amber-50 text-amber-700" : "bg-gray-100 text-gray-500"}`}>
             {blueprint.status}
           </span>
-          {canManage && blueprint.status === "submitted" && (
+          {canApprove && blueprint.status === "submitted" && (
             <Button
               size="sm"
               variant="outline"
