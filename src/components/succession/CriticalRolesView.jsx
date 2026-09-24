@@ -6,9 +6,10 @@ import {
   Plus,
   CheckCircle2,
   RotateCcw,
-  AlertTriangle,
 } from "lucide-react";
 import { useSuccessionApi } from "./useSuccessionApi";
+import CriticalRoleDesignationForm from "./CriticalRoleDesignationForm";
+import CriticalRoleRow from "./CriticalRoleRow";
 import {
   SuccessionSection,
   SuccessionLoading,
@@ -36,6 +37,9 @@ export default function CriticalRolesView() {
   const [selectedRoleId, setSelectedRoleId] = useState(null);
   const [requirements, setRequirements] = useState([]);
   const [showCreateReq, setShowCreateReq] = useState(false);
+  const [criticalRoles, setCriticalRoles] = useState([]);
+  const [positionMap, setPositionMap] = useState({});
+  const [showDesignateForm, setShowDesignateForm] = useState(false);
 
   const canManage = hasPermission("succession.roles.manage");
   const canView = hasPermission("succession.roles.view");
@@ -44,18 +48,43 @@ export default function CriticalRolesView() {
     try { const data = await invoke("successionListCycles", {}); setCycles(data?.cycles || []); } catch {}
   }, [invoke]);
 
-  const fetchRoles = useCallback(async () => {
-    if (!selectedCycleId) return;
-    try { const data = await invoke("successionListOrgRoles", { cycle_id: selectedCycleId }); setRoles(data?.org_roles || []); } catch {}
-  }, [invoke, selectedCycleId]);
-
   const fetchRequirements = useCallback(async () => {
     if (!selectedRoleId) return;
     try { const data = await invoke("successionListCriticalRoleRequirements", { org_role_id: selectedRoleId }); setRequirements(data?.requirements || []); } catch {}
   }, [invoke, selectedRoleId]);
 
   useEffect(() => { fetchCycles(); }, [fetchCycles]);
-  useEffect(() => { if (selectedCycleId) fetchRoles(); else setRoles([]); }, [fetchRoles, selectedCycleId]);
+
+  // When cycle changes: fetch roles, critical role designations, and build
+  // a position map (sequential — useSuccessionApi invoke is single-flight).
+  useEffect(() => {
+    if (!selectedCycleId) {
+      setRoles([]); setCriticalRoles([]); setPositionMap({});
+      return;
+    }
+    (async () => {
+      try {
+        const rolesData = await invoke("successionListOrgRoles", { cycle_id: selectedCycleId });
+        const rolesList = rolesData?.org_roles || [];
+        setRoles(rolesList);
+
+        const crData = await invoke("successionListCriticalRoles", { cycle_id: selectedCycleId });
+        setCriticalRoles(crData?.critical_roles || []);
+
+        const map = {};
+        for (const role of rolesList) {
+          try {
+            const posData = await invoke("successionListOrgPositions", { org_role_id: role.id });
+            for (const p of (posData?.positions || [])) {
+              map[p.id] = { title: p.title, position_identifier: p.position_identifier, role_title: role.title };
+            }
+          } catch {}
+        }
+        setPositionMap(map);
+      } catch {}
+    })();
+  }, [selectedCycleId, invoke]);
+
   useEffect(() => { if (selectedRoleId) fetchRequirements(); else setRequirements([]); }, [fetchRequirements, selectedRoleId]);
 
   const handleCreateRequirement = async (formData) => {
@@ -93,11 +122,41 @@ export default function CriticalRolesView() {
     } catch {}
   };
 
+  const refreshCriticalRoles = async () => {
+    try {
+      const crData = await invoke("successionListCriticalRoles", { cycle_id: selectedCycleId });
+      setCriticalRoles(crData?.critical_roles || []);
+    } catch {}
+  };
+
+  const handleDesignate = async (formData) => {
+    const opId = `desig-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    try {
+      await invoke("successionDesignateCriticalRole", {
+        operation_id: opId,
+        cycle_id: selectedCycleId,
+        ...formData,
+      });
+      setShowDesignateForm(false);
+      await refreshCriticalRoles();
+    } catch {}
+  };
+
+  const handleStatusChange = async (criticalRoleId, newStatus) => {
+    const opId = `cr-status-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    try {
+      await invoke("successionChangeCriticalRoleStatus", {
+        operation_id: opId,
+        critical_role_id: criticalRoleId,
+        new_status: newStatus,
+      });
+      await refreshCriticalRoles();
+    } catch {}
+  };
+
   if (!canView) {
     return <SuccessionEmpty icon={Shield} title="You do not have permission to view critical roles." />;
   }
-
-  const selectedRole = roles.find((r) => r.id === selectedRoleId);
 
   return (
     <div className="space-y-4">
@@ -117,7 +176,7 @@ export default function CriticalRolesView() {
       </SuccessionSection>
 
       {selectedCycleId && (
-        <SuccessionSection icon={Briefcase} title="Select Role">
+        <SuccessionSection icon={Briefcase} title="Select Role (for Requirements)">
           {loading && roles.length === 0 ? <SuccessionLoading /> :
            roles.length === 0 ? <SuccessionEmpty icon={Briefcase} title="No roles in this cycle" /> :
            <select className="w-full h-9 text-sm border border-gray-200 rounded-md px-3 bg-white"
@@ -129,28 +188,42 @@ export default function CriticalRolesView() {
         </SuccessionSection>
       )}
 
-      {selectedRoleId && selectedRole && (
-        <SuccessionSection icon={Shield} title="Critical Role Designation">
-          <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-600" />
-              <p className="text-sm font-medium text-amber-800">Designation not yet available</p>
+      {selectedCycleId && (
+        <SuccessionSection
+          icon={Shield}
+          title="Critical Role Designations"
+          action={canManage && !showDesignateForm && (
+            <Button size="sm" onClick={() => setShowDesignateForm(true)} className="h-7 text-xs">
+              <Plus className="w-3.5 h-3.5 mr-1" /> Designate Position
+            </Button>
+          )}
+        >
+          {showDesignateForm && canManage && (
+            <CriticalRoleDesignationForm
+              roles={roles}
+              invoke={invoke}
+              onSubmit={handleDesignate}
+              loading={loading}
+              onCancel={() => setShowDesignateForm(false)}
+            />
+          )}
+          {loading && criticalRoles.length === 0 ? <SuccessionLoading /> :
+           criticalRoles.length === 0 ? (
+             <SuccessionEmpty icon={Shield} title="No critical roles designated" subtitle="Designate positions critical to organizational continuity." />
+           ) : (
+            <div className="space-y-2">
+              {criticalRoles.map((cr) => (
+                <CriticalRoleRow
+                  key={cr.id}
+                  criticalRole={cr}
+                  positionInfo={positionMap[cr.org_position_id]}
+                  canManage={canManage}
+                  loading={loading}
+                  onStatusChange={handleStatusChange}
+                />
+              ))}
             </div>
-            <p className="text-xs text-amber-700 mt-1.5">
-              criticality_level, governance_tier and continuity_urgency are not yet defined on the
-              role schema, and no designation backend function is deployed. This screen cannot
-              designate this OrgPosition as a critical role within the active cycle until those are
-              added. The fields previously shown here (confidentiality_level, integrity_status,
-              resolution_status) are integrity metadata, not criticality dimensions, and have been
-              removed to avoid misrepresentation.
-            </p>
-          </div>
-          <div className="mt-3 p-3 rounded-lg bg-gray-50 border border-gray-200">
-            <p className="text-xs text-gray-500">
-              When available, criticality_level, governance_tier and continuity_urgency will be shown
-              separately. No composite score or automatic ranking will be computed.
-            </p>
-          </div>
+          )}
         </SuccessionSection>
       )}
 
