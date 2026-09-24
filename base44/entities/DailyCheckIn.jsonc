@@ -176,10 +176,16 @@
     "check_in_type"
   ],
   "rls": {
+    "create": {
+      "data.user_email": "{{user.email}}"
+    },
     "read": {
       "user_email": "{{user.email}}"
     },
-    "write": {
+    "update": {
+      "created_by": "{{user.email}}"
+    },
+    "delete": {
       "created_by": "{{user.email}}"
     }
   }

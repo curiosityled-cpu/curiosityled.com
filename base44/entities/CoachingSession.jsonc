@@ -236,6 +236,31 @@
     "scheduled_date"
   ],
   "rls": {
+    "create": {
+      "$or": [
+        {
+          "data.coach_email": "{{user.email}}"
+        },
+        {
+          "data.coachee_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
     "read": {
       "$or": [
         {
@@ -279,36 +304,7 @@
         }
       ]
     },
-    "write": {
-      "$or": [
-        {
-          "coach_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "Admin Level 2",
-                "Super Administrator"
-              ]
-            }
-          },
-          "client_id": "{{user.client_id}}"
-        },
-        {
-          "user_condition": {
-            "role": "Partner Business Administrator"
-          },
-          "client_id": {
-            "$in": "{{user.partner_client_ids}}"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Platform Admin"
-          }
-        }
-      ]
-    }
+    "update": null,
+    "delete": null
   }
 }

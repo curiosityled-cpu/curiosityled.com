@@ -261,10 +261,16 @@
     "decision_text"
   ],
   "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
     "read": {
       "created_by": "{{user.email}}"
     },
-    "write": {
+    "update": {
+      "created_by": "{{user.email}}"
+    },
+    "delete": {
       "created_by": "{{user.email}}"
     }
   }

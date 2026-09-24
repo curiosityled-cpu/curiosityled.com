@@ -123,10 +123,11 @@
     "requirement_text"
   ],
   "rls": {
+    "create": false,
     "read": {
       "$or": [
         {
-          "data.client_id": "{{user.client_id}}"
+          "data.client_id": "{{user.data.client_id}}"
         },
         {
           "user_condition": {
@@ -135,7 +136,6 @@
         }
       ]
     },
-    "create": false,
     "update": false,
     "delete": false
   }

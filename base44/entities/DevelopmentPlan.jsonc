@@ -126,13 +126,17 @@
         },
         {
           "user_condition": {
-            "role": {
-              "$in": [
-                "User Level 2",
-                "Admin Level 2",
-                "Platform Admin"
-              ]
-            }
+            "role": "User Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
           }
         }
       ]

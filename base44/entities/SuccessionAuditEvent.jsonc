@@ -94,13 +94,13 @@
     "timestamp"
   ],
   "rls": {
-    "read": {
-      "data.client_id": "{{user.client_id}}"
-    },
     "create": {
       "user_condition": {
         "role": "__succession_audit_writer_only__"
       }
+    },
+    "read": {
+      "data.client_id": "{{user.data.client_id}}"
     },
     "update": false,
     "delete": false

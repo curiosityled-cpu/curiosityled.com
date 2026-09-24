@@ -301,67 +301,122 @@
   ],
   "rls": {
     "create": {
-      "user_condition": {
-        "role": {
-          "$in": [
-            "Admin Level 2",
-            "Super Administrator",
-            "Platform Admin"
+      "$and": [
+        {
+          "$or": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "user_condition": {
+                "role": "Platform Admin"
+              }
+            }
           ]
+        },
+        {
+          "data.client_id": "{{user.data.client_id}}"
         }
-      },
-      "client_id": "{{user.client_id}}"
+      ]
     },
     "read": {
-      "client_id": {
-        "$in": [
-          null,
-          "{{user.client_id}}"
-        ]
-      },
       "$or": [
         {
-          "is_platform_default": true
+          "data.is_platform_default": true
+        },
+        {
+          "data.client_id": "{{user.data.client_id}}"
         },
         {
           "user_condition": {
-            "role": {
-              "$in": [
-                "Analyst",
-                "Admin Level 1",
-                "Admin Level 2",
-                "Super Administrator",
-                "Partner Business Administrator",
-                "Platform Admin"
-              ]
-            }
+            "role": "Analyst"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
           }
         }
       ]
     },
     "update": {
-      "user_condition": {
-        "role": {
-          "$in": [
-            "Admin Level 2",
-            "Super Administrator",
-            "Platform Admin"
+      "$and": [
+        {
+          "$or": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "user_condition": {
+                "role": "Platform Admin"
+              }
+            }
           ]
+        },
+        {
+          "data.client_id": "{{user.data.client_id}}"
         }
-      },
-      "client_id": "{{user.client_id}}"
+      ]
     },
     "delete": {
-      "user_condition": {
-        "role": {
-          "$in": [
-            "Admin Level 2",
-            "Super Administrator",
-            "Platform Admin"
+      "$and": [
+        {
+          "$or": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "user_condition": {
+                "role": "Platform Admin"
+              }
+            }
           ]
+        },
+        {
+          "data.client_id": "{{user.data.client_id}}"
         }
-      },
-      "client_id": "{{user.client_id}}"
+      ]
     }
   }
 }

@@ -90,6 +90,9 @@
     "title"
   ],
   "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
     "read": {
       "$or": [
         {
@@ -174,55 +177,7 @@
         }
       ]
     },
-    "write": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "$and": [
-            {
-              "user_condition": {
-                "role": "Admin Level 2"
-              }
-            },
-            {
-              "data.client_id": "{{user.client_id}}"
-            }
-          ]
-        },
-        {
-          "$and": [
-            {
-              "user_condition": {
-                "role": "Super Administrator"
-              }
-            },
-            {
-              "data.client_id": "{{user.client_id}}"
-            }
-          ]
-        },
-        {
-          "$and": [
-            {
-              "user_condition": {
-                "role": "Partner Business Administrator"
-              }
-            },
-            {
-              "data.client_id": {
-                "$in": "{{user.data.partner_client_ids}}"
-              }
-            }
-          ]
-        },
-        {
-          "user_condition": {
-            "role": "Platform Admin"
-          }
-        }
-      ]
-    }
+    "update": null,
+    "delete": null
   }
 }

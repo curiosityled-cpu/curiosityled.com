@@ -199,6 +199,31 @@
     "start_date"
   ],
   "rls": {
+    "create": {
+      "$or": [
+        {
+          "data.manager_email": "{{user.email}}"
+        },
+        {
+          "data.primary_facilitator_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
     "read": {
       "$or": [
         {
@@ -249,53 +274,7 @@
         }
       ]
     },
-    "write": {
-      "$or": [
-        {
-          "manager_email": "{{user.email}}"
-        },
-        {
-          "facilitator_emails": {
-            "$in": [
-              "{{user.email}}"
-            ]
-          }
-        },
-        {
-          "primary_facilitator_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "Admin Level 1"
-          },
-          "client_id": "{{user.client_id}}"
-        },
-        {
-          "user_condition": {
-            "role": "Admin Level 2"
-          },
-          "client_id": "{{user.client_id}}"
-        },
-        {
-          "user_condition": {
-            "role": "Super Administrator"
-          },
-          "client_id": "{{user.client_id}}"
-        },
-        {
-          "user_condition": {
-            "role": "Partner Business Administrator"
-          },
-          "client_id": {
-            "$in": "{{user.partner_client_ids}}"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Platform Admin"
-          }
-        }
-      ]
-    }
+    "update": null,
+    "delete": null
   }
 }

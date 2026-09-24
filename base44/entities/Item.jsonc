@@ -77,6 +77,9 @@
     "title"
   ],
   "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
     "read": {
       "$or": [
         {
@@ -91,19 +94,7 @@
         }
       ]
     },
-    "write": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "assignees": {
-            "$elemMatch": {
-              "user_email": "{{user.email}}"
-            }
-          }
-        }
-      ]
-    }
+    "update": null,
+    "delete": null
   }
 }

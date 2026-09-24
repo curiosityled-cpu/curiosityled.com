@@ -203,10 +203,23 @@
     "user_email"
   ],
   "rls": {
+    "create": {
+      "data.user_email": "{{user.email}}"
+    },
     "read": {
       "data.user_email": "{{user.email}}"
     },
-    "write": {
+    "update": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "data.source": "system"
+        }
+      ]
+    },
+    "delete": {
       "$or": [
         {
           "data.user_email": "{{user.email}}"

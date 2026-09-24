@@ -97,60 +97,82 @@
   ],
   "rls": {
     "create": {
-      "partner_id": "{{user.partner_id}}",
-      "user_condition": {
-        "role": "Partner Business Administrator"
-      }
-    },
-    "read": {
-      "partner_id": "{{user.partner_id}}",
-      "$or": [
+      "$and": [
+        {
+          "data.partner_id": "{{user.data.partner_id}}"
+        },
         {
           "user_condition": {
             "role": "Partner Business Administrator"
           }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.partner_id": "{{user.data.partner_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            }
+          ]
         },
         {
           "user_condition": {
-            "role": {
-              "$in": [
-                "Super Administrator",
-                "Platform Admin"
-              ]
-            }
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
           }
         }
       ]
     },
     "update": {
-      "partner_id": "{{user.partner_id}}",
       "$or": [
         {
+          "$and": [
+            {
+              "data.partner_id": "{{user.data.partner_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            }
+          ]
+        },
+        {
           "user_condition": {
-            "role": "Partner Business Administrator"
+            "role": "Super Administrator"
           }
         },
         {
           "user_condition": {
-            "role": {
-              "$in": [
-                "Super Administrator",
-                "Platform Admin"
-              ]
-            }
+            "role": "Platform Admin"
           }
         }
       ]
     },
     "delete": {
-      "user_condition": {
-        "role": {
-          "$in": [
-            "Super Administrator",
-            "Platform Admin"
-          ]
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
         }
-      }
+      ]
     }
   }
 }

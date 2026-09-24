@@ -131,6 +131,11 @@
     "contact_email"
   ],
   "rls": {
+    "create": {
+      "user_condition": {
+        "role": "Platform Admin"
+      }
+    },
     "read": {
       "$or": [
         {
@@ -148,7 +153,21 @@
         }
       ]
     },
-    "write": {
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "delete": {
       "$or": [
         {
           "user_condition": {

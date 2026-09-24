@@ -77,26 +77,13 @@
     "relevance_score"
   ],
   "rls": {
+    "create": {
+      "data.user_email": "{{user.email}}"
+    },
     "read": {
       "user_email": "{{user.email}}"
     },
-    "write": {
-      "$or": [
-        {
-          "user_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "Admin Level 2",
-                "Super Administrator",
-                "Platform Admin"
-              ]
-            }
-          }
-        }
-      ]
-    }
+    "update": null,
+    "delete": null
   }
 }

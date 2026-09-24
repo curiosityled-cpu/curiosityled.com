@@ -112,21 +112,6 @@
     "definition"
   ],
   "rls": {
-    "read": {
-      "$or": [
-        {
-          "data.is_platform_default": true
-        },
-        {
-          "data.client_id": "{{user.client_id}}"
-        },
-        {
-          "user_condition": {
-            "role": "Platform Admin"
-          }
-        }
-      ]
-    },
     "create": {
       "$or": [
         {
@@ -137,7 +122,7 @@
               }
             },
             {
-              "data.client_id": "{{user.client_id}}"
+              "data.client_id": "{{user.data.client_id}}"
             },
             {
               "data.is_platform_default": {
@@ -154,7 +139,7 @@
               }
             },
             {
-              "data.client_id": "{{user.client_id}}"
+              "data.client_id": "{{user.data.client_id}}"
             },
             {
               "data.is_platform_default": {
@@ -184,6 +169,21 @@
         }
       ]
     },
+    "read": {
+      "$or": [
+        {
+          "data.is_platform_default": true
+        },
+        {
+          "data.client_id": "{{user.data.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
     "update": {
       "$or": [
         {
@@ -194,7 +194,7 @@
               }
             },
             {
-              "data.client_id": "{{user.client_id}}"
+              "data.client_id": "{{user.data.client_id}}"
             },
             {
               "data.is_platform_default": {
@@ -211,7 +211,7 @@
               }
             },
             {
-              "data.client_id": "{{user.client_id}}"
+              "data.client_id": "{{user.data.client_id}}"
             },
             {
               "data.is_platform_default": {
@@ -251,7 +251,7 @@
               }
             },
             {
-              "data.client_id": "{{user.client_id}}"
+              "data.client_id": "{{user.data.client_id}}"
             },
             {
               "data.is_platform_default": {
@@ -268,7 +268,7 @@
               }
             },
             {
-              "data.client_id": "{{user.client_id}}"
+              "data.client_id": "{{user.data.client_id}}"
             },
             {
               "data.is_platform_default": {

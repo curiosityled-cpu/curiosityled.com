@@ -68,70 +68,70 @@
   ],
   "rls": {
     "create": {
-      "user_condition": {
-        "role": {
-          "$in": [
-            "Platform Admin",
-            "Super Administrator"
-          ]
-        }
-      },
-      "client_id": {
-        "$in": [
-          null,
-          "{{user.client_id}}"
-        ]
-      }
-    },
-    "read": {
-      "is_system_default": true,
       "$or": [
         {
-          "client_id": "{{user.client_id}}"
+          "user_condition": {
+            "role": "Platform Admin"
+          }
         },
         {
           "user_condition": {
-            "role": {
-              "$in": [
-                "Super Administrator",
-                "Platform Admin"
-              ]
-            }
+            "role": "Super Administrator"
           }
         }
       ]
     },
-    "update": {
-      "user_condition": {
-        "role": {
-          "$in": [
-            "Platform Admin",
-            "Super Administrator"
+    "read": {
+      "$and": [
+        {
+          "data.is_system_default": true
+        },
+        {
+          "$or": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "user_condition": {
+                "role": "Platform Admin"
+              }
+            }
           ]
         }
-      },
-      "client_id": {
-        "$in": [
-          null,
-          "{{user.client_id}}"
-        ]
-      }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        }
+      ]
     },
     "delete": {
-      "user_condition": {
-        "role": {
-          "$in": [
-            "Platform Admin",
-            "Super Administrator"
-          ]
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
         }
-      },
-      "client_id": {
-        "$in": [
-          null,
-          "{{user.client_id}}"
-        ]
-      }
+      ]
     }
   }
 }

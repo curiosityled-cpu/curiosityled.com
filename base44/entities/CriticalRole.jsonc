@@ -73,13 +73,14 @@
     "name"
   ],
   "rls": {
+    "create": false,
     "read": {
       "$or": [
         {
           "data.is_platform_default": true
         },
         {
-          "data.client_id": "{{user.client_id}}"
+          "data.client_id": "{{user.data.client_id}}"
         },
         {
           "user_condition": {
@@ -88,7 +89,6 @@
         }
       ]
     },
-    "create": false,
     "update": false,
     "delete": false
   }

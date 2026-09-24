@@ -115,6 +115,18 @@
     "trigger_type"
   ],
   "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
     "read": {
       "$or": [
         {
@@ -143,32 +155,7 @@
         }
       ]
     },
-    "write": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "Admin Level 2",
-                "Super Administrator",
-                "Platform Admin"
-              ]
-            }
-          },
-          "client_id": "{{user.client_id}}"
-        },
-        {
-          "user_condition": {
-            "role": "Partner Business Administrator"
-          },
-          "client_id": {
-            "$in": "{{user.partner_client_ids}}"
-          }
-        }
-      ]
-    }
+    "update": null,
+    "delete": null
   }
 }

@@ -74,6 +74,28 @@
     "client_id"
   ],
   "rls": {
+    "create": {
+      "$or": [
+        {
+          "data.initiator_user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
     "read": {
       "$or": [
         {
@@ -124,37 +146,7 @@
         }
       ]
     },
-    "write": {
-      "$or": [
-        {
-          "user_condition": {
-            "role": "Platform Admin"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Super Administrator"
-          },
-          "client_id": "{{user.client_id}}"
-        },
-        {
-          "user_condition": {
-            "role": "Partner Business Administrator"
-          },
-          "client_id": "{{user.client_id}}"
-        },
-        {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "Admin Level 1",
-                "Admin Level 2"
-              ]
-            }
-          },
-          "client_id": "{{user.client_id}}"
-        }
-      ]
-    }
+    "update": null,
+    "delete": null
   }
 }

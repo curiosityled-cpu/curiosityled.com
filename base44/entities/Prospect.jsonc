@@ -70,7 +70,35 @@
     "email"
   ],
   "rls": {
-    "create": true,
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
     "read": {
       "$or": [
         {

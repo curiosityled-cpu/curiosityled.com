@@ -77,27 +77,21 @@
     "criteria_type"
   ],
   "rls": {
-    "read": {},
-    "write": {
+    "create": {
       "$or": [
         {
           "user_condition": {
             "role": "Admin Level 2"
-          },
-          "client_id": "{{user.client_id}}"
+          }
         },
         {
           "user_condition": {
             "role": "Super Administrator"
-          },
-          "client_id": "{{user.client_id}}"
+          }
         },
         {
           "user_condition": {
             "role": "Partner Business Administrator"
-          },
-          "client_id": {
-            "$in": "{{user.partner_client_ids}}"
           }
         },
         {
@@ -106,6 +100,9 @@
           }
         }
       ]
-    }
+    },
+    "read": null,
+    "update": null,
+    "delete": null
   }
 }

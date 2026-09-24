@@ -52,6 +52,25 @@
     "expires_at"
   ],
   "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
     "read": {
       "$or": [
         {
@@ -68,21 +87,7 @@
         }
       ]
     },
-    "write": {
-      "$or": [
-        {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "Admin Level 2",
-                "Super Administrator",
-                "Platform Admin"
-              ]
-            }
-          },
-          "tenant_id": "{{user.client_id}}"
-        }
-      ]
-    }
+    "update": null,
+    "delete": null
   }
 }
