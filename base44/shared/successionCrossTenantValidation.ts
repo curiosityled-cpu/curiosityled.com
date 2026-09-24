@@ -42,7 +42,8 @@ export async function writeDeniedReferenceEvent(
   auth: any,
   target_entity_type: string,
   target_entity_id: string,
-  reason: string
+  reason: string,
+  operation_id?: string
 ): Promise<void> {
   try {
     await writeSuccessionAuditEvent({
@@ -51,10 +52,11 @@ export async function writeDeniedReferenceEvent(
       target_entity_type,
       target_entity_id,
       metadata: { reason, actor_context_type: auth.isPlatformAdmin ? "platform_operator" : "tenant" },
-      event_key: { action: "denied_cross_tenant_reference", target_entity_type, target_entity_id },
+      event_key: { action: "denied_cross_tenant_reference", target_entity_type, target_entity_id, operation_id: operation_id || null },
       event_type: "denied_action",
       target_record_id: target_entity_id,
       attempt_number: 1,
+      operation_id: operation_id || null,
     });
   } catch {
     // best-effort audit — never block on audit failure

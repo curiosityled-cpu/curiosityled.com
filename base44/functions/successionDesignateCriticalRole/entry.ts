@@ -34,10 +34,10 @@ export default async function(req: Request): Promise<Response> {
 
     // Cross-tenant validation: cycle + position must belong to caller's tenant
     const cycle = await validateSameTenantReference(base44, "SuccessionCycle", cycle_id, auth.client_id);
-    if (!cycle) { await writeDeniedReferenceEvent(base44, auth, "SuccessionCycle", cycle_id, "cross_tenant_or_not_found"); await failOperation(base44, opResult.operation.id, "cycle_not_found"); return Response.json({ error: "Cycle not found" }, { status: 404 }); }
+    if (!cycle) { await writeDeniedReferenceEvent(base44, auth, "SuccessionCycle", cycle_id, "cross_tenant_or_not_found", opResult.operation.id); await failOperation(base44, opResult.operation.id, "cycle_not_found"); return Response.json({ error: "Cycle not found" }, { status: 404 }); }
 
     const position = await validateSameTenantReference(base44, "OrgPosition", org_position_id, auth.client_id);
-    if (!position) { await writeDeniedReferenceEvent(base44, auth, "OrgPosition", org_position_id, "cross_tenant_or_not_found"); await failOperation(base44, opResult.operation.id, "position_not_found"); return Response.json({ error: "OrgPosition not found" }, { status: 404 }); }
+    if (!position) { await writeDeniedReferenceEvent(base44, auth, "OrgPosition", org_position_id, "cross_tenant_or_not_found", opResult.operation.id); await failOperation(base44, opResult.operation.id, "position_not_found"); return Response.json({ error: "OrgPosition not found" }, { status: 404 }); }
 
     // Enforce one non-removed CriticalRole per client_id + cycle_id + org_position_id
     const existing = await base44.asServiceRole.entities.CriticalRole.filter({

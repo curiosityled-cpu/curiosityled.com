@@ -83,7 +83,7 @@ export default async function(req: Request): Promise<Response> {
     // Read the blueprint — cross-tenant validated
     const blueprints = await base44.asServiceRole.entities.RoleSuccessBlueprint.filter({ id: blueprint_id, client_id: auth.client_id });
     if (blueprints.length === 0) {
-      await writeDeniedReferenceEvent(base44, auth, "RoleSuccessBlueprint", blueprint_id, "cross_tenant_or_not_found");
+      await writeDeniedReferenceEvent(base44, auth, "RoleSuccessBlueprint", blueprint_id, "cross_tenant_or_not_found", opResult.operation.id);
       await failOperation(base44, opResult.operation.id, "blueprint_not_found");
       return Response.json({ error: "Blueprint not found" }, { status: 404 });
     }
@@ -116,7 +116,7 @@ export default async function(req: Request): Promise<Response> {
     // Read OrgRole — cross-tenant validated
     const roles = await base44.asServiceRole.entities.OrgRole.filter({ id: org_role_id, client_id: auth.client_id });
     if (roles.length === 0) {
-      await writeDeniedReferenceEvent(base44, auth, "OrgRole", org_role_id, "cross_tenant_or_not_found");
+      await writeDeniedReferenceEvent(base44, auth, "OrgRole", org_role_id, "cross_tenant_or_not_found", opResult.operation.id);
       await failOperation(base44, opResult.operation.id, "org_role_not_found");
       return Response.json({ error: "OrgRole not found" }, { status: 404 });
     }

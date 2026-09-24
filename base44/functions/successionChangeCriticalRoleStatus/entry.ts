@@ -39,7 +39,7 @@ export default async function(req: Request): Promise<Response> {
     await beginOperationExecution(base44, opResult.operation.id);
 
     const role = await validateSameTenantReference(base44, "CriticalRole", critical_role_id, auth.client_id);
-    if (!role) { await writeDeniedReferenceEvent(base44, auth, "CriticalRole", critical_role_id, "cross_tenant_or_not_found"); await failOperation(base44, opResult.operation.id, "critical_role_not_found"); return Response.json({ error: "Critical role not found" }, { status: 404 }); }
+    if (!role) { await writeDeniedReferenceEvent(base44, auth, "CriticalRole", critical_role_id, "cross_tenant_or_not_found", opResult.operation.id); await failOperation(base44, opResult.operation.id, "critical_role_not_found"); return Response.json({ error: "Critical role not found" }, { status: 404 }); }
 
     const allowed = validTransitions[role.status] || [];
     if (!allowed.includes(new_status)) {

@@ -22,7 +22,7 @@ export default async function(req: Request): Promise<Response> {
     // Cross-tenant validation: verify org_role belongs to caller's tenant
     const orgRole = await validateSameTenantReference(base44, "OrgRole", org_role_id, auth.client_id);
     if (!orgRole) {
-      await writeDeniedReferenceEvent(base44, auth, "OrgRole", org_role_id, "cross_tenant_or_not_found");
+      await writeDeniedReferenceEvent(base44, auth, "OrgRole", org_role_id, "cross_tenant_or_not_found", opResult.operation.id);
       await failOperation(base44, opResult.operation.id, "org_role_not_found");
       return Response.json({ error: "OrgRole not found" }, { status: 404 });
     }

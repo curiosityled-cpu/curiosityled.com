@@ -25,6 +25,12 @@ export interface AuditEventInput {
   client_id_override?: string;
   // Optional context type override (defaults to "tenant" or "platform_operator")
   actor_context_type_override?: string;
+  // At-least-once delivery + deduplication fields
+  operation_id?: string;
+  event_key?: Record<string, any> | string;
+  event_type?: string;
+  target_record_id?: string;
+  attempt_number?: number;
 }
 
 export async function writeSuccessionAuditEvent(input: AuditEventInput): Promise<any> {
@@ -76,6 +82,13 @@ export async function writeSuccessionAuditEvent(input: AuditEventInput): Promise
     metadata: input.metadata || {},
     timestamp: new Date().toISOString(),
     confidentiality_level: input.confidentiality_level || CONFIDENTIALITY_LEVELS.STANDARD,
+    operation_id: input.operation_id || null,
+    event_key: input.event_key
+      ? (typeof input.event_key === "string" ? input.event_key : JSON.stringify(input.event_key))
+      : null,
+    event_type: input.event_type || null,
+    target_record_id: input.target_record_id || null,
+    attempt_number: input.attempt_number ?? 1,
   };
 
   try {
