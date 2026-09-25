@@ -1,11 +1,11 @@
 {
   "guard_version": "2.0-hardened",
-  "checked_at": "2026-09-25T00:29:23.405Z",
+  "checked_at": "2026-09-25T01:07:01.589Z",
   "exception_list_reviewed": "2026-09-25",
   "passed": true,
-  "total_functions": 65,
+  "total_functions": 72,
   "coverage": {
-    "operational": 54,
+    "operational": 61,
     "control_plane": 6,
     "infrastructure": 2,
     "test_harness": 3,
@@ -29,6 +29,16 @@
   ],
   "inventory": [
     {
+      "name": "successionAddPoolMember",
+      "classification": "operational",
+      "bootstrap_offset": 761,
+      "authorize_offset": 894,
+      "domain_access_offset": 2225,
+      "domain_access_entity": "TalentPoolMembership",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
       "name": "successionApproveBlueprint",
       "classification": "operational",
       "bootstrap_offset": 921,
@@ -45,6 +55,16 @@
       "authorize_offset": 723,
       "domain_access_offset": 1534,
       "domain_access_entity": "CriticalRoleRequirement",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionArchiveTalentPool",
+      "classification": "operational",
+      "bootstrap_offset": 685,
+      "authorize_offset": 818,
+      "domain_access_offset": 2110,
+      "domain_access_entity": "TalentPool",
       "ordering_ok": true,
       "issues": []
     },
@@ -95,6 +115,16 @@
       "authorize_offset": 867,
       "domain_access_offset": 1999,
       "domain_access_entity": "RoleSuccessBlueprint",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionCreateCandidacy",
+      "classification": "operational",
+      "bootstrap_offset": 1022,
+      "authorize_offset": 1155,
+      "domain_access_offset": 3201,
+      "domain_access_entity": "SuccessorCandidacy",
       "ordering_ok": true,
       "issues": []
     },
@@ -185,6 +215,16 @@
       "authorize_offset": 934,
       "domain_access_offset": 1819,
       "domain_access_entity": "RoleRequirement",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionCreateTalentPool",
+      "classification": "operational",
+      "bootstrap_offset": 754,
+      "authorize_offset": 887,
+      "domain_access_offset": 2099,
+      "domain_access_entity": "TalentPool",
       "ordering_ok": true,
       "issues": []
     },
@@ -509,6 +549,16 @@
       "issues": []
     },
     {
+      "name": "successionRemovePoolMember",
+      "classification": "operational",
+      "bootstrap_offset": 713,
+      "authorize_offset": 846,
+      "domain_access_offset": 2232,
+      "domain_access_entity": "TalentPoolMembership",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
       "name": "successionRemoveRoleRequirement",
       "classification": "operational",
       "bootstrap_offset": 610,
@@ -619,6 +669,16 @@
       "issues": []
     },
     {
+      "name": "successionSubmitSelfDisclosure",
+      "classification": "operational",
+      "bootstrap_offset": 1326,
+      "authorize_offset": 1468,
+      "domain_access_offset": 3545,
+      "domain_access_entity": "CandidateSelfDisclosure",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
       "name": "successionUpdateCriticalRoleRequirement",
       "classification": "operational",
       "bootstrap_offset": 629,
@@ -675,6 +735,16 @@
       "authorize_offset": 782,
       "domain_access_offset": 1783,
       "domain_access_entity": "RoleSuccessBlueprint",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionWithdrawCandidacy",
+      "classification": "operational",
+      "bootstrap_offset": 714,
+      "authorize_offset": 847,
+      "domain_access_offset": 2230,
+      "domain_access_entity": "SuccessorCandidacy",
       "ordering_ok": true,
       "issues": []
     }

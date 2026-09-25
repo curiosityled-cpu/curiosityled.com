@@ -12,6 +12,8 @@ import {
   ShieldCheck,
   Activity,
   Lock,
+  Users,
+  UserCheck,
 } from "lucide-react";
 import OverviewView from "@/components/succession/OverviewView";
 import CyclesView from "@/components/succession/CyclesView";
@@ -20,6 +22,8 @@ import PositionsView from "@/components/succession/PositionsView";
 import CriticalRolesView from "@/components/succession/CriticalRolesView";
 import BlueprintsView from "@/components/succession/BlueprintsView";
 import SnapshotsView from "@/components/succession/SnapshotsView";
+import TalentPoolsView from "@/components/succession/TalentPoolsView";
+import CandidatesView from "@/components/succession/CandidatesView";
 
 const PHASE_1_VIEWS = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
@@ -31,12 +35,17 @@ const PHASE_1_VIEWS = [
   { key: "snapshots", label: "Effective Snapshots", icon: Camera },
 ];
 
+const PHASE_2A_VIEWS = [
+  { key: "talent-pools", label: "Talent Pools", icon: Users },
+  { key: "candidates", label: "Candidates", icon: UserCheck },
+];
+
 const PHASE_0_VIEWS = [
   { key: "governance", label: "Governance", icon: ShieldCheck },
   { key: "monitor", label: "Monitor", icon: Activity },
 ];
 
-const ALL_VIEWS = [...PHASE_1_VIEWS, ...PHASE_0_VIEWS];
+const ALL_VIEWS = [...PHASE_1_VIEWS, ...PHASE_2A_VIEWS, ...PHASE_0_VIEWS];
 
 export default function SuccessionWorkspace() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -103,6 +112,10 @@ function renderView(viewKey) {
       return <BlueprintsView />;
     case "snapshots":
       return <SnapshotsView />;
+    case "talent-pools":
+      return <TalentPoolsView />;
+    case "candidates":
+      return <CandidatesView />;
     case "governance":
       return <GovernanceView />;
     case "monitor":

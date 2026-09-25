@@ -1,0 +1,192 @@
+{
+  "name": "CandidateSelfDisclosure",
+  "type": "object",
+  "description": "A candidate-authored, versioned self-disclosure. Each new submission creates a new version and supersedes the prior. Never updated in place. Candidate-authored only in this MVP \u2014 no proxy submission or HR interpretation.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side \u2014 never accepted from frontend input."
+    },
+    "candidacy_id": {
+      "type": "string",
+      "description": "SuccessorCandidacy ID this disclosure belongs to. Required."
+    },
+    "user_profile_id": {
+      "type": "string",
+      "description": "UserProfile ID of the candidate. Must match candidacy.user_profile_id. Required."
+    },
+    "version": {
+      "type": "number",
+      "description": "Version number. Increments with each new submission. 1 for the first disclosure."
+    },
+    "aspiration_status": {
+      "type": "string",
+      "enum": [
+        "interested",
+        "undecided",
+        "not_interested"
+      ],
+      "description": "Candidate's aspiration status. Required."
+    },
+    "aspiration_statement": {
+      "type": "string",
+      "description": "Optional candidate aspiration statement."
+    },
+    "mobility": {
+      "type": "string",
+      "enum": [
+        "local_only",
+        "relocatable",
+        "remote_only",
+        "open"
+      ],
+      "description": "Candidate's mobility preference. Required."
+    },
+    "availability_horizon": {
+      "type": "string",
+      "enum": [
+        "immediate",
+        "0_6_months",
+        "6_12_months",
+        "12_24_months",
+        "24_plus_months"
+      ],
+      "description": "Candidate's availability horizon. Required."
+    },
+    "conflict_of_interest_disclosed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the candidate disclosed a conflict of interest. When true, HR follow-up is required. No free-text COI narrative is stored in this MVP."
+    },
+    "submitted_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the submitter. Must match candidacy.user_profile_id. Derived server-side."
+    },
+    "submitted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the disclosure was submitted. Set server-side."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "current",
+        "superseded"
+      ],
+      "default": "current",
+      "description": "Disclosure lifecycle. current = latest version. superseded = replaced by a newer version."
+    },
+    "supersedes_disclosure_id": {
+      "type": "string",
+      "description": "ID of the prior disclosure this one supersedes. Null for the first disclosure."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "pending_validation"
+    },
+    "quarantine_reason": {
+      "type": "string"
+    },
+    "quarantined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quarantined_by_operation_id": {
+      "type": "string"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "pending"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "candidacy_id",
+    "user_profile_id",
+    "version",
+    "aspiration_status",
+    "mobility",
+    "availability_horizon",
+    "conflict_of_interest_disclosed",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            }
+          ]
+        },
+        {
+          "data.user_profile_id": "{{user.id}}"
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

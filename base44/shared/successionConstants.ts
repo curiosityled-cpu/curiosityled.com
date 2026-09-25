@@ -73,6 +73,10 @@ export const SUCCESSION_PERMISSIONS = [
   "succession.monitor.view",
   "succession.monitor.manage",
   "succession.export",
+  // Phase 2A — Discover workflow permissions
+  "succession.discovery.view",
+  "succession.discovery.manage",
+  "succession.discovery.disclose",
   // Add-on / restricted-scope permissions
   "succession.view_executive_aggregate",
   "succession.compliance_view",

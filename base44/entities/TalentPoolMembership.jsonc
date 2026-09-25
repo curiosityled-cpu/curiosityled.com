@@ -1,0 +1,150 @@
+{
+  "name": "TalentPoolMembership",
+  "type": "object",
+  "description": "A membership record linking a user to a talent pool. Created by authorized tenant administrators. No automated membership \u2014 confirmed when an authorized human adds it.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side \u2014 never accepted from frontend input."
+    },
+    "pool_id": {
+      "type": "string",
+      "description": "TalentPool ID this membership belongs to. Required."
+    },
+    "user_profile_id": {
+      "type": "string",
+      "description": "UserProfile ID of the pool member. Required."
+    },
+    "added_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the user who added this member. Derived server-side."
+    },
+    "added_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the member was added. Set server-side."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "removed"
+      ],
+      "default": "active",
+      "description": "Membership lifecycle. active = current member. removed = no longer in pool."
+    },
+    "removed_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the user who removed this member. Derived server-side."
+    },
+    "removed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the member was removed."
+    },
+    "removal_reason": {
+      "type": "string",
+      "description": "Reason for removal."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "pending_validation"
+    },
+    "quarantine_reason": {
+      "type": "string"
+    },
+    "quarantined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quarantined_by_operation_id": {
+      "type": "string"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "pending"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "pool_id",
+    "user_profile_id",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

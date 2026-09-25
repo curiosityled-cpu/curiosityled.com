@@ -1,0 +1,173 @@
+{
+  "name": "SuccessorCandidacy",
+  "type": "object",
+  "description": "A successor candidacy linking a user to a critical role within a cycle. Created by authorized tenant administrators. No scoring, ranking, readiness, evidence, or recommendations in this MVP. One active candidacy per client_id + critical_role_id + user_profile_id.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side \u2014 never accepted from frontend input."
+    },
+    "cycle_id": {
+      "type": "string",
+      "description": "SuccessionCycle ID this candidacy belongs to. Required."
+    },
+    "critical_role_id": {
+      "type": "string",
+      "description": "CriticalRole ID this candidacy is for. Required."
+    },
+    "user_profile_id": {
+      "type": "string",
+      "description": "UserProfile ID of the candidate. Required."
+    },
+    "origin_pool_membership_id": {
+      "type": "string",
+      "description": "Optional TalentPoolMembership ID if the candidacy originated from a pool nomination."
+    },
+    "discovery_source": {
+      "type": "string",
+      "enum": [
+        "pool_nomination",
+        "manager_nomination",
+        "self_nomination",
+        "hr_nomination"
+      ],
+      "description": "How the candidacy was discovered. Required."
+    },
+    "nominated_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the nominator. Derived server-side."
+    },
+    "nominated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the candidacy was nominated. Set server-side."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "withdrawn"
+      ],
+      "default": "active",
+      "description": "Candidacy lifecycle. active = current candidate. withdrawn = no longer a candidate."
+    },
+    "withdrawn_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the user who withdrew the candidacy. Derived server-side."
+    },
+    "withdrawn_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the candidacy was withdrawn."
+    },
+    "withdrawal_reason": {
+      "type": "string",
+      "description": "Reason for withdrawal."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "pending_validation"
+    },
+    "quarantine_reason": {
+      "type": "string"
+    },
+    "quarantined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quarantined_by_operation_id": {
+      "type": "string"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "pending"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "cycle_id",
+    "critical_role_id",
+    "user_profile_id",
+    "discovery_source",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            }
+          ]
+        },
+        {
+          "data.user_profile_id": "{{user.id}}"
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

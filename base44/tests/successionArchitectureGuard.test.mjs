@@ -110,6 +110,10 @@ const DOMAIN_ENTITY_NAMES = new Set([
   "SnapshotIntegrityIncident",
   "PositionAssignment",
   "CrossTenantAccessGrant",
+  "TalentPool",
+  "TalentPoolMembership",
+  "SuccessorCandidacy",
+  "CandidateSelfDisclosure",
 ]);
 
 // ═══════════════════════════════════════════════════════════════════════════

@@ -225,6 +225,10 @@ export const SUCCESSION_PERMISSIONS = [
   'succession.monitor.view',
   'succession.monitor.manage',
   'succession.export',
+  // Phase 2A — Discover workflow permissions
+  'succession.discovery.view',
+  'succession.discovery.manage',
+  'succession.discovery.disclose',
   // Add-on / restricted-scope permissions
   'succession.view_executive_aggregate',
   'succession.compliance_view',
@@ -351,6 +355,7 @@ export const BASE_ROLE_PERMISSIONS = {
     'succession.governance.view', 'succession.governance.manage',
     'succession.monitor.view', 'succession.monitor.manage',
     'succession.export',
+    'succession.discovery.view', 'succession.discovery.manage',
     'succession.view_executive_aggregate', 'succession.compliance_view', 'succession.partner_aggregate_view'
     // NOTE: Team permissions removed - Super Admins need Team Leader Add-on for team view
     // NOTE: Personal dashboard permissions removed - Super Admins need User Add-on to see their own progress
@@ -467,7 +472,8 @@ export const BASE_ROLE_PERMISSIONS = {
     'succession.cycles.view', 'succession.cycles.manage',
     'succession.roles.view', 'succession.roles.manage',
     'succession.blueprints.approve',
-    'succession.critical_role_requirements.approve'
+    'succession.critical_role_requirements.approve',
+    'succession.discovery.view', 'succession.discovery.manage'
   ],
   'Admin Level 1': [
     // Class Management
@@ -519,7 +525,8 @@ export const BASE_ROLE_PERMISSIONS = {
     'experiences.view_analytics',
     // Succession Module — Admin Level 1 (Program Manager) can manage cycles, roles, requirements
     'succession.cycles.view', 'succession.cycles.manage',
-    'succession.roles.view', 'succession.roles.manage'
+    'succession.roles.view', 'succession.roles.manage',
+    'succession.discovery.view', 'succession.discovery.manage'
   ],
   'Executive': [
     'analytics.view_client',
