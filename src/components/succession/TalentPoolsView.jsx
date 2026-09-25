@@ -160,7 +160,10 @@ export default function TalentPoolsView() {
 
 function PoolRow({ pool, isSelected, canManage, onSelect, onArchive }) {
   return (
-    <div className={`border rounded-lg p-3 cursor-pointer transition-colors ${isSelected ? "border-[#0202ff] bg-[#0202ff]/5" : "border-gray-200 hover:border-gray-300 bg-white"}`} onClick={onSelect}>
+    <div className={`border rounded-lg p-3 cursor-pointer transition-colors ${isSelected ? "border-[#0202ff] bg-[#0202ff]/5" : "border-gray-200 hover:border-gray-300 bg-white"}`}
+      role="button" tabIndex={0} aria-pressed={isSelected}
+      onClick={onSelect}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(); } }}>
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-gray-900 truncate">{pool.name}</p>

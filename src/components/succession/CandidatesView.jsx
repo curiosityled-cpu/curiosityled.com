@@ -12,6 +12,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import CandidateDetailView from "./CandidateDetailView";
 
 const DISCOVERY_SOURCES = [
@@ -33,6 +34,8 @@ export default function CandidatesView() {
   const [showCreate, setShowCreate] = useState(false);
   const [users, setUsers] = useState([]);
   const [snapshots, setSnapshots] = useState([]);
+  const [withdrawTarget, setWithdrawTarget] = useState(null);
+  const [withdrawReason, setWithdrawReason] = useState("");
 
   const canManage = hasPermission("succession.discovery.manage");
   const canView = hasPermission("succession.discovery.view") || canManage;
@@ -114,6 +117,8 @@ export default function CandidatesView() {
       await invoke("successionWithdrawCandidacy", {
         operation_id: opId, candidacy_id: candidacyId, withdrawal_reason: reason,
       });
+      setWithdrawTarget(null);
+      setWithdrawReason("");
       setSelectedCandidacy(null);
       await fetchCandidacies();
     } catch { /* handled by hook */ }
@@ -175,10 +180,30 @@ export default function CandidatesView() {
                   isSelected={selectedCandidacy?.id === c.id}
                   canManage={canManage}
                   onSelect={() => setSelectedCandidacy(prev => prev?.id === c.id ? null : c)}
-                  onWithdraw={() => { const reason = prompt("Withdrawal reason:"); if (reason !== null) handleWithdrawCandidacy(c.id, reason); }}
+                  onWithdraw={() => { setWithdrawTarget(c.id); setWithdrawReason(""); }}
                 />
               );
             })}
+          </div>
+        )}
+
+        {withdrawTarget && (
+          <div className="border border-gray-200 rounded-lg p-4 mt-3 bg-gray-50/50">
+            <Label htmlFor="withdraw-reason" className="text-xs text-gray-600">Withdrawal reason</Label>
+            <Textarea id="withdraw-reason" className="mt-1 w-full text-sm" rows={2}
+              placeholder="Reason for withdrawing this candidacy"
+              value={withdrawReason} onChange={(e) => setWithdrawReason(e.target.value)}
+              aria-describedby="withdraw-reason-error" />
+            {error && <p id="withdraw-reason-error" className="text-xs text-red-600 mt-1" role="alert">{error}</p>}
+            <div className="flex gap-2 mt-2">
+              <Button size="sm" onClick={() => handleWithdrawCandidacy(withdrawTarget, withdrawReason)}
+                disabled={loading || !withdrawReason.trim()}>
+                Confirm Withdraw
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => { setWithdrawTarget(null); setWithdrawReason(""); clearError(); }}>
+                Cancel
+              </Button>
+            </div>
           </div>
         )}
       </SuccessionSection>
@@ -193,7 +218,10 @@ export default function CandidatesView() {
 function CandidacyRow({ candidacy, criticalRoleLabel, userLabel, isSelected, canManage, onSelect, onWithdraw }) {
   const sourceLabel = DISCOVERY_SOURCES.find(s => s.value === candidacy.discovery_source)?.label || candidacy.discovery_source;
   return (
-    <div className={`border rounded-lg p-3 cursor-pointer transition-colors ${isSelected ? "border-[#0202ff] bg-[#0202ff]/5" : "border-gray-200 hover:border-gray-300 bg-white"}`} onClick={onSelect}>
+    <div className={`border rounded-lg p-3 cursor-pointer transition-colors ${isSelected ? "border-[#0202ff] bg-[#0202ff]/5" : "border-gray-200 hover:border-gray-300 bg-white"}`}
+      role="button" tabIndex={0} aria-pressed={isSelected}
+      onClick={onSelect}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(); } }}>
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-gray-900 truncate">{userLabel}</p>

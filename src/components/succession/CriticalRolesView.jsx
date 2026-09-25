@@ -215,6 +215,7 @@ export default function CriticalRolesView() {
           <SuccessionEmpty icon={Building2} title="No cycles available" />
         ) : (
           <select className="w-full h-9 text-sm border border-gray-200 rounded-md px-3 bg-white"
+            aria-label="Select a cycle"
             value={selectedCycleId || ""}
             onChange={(e) => { setSelectedCycleId(e.target.value || null); setSelectedRoleId(null); }}>
             <option value="">— Select a cycle —</option>
@@ -228,8 +229,9 @@ export default function CriticalRolesView() {
           {loading && roles.length === 0 ? <SuccessionLoading /> :
            roles.length === 0 ? <SuccessionEmpty icon={Briefcase} title="No roles in this cycle" /> :
            <select className="w-full h-9 text-sm border border-gray-200 rounded-md px-3 bg-white"
-             value={selectedRoleId || ""}
-             onChange={(e) => setSelectedRoleId(e.target.value || null)}>
+              aria-label="Select a role for requirements"
+              value={selectedRoleId || ""}
+              onChange={(e) => setSelectedRoleId(e.target.value || null)}>
              <option value="">— Select a role —</option>
              {roles.map((r) => <option key={r.id} value={r.id}>{r.title}</option>)}
            </select>}
