@@ -6,8 +6,9 @@
 import React from "react";
 import { RefreshCw, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import TeamPulseOverlay from "@/components/team/TeamPulseOverlay";
 
-const HERO_IMAGE = "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/e2677784c_generated_image.png";
+const HERO_IMAGE = "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/741bf3823_generated_image.png";
 
 export default function TeamHeroHeader({ scopeLabel, subtitle, pulse, isFetching, onRefresh }) {
   const day = new Date().toLocaleDateString("en-US", {
@@ -15,14 +16,17 @@ export default function TeamHeroHeader({ scopeLabel, subtitle, pulse, isFetching
   });
 
   return (
-    <div className="relative rounded-2xl overflow-hidden mb-5 shadow-lg" style={{ minHeight: "160px" }}>
+    <div className="relative rounded-2xl overflow-hidden mb-5 shadow-lg" style={{ minHeight: "180px" }}>
       {/* Background image with breathing animation */}
-      <div className="absolute inset-0" style={{ animation: "hero-breathe 24s ease-in-out infinite" }}>
+      <div className="absolute inset-0" style={{ animation: "hero-breathe 22s ease-in-out infinite" }}>
         <img src={HERO_IMAGE} alt="" className="w-full h-full object-cover" />
       </div>
 
       {/* Gradient overlay for text readability */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#0202ff]/80 via-[#0202ff]/30 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent" />
+
+      {/* Animated team network overlay */}
+      <TeamPulseOverlay />
 
       {/* Refresh button */}
       {onRefresh && (
@@ -36,7 +40,7 @@ export default function TeamHeroHeader({ scopeLabel, subtitle, pulse, isFetching
       )}
 
       {/* Content */}
-      <div className="relative z-10 px-6 py-5 flex flex-col justify-end" style={{ minHeight: "160px" }}>
+      <div className="relative z-10 px-6 py-5 flex flex-col justify-end" style={{ minHeight: "180px" }}>
         <div className="flex items-center gap-2 mb-1">
           <Users className="w-3.5 h-3.5 text-white/70" />
           <p className="text-[10px] font-semibold text-white/70 uppercase tracking-widest">{day}</p>
