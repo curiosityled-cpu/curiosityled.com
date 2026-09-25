@@ -32,6 +32,7 @@ export default function CandidatesView() {
   const [selectedCandidacy, setSelectedCandidacy] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
   const [users, setUsers] = useState([]);
+  const [snapshots, setSnapshots] = useState([]);
 
   const canManage = hasPermission("succession.discovery.manage");
   const canView = hasPermission("succession.discovery.view") || canManage;
@@ -83,6 +84,19 @@ export default function CandidatesView() {
     }
   }, [canManage]);
 
+  // Fetch generated, active snapshots for the selected critical role
+  const fetchSnapshots = useCallback(async (criticalRoleId) => {
+    if (!criticalRoleId) { setSnapshots([]); return; }
+    try {
+      const data = await base44.entities.EffectiveBlueprintSnapshot.filter({
+        critical_role_id: criticalRoleId,
+        status: "generated",
+        integrity_status: "active",
+      });
+      setSnapshots(data || []);
+    } catch { setSnapshots([]); }
+  }, []);
+
   const handleCreateCandidacy = async (formData) => {
     const opId = `candidacy-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     try {
@@ -91,6 +105,7 @@ export default function CandidatesView() {
         cycle_id: selectedCycleId,
         critical_role_id: formData.critical_role_id,
         user_profile_id: formData.user_profile_id,
+        effective_blueprint_snapshot_id: formData.effective_blueprint_snapshot_id,
         discovery_source: formData.discovery_source,
         origin_pool_membership_id: formData.origin_pool_membership_id || null,
       });
@@ -147,6 +162,7 @@ export default function CandidatesView() {
           <CreateCandidacyForm
             cycles={cycles} selectedCycleId={selectedCycleId}
             criticalRoles={criticalRoles} users={users}
+            snapshots={snapshots} onFetchSnapshots={fetchSnapshots}
             onSubmit={handleCreateCandidacy} loading={loading} onCancel={() => setShowCreate(false)}
           />
         )}
@@ -206,11 +222,22 @@ function CandidacyRow({ candidacy, criticalRoleLabel, userLabel, isSelected, can
   );
 }
 
-function CreateCandidacyForm({ cycles, selectedCycleId, criticalRoles, users, onSubmit, loading, onCancel }) {
+function CreateCandidacyForm({ cycles, selectedCycleId, criticalRoles, users, snapshots, onFetchSnapshots, onSubmit, loading, onCancel }) {
   const [formData, setFormData] = useState({
-    critical_role_id: "", user_profile_id: "", discovery_source: "hr_nomination", origin_pool_membership_id: "",
+    critical_role_id: "", user_profile_id: "", effective_blueprint_snapshot_id: "", discovery_source: "hr_nomination", origin_pool_membership_id: "",
   });
-  const handleSubmit = (e) => { e.preventDefault(); if (!formData.critical_role_id || !formData.user_profile_id) return; onSubmit(formData); };
+
+  // Fetch snapshots when critical role changes
+  useEffect(() => {
+    if (formData.critical_role_id) {
+      onFetchSnapshots(formData.critical_role_id);
+      setFormData(d => ({ ...d, effective_blueprint_snapshot_id: "" }));
+    } else {
+      setFormData(d => ({ ...d, effective_blueprint_snapshot_id: "" }));
+    }
+  }, [formData.critical_role_id, onFetchSnapshots]);
+
+  const handleSubmit = (e) => { e.preventDefault(); if (!formData.critical_role_id || !formData.user_profile_id || !formData.effective_blueprint_snapshot_id) return; onSubmit(formData); };
   return (
     <form onSubmit={handleSubmit} className="border border-gray-200 rounded-lg p-4 mb-4 bg-gray-50/50">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -230,6 +257,17 @@ function CreateCandidacyForm({ cycles, selectedCycleId, criticalRoles, users, on
             {users.map(u => <option key={u.id} value={u.id}>{u.full_name || u.email}</option>)}
           </select>
         </div>
+        <div className="sm:col-span-2">
+          <Label className="text-xs text-gray-600">Effective Blueprint Snapshot *</Label>
+          <select className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
+            value={formData.effective_blueprint_snapshot_id} onChange={e => setFormData(d => ({ ...d, effective_blueprint_snapshot_id: e.target.value }))} required disabled={!formData.critical_role_id}>
+            <option value="">— Select —</option>
+            {snapshots.map(s => <option key={s.id} value={s.id}>Snapshot (rev {s.blueprint_revision || "?"}, {s.generated_requirement_count || 0} requirements)</option>)}
+          </select>
+          {formData.critical_role_id && snapshots.length === 0 && (
+            <p className="text-xs text-amber-600 mt-1">No generated, active snapshots available for this critical role. Generate a snapshot first.</p>
+          )}
+        </div>
         <div>
           <Label className="text-xs text-gray-600">Discovery Source *</Label>
           <select className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
@@ -244,7 +282,7 @@ function CreateCandidacyForm({ cycles, selectedCycleId, criticalRoles, users, on
         </div>
       </div>
       <div className="flex gap-2 mt-3">
-        <Button type="submit" size="sm" disabled={loading || !formData.critical_role_id || !formData.user_profile_id}>Create Candidacy</Button>
+        <Button type="submit" size="sm" disabled={loading || !formData.critical_role_id || !formData.user_profile_id || !formData.effective_blueprint_snapshot_id}>Create Candidacy</Button>
         <Button type="button" size="sm" variant="ghost" onClick={onCancel}>Cancel</Button>
       </div>
     </form>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { FileText, AlertTriangle, History } from "lucide-react";
+import { FileText, AlertTriangle, History, Lock } from "lucide-react";
 import { useSuccessionApi } from "./useSuccessionApi";
 import { SuccessionSection, SuccessionLoading, SuccessionEmpty } from "./SuccessionSection";
 import { useAuth } from "@/components/useAuth";
@@ -29,24 +29,48 @@ const HORIZON_LABELS = {
 
 export default function CandidateDetailView({ candidacy, canManage, onWithdraw }) {
   const { invoke, loading, error, clearError } = useSuccessionApi();
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [disclosures, setDisclosures] = useState([]);
   const [showDisclosureForm, setShowDisclosureForm] = useState(false);
+  const [disclosureContext, setDisclosureContext] = useState(null);
+  const [ctxLoading, setCtxLoading] = useState(false);
 
   const isOwnCandidacy = candidacy.user_profile_id === user?.id;
-  const canSubmitDisclosure = isOwnCandidacy && candidacy.status === "active";
+  const canDisclose = hasPermission("succession.discovery.disclose");
+  const canSubmitDisclosure = isOwnCandidacy && canDisclose && candidacy.status === "active";
 
-  const fetchDisclosures = useCallback(async () => {
+  // ── Candidate self-service: use secure backend function ──
+  const fetchMyDisclosureContext = useCallback(async () => {
+    if (!isOwnCandidacy) return;
+    setCtxLoading(true);
+    try {
+      const ctx = await invoke("successionGetMyDisclosureContext", { candidacy_id: candidacy.id });
+      setDisclosureContext(ctx);
+    } catch {
+      setDisclosureContext(null);
+    } finally {
+      setCtxLoading(false);
+    }
+  }, [isOwnCandidacy, candidacy.id, invoke]);
+
+  // ── Admin read-only: fetch all disclosures via RLS-enforced entity filter ──
+  const fetchDisclosuresAdmin = useCallback(async () => {
+    if (isOwnCandidacy) return;
     try {
       const data = await base44.entities.CandidateSelfDisclosure.filter({
         candidacy_id: candidacy.id,
       });
-      // Sort by version descending
       setDisclosures((data || []).sort((a, b) => (b.version || 0) - (a.version || 0)));
     } catch { setDisclosures([]); }
-  }, [candidacy.id]);
+  }, [isOwnCandidacy, candidacy.id]);
 
-  useEffect(() => { fetchDisclosures(); }, [fetchDisclosures]);
+  useEffect(() => {
+    if (isOwnCandidacy) {
+      fetchMyDisclosureContext();
+    } else {
+      fetchDisclosuresAdmin();
+    }
+  }, [isOwnCandidacy, fetchMyDisclosureContext, fetchDisclosuresAdmin]);
 
   const handleSubmitDisclosure = async (formData) => {
     const opId = `disclosure-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -61,16 +85,84 @@ export default function CandidateDetailView({ candidacy, canManage, onWithdraw }
         conflict_of_interest_disclosed: formData.conflict_of_interest_disclosed,
       });
       setShowDisclosureForm(false);
-      await fetchDisclosures();
+      await fetchMyDisclosureContext();
     } catch { /* handled by hook */ }
   };
 
+  // ── Candidate self-service view (minimal, no HR notes or deliberations) ──
+  if (isOwnCandidacy) {
+    const ctx = disclosureContext;
+    const current = ctx?.current_disclosure;
+    const canSubmit = ctx?.permitted_actions?.can_submit_disclosure ?? false;
+
+    return (
+      <div className="space-y-4">
+        <SuccessionSection icon={FileText} title="My Candidacy">
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <DetailField label="Role" value={ctx?.role_label || "—"} />
+            <DetailField label="Candidacy Status" value={ctx?.candidacy_status || candidacy.status} />
+          </div>
+          {!canSubmit && (
+            <div className="mt-3 flex items-center gap-2 p-3 rounded-lg bg-gray-50 border border-gray-200">
+              <Lock className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              <span className="text-sm text-gray-500">Disclosure submission is unavailable for this candidacy.</span>
+            </div>
+          )}
+        </SuccessionSection>
+
+        {current && (
+          <SuccessionSection icon={FileText} title="My Current Self-Disclosure">
+            {current.conflict_of_interest_disclosed && (
+              <div className="mb-3 flex items-center gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200">
+                <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <span className="text-sm font-medium text-amber-800">HR follow-up required — conflict of interest disclosed.</span>
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <DetailField label="Version" value={`v${current.version}`} />
+              <DetailField label="Aspiration" value={ASPIRATION_LABELS[current.aspiration_status] || current.aspiration_status} />
+              <DetailField label="Mobility" value={MOBILITY_LABELS[current.mobility] || current.mobility} />
+              <DetailField label="Availability" value={HORIZON_LABELS[current.availability_horizon] || current.availability_horizon} />
+              <DetailField label="COI Disclosed" value={current.conflict_of_interest_disclosed ? "Yes" : "No"} />
+              <DetailField label="Submitted" value={current.submitted_at ? new Date(current.submitted_at).toLocaleDateString() : "—"} />
+            </div>
+            {current.aspiration_statement && (
+              <div className="mt-3">
+                <p className="text-xs text-gray-500 uppercase tracking-wider">Aspiration Statement</p>
+                <p className="text-sm text-gray-900 mt-1">{current.aspiration_statement}</p>
+              </div>
+            )}
+          </SuccessionSection>
+        )}
+
+        {canSubmit && (
+          <SuccessionSection icon={FileText} title="Submit Self-Disclosure"
+            action={<Button size="sm" onClick={() => setShowDisclosureForm(s => !s)} className="h-7 text-xs">New Disclosure</Button>}>
+            {showDisclosureForm && (
+              <DisclosureForm onSubmit={handleSubmitDisclosure} loading={loading} onCancel={() => setShowDisclosureForm(false)} />
+            )}
+            {!showDisclosureForm && !current && (
+              <SuccessionEmpty icon={FileText} title="No disclosure submitted" subtitle="Submit your self-disclosure to share your aspiration, mobility, and availability." />
+            )}
+          </SuccessionSection>
+        )}
+
+        {ctxLoading && !ctx && <SuccessionLoading />}
+      </div>
+    );
+  }
+
+  // ── Admin read-only view (no edit, no form, no scores, no readiness) ──
   const currentDisclosure = disclosures.find(d => d.status === "current" && d.integrity_status === "active");
   const historyDisclosures = disclosures.filter(d => d.status !== "current" || d.integrity_status !== "active");
 
   return (
     <div className="space-y-4">
-      <SuccessionSection icon={FileText} title="Candidate Detail">
+      <SuccessionSection icon={FileText} title="Candidate Detail (Read-Only)">
+        <div className="mb-3 flex items-center gap-2 p-2.5 rounded-lg bg-blue-50 border border-blue-200">
+          <Lock className="w-4 h-4 text-blue-600 flex-shrink-0" />
+          <span className="text-xs text-blue-700 font-medium">Read-only — administrators cannot author or overwrite candidate self-disclosures.</span>
+        </div>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <DetailField label="Candidate" value={candidacy.user_profile_id} />
           <DetailField label="Critical Role" value={candidacy.critical_role_id} />
@@ -102,18 +194,6 @@ export default function CandidateDetailView({ candidacy, canManage, onWithdraw }
               <p className="text-xs text-gray-500 uppercase tracking-wider">Aspiration Statement</p>
               <p className="text-sm text-gray-900 mt-1">{currentDisclosure.aspiration_statement}</p>
             </div>
-          )}
-        </SuccessionSection>
-      )}
-
-      {canSubmitDisclosure && (
-        <SuccessionSection icon={FileText} title="Submit Self-Disclosure"
-          action={<Button size="sm" onClick={() => setShowDisclosureForm(s => !s)} className="h-7 text-xs">New Disclosure</Button>}>
-          {showDisclosureForm && (
-            <DisclosureForm onSubmit={handleSubmitDisclosure} loading={loading} onCancel={() => setShowDisclosureForm(false)} />
-          )}
-          {!showDisclosureForm && !currentDisclosure && (
-            <SuccessionEmpty icon={FileText} title="No disclosure submitted" subtitle="Submit your self-disclosure to share your aspiration, mobility, and availability." />
           )}
         </SuccessionSection>
       )}

@@ -1,7 +1,7 @@
 {
   "name": "SuccessorCandidacy",
   "type": "object",
-  "description": "A successor candidacy linking a user to a critical role within a cycle. Created by authorized tenant administrators. No scoring, ranking, readiness, evidence, or recommendations in this MVP. One active candidacy per client_id + critical_role_id + user_profile_id.",
+  "description": "A successor candidacy linking a user to a critical role within a cycle. Created by authorized tenant administrators. Bound to an EffectiveBlueprintSnapshot at creation time \u2014 the snapshot is never silently migrated to a later version. No scoring, ranking, readiness, evidence, or recommendations in this MVP. One active candidacy per client_id + critical_role_id + user_profile_id.",
   "properties": {
     "client_id": {
       "type": "string",
@@ -18,6 +18,10 @@
     "user_profile_id": {
       "type": "string",
       "description": "UserProfile ID of the candidate. Required."
+    },
+    "effective_blueprint_snapshot_id": {
+      "type": "string",
+      "description": "EffectiveBlueprintSnapshot ID this candidacy is bound to at creation time. Required. The snapshot must be status=generated, integrity_status=active, belong to the same CriticalRole, and have no open blocking SnapshotIntegrityIncident. Never silently migrated to a later snapshot."
     },
     "origin_pool_membership_id": {
       "type": "string",
@@ -119,6 +123,7 @@
     "cycle_id",
     "critical_role_id",
     "user_profile_id",
+    "effective_blueprint_snapshot_id",
     "discovery_source",
     "status"
   ],

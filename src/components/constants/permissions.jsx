@@ -356,6 +356,7 @@ export const BASE_ROLE_PERMISSIONS = {
     'succession.monitor.view', 'succession.monitor.manage',
     'succession.export',
     'succession.discovery.view', 'succession.discovery.manage',
+    'succession.discovery.disclose',
     'succession.view_executive_aggregate', 'succession.compliance_view', 'succession.partner_aggregate_view'
     // NOTE: Team permissions removed - Super Admins need Team Leader Add-on for team view
     // NOTE: Personal dashboard permissions removed - Super Admins need User Add-on to see their own progress
@@ -473,7 +474,8 @@ export const BASE_ROLE_PERMISSIONS = {
     'succession.roles.view', 'succession.roles.manage',
     'succession.blueprints.approve',
     'succession.critical_role_requirements.approve',
-    'succession.discovery.view', 'succession.discovery.manage'
+    'succession.discovery.view', 'succession.discovery.manage',
+    'succession.discovery.disclose'
   ],
   'Admin Level 1': [
     // Class Management
@@ -526,7 +528,8 @@ export const BASE_ROLE_PERMISSIONS = {
     // Succession Module — Admin Level 1 (Program Manager) can manage cycles, roles, requirements
     'succession.cycles.view', 'succession.cycles.manage',
     'succession.roles.view', 'succession.roles.manage',
-    'succession.discovery.view', 'succession.discovery.manage'
+    'succession.discovery.view', 'succession.discovery.manage',
+    'succession.discovery.disclose'
   ],
   'Executive': [
     'analytics.view_client',
@@ -576,7 +579,9 @@ export const BASE_ROLE_PERMISSIONS = {
     'experiences.view_personal',
     'experiences.take',
     'experiences.view_team',
-    'experiences.track_team_progress'
+    'experiences.track_team_progress',
+    // Succession — self-service disclosure (UI visibility only; backend enforces ownership)
+    'succession.discovery.disclose'
   ],
   'User Level 1': [
     'content.view',
@@ -588,7 +593,9 @@ export const BASE_ROLE_PERMISSIONS = {
     'personal.goals.view', 'personal.learning.view',
     // Personal experience participation
     'experiences.view_personal',
-    'experiences.take'
+    'experiences.take',
+    // Succession — self-service disclosure (UI visibility only; backend enforces ownership)
+    'succession.discovery.disclose'
   ]
 };
 
