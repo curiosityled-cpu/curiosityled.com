@@ -12,6 +12,6 @@ export default async function(req: Request): Promise<Response> {
   if (!auth.client_id) return Response.json({ error: "Tenant resolution failed" }, { status: 403 });
   const authz = await authorizeSuccessionAction({ base44, auth, action: "successionListOrgRoles", target_client_id: auth.client_id, required_permission: "succession.roles.view" });
   if (!authz.allowed) return Response.json({ error: authz.denied_reason }, { status: 403 });
-  const roles = await base44.asServiceRole.entities.OrgRole.filter({ client_id: auth.client_id, cycle_id }, '-created_date');
+  const roles = await base44.asServiceRole.entities.OrgRole.filter({ client_id: auth.client_id, cycle_id }, '-created_date', 200);
   return Response.json({ org_roles: filterActiveRecords(roles) });
 }

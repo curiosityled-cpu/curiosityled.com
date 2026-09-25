@@ -14,6 +14,6 @@ export default async function(req: Request): Promise<Response> {
   if (!authz.allowed) return Response.json({ error: authz.denied_reason }, { status: 403 });
   const filter: any = { client_id: auth.client_id, org_role_id };
   if (status) filter.status = status;
-  const requirements = await base44.asServiceRole.entities.CriticalRoleRequirement.filter(filter, '-created_date');
+  const requirements = await base44.asServiceRole.entities.CriticalRoleRequirement.filter(filter, '-created_date', 200);
   return Response.json({ requirements: filterActiveRecords(requirements) });
 }

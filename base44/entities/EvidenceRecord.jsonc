@@ -55,6 +55,10 @@
       "type": "string",
       "description": "Optional reference to the originating platform record (e.g. CoachingSession ID, AssessmentSubmission ID). Null for manual evidence."
     },
+    "source_competency_id": {
+      "type": "string",
+      "description": "Optional competency ID for evidence derived from a competency-based source (e.g. Leadership Index assessment). Used for deterministic idempotency. Null for manual evidence and non-competency sources."
+    },
     "source_date": {
       "type": "string",
       "format": "date",

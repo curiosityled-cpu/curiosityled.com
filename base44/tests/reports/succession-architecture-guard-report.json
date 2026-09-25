@@ -1,6 +1,6 @@
 {
   "guard_version": "2.0-hardened",
-  "checked_at": "2026-09-25T20:52:41.507Z",
+  "checked_at": "2026-09-25T20:57:40.689Z",
   "exception_list_reviewed": "2026-09-25",
   "passed": true,
   "total_functions": 121,
@@ -280,7 +280,7 @@
       "classification": "operational",
       "bootstrap_offset": 1006,
       "authorize_offset": 1139,
-      "domain_access_offset": 5037,
+      "domain_access_offset": 5051,
       "domain_access_entity": "EvidenceRecord",
       "ordering_ok": true,
       "issues": []

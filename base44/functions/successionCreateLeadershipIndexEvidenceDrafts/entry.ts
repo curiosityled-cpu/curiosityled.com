@@ -136,17 +136,19 @@ export default async function(req: Request): Promise<Response> {
         cid, candidacy_id, assessment_id, mapping.competency_id, mapping.effective_requirement_snapshot_id
       );
 
+      // Deterministic idempotency: query by exact field combination, not
+      // description substring. The fingerprint is the canonical business key.
       const existing = await base44.asServiceRole.entities.EvidenceRecord.filter({
         client_id: cid,
         candidacy_id,
         source_record_id: assessment_id,
+        source_competency_id: mapping.competency_id,
         effective_requirement_snapshot_id: mapping.effective_requirement_snapshot_id,
       }, "-created_date", 10);
 
-      // Check if any existing evidence has the same source competency
-      const duplicate = existing.find((e: any) =>
-        e.description && e.description.includes(`Competency: ${mapping.competency_key}`)
-      );
+      // A record matching all four deterministic fields IS the duplicate.
+      // No wording-dependent substring match is used.
+      const duplicate = existing.length > 0 ? existing[0] : null;
 
       if (duplicate) {
         skipped.push({ mapping_id: mappingId, reason: "duplicate_evidence_exists", evidence_id: duplicate.id });
@@ -191,6 +193,7 @@ export default async function(req: Request): Promise<Response> {
         evidence_type: "competency_behavior",
         source_system: "curiosity_led",
         source_record_id: assessment_id,
+        source_competency_id: mapping.competency_id,
         source_date: assessment.submission_date?.split("T")[0] || new Date().toISOString().split("T")[0],
         title: `Leadership Index: ${competencyName} — ${profLabel}`,
         description,

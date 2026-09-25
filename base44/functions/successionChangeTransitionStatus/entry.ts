@@ -67,6 +67,22 @@ export default async function(req: Request): Promise<Response> {
       updates.cancellation_reason = cancellation_reason || null;
     }
 
+    // ── Separation of Duties: initiator cannot approve their own transition ──
+    if (new_status === "approved") {
+      if (initiation.initiated_by_profile_id === auth.profile_id) {
+        await failOperation(base44, opResult.operation.id, "self_approval_denied");
+        await writeSuccessionAuditEvent({
+          base44, action_type: "denied_action",
+          target_entity_type: "TransitionInitiation", target_entity_id: initiation_id,
+          metadata: { denied_reason: "self_approval_denied", initiation_id, new_status },
+          operation_id,
+        });
+        return Response.json({ error: "Transition initiator cannot approve their own transition (separation of duties)" }, { status: 403 });
+      }
+      updates.approved_by_profile_id = auth.profile_id;
+      updates.approved_at = new Date().toISOString();
+    }
+
     await base44.asServiceRole.entities.TransitionInitiation.update(initiation_id, updates);
 
     const auditEvent = await writeSuccessionAuditEvent({
