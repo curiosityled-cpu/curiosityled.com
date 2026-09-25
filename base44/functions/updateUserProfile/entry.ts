@@ -51,7 +51,8 @@ Deno.serve(async (req) => {
             'account_status',
             'account_expires_at',
             'license_type',
-            'is_uat_tester'
+            'is_uat_tester',
+            'leadership_level'
         ];
         
         // Build update object based on permissions

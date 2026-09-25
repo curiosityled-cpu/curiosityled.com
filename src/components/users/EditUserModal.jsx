@@ -151,6 +151,26 @@ export default function EditUserModal({ open, onOpenChange, editingUser, setEdit
             </div>
 
             <div>
+              <Label>Leadership Level</Label>
+              <Select
+                value={editingUser.leadership_level || 'auto'}
+                onValueChange={(value) => setEditingUser({ ...editingUser, leadership_level: value === 'auto' ? null : value })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">Auto (derived from reporting depth)</SelectItem>
+                  <SelectItem value="1">Level 1 — Leading Self</SelectItem>
+                  <SelectItem value="2">Level 2 — Leading Others</SelectItem>
+                  <SelectItem value="3">Level 3 — Leading Managers</SelectItem>
+                  <SelectItem value="4">Level 4 — Leading Functions</SelectItem>
+                  <SelectItem value="5">Level 5 — Leading Organizations</SelectItem>
+                  <SelectItem value="hipo">HiPo Individual Contributor</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500 mt-1">Drives the Team dashboard layout. Leave on Auto to derive from reporting-tree depth. HR Admin or above only.</p>
+            </div>
+
+            <div>
               <Label>Addon Role</Label>
               <Select value={editingUser.custom_role_id || 'none'} onValueChange={(value) => setEditingUser({ ...editingUser, custom_role_id: value === 'none' ? null : value })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>

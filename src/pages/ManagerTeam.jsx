@@ -1,11 +1,12 @@
 /**
- * ManagerTeam — role-aware team rollup view.
+ * ManagerTeam — depth-aware Team Landscape view.
  * Route: /team
  *
- * Renders differently by the rollup's detail_level:
- *  - full:       aggregate cards + KPIs + roster + at-risk (HRBP, HR/Super Admin, Platform Admin)
- *  - directs:    aggregate cards (full tree) + KPIs + directs roster + at-risk (User Level 2)
- *  - aggregated: aggregate cards + KPIs only — no roster, no at-risk (Analyst, Executive)
+ * Layout adapts by leader_level (from getTeamRollup):
+ *  - Level 1:      empty state (no direct reports)
+ *  - Level 2:      Team Pulse hero + aggregate cards + KPIs + IC roster + at-risk
+ *  - Level 3-5:    Team Pulse hero + aggregate cards + subtree card grid (depth-aware)
+ *  - Enterprise/Portfolio scopes: keep the existing full/aggregated layout
  */
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -17,6 +18,8 @@ import { Button } from "@/components/ui/button";
 import TeamSummaryCards from "@/components/team/TeamSummaryCards";
 import TeamMemberRow from "@/components/team/TeamMemberRow";
 import TeamKpiList from "@/components/team/TeamKpiList";
+import TeamPulseHero from "@/components/team/TeamPulseHero";
+import SubtreeCardGrid from "@/components/team/SubtreeCardGrid";
 
 function SectionBar({ icon: Icon, label, action }) {
   return (
@@ -45,6 +48,7 @@ export default function ManagerTeam() {
   const rollup = data;
   const aggregates = rollup?.aggregates;
   const members = rollup?.members || [];
+  const subtreeCards = rollup?.subtree_cards || [];
   const kpis = aggregates?.kpis || [];
   const atRisk = rollup?.at_risk || [];
   const atRiskEmails = new Set(atRisk.map((r) => r.email));
@@ -54,8 +58,14 @@ export default function ManagerTeam() {
   const detailSize = rollup?.detail_size || 0;
   const detailLevel = rollup?.detail_level || "full";
   const scopeType = rollup?.scope_type || "vertical";
+  const leaderLevel = rollup?.leader_level || 1;
   const isAggregatedOnly = detailLevel === "aggregated";
   const isDirectsOnly = detailLevel === "directs";
+
+  // Depth-aware layout applies only to vertical (manager) scope
+  const isDepthAware = scopeType === "vertical";
+  const isICLevel = isDepthAware && leaderLevel <= 1;
+  const isSubtreeLevel = isDepthAware && leaderLevel >= 3;
 
   const subtitle = isDirectsOnly
     ? `${scopeSize} in your reporting tree · ${detailSize} direct ${detailSize === 1 ? "report" : "reports"}`
@@ -102,8 +112,22 @@ export default function ManagerTeam() {
             </p>
           </div>
         </Card>
+      ) : isICLevel ? (
+        /* Level 1 — no direct reports yet */
+        <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl">
+          <div className="px-5 py-12 text-center">
+            <Users className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+            <p className="text-sm font-medium text-gray-800">You don't have direct reports yet.</p>
+            <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto">
+              Once your team is assigned, you'll see goal progress, assessments, and check-ins roll up here. Your leadership level is set to {leaderLevel === 1 ? "Leading Self" : "HiPo Individual Contributor"}.
+            </p>
+          </div>
+        </Card>
       ) : (
         <>
+          {/* Team Pulse hero — synthesized situational read */}
+          {rollup?.team_pulse && <TeamPulseHero rollup={rollup} />}
+
           {/* Scope note for directs-only: aggregates span the full tree */}
           {isDirectsOnly && detailSize < scopeSize && (
             <div className="flex items-start gap-2 px-4 py-2.5 bg-[#0202ff]/5 border border-[#0202ff]/15 rounded-xl">
@@ -141,8 +165,16 @@ export default function ManagerTeam() {
             <TeamKpiList kpis={kpis} members={members} />
           </Card>
 
-          {/* Roster — only when per-member detail is available */}
-          {!isAggregatedOnly && members.length > 0 && (
+          {/* Depth-aware subtree card grid — Level 3+ */}
+          {isSubtreeLevel && subtreeCards.length > 0 && (
+            <div>
+              <SectionBar icon={Users} label={`Team Leads · ${subtreeCards.length}`} />
+              <SubtreeCardGrid subtreeCards={subtreeCards} level={leaderLevel} atRisk={atRisk} />
+            </div>
+          )}
+
+          {/* IC roster — Level 2 or enterprise/portfolio full detail */}
+          {!isAggregatedOnly && !isSubtreeLevel && members.length > 0 && (
             <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
               <SectionBar icon={Users} label={`Roster · ${members.length}`} />
               <div>

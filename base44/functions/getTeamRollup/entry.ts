@@ -5,6 +5,143 @@ import {
 } from "../../shared/teamHierarchy.ts";
 import { resolveHRBPManagerEmails } from "../../shared/portfolioData.ts";
 
+// ── Leadership-level → Team Landscape layout tier ─────────────────────────
+// Levels 1-5 mirror the Competency Matrix. "hipo" is treated as Level 1 for
+// layout purposes (IC-style roster). Null/undefined → auto-detect from depth.
+const LEVEL_TIER = {
+  "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, hipo: 1,
+};
+
+function resolveLeaderLevel(user, allUsers) {
+  const explicit = user?.leadership_level ?? user?.data?.leadership_level;
+  if (explicit && LEVEL_TIER[String(explicit)]) return LEVEL_TIER[String(explicit)];
+  // Auto-detect from reporting-tree depth (number of layers below this user).
+  const tree = buildReportingTree(allUsers, user.email, 10);
+  // depth = max generations below root (0 = no reports, 1 = only directs, etc.)
+  let maxDepth = 0;
+  for (const node of tree) {
+    const d = node.depth ?? 0;
+    if (d > maxDepth) maxDepth = d;
+  }
+  if (maxDepth === 0) return 1;          // no reports → Leading Self
+  if (maxDepth === 1) return 2;          // only directs, no managers below → Leading Others
+  if (maxDepth === 2) return 3;          // managers of managers → Leading Managers
+  if (maxDepth === 3) return 4;          // function-level → Leading Functions
+  return 5;                              // org-level → Leading Organizations
+}
+
+// Build a per-direct-report subtree aggregate card.
+// For each direct report, compute rolled-up health across everyone in their
+// reporting subtree (inclusive).
+function buildSubtreeCards(allUsers, directReports, goals, journeys, assessments, checkins) {
+  const byManager = new Map();
+  for (const u of allUsers) {
+    if (!u.email) continue;
+    const key = u.manager_email;
+    if (!key) continue;
+    if (!byManager.has(key)) byManager.set(key, []);
+    byManager.get(key).push(u);
+  }
+
+  // Recursive subtree email collector
+  const collectSubtree = (email, seen = new Set()) => {
+    if (!email || seen.has(email)) return [];
+    seen.add(email);
+    const children = byManager.get(email) || [];
+    let all = [email];
+    for (const child of children) {
+      all = all.concat(collectSubtree(child.email, seen));
+    }
+    return all;
+  };
+
+  return directReports.map((dr) => {
+    const subtreeEmails = collectSubtree(dr.email);
+    const subtreeSet = new Set(subtreeEmails);
+    const sGoals = goals.filter((g) => subtreeSet.has(g.created_by));
+    const sJourneys = journeys.filter((j) => subtreeSet.has(j.user_email));
+    const sAssessments = assessments.filter((a) => subtreeSet.has(a.email));
+    const sCheckins = checkins.filter((c) => subtreeSet.has(c.employee_email));
+    const gCompleted = sGoals.filter((g) => g.status === "completed").length;
+    const scored = sAssessments.filter((a) => a.overall_pct != null);
+    const avgPct = scored.length > 0
+      ? Math.round(scored.reduce((s, a) => s + (a.overall_pct || 0), 0) / scored.length)
+      : null;
+    const participation = subtreeEmails.length > 0
+      ? Math.round((new Set(sCheckins.map((c) => c.employee_email)).size / subtreeEmails.length) * 100)
+      : 0;
+
+    // At-risk count within subtree (excluding the lead themselves)
+    const subtreeMembers = allUsers.filter((u) => subtreeSet.has(u.email) && u.email !== dr.email);
+    const atRiskCount = subtreeMembers.filter((m) => {
+      const mGoals = sGoals.filter((g) => g.created_by === m.email);
+      const mAssess = sAssessments.filter((a) => a.email === m.email);
+      const mCheckins = sCheckins.filter((c) => c.employee_email === m.email);
+      if (mAssess.length === 0) return true;
+      if (mAssess[0]?.overall_pct != null && mAssess[0].overall_pct < 60) return true;
+      if (mGoals.length === 0) return true;
+      if (mCheckins.length === 0) return true;
+      return false;
+    }).length;
+
+    return {
+      email: dr.email,
+      full_name: dr.full_name,
+      current_role: dr.current_role,
+      subtree_size: subtreeEmails.length,
+      goals: {
+        total: sGoals.length,
+        completed: gCompleted,
+        completion_pct: sGoals.length > 0 ? Math.round((gCompleted / sGoals.length) * 100) : 0,
+      },
+      journeys: {
+        enrolled: sJourneys.length,
+        in_progress: sJourneys.filter((j) => j.status === "in_progress").length,
+        completed: sJourneys.filter((j) => j.status === "completed").length,
+      },
+      assessments: {
+        count: scored.length,
+        avg_overall_pct: avgPct,
+      },
+      checkins: { participation_pct: participation },
+      at_risk_count: atRiskCount,
+    };
+  });
+}
+
+// Synthesize a Team Pulse narrative from structured signals via InvokeLLM.
+async function synthesizeTeamPulse(base44, signals, clientId) {
+  const { at_risk_count, stalled_goals, checkin_gap, avg_assessment_pct, subtree_cards } = signals;
+  const prompt = `You are an executive coach reviewing a manager's team pulse for the week.
+Synthesize a single situational read in 2-3 sentences. Lead with a headline count of who/what needs attention this week, then 1-2 sentences of context. Be direct, warm, and specific. Do not use bullet points or headers.
+
+Team signals:
+- People needing attention (at-risk): ${at_risk_count}
+- Stalled or overdue goals: ${stalled_goals}
+- Check-in participation gap (people who haven't checked in): ${checkin_gap}
+- Average assessment score across team: ${avg_assessment_pct ?? "no data"}%
+- Direct reports: ${subtree_cards.length}
+
+Return only the synthesized paragraph.`;
+  try {
+    const res = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          headline: { type: "string" },
+          body: { type: "string" },
+        },
+        required: ["headline", "body"],
+      },
+    });
+    return { headline: res.headline, body: res.body };
+  } catch (e) {
+    console.warn("Team Pulse synthesis failed:", e.message);
+    return null;
+  }
+}
+
 /**
  * getTeamRollup — role-aware team rollup spanning the full reporting tree.
  *
@@ -51,6 +188,9 @@ export default async function (req) {
     const clientId = currentUser.client_id;
     const allUsers = await base44.asServiceRole.entities.User.list(500);
 
+    // ── Resolve leadership level (explicit field or auto from depth) ──
+    const leaderLevel = resolveLeaderLevel(currentUser, allUsers);
+
     // ── Resolve scope + detail email sets ─────────────────────────────
     let scopeEmails = [];
     let detailEmails = [];
@@ -91,9 +231,12 @@ export default async function (req) {
       scope_label: config.label,
       scope_size: scopeEmails.length,
       detail_size: detailEmails.length,
+      leader_level: leaderLevel,
       members: [],
       aggregates: emptyAggregates(),
       at_risk: [],
+      subtree_cards: [],
+      team_pulse: null,
     };
 
     if (scopeEmails.length === 0) {
@@ -239,11 +382,32 @@ export default async function (req) {
         .filter(Boolean);
     }
 
+    // ── Subtree cards (Level 3+ — each direct report leads a sub-team) ──
+    let subtreeCards = [];
+    if (leaderLevel >= 3 && config.scope === "vertical") {
+      const directs = deriveDirectReports(allUsers, currentUser.email);
+      if (directs.length > 0) {
+        subtreeCards = buildSubtreeCards(allUsers, directs, goals, journeys, assessments, checkins);
+      }
+    }
+
+    // ── Team Pulse synthesis (structured signals → natural-language read) ──
+    const pulseSignals = {
+      at_risk_count: atRisk.length,
+      stalled_goals: goals.filter((g) => g.status === "active" || g.status === "in_progress").length - goals.filter((g) => (g.status === "active" || g.status === "in_progress") && (g.progress_percentage || g.progress || 0) > 0).length,
+      checkin_gap: scopeEmails.length - new Set(checkins.map((c) => c.employee_email)).size,
+      avg_assessment_pct: avgOverall || null,
+      subtree_cards: subtreeCards,
+    };
+    const teamPulse = await synthesizeTeamPulse(base44, pulseSignals, clientId);
+
     return Response.json({
       ...base,
       members,
       aggregates,
       at_risk: atRisk,
+      subtree_cards: subtreeCards,
+      team_pulse: teamPulse,
     });
   } catch (error) {
     console.error("getTeamRollup error:", error);
