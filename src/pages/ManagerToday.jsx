@@ -449,7 +449,6 @@ export default function ManagerToday() {
   // ── Zone 3 content (Reflect) ──
   const reflectContent = (
     <>
-      <UpcomingFrictionCard trends={trends} goals={goals} pulses={recentPulses} onOpenAtreus={openAtreus} />
       <CheckInTrendDashboard checkIns={(() => {
         const ids = new Set(checkInHistory.map(r => r.check_in_date));
         const hasToday = ids.has(todayET);
@@ -514,6 +513,7 @@ export default function ManagerToday() {
             collapsible
             defaultExpanded
           >
+            <UpcomingFrictionCard trends={trends} goals={goals} pulses={recentPulses} onOpenAtreus={openAtreus} />
             {crossToolData ? (
               <TopPatternsMoveCard
                 crossToolData={crossToolData}
