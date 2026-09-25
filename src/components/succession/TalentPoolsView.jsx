@@ -47,13 +47,11 @@ export default function TalentPoolsView() {
   const fetchMemberships = useCallback(async () => {
     if (!selectedPool) { setMemberships([]); return; }
     try {
-      const data = await base44.entities.TalentPoolMembership.filter({
-        pool_id: selectedPool.id,
-        integrity_status: "active",
-      });
-      setMemberships(data || []);
+      // Secure read: backend enforces tenant scope, pool ownership, integrity filtering.
+      const data = await invoke("successionListPoolMemberships", { pool_id: selectedPool.id });
+      setMemberships(data?.memberships || []);
     } catch { setMemberships([]); }
-  }, [selectedPool]);
+  }, [invoke, selectedPool]);
 
   useEffect(() => { fetchCycles(); }, [fetchCycles]);
   useEffect(() => { fetchPools(); }, [fetchPools]);

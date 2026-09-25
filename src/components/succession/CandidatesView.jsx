@@ -79,17 +79,17 @@ export default function CandidatesView() {
   }, [canManage]);
 
   // Fetch generated, active snapshots for the selected critical role
+  // Secure read: backend enforces tenant scope, integrity filtering, and status.
   const fetchSnapshots = useCallback(async (criticalRoleId) => {
     if (!criticalRoleId) { setSnapshots([]); return; }
     try {
-      const data = await base44.entities.EffectiveBlueprintSnapshot.filter({
+      const data = await invoke("successionListSnapshots", {
         critical_role_id: criticalRoleId,
         status: "generated",
-        integrity_status: "active",
       });
-      setSnapshots(data || []);
+      setSnapshots(data?.snapshots || []);
     } catch { setSnapshots([]); }
-  }, []);
+  }, [invoke]);
 
   const handleCreateCandidacy = async (formData) => {
     const opId = `candidacy-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;

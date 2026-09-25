@@ -19,6 +19,16 @@
 
 import { writeSuccessionAuditEvent } from "./successionAuditWriter.ts";
 
+/**
+ * Entities that use `tenant_id` as their partition field instead of `client_id`.
+ * UserProfile is the primary example — its RLS maps `data.tenant_id` to
+ * `user.data.client_id`, so the record field is `tenant_id` even though the
+ * authenticated user's tenant identifier is `client_id`.
+ */
+const TENANT_FIELD_BY_ENTITY: Record<string, string> = {
+  UserProfile: "tenant_id",
+};
+
 export async function validateSameTenantReference(
   base44: any,
   entityName: string,
@@ -26,10 +36,11 @@ export async function validateSameTenantReference(
   client_id: string
 ): Promise<any | null> {
   if (!record_id || !client_id) return null;
+  const tenantField = TENANT_FIELD_BY_ENTITY[entityName] || "client_id";
   try {
     const records = await base44.asServiceRole.entities[entityName].filter({
       id: record_id,
-      client_id,
+      [tenantField]: client_id,
     });
     return records.length > 0 ? records[0] : null;
   } catch {
