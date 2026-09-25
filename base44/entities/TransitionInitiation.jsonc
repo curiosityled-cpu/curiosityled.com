@@ -1,0 +1,236 @@
+{
+  "name": "TransitionInitiation",
+  "type": "object",
+  "description": "A transition initiation record for a critical role. Created by authorized tenant administrators. For succession_process basis, requires a current ratified/overridden readiness conclusion. For other bases, requires external authorization reference and exception rationale. Does not promote, change PositionAssignment, update UserProfile, guarantee employment, or automatically close candidacy. No ranking, scoring, or AI recommendations.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side \u2014 never accepted from frontend input."
+    },
+    "cycle_id": {
+      "type": "string",
+      "description": "SuccessionCycle ID this initiation belongs to. Required."
+    },
+    "critical_role_id": {
+      "type": "string",
+      "description": "CriticalRole ID this transition is for. Required."
+    },
+    "org_position_id": {
+      "type": "string",
+      "description": "OrgPosition ID of the target position. Required."
+    },
+    "successor_profile_id": {
+      "type": "string",
+      "description": "UserProfile ID of the successor. Required. Must belong to the tenant."
+    },
+    "candidacy_id": {
+      "type": "string",
+      "description": "SuccessorCandidacy ID. Required when initiation_basis=succession_process. Must belong to the CriticalRole and match the successor."
+    },
+    "readiness_conclusion_id": {
+      "type": "string",
+      "description": "ReadinessConclusion ID. Required when initiation_basis=succession_process. Must be ratified or overridden, current, and within its review period."
+    },
+    "development_plan_link_id": {
+      "type": "string",
+      "description": "Optional DevelopmentPlanLink ID if a development plan informed this transition."
+    },
+    "initiation_type": {
+      "type": "string",
+      "enum": [
+        "promotion",
+        "lateral",
+        "acting",
+        "interim",
+        "external_appointment",
+        "other"
+      ],
+      "description": "The type of transition. Required."
+    },
+    "initiation_basis": {
+      "type": "string",
+      "enum": [
+        "succession_process",
+        "external_authorization",
+        "emergency_coverage",
+        "other"
+      ],
+      "description": "The basis for this transition. succession_process requires candidacy and ratified conclusion. Others require external_authorization_reference and exception_reason. Required."
+    },
+    "external_authorization_reference": {
+      "type": "string",
+      "description": "Reference to external authorization. Required when initiation_basis is not succession_process."
+    },
+    "exception_reason": {
+      "type": "string",
+      "description": "Rationale for the exception path. Required when initiation_basis is not succession_process."
+    },
+    "initiated_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the initiator. Derived server-side."
+    },
+    "initiated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the initiation was created. Set server-side."
+    },
+    "target_start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Target start date for the transition. Required."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "requested",
+        "approved",
+        "in_progress",
+        "completed",
+        "cancelled"
+      ],
+      "default": "draft",
+      "description": "Initiation lifecycle. draft \u2192 requested \u2192 approved \u2192 in_progress \u2192 completed. Alternatives: draft/requested/approved/in_progress \u2192 cancelled. Transitions via successionChangeTransitionStatus only."
+    },
+    "sponsor_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the transition sponsor. Required."
+    },
+    "approved_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the approver. Derived server-side. Must differ from initiated_by_profile_id."
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the initiation was approved. Set server-side."
+    },
+    "cancellation_reason": {
+      "type": "string",
+      "description": "Reason for cancellation. Required when status transitions to cancelled from approved or in_progress."
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the transition was completed. Set server-side."
+    },
+    "completion_summary": {
+      "type": "string",
+      "description": "Optional summary of the transition outcome."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "pending_validation"
+    },
+    "quarantine_reason": {
+      "type": "string"
+    },
+    "quarantined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quarantined_by_operation_id": {
+      "type": "string"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "pending"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "cycle_id",
+    "critical_role_id",
+    "org_position_id",
+    "successor_profile_id",
+    "initiation_type",
+    "initiation_basis",
+    "target_start_date",
+    "status",
+    "sponsor_profile_id"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "data.successor_profile_id": "{{user.id}}"
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

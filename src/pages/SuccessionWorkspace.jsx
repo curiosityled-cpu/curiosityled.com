@@ -17,6 +17,7 @@ import {
   ClipboardCheck,
   Target,
   Zap,
+  ArrowRightCircle,
 } from "lucide-react";
 import OverviewView from "@/components/succession/OverviewView";
 import CyclesView from "@/components/succession/CyclesView";
@@ -33,6 +34,8 @@ import CalibrationView from "@/components/succession/CalibrationView";
 import RatificationQueueView from "@/components/succession/RatificationQueueView";
 import DevelopmentPlansView from "@/components/succession/DevelopmentPlansView";
 import DevelopmentActionsView from "@/components/succession/DevelopmentActionsView";
+import TransitionsView from "@/components/succession/TransitionsView";
+import TransitionDetailView from "@/components/succession/TransitionDetailView";
 
 const PHASE_1_VIEWS = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
@@ -64,12 +67,16 @@ const PHASE_2D_VIEWS = [
   { key: "development-actions", label: "Development Actions", icon: Zap },
 ];
 
+const PHASE_2E_VIEWS = [
+  { key: "transitions", label: "Transitions", icon: ArrowRightCircle },
+];
+
 const PHASE_0_VIEWS = [
   { key: "governance", label: "Governance", icon: ShieldCheck },
   { key: "monitor", label: "Monitor", icon: Activity },
 ];
 
-const ALL_VIEWS = [...PHASE_1_VIEWS, ...PHASE_2A_VIEWS, ...PHASE_2B_VIEWS, ...PHASE_2C_VIEWS, ...PHASE_2D_VIEWS, ...PHASE_0_VIEWS];
+const ALL_VIEWS = [...PHASE_1_VIEWS, ...PHASE_2A_VIEWS, ...PHASE_2B_VIEWS, ...PHASE_2C_VIEWS, ...PHASE_2D_VIEWS, ...PHASE_2E_VIEWS, ...PHASE_0_VIEWS];
 
 export default function SuccessionWorkspace() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -152,6 +159,10 @@ function renderView(viewKey) {
       return <DevelopmentPlansView />;
     case "development-actions":
       return <DevelopmentActionsView />;
+    case "transitions":
+      return <TransitionsView />;
+    case "transition-detail":
+      return <TransitionDetailView />;
     case "governance":
       return <GovernanceView />;
     case "monitor":

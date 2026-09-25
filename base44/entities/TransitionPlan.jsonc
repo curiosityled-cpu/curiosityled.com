@@ -1,0 +1,257 @@
+{
+  "name": "TransitionPlan",
+  "type": "object",
+  "description": "A transition plan for a transition initiation. Tracks ramp plan, success outcomes, risks, mitigations, and milestones. Risk acceptance requires an authorized actor. Completion does not change readiness or employee records. PositionAssignment changes remain a separate controlled workflow. No ranking, scoring, or AI recommendations.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side \u2014 never accepted from frontend input."
+    },
+    "transition_initiation_id": {
+      "type": "string",
+      "description": "TransitionInitiation ID this plan belongs to. Required. Must be same tenant."
+    },
+    "org_position_id": {
+      "type": "string",
+      "description": "OrgPosition ID. Derived from the initiation. Required."
+    },
+    "successor_profile_id": {
+      "type": "string",
+      "description": "UserProfile ID of the successor. Derived from the initiation. Required."
+    },
+    "sponsor_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the sponsor. Derived from the initiation. Required."
+    },
+    "transition_type": {
+      "type": "string",
+      "enum": [
+        "promotion",
+        "lateral",
+        "acting",
+        "interim",
+        "external_appointment",
+        "other"
+      ],
+      "description": "The transition type. Required."
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Transition start date. Required."
+    },
+    "review_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date for transition review. Required."
+    },
+    "target_completion_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Target completion date. Required."
+    },
+    "ramp_plan": {
+      "type": "string",
+      "description": "Description of the ramp-up plan."
+    },
+    "success_outcomes": {
+      "type": "string",
+      "description": "Description of success outcomes and criteria."
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "risk": {
+            "type": "string",
+            "description": "Risk description."
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "default": "medium"
+          },
+          "mitigation": {
+            "type": "string",
+            "description": "Mitigation strategy."
+          },
+          "owner_profile_id": {
+            "type": "string",
+            "description": "Profile ID of the risk owner."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "monitoring",
+              "resolved",
+              "accepted"
+            ],
+            "default": "open"
+          },
+          "accepted_by_profile_id": {
+            "type": "string",
+            "description": "Profile ID of the authorized actor who accepted this risk. Set server-side."
+          },
+          "accepted_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the risk was accepted. Set server-side."
+          }
+        },
+        "required": [
+          "risk",
+          "severity",
+          "mitigation",
+          "owner_profile_id",
+          "status"
+        ]
+      },
+      "description": "Array of transition risks."
+    },
+    "milestone_summary": {
+      "type": "string",
+      "description": "Summary of milestones."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "paused",
+        "completed",
+        "cancelled"
+      ],
+      "default": "draft",
+      "description": "Plan lifecycle. draft = editable. active = in progress. paused = temporarily halted. completed = finished. cancelled = removed."
+    },
+    "completion_summary": {
+      "type": "string",
+      "description": "Optional summary of the transition outcome."
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the plan was completed. Set server-side."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "active"
+    },
+    "quarantine_reason": {
+      "type": "string"
+    },
+    "quarantined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quarantined_by_operation_id": {
+      "type": "string"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "pending"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "transition_initiation_id",
+    "org_position_id",
+    "successor_profile_id",
+    "sponsor_profile_id",
+    "transition_type",
+    "start_date",
+    "review_date",
+    "target_completion_date",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "data.successor_profile_id": "{{user.id}}"
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

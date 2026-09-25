@@ -233,6 +233,9 @@ export const SUCCESSION_PERMISSIONS = [
   // Phase 2D — Accelerate workflow permissions
   'succession.development.view',
   'succession.development.manage',
+  // Phase 2E — Transition workflow permissions
+  'succession.transition.view',
+  'succession.transition.manage',
   // Add-on / restricted-scope permissions
   'succession.view_executive_aggregate',
   'succession.compliance_view',
@@ -363,6 +366,7 @@ export const BASE_ROLE_PERMISSIONS = {
     'succession.discovery.disclose',
     'succession.evidence.view', 'succession.evidence.manage',
     'succession.development.view', 'succession.development.manage',
+    'succession.transition.view', 'succession.transition.manage',
     'succession.view_executive_aggregate', 'succession.compliance_view', 'succession.partner_aggregate_view'
     // NOTE: Team permissions removed - Super Admins need Team Leader Add-on for team view
     // NOTE: Personal dashboard permissions removed - Super Admins need User Add-on to see their own progress
@@ -483,7 +487,8 @@ export const BASE_ROLE_PERMISSIONS = {
     'succession.discovery.view', 'succession.discovery.manage',
     'succession.discovery.disclose',
     'succession.evidence.view', 'succession.evidence.manage',
-    'succession.development.view', 'succession.development.manage'
+    'succession.development.view', 'succession.development.manage',
+    'succession.transition.view', 'succession.transition.manage'
   ],
   'Admin Level 1': [
     // Class Management
@@ -539,7 +544,8 @@ export const BASE_ROLE_PERMISSIONS = {
     'succession.discovery.view', 'succession.discovery.manage',
     'succession.discovery.disclose',
     'succession.evidence.view', 'succession.evidence.manage',
-    'succession.development.view', 'succession.development.manage'
+    'succession.development.view', 'succession.development.manage',
+    'succession.transition.view', 'succession.transition.manage'
   ],
   'Executive': [
     'analytics.view_client',

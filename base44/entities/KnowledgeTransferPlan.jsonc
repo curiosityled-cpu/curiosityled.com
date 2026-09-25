@@ -1,0 +1,237 @@
+{
+  "name": "KnowledgeTransferPlan",
+  "type": "object",
+  "description": "A knowledge transfer plan for a transition initiation. Tracks knowledge areas, access handoffs, stakeholder handoffs, and documentation locations. Completion does not automatically create a PositionAssignment. The completed plan is preserved as historical evidence. No ranking, scoring, or AI recommendations.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side \u2014 never accepted from frontend input."
+    },
+    "transition_initiation_id": {
+      "type": "string",
+      "description": "TransitionInitiation ID this plan belongs to. Required. Initiation must be approved or in_progress."
+    },
+    "org_position_id": {
+      "type": "string",
+      "description": "OrgPosition ID. Derived from the initiation. Required."
+    },
+    "incumbent_profile_id": {
+      "type": "string",
+      "description": "Optional UserProfile ID of the incumbent (current role holder). Must belong to the tenant."
+    },
+    "successor_profile_id": {
+      "type": "string",
+      "description": "UserProfile ID of the successor. Derived from the initiation. Required."
+    },
+    "owner_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the plan owner. Required. Must belong to the tenant."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "completed",
+        "cancelled"
+      ],
+      "default": "draft",
+      "description": "Plan lifecycle. draft = editable. active = in progress. completed = finished. cancelled = removed."
+    },
+    "knowledge_areas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Knowledge area title."
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the knowledge area."
+          },
+          "transfer_method": {
+            "type": "string",
+            "description": "How the knowledge will be transferred (e.g. shadowing, documentation, workshop)."
+          },
+          "owner_profile_id": {
+            "type": "string",
+            "description": "Profile ID responsible for this area."
+          },
+          "target_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Target completion date for this area."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "not_started",
+              "in_progress",
+              "completed",
+              "waived"
+            ],
+            "default": "not_started"
+          },
+          "waiver_reason": {
+            "type": "string",
+            "description": "Required when status is waived."
+          }
+        },
+        "required": [
+          "title",
+          "description",
+          "transfer_method",
+          "owner_profile_id",
+          "target_date",
+          "status"
+        ]
+      },
+      "description": "Array of knowledge transfer areas."
+    },
+    "access_handoffs": {
+      "type": "string",
+      "description": "Description of system and access handoffs required."
+    },
+    "stakeholder_handoffs": {
+      "type": "string",
+      "description": "Description of stakeholder communication and relationship handoffs."
+    },
+    "documentation_locations": {
+      "type": "string",
+      "description": "Where documentation is stored or can be found."
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When the knowledge transfer starts. Required."
+    },
+    "target_completion_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Target completion date. Required."
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the plan was completed. Set server-side."
+    },
+    "completion_summary": {
+      "type": "string",
+      "description": "Optional summary of what was accomplished."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "active"
+    },
+    "quarantine_reason": {
+      "type": "string"
+    },
+    "quarantined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quarantined_by_operation_id": {
+      "type": "string"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "pending"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "transition_initiation_id",
+    "org_position_id",
+    "successor_profile_id",
+    "owner_profile_id",
+    "status",
+    "start_date",
+    "target_completion_date"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "data.successor_profile_id": "{{user.id}}"
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}
