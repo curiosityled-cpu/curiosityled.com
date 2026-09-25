@@ -33,7 +33,7 @@ function resolveLeaderLevel(user, allUsers) {
 // Build a per-direct-report subtree aggregate card.
 // For each direct report, compute rolled-up health across everyone in their
 // reporting subtree (inclusive).
-function buildSubtreeCards(allUsers, directReports, goals, journeys, assessments, checkins) {
+function buildSubtreeCards(allUsers, directReports, goals, journeys, assessments, checkins, kpis) {
   const byManager = new Map();
   for (const u of allUsers) {
     if (!u.email) continue;
@@ -105,6 +105,16 @@ function buildSubtreeCards(allUsers, directReports, goals, journeys, assessments
       },
       checkins: { participation_pct: participation },
       at_risk_count: atRiskCount,
+      kpis: (kpis || []).filter((k) => k.owner_email === dr.email).map((k) => ({
+        id: k.id,
+        title: k.title,
+        current_value: k.current_value,
+        target_value: k.target_value,
+        unit: k.unit,
+        progress: k.progress,
+        direction: k.direction,
+        status: k.status,
+      })),
     };
   });
 }
@@ -367,6 +377,16 @@ export default async function (req) {
             completed: mLp.filter((l) => l.status === "completed").length,
             in_progress: mLp.filter((l) => l.status === "in_progress").length,
           },
+          kpis: scopedKpis.filter((k) => k.owner_email === m.email).map((k) => ({
+            id: k.id,
+            title: k.title,
+            current_value: k.current_value,
+            target_value: k.target_value,
+            unit: k.unit,
+            progress: k.progress,
+            direction: k.direction,
+            status: k.status,
+          })),
         };
       });
 
@@ -387,7 +407,7 @@ export default async function (req) {
     if (leaderLevel >= 3 && config.scope === "vertical") {
       const directs = deriveDirectReports(allUsers, currentUser.email);
       if (directs.length > 0) {
-        subtreeCards = buildSubtreeCards(allUsers, directs, goals, journeys, assessments, checkins);
+        subtreeCards = buildSubtreeCards(allUsers, directs, goals, journeys, assessments, checkins, scopedKpis);
       }
     }
 

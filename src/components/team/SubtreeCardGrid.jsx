@@ -10,6 +10,7 @@
 import React, { useState } from "react";
 import { ChevronDown, Users, AlertTriangle, Target, Activity, BarChart3 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import OwnedKpiList from "@/components/team/OwnedKpiList";
 
 function MetricChip({ icon: Icon, label, value, color }) {
   return (
@@ -92,6 +93,14 @@ function SubtreeCard({ card, level, atRisk, isExpanded, onToggle }) {
           <MetricChip icon={BarChart3} label="Assessment" value={`${avgPct}%`} color="text-muted-foreground" />
         )}
       </div>
+
+      {/* Owned KPIs */}
+      {card.kpis?.length > 0 && (
+        <div className="px-5 pb-4 pt-1 border-t border-border">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 pt-2">Owned KPIs</p>
+          <OwnedKpiList kpis={card.kpis} />
+        </div>
+      )}
 
       {/* Expanded drill-down (Level 4+) */}
       {level >= 4 && isExpanded && card.at_risk_count > 0 && (

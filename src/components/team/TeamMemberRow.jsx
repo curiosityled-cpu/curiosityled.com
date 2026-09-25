@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { ChevronDown, ChevronUp, Target, BookOpen, BarChart3, Calendar, AlertCircle } from "lucide-react";
+import { ChevronDown, ChevronUp, Target, BookOpen, BarChart3, Calendar, AlertCircle, Gauge } from "lucide-react";
+import OwnedKpiList from "@/components/team/OwnedKpiList";
 
 function StatPill({ icon: Icon, label, value, color }) {
   return (
@@ -80,6 +81,15 @@ export default function TeamMemberRow({ member, isAtRisk }) {
               <p className="text-xs text-gray-500">{m.learner_progress.completed} resources done</p>
             </div>
           </div>
+          {m.kpis?.length > 0 && (
+            <div className="mt-3 bg-white border border-gray-100 rounded-xl p-3">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Gauge className="w-3.5 h-3.5 text-[#0202ff]" />
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Owned KPIs</p>
+              </div>
+              <OwnedKpiList kpis={m.kpis} />
+            </div>
+          )}
         </div>
       )}
     </div>
