@@ -1,0 +1,183 @@
+{
+  "name": "DevelopmentPlanLink",
+  "type": "object",
+  "description": "A development plan link connecting a ratified/overridden/returned readiness conclusion to an optional existing Curiosity Led DevelopmentPlan. Created by authorized tenant administrators to accelerate candidate development. A completed plan does not change readiness automatically. No scoring, ranking, or AI recommendations.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side \u2014 never accepted from frontend input."
+    },
+    "candidacy_id": {
+      "type": "string",
+      "description": "SuccessorCandidacy ID this plan link belongs to. Required. Candidacy must be active."
+    },
+    "readiness_conclusion_id": {
+      "type": "string",
+      "description": "ReadinessConclusion ID this plan link is derived from. Required. Conclusion must be ratified, overridden, or returned for development."
+    },
+    "linked_development_plan_id": {
+      "type": "string",
+      "description": "Optional existing Curiosity Led DevelopmentPlan ID linked to this succession development plan. Must belong to the same employee and tenant."
+    },
+    "effective_blueprint_snapshot_id": {
+      "type": "string",
+      "description": "EffectiveBlueprintSnapshot ID the candidacy and conclusion are bound to. Must match both. Required."
+    },
+    "gap_summary": {
+      "type": "string",
+      "description": "Summary of development gaps identified from the readiness conclusion. Required."
+    },
+    "owner_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the user responsible for this development plan. Required."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "paused",
+        "completed",
+        "cancelled"
+      ],
+      "default": "draft",
+      "description": "Plan link lifecycle. draft = newly created. active = in progress. paused = temporarily halted. completed = finished. cancelled = removed."
+    },
+    "review_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date by which this plan should be reviewed. Required."
+    },
+    "reassessment_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date by which readiness should be reassessed. Optional, set via successionScheduleReassessment."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "pending_validation"
+    },
+    "created_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the plan link creator. Derived server-side."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the plan link was created. Set server-side."
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the plan was marked completed. Set server-side."
+    },
+    "completion_summary": {
+      "type": "string",
+      "description": "Optional summary of what was accomplished when the plan is completed."
+    },
+    "quarantine_reason": {
+      "type": "string"
+    },
+    "quarantined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quarantined_by_operation_id": {
+      "type": "string"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "pending"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "candidacy_id",
+    "readiness_conclusion_id",
+    "effective_blueprint_snapshot_id",
+    "gap_summary",
+    "owner_profile_id",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

@@ -1,0 +1,220 @@
+{
+  "name": "DevelopmentAction",
+  "type": "object",
+  "description": "A single development action within a DevelopmentPlanLink. Linked to optional readiness conditions, frozen requirements, and Curiosity Led resources. Completion never changes readiness, does not close conditions automatically, and does not change candidacy status. Outcome notes are not accepted evidence. A completed action may create a suggested EvidenceRecord requiring normal review.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side \u2014 never accepted from frontend input."
+    },
+    "development_plan_link_id": {
+      "type": "string",
+      "description": "DevelopmentPlanLink ID this action belongs to. Required."
+    },
+    "candidacy_id": {
+      "type": "string",
+      "description": "SuccessorCandidacy ID. Derived from the plan link. Required."
+    },
+    "readiness_condition_id": {
+      "type": "string",
+      "description": "Optional ReadinessCondition ID this action addresses. Must belong to the same conclusion as the plan link."
+    },
+    "effective_requirement_snapshot_id": {
+      "type": "string",
+      "description": "Optional EffectiveRequirementSnapshot ID this action addresses. Must belong to the bound snapshot."
+    },
+    "action_type": {
+      "type": "string",
+      "enum": [
+        "learning",
+        "coaching",
+        "stretch_assignment",
+        "critical_experience",
+        "credential",
+        "business_goal",
+        "other"
+      ],
+      "description": "The type of development action. Required."
+    },
+    "title": {
+      "type": "string",
+      "description": "Action title. Required."
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the action. Required."
+    },
+    "owner_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the user responsible for completing this action. Required. Must belong to the tenant."
+    },
+    "linked_resource_id": {
+      "type": "string",
+      "description": "Optional LearningResource ID linked to this action. Must belong to the tenant."
+    },
+    "linked_goal_id": {
+      "type": "string",
+      "description": "Optional Goal ID linked to this action. Must belong to the tenant."
+    },
+    "linked_coaching_engagement_id": {
+      "type": "string",
+      "description": "Optional CoachingEngagement ID linked to this action. Must belong to the tenant."
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date by which this action should be completed. Required."
+    },
+    "milestone_text": {
+      "type": "string",
+      "description": "Milestone description for this action. Required."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "in_progress",
+        "completed",
+        "cancelled"
+      ],
+      "default": "not_started",
+      "description": "Action lifecycle. not_started = newly created. in_progress = being worked. completed = finished. cancelled = removed."
+    },
+    "completion_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the action was completed. Set server-side."
+    },
+    "outcome_notes": {
+      "type": "string",
+      "description": "Optional notes on the outcome. Not accepted evidence \u2014 a completed action may create a suggested EvidenceRecord requiring normal review."
+    },
+    "evidence_record_id": {
+      "type": "string",
+      "description": "Optional EvidenceRecord ID created as suggested evidence when the action was completed. The suggested evidence is draft status and not decision-eligible until reviewed."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "active"
+    },
+    "created_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the action creator. Derived server-side."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the action was created. Set server-side."
+    },
+    "quarantine_reason": {
+      "type": "string"
+    },
+    "quarantined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quarantined_by_operation_id": {
+      "type": "string"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "pending"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "development_plan_link_id",
+    "candidacy_id",
+    "action_type",
+    "title",
+    "description",
+    "owner_profile_id",
+    "due_date",
+    "milestone_text",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "data.owner_profile_id": "{{user.id}}"
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

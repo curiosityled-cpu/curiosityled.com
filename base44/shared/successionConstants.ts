@@ -115,4 +115,7 @@ export const SUCCESSION_PERMISSIONS = [
   "succession.deliberate.view",
   "succession.deliberate.manage",
   "succession.readiness.ratify",
+  // Phase 2D — Accelerate workflow permissions
+  "succession.development.view",
+  "succession.development.manage",
 ] as const;
