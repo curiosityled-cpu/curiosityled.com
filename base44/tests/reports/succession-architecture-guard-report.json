@@ -1,15 +1,15 @@
 {
   "guard_version": "2.0-hardened",
-  "checked_at": "2026-09-25T17:15:48.162Z",
+  "checked_at": "2026-09-25T20:52:41.507Z",
   "exception_list_reviewed": "2026-09-25",
   "passed": true,
-  "total_functions": 93,
+  "total_functions": 121,
   "coverage": {
-    "operational": 82,
+    "operational": 110,
     "control_plane": 6,
     "infrastructure": 2,
     "test_harness": 3,
-    "private_helper": 16,
+    "private_helper": 20,
     "unclassified": 0
   },
   "shared_private_helpers": [
@@ -21,14 +21,18 @@
     "successionAuthBootstrap.ts",
     "successionConstants.ts",
     "successionCrossTenantValidation.ts",
+    "successionDevelopmentValidator.ts",
     "successionEvidenceValidator.ts",
     "successionIntegrityHelper.ts",
+    "successionLeadershipIndexValidator.ts",
     "successionLockHelper.ts",
+    "successionMonitorValidator.ts",
     "successionOperationHelper.ts",
     "successionPayloadCanonical.ts",
     "successionReadinessValidator.ts",
     "successionSnapshotValidator.ts",
-    "successionTimezoneHelper.ts"
+    "successionTimezoneHelper.ts",
+    "successionTransitionValidator.ts"
   ],
   "inventory": [
     {
@@ -58,6 +62,16 @@
       "authorize_offset": 723,
       "domain_access_offset": 1534,
       "domain_access_entity": "CriticalRoleRequirement",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionApproveLeadershipIndexMapping",
+      "classification": "operational",
+      "bootstrap_offset": 666,
+      "authorize_offset": 799,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
       "ordering_ok": true,
       "issues": []
     },
@@ -98,6 +112,46 @@
       "authorize_offset": 1016,
       "domain_access_offset": 2598,
       "domain_access_entity": "SuccessionCycle",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionChangeTransitionStatus",
+      "classification": "operational",
+      "bootstrap_offset": 790,
+      "authorize_offset": 923,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionCompleteDevelopmentAction",
+      "classification": "operational",
+      "bootstrap_offset": 731,
+      "authorize_offset": 864,
+      "domain_access_offset": 3390,
+      "domain_access_entity": "EvidenceRecord",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionCompleteReviewRecord",
+      "classification": "operational",
+      "bootstrap_offset": 856,
+      "authorize_offset": 989,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionCompleteTransition",
+      "classification": "operational",
+      "bootstrap_offset": 717,
+      "authorize_offset": 850,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
       "ordering_ok": true,
       "issues": []
     },
@@ -182,6 +236,26 @@
       "issues": []
     },
     {
+      "name": "successionCreateDevelopmentAction",
+      "classification": "operational",
+      "bootstrap_offset": 1206,
+      "authorize_offset": 1339,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionCreateDevelopmentPlanLink",
+      "classification": "operational",
+      "bootstrap_offset": 963,
+      "authorize_offset": 1096,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
       "name": "successionCreateEffectiveBlueprintSnapshot",
       "classification": "operational",
       "bootstrap_offset": 758,
@@ -197,6 +271,16 @@
       "bootstrap_offset": 1311,
       "authorize_offset": 1444,
       "domain_access_offset": 2880,
+      "domain_access_entity": "EvidenceRecord",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionCreateLeadershipIndexEvidenceDrafts",
+      "classification": "operational",
+      "bootstrap_offset": 1006,
+      "authorize_offset": 1139,
+      "domain_access_offset": 5037,
       "domain_access_entity": "EvidenceRecord",
       "ordering_ok": true,
       "issues": []
@@ -218,6 +302,16 @@
       "authorize_offset": 871,
       "domain_access_offset": 2087,
       "domain_access_entity": "OrgRole",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionCreateReviewRecord",
+      "classification": "operational",
+      "bootstrap_offset": 787,
+      "authorize_offset": 920,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
       "ordering_ok": true,
       "issues": []
     },
@@ -248,6 +342,16 @@
       "authorize_offset": 887,
       "domain_access_offset": 2099,
       "domain_access_entity": "TalentPool",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionCreateTransitionInitiation",
+      "classification": "operational",
+      "bootstrap_offset": 1126,
+      "authorize_offset": 1259,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
       "ordering_ok": true,
       "issues": []
     },
@@ -369,6 +473,16 @@
       "domain_access_offset": -1,
       "domain_access_entity": "",
       "ordering_ok": null,
+      "issues": []
+    },
+    {
+      "name": "successionGetOperationalDashboard",
+      "classification": "operational",
+      "bootstrap_offset": 648,
+      "authorize_offset": 781,
+      "domain_access_offset": 1988,
+      "domain_access_entity": "CriticalRole",
+      "ordering_ok": true,
       "issues": []
     },
     {
@@ -512,6 +626,46 @@
       "issues": []
     },
     {
+      "name": "successionListDevelopmentPlans",
+      "classification": "operational",
+      "bootstrap_offset": 567,
+      "authorize_offset": 700,
+      "domain_access_offset": 2115,
+      "domain_access_entity": "ReadinessConclusion",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionListEligibleLeadershipIndexAssessments",
+      "classification": "operational",
+      "bootstrap_offset": 592,
+      "authorize_offset": 725,
+      "domain_access_offset": 3098,
+      "domain_access_entity": "EvidenceRecord",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionListLeadershipIndexMappings",
+      "classification": "operational",
+      "bootstrap_offset": 568,
+      "authorize_offset": 701,
+      "domain_access_offset": 1818,
+      "domain_access_entity": "EffectiveBlueprintSnapshot",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionListMonitorAlerts",
+      "classification": "operational",
+      "bootstrap_offset": 714,
+      "authorize_offset": 847,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
       "name": "successionListOperations",
       "classification": "operational",
       "bootstrap_offset": 333,
@@ -602,6 +756,16 @@
       "issues": []
     },
     {
+      "name": "successionListTransitions",
+      "classification": "operational",
+      "bootstrap_offset": 586,
+      "authorize_offset": 719,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
       "name": "successionPartnerValidate",
       "classification": "control_plane",
       "bootstrap_offset": -1,
@@ -652,6 +816,16 @@
       "issues": []
     },
     {
+      "name": "successionPreviewLeadershipIndexEvidence",
+      "classification": "operational",
+      "bootstrap_offset": 675,
+      "authorize_offset": 808,
+      "domain_access_offset": 2322,
+      "domain_access_entity": "EffectiveBlueprintSnapshot",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
       "name": "successionRatifyReadinessConclusion",
       "classification": "operational",
       "bootstrap_offset": 929,
@@ -688,6 +862,16 @@
       "authorize_offset": 765,
       "domain_access_offset": -1,
       "domain_access_entity": "",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionRefreshMonitorAlerts",
+      "classification": "operational",
+      "bootstrap_offset": 738,
+      "authorize_offset": 871,
+      "domain_access_offset": 2119,
+      "domain_access_entity": "CriticalRole",
       "ordering_ok": true,
       "issues": []
     },
@@ -742,6 +926,16 @@
       "issues": []
     },
     {
+      "name": "successionRetireLeadershipIndexMapping",
+      "classification": "operational",
+      "bootstrap_offset": 735,
+      "authorize_offset": 868,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
       "name": "successionReturnBlueprint",
       "classification": "operational",
       "bootstrap_offset": 587,
@@ -782,12 +976,52 @@
       "issues": []
     },
     {
+      "name": "successionSaveKnowledgeTransferPlan",
+      "classification": "operational",
+      "bootstrap_offset": 962,
+      "authorize_offset": 1095,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionSaveLeadershipIndexMappingDraft",
+      "classification": "operational",
+      "bootstrap_offset": 908,
+      "authorize_offset": 1041,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
       "name": "successionSaveReadinessDraft",
       "classification": "operational",
       "bootstrap_offset": 1125,
       "authorize_offset": 1258,
       "domain_access_offset": 4835,
       "domain_access_entity": "ReadinessConclusion",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionSaveTransitionPlan",
+      "classification": "operational",
+      "bootstrap_offset": 937,
+      "authorize_offset": 1070,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionScheduleReassessment",
+      "classification": "operational",
+      "bootstrap_offset": 736,
+      "authorize_offset": 869,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
       "ordering_ok": true,
       "issues": []
     },
@@ -872,6 +1106,26 @@
       "issues": []
     },
     {
+      "name": "successionUpdateDevelopmentAction",
+      "classification": "operational",
+      "bootstrap_offset": 1015,
+      "authorize_offset": 1148,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionUpdateDevelopmentPlanLink",
+      "classification": "operational",
+      "bootstrap_offset": 850,
+      "authorize_offset": 983,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
       "name": "successionUpdateDraftCycle",
       "classification": "operational",
       "bootstrap_offset": 740,
@@ -888,6 +1142,16 @@
       "authorize_offset": 1301,
       "domain_access_offset": 3920,
       "domain_access_entity": "EvidenceRecord",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionUpdateMonitorAlert",
+      "classification": "operational",
+      "bootstrap_offset": 844,
+      "authorize_offset": 977,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
       "ordering_ok": true,
       "issues": []
     },
@@ -922,12 +1186,32 @@
       "issues": []
     },
     {
+      "name": "successionUpdateReviewRecord",
+      "classification": "operational",
+      "bootstrap_offset": 847,
+      "authorize_offset": 980,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
       "name": "successionUpdateRoleRequirement",
       "classification": "operational",
       "bootstrap_offset": 629,
       "authorize_offset": 761,
       "domain_access_offset": 1578,
       "domain_access_entity": "RoleRequirement",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionUpdateTransitionInitiation",
+      "classification": "operational",
+      "bootstrap_offset": 865,
+      "authorize_offset": 998,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
       "ordering_ok": true,
       "issues": []
     },
