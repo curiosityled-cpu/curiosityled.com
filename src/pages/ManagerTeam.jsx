@@ -20,17 +20,16 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import {
-  Users, Gauge, AlertTriangle, Loader2, Info,
+  Users, AlertTriangle, Loader2, Info,
   TrendingUp, Activity, ChevronRight, Brain, ClipboardList, Layers,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import TeamMemberRow from "@/components/team/TeamMemberRow";
-import TeamKpiList from "@/components/team/TeamKpiList";
 import TeamPulseHero from "@/components/team/TeamPulseHero";
 import SubtreeCardGrid from "@/components/team/SubtreeCardGrid";
 import TeamHeroHeader from "@/components/team/TeamHeroHeader";
 import ZoneCard from "@/components/density/ZoneCard";
-import TeamHealthCard from "@/components/team/TeamHealthCard";
+import TeamTalentScorecard from "@/components/team/TeamTalentScorecard";
 import TeamRosterCard from "@/components/team/TeamRosterCard";
 
 function ActionTile({ icon: Icon, iconBg, iconColor, title, description, to }) {
@@ -173,22 +172,8 @@ export default function ManagerTeam() {
 
             {/* Right — Context sidebar */}
             <div className="space-y-4 md:sticky md:top-20 md:self-start">
-              {/* Aggregate summary */}
-              <TeamHealthCard aggregates={aggregates} teamSize={scopeSize} />
-
-              {/* KPIs */}
-              {kpis.length > 0 && (
-                <ZoneCard
-                  title={`${scopeLabel} KPIs`}
-                  icon={Gauge}
-                  iconColor="text-[#0202ff]"
-                  accentColor="#0202ff"
-                  collapsible
-                  defaultExpanded={false}
-                >
-                  <TeamKpiList kpis={kpis} members={members} />
-                </ZoneCard>
-              )}
+              {/* Combined Team Talent Scorecard (Team Health + KPIs) */}
+              <TeamTalentScorecard aggregates={aggregates} kpis={kpis} teamSize={scopeSize} />
 
               {/* Team Tools */}
               <div className="space-y-3">
