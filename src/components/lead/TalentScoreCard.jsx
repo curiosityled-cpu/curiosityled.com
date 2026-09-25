@@ -67,6 +67,12 @@ function SectionLink({ to, label }) {
 
 export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals = [] }) {
   const { user } = useAuth();
+  const [kpiExpanded, setKpiExpanded] = useState(() => {
+    try { const s = localStorage.getItem("cl_collapse_scorecard_kpi"); return s !== null ? JSON.parse(s) : true; } catch { return true; }
+  });
+  const [orgGoalsExpanded, setOrgGoalsExpanded] = useState(() => {
+    try { const s = localStorage.getItem("cl_collapse_scorecard_orggoals"); return s !== null ? JSON.parse(s) : true; } catch { return true; }
+  });
   const [goalsExpanded, setGoalsExpanded] = useState(() => {
     try { const s = localStorage.getItem("cl_collapse_scorecard_goals"); return s !== null ? JSON.parse(s) : false; } catch { return false; }
   });
@@ -122,67 +128,89 @@ export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals =
       {scorecardExpanded && (
       <div className="px-4 pb-4 space-y-3 border-t border-slate-100 pt-3">
 
-        {/* ── My Performance sub-card ────────────────────────────────── */}
-        {hasPerfData && (
+        {/* ── KPI sub-card ────────────────────────────────────────────── */}
+        {topKpis.length > 0 && (
           <div className="bg-card border border-border rounded-2xl px-5 py-4">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">My Performance</p>
-              <SectionLink to="/my-performance" label="All" />
-            </div>
-
-            {topKpis.length > 0 && (
-              <div className="mb-3">
-                <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-widest mb-1">KPIs</p>
-                <div className="divide-y divide-border/40">
-                  {topKpis.map(k => <KpiRow key={k.id} kpi={k} />)}
-                </div>
+            <button
+              className="flex items-center justify-between w-full text-left"
+              onClick={() => { const v = !kpiExpanded; setKpiExpanded(v); try { localStorage.setItem("cl_collapse_scorecard_kpi", JSON.stringify(v)); } catch {} }}
+            >
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">KPI</p>
+              <div className="flex items-center gap-2">
+                <SectionLink to="/my-performance" label="All" />
+                {kpiExpanded
+                  ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                  : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
+              </div>
+            </button>
+            {kpiExpanded && (
+              <div className="divide-y divide-border/40 mt-2">
+                {topKpis.map(k => <KpiRow key={k.id} kpi={k} />)}
               </div>
             )}
+          </div>
+        )}
 
-            {activeCascaded.length > 0 && (
-              <div>
-                <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-widest mb-1">Org Goals</p>
-                <div className="space-y-1.5">
-                  {activeCascaded.slice(0, 3).map(g => (
-                    <div key={g.id} className="flex items-center gap-2">
-                      <Target className="w-3 h-3 text-indigo-500 flex-shrink-0" />
-                      <p className="text-xs text-foreground truncate flex-1">{g.title}</p>
+        {/* ── Org Goals sub-card ─────────────────────────────────────── */}
+        {activeCascaded.length > 0 && (
+          <div className="bg-card border border-border rounded-2xl px-5 py-4">
+            <button
+              className="flex items-center justify-between w-full text-left"
+              onClick={() => { const v = !orgGoalsExpanded; setOrgGoalsExpanded(v); try { localStorage.setItem("cl_collapse_scorecard_orggoals", JSON.stringify(v)); } catch {} }}
+            >
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Org Goals</p>
+              <div className="flex items-center gap-2">
+                <SectionLink to="/my-performance" label="All" />
+                {orgGoalsExpanded
+                  ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                  : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
+              </div>
+            </button>
+            {orgGoalsExpanded && (
+              <div className="space-y-1.5 mt-2">
+                {activeCascaded.slice(0, 3).map(g => (
+                  <div key={g.id} className="flex items-center gap-2">
+                    <Target className="w-3 h-3 text-indigo-500 flex-shrink-0" />
+                    <p className="text-xs text-foreground truncate flex-1">{g.title}</p>
+                    <span className="text-[10px] text-muted-foreground flex-shrink-0">{g.progress || 0}%</span>
+                  </div>
+                ))}
+                {activeCascaded.length > 3 && (
+                  <p className="text-[10px] text-muted-foreground pl-5">+{activeCascaded.length - 3} more</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── My Goals sub-card ──────────────────────────────────────── */}
+        {activeGoals.length > 0 && (
+          <div className="bg-card border border-border rounded-2xl px-5 py-4">
+            <button
+              className="flex items-center justify-between w-full text-left"
+              onClick={() => { const v = !goalsExpanded; setGoalsExpanded(v); try { localStorage.setItem("cl_collapse_scorecard_goals", JSON.stringify(v)); } catch {} }}
+            >
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">My Goals</p>
+              <div className="flex items-center gap-2">
+                <SectionLink to="/my-performance" label="All" />
+                {goalsExpanded
+                  ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                  : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
+              </div>
+            </button>
+            {goalsExpanded && (
+              <div className="space-y-2 mt-2">
+                {activeGoals.slice(0, 3).map(g => (
+                  <div key={g.id}>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-xs font-medium text-foreground truncate flex-1 mr-2">{g.title}</p>
                       <span className="text-[10px] text-muted-foreground flex-shrink-0">{g.progress || 0}%</span>
                     </div>
-                  ))}
-                  {activeCascaded.length > 3 && (
-                    <p className="text-[10px] text-muted-foreground pl-5">+{activeCascaded.length - 3} more</p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {activeGoals.length > 0 && (
-              <div>
-                <button
-                  className="flex items-center justify-between w-full text-left mb-1"
-                  onClick={() => { const v = !goalsExpanded; setGoalsExpanded(v); try { localStorage.setItem("cl_collapse_scorecard_goals", JSON.stringify(v)); } catch {} }}
-                >
-                  <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-widest">My Goals</p>
-                  {goalsExpanded
-                    ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                    : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
-                </button>
-                {goalsExpanded && (
-                  <div className="space-y-2">
-                    {activeGoals.slice(0, 3).map(g => (
-                      <div key={g.id}>
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="text-xs font-medium text-foreground truncate flex-1 mr-2">{g.title}</p>
-                          <span className="text-[10px] text-muted-foreground flex-shrink-0">{g.progress || 0}%</span>
-                        </div>
-                        <Progress value={g.progress || 0} className="h-1" />
-                      </div>
-                    ))}
-                    {activeGoals.length > 3 && (
-                      <p className="text-[10px] text-muted-foreground">+{activeGoals.length - 3} more active</p>
-                    )}
+                    <Progress value={g.progress || 0} className="h-1" />
                   </div>
+                ))}
+                {activeGoals.length > 3 && (
+                  <p className="text-[10px] text-muted-foreground">+{activeGoals.length - 3} more active</p>
                 )}
               </div>
             )}
