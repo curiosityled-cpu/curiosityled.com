@@ -219,7 +219,7 @@ export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals =
               className="flex items-center justify-between w-full text-left"
               onClick={() => { const v = !devExpanded; setDevExpanded(v); try { localStorage.setItem("cl_collapse_scorecard_dev", JSON.stringify(v)); } catch {} }}
             >
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">My Development</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Development</p>
               <div className="flex items-center gap-2">
                 <SectionLink to="/my-development" label="All" />
                 {devExpanded
