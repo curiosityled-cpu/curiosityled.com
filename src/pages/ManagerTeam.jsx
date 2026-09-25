@@ -24,13 +24,14 @@ import {
   TrendingUp, Activity, ChevronRight, Brain, ClipboardList, Layers,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import TeamSummaryCards from "@/components/team/TeamSummaryCards";
 import TeamMemberRow from "@/components/team/TeamMemberRow";
 import TeamKpiList from "@/components/team/TeamKpiList";
 import TeamPulseHero from "@/components/team/TeamPulseHero";
 import SubtreeCardGrid from "@/components/team/SubtreeCardGrid";
 import TeamHeroHeader from "@/components/team/TeamHeroHeader";
 import ZoneCard from "@/components/density/ZoneCard";
+import TeamHealthCard from "@/components/team/TeamHealthCard";
+import TeamRosterCard from "@/components/team/TeamRosterCard";
 
 function ActionTile({ icon: Icon, iconBg, iconColor, title, description, to }) {
   const content = (
@@ -154,80 +155,26 @@ export default function ManagerTeam() {
               {/* Team Pulse — synthesized situational read */}
               {rollup?.team_pulse && <TeamPulseHero rollup={rollup} />}
 
-              {/* At-risk zone */}
-              {!isAggregatedOnly && atRisk.length > 0 && (
-                <ZoneCard
-                  title={`At-risk signals · ${atRisk.length}`}
-                  icon={AlertTriangle}
-                  iconColor="text-amber-500"
-                  accentColor="#f59e0b"
-                  collapsible
-                  defaultExpanded
-                >
-                  <div className="space-y-2">
-                    {atRisk.map((r) => (
-                      <div key={r.email} className="flex items-start gap-2 px-1">
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-800">{r.full_name || r.email}</p>
-                          <p className="text-xs text-gray-500">{r.reasons.join(" · ")}</p>
-                        </div>
-                      </div>
+              {/* Combined Team card: roster/subtree + at-risk signals */}
+              {isSubtreeLevel && subtreeCards.length > 0 ? (
+                <TeamRosterCard count={subtreeCards.length} atRisk={!isAggregatedOnly ? atRisk : []}>
+                  <SubtreeCardGrid subtreeCards={subtreeCards} level={leaderLevel} atRisk={atRisk} />
+                </TeamRosterCard>
+              ) : !isAggregatedOnly && members.length > 0 ? (
+                <TeamRosterCard count={members.length} atRisk={atRisk}>
+                  <div className="divide-y divide-border">
+                    {members.map((m) => (
+                      <TeamMemberRow key={m.id || m.email} member={m} isAtRisk={atRiskEmails.has(m.email)} />
                     ))}
                   </div>
-                </ZoneCard>
-              )}
-
-              {/* Roster or Subtree Cards */}
-              {isSubtreeLevel && subtreeCards.length > 0 ? (
-                <div className="space-y-3">
-                  <div className="px-1 pt-1">
-                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Team Leads · {subtreeCards.length}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Each lead's subtree health, with inline drill-down for deeper hierarchies.
-                    </p>
-                  </div>
-                  <SubtreeCardGrid subtreeCards={subtreeCards} level={leaderLevel} atRisk={atRisk} />
-                </div>
-              ) : !isAggregatedOnly && members.length > 0 ? (
-                <div className="space-y-3">
-                  <div className="px-1 pt-1">
-                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Roster · {members.length}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {isDirectsOnly
-                        ? `Your ${detailSize} direct ${detailSize === 1 ? "report" : "reports"}. Tap a row for detail.`
-                        : "People in your scope. Tap a row for detail."}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-                    <div className="divide-y divide-border">
-                      {members.map((m) => (
-                        <TeamMemberRow key={m.id || m.email} member={m} isAtRisk={atRiskEmails.has(m.email)} />
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                </TeamRosterCard>
               ) : null}
             </div>
 
             {/* Right — Context sidebar */}
             <div className="space-y-4 md:sticky md:top-20 md:self-start">
               {/* Aggregate summary */}
-              <div>
-                <div className="px-1 pt-1 mb-2">
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Team Health
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Goal progress, assessments, and check-in participation across your scope.
-                  </p>
-                </div>
-                <TeamSummaryCards aggregates={aggregates} teamSize={scopeSize} />
-              </div>
+              <TeamHealthCard aggregates={aggregates} teamSize={scopeSize} />
 
               {/* KPIs */}
               {kpis.length > 0 && (
