@@ -169,7 +169,7 @@ function findFirstDomainAccess(source) {
   const regex = /base44\.(?:asServiceRole\.)?entities\.(\w+)/g;
   let match;
   while ((match = regex.exec(stripped)) !== null) {
-    const entityName = match[2];
+    const entityName = match[1];
     if (DOMAIN_ENTITY_NAMES.has(entityName)) {
       return { offset: match.index, entity: entityName };
     }
@@ -188,7 +188,7 @@ function findFirstServiceRoleDomainOp(source) {
   const regex = /base44\.asServiceRole\.entities\.(\w+)/g;
   let match;
   while ((match = regex.exec(stripped)) !== null) {
-    const entityName = match[2];
+    const entityName = match[1];
     if (DOMAIN_ENTITY_NAMES.has(entityName)) {
       return match.index;
     }
