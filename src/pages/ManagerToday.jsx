@@ -513,7 +513,6 @@ export default function ManagerToday() {
             collapsible
             defaultExpanded
           >
-            <UpcomingFrictionCard trends={trends} goals={goals} pulses={recentPulses} onOpenAtreus={openAtreus} />
             {crossToolData ? (
               <TopPatternsMoveCard
                 crossToolData={crossToolData}
@@ -529,6 +528,7 @@ export default function ManagerToday() {
                 </div>
               </div>
             )}
+            <UpcomingFrictionCard trends={trends} goals={goals} pulses={recentPulses} onOpenAtreus={openAtreus} />
             <LeadershipNarrativeCard trends={trends} insight={insight} goals={goals} pulses={recentPulses} onOpenAtreus={openAtreus} />
           </ZoneCard>
         </div>
