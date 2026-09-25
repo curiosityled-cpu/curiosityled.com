@@ -128,7 +128,14 @@ export const ClientProvider = ({ children }) => {
 export const useClient = () => {
   const context = useContext(ClientContext);
   if (!context) {
-    throw new Error('useClient must be used within ClientProvider');
+    // Return a safe default instead of throwing so components degrade
+    // gracefully to a loading state when the provider is not in the tree.
+    return {
+      client: null,
+      stats: { total_users: 0, total_goals: 0, total_assessments: 0, total_learning_assigned: 0 },
+      loading: true,
+      refreshContext: async () => {}
+    };
   }
   return context;
 };
