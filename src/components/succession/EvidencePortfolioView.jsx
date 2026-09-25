@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import EvidenceDetailDrawer from "./EvidenceDetailDrawer";
+import AssessmentEvidenceView from "./AssessmentEvidenceView";
 
 const EVIDENCE_TYPES = [
   { value: "performance_outcome", label: "Performance Outcome" },
@@ -218,6 +219,11 @@ export default function EvidencePortfolioView({ candidacy }) {
           </div>
         )}
       </SuccessionSection>
+
+      {/* Leadership Index Assessment Evidence Bridge */}
+      {candidacy?.status === "active" && (
+        <AssessmentEvidenceView candidacy={candidacy} />
+      )}
 
       {editingDraft && (
         <SuccessionSection icon={FileText} title="Edit Draft Evidence">

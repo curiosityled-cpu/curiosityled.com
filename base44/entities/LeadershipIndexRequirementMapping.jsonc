@@ -1,0 +1,227 @@
+{
+  "name": "LeadershipIndexRequirementMapping",
+  "type": "object",
+  "description": "A governance mapping connecting one competency-level result from a known Leadership Index framework version to one applicable frozen competency requirement within an EffectiveBlueprintSnapshot. An approved mapping means only 'this assessment competency may be considered as one source of evidence for this frozen competency requirement.' It does not mean the scales are equivalent, the result satisfies the requirement, or the candidate is ready. Does not store individual assessment scores, raw responses, narratives, archetypes, readiness values, candidate identity, or development recommendations.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side \u2014 never accepted from frontend input."
+    },
+    "assessment_definition_id": {
+      "type": "string",
+      "description": "CustomAssessment ID (or equivalent assessment definition identifier) that defines the Leadership Index assessment. Required."
+    },
+    "assessment_framework_version": {
+      "type": "string",
+      "description": "The Leadership Index framework version this mapping applies to. Required. Derived server-side from the assessment definition."
+    },
+    "assessment_leadership_level": {
+      "type": "string",
+      "enum": [
+        "Level 1 (Leading Self)",
+        "Level 2 (Leading Others)",
+        "Level 3 (Leading Managers)",
+        "Level 4 (Leading Functions)",
+        "Level 5 (Leading Organizations)",
+        "HiPo Individual Contributor"
+      ],
+      "description": "The leadership level the assessment was taken at. Must exactly match the leadership level authorized for the target role/snapshot. Required."
+    },
+    "competency_id": {
+      "type": "string",
+      "description": "Competency ID of the source assessment competency. Required."
+    },
+    "competency_key": {
+      "type": "string",
+      "description": "Competency.field_key for the source competency (e.g. 'si', 'dm', 'comm'). Required."
+    },
+    "effective_blueprint_snapshot_id": {
+      "type": "string",
+      "description": "EffectiveBlueprintSnapshot ID this mapping targets. Required. Must be same tenant."
+    },
+    "effective_requirement_snapshot_id": {
+      "type": "string",
+      "description": "EffectiveRequirementSnapshot ID this mapping targets. Required. Must belong to the snapshot, be requirement_type=competency, and applicability_status=applicable."
+    },
+    "version_number": {
+      "type": "number",
+      "description": "Mapping version number. Increments when an approved mapping is changed. 1 for the first version."
+    },
+    "mapping_rationale": {
+      "type": "string",
+      "description": "Governance rationale for why this assessment competency maps to this frozen requirement. Required."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "submitted",
+        "approved",
+        "retired"
+      ],
+      "default": "draft",
+      "description": "Mapping lifecycle. draft = editable by creator. submitted = locked, awaiting approval. approved = immutable governance configuration. retired = no longer current, historical evidence preserved."
+    },
+    "is_current": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this is the current approved version for this source competency + framework version + leadership level + target requirement. Only one current approved version may exist."
+    },
+    "operation_id": {
+      "type": "string",
+      "description": "SuccessionOperation ID that created or last modified this mapping. For idempotency."
+    },
+    "created_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the mapping creator. Derived server-side."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the mapping was created. Set server-side."
+    },
+    "submitted_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the submitter. Derived server-side. Set when status transitions to submitted."
+    },
+    "submitted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the mapping was submitted. Set server-side."
+    },
+    "approved_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the approver. Derived server-side. Must differ from submitted_by_profile_id."
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the mapping was approved. Set server-side."
+    },
+    "retired_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the user who retired the mapping. Derived server-side."
+    },
+    "retired_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the mapping was retired. Set server-side."
+    },
+    "retirement_reason": {
+      "type": "string",
+      "description": "Reason for retirement. Required when status transitions to retired."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "pending_validation"
+    },
+    "quarantine_reason": {
+      "type": "string"
+    },
+    "quarantined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quarantined_by_operation_id": {
+      "type": "string"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "pending"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "assessment_definition_id",
+    "assessment_framework_version",
+    "assessment_leadership_level",
+    "competency_id",
+    "competency_key",
+    "effective_blueprint_snapshot_id",
+    "effective_requirement_snapshot_id",
+    "version_number",
+    "mapping_rationale",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

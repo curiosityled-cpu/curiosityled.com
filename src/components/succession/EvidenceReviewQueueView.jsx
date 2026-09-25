@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import EvidenceDetailDrawer from "./EvidenceDetailDrawer";
+import LeadershipIndexMappingRegistryView from "./LeadershipIndexMappingRegistryView";
 
 const EVIDENCE_TYPES = {
   performance_outcome: "Performance Outcome",
@@ -154,6 +155,11 @@ export default function EvidenceReviewQueueView() {
           evidenceId={detailEvidence.id}
           onClose={() => setDetailEvidence(null)}
         />
+      )}
+
+      {/* Leadership Index Mapping Registry — admin governance configuration */}
+      {canManage && (
+        <LeadershipIndexMappingRegistryView />
       )}
     </div>
   );
