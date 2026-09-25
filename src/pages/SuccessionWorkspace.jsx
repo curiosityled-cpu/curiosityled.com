@@ -104,7 +104,7 @@ export default function SuccessionWorkspace() {
       }
     >
       {/* Sub-nav pills */}
-      <div className="flex flex-wrap gap-2">
+      <nav aria-label="Succession workspace views" className="flex flex-wrap gap-2">
         {ALL_VIEWS.map((v) => {
           const Icon = v.icon;
           const active = activeView === v.key;
@@ -112,23 +112,24 @@ export default function SuccessionWorkspace() {
             <button
               key={v.key}
               onClick={() => handleViewChange(v.key)}
-              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium border transition-colors ${
+              aria-current={active ? "page" : undefined}
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium border transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0202ff] ${
                 active
                   ? "bg-[#0202ff] text-white border-[#0202ff] shadow-sm"
                   : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
               }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-4 h-4" aria-hidden="true" />
               {v.label}
             </button>
           );
         })}
-      </div>
+      </nav>
 
       {/* Content area */}
-      <div className="mt-5">
+      <section aria-label="Succession workspace content" className="mt-5">
         {renderView(activeView)}
-      </div>
+      </section>
     </MVPPageLayout>
   );
 }

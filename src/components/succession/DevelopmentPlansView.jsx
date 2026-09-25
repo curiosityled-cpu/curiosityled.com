@@ -128,8 +128,9 @@ export default function DevelopmentPlansView() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label className="text-sm font-medium">Candidacy *</Label>
+              <Label htmlFor="dev-plan-candidacy" className="text-sm font-medium">Candidacy *</Label>
               <select
+                id="dev-plan-candidacy"
                 className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
                 value={formData.candidacy_id}
                 onChange={(e) => {

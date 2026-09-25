@@ -49,6 +49,8 @@ export default function LeadershipIndexMappingRegistryView() {
     effective_requirement_snapshot_id: "",
     mapping_rationale: "",
   });
+  const [retireTarget, setRetireTarget] = useState(null);
+  const [retireReason, setRetireReason] = useState("");
 
   const canManage = hasPermission("succession.evidence.manage");
   const canView = hasPermission("succession.evidence.view") || canManage;
@@ -110,15 +112,18 @@ export default function LeadershipIndexMappingRegistryView() {
   };
 
   const handleRetire = async (mappingId) => {
-    const reason = prompt("Enter retirement reason (required):");
-    if (!reason || !reason.trim()) return;
+    if (!retireReason.trim()) return;
     const opId = `li-mapping-retire-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const result = await invoke("successionRetireLeadershipIndexMapping", {
       operation_id: opId,
       mapping_id: mappingId,
-      retirement_reason: reason,
+      retirement_reason: retireReason,
     });
-    if (result) fetchMappings();
+    if (result) {
+      setRetireTarget(null);
+      setRetireReason("");
+      fetchMappings();
+    }
   };
 
   return (
@@ -143,16 +148,19 @@ export default function LeadershipIndexMappingRegistryView() {
       {/* Filters */}
       <div className="mb-4 flex items-center gap-3 flex-wrap">
         <select value={filters.framework_version} onChange={(e) => setFilters({ ...filters, framework_version: e.target.value })}
+          aria-label="Filter by framework version"
           className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white">
           <option value="">All Framework Versions</option>
           <option value="leadership_index_v1">leadership_index_v1</option>
         </select>
         <select value={filters.leadership_level} onChange={(e) => setFilters({ ...filters, leadership_level: e.target.value })}
+          aria-label="Filter by leadership level"
           className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white">
           <option value="">All Levels</option>
           {LEADERSHIP_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
         </select>
         <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+          aria-label="Filter by mapping status"
           className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white">
           <option value="">All Statuses</option>
           <option value="draft">Draft</option>
@@ -228,7 +236,7 @@ export default function LeadershipIndexMappingRegistryView() {
                       </Button>
                     )}
                     {m.status === "approved" && (
-                      <Button size="sm" variant="outline" onClick={() => handleRetire(m.mapping_id)}>
+                      <Button size="sm" variant="outline" onClick={() => { setRetireTarget(m.mapping_id); setRetireReason(""); }}>
                         <Ban className="w-3.5 h-3.5 mr-1" /> Retire
                       </Button>
                     )}
@@ -240,8 +248,22 @@ export default function LeadershipIndexMappingRegistryView() {
         </div>
       )}
 
+      {retireTarget && (
+        <div className="mt-3 p-3 rounded-lg border border-gray-200 bg-white">
+          <Label htmlFor="retire-reason" className="text-xs">Retirement Reason *</Label>
+          <Textarea id="retire-reason" value={retireReason} onChange={(e) => setRetireReason(e.target.value)}
+            placeholder="Explain why this mapping is being retired..." />
+          <div className="flex gap-2 mt-2">
+            <Button size="sm" onClick={() => handleRetire(retireTarget)} disabled={loading || !retireReason.trim()}>
+              {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Confirm Retire"}
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => { setRetireTarget(null); setRetireReason(""); }}>Cancel</Button>
+          </div>
+        </div>
+      )}
+
       {error && (
-        <div className="mt-2 p-2 rounded bg-red-50 border border-red-200">
+        <div className="mt-2 p-2 rounded bg-red-50 border border-red-200" role="alert">
           <p className="text-xs text-red-600">{error}</p>
         </div>
       )}

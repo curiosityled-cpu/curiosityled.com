@@ -168,26 +168,26 @@ export default function OperationalMonitorView() {
 
           {/* Filters */}
           <div className="flex items-center gap-3 flex-wrap">
-            <Label className="text-sm text-gray-600">Filter:</Label>
-            <select value={filters.alert_type} onChange={(e) => setFilters({ ...filters, alert_type: e.target.value })} className="text-sm border border-gray-200 rounded-md px-2 py-1 bg-white">
+            <span className="text-sm text-gray-600" id="monitor-filter-label">Filter:</span>
+            <select value={filters.alert_type} onChange={(e) => setFilters({ ...filters, alert_type: e.target.value })} aria-label="Filter by alert type" className="text-sm border border-gray-200 rounded-md px-2 py-1 bg-white">
               <option value="">All Types</option>
               {Object.entries(ALERT_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
-            <select value={filters.severity} onChange={(e) => setFilters({ ...filters, severity: e.target.value })} className="text-sm border border-gray-200 rounded-md px-2 py-1 bg-white">
+            <select value={filters.severity} onChange={(e) => setFilters({ ...filters, severity: e.target.value })} aria-label="Filter by severity" className="text-sm border border-gray-200 rounded-md px-2 py-1 bg-white">
               <option value="">All Severities</option>
               <option value="informational">Informational</option>
               <option value="attention">Attention</option>
               <option value="high">High</option>
               <option value="critical">Critical</option>
             </select>
-            <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })} className="text-sm border border-gray-200 rounded-md px-2 py-1 bg-white">
+            <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })} aria-label="Filter by status" className="text-sm border border-gray-200 rounded-md px-2 py-1 bg-white">
               <option value="">All Statuses</option>
               <option value="open">Open</option>
               <option value="acknowledged">Acknowledged</option>
               <option value="resolved">Resolved</option>
               <option value="dismissed">Dismissed</option>
             </select>
-            <select value={filters.due_within_days} onChange={(e) => setFilters({ ...filters, due_within_days: e.target.value })} className="text-sm border border-gray-200 rounded-md px-2 py-1 bg-white">
+            <select value={filters.due_within_days} onChange={(e) => setFilters({ ...filters, due_within_days: e.target.value })} aria-label="Filter by due date range" className="text-sm border border-gray-200 rounded-md px-2 py-1 bg-white">
               <option value="">Any Due Date</option>
               <option value="7">Due ≤7 days</option>
               <option value="30">Due ≤30 days</option>
@@ -288,7 +288,7 @@ export default function OperationalMonitorView() {
               </Button>
               <Button variant="outline" onClick={() => setActionAlert(null)}>Cancel</Button>
             </div>
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
           </CardContent>
         </Card>
       )}

@@ -122,11 +122,14 @@ export default function ReviewQueueView() {
     }
   };
 
+  const [cancelError, setCancelError] = useState("");
+
   const handleCancel = async (reviewId) => {
     if (!completeForm.cancellation_reason.trim()) {
-      alert("Cancellation requires a reason.");
+      setCancelError("Cancellation requires a reason.");
       return;
     }
+    setCancelError("");
     const result = await invoke("successionCompleteReviewRecord", {
       operation_id: `cancel-review-${Date.now()}`,
       review_id: reviewId,
@@ -292,6 +295,7 @@ export default function ReviewQueueView() {
                   <Label className="text-xs">Cancellation Reason (required)</Label>
                   <Textarea value={completeForm.cancellation_reason} onChange={(e) => setCompleteForm({ ...completeForm, cancellation_reason: e.target.value })} />
                 </div>
+                {cancelError && <p className="text-sm text-red-600" role="alert">{cancelError}</p>}
                 <div className="flex gap-2">
                   <Button onClick={() => handleCancel(activeReview.id)} disabled={loading} variant="outline">
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4 mr-1" />} Confirm Cancel

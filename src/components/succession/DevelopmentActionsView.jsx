@@ -159,8 +159,9 @@ export default function DevelopmentActionsView() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label className="text-sm font-medium">Plan Link *</Label>
+              <Label htmlFor="dev-action-planlink" className="text-sm font-medium">Plan Link *</Label>
               <select
+                id="dev-action-planlink"
                 className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
                 value={selectedPlanLink}
                 onChange={(e) => setSelectedPlanLink(e.target.value)}

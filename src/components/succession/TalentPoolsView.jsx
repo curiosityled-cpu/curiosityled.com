@@ -12,6 +12,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function TalentPoolsView() {
   const { invoke, loading, error, clearError } = useSuccessionApi();
@@ -185,6 +186,8 @@ function PoolMembersSection({ pool, memberships, canManage, loading, onAddMember
   const [showAdd, setShowAdd] = useState(false);
   const [userProfileId, setUserProfileId] = useState("");
   const [users, setUsers] = useState([]);
+  const [removeTarget, setRemoveTarget] = useState(null);
+  const [removeReason, setRemoveReason] = useState("");
 
   useEffect(() => {
     // Tenant-scoped employee picker — RLS restricts to caller's tenant
@@ -232,13 +235,27 @@ function PoolMembersSection({ pool, memberships, canManage, loading, onAddMember
                 </div>
                 {canManage && m.status === "active" && (
                   <Button size="sm" variant="outline" className="h-7 text-xs flex-shrink-0"
-                    onClick={() => { const reason = prompt("Removal reason (optional):"); onRemoveMember(m.id, reason || ""); }}>
+                    onClick={() => { setRemoveTarget(m.id); setRemoveReason(""); }}>
                     <UserMinus className="w-3.5 h-3.5 mr-1" /> Remove
                   </Button>
                 )}
               </div>
             );
           })}
+        </div>
+      )}
+
+      {removeTarget && (
+        <div className="mt-3 p-3 rounded-lg border border-gray-200 bg-white">
+          <Label htmlFor="remove-reason" className="text-xs text-gray-600">Removal Reason (optional)</Label>
+          <Textarea id="remove-reason" value={removeReason} onChange={(e) => setRemoveReason(e.target.value)}
+            placeholder="Reason for removing this member..." />
+          <div className="flex gap-2 mt-2">
+            <Button size="sm" onClick={() => { onRemoveMember(removeTarget, removeReason || ""); setRemoveTarget(null); setRemoveReason(""); }}>
+              Confirm Remove
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => { setRemoveTarget(null); setRemoveReason(""); }}>Cancel</Button>
+          </div>
         </div>
       )}
     </SuccessionSection>

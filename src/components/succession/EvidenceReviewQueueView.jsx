@@ -169,7 +169,10 @@ function ReviewQueueRow({ evidence, isSubmitter, canReview, onReview, onDetail }
   return (
     <div className="border border-gray-200 rounded-lg p-3 bg-white">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1 cursor-pointer" onClick={onDetail}>
+        <div className="min-w-0 flex-1 cursor-pointer" role="button" tabIndex={0}
+          aria-label={`View evidence details: ${evidence.title}`}
+          onClick={onDetail}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onDetail(); } }}>
           <div className="flex items-center gap-2 mb-1">
             <p className="text-sm font-medium text-gray-900 truncate">{evidence.title}</p>
             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${

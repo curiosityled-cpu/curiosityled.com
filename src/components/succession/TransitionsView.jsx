@@ -130,27 +130,37 @@ export default function TransitionsView() {
     if (result) loadData();
   };
 
+  const [completeTarget, setCompleteTarget] = useState(null);
+  const [completeSummary, setCompleteSummary] = useState("");
+  const [cancelTarget, setCancelTarget] = useState(null);
+  const [cancelReason, setCancelReason] = useState("");
+
   const handleComplete = async (initiationId) => {
-    const summary = prompt("Enter completion summary (optional):");
-    if (summary === null) return;
     const result = await invoke("successionCompleteTransition", {
       operation_id: `complete-${Date.now()}`,
       initiation_id: initiationId,
-      completion_summary: summary || null,
+      completion_summary: completeSummary || null,
     });
-    if (result) loadData();
+    if (result) {
+      setCompleteTarget(null);
+      setCompleteSummary("");
+      loadData();
+    }
   };
 
   const handleCancel = async (initiationId) => {
-    const reason = prompt("Enter cancellation reason:");
-    if (!reason) return;
+    if (!cancelReason.trim()) return;
     const result = await invoke("successionChangeTransitionStatus", {
       operation_id: `cancel-${Date.now()}`,
       initiation_id: initiationId,
       new_status: "cancelled",
-      cancellation_reason: reason,
+      cancellation_reason: cancelReason,
     });
-    if (result) loadData();
+    if (result) {
+      setCancelTarget(null);
+      setCancelReason("");
+      loadData();
+    }
   };
 
   const filteredTransitions = statusFilter
@@ -176,6 +186,7 @@ export default function TransitionsView() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
+            aria-label="Filter transitions by status"
             className="text-sm border border-gray-200 rounded-md px-2 py-1 bg-white"
           >
             <option value="">All Statuses</option>
@@ -355,12 +366,12 @@ export default function TransitionsView() {
                       </Button>
                     )}
                     {t.status === "in_progress" && (
-                      <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handleComplete(t.initiation_id)}>
+                      <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => { setCompleteTarget(t.initiation_id); setCompleteSummary(""); }}>
                         <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Complete
                       </Button>
                     )}
                     {["draft", "requested", "approved", "in_progress"].includes(t.status) && (
-                      <Button size="sm" variant="outline" onClick={() => handleCancel(t.initiation_id)}>
+                      <Button size="sm" variant="outline" onClick={() => { setCancelTarget(t.initiation_id); setCancelReason(""); }}>
                         <XCircle className="w-3.5 h-3.5 mr-1" /> Cancel
                       </Button>
                     )}
@@ -369,8 +380,50 @@ export default function TransitionsView() {
               </CardContent>
             </Card>
           ))}
-        </div>
-      )}
-    </div>
-  );
-}
+          </div>
+          )}
+
+          {/* Complete dialog */}
+          {completeTarget && (
+          <Card className="border-2 border-green-300">
+          <CardHeader><CardTitle className="text-base">Complete Transition</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+           <div>
+             <Label htmlFor="complete-summary" className="text-xs">Completion Summary (optional)</Label>
+             <Textarea id="complete-summary" value={completeSummary} onChange={(e) => setCompleteSummary(e.target.value)}
+               placeholder="Summarize the transition outcome..." />
+           </div>
+           <div className="flex gap-2">
+             <Button onClick={() => handleComplete(completeTarget)} disabled={loading} className="bg-green-600 hover:bg-green-700">
+               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-1" />} Confirm Complete
+             </Button>
+             <Button variant="outline" onClick={() => { setCompleteTarget(null); setCompleteSummary(""); }}>Cancel</Button>
+           </div>
+          </CardContent>
+          </Card>
+          )}
+
+          {/* Cancel dialog */}
+          {cancelTarget && (
+          <Card className="border-2 border-red-300">
+          <CardHeader><CardTitle className="text-base">Cancel Transition</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+           <div>
+             <Label htmlFor="cancel-reason" className="text-xs">Cancellation Reason *</Label>
+             <Textarea id="cancel-reason" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)}
+               placeholder="Explain why this transition is being cancelled..." />
+           </div>
+           <div className="flex gap-2">
+             <Button onClick={() => handleCancel(cancelTarget)} disabled={loading || !cancelReason.trim()} variant="outline">
+               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4 mr-1" />} Confirm Cancel
+             </Button>
+             <Button variant="outline" onClick={() => { setCancelTarget(null); setCancelReason(""); }}>Close</Button>
+           </div>
+          </CardContent>
+          </Card>
+          )}
+
+          {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
+          </div>
+          );
+          }

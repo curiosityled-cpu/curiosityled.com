@@ -147,7 +147,7 @@ export default function TransitionDetailView({ initiationId, onBack }) {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={onBack}>← Back</Button>
+        <Button variant="ghost" size="sm" onClick={onBack} aria-label="Back to transitions">← Back</Button>
         <h2 className="text-lg font-semibold text-gray-900">Transition Detail</h2>
       </div>
 
@@ -245,7 +245,7 @@ export default function TransitionDetailView({ initiationId, onBack }) {
                 <div className="grid grid-cols3 gap-2">
                   <Input placeholder="Owner Profile ID" value={newKtArea.owner_profile_id} onChange={(e) => setNewKtArea({ ...newKtArea, owner_profile_id: e.target.value })} />
                   <Input type="date" value={newKtArea.target_date} onChange={(e) => setNewKtArea({ ...newKtArea, target_date: e.target.value })} />
-                  <select value={newKtArea.status} onChange={(e) => setNewKtArea({ ...newKtArea, status: e.target.value })} className="text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white">
+                  <select value={newKtArea.status} onChange={(e) => setNewKtArea({ ...newKtArea, status: e.target.value })} aria-label="New knowledge area status" className="text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white">
                     <option value="not_started">Not Started</option>
                     <option value="in_progress">In Progress</option>
                     <option value="completed">Completed</option>
@@ -277,7 +277,7 @@ export default function TransitionDetailView({ initiationId, onBack }) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-xs">Transition Type</Label>
-              <select value={tpForm.transition_type} onChange={(e) => setTpForm({ ...tpForm, transition_type: e.target.value })} disabled={!canEdit} className="w-full text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white">
+              <select value={tpForm.transition_type} onChange={(e) => setTpForm({ ...tpForm, transition_type: e.target.value })} disabled={!canEdit} aria-label="Transition type" className="w-full text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white">
                 <option value="promotion">Promotion</option>
                 <option value="lateral">Lateral</option>
                 <option value="acting">Acting</option>
@@ -318,13 +318,13 @@ export default function TransitionDetailView({ initiationId, onBack }) {
                 <Input placeholder="Risk description" value={newRisk.risk} onChange={(e) => setNewRisk({ ...newRisk, risk: e.target.value })} />
                 <Textarea placeholder="Mitigation" value={newRisk.mitigation} onChange={(e) => setNewRisk({ ...newRisk, mitigation: e.target.value })} />
                 <div className="grid grid-cols-3 gap-2">
-                  <select value={newRisk.severity} onChange={(e) => setNewRisk({ ...newRisk, severity: e.target.value })} className="text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white">
+                  <select value={newRisk.severity} onChange={(e) => setNewRisk({ ...newRisk, severity: e.target.value })} aria-label="New risk severity" className="text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white">
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
                   </select>
                   <Input placeholder="Owner Profile ID" value={newRisk.owner_profile_id} onChange={(e) => setNewRisk({ ...newRisk, owner_profile_id: e.target.value })} />
-                  <select value={newRisk.status} onChange={(e) => setNewRisk({ ...newRisk, status: e.target.value })} className="text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white">
+                  <select value={newRisk.status} onChange={(e) => setNewRisk({ ...newRisk, status: e.target.value })} aria-label="New risk status" className="text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white">
                     <option value="open">Open</option>
                     <option value="monitoring">Monitoring</option>
                     <option value="resolved">Resolved</option>

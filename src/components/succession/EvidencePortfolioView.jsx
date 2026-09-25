@@ -53,6 +53,8 @@ export default function EvidencePortfolioView({ candidacy }) {
   const [editingDraft, setEditingDraft] = useState(null);
   const [detailEvidence, setDetailEvidence] = useState(null);
   const [supersedeTarget, setSupersedeTarget] = useState(null);
+  const [withdrawTarget, setWithdrawTarget] = useState(null);
+  const [withdrawReason, setWithdrawReason] = useState("");
 
   const canManage = hasPermission("succession.evidence.manage");
   const canView = hasPermission("succession.evidence.view") || canManage;
@@ -138,15 +140,17 @@ export default function EvidencePortfolioView({ candidacy }) {
     } catch { /* handled by hook */ }
   };
 
-  const handleWithdraw = async (evidenceId, reason) => {
+  const handleWithdraw = async (evidenceId) => {
     const opId = `evidence-withdraw-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     try {
       await invoke("successionWithdrawOrSupersedeEvidence", {
         operation_id: opId,
         evidence_id: evidenceId,
         mode: "withdraw",
-        withdrawal_reason: reason,
+        withdrawal_reason: withdrawReason,
       });
+      setWithdrawTarget(null);
+      setWithdrawReason("");
       await fetchEvidence();
     } catch { /* handled by hook */ }
   };
@@ -211,7 +215,7 @@ export default function EvidencePortfolioView({ candidacy }) {
                 currentUserId={user?.id}
                 onEdit={() => setEditingDraft(e)}
                 onSubmit={() => handleSubmitEvidence(e.id)}
-                onWithdraw={() => { const r = prompt("Withdrawal reason:"); if (r !== null) handleWithdraw(e.id, r); }}
+                onWithdraw={() => { setWithdrawTarget(e); setWithdrawReason(""); }}
                 onSupersede={() => setSupersedeTarget(e)}
                 onDetail={() => setDetailEvidence(e)}
               />
@@ -250,6 +254,25 @@ export default function EvidencePortfolioView({ candidacy }) {
         </SuccessionSection>
       )}
 
+      {withdrawTarget && (
+        <SuccessionSection icon={Ban} title={`Withdraw Evidence: ${withdrawTarget.title}`}>
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="withdraw-reason" className="text-xs text-gray-600">Withdrawal Reason *</Label>
+              <textarea id="withdraw-reason" className="mt-1 w-full text-sm border border-gray-200 rounded-md px-2 py-1.5 min-h-[60px]"
+                placeholder="Explain why this evidence is being withdrawn..."
+                value={withdrawReason} onChange={e => setWithdrawReason(e.target.value)} />
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={() => handleWithdraw(withdrawTarget.id)} disabled={loading || !withdrawReason.trim()}>
+                Confirm Withdraw
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => { setWithdrawTarget(null); setWithdrawReason(""); }}>Cancel</Button>
+            </div>
+          </div>
+        </SuccessionSection>
+      )}
+
       {detailEvidence && (
         <EvidenceDetailDrawer
           evidenceId={detailEvidence.id}
@@ -281,7 +304,10 @@ function EvidenceRow({ evidence, canManage, currentUserId, onEdit, onSubmit, onW
   return (
     <div className="border border-gray-200 rounded-lg p-3 bg-white">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1 cursor-pointer" onClick={onDetail}>
+        <div className="min-w-0 flex-1 cursor-pointer" role="button" tabIndex={0}
+          aria-label={`View evidence details: ${evidence.title}`}
+          onClick={onDetail}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onDetail(); } }}>
           <div className="flex items-center gap-2 mb-1">
             <p className="text-sm font-medium text-gray-900 truncate">{evidence.title}</p>
             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLES[evidence.status] || STATUS_STYLES.draft}`}>
