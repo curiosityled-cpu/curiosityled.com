@@ -41,6 +41,35 @@ export const GRANT_DISABLED_MESSAGE =
   "The grant workflow and dedicated read function must pass security testing " +
   "before this path can be activated. Production activation requires a separate approval.";
 
+// ── Platform Admin full-access flag (TEMPORARY stabilization measure) ────────
+// Reads the PLATFORM_ADMIN_FULL_ACCESS secret. Unset or any value other than
+// "true" means DISABLED (the default — Platform Admin is denied all succession
+// access per the Phase 1 separation-of-duties gate).
+//
+// When ENABLED, Platform Admin bypasses the standing-access denial and the
+// per-action permission check in authorizeSuccessionAction, and receives
+// legally_restricted confidentiality clearance. This gives the platform
+// operator full read/write/approve access to any tenant whose client_id
+// matches the Platform Admin's profile client_id.
+//
+// REVISIT THRESHOLD: This flag is a temporary measure for early-stage platform
+// stabilization. It should be turned OFF (secret removed or set to "false")
+// when ANY of the following become true:
+//   1. Active client count exceeds ~10 tenants, OR
+//   2. Phase 2 succession module reaches production stability, OR
+//   3. The cross-tenant grant workflow passes security testing and is activated.
+// At that point, Platform Admin access must flow through the grant mechanism
+// with per-action audit and time-boxed leases — not standing access.
+//
+// The frontend cannot override this. Toggled via the Secrets dashboard.
+export function isPlatformAdminFullAccessEnabled(): boolean {
+  try {
+    return secrets.get("PLATFORM_ADMIN_FULL_ACCESS") === "true";
+  } catch {
+    return false;
+  }
+}
+
 // ── Permitted grant actions (NO export in the first release) ──────────────
 export const GRANT_PERMITTED_ACTIONS = [
   "read_metadata",

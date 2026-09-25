@@ -12,7 +12,7 @@
 
 import { writeSuccessionAuditEvent } from "./successionAuditWriter.ts";
 import { isWithinClearance } from "./confidentialityFilter.ts";
-import { isGrantFeatureEnabled, GRANT_DISABLED_MESSAGE } from "./successionConstants.ts";
+import { isGrantFeatureEnabled, GRANT_DISABLED_MESSAGE, isPlatformAdminFullAccessEnabled } from "./successionConstants.ts";
 import type { BootstrapAuthContext } from "./successionAuthBootstrap.ts";
 
 export interface AuthorizationResult {
@@ -53,7 +53,12 @@ export async function authorizeSuccessionAction(
   // record's client_id. This denial runs BEFORE the permission check, tenant
   // scope check, wildcard check, and role bypass. It cannot be overridden by
   // client_id match, wildcard permission, role bypass, or support purpose.
-  if (auth.isPlatformAdmin) {
+  //
+  // TEMPORARY OVERRIDE: When PLATFORM_ADMIN_FULL_ACCESS is enabled (see
+  // successionConstants.ts), Platform Admin bypasses this denial and the
+  // permission check below. This is a stabilization measure with a revisit
+  // threshold — see the flag documentation for when to turn it off.
+  if (auth.isPlatformAdmin && !isPlatformAdminFullAccessEnabled()) {
     await writeSuccessionAuditEvent({
       base44,
       action_type: "denied_action",
@@ -79,7 +84,9 @@ export async function authorizeSuccessionAction(
   }
 
   // ── 1. Permission check ──────────────────────────────────────────────────
-  if (params.required_permission) {
+  // Platform Admin with full-access flag bypasses the permission check
+  // entirely (including explicit_permission_only approval gates).
+  if (params.required_permission && !(auth.isPlatformAdmin && isPlatformAdminFullAccessEnabled())) {
     // explicit_permission_only: require an exact grant. No Platform Admin
     // bypass, no "*" wildcard. Used for tenant-scoped approvals where the
     // platform operator must not hold standing approval authority.
@@ -236,6 +243,12 @@ function getCallerClearance(auth: BootstrapAuthContext): string {
   // authorization path not yet implemented. Platform Admins get
   // highly_confidential (same as tenant admins). Per-role clearance mapping
   // will be refined in later phases.
+  //
+  // TEMPORARY OVERRIDE: When PLATFORM_ADMIN_FULL_ACCESS is enabled, Platform
+  // Admin receives legally_restricted clearance for full stabilization access.
+  if (auth.isPlatformAdmin && isPlatformAdminFullAccessEnabled()) {
+    return "legally_restricted";
+  }
   const adminRoles = [
     "Platform Admin",
     "Platform Administrator",
