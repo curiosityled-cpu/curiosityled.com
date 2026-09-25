@@ -2,35 +2,51 @@
  * ManagerTeam — depth-aware Team Landscape view.
  * Route: /team
  *
- * Layout adapts by leader_level (from getTeamRollup):
- *  - Level 1:      empty state (no direct reports)
- *  - Level 2:      Team Pulse hero + aggregate cards + KPIs + IC roster + at-risk
- *  - Level 3-5:    Team Pulse hero + aggregate cards + subtree card grid (depth-aware)
- *  - Enterprise/Portfolio scopes: keep the existing full/aggregated layout
+ * Layout mirrors the Lead/Practice page rhythm:
+ *   - Team hero header with pulse signal
+ *   - Two-column grid: main content (left) | context sidebar (right)
+ *   - ZoneCard collapsible sections with icons + accent colors
+ *   - Action tiles for team-related tools
+ *
+ * Depth-aware by leader_level (from getTeamRollup):
+ *   - Level 1:    empty state (no direct reports)
+ *   - Level 2:    IC roster + at-risk
+ *   - Level 3-5:  subtree card grid with inline drill-down
+ *   - Enterprise/Portfolio: keep existing full/aggregated layout
  */
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { Users, Gauge, AlertTriangle, Loader2, RefreshCw, Info } from "lucide-react";
+import {
+  Users, Gauge, AlertTriangle, Loader2, Info,
+  TrendingUp, Activity, ChevronRight, Brain, ClipboardList, Layers,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import TeamSummaryCards from "@/components/team/TeamSummaryCards";
 import TeamMemberRow from "@/components/team/TeamMemberRow";
 import TeamKpiList from "@/components/team/TeamKpiList";
 import TeamPulseHero from "@/components/team/TeamPulseHero";
 import SubtreeCardGrid from "@/components/team/SubtreeCardGrid";
+import TeamHeroHeader from "@/components/team/TeamHeroHeader";
+import ZoneCard from "@/components/density/ZoneCard";
 
-function SectionBar({ icon: Icon, label, action }) {
-  return (
-    <div className="px-5 pt-4 pb-2 flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <Icon className="w-4 h-4 text-[#0202ff]" />
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500">{label}</h2>
+function ActionTile({ icon: Icon, iconBg, iconColor, title, description, to }) {
+  const content = (
+    <div className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-muted/40 transition-colors active:bg-muted/60 group">
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
+        <Icon className={`w-4.5 h-4.5 ${iconColor}`} />
       </div>
-      {action}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-card-foreground">{title}</p>
+        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{description}</p>
+      </div>
+      <ChevronRight className="w-4 h-4 flex-shrink-0 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
     </div>
   );
+  if (to) return <Link to={to} className="block">{content}</Link>;
+  return content;
 }
 
 export default function ManagerTeam() {
@@ -62,7 +78,6 @@ export default function ManagerTeam() {
   const isAggregatedOnly = detailLevel === "aggregated";
   const isDirectsOnly = detailLevel === "directs";
 
-  // Depth-aware layout applies only to vertical (manager) scope
   const isDepthAware = scopeType === "vertical";
   const isICLevel = isDepthAware && leaderLevel <= 1;
   const isSubtreeLevel = isDepthAware && leaderLevel >= 3;
@@ -77,27 +92,7 @@ export default function ManagerTeam() {
     : "No reports in your tree yet.";
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
-      {/* Header */}
-      <div className="flex items-start justify-between pt-1">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{scopeLabel}</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {rollup ? subtitle : "Progress and rollups across your scope."}
-          </p>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => refetch()}
-          disabled={isFetching}
-          className="text-gray-500 hover:text-gray-800"
-        >
-          <RefreshCw className={`w-4 h-4 mr-1.5 ${isFetching ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
-      </div>
-
+    <div className="px-4 py-6 max-w-6xl mx-auto">
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-6 h-6 text-[#0202ff] animate-spin" />
@@ -113,24 +108,38 @@ export default function ManagerTeam() {
           </div>
         </Card>
       ) : isICLevel ? (
-        /* Level 1 — no direct reports yet */
-        <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl">
-          <div className="px-5 py-12 text-center">
-            <Users className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-sm font-medium text-gray-800">You don't have direct reports yet.</p>
-            <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto">
-              Once your team is assigned, you'll see goal progress, assessments, and check-ins roll up here. Your leadership level is set to {leaderLevel === 1 ? "Leading Self" : "HiPo Individual Contributor"}.
-            </p>
-          </div>
-        </Card>
+        <>
+          <TeamHeroHeader
+            scopeLabel={scopeLabel}
+            subtitle="Your team landscape"
+            pulse={null}
+            isFetching={isFetching}
+            onRefresh={() => refetch()}
+          />
+          <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl">
+            <div className="px-5 py-12 text-center">
+              <Users className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+              <p className="text-sm font-medium text-gray-800">You don't have direct reports yet.</p>
+              <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto">
+                Once your team is assigned, you'll see goal progress, assessments, and check-ins roll up here.
+              </p>
+            </div>
+          </Card>
+        </>
       ) : (
         <>
-          {/* Team Pulse hero — synthesized situational read */}
-          {rollup?.team_pulse && <TeamPulseHero rollup={rollup} />}
+          {/* ── Hero header ── */}
+          <TeamHeroHeader
+            scopeLabel={scopeLabel}
+            subtitle={subtitle}
+            pulse={rollup?.team_pulse}
+            isFetching={isFetching}
+            onRefresh={() => refetch()}
+          />
 
-          {/* Scope note for directs-only: aggregates span the full tree */}
+          {/* Scope note for directs-only */}
           {isDirectsOnly && detailSize < scopeSize && (
-            <div className="flex items-start gap-2 px-4 py-2.5 bg-[#0202ff]/5 border border-[#0202ff]/15 rounded-xl">
+            <div className="flex items-start gap-2 px-4 py-2.5 mb-4 bg-[#0202ff]/5 border border-[#0202ff]/15 rounded-xl">
               <Info className="w-3.5 h-3.5 text-[#0202ff] mt-0.5 flex-shrink-0" />
               <p className="text-xs text-gray-600">
                 Aggregates span your full reporting tree of {scopeSize} people. Individual results show your {detailSize} direct {detailSize === 1 ? "report" : "reports"}.
@@ -138,52 +147,143 @@ export default function ManagerTeam() {
             </div>
           )}
 
-          {/* Aggregate summary */}
-          <TeamSummaryCards aggregates={aggregates} teamSize={scopeSize} />
+          {/* ── Two-column grid: Main (left) | Context sidebar (right) ── */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+            {/* Left — Main content */}
+            <div className="space-y-4">
+              {/* Team Pulse — synthesized situational read */}
+              {rollup?.team_pulse && <TeamPulseHero rollup={rollup} />}
 
-          {/* At-risk — only when per-member detail is available */}
-          {!isAggregatedOnly && atRisk.length > 0 && (
-            <Card className="shadow-sm border border-amber-100 bg-amber-50/40 rounded-2xl overflow-hidden">
-              <SectionBar icon={AlertTriangle} label={`At-risk signals · ${atRisk.length}`} />
-              <div className="px-5 pb-4 space-y-2">
-                {atRisk.map((r) => (
-                  <div key={r.email} className="flex items-start gap-2">
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-800">{r.full_name || r.email}</p>
-                      <p className="text-xs text-gray-500">{r.reasons.join(" · ")}</p>
+              {/* At-risk zone */}
+              {!isAggregatedOnly && atRisk.length > 0 && (
+                <ZoneCard
+                  title={`At-risk signals · ${atRisk.length}`}
+                  icon={AlertTriangle}
+                  iconColor="text-amber-500"
+                  accentColor="#f59e0b"
+                  collapsible
+                  defaultExpanded
+                >
+                  <div className="space-y-2">
+                    {atRisk.map((r) => (
+                      <div key={r.email} className="flex items-start gap-2 px-1">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-800">{r.full_name || r.email}</p>
+                          <p className="text-xs text-gray-500">{r.reasons.join(" · ")}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ZoneCard>
+              )}
+
+              {/* Roster or Subtree Cards */}
+              {isSubtreeLevel && subtreeCards.length > 0 ? (
+                <div className="space-y-3">
+                  <div className="px-1 pt-1">
+                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Team Leads · {subtreeCards.length}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Each lead's subtree health, with inline drill-down for deeper hierarchies.
+                    </p>
+                  </div>
+                  <SubtreeCardGrid subtreeCards={subtreeCards} level={leaderLevel} atRisk={atRisk} />
+                </div>
+              ) : !isAggregatedOnly && members.length > 0 ? (
+                <div className="space-y-3">
+                  <div className="px-1 pt-1">
+                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Roster · {members.length}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {isDirectsOnly
+                        ? `Your ${detailSize} direct ${detailSize === 1 ? "report" : "reports"}. Tap a row for detail.`
+                        : "People in your scope. Tap a row for detail."}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                    <div className="divide-y divide-border">
+                      {members.map((m) => (
+                        <TeamMemberRow key={m.id || m.email} member={m} isAtRisk={atRiskEmails.has(m.email)} />
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
-            </Card>
-          )}
-
-          {/* KPIs */}
-          <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
-            <SectionBar icon={Gauge} label={`${scopeLabel} KPIs`} />
-            <TeamKpiList kpis={kpis} members={members} />
-          </Card>
-
-          {/* Depth-aware subtree card grid — Level 3+ */}
-          {isSubtreeLevel && subtreeCards.length > 0 && (
-            <div>
-              <SectionBar icon={Users} label={`Team Leads · ${subtreeCards.length}`} />
-              <SubtreeCardGrid subtreeCards={subtreeCards} level={leaderLevel} atRisk={atRisk} />
+                </div>
+              ) : null}
             </div>
-          )}
 
-          {/* IC roster — Level 2 or enterprise/portfolio full detail */}
-          {!isAggregatedOnly && !isSubtreeLevel && members.length > 0 && (
-            <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
-              <SectionBar icon={Users} label={`Roster · ${members.length}`} />
+            {/* Right — Context sidebar */}
+            <div className="space-y-4 md:sticky md:top-20 md:self-start">
+              {/* Aggregate summary */}
               <div>
-                {members.map((m) => (
-                  <TeamMemberRow key={m.id || m.email} member={m} isAtRisk={atRiskEmails.has(m.email)} />
-                ))}
+                <div className="px-1 pt-1 mb-2">
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Team Health
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Goal progress, assessments, and check-in participation across your scope.
+                  </p>
+                </div>
+                <TeamSummaryCards aggregates={aggregates} teamSize={scopeSize} />
               </div>
-            </Card>
-          )}
+
+              {/* KPIs */}
+              {kpis.length > 0 && (
+                <ZoneCard
+                  title={`${scopeLabel} KPIs`}
+                  icon={Gauge}
+                  iconColor="text-[#0202ff]"
+                  accentColor="#0202ff"
+                  collapsible
+                  defaultExpanded={false}
+                >
+                  <TeamKpiList kpis={kpis} members={members} />
+                </ZoneCard>
+              )}
+
+              {/* Team Tools */}
+              <div className="space-y-3">
+                <div className="px-1 pt-1">
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Team Tools
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Jump to a structured tool to prepare, plan, or review with your team.
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                  <div className="divide-y divide-border">
+                    <ActionTile
+                      icon={Users}
+                      iconBg="bg-sky-50 dark:bg-sky-950/40"
+                      iconColor="text-sky-600"
+                      title="1:1 prep & notes"
+                      description="Prepare questions, review commitments, track notes."
+                      to="/one-on-ones"
+                    />
+                    <ActionTile
+                      icon={Layers}
+                      iconBg="bg-orange-50 dark:bg-orange-950/40"
+                      iconColor="text-orange-600"
+                      title="Delegation planner"
+                      description="Identify what to hand off and set your team up to win."
+                      to="/delegation-planner"
+                    />
+                    <ActionTile
+                      icon={Brain}
+                      iconBg="bg-rose-50 dark:bg-rose-950/40"
+                      iconColor="text-rose-600"
+                      title="Leadership Support Tool"
+                      description="Think through a high-stakes moment and review outcomes later."
+                      to="/decision-journal"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </>
       )}
     </div>

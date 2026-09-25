@@ -63,13 +63,13 @@ export default function TeamPulseHero({ rollup }) {
 
   return (
     <>
-      <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
+      <Card className="shadow-sm border border-border bg-card rounded-2xl overflow-hidden">
         <div className="px-5 pt-5 pb-1 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-[#0202ff] flex items-center justify-center">
               <Activity className="w-3.5 h-3.5 text-white" />
             </div>
-            <p className="text-sm font-semibold text-gray-900">Team Pulse</p>
+            <p className="text-sm font-semibold text-card-foreground">Team Pulse</p>
           </div>
           <button
             onClick={() => setDrawerOpen(true)}
@@ -81,7 +81,7 @@ export default function TeamPulseHero({ rollup }) {
         </div>
 
         <CardContent className="px-5 pt-3 pb-5 space-y-3">
-          <p className="text-base font-semibold text-gray-900 leading-snug">{pulse.headline}</p>
+          <p className="text-base font-semibold text-card-foreground leading-snug">{pulse.headline}</p>
 
           {chips.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
@@ -97,7 +97,7 @@ export default function TeamPulseHero({ rollup }) {
             </div>
           )}
 
-          <p className="text-sm text-gray-500 leading-relaxed line-clamp-3">{pulse.body}</p>
+          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">{pulse.body}</p>
           <button
             onClick={() => setDrawerOpen(true)}
             className="text-xs text-gray-400 hover:text-[#0202ff] transition-colors -mt-1"

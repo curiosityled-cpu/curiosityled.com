@@ -22,10 +22,10 @@ export default function TeamMemberRow({ member, isAtRisk }) {
   const name = m.full_name || m.email;
 
   return (
-    <div className="border-b border-gray-100 last:border-b-0">
+    <div>
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors text-left"
       >
         <div className="w-9 h-9 rounded-full bg-[#0202ff]/10 text-[#0202ff] flex items-center justify-center text-xs font-semibold flex-shrink-0">
           {initials(name)}
@@ -45,7 +45,7 @@ export default function TeamMemberRow({ member, isAtRisk }) {
       </button>
 
       {open && (
-        <div className="px-4 pb-4 pt-1 bg-gray-50/50">
+        <div className="px-4 pb-4 pt-1 bg-muted/30">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
             <div className="bg-white border border-gray-100 rounded-xl p-3">
               <div className="flex items-center gap-1.5 mb-1">

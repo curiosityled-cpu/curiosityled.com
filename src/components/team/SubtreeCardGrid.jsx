@@ -15,8 +15,8 @@ function MetricChip({ icon: Icon, label, value, color }) {
   return (
     <div className="flex items-center gap-1.5">
       <Icon className={`w-3 h-3 ${color}`} />
-      <span className="text-xs text-gray-500">{label}</span>
-      <span className="text-xs font-semibold text-gray-800">{value}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className="text-xs font-semibold text-card-foreground">{value}</span>
     </div>
   );
 }
@@ -35,11 +35,11 @@ function SubtreeCard({ card, level, atRisk, isExpanded, onToggle }) {
   const avgPct = card.assessments?.avg_overall_pct;
 
   return (
-    <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
+    <Card className="shadow-sm border border-border bg-card rounded-2xl overflow-hidden">
       {/* Card header */}
       <button
         onClick={level >= 4 ? onToggle : undefined}
-        className={`w-full px-5 pt-4 pb-3 flex items-center justify-between ${level >= 4 ? "hover:bg-gray-50" : ""} transition-colors text-left`}
+        className={`w-full px-5 pt-4 pb-3 flex items-center justify-between ${level >= 4 ? "hover:bg-muted/40" : ""} transition-colors text-left`}
       >
         <div className="flex items-center gap-3">
           {showName ? (
@@ -49,20 +49,20 @@ function SubtreeCard({ card, level, atRisk, isExpanded, onToggle }) {
               </span>
             </div>
           ) : (
-            <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-              <Users className="w-4 h-4 text-gray-500" />
+            <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+              <Users className="w-4 h-4 text-muted-foreground" />
             </div>
           )}
           <div>
             {showName ? (
               <>
-                <p className="text-sm font-semibold text-gray-900">{card.full_name || card.email}</p>
+                <p className="text-sm font-semibold text-card-foreground">{card.full_name || card.email}</p>
                 {card.current_role && (
-                  <p className="text-xs text-gray-500">{card.current_role}</p>
+                  <p className="text-xs text-muted-foreground">{card.current_role}</p>
                 )}
               </>
             ) : (
-              <p className="text-sm font-semibold text-gray-900">
+              <p className="text-sm font-semibold text-card-foreground">
                 {card.subtree_size} {card.subtree_size === 1 ? "person" : "people"}
               </p>
             )}
@@ -83,30 +83,30 @@ function SubtreeCard({ card, level, atRisk, isExpanded, onToggle }) {
 
       {/* Metrics row */}
       <div className="px-5 pb-4 flex flex-wrap gap-x-4 gap-y-2">
-        <MetricChip icon={Users} label="Team" value={card.subtree_size} color="text-gray-400" />
+        <MetricChip icon={Users} label="Team" value={card.subtree_size} color="text-muted-foreground" />
         {card.goals?.total > 0 && (
-          <MetricChip icon={Target} label="Goals" value={`${completionPct}%`} color="text-gray-400" />
+          <MetricChip icon={Target} label="Goals" value={`${completionPct}%`} color="text-muted-foreground" />
         )}
-        <MetricChip icon={Activity} label="Check-ins" value={`${participationPct}%`} color="text-gray-400" />
+        <MetricChip icon={Activity} label="Check-ins" value={`${participationPct}%`} color="text-muted-foreground" />
         {avgPct != null && (
-          <MetricChip icon={BarChart3} label="Assessment" value={`${avgPct}%`} color="text-gray-400" />
+          <MetricChip icon={BarChart3} label="Assessment" value={`${avgPct}%`} color="text-muted-foreground" />
         )}
       </div>
 
       {/* Expanded drill-down (Level 4+) */}
       {level >= 4 && isExpanded && card.at_risk_count > 0 && (
-        <div className="px-5 pb-4 pt-1 border-t border-gray-100 space-y-1.5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 pt-2">
+        <div className="px-5 pb-4 pt-1 border-t border-border space-y-1.5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground pt-2">
             {card.at_risk_count} {card.at_risk_count === 1 ? "person" : "people"} needing attention in this subtree
           </p>
-          <p className="text-xs text-gray-500 leading-relaxed">
+          <p className="text-xs text-muted-foreground leading-relaxed">
             Review the at-risk section above for specific names and reasons. Consider a check-in with {card.full_name?.split(" ")[0] || "this lead"} to unblock.
           </p>
         </div>
       )}
       {level >= 4 && isExpanded && card.at_risk_count === 0 && (
-        <div className="px-5 pb-4 pt-1 border-t border-gray-100">
-          <p className="text-xs text-gray-500 pt-2">No at-risk signals in this subtree. Team is in a steady state.</p>
+        <div className="px-5 pb-4 pt-1 border-t border-border">
+          <p className="text-xs text-muted-foreground pt-2">No at-risk signals in this subtree. Team is in a steady state.</p>
         </div>
       )}
     </Card>
