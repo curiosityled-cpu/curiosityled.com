@@ -70,11 +70,11 @@ export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals =
   const [kpiExpanded, setKpiExpanded] = useState(() => {
     try { const s = localStorage.getItem("cl_collapse_scorecard_kpi"); return s !== null ? JSON.parse(s) : true; } catch { return true; }
   });
-  const [orgGoalsExpanded, setOrgGoalsExpanded] = useState(() => {
-    try { const s = localStorage.getItem("cl_collapse_scorecard_orggoals"); return s !== null ? JSON.parse(s) : true; } catch { return true; }
-  });
   const [goalsExpanded, setGoalsExpanded] = useState(() => {
-    try { const s = localStorage.getItem("cl_collapse_scorecard_goals"); return s !== null ? JSON.parse(s) : false; } catch { return false; }
+    try { const s = localStorage.getItem("cl_collapse_scorecard_goals"); return s !== null ? JSON.parse(s) : true; } catch { return true; }
+  });
+  const [devExpanded, setDevExpanded] = useState(() => {
+    try { const s = localStorage.getItem("cl_collapse_scorecard_dev"); return s !== null ? JSON.parse(s) : true; } catch { return true; }
   });
   const [scorecardExpanded, setScorecardExpanded] = useState(() => {
     try { const s = localStorage.getItem("cl_collapse_scorecard"); return s !== null ? JSON.parse(s) : true; } catch { return true; }
@@ -151,46 +151,14 @@ export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals =
           </div>
         )}
 
-        {/* ── Org Goals sub-card ─────────────────────────────────────── */}
-        {activeCascaded.length > 0 && (
-          <div className="bg-card border border-border rounded-2xl px-5 py-4">
-            <button
-              className="flex items-center justify-between w-full text-left"
-              onClick={() => { const v = !orgGoalsExpanded; setOrgGoalsExpanded(v); try { localStorage.setItem("cl_collapse_scorecard_orggoals", JSON.stringify(v)); } catch {} }}
-            >
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Org Goals</p>
-              <div className="flex items-center gap-2">
-                <SectionLink to="/my-performance" label="All" />
-                {orgGoalsExpanded
-                  ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                  : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
-              </div>
-            </button>
-            {orgGoalsExpanded && (
-              <div className="space-y-1.5 mt-2">
-                {activeCascaded.slice(0, 3).map(g => (
-                  <div key={g.id} className="flex items-center gap-2">
-                    <Target className="w-3 h-3 text-indigo-500 flex-shrink-0" />
-                    <p className="text-xs text-foreground truncate flex-1">{g.title}</p>
-                    <span className="text-[10px] text-muted-foreground flex-shrink-0">{g.progress || 0}%</span>
-                  </div>
-                ))}
-                {activeCascaded.length > 3 && (
-                  <p className="text-[10px] text-muted-foreground pl-5">+{activeCascaded.length - 3} more</p>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── My Goals sub-card ──────────────────────────────────────── */}
-        {activeGoals.length > 0 && (
+        {/* ── Goals sub-card (Org Goals + My Goals) ──────────────────── */}
+        {(activeCascaded.length > 0 || activeGoals.length > 0) && (
           <div className="bg-card border border-border rounded-2xl px-5 py-4">
             <button
               className="flex items-center justify-between w-full text-left"
               onClick={() => { const v = !goalsExpanded; setGoalsExpanded(v); try { localStorage.setItem("cl_collapse_scorecard_goals", JSON.stringify(v)); } catch {} }}
             >
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">My Goals</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Goals</p>
               <div className="flex items-center gap-2">
                 <SectionLink to="/my-performance" label="All" />
                 {goalsExpanded
@@ -199,18 +167,45 @@ export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals =
               </div>
             </button>
             {goalsExpanded && (
-              <div className="space-y-2 mt-2">
-                {activeGoals.slice(0, 3).map(g => (
-                  <div key={g.id}>
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-xs font-medium text-foreground truncate flex-1 mr-2">{g.title}</p>
-                      <span className="text-[10px] text-muted-foreground flex-shrink-0">{g.progress || 0}%</span>
+              <div className="mt-2 space-y-3">
+                {activeCascaded.length > 0 && (
+                  <div>
+                    <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-widest mb-1.5">Org Goals</p>
+                    <div className="space-y-1.5">
+                      {activeCascaded.slice(0, 3).map(g => (
+                        <div key={g.id} className="flex items-center gap-2">
+                          <Target className="w-3 h-3 text-indigo-500 flex-shrink-0" />
+                          <p className="text-xs text-foreground truncate flex-1">{g.title}</p>
+                          <span className="text-[10px] text-muted-foreground flex-shrink-0">{g.progress || 0}%</span>
+                        </div>
+                      ))}
+                      {activeCascaded.length > 3 && (
+                        <p className="text-[10px] text-muted-foreground pl-5">+{activeCascaded.length - 3} more</p>
+                      )}
                     </div>
-                    <Progress value={g.progress || 0} className="h-1" />
                   </div>
-                ))}
-                {activeGoals.length > 3 && (
-                  <p className="text-[10px] text-muted-foreground">+{activeGoals.length - 3} more active</p>
+                )}
+                {activeCascaded.length > 0 && activeGoals.length > 0 && (
+                  <div className="border-t border-border/40" />
+                )}
+                {activeGoals.length > 0 && (
+                  <div>
+                    <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-widest mb-1.5">My Goals</p>
+                    <div className="space-y-2">
+                      {activeGoals.slice(0, 3).map(g => (
+                        <div key={g.id}>
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-xs font-medium text-foreground truncate flex-1 mr-2">{g.title}</p>
+                            <span className="text-[10px] text-muted-foreground flex-shrink-0">{g.progress || 0}%</span>
+                          </div>
+                          <Progress value={g.progress || 0} className="h-1" />
+                        </div>
+                      ))}
+                      {activeGoals.length > 3 && (
+                        <p className="text-[10px] text-muted-foreground">+{activeGoals.length - 3} more active</p>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
             )}
@@ -220,22 +215,32 @@ export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals =
         {/* ── My Development sub-card ───────────────────────────────── */}
         {hasDevData && (
           <div className="bg-card border border-border rounded-2xl px-5 py-4">
-            <div className="flex items-center justify-between mb-3">
+            <button
+              className="flex items-center justify-between w-full text-left"
+              onClick={() => { const v = !devExpanded; setDevExpanded(v); try { localStorage.setItem("cl_collapse_scorecard_dev", JSON.stringify(v)); } catch {} }}
+            >
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">My Development</p>
-              <SectionLink to="/my-development" label="All" />
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {DEV_STATS.map((s) => {
-                const Icon = s.icon;
-                return (
-                  <div key={s.key} className={`rounded-xl ${s.bg} px-2.5 py-2.5 text-center`}>
-                    <Icon className={`w-3.5 h-3.5 mx-auto mb-1.5 ${s.color}`} />
-                    <p className={`text-lg font-bold leading-none ${s.color}`}>{devStats[s.key]}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1 leading-tight">{s.label}</p>
-                  </div>
-                );
-              })}
-            </div>
+              <div className="flex items-center gap-2">
+                <SectionLink to="/my-development" label="All" />
+                {devExpanded
+                  ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                  : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
+              </div>
+            </button>
+            {devExpanded && (
+              <div className="grid grid-cols-3 gap-2 mt-3">
+                {DEV_STATS.map((s) => {
+                  const Icon = s.icon;
+                  return (
+                    <div key={s.key} className={`rounded-xl ${s.bg} px-2.5 py-2.5 text-center`}>
+                      <Icon className={`w-3.5 h-3.5 mx-auto mb-1.5 ${s.color}`} />
+                      <p className={`text-lg font-bold leading-none ${s.color}`}>{devStats[s.key]}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1 leading-tight">{s.label}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>
