@@ -116,6 +116,13 @@ const DOMAIN_ENTITY_NAMES = new Set([
   "CandidateSelfDisclosure",
   "EvidenceRecord",
   "EvidenceReviewDecision",
+  "ReadinessConclusion",
+  "ReadinessEvidenceCitation",
+  "ReadinessCondition",
+  "CalibrationSession",
+  "CalibrationCase",
+  "CalibrationJudgment",
+  "GovernanceApproval",
 ]);
 
 // ═══════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,164 @@
+{
+  "name": "CalibrationJudgment",
+  "type": "object",
+  "description": "A single panelist's blind judgment on a CalibrationCase. Blind (revealed=false) until the case is finalized. Panelists with COI must abstain and do not count toward quorum. Append-only \u2014 never updated or deleted.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side."
+    },
+    "calibration_case_id": {
+      "type": "string",
+      "description": "CalibrationCase ID this judgment belongs to. Required."
+    },
+    "panelist_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the panelist. Derived server-side. Must be in the case panel roster."
+    },
+    "eligibility_status": {
+      "type": "string",
+      "enum": [
+        "eligible",
+        "abstained_due_to_coi",
+        "disqualified"
+      ],
+      "default": "eligible",
+      "description": "eligibility_status determines whether the judgment counts toward quorum. eligible = counts. abstained_due_to_coi = COI disclosed, does not count. disqualified = removed, does not count."
+    },
+    "coi_disclosed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the panelist disclosed a conflict of interest."
+    },
+    "judgment_value": {
+      "type": "string",
+      "enum": [
+        "ready_now",
+        "ready_with_conditions",
+        "emerging",
+        "insufficient_evidence",
+        "not_aligned_now"
+      ],
+      "description": "The panelist's readiness judgment. Null if abstained_due_to_coi or disqualified."
+    },
+    "judgment_notes": {
+      "type": "string",
+      "description": "Optional notes from the panelist."
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the judgment was recorded. Set server-side."
+    },
+    "revealed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this judgment has been revealed. Blind (false) until the case is finalized. Backend responses suppress judgment_value for other panelists before reveal."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "active"
+    },
+    "quarantine_reason": {
+      "type": "string"
+    },
+    "quarantined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quarantined_by_operation_id": {
+      "type": "string"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "pending"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "calibration_case_id",
+    "panelist_profile_id",
+    "eligibility_status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

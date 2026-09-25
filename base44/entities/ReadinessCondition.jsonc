@@ -1,0 +1,160 @@
+{
+  "name": "ReadinessCondition",
+  "type": "object",
+  "description": "A condition attached to a ReadinessConclusion (e.g. for ready_with_conditions). Condition status changes never automatically change readiness \u2014 conditions are tracked independently and require a new conclusion version to affect readiness.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side."
+    },
+    "readiness_conclusion_id": {
+      "type": "string",
+      "description": "ReadinessConclusion ID this condition belongs to. Required."
+    },
+    "condition_text": {
+      "type": "string",
+      "description": "The condition statement. Required."
+    },
+    "owner_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the user responsible for fulfilling this condition. Required."
+    },
+    "required_by_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date by which this condition should be met. Required."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "in_progress",
+        "met",
+        "not_met",
+        "waived"
+      ],
+      "default": "open",
+      "description": "Condition lifecycle. open = newly created. in_progress = being worked. met = fulfilled. not_met = failed. waived = formally waived with reason."
+    },
+    "waiver_reason": {
+      "type": "string",
+      "description": "Reason for waiver. Required when status is waived."
+    },
+    "updated_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the user who last updated the condition status. Derived server-side."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the condition status was last updated. Set server-side."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "active"
+    },
+    "quarantine_reason": {
+      "type": "string"
+    },
+    "quarantined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quarantined_by_operation_id": {
+      "type": "string"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "pending"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "readiness_conclusion_id",
+    "condition_text",
+    "owner_profile_id",
+    "required_by_date",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

@@ -1,0 +1,163 @@
+{
+  "name": "CalibrationSession",
+  "type": "object",
+  "description": "A calibration session within a succession cycle. Contains one or more CalibrationCases, each linked to a submitted readiness conclusion. Panelists record blind judgments; the case is finalized when quorum and concurrence are met.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side."
+    },
+    "cycle_id": {
+      "type": "string",
+      "description": "SuccessionCycle ID this session belongs to. Required."
+    },
+    "scheduled_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the calibration session is scheduled. Required."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "in_progress",
+        "completed",
+        "cancelled"
+      ],
+      "default": "scheduled",
+      "description": "Session lifecycle. scheduled = created. in_progress = first judgment recorded. completed = all cases finalized. cancelled = removed."
+    },
+    "quorum_required": {
+      "type": "number",
+      "default": 3,
+      "description": "Minimum number of eligible participating panelists required to finalize a case."
+    },
+    "concurrence_rule": {
+      "type": "string",
+      "enum": [
+        "majority"
+      ],
+      "default": "majority",
+      "description": "Concurrence rule for panel determination. majority = more than 50% of eligible participating judgments."
+    },
+    "blind_judgment": {
+      "type": "boolean",
+      "default": true,
+      "description": "When true, individual judgments are hidden until the case is finalized. Each panelist sees only their own judgment before reveal."
+    },
+    "created_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the session creator. Derived server-side."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the session was created. Set server-side."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "pending_validation"
+    },
+    "quarantine_reason": {
+      "type": "string"
+    },
+    "quarantined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quarantined_by_operation_id": {
+      "type": "string"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "pending"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "cycle_id",
+    "scheduled_at",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

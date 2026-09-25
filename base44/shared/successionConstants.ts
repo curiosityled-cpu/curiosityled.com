@@ -111,4 +111,8 @@ export const SUCCESSION_PERMISSIONS = [
   "succession.view_executive_aggregate",
   "succession.compliance_view",
   "succession.partner_aggregate_view",
+  // Phase 2C — Deliberate workflow permissions
+  "succession.deliberate.view",
+  "succession.deliberate.manage",
+  "succession.readiness.ratify",
 ] as const;

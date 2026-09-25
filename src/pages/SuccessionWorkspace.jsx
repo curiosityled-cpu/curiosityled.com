@@ -26,6 +26,9 @@ import SnapshotsView from "@/components/succession/SnapshotsView";
 import TalentPoolsView from "@/components/succession/TalentPoolsView";
 import CandidatesView from "@/components/succession/CandidatesView";
 import EvidenceReviewQueueView from "@/components/succession/EvidenceReviewQueueView";
+import ReadinessProposalsView from "@/components/succession/ReadinessProposalsView";
+import CalibrationView from "@/components/succession/CalibrationView";
+import RatificationQueueView from "@/components/succession/RatificationQueueView";
 
 const PHASE_1_VIEWS = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
@@ -46,12 +49,18 @@ const PHASE_2B_VIEWS = [
   { key: "evidence-queue", label: "Evidence Review", icon: ClipboardCheck },
 ];
 
+const PHASE_2C_VIEWS = [
+  { key: "readiness-proposals", label: "Readiness Proposals", icon: ClipboardCheck },
+  { key: "calibration", label: "Calibration", icon: Users },
+  { key: "ratification", label: "Ratification", icon: ShieldCheck },
+];
+
 const PHASE_0_VIEWS = [
   { key: "governance", label: "Governance", icon: ShieldCheck },
   { key: "monitor", label: "Monitor", icon: Activity },
 ];
 
-const ALL_VIEWS = [...PHASE_1_VIEWS, ...PHASE_2A_VIEWS, ...PHASE_2B_VIEWS, ...PHASE_0_VIEWS];
+const ALL_VIEWS = [...PHASE_1_VIEWS, ...PHASE_2A_VIEWS, ...PHASE_2B_VIEWS, ...PHASE_2C_VIEWS, ...PHASE_0_VIEWS];
 
 export default function SuccessionWorkspace() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -124,6 +133,12 @@ function renderView(viewKey) {
       return <CandidatesView />;
     case "evidence-queue":
       return <EvidenceReviewQueueView />;
+    case "readiness-proposals":
+      return <ReadinessProposalsView />;
+    case "calibration":
+      return <CalibrationView />;
+    case "ratification":
+      return <RatificationQueueView />;
     case "governance":
       return <GovernanceView />;
     case "monitor":

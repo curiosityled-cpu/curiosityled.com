@@ -1,0 +1,160 @@
+{
+  "name": "GovernanceApproval",
+  "type": "object",
+  "description": "An append-only governance approval decision on a ReadinessConclusion. ratify = governance ratifies the calibrated value. return_for_evidence = returned for evidence rework. return_for_recalibration = returned for recalibration. override = governance overrides the panel with a different value (requires explicit rationale and panel notification). The proposer cannot be the final ratifier.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side."
+    },
+    "readiness_conclusion_id": {
+      "type": "string",
+      "description": "ReadinessConclusion ID this approval is for. Required."
+    },
+    "approver_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the approver. Derived server-side. Must not match the conclusion's proposed_by_profile_id."
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "ratify",
+        "return_for_evidence",
+        "return_for_recalibration",
+        "override"
+      ],
+      "description": "The governance decision. Required."
+    },
+    "override_value": {
+      "type": "string",
+      "enum": [
+        "ready_now",
+        "ready_with_conditions",
+        "emerging",
+        "insufficient_evidence",
+        "not_aligned_now"
+      ],
+      "description": "The override readiness value. Required only when decision=override. Normal ratification uses calibrated_value."
+    },
+    "rationale": {
+      "type": "string",
+      "description": "Required rationale for the decision. For override, must be detailed."
+    },
+    "next_review_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Required when decision=ratify or override."
+    },
+    "decided_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the decision was recorded. Set server-side."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "active"
+    },
+    "quarantine_reason": {
+      "type": "string"
+    },
+    "quarantined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quarantined_by_operation_id": {
+      "type": "string"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "pending"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "readiness_conclusion_id",
+    "approver_profile_id",
+    "decision",
+    "rationale"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

@@ -1,0 +1,211 @@
+{
+  "name": "ReadinessEvidenceCitation",
+  "type": "object",
+  "description": "A citation linking a ReadinessConclusion to an EvidenceRecord, preserving decision-time evidence facts (type, strength, confidence, relevance, status, source date, latest review decision) even if the evidence later expires or is superseded. Append-only \u2014 never updated or deleted. Only accepted or accepted_with_limitations, current, active, same-candidacy, same-snapshot evidence linked to an exact frozen requirement may be cited.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side."
+    },
+    "readiness_conclusion_id": {
+      "type": "string",
+      "description": "ReadinessConclusion ID this citation belongs to. Required."
+    },
+    "evidence_record_id": {
+      "type": "string",
+      "description": "EvidenceRecord ID cited. Required."
+    },
+    "effective_requirement_snapshot_id": {
+      "type": "string",
+      "description": "EffectiveRequirementSnapshot ID the cited evidence addresses. Required. Must match the evidence record's requirement."
+    },
+    "citation_role": {
+      "type": "string",
+      "enum": [
+        "supporting",
+        "contrary",
+        "contextual"
+      ],
+      "description": "How the evidence relates to the conclusion. supporting = supports the proposed value. contrary = contradicts. contextual = provides context. Required."
+    },
+    "snapshot_evidence_type": {
+      "type": "string",
+      "enum": [
+        "performance_outcome",
+        "competency_behavior",
+        "critical_experience",
+        "stretch_assignment",
+        "coaching_milestone",
+        "development_completion",
+        "business_outcome",
+        "credential",
+        "manager_observation",
+        "manual_other"
+      ],
+      "description": "Frozen evidence type at citation time."
+    },
+    "snapshot_strength": {
+      "type": "string",
+      "enum": [
+        "direct",
+        "transferable",
+        "indicative",
+        "developmental",
+        "not_relevant"
+      ],
+      "description": "Frozen evidence strength from the latest review at citation time."
+    },
+    "snapshot_confidence": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "description": "Frozen reviewer confidence from the latest review at citation time."
+    },
+    "snapshot_relevance": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "description": "Frozen relevance from the latest review at citation time."
+    },
+    "snapshot_status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "submitted",
+        "under_review",
+        "accepted",
+        "accepted_with_limitations",
+        "rejected",
+        "expired",
+        "superseded",
+        "withdrawn"
+      ],
+      "description": "Frozen EvidenceRecord.status at citation time."
+    },
+    "snapshot_source_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Frozen source date from the evidence at citation time."
+    },
+    "snapshot_review_decision_id": {
+      "type": "string",
+      "description": "Frozen ID of the latest EvidenceReviewDecision at citation time. Null if no review exists."
+    },
+    "citation_notes": {
+      "type": "string",
+      "description": "Optional notes on why this evidence is cited."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "active"
+    },
+    "quarantine_reason": {
+      "type": "string"
+    },
+    "quarantined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quarantined_by_operation_id": {
+      "type": "string"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "pending"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "readiness_conclusion_id",
+    "evidence_record_id",
+    "effective_requirement_snapshot_id",
+    "citation_role"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

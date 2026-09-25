@@ -1,0 +1,201 @@
+{
+  "name": "CalibrationCase",
+  "type": "object",
+  "description": "A single case within a CalibrationSession, linked to one submitted readiness conclusion. Panelists from the case-specific roster record blind judgments. The case is finalized when quorum and concurrence are met. no_quorum and no_concurrence do not populate calibrated_value or advance the conclusion to awaiting_ratification.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side."
+    },
+    "session_id": {
+      "type": "string",
+      "description": "CalibrationSession ID this case belongs to. Required."
+    },
+    "candidacy_id": {
+      "type": "string",
+      "description": "SuccessorCandidacy ID. Required."
+    },
+    "readiness_conclusion_id": {
+      "type": "string",
+      "description": "ReadinessConclusion ID being calibrated. Required."
+    },
+    "effective_blueprint_snapshot_id": {
+      "type": "string",
+      "description": "EffectiveBlueprintSnapshot ID. Derived from the conclusion. Required."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "judgments_recorded",
+        "revealed",
+        "decision_recorded"
+      ],
+      "default": "open",
+      "description": "Case lifecycle. open = accepting judgments. judgments_recorded = required judgments submitted. revealed = judgments unblinded. decision_recorded = finalized with determination."
+    },
+    "panel_determination": {
+      "type": "string",
+      "enum": [
+        "ready_now",
+        "ready_with_conditions",
+        "emerging",
+        "insufficient_evidence",
+        "not_aligned_now",
+        "no_quorum",
+        "no_concurrence"
+      ],
+      "description": "The panel's final determination. Null until finalized. no_quorum = fewer than quorum_required eligible participating. no_concurrence = quorum met but no majority."
+    },
+    "dissent": {
+      "type": "string",
+      "description": "Summary of dissenting judgments."
+    },
+    "concurrence_met": {
+      "type": "boolean",
+      "description": "Whether majority concurrence was achieved. Null until finalized."
+    },
+    "participating_count": {
+      "type": "number",
+      "description": "Number of eligible participating panelists (eligible + judgment_value not null). Null until finalized."
+    },
+    "abstention_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of panelists who abstained due to COI."
+    },
+    "panel_member_profile_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Case-specific panel roster. Only rostered, same-tenant panelists may record judgments."
+    },
+    "minimum_panel_size": {
+      "type": "number",
+      "default": 3,
+      "description": "Minimum panel size for this case. Defaults to the session quorum_required."
+    },
+    "panel_roster_finalized_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the panel roster was finalized. Judgments may only be recorded after this."
+    },
+    "panel_roster_finalized_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the user who finalized the panel roster."
+    },
+    "finalized_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the case was finalized. Set server-side."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "active"
+    },
+    "quarantine_reason": {
+      "type": "string"
+    },
+    "quarantined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quarantined_by_operation_id": {
+      "type": "string"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "pending"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "session_id",
+    "candidacy_id",
+    "readiness_conclusion_id",
+    "effective_blueprint_snapshot_id",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}
