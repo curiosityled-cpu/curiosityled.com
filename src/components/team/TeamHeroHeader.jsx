@@ -1,11 +1,13 @@
 /**
- * TeamHeroHeader — calm hero banner for the Team page.
+ * TeamHeroHeader — animated hero banner for the Team page.
  * Mirrors the Lead/Practice hero rhythm: date label, title, signal pill, refresh.
- * Uses a gradient (not animated landscape) to stay distinct from /today.
+ * Uses an animated team-collaboration image with a gradient overlay for readability.
  */
 import React from "react";
 import { RefreshCw, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+const HERO_IMAGE = "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/e2677784c_generated_image.png";
 
 export default function TeamHeroHeader({ scopeLabel, subtitle, pulse, isFetching, onRefresh }) {
   const day = new Date().toLocaleDateString("en-US", {
@@ -14,14 +16,13 @@ export default function TeamHeroHeader({ scopeLabel, subtitle, pulse, isFetching
 
   return (
     <div className="relative rounded-2xl overflow-hidden mb-5 shadow-lg" style={{ minHeight: "160px" }}>
-      {/* Gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0202ff] via-[#1a1aff] to-[#4a4aff]" />
+      {/* Background image with breathing animation */}
+      <div className="absolute inset-0" style={{ animation: "hero-breathe 24s ease-in-out infinite" }}>
+        <img src={HERO_IMAGE} alt="" className="w-full h-full object-cover" />
+      </div>
 
-      {/* Subtle pattern overlay */}
-      <div className="absolute inset-0 opacity-10" style={{
-        backgroundImage: "radial-gradient(circle at 20% 50%, rgba(255,255,255,0.3) 1px, transparent 1px), radial-gradient(circle at 80% 30%, rgba(255,255,255,0.2) 1px, transparent 1px)",
-        backgroundSize: "40px 40px, 60px 60px",
-      }} />
+      {/* Gradient overlay for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#0202ff]/80 via-[#0202ff]/30 to-transparent" />
 
       {/* Refresh button */}
       {onRefresh && (
@@ -41,7 +42,7 @@ export default function TeamHeroHeader({ scopeLabel, subtitle, pulse, isFetching
           <p className="text-[10px] font-semibold text-white/70 uppercase tracking-widest">{day}</p>
         </div>
         <h1 className="text-2xl font-bold text-white tracking-tight" style={{ fontSize: "clamp(1.5rem, 2.5vw, 2.25rem)" }}>
-          {scopeLabel}
+          Team
         </h1>
         <p className="text-sm text-white/80 mt-1">{subtitle}</p>
 
