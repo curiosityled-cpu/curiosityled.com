@@ -121,6 +121,36 @@ export default function TeamTalentScorecard({ aggregates, kpis = [], teamSize })
       {cardExpanded && (
         <div className="px-4 pb-4 space-y-3 border-t border-slate-100 pt-3">
 
+          {/* ── Team Health sub-card ──────────────────────────────────── */}
+          <div className="bg-card border border-border rounded-2xl px-5 py-4">
+            <button
+              className="flex items-center justify-between w-full text-left"
+              onClick={() => persist("cl_collapse_team_scorecard_health", setHealthExpanded)(!healthExpanded)}
+            >
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Team Health</p>
+              <div className="flex items-center gap-2">
+                <SectionLink to="/Insights" label="All" />
+                {healthExpanded
+                  ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                  : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
+              </div>
+            </button>
+            {healthExpanded && (
+              <div className="grid grid-cols-2 gap-2 mt-3">
+                {HEALTH_STATS.map((s) => {
+                  const Icon = s.icon;
+                  return (
+                    <div key={s.key} className={`rounded-xl ${s.bg} px-2.5 py-2.5 text-center`}>
+                      <Icon className={`w-3.5 h-3.5 mx-auto mb-1.5 ${s.color}`} />
+                      <p className={`text-lg font-bold leading-none ${s.color}`}>{healthValues[s.key]}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1 leading-tight">{s.label}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {/* ── KPI sub-card ───────────────────────────────────────────── */}
           {hasKpis && (
             <div className="bg-card border border-border rounded-2xl px-5 py-4">
@@ -167,36 +197,6 @@ export default function TeamTalentScorecard({ aggregates, kpis = [], teamSize })
               )}
             </div>
           )}
-
-          {/* ── Team Health sub-card ──────────────────────────────────── */}
-          <div className="bg-card border border-border rounded-2xl px-5 py-4">
-            <button
-              className="flex items-center justify-between w-full text-left"
-              onClick={() => persist("cl_collapse_team_scorecard_health", setHealthExpanded)(!healthExpanded)}
-            >
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Team Health</p>
-              <div className="flex items-center gap-2">
-                <SectionLink to="/Insights" label="All" />
-                {healthExpanded
-                  ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                  : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
-              </div>
-            </button>
-            {healthExpanded && (
-              <div className="grid grid-cols-2 gap-2 mt-3">
-                {HEALTH_STATS.map((s) => {
-                  const Icon = s.icon;
-                  return (
-                    <div key={s.key} className={`rounded-xl ${s.bg} px-2.5 py-2.5 text-center`}>
-                      <Icon className={`w-3.5 h-3.5 mx-auto mb-1.5 ${s.color}`} />
-                      <p className={`text-lg font-bold leading-none ${s.color}`}>{healthValues[s.key]}</p>
-                      <p className="text-[10px] text-muted-foreground mt-1 leading-tight">{s.label}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
 
         </div>
       )}
