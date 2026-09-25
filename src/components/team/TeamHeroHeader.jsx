@@ -48,7 +48,6 @@ export default function TeamHeroHeader({ scopeLabel, subtitle, pulse, isFetching
         <h1 className="text-2xl font-bold text-white tracking-tight" style={{ fontSize: "clamp(1.5rem, 2.5vw, 2.25rem)" }}>
           Team
         </h1>
-        <p className="text-sm text-white/80 mt-1">{subtitle}</p>
 
         {/* Pulse signal pill */}
         {pulse?.headline && (
