@@ -36,6 +36,8 @@ import DevelopmentPlansView from "@/components/succession/DevelopmentPlansView";
 import DevelopmentActionsView from "@/components/succession/DevelopmentActionsView";
 import TransitionsView from "@/components/succession/TransitionsView";
 import TransitionDetailView from "@/components/succession/TransitionDetailView";
+import OperationalMonitorView from "@/components/succession/OperationalMonitorView";
+import ReviewQueueView from "@/components/succession/ReviewQueueView";
 
 const PHASE_1_VIEWS = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
@@ -71,12 +73,16 @@ const PHASE_2E_VIEWS = [
   { key: "transitions", label: "Transitions", icon: ArrowRightCircle },
 ];
 
-const PHASE_0_VIEWS = [
-  { key: "governance", label: "Governance", icon: ShieldCheck },
-  { key: "monitor", label: "Monitor", icon: Activity },
+const PHASE_2F_VIEWS = [
+  { key: "operational-monitor", label: "Operational Monitor", icon: Activity },
+  { key: "review-queue", label: "Review Queue", icon: ClipboardCheck },
 ];
 
-const ALL_VIEWS = [...PHASE_1_VIEWS, ...PHASE_2A_VIEWS, ...PHASE_2B_VIEWS, ...PHASE_2C_VIEWS, ...PHASE_2D_VIEWS, ...PHASE_2E_VIEWS, ...PHASE_0_VIEWS];
+const PHASE_0_VIEWS = [
+  { key: "governance", label: "Governance", icon: ShieldCheck },
+];
+
+const ALL_VIEWS = [...PHASE_1_VIEWS, ...PHASE_2A_VIEWS, ...PHASE_2B_VIEWS, ...PHASE_2C_VIEWS, ...PHASE_2D_VIEWS, ...PHASE_2E_VIEWS, ...PHASE_2F_VIEWS, ...PHASE_0_VIEWS];
 
 export default function SuccessionWorkspace() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -163,10 +169,12 @@ function renderView(viewKey) {
       return <TransitionsView />;
     case "transition-detail":
       return <TransitionDetailView />;
+    case "operational-monitor":
+      return <OperationalMonitorView />;
+    case "review-queue":
+      return <ReviewQueueView />;
     case "governance":
       return <GovernanceView />;
-    case "monitor":
-      return <MonitorView />;
     default:
       return <OverviewView />;
   }
@@ -200,29 +208,6 @@ function GovernanceView() {
             testing passes. Production activation requires a separate approval.
           </p>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function MonitorView() {
-  return (
-    <div className="border border-gray-200 rounded-lg p-6 bg-white">
-      <div className="flex items-start gap-4">
-        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-[#0202ff]/10 flex items-center justify-center">
-          <Activity className="w-5 h-5 text-[#0202ff]" />
-        </div>
-        <div>
-          <h3 className="text-base font-semibold text-gray-900">Succession Monitoring</h3>
-          <p className="text-sm text-gray-500 mt-1">
-            Review-due alerts, blueprint-change impacts, and aspiration/availability-change alerts
-            will surface here once succession cycles are active. Monitoring events are lifecycle
-            events — they do not mutate immutable ratified readiness conclusions.
-          </p>
-        </div>
-      </div>
-      <div className="mt-5 p-4 rounded-lg bg-gray-50 border border-gray-200">
-        <p className="text-sm text-gray-500">No monitoring alerts — no succession cycles are active yet.</p>
       </div>
     </div>
   );

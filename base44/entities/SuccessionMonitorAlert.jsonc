@@ -1,0 +1,241 @@
+{
+  "name": "SuccessionMonitorAlert",
+  "type": "object",
+  "description": "An operational monitor alert identifying a succession workflow exception. Derived from current source records by an authorized refresh. Contains only minimum operational information. Does not copy confidential panel judgments, dissent, or evidence text. Alert status changes never mutate source entities. No scoring, ranking, or AI recommendations.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side \u2014 never accepted from frontend input."
+    },
+    "cycle_id": {
+      "type": "string",
+      "description": "Optional SuccessionCycle ID this alert relates to."
+    },
+    "critical_role_id": {
+      "type": "string",
+      "description": "Optional CriticalRole ID this alert relates to."
+    },
+    "org_position_id": {
+      "type": "string",
+      "description": "Optional OrgPosition ID this alert relates to."
+    },
+    "candidacy_id": {
+      "type": "string",
+      "description": "Optional SuccessorCandidacy ID this alert relates to."
+    },
+    "readiness_conclusion_id": {
+      "type": "string",
+      "description": "Optional ReadinessConclusion ID this alert relates to."
+    },
+    "development_plan_link_id": {
+      "type": "string",
+      "description": "Optional DevelopmentPlanLink ID this alert relates to."
+    },
+    "development_action_id": {
+      "type": "string",
+      "description": "Optional DevelopmentAction ID this alert relates to."
+    },
+    "transition_initiation_id": {
+      "type": "string",
+      "description": "Optional TransitionInitiation ID this alert relates to."
+    },
+    "source_entity_type": {
+      "type": "string",
+      "description": "The entity type from which this alert was derived (e.g. CriticalRole, SuccessorCandidacy, ReadinessConclusion, DevelopmentPlanLink, DevelopmentAction, TransitionInitiation, KnowledgeTransferPlan, TransitionPlan)."
+    },
+    "source_entity_id": {
+      "type": "string",
+      "description": "The ID of the source entity this alert was derived from."
+    },
+    "alert_type": {
+      "type": "string",
+      "enum": [
+        "critical_role_uncovered",
+        "no_active_candidacy",
+        "current_readiness_missing",
+        "readiness_review_due",
+        "readiness_expired",
+        "development_review_due",
+        "development_action_overdue",
+        "transition_start_overdue",
+        "knowledge_transfer_overdue",
+        "unresolved_high_transition_risk",
+        "integrity_attention_required",
+        "other"
+      ],
+      "description": "The type of operational exception detected. Required."
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "informational",
+        "attention",
+        "high",
+        "critical"
+      ],
+      "default": "attention",
+      "description": "Alert severity. critical alerts cannot be dismissed by unauthorized actors."
+    },
+    "title": {
+      "type": "string",
+      "description": "Short alert title. Required."
+    },
+    "description": {
+      "type": "string",
+      "description": "Operational description of the exception. Must not contain confidential evidence or panel deliberation text. Required."
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Optional date by which this alert should be addressed."
+    },
+    "detected_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the exception was first detected. Set server-side."
+    },
+    "last_detected_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the exception was most recently confirmed still present. Updated on refresh. Set server-side."
+    },
+    "fingerprint": {
+      "type": "string",
+      "description": "Deterministic tenant-scoped fingerprint. Only one active alert may exist per fingerprint. Set server-side."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "acknowledged",
+        "resolved",
+        "dismissed"
+      ],
+      "default": "open",
+      "description": "Alert lifecycle. open = active exception. acknowledged = reviewed but not yet resolved. resolved = underlying condition cleared. dismissed = intentionally closed with reason."
+    },
+    "assigned_to_profile_id": {
+      "type": "string",
+      "description": "Optional profile ID the alert is assigned to."
+    },
+    "acknowledged_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the user who acknowledged the alert. Derived server-side."
+    },
+    "acknowledged_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the alert was acknowledged. Set server-side."
+    },
+    "resolved_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the user who resolved the alert. Derived server-side."
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the alert was resolved. Set server-side."
+    },
+    "resolution_note": {
+      "type": "string",
+      "description": "Optional note explaining how the alert was resolved."
+    },
+    "dismissal_reason": {
+      "type": "string",
+      "description": "Reason for dismissal. Required when status is dismissed."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "active"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the alert record was created. Set server-side."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the alert was last updated. Set server-side."
+    }
+  },
+  "required": [
+    "client_id",
+    "source_entity_type",
+    "source_entity_id",
+    "alert_type",
+    "severity",
+    "title",
+    "description",
+    "detected_at",
+    "last_detected_at",
+    "fingerprint",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

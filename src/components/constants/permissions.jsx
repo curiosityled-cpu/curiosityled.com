@@ -488,7 +488,8 @@ export const BASE_ROLE_PERMISSIONS = {
     'succession.discovery.disclose',
     'succession.evidence.view', 'succession.evidence.manage',
     'succession.development.view', 'succession.development.manage',
-    'succession.transition.view', 'succession.transition.manage'
+    'succession.transition.view', 'succession.transition.manage',
+    'succession.monitor.view', 'succession.monitor.manage'
   ],
   'Admin Level 1': [
     // Class Management
@@ -545,7 +546,8 @@ export const BASE_ROLE_PERMISSIONS = {
     'succession.discovery.disclose',
     'succession.evidence.view', 'succession.evidence.manage',
     'succession.development.view', 'succession.development.manage',
-    'succession.transition.view', 'succession.transition.manage'
+    'succession.transition.view', 'succession.transition.manage',
+    'succession.monitor.view'
   ],
   'Executive': [
     'analytics.view_client',

@@ -1,0 +1,198 @@
+{
+  "name": "SuccessionReviewRecord",
+  "type": "object",
+  "description": "An operational review record documenting a succession workflow follow-up. Does not replace a ReadinessConclusion, panel judgment, development action, or transition approval. Completing a review does not resolve source alerts automatically and does not change readiness, candidacy, development, transition, UserProfile, or PositionAssignment. No scoring, ranking, or AI recommendations.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side \u2014 never accepted from frontend input."
+    },
+    "cycle_id": {
+      "type": "string",
+      "description": "Optional SuccessionCycle ID this review relates to."
+    },
+    "critical_role_id": {
+      "type": "string",
+      "description": "Optional CriticalRole ID this review relates to."
+    },
+    "candidacy_id": {
+      "type": "string",
+      "description": "Optional SuccessorCandidacy ID this review relates to."
+    },
+    "review_type": {
+      "type": "string",
+      "enum": [
+        "operational",
+        "readiness_reassessment",
+        "development",
+        "transition",
+        "integrity",
+        "pilot",
+        "other"
+      ],
+      "description": "The type of review. Required."
+    },
+    "title": {
+      "type": "string",
+      "description": "Review title. Required."
+    },
+    "review_scope": {
+      "type": "string",
+      "description": "Description of the review scope. Required."
+    },
+    "owner_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the review owner. Required. Must belong to the tenant."
+    },
+    "scheduled_for": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the review is scheduled. Required."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "in_progress",
+        "completed",
+        "cancelled"
+      ],
+      "default": "scheduled",
+      "description": "Review lifecycle. scheduled = created. in_progress = actively being held. completed = finished. cancelled = removed with reason."
+    },
+    "participant_profile_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Profile IDs of review participants. All must belong to the tenant."
+    },
+    "source_alert_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "SuccessionMonitorAlert IDs linked to this review. All must belong to the tenant and authorized scope."
+    },
+    "held_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the review was held. Set server-side."
+    },
+    "operational_notes": {
+      "type": "string",
+      "description": "Optional operational notes. Must not contain copied confidential evidence or panel deliberation."
+    },
+    "follow_up_actions": {
+      "type": "string",
+      "description": "Optional follow-up actions documented during the review."
+    },
+    "next_review_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Optional date for the next review."
+    },
+    "cancellation_reason": {
+      "type": "string",
+      "description": "Reason for cancellation. Required when status is cancelled."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "active"
+    },
+    "created_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the review creator. Derived server-side."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the review was created. Set server-side."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the review was last updated. Set server-side."
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the review was completed. Set server-side."
+    }
+  },
+  "required": [
+    "client_id",
+    "review_type",
+    "title",
+    "review_scope",
+    "owner_profile_id",
+    "scheduled_for",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}
