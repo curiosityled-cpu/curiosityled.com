@@ -1,0 +1,237 @@
+{
+  "name": "EvidenceRecord",
+  "type": "object",
+  "description": "A structured evidence record linked to a SuccessorCandidacy, its bound EffectiveBlueprintSnapshot, and an exact EffectiveRequirementSnapshot child. Evidence supports future deliberation but does not determine readiness, recommend successors, or rank candidates. Content becomes immutable once submitted. Corrections create a new EvidenceRecord linked through supersedes_evidence_record_id.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side \u2014 never accepted from frontend input."
+    },
+    "candidacy_id": {
+      "type": "string",
+      "description": "SuccessorCandidacy ID this evidence belongs to. Required."
+    },
+    "user_profile_id": {
+      "type": "string",
+      "description": "UserProfile ID of the candidate. Must match candidacy.user_profile_id. Required."
+    },
+    "critical_role_id": {
+      "type": "string",
+      "description": "CriticalRole ID this evidence relates to. Derived from the candidacy. Required."
+    },
+    "effective_blueprint_snapshot_id": {
+      "type": "string",
+      "description": "EffectiveBlueprintSnapshot ID the candidacy is bound to. Must match candidacy.effective_blueprint_snapshot_id. Required."
+    },
+    "effective_requirement_snapshot_id": {
+      "type": "string",
+      "description": "Exact EffectiveRequirementSnapshot child ID this evidence addresses. Must belong to the same snapshot. Evidence may not attach directly to a mutable RoleRequirement or CriticalRoleRequirement. Required."
+    },
+    "evidence_type": {
+      "type": "string",
+      "enum": [
+        "performance_outcome",
+        "competency_behavior",
+        "critical_experience",
+        "stretch_assignment",
+        "coaching_milestone",
+        "development_completion",
+        "business_outcome",
+        "credential",
+        "manager_observation",
+        "manual_other"
+      ],
+      "description": "The type of evidence. Required."
+    },
+    "source_system": {
+      "type": "string",
+      "enum": [
+        "curiosity_led",
+        "manual"
+      ],
+      "description": "Where the evidence originated. curiosity_led = derived from platform data. manual = manually authored. Required."
+    },
+    "source_record_id": {
+      "type": "string",
+      "description": "Optional reference to the originating platform record (e.g. CoachingSession ID, AssessmentSubmission ID). Null for manual evidence."
+    },
+    "source_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the evidence event occurred or was observed. Required."
+    },
+    "title": {
+      "type": "string",
+      "description": "Short title summarizing the evidence. Required."
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the evidence. Required."
+    },
+    "submitted_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the user who submitted this evidence. Derived server-side."
+    },
+    "submitted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the evidence was submitted. Set server-side. Null while in draft."
+    },
+    "freshness_review_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date by which this evidence should be reviewed for freshness. Set server-side at submission time."
+    },
+    "expiration_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Optional date after which the evidence is considered expired."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "pending_validation"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "submitted",
+        "under_review",
+        "accepted",
+        "accepted_with_limitations",
+        "rejected",
+        "expired",
+        "superseded",
+        "withdrawn"
+      ],
+      "default": "draft",
+      "description": "Evidence lifecycle. draft = editable. submitted = immutable, awaiting review. under_review = actively being reviewed. accepted/accepted_with_limitations/rejected = review decision recorded. expired = past expiration. superseded = replaced by a corrected record. withdrawn = removed by submitter."
+    },
+    "supersedes_evidence_record_id": {
+      "type": "string",
+      "description": "ID of the prior evidence record this one corrects. Null for original records."
+    },
+    "withdrawn_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the evidence was withdrawn. Set server-side."
+    },
+    "withdrawn_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the user who withdrew the evidence. Derived server-side."
+    },
+    "withdrawal_reason": {
+      "type": "string",
+      "description": "Reason for withdrawal."
+    },
+    "quarantine_reason": {
+      "type": "string"
+    },
+    "quarantined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quarantined_by_operation_id": {
+      "type": "string"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "pending"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "candidacy_id",
+    "user_profile_id",
+    "critical_role_id",
+    "effective_blueprint_snapshot_id",
+    "effective_requirement_snapshot_id",
+    "evidence_type",
+    "source_system",
+    "source_date",
+    "title",
+    "description",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

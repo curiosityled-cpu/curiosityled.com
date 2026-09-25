@@ -1,0 +1,194 @@
+{
+  "name": "EvidenceReviewDecision",
+  "type": "object",
+  "description": "An append-only review decision on an EvidenceRecord. A new review does not overwrite a prior decision. Review decisions do not change readiness, candidacy status, rank candidates, or create recommendations. Separation of duties: the evidence submitter may not make the accepting or rejecting review decision for the same evidence record.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side \u2014 never accepted from frontend input."
+    },
+    "evidence_record_id": {
+      "type": "string",
+      "description": "EvidenceRecord ID this decision reviews. Required."
+    },
+    "candidacy_id": {
+      "type": "string",
+      "description": "SuccessorCandidacy ID. Derived from the evidence record. Required."
+    },
+    "effective_requirement_snapshot_id": {
+      "type": "string",
+      "description": "EffectiveRequirementSnapshot ID. Derived from the evidence record. Required."
+    },
+    "reviewer_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the reviewer. Derived server-side. Must not match the evidence submitter."
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "accepted",
+        "accepted_with_limitations",
+        "rejected",
+        "returned_for_clarification"
+      ],
+      "description": "The review decision. Required."
+    },
+    "evidence_strength": {
+      "type": "string",
+      "enum": [
+        "direct",
+        "transferable",
+        "indicative",
+        "developmental",
+        "not_relevant"
+      ],
+      "description": "Assessed strength of the evidence relative to the requirement. Required."
+    },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "description": "Reviewer confidence in the evidence assessment. Required."
+    },
+    "relevance": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "description": "Relevance of the evidence to the specific frozen requirement. Required."
+    },
+    "limitations": {
+      "type": "string",
+      "description": "Limitations text. Required when decision is accepted_with_limitations. Optional otherwise."
+    },
+    "contrary_evidence_indicator": {
+      "type": "boolean",
+      "default": false,
+      "description": "When true, the reviewer indicates contrary evidence exists."
+    },
+    "contrary_evidence_notes": {
+      "type": "string",
+      "description": "Notes on contrary evidence. Required when contrary_evidence_indicator is true."
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the review decision was recorded. Set server-side."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "confidential"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "pending_validation",
+        "active",
+        "quarantined",
+        "resolved"
+      ],
+      "default": "active"
+    },
+    "quarantine_reason": {
+      "type": "string"
+    },
+    "quarantined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quarantined_by_operation_id": {
+      "type": "string"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "exception_found"
+      ],
+      "default": "pending"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_profile_id": {
+      "type": "string"
+    },
+    "resolution_rationale": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "evidence_record_id",
+    "candidacy_id",
+    "effective_requirement_snapshot_id",
+    "reviewer_profile_id",
+    "decision",
+    "evidence_strength",
+    "confidence",
+    "relevance"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}

@@ -114,6 +114,8 @@ const DOMAIN_ENTITY_NAMES = new Set([
   "TalentPoolMembership",
   "SuccessorCandidacy",
   "CandidateSelfDisclosure",
+  "EvidenceRecord",
+  "EvidenceReviewDecision",
 ]);
 
 // ═══════════════════════════════════════════════════════════════════════════

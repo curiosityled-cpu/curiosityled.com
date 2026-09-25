@@ -6,6 +6,7 @@ import { useAuth } from "@/components/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import EvidencePortfolioView from "./EvidencePortfolioView";
 
 const ASPIRATION_LABELS = {
   interested: "Interested",
@@ -224,6 +225,9 @@ export default function CandidateDetailView({ candidacy, canManage, onWithdraw }
           </div>
         </SuccessionSection>
       )}
+
+      {/* Evidence Portfolio — admin-only; candidates have no evidence access in MVP */}
+      <EvidencePortfolioView candidacy={candidacy} />
     </div>
   );
 }

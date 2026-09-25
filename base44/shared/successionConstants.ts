@@ -92,6 +92,7 @@ export const SUCCESSION_PERMISSIONS = [
   "succession.candidates.view",
   "succession.candidates.manage",
   "succession.evidence.view",
+  "succession.evidence.manage",
   "succession.evidence.attest",
   "succession.calibration.view",
   "succession.calibration.manage",
