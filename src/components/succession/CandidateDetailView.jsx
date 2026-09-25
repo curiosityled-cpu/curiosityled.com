@@ -3,7 +3,6 @@ import { FileText, AlertTriangle, History, Lock } from "lucide-react";
 import { useSuccessionApi } from "./useSuccessionApi";
 import { SuccessionSection, SuccessionLoading, SuccessionEmpty } from "./SuccessionSection";
 import { useAuth } from "@/components/useAuth";
-import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,7 +29,7 @@ const HORIZON_LABELS = {
 export default function CandidateDetailView({ candidacy, canManage, onWithdraw }) {
   const { invoke, loading, error, clearError } = useSuccessionApi();
   const { user, hasPermission } = useAuth();
-  const [disclosures, setDisclosures] = useState([]);
+  const [adminDetail, setAdminDetail] = useState(null);
   const [showDisclosureForm, setShowDisclosureForm] = useState(false);
   const [disclosureContext, setDisclosureContext] = useState(null);
   const [ctxLoading, setCtxLoading] = useState(false);
@@ -53,24 +52,22 @@ export default function CandidateDetailView({ candidacy, canManage, onWithdraw }
     }
   }, [isOwnCandidacy, candidacy.id, invoke]);
 
-  // ── Admin read-only: fetch all disclosures via RLS-enforced entity filter ──
-  const fetchDisclosuresAdmin = useCallback(async () => {
+  // ── Admin read-only: fetch candidate detail via secure backend function ──
+  const fetchAdminDetail = useCallback(async () => {
     if (isOwnCandidacy) return;
     try {
-      const data = await base44.entities.CandidateSelfDisclosure.filter({
-        candidacy_id: candidacy.id,
-      });
-      setDisclosures((data || []).sort((a, b) => (b.version || 0) - (a.version || 0)));
-    } catch { setDisclosures([]); }
-  }, [isOwnCandidacy, candidacy.id]);
+      const data = await invoke("successionGetCandidateAdminDetail", { candidacy_id: candidacy.id });
+      setAdminDetail(data);
+    } catch { setAdminDetail(null); }
+  }, [invoke, isOwnCandidacy, candidacy.id]);
 
   useEffect(() => {
     if (isOwnCandidacy) {
       fetchMyDisclosureContext();
     } else {
-      fetchDisclosuresAdmin();
+      fetchAdminDetail();
     }
-  }, [isOwnCandidacy, fetchMyDisclosureContext, fetchDisclosuresAdmin]);
+  }, [isOwnCandidacy, fetchMyDisclosureContext, fetchAdminDetail]);
 
   const handleSubmitDisclosure = async (formData) => {
     const opId = `disclosure-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -153,8 +150,8 @@ export default function CandidateDetailView({ candidacy, canManage, onWithdraw }
   }
 
   // ── Admin read-only view (no edit, no form, no scores, no readiness) ──
-  const currentDisclosure = disclosures.find(d => d.status === "current" && d.integrity_status === "active");
-  const historyDisclosures = disclosures.filter(d => d.status !== "current" || d.integrity_status !== "active");
+  const currentDisclosure = adminDetail?.current_disclosure || null;
+  const historyDisclosures = adminDetail?.disclosure_history || [];
 
   return (
     <div className="space-y-4">

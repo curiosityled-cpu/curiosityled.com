@@ -5,6 +5,7 @@ import { writeSuccessionAuditEvent } from "../../shared/successionAuditWriter.ts
 import { createOrAttachOperation, beginOperationExecution, completeOperation, failOperation } from "../../shared/successionOperationHelper.ts";
 import { validateSameTenantReference, writeDeniedReferenceEvent } from "../../shared/successionCrossTenantValidation.ts";
 import { validateUniqueness } from "../../shared/successionIntegrityHelper.ts";
+import { validateOperationalSnapshot } from "../../shared/successionSnapshotValidator.ts";
 
 /**
  * POST /successionCreateCandidacy
@@ -55,35 +56,18 @@ export default async function(req: Request): Promise<Response> {
   try {
     await beginOperationExecution(base44, opResult.operation.id);
 
-    // ── 1. Cycle must be active and belong to caller's tenant ──
-    const cycle = await validateSameTenantReference(base44, "SuccessionCycle", cycle_id, auth.client_id);
-    if (!cycle) {
-      await writeDeniedReferenceEvent(base44, auth, "SuccessionCycle", cycle_id, "cross_tenant_or_not_found", opResult.operation.id);
-      await failOperation(base44, opResult.operation.id, "cycle_not_found");
-      return Response.json({ error: "Cycle not found" }, { status: 404 });
+    // ── 1. Validate the bound snapshot (cycle, critical role, snapshot integrity, incidents) ──
+    const snapshotValidation = await validateOperationalSnapshot(
+      base44, auth.client_id, effective_blueprint_snapshot_id, critical_role_id, cycle_id
+    );
+    if (!snapshotValidation.valid) {
+      await writeDeniedReferenceEvent(base44, auth, "EffectiveBlueprintSnapshot", effective_blueprint_snapshot_id, "cross_tenant_or_not_found", opResult.operation.id);
+      await failOperation(base44, opResult.operation.id, snapshotValidation.error_code);
+      return Response.json({ error: snapshotValidation.error_message }, { status: 409 });
     }
-    if (cycle.status !== "active") {
-      await failOperation(base44, opResult.operation.id, "cycle_not_active");
-      return Response.json({ error: "Cycle must be active to create candidacies" }, { status: 409 });
-    }
+    const { snapshot, critical_role: criticalRole, cycle } = snapshotValidation;
 
-    // ── 2. CriticalRole must be active and belong to the cycle ──
-    const criticalRole = await validateSameTenantReference(base44, "CriticalRole", critical_role_id, auth.client_id);
-    if (!criticalRole) {
-      await writeDeniedReferenceEvent(base44, auth, "CriticalRole", critical_role_id, "cross_tenant_or_not_found", opResult.operation.id);
-      await failOperation(base44, opResult.operation.id, "critical_role_not_found");
-      return Response.json({ error: "Critical role not found" }, { status: 404 });
-    }
-    if (criticalRole.cycle_id !== cycle_id) {
-      await failOperation(base44, opResult.operation.id, "critical_role_not_in_cycle");
-      return Response.json({ error: "Critical role does not belong to the specified cycle" }, { status: 409 });
-    }
-    if (criticalRole.status !== "active") {
-      await failOperation(base44, opResult.operation.id, "critical_role_not_active");
-      return Response.json({ error: "Critical role must be active to create candidacies" }, { status: 409 });
-    }
-
-    // ── 3. Candidate profile must belong to the tenant ──
+    // ── 2. Candidate profile must belong to the tenant ──
     const candidateProfile = await validateSameTenantReference(base44, "UserProfile", user_profile_id, auth.client_id);
     if (!candidateProfile) {
       await writeDeniedReferenceEvent(base44, auth, "UserProfile", user_profile_id, "cross_tenant_or_not_found", opResult.operation.id);
@@ -91,7 +75,7 @@ export default async function(req: Request): Promise<Response> {
       return Response.json({ error: "Candidate profile not found in tenant" }, { status: 404 });
     }
 
-    // ── 4. Validate origin pool membership if provided ──
+    // ── 3. Validate origin pool membership if provided ──
     if (origin_pool_membership_id) {
       const poolMembership = await validateSameTenantReference(base44, "TalentPoolMembership", origin_pool_membership_id, auth.client_id);
       if (!poolMembership) {
@@ -105,44 +89,7 @@ export default async function(req: Request): Promise<Response> {
       }
     }
 
-    // ── 5. Snapshot must belong to the CriticalRole, be generated, active, and valid ──
-    const snapshot = await validateSameTenantReference(base44, "EffectiveBlueprintSnapshot", effective_blueprint_snapshot_id, auth.client_id);
-    if (!snapshot) {
-      await writeDeniedReferenceEvent(base44, auth, "EffectiveBlueprintSnapshot", effective_blueprint_snapshot_id, "cross_tenant_or_not_found", opResult.operation.id);
-      await failOperation(base44, opResult.operation.id, "snapshot_not_found");
-      return Response.json({ error: "Effective blueprint snapshot not found" }, { status: 404 });
-    }
-    if (snapshot.critical_role_id !== critical_role_id) {
-      await failOperation(base44, opResult.operation.id, "snapshot_role_mismatch");
-      return Response.json({ error: "Snapshot does not belong to the specified critical role" }, { status: 409 });
-    }
-    if (snapshot.status !== "generated") {
-      await failOperation(base44, opResult.operation.id, "snapshot_not_generated");
-      return Response.json({ error: "Snapshot must be in 'generated' status" }, { status: 409 });
-    }
-    if (snapshot.integrity_status !== "active") {
-      await failOperation(base44, opResult.operation.id, "snapshot_not_active_integrity");
-      return Response.json({ error: "Snapshot integrity_status must be 'active'" }, { status: 409 });
-    }
-    // Validate persisted requirement count and hash
-    if (!snapshot.requirements_content_hash || snapshot.expected_requirement_count !== snapshot.generated_requirement_count) {
-      await failOperation(base44, opResult.operation.id, "snapshot_count_hash_invalid");
-      return Response.json({ error: "Snapshot has invalid requirement count or hash" }, { status: 409 });
-    }
-
-    // ── 6. No open blocking SnapshotIntegrityIncident ──
-    const blockingIncidents = await base44.asServiceRole.entities.SnapshotIntegrityIncident.filter({
-      client_id: auth.client_id,
-      snapshot_id: effective_blueprint_snapshot_id,
-      operational_use_blocked: true,
-      status: { $in: ["open", "under_review"] },
-    });
-    if (blockingIncidents.length > 0) {
-      await failOperation(base44, opResult.operation.id, "snapshot_blocked_by_incident");
-      return Response.json({ error: "Snapshot is blocked by an open SnapshotIntegrityIncident", incident_ids: blockingIncidents.map(i => i.id) }, { status: 409 });
-    }
-
-    // ── 7. Enforce one active candidacy per client_id + critical_role_id + user_profile_id ──
+    // ── 4. Enforce one active candidacy per client_id + critical_role_id + user_profile_id ──
     const existing = await base44.asServiceRole.entities.SuccessorCandidacy.filter({
       client_id: auth.client_id, critical_role_id, user_profile_id, status: "active", integrity_status: "active",
     });

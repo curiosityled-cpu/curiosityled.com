@@ -39,13 +39,10 @@ export default function TalentPoolsView() {
   const fetchPools = useCallback(async () => {
     if (!selectedCycleId) return;
     try {
-      const data = await base44.entities.TalentPool.filter({
-        cycle_id: selectedCycleId,
-        integrity_status: "active",
-      });
-      setPools(data || []);
+      const data = await invoke("successionListTalentPools", { cycle_id: selectedCycleId });
+      setPools(data?.pools || []);
     } catch { setPools([]); }
-  }, [selectedCycleId]);
+  }, [invoke, selectedCycleId]);
 
   const fetchMemberships = useCallback(async () => {
     if (!selectedPool) { setMemberships([]); return; }

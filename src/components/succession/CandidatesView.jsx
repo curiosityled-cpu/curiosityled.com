@@ -58,21 +58,15 @@ export default function CandidatesView() {
 
   const fetchCandidacies = useCallback(async () => {
     try {
-      let filter = { integrity_status: "active" };
-      if (isCandidateView) {
-        // Candidates see only their own candidacies (RLS enforces this)
-        filter.user_profile_id = user?.id;
-      }
-      if (filterCriticalRoleId) {
-        filter.critical_role_id = filterCriticalRoleId;
-      }
-      if (selectedCycleId) {
-        filter.cycle_id = selectedCycleId;
-      }
-      const data = await base44.entities.SuccessorCandidacy.filter(filter);
-      setCandidacies(data || []);
+      // Secure read: backend enforces tenant scope, integrity filtering,
+      // and self-service scoping (own candidacies only when no discovery.view).
+      const payload = {};
+      if (filterCriticalRoleId) payload.critical_role_id = filterCriticalRoleId;
+      if (selectedCycleId) payload.cycle_id = selectedCycleId;
+      const data = await invoke("successionListCandidacies", payload);
+      setCandidacies(data?.candidacies || []);
     } catch { setCandidacies([]); }
-  }, [isCandidateView, user?.id, filterCriticalRoleId, selectedCycleId]);
+  }, [invoke, filterCriticalRoleId, selectedCycleId]);
 
   useEffect(() => { fetchCycles(); }, [fetchCycles]);
   useEffect(() => { fetchCriticalRoles(); }, [fetchCriticalRoles]);
