@@ -42,6 +42,7 @@ import ReviewQueueView from "@/components/succession/ReviewQueueView";
 import DemoDataButton from "@/components/succession/DemoDataButton";
 import { useAuth } from "@/components/useAuth";
 import { useSuccessionEnabled } from "@/components/succession/useSuccessionEnabled";
+import { useClient } from "@/components/contexts/ClientContext";
 
 const PHASE_1_VIEWS = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
@@ -92,7 +93,8 @@ export default function SuccessionWorkspace() {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeView = searchParams.get("view") || "overview";
   const { user } = useAuth();
-  const isDemoTenant = user?.data?.client_id === "demo-acme-corp";
+  const { client } = useClient();
+  const isDemoTenant = Boolean(client?.settings?.succession_demo);
   const { enabled: successionEnabled, loading: successionLoading } = useSuccessionEnabled();
 
   const handleViewChange = (key) => {
@@ -141,7 +143,7 @@ export default function SuccessionWorkspace() {
           {isDemoTenant && (
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
               <FlaskConical className="w-3.5 h-3.5 text-blue-600" />
-              <span className="text-xs font-medium text-blue-700">Demo Tenant — Acme Corp</span>
+              <span className="text-xs font-medium text-blue-700">Synthetic Demo Tenant</span>
             </div>
           )}
           <DemoDataButton isDemoTenant={isDemoTenant} />
