@@ -2154,41 +2154,14 @@ Return top 3 with relevance scores (0-100) and reasoning.`;
 
 async function executeAnalyzeFormSubmissions(base44, user, params) {
   const { formId, analysisType, dateRange = '30days' } = params;
-
-  const submissions = await base44.asServiceRole.entities.CustomFormSubmission.filter({
-    form_id: formId
-  });
-
-  const prompt = `Analyze these form submissions (${submissions.length} responses):
-
-Analysis Type: ${analysisType}
-Date Range: ${dateRange}
-
-Submissions Summary: ${JSON.stringify(submissions.slice(0, 50).map(s => s.responses))}
-
-Provide:
-1. Key findings (3-5 bullets)
-2. Patterns or trends
-3. Notable insights
-4. Recommendations`;
-
-  const analysis = await base44.integrations.Core.InvokeLLM({
-    prompt: prompt,
-    response_json_schema: {
-      type: "object",
-      properties: {
-        summary: { type: "string" },
-        findings: { type: "array", items: { type: "string" } },
-        patterns: { type: "array", items: { type: "string" } },
-        recommendations: { type: "array", items: { type: "string" } }
-      }
-    }
-  });
-
-  return {
-    message: `**Form Analysis (${submissions.length} responses):**\n\n${analysis.summary}\n\n**Key Findings:**\n${analysis.findings.map(f => `• ${f}`).join('\n')}\n\n**Recommendations:**\n${analysis.recommendations.map(r => `• ${r}`).join('\n')}`,
-    analysis_data: analysis
-  };
+  // Security: verify form ownership before service-role submission read.
+  const adminRoles = ['Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'];
+  let forms = []; try { forms = await base44.entities.CustomForm.filter({ id: formId }); } catch (e) {}
+  if (!forms[0] || (!adminRoles.includes(user.app_role) && forms[0].created_by !== user.email)) return { message: 'Form not found or you lack permission to analyze its submissions.' };
+  const submissions = await base44.asServiceRole.entities.CustomFormSubmission.filter({ form_id: formId });
+  const prompt = `Analyze these form submissions (${submissions.length} responses):\n\nAnalysis Type: ${analysisType}\nDate Range: ${dateRange}\n\nSubmissions Summary: ${JSON.stringify(submissions.slice(0, 50).map(s => s.responses))}\n\nProvide:\n1. Key findings (3-5 bullets)\n2. Patterns or trends\n3. Notable insights\n4. Recommendations`;
+  const analysis = await base44.integrations.Core.InvokeLLM({ prompt, response_json_schema: { type: "object", properties: { summary: { type: "string" }, findings: { type: "array", items: { type: "string" } }, patterns: { type: "array", items: { type: "string" } }, recommendations: { type: "array", items: { type: "string" } } } } });
+  return { message: `**Form Analysis (${submissions.length} responses):**\n\n${analysis.summary}\n\n**Key Findings:**\n${analysis.findings.map(f => `• ${f}`).join('\n')}\n\n**Recommendations:**\n${analysis.recommendations.map(r => `• ${r}`).join('\n')}`, analysis_data: analysis };
 }
 
 async function executeExportFormData(base44, user, params) {
