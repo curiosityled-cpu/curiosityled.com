@@ -17,13 +17,16 @@ export default async function(req: Request): Promise<Response> {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    // Security: restrict on-demand module publication to manager/admin roles.
-    // Regular users must not bypass the admin-gated module-create RLS via
-    // the service role to publish content into the shared learning catalog.
-    const allowedRoles = ['Platform Admin', 'Super Administrator', 'Partner Business Administrator', 'Admin Level 1', 'Admin Level 2', 'User Level 2', 'User Level 3'];
-    if (!allowedRoles.includes(user.app_role)) {
-      return Response.json({ error: 'Unauthorized — only managers and admins may publish pattern workouts' }, { status: 403 });
+    // Security: only admin-level roles may publish into the shared learning
+    // catalog. Manager roles (User Level 2/3) may create tenant-private drafts
+    // that require admin review before shared publication. Ordinary users are
+    // denied entirely.
+    const adminRoles = ['Platform Admin', 'Super Administrator', 'Partner Business Administrator', 'Admin Level 1', 'Admin Level 2'];
+    const managerRoles = ['User Level 2', 'User Level 3'];
+    if (!adminRoles.includes(user.app_role) && !managerRoles.includes(user.app_role)) {
+      return Response.json({ error: 'Unauthorized — only managers and admins may generate pattern workouts' }, { status: 403 });
     }
+    const canPublish = adminRoles.includes(user.app_role);
 
     const body = await req.json().catch(() => ({}));
     const brief = body.brief;
@@ -38,13 +41,14 @@ export default async function(req: Request): Promise<Response> {
     const savedModule = await svc.entities.ConversationalLearningModule.create({
       title: module.title,
       description: module.description,
-      status: 'published',
+      status: canPublish ? 'published' : 'draft',
       competencies: module.competencies,
       leadership_level: brief.leadership_level || WORKOUT_DEFAULTS.leadership_level,
       estimated_duration_minutes: module.estimated_duration_minutes || 5,
       conversation_structure: module.conversation_structure,
       related_resource_ids: resourceIds,
-      is_active: true,
+      is_active: canPublish,
+      client_id: canPublish ? undefined : user.client_id,
       points_value: WORKOUT_DEFAULTS.points_value,
       source_pattern_id: brief.pattern_id,
       workout_type: brief.type || 'skill',
