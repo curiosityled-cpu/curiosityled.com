@@ -289,7 +289,11 @@ export async function deriveServerOwnedPermissions(
   user: any,
   base44: any
 ): Promise<string[]> {
-  const role = user.app_role || user.data?.app_role || user.role || 'user';
+  // SECURITY: Read ONLY the top-level app_role (server-owned, set by admin
+  // functions via asServiceRole). Never read user.data?.app_role — it is
+  // self-settable via the platform-owned updateMe SDK method. If app_role
+  // is absent, default to 'User Level 1' (least privilege / fail closed).
+  const role = user.app_role || 'User Level 1';
 
   // Step 1: Base permissions from app_role (server-side mapping)
   const basePermissions: string[] = BASE_ROLE_PERMISSIONS[role] || [];

@@ -97,7 +97,7 @@
       "items": {
         "type": "string"
       },
-      "description": "Array of direct report emails (for User Level 2)"
+      "description": "Array of direct report emails (for User Level 2). NOT trusted for authorization \u2014 derive manager/subordinate relationships from PositionAssignment/OrgPosition instead."
     },
     "partner_client_ids": {
       "type": "array",
@@ -234,14 +234,6 @@
         },
         {
           "user_condition": {
-            "role": "User Level 2"
-          },
-          "email": {
-            "$in": "{{user.subordinate_emails}}"
-          }
-        },
-        {
-          "user_condition": {
             "role": {
               "$in": [
                 "Analyst",
@@ -285,9 +277,6 @@
     },
     "update": {
       "$or": [
-        {
-          "id": "{{user.id}}"
-        },
         {
           "user_condition": {
             "role": "Super Administrator"

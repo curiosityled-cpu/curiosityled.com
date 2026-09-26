@@ -142,11 +142,30 @@ Deno.serve(async (req) => {
 
     for (const email of managerEmails) {
       try {
-        // Look up the manager's client_id for tenant isolation (defense-in-depth)
+        // Look up the manager's client_id for tenant isolation (defense-in-depth).
+        // Derive from the authoritative User entity only — never from browser
+        // input, never from source records (ManagerPulse etc.), and never
+        // default to any hardcoded tenant. Skip processing when tenant
+        // membership is missing or ambiguous.
         const userRecords = await base44.asServiceRole.entities.User.filter(
-          { email }, '-created_date', 1
+          { email }, '-created_date', 5
         );
-        const managerClientId = userRecords[0]?.data?.client_id || null;
+        if (userRecords.length === 0) {
+          results.push({ email, status: 'skipped', reason: 'No User record — cannot derive tenant' });
+          continue;
+        }
+        if (userRecords.length > 1) {
+          const clientIds = [...new Set(userRecords.map(u => u.data?.client_id || u.client_id).filter(Boolean))];
+          if (clientIds.length > 1) {
+            results.push({ email, status: 'skipped', reason: 'Multiple User records with conflicting client_id' });
+            continue;
+          }
+        }
+        const managerClientId = userRecords[0]?.data?.client_id || userRecords[0]?.client_id || null;
+        if (!managerClientId) {
+          results.push({ email, status: 'skipped', reason: 'User record has no client_id — tenant membership missing' });
+          continue;
+        }
 
         // Fetch pulses — manager-private, accessed via service role
         const allPulses = await base44.asServiceRole.entities.ManagerPulse.filter(

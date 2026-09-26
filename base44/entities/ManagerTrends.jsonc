@@ -167,21 +167,12 @@
   ],
   "rls": {
     "create": {
-      "$or": [
+      "$and": [
         {
-          "$and": [
-            {
-              "data.user_email": "{{user.email}}"
-            },
-            {
-              "data.client_id": "{{user.data.client_id}}"
-            }
-          ]
+          "data.user_email": "{{user.email}}"
         },
         {
-          "user_condition": {
-            "role": "Platform Admin"
-          }
+          "data.client_id": "{{user.data.client_id}}"
         }
       ]
     },
@@ -194,23 +185,6 @@
             },
             {
               "data.client_id": "{{user.data.client_id}}"
-            }
-          ]
-        },
-        {
-          "$and": [
-            {
-              "data.client_id": "{{user.data.client_id}}"
-            },
-            {
-              "user_condition": {
-                "role": "User Level 2"
-              }
-            },
-            {
-              "data.user_email": {
-                "$in": "{{user.data.subordinate_emails}}"
-              }
             }
           ]
         },
@@ -249,49 +223,26 @@
               }
             }
           ]
-        },
-        {
-          "user_condition": {
-            "role": "Platform Admin"
-          }
         }
       ]
     },
     "update": {
-      "$or": [
+      "$and": [
         {
-          "$and": [
-            {
-              "data.user_email": "{{user.email}}"
-            },
-            {
-              "data.client_id": "{{user.data.client_id}}"
-            }
-          ]
+          "data.user_email": "{{user.email}}"
         },
         {
-          "user_condition": {
-            "role": "Platform Admin"
-          }
+          "data.client_id": "{{user.data.client_id}}"
         }
       ]
     },
     "delete": {
-      "$or": [
+      "$and": [
         {
-          "$and": [
-            {
-              "data.user_email": "{{user.email}}"
-            },
-            {
-              "data.client_id": "{{user.data.client_id}}"
-            }
-          ]
+          "data.user_email": "{{user.email}}"
         },
         {
-          "user_condition": {
-            "role": "Platform Admin"
-          }
+          "data.client_id": "{{user.data.client_id}}"
         }
       ]
     }
