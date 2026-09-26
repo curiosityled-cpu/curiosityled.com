@@ -42,7 +42,7 @@ export default function CriticalRoleDesignationForm({ roles, invoke, onSubmit, l
     <form onSubmit={handleSubmit} className="border border-gray-200 rounded-lg p-4 mb-4 bg-gray-50/50 space-y-3">
       <div>
         <Label className="text-xs text-gray-600">Select Role *</Label>
-        <select className="w-full h-9 text-sm border border-gray-200 rounded-md px-3 mt-1 bg-white"
+        <select aria-label="Select Role" className="w-full h-9 text-sm border border-gray-200 rounded-md px-3 mt-1 bg-white"
           value={selectedRoleId} onChange={(e) => { setSelectedRoleId(e.target.value); setSelectedPositionId(""); }}>
           <option value="">— Select a role —</option>
           {roles.map((r) => <option key={r.id} value={r.id}>{r.title}</option>)}
@@ -57,7 +57,7 @@ export default function CriticalRoleDesignationForm({ roles, invoke, onSubmit, l
           ) : positions.length === 0 ? (
             <p className="text-xs text-gray-400 mt-1">No positions found for this role.</p>
           ) : (
-            <select className="w-full h-9 text-sm border border-gray-200 rounded-md px-3 mt-1 bg-white"
+            <select aria-label="Select Position" className="w-full h-9 text-sm border border-gray-200 rounded-md px-3 mt-1 bg-white"
               value={selectedPositionId} onChange={(e) => setSelectedPositionId(e.target.value)} required>
               <option value="">— Select a position —</option>
               {positions.map((p) => (
@@ -71,7 +71,7 @@ export default function CriticalRoleDesignationForm({ roles, invoke, onSubmit, l
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div>
           <Label className="text-xs text-gray-600">Criticality Level</Label>
-          <select className="w-full h-9 text-sm border border-gray-200 rounded-md px-3 mt-1 bg-white"
+          <select aria-label="Criticality Level" className="w-full h-9 text-sm border border-gray-200 rounded-md px-3 mt-1 bg-white"
             value={criticalityLevel} onChange={(e) => setCriticalityLevel(e.target.value)}>
             <option value="critical">Critical</option>
             <option value="high">High</option>
@@ -80,7 +80,7 @@ export default function CriticalRoleDesignationForm({ roles, invoke, onSubmit, l
         </div>
         <div>
           <Label className="text-xs text-gray-600">Governance Tier</Label>
-          <select className="w-full h-9 text-sm border border-gray-200 rounded-md px-3 mt-1 bg-white"
+          <select aria-label="Governance Tier" className="w-full h-9 text-sm border border-gray-200 rounded-md px-3 mt-1 bg-white"
             value={governanceTier} onChange={(e) => setGovernanceTier(e.target.value)}>
             <option value="executive">Executive</option>
             <option value="senior">Senior</option>
@@ -89,7 +89,7 @@ export default function CriticalRoleDesignationForm({ roles, invoke, onSubmit, l
         </div>
         <div>
           <Label className="text-xs text-gray-600">Continuity Urgency</Label>
-          <select className="w-full h-9 text-sm border border-gray-200 rounded-md px-3 mt-1 bg-white"
+          <select aria-label="Continuity Urgency" className="w-full h-9 text-sm border border-gray-200 rounded-md px-3 mt-1 bg-white"
             value={continuityUrgency} onChange={(e) => setContinuityUrgency(e.target.value)}>
             <option value="immediate">Immediate</option>
             <option value="short_term">Short Term</option>
@@ -100,7 +100,7 @@ export default function CriticalRoleDesignationForm({ roles, invoke, onSubmit, l
 
       <div>
         <Label className="text-xs text-gray-600">Designation Reason *</Label>
-        <Textarea className="mt-1 text-sm" placeholder="Explain why this position is critical to organizational continuity…"
+        <Textarea className="mt-1 text-sm" aria-label="Designation Reason" placeholder="Explain why this position is critical to organizational continuity…"
           value={designationReason} onChange={(e) => setDesignationReason(e.target.value)} required rows={2} />
       </div>
 

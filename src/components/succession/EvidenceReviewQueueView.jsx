@@ -234,7 +234,7 @@ function ReviewForm({ evidence, onSubmit, loading, onCancel }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <Label className="text-xs text-gray-600">Decision *</Label>
-          <select className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
+          <select aria-label="Decision" className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
             value={formData.decision} onChange={e => setFormData(d => ({ ...d, decision: e.target.value }))} required>
             <option value="accepted">Accepted</option>
             <option value="accepted_with_limitations">Accepted with Limitations</option>
@@ -244,21 +244,21 @@ function ReviewForm({ evidence, onSubmit, loading, onCancel }) {
         </div>
         <div>
           <Label className="text-xs text-gray-600">Evidence Strength *</Label>
-          <select className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
+          <select aria-label="Evidence Strength" className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
             value={formData.evidence_strength} onChange={e => setFormData(d => ({ ...d, evidence_strength: e.target.value }))} required>
             {STRENGTH_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
         </div>
         <div>
           <Label className="text-xs text-gray-600">Confidence *</Label>
-          <select className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
+          <select aria-label="Confidence" className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
             value={formData.confidence} onChange={e => setFormData(d => ({ ...d, confidence: e.target.value }))} required>
             {CONFIDENCE_OPTIONS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
           </select>
         </div>
         <div>
           <Label className="text-xs text-gray-600">Relevance *</Label>
-          <select className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
+          <select aria-label="Relevance" className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
             value={formData.relevance} onChange={e => setFormData(d => ({ ...d, relevance: e.target.value }))} required>
             {RELEVANCE_OPTIONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
           </select>
@@ -267,7 +267,7 @@ function ReviewForm({ evidence, onSubmit, loading, onCancel }) {
           <Label className="text-xs text-gray-600">
             Limitations {formData.decision === "accepted_with_limitations" ? "*" : "(optional)"}
           </Label>
-          <textarea className="mt-1 w-full text-sm border border-gray-200 rounded-md px-2 py-1.5 min-h-[60px]"
+          <textarea aria-label="Limitations" className="mt-1 w-full text-sm border border-gray-200 rounded-md px-2 py-1.5 min-h-[60px]"
             placeholder="Describe any limitations..."
             value={formData.limitations} onChange={e => setFormData(d => ({ ...d, limitations: e.target.value }))}
             required={formData.decision === "accepted_with_limitations"} />
@@ -283,7 +283,7 @@ function ReviewForm({ evidence, onSubmit, loading, onCancel }) {
         {formData.contrary_evidence_indicator && (
           <div className="sm:col-span-2">
             <Label className="text-xs text-gray-600">Contrary Evidence Notes *</Label>
-            <textarea className="mt-1 w-full text-sm border border-gray-200 rounded-md px-2 py-1.5 min-h-[60px]"
+            <textarea aria-label="Contrary Evidence Notes" className="mt-1 w-full text-sm border border-gray-200 rounded-md px-2 py-1.5 min-h-[60px]"
               placeholder="Describe the contrary evidence..."
               value={formData.contrary_evidence_notes}
               onChange={e => setFormData(d => ({ ...d, contrary_evidence_notes: e.target.value }))} required />

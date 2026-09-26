@@ -246,7 +246,7 @@ function DisclosureForm({ onSubmit, loading, onCancel }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <Label className="text-xs text-gray-600">Aspiration Status *</Label>
-          <select className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
+          <select aria-label="Aspiration Status" className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
             value={formData.aspiration_status} onChange={e => setFormData(d => ({ ...d, aspiration_status: e.target.value }))} required>
             <option value="interested">Interested</option>
             <option value="undecided">Undecided</option>
@@ -255,7 +255,7 @@ function DisclosureForm({ onSubmit, loading, onCancel }) {
         </div>
         <div>
           <Label className="text-xs text-gray-600">Mobility *</Label>
-          <select className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
+          <select aria-label="Mobility" className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
             value={formData.mobility} onChange={e => setFormData(d => ({ ...d, mobility: e.target.value }))} required>
             <option value="local_only">Local Only</option>
             <option value="relocatable">Relocatable</option>
@@ -265,7 +265,7 @@ function DisclosureForm({ onSubmit, loading, onCancel }) {
         </div>
         <div>
           <Label className="text-xs text-gray-600">Availability Horizon *</Label>
-          <select className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
+          <select aria-label="Availability Horizon" className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
             value={formData.availability_horizon} onChange={e => setFormData(d => ({ ...d, availability_horizon: e.target.value }))} required>
             <option value="immediate">Immediate</option>
             <option value="0_6_months">0–6 Months</option>
@@ -285,7 +285,7 @@ function DisclosureForm({ onSubmit, loading, onCancel }) {
       </div>
       <div className="mt-3">
         <Label className="text-xs text-gray-600">Aspiration Statement (optional)</Label>
-        <textarea className="mt-1 w-full text-sm border border-gray-200 rounded-md px-2 py-1.5 min-h-[60px]"
+        <textarea aria-label="Aspiration Statement" className="mt-1 w-full text-sm border border-gray-200 rounded-md px-2 py-1.5 min-h-[60px]"
           placeholder="Optional statement about your aspirations..."
           value={formData.aspiration_statement} onChange={e => setFormData(d => ({ ...d, aspiration_statement: e.target.value }))} />
       </div>

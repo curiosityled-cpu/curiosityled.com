@@ -171,12 +171,12 @@ export default function ReviewQueueView() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs">Review Type</Label>
-                <select value={formData.review_type} onChange={(e) => setFormData({ ...formData, review_type: e.target.value })} className="w-full text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white">
+                <select aria-label="Review Type" value={formData.review_type} onChange={(e) => setFormData({ ...formData, review_type: e.target.value })} className="w-full text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white">
                   {Object.entries(REVIEW_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                 </select>
               </div>
               <div><Label className="text-xs">Title</Label><Input value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} /></div>
-              <div className="col-span-2"><Label className="text-xs">Review Scope</Label><Textarea value={formData.review_scope} onChange={(e) => setFormData({ ...formData, review_scope: e.target.value })} /></div>
+              <div className="col-span-2"><Label className="text-xs">Review Scope</Label><Textarea aria-label="Review Scope" value={formData.review_scope} onChange={(e) => setFormData({ ...formData, review_scope: e.target.value })} /></div>
               <div><Label className="text-xs">Owner Profile ID</Label><Input value={formData.owner_profile_id} onChange={(e) => setFormData({ ...formData, owner_profile_id: e.target.value })} /></div>
               <div><Label className="text-xs">Scheduled For</Label><Input type="datetime-local" value={formData.scheduled_for} onChange={(e) => setFormData({ ...formData, scheduled_for: e.target.value })} /></div>
               <div><Label className="text-xs">Cycle ID (optional)</Label><Input value={formData.cycle_id} onChange={(e) => setFormData({ ...formData, cycle_id: e.target.value })} /></div>
@@ -271,11 +271,11 @@ export default function ReviewQueueView() {
               <>
                 <div>
                   <Label className="text-xs">Operational Notes</Label>
-                  <Textarea value={completeForm.operational_notes} onChange={(e) => setCompleteForm({ ...completeForm, operational_notes: e.target.value })} />
+                  <Textarea aria-label="Operational Notes" value={completeForm.operational_notes} onChange={(e) => setCompleteForm({ ...completeForm, operational_notes: e.target.value })} />
                 </div>
                 <div>
                   <Label className="text-xs">Follow-up Actions</Label>
-                  <Textarea value={completeForm.follow_up_actions} onChange={(e) => setCompleteForm({ ...completeForm, follow_up_actions: e.target.value })} />
+                  <Textarea aria-label="Follow-up Actions" value={completeForm.follow_up_actions} onChange={(e) => setCompleteForm({ ...completeForm, follow_up_actions: e.target.value })} />
                 </div>
                 <div>
                   <Label className="text-xs">Next Review Date (optional)</Label>
@@ -292,7 +292,7 @@ export default function ReviewQueueView() {
               <>
                 <div>
                   <Label className="text-xs">Cancellation Reason (required)</Label>
-                  <Textarea value={completeForm.cancellation_reason} onChange={(e) => setCompleteForm({ ...completeForm, cancellation_reason: e.target.value })} />
+                  <Textarea aria-label="Cancellation Reason" value={completeForm.cancellation_reason} onChange={(e) => setCompleteForm({ ...completeForm, cancellation_reason: e.target.value })} />
                 </div>
                 {cancelError && <p className="text-sm text-red-600" role="alert">{cancelError}</p>}
                 <div className="flex gap-2">

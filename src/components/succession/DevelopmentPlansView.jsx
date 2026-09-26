@@ -159,6 +159,7 @@ export default function DevelopmentPlansView() {
             <div>
               <Label className="text-sm font-medium">Gap Summary *</Label>
               <Textarea
+                aria-label="Gap Summary"
                 value={formData.gap_summary}
                 onChange={(e) => setFormData({ ...formData, gap_summary: e.target.value })}
                 placeholder="Development gaps identified from the readiness conclusion"

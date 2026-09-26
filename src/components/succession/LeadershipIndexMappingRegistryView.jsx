@@ -177,7 +177,7 @@ export default function LeadershipIndexMappingRegistryView() {
           <div className="grid grid-cols-2 gap-3">
             <div><Label className="text-xs">Assessment Definition ID *</Label><Input value={formData.assessment_definition_id} onChange={(e) => setFormData({ ...formData, assessment_definition_id: e.target.value })} /></div>
             <div><Label className="text-xs">Leadership Level *</Label>
-              <select value={formData.assessment_leadership_level} onChange={(e) => setFormData({ ...formData, assessment_leadership_level: e.target.value })}
+              <select aria-label="Leadership Level" value={formData.assessment_leadership_level} onChange={(e) => setFormData({ ...formData, assessment_leadership_level: e.target.value })}
                 className="w-full text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white">
                 <option value="">Select...</option>
                 {LEADERSHIP_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
@@ -187,7 +187,7 @@ export default function LeadershipIndexMappingRegistryView() {
             <div><Label className="text-xs">Competency Key *</Label><Input value={formData.competency_key} onChange={(e) => setFormData({ ...formData, competency_key: e.target.value })} placeholder="e.g. si, dm, comm" /></div>
             <div><Label className="text-xs">Effective Blueprint Snapshot ID *</Label><Input value={formData.effective_blueprint_snapshot_id} onChange={(e) => setFormData({ ...formData, effective_blueprint_snapshot_id: e.target.value })} /></div>
             <div><Label className="text-xs">Effective Requirement Snapshot ID *</Label><Input value={formData.effective_requirement_snapshot_id} onChange={(e) => setFormData({ ...formData, effective_requirement_snapshot_id: e.target.value })} /></div>
-            <div className="col-span-2"><Label className="text-xs">Mapping Rationale *</Label><Textarea value={formData.mapping_rationale} onChange={(e) => setFormData({ ...formData, mapping_rationale: e.target.value })} /></div>
+            <div className="col-span-2"><Label className="text-xs">Mapping Rationale *</Label><Textarea aria-label="Mapping Rationale" value={formData.mapping_rationale} onChange={(e) => setFormData({ ...formData, mapping_rationale: e.target.value })} /></div>
           </div>
           <div className="flex gap-2 mt-3">
             <Button size="sm" onClick={handleCreate} disabled={loading} className="bg-[#0202ff] hover:bg-[#0101dd]">

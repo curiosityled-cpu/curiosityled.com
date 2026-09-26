@@ -450,7 +450,7 @@ function EvidenceForm({ requirements, initialData, isSupersede, onSubmit, loadin
         </div>
         <div className="sm:col-span-2">
           <Label className="text-xs text-gray-600">Description *</Label>
-          <textarea className="mt-1 w-full text-sm border border-gray-200 rounded-md px-2 py-1.5 min-h-[80px]"
+          <textarea aria-label="Description" className="mt-1 w-full text-sm border border-gray-200 rounded-md px-2 py-1.5 min-h-[80px]"
             placeholder="Describe the evidence..."
             value={formData.description} onChange={e => setFormData(d => ({ ...d, description: e.target.value }))} required />
         </div>

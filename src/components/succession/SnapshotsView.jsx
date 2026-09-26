@@ -119,7 +119,7 @@ export default function SnapshotsView() {
         {cycles.length === 0 && !loading ? (
           <SuccessionEmpty icon={Building2} title="No cycles available" />
         ) : (
-          <select className="w-full h-9 text-sm border border-gray-200 rounded-md px-3 bg-white"
+          <select aria-label="Select Cycle" className="w-full h-9 text-sm border border-gray-200 rounded-md px-3 bg-white"
             value={selectedCycleId || ""}
             onChange={(e) => { setSelectedCycleId(e.target.value || null); setSelectedRoleId(null); setSelectedSnapshot(null); setPreviewData(null); }}>
             <option value="">— Select a cycle —</option>
@@ -132,9 +132,9 @@ export default function SnapshotsView() {
         <SuccessionSection icon={Briefcase} title="Select Role">
           {loading && roles.length === 0 ? <SuccessionLoading /> :
            roles.length === 0 ? <SuccessionEmpty icon={Briefcase} title="No roles in this cycle" /> :
-           <select className="w-full h-9 text-sm border border-gray-200 rounded-md px-3 bg-white"
-             value={selectedRoleId || ""}
-             onChange={(e) => { setSelectedRoleId(e.target.value || null); setSelectedSnapshot(null); setPreviewData(null); }}>
+           <select aria-label="Select Role" className="w-full h-9 text-sm border border-gray-200 rounded-md px-3 bg-white"
+              value={selectedRoleId || ""}
+              onChange={(e) => { setSelectedRoleId(e.target.value || null); setSelectedSnapshot(null); setPreviewData(null); }}>
              <option value="">— Select a role —</option>
              {roles.map((r) => <option key={r.id} value={r.id}>{r.title}</option>)}
            </select>}

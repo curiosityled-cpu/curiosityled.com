@@ -260,7 +260,7 @@ export default function OperationalMonitorView() {
           <CardContent className="space-y-3">
             <div>
               <Label className="text-xs">Action</Label>
-              <select value={actionForm.new_status} onChange={(e) => setActionForm({ ...actionForm, new_status: e.target.value })} className="w-full text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white">
+              <select aria-label="Action" value={actionForm.new_status} onChange={(e) => setActionForm({ ...actionForm, new_status: e.target.value })} className="w-full text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white">
                 <option value="acknowledged">Acknowledge</option>
                 <option value="resolved">Resolve</option>
                 {actionAlert.severity !== "critical" && <option value="dismissed">Dismiss</option>}
@@ -269,13 +269,13 @@ export default function OperationalMonitorView() {
             {actionForm.new_status === "resolved" && (
               <div>
                 <Label className="text-xs">Resolution Note (required)</Label>
-                <Textarea value={actionForm.resolution_note} onChange={(e) => setActionForm({ ...actionForm, resolution_note: e.target.value })} />
+                <Textarea aria-label="Resolution Note" value={actionForm.resolution_note} onChange={(e) => setActionForm({ ...actionForm, resolution_note: e.target.value })} />
               </div>
             )}
             {actionForm.new_status === "dismissed" && (
               <div>
                 <Label className="text-xs">Dismissal Reason (required)</Label>
-                <Textarea value={actionForm.dismissal_reason} onChange={(e) => setActionForm({ ...actionForm, dismissal_reason: e.target.value })} />
+                <Textarea aria-label="Dismissal Reason" value={actionForm.dismissal_reason} onChange={(e) => setActionForm({ ...actionForm, dismissal_reason: e.target.value })} />
               </div>
             )}
             <div>

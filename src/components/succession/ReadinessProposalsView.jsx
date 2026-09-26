@@ -183,7 +183,7 @@ export default function ReadinessProposalsView() {
             <div>
               <Label className="text-xs">Candidacy</Label>
               <Select value={selectedCandidacy} onValueChange={setSelectedCandidacy}>
-                <SelectTrigger className="mt-1"><SelectValue placeholder="Select candidacy" /></SelectTrigger>
+                               <SelectTrigger className="mt-1" aria-label="Candidacy"><SelectValue placeholder="Select candidacy" /></SelectTrigger>
                 <SelectContent>
                   {candidacies.map(c => (
                     <SelectItem key={c.candidacy_id || c.id} value={c.candidacy_id || c.id}>
@@ -197,7 +197,7 @@ export default function ReadinessProposalsView() {
             <div>
               <Label className="text-xs">Proposed Value</Label>
               <Select value={proposedValue} onValueChange={setProposedValue}>
-                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                               <SelectTrigger className="mt-1" aria-label="Proposed Value"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {READINESS_VALUES.map(v => <SelectItem key={v.value} value={v.value}>{v.label}</SelectItem>)}
                 </SelectContent>
@@ -206,24 +206,24 @@ export default function ReadinessProposalsView() {
 
             <div>
               <Label className="text-xs">Rationale</Label>
-              <Textarea className="mt-1" value={rationale} onChange={e => setRationale(e.target.value)} placeholder="Explain the proposed readiness..." rows={3} />
+              <Textarea className="mt-1" aria-label="Rationale" value={rationale} onChange={e => setRationale(e.target.value)} placeholder="Explain the proposed readiness..." rows={3} />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs">Missing Evidence</Label>
-                <Textarea className="mt-1" value={missingEvidence} onChange={e => setMissingEvidence(e.target.value)} placeholder="Describe evidence gaps..." rows={2} />
+                <Textarea className="mt-1" aria-label="Missing Evidence" value={missingEvidence} onChange={e => setMissingEvidence(e.target.value)} placeholder="Describe evidence gaps..." rows={2} />
               </div>
               <div>
                 <Label className="text-xs">Conflicting Evidence</Label>
-                <Textarea className="mt-1" value={conflictingEvidence} onChange={e => setConflictingEvidence(e.target.value)} placeholder="Describe contrary evidence..." rows={2} />
+                <Textarea className="mt-1" aria-label="Conflicting Evidence" value={conflictingEvidence} onChange={e => setConflictingEvidence(e.target.value)} placeholder="Describe contrary evidence..." rows={2} />
               </div>
             </div>
 
             <div>
               <Label className="text-xs">Transition Horizon</Label>
               <Select value={transitionHorizon} onValueChange={setTransitionHorizon}>
-                <SelectTrigger className="mt-1"><SelectValue placeholder="Optional" /></SelectTrigger>
+                               <SelectTrigger className="mt-1" aria-label="Transition Horizon"><SelectValue placeholder="Optional" /></SelectTrigger>
                 <SelectContent>
                   {TRANSITION_HORIZONS.map(h => <SelectItem key={h.value} value={h.value}>{h.label}</SelectItem>)}
                 </SelectContent>
@@ -239,13 +239,13 @@ export default function ReadinessProposalsView() {
               {citations.map((c, idx) => (
                 <div key={idx} className="flex gap-2 items-start p-2 rounded-lg border border-gray-200">
                   <Select value={c.evidence_record_id} onValueChange={v => updateCitation(idx, "evidence_record_id", v)}>
-                    <SelectTrigger className="flex-1"><SelectValue placeholder="Evidence" /></SelectTrigger>
+                                       <SelectTrigger className="flex-1" aria-label="Evidence"><SelectValue placeholder="Evidence" /></SelectTrigger>
                     <SelectContent>
                       {evidence.map(e => <SelectItem key={e.evidence_id || e.id} value={e.evidence_id || e.id}>{e.title || e.evidence_id || e.id}</SelectItem>)}
                     </SelectContent>
                   </Select>
                   <Select value={c.citation_role} onValueChange={v => updateCitation(idx, "citation_role", v)}>
-                    <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                                       <SelectTrigger className="w-32" aria-label="Citation Role"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="supporting">Supporting</SelectItem>
                       <SelectItem value="contrary">Contrary</SelectItem>

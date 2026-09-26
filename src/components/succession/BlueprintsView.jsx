@@ -124,7 +124,7 @@ export default function BlueprintsView() {
         {cycles.length === 0 && !loading ? (
           <SuccessionEmpty icon={Building2} title="No cycles available" />
         ) : (
-          <select className="w-full h-9 text-sm border border-gray-200 rounded-md px-3 bg-white"
+          <select aria-label="Select Cycle" className="w-full h-9 text-sm border border-gray-200 rounded-md px-3 bg-white"
             value={selectedCycleId || ""}
             onChange={(e) => { setSelectedCycleId(e.target.value || null); setSelectedRoleId(null); }}>
             <option value="">— Select a cycle —</option>
@@ -137,9 +137,9 @@ export default function BlueprintsView() {
         <SuccessionSection icon={Briefcase} title="Select Role">
           {loading && roles.length === 0 ? <SuccessionLoading /> :
            roles.length === 0 ? <SuccessionEmpty icon={Briefcase} title="No roles in this cycle" /> :
-           <select className="w-full h-9 text-sm border border-gray-200 rounded-md px-3 bg-white"
-             value={selectedRoleId || ""}
-             onChange={(e) => setSelectedRoleId(e.target.value || null)}>
+           <select aria-label="Select Role" className="w-full h-9 text-sm border border-gray-200 rounded-md px-3 bg-white"
+              value={selectedRoleId || ""}
+              onChange={(e) => setSelectedRoleId(e.target.value || null)}>
              <option value="">— Select a role —</option>
              {roles.map((r) => <option key={r.id} value={r.id}>{r.title}</option>)}
            </select>}
@@ -304,7 +304,7 @@ function CreateRequirementForm({ onSubmit, loading, onCancel }) {
     <form onSubmit={handleSubmit} className="border border-gray-200 rounded-lg p-4 mb-4 bg-gray-50/50">
       <div>
         <Label className="text-xs text-gray-600">Requirement Text *</Label>
-        <Textarea className="mt-1 text-sm" placeholder="Describe a role requirement..." value={requirementText}
+        <Textarea className="mt-1 text-sm" aria-label="Requirement Text" placeholder="Describe a role requirement..." value={requirementText}
           onChange={(e) => setRequirementText(e.target.value)} required rows={3} />
       </div>
       <div className="flex gap-2 mt-3">

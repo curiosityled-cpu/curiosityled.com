@@ -193,7 +193,7 @@ export default function RatificationQueueView() {
                     <div>
                       <Label className="text-xs">Decision</Label>
                       <Select value={decision} onValueChange={setDecision}>
-                        <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="mt-1" aria-label="Decision"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="ratify">Ratify (use calibrated value)</SelectItem>
                           <SelectItem value="override">Override (different value)</SelectItem>
@@ -207,7 +207,7 @@ export default function RatificationQueueView() {
                       <div>
                         <Label className="text-xs">Override Value</Label>
                         <Select value={overrideValue} onValueChange={setOverrideValue}>
-                          <SelectTrigger className="mt-1"><SelectValue placeholder="Select override value" /></SelectTrigger>
+                          <SelectTrigger className="mt-1" aria-label="Override Value"><SelectValue placeholder="Select override value" /></SelectTrigger>
                           <SelectContent>
                             {READINESS_VALUES.map(v => <SelectItem key={v.value} value={v.value}>{v.label}</SelectItem>)}
                           </SelectContent>
@@ -217,7 +217,7 @@ export default function RatificationQueueView() {
 
                     <div>
                       <Label className="text-xs">Rationale</Label>
-                      <Textarea className="mt-1" value={rationale} onChange={e => setRationale(e.target.value)} placeholder="Required rationale..." rows={3} />
+                      <Textarea className="mt-1" aria-label="Rationale" value={rationale} onChange={e => setRationale(e.target.value)} placeholder="Required rationale..." rows={3} />
                     </div>
 
                     {(decision === "ratify" || decision === "override") && (

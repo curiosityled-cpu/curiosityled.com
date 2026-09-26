@@ -116,7 +116,7 @@ export default function CalibrationView() {
           <div>
             <Label className="text-xs">Calibration Session</Label>
             <Select value={selectedSession} onValueChange={setSelectedSession}>
-              <SelectTrigger className="mt-1"><SelectValue placeholder="Select session" /></SelectTrigger>
+                           <SelectTrigger className="mt-1" aria-label="Calibration Session"><SelectValue placeholder="Select session" /></SelectTrigger>
               <SelectContent>
                 {sessions.map(s => (
                   <SelectItem key={s.id} value={s.id}>
@@ -176,13 +176,13 @@ export default function CalibrationView() {
                       </label>
                       {!coiDisclosed && (
                         <Select value={judgmentValue} onValueChange={setJudgmentValue}>
-                          <SelectTrigger><SelectValue placeholder="Your judgment" /></SelectTrigger>
+                                                   <SelectTrigger aria-label="Judgment"><SelectValue placeholder="Your judgment" /></SelectTrigger>
                           <SelectContent>
                             {JUDGMENT_VALUES.map(v => <SelectItem key={v.value} value={v.value}>{v.label}</SelectItem>)}
                           </SelectContent>
                         </Select>
                       )}
-                      <Textarea placeholder="Notes (optional)" value={judgmentNotes} onChange={e => setJudgmentNotes(e.target.value)} rows={2} />
+                      <Textarea aria-label="Notes" placeholder="Notes (optional)" value={judgmentNotes} onChange={e => setJudgmentNotes(e.target.value)} rows={2} />
                       <Button size="sm" onClick={() => handleRecordJudgment(c.case_id)} disabled={loading || (!coiDisclosed && !judgmentValue)}>
                         {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : null}
                         Record Judgment

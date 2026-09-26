@@ -205,6 +205,7 @@ export default function DevelopmentActionsView() {
             <div>
               <Label className="text-sm font-medium">Description *</Label>
               <Textarea
+                aria-label="Description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Detailed description"
@@ -280,6 +281,7 @@ export default function DevelopmentActionsView() {
             <div>
               <Label className="text-sm font-medium">Outcome Notes (not accepted evidence)</Label>
               <Textarea
+                aria-label="Outcome Notes"
                 value={outcomeNotes}
                 onChange={(e) => setOutcomeNotes(e.target.value)}
                 placeholder="Describe the outcome. A suggested EvidenceRecord will be created in draft status — it requires normal review before it can be cited."

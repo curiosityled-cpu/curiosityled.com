@@ -204,15 +204,15 @@ export default function TransitionDetailView({ initiationId, onBack }) {
             </div>
             <div className="col-span-2">
               <Label className="text-xs">Access Handoffs</Label>
-              <Textarea value={ktForm.access_handoffs} onChange={(e) => setKtForm({ ...ktForm, access_handoffs: e.target.value })} disabled={!canEdit} />
+              <Textarea aria-label="Access Handoffs" value={ktForm.access_handoffs} onChange={(e) => setKtForm({ ...ktForm, access_handoffs: e.target.value })} disabled={!canEdit} />
             </div>
             <div className="col-span-2">
               <Label className="text-xs">Stakeholder Handoffs</Label>
-              <Textarea value={ktForm.stakeholder_handoffs} onChange={(e) => setKtForm({ ...ktForm, stakeholder_handoffs: e.target.value })} disabled={!canEdit} />
+              <Textarea aria-label="Stakeholder Handoffs" value={ktForm.stakeholder_handoffs} onChange={(e) => setKtForm({ ...ktForm, stakeholder_handoffs: e.target.value })} disabled={!canEdit} />
             </div>
             <div className="col-span-2">
               <Label className="text-xs">Documentation Locations</Label>
-              <Textarea value={ktForm.documentation_locations} onChange={(e) => setKtForm({ ...ktForm, documentation_locations: e.target.value })} disabled={!canEdit} />
+              <Textarea aria-label="Documentation Locations" value={ktForm.documentation_locations} onChange={(e) => setKtForm({ ...ktForm, documentation_locations: e.target.value })} disabled={!canEdit} />
             </div>
           </div>
 
@@ -241,7 +241,7 @@ export default function TransitionDetailView({ initiationId, onBack }) {
                   <Input placeholder="Area title" value={newKtArea.title} onChange={(e) => setNewKtArea({ ...newKtArea, title: e.target.value })} />
                   <Input placeholder="Transfer method" value={newKtArea.transfer_method} onChange={(e) => setNewKtArea({ ...newKtArea, transfer_method: e.target.value })} />
                 </div>
-                <Textarea placeholder="Description" value={newKtArea.description} onChange={(e) => setNewKtArea({ ...newKtArea, description: e.target.value })} />
+                <Textarea aria-label="Description" placeholder="Description" value={newKtArea.description} onChange={(e) => setNewKtArea({ ...newKtArea, description: e.target.value })} />
                 <div className="grid grid-cols3 gap-2">
                   <Input placeholder="Owner Profile ID" value={newKtArea.owner_profile_id} onChange={(e) => setNewKtArea({ ...newKtArea, owner_profile_id: e.target.value })} />
                   <Input type="date" value={newKtArea.target_date} onChange={(e) => setNewKtArea({ ...newKtArea, target_date: e.target.value })} />
@@ -289,9 +289,9 @@ export default function TransitionDetailView({ initiationId, onBack }) {
             <div><Label className="text-xs">Start Date</Label><Input type="date" value={tpForm.start_date} onChange={(e) => setTpForm({ ...tpForm, start_date: e.target.value })} disabled={!canEdit} /></div>
             <div><Label className="text-xs">Review Date</Label><Input type="date" value={tpForm.review_date} onChange={(e) => setTpForm({ ...tpForm, review_date: e.target.value })} disabled={!canEdit} /></div>
             <div><Label className="text-xs">Target Completion</Label><Input type="date" value={tpForm.target_completion_date} onChange={(e) => setTpForm({ ...tpForm, target_completion_date: e.target.value })} disabled={!canEdit} /></div>
-            <div className="col-span-2"><Label className="text-xs">Ramp Plan</Label><Textarea value={tpForm.ramp_plan} onChange={(e) => setTpForm({ ...tpForm, ramp_plan: e.target.value })} disabled={!canEdit} /></div>
-            <div className="col-span-2"><Label className="text-xs">Success Outcomes</Label><Textarea value={tpForm.success_outcomes} onChange={(e) => setTpForm({ ...tpForm, success_outcomes: e.target.value })} disabled={!canEdit} /></div>
-            <div className="col-span-2"><Label className="text-xs">Milestone Summary</Label><Textarea value={tpForm.milestone_summary} onChange={(e) => setTpForm({ ...tpForm, milestone_summary: e.target.value })} disabled={!canEdit} /></div>
+            <div className="col-span-2"><Label className="text-xs">Ramp Plan</Label><Textarea aria-label="Ramp Plan" value={tpForm.ramp_plan} onChange={(e) => setTpForm({ ...tpForm, ramp_plan: e.target.value })} disabled={!canEdit} /></div>
+            <div className="col-span-2"><Label className="text-xs">Success Outcomes</Label><Textarea aria-label="Success Outcomes" value={tpForm.success_outcomes} onChange={(e) => setTpForm({ ...tpForm, success_outcomes: e.target.value })} disabled={!canEdit} /></div>
+            <div className="col-span-2"><Label className="text-xs">Milestone Summary</Label><Textarea aria-label="Milestone Summary" value={tpForm.milestone_summary} onChange={(e) => setTpForm({ ...tpForm, milestone_summary: e.target.value })} disabled={!canEdit} /></div>
           </div>
 
           {/* Risks */}
@@ -316,7 +316,7 @@ export default function TransitionDetailView({ initiationId, onBack }) {
             {canEdit && (
               <div className="mt-2 p-3 rounded-lg border border-dashed border-gray-300 space-y-2">
                 <Input placeholder="Risk description" value={newRisk.risk} onChange={(e) => setNewRisk({ ...newRisk, risk: e.target.value })} />
-                <Textarea placeholder="Mitigation" value={newRisk.mitigation} onChange={(e) => setNewRisk({ ...newRisk, mitigation: e.target.value })} />
+                <Textarea aria-label="Mitigation" placeholder="Mitigation" value={newRisk.mitigation} onChange={(e) => setNewRisk({ ...newRisk, mitigation: e.target.value })} />
                 <div className="grid grid-cols-3 gap-2">
                   <select value={newRisk.severity} onChange={(e) => setNewRisk({ ...newRisk, severity: e.target.value })} aria-label="New risk severity" className="text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white">
                     <option value="low">Low</option>

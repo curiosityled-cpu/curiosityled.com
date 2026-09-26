@@ -268,7 +268,7 @@ export default function TransitionsView() {
                   </div>
                   <div className="col-span-2">
                     <Label className="text-xs">Exception Reason</Label>
-                    <Textarea value={formData.exception_reason} onChange={(e) => setFormData({ ...formData, exception_reason: e.target.value })} placeholder="Reason for exception" />
+                    <Textarea aria-label="Exception Reason" value={formData.exception_reason} onChange={(e) => setFormData({ ...formData, exception_reason: e.target.value })} placeholder="Reason for exception" />
                   </div>
                 </>
               )}
