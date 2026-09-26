@@ -93,6 +93,12 @@ async function seedAllData(base44: any, adminProfileId: string): Promise<any> {
   let client = await base44.asServiceRole.entities.Client.filter({ slug: DEMO_CLIENT_SLUG }, '-created_date', 1);
   if (client.length > 0) {
     ids.client = client[0].id;
+    // Ensure the existing demo tenant has the Succession module activated.
+    if (!client[0].settings?.succession_enabled) {
+      await base44.asServiceRole.entities.Client.update(client[0].id, {
+        settings: { ...client[0].settings, succession_enabled: true },
+      });
+    }
   } else {
     const created = await base44.asServiceRole.entities.Client.create({
       name: 'Acme Corp (DEMO)',
@@ -108,6 +114,7 @@ async function seedAllData(base44: any, adminProfileId: string): Promise<any> {
       seats_used: 7,
       onboarding_status: 'completed',
       notes: 'DEMO TENANT — Created for succession module demonstration. Not real data.',
+      settings: { succession_enabled: true },
     });
     ids.client = created.id;
   }

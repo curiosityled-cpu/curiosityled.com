@@ -27,6 +27,7 @@ export interface BootstrapAuthContext {
   partner_client_ids: string[];
   permissions: string[];
   grant_feature_enabled: boolean;
+  succession_enabled: boolean;
 }
 
 export async function bootstrapSuccessionAuth(base44: any): Promise<BootstrapAuthContext> {
@@ -87,5 +88,6 @@ export async function bootstrapSuccessionAuth(base44: any): Promise<BootstrapAut
     partner_client_ids,
     permissions,
     grant_feature_enabled: isGrantFeatureEnabled(),
+    succession_enabled: Boolean(client?.settings?.succession_enabled),
   };
 }

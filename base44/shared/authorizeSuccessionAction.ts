@@ -83,6 +83,36 @@ export async function authorizeSuccessionAction(
     };
   }
 
+  // ── 0.5. Tenant activation gate ───────────────────────────────────────────
+  // The Succession module must be explicitly activated per tenant via
+  // Client.settings.succession_enabled. When false (the default), ALL
+  // succession actions are denied regardless of role or permission. This
+  // enforces the "disabled by default" invariant: no tenant gets succession
+  // access unless an authorized admin has explicitly turned it on.
+  if (!auth.succession_enabled) {
+    await writeSuccessionAuditEvent({
+      base44,
+      action_type: "denied_action",
+      target_entity_type: params.target_entity_type,
+      target_entity_id: params.target_entity_id,
+      metadata: {
+        action,
+        denied_reason: "succession_module_not_activated",
+        actor_role: auth.role,
+        actor_email: auth.email,
+        actor_client_id: auth.client_id,
+        target_client_id,
+      },
+      client_id_override: target_client_id || undefined,
+    });
+    return {
+      allowed: false,
+      denied_reason:
+        "Succession Management is not activated for this tenant. A tenant admin or Platform Admin must enable it in Client settings.",
+      target_client_id: target_client_id || undefined,
+    };
+  }
+
   // ── 1. Permission check ──────────────────────────────────────────────────
   // Platform Admin with full-access flag bypasses the permission check
   // entirely (including explicit_permission_only approval gates).

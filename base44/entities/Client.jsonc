@@ -525,6 +525,11 @@
           },
           "description": "Reporting defaults"
         },
+        "succession_enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the Succession Management module is activated for this tenant. When false (the default), all succession backend functions reject access and the workspace is hidden from navigation. Must be explicitly set to true by a tenant admin or Platform Admin to activate the module."
+        },
         "locks": {
           "type": "object",
           "description": "Org-override locks. When a key is true, the corresponding personal setting is locked to the org value for non-super-admin users.",
