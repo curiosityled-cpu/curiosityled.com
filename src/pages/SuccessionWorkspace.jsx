@@ -18,6 +18,7 @@ import {
   Target,
   Zap,
   ArrowRightCircle,
+  FlaskConical,
 } from "lucide-react";
 import OverviewView from "@/components/succession/OverviewView";
 import CyclesView from "@/components/succession/CyclesView";
@@ -38,6 +39,8 @@ import TransitionsView from "@/components/succession/TransitionsView";
 import TransitionDetailView from "@/components/succession/TransitionDetailView";
 import OperationalMonitorView from "@/components/succession/OperationalMonitorView";
 import ReviewQueueView from "@/components/succession/ReviewQueueView";
+import DemoDataButton from "@/components/succession/DemoDataButton";
+import { useAuth } from "@/components/useAuth";
 
 const PHASE_1_VIEWS = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
@@ -87,6 +90,8 @@ const ALL_VIEWS = [...PHASE_1_VIEWS, ...PHASE_2A_VIEWS, ...PHASE_2B_VIEWS, ...PH
 export default function SuccessionWorkspace() {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeView = searchParams.get("view") || "overview";
+  const { user } = useAuth();
+  const isDemoTenant = user?.data?.client_id === "demo-acme-corp";
 
   const handleViewChange = (key) => {
     setSearchParams({ view: key });
@@ -97,9 +102,18 @@ export default function SuccessionWorkspace() {
       title="Succession Management"
       subtitle="Build the organizational and blueprint foundation: cycles, roles, positions, critical roles, blueprints, and effective snapshots."
       action={
-        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200">
-          <Lock className="w-3.5 h-3.5 text-amber-600" />
-          <span className="text-xs font-medium text-amber-700">Phase 1 — Development Only (Non-Production)</span>
+        <div className="flex items-center gap-3">
+          {isDemoTenant && (
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
+              <FlaskConical className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-xs font-medium text-blue-700">Demo Tenant — Acme Corp</span>
+            </div>
+          )}
+          <DemoDataButton isDemoTenant={isDemoTenant} />
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200">
+            <Lock className="w-3.5 h-3.5 text-amber-600" />
+            <span className="text-xs font-medium text-amber-700">Phase 1 — Development Only (Non-Production)</span>
+          </div>
         </div>
       }
     >
