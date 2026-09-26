@@ -13,6 +13,7 @@
  */
 
 import { isGrantFeatureEnabled } from "./successionConstants.ts";
+import { deriveServerOwnedPermissions } from "./successionRolePermissions.ts";
 
 export interface BootstrapAuthContext {
   user: any;
@@ -63,12 +64,13 @@ export async function bootstrapSuccessionAuth(base44: any): Promise<BootstrapAut
     (user.data?.partner_client_ids as string[]) ||
     [];
 
-  // Permissions: read from user data (addon permissions are merged by the
-  // platform into the user object). We do NOT query succession-domain entities.
-  const permissions: string[] =
-    (user.permissions as string[]) ||
-    (user.data?.permissions as string[]) ||
-    [];
+  // Permissions: derived from SERVER-OWNED sources only (app_role mapping +
+  // CustomRole entity). We NEVER read user.permissions or user.data.permissions
+  // — those fields are self-settable via the platform-owned updateMe SDK
+  // method and are NOT trusted for authorization decisions. An ordinary user
+  // calling base44.auth.updateMe({ permissions: ["succession.cycles.view"] })
+  // has NO effect on the permissions returned here.
+  const permissions: string[] = await deriveServerOwnedPermissions(user, base44);
 
   return {
     user,

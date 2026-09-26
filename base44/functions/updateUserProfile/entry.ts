@@ -35,10 +35,29 @@ Deno.serve(async (req) => {
         const isOwnProfile = currentUser.id === user_id;
         const isHRAdmin = ['Admin Level 2', 'Super Administrator', 'Platform Admin', 'Partner Business Administrator'].includes(currentUser.app_role);
 
-        // Fields that only HR admins can update
-        // Includes security-critical tenant/role fields that must never be
-        // self-editable by ordinary users (Phase 0 succession security).
-        const restrictedFields = [
+        // ── Allowlist for self-service profile fields ──────────────────────────
+        // Ordinary users may ONLY update these fields on their own profile.
+        // Everything else (role, permissions, tenant, status, etc.) is
+        // SERVER-OWNED and requires HR admin authorization. This is an
+        // ALLOWLIST, not a denylist — any field not listed here is rejected
+        // for self-service updates, preventing mass assignment of privileged
+        // fields (permissions, app_role, client_id, account_status, etc.).
+        const SELF_SERVICE_ALLOWED_FIELDS = new Set([
+            'display_name',
+            'current_role',
+            'department',
+            'manager_email',
+            'start_date',
+            'leadership_start_date',
+            'leadership_lifecycle_stage',
+            'sector',
+            'onboarding_completed',
+            'two_factor_enabled',
+            'two_factor_enabled_at'
+        ]);
+
+        // Fields that ONLY HR admins can update (even on their own profile)
+        const ADMIN_ONLY_FIELDS = new Set([
             'email',
             'full_name',
             'client_id',
@@ -49,29 +68,49 @@ Deno.serve(async (req) => {
             'managed_program_ids',
             'subordinate_emails',
             'account_status',
+            'account_suspended_at',
+            'account_suspended_by',
+            'account_suspended_reason',
             'account_expires_at',
+            'account_type',
             'license_type',
+            'license_assigned_date',
             'is_uat_tester',
-            'leadership_level'
-        ];
-        
+            'leadership_level',
+            'invitation_sent_at',
+            'invitation_accepted_at',
+            'invitation_resend_count',
+            'last_invitation_sent_at',
+            'license_activated_at',
+            'failed_login_attempts',
+            'locked_until',
+            'locked_reason',
+            'last_login_date'
+        ]);
+
         // Build update object based on permissions
         const updateData = {};
-        
+
         for (const [key, value] of Object.entries(profile_data)) {
-            // Skip restricted fields if user is not HR admin
-            if (restrictedFields.includes(key) && !isHRAdmin) {
+            // Reject admin-only fields if user is not HR admin
+            if (ADMIN_ONLY_FIELDS.has(key) && !isHRAdmin) {
                 continue;
             }
-            
+
+            // For self-service (non-admin) updates, use ALLOWLIST:
+            // reject any field not explicitly permitted
+            if (!isHRAdmin && !SELF_SERVICE_ALLOWED_FIELDS.has(key)) {
+                continue;
+            }
+
             // Skip if not own profile and not admin
             if (!isOwnProfile && !isHRAdmin) {
-                return Response.json({ 
-                    success: false, 
-                    error: 'Forbidden - You can only edit your own profile' 
+                return Response.json({
+                    success: false,
+                    error: 'Forbidden - You can only edit your own profile'
                 }, { status: 403 });
             }
-            
+
             updateData[key] = value;
         }
 

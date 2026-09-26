@@ -161,10 +161,10 @@ export default async function(req: Request): Promise<Response> {
     }
 
     // ── 6. Verify partner succession aggregate permission ─────────────────────
-    const permissions: string[] =
-      (user.permissions as string[]) ||
-      (user.data?.permissions as string[]) ||
-      [];
+    // Permissions derived from SERVER-OWNED sources only (app_role + CustomRole).
+    // Never trust user.data.permissions — self-settable via updateMe.
+    const { deriveServerOwnedPermissions } = await import("../../shared/successionRolePermissions.ts");
+    const permissions: string[] = await deriveServerOwnedPermissions(user, base44);
 
     if (!permissions.includes("succession.partner_aggregate_view")) {
       await writeSuccessionAuditEvent({
