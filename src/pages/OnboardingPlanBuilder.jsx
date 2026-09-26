@@ -381,11 +381,17 @@ ${jobDescription}`;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const [confirmingDelete, setConfirmingDelete] = useState(null);
+
   const handleDeletePlan = async (planId) => {
-    if (!window.confirm("Are you sure you want to delete this plan? This action cannot be undone.")) return;
+    if (confirmingDelete !== planId) {
+      setConfirmingDelete(planId);
+      return;
+    }
 
     try {
         await base44.entities.OnboardingPlan.delete(planId);
+        setConfirmingDelete(null);
         toast.success("Plan deleted successfully.");
         fetchSavedPlans();
         if(generatedPlan?.id === planId) {
@@ -894,8 +900,8 @@ ${jobDescription}`;
                          <Button size="sm" onClick={() => handleOpenDeployModal(plan)}>
                             <Send className="h-4 w-4 mr-1.5"/> Deploy
                          </Button>
-                         <Button size="sm" variant="destructive" onClick={() => handleDeletePlan(plan.id)}>
-                            <Trash2 className="h-4 w-4"/>
+                         <Button size="sm" variant={confirmingDelete === plan.id ? "destructive" : "outline"} onClick={() => handleDeletePlan(plan.id)} aria-label={confirmingDelete === plan.id ? `Confirm deletion of ${plan.name || 'plan'}` : `Delete ${plan.name || 'plan'}`}>
+                            {confirmingDelete === plan.id ? <span className="text-xs font-medium">Confirm?</span> : <Trash2 className="h-4 w-4"/>}
                          </Button>
                       </div>
                     </div>

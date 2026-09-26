@@ -112,8 +112,9 @@ bob.johnson@company.com,Program Coordinator`;
     const results = { valid: [], invalid: [] };
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    // Get all users
-    const allUsers = await base44.asServiceRole.entities.User.list();
+    // Get all users via backend function (no frontend service-role access)
+    const usersResponse = await base44.functions.invoke('listAllUsers', {});
+    const allUsers = usersResponse?.data?.users || usersResponse?.data || [];
     const userEmailMap = new Map(allUsers.map(u => [u.email.toLowerCase(), u]));
 
     // Create role name map

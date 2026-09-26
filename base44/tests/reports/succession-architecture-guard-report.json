@@ -1,15 +1,16 @@
 {
-  "guard_version": "2.0-hardened",
-  "checked_at": "2026-09-25T20:57:40.689Z",
+  "guard_version": "3.0-hardened",
+  "checked_at": "2026-09-26T02:20:58.548Z",
   "exception_list_reviewed": "2026-09-25",
   "passed": true,
-  "total_functions": 121,
+  "total_functions": 122,
+  "total_backend_functions_scanned": 487,
   "coverage": {
-    "operational": 110,
+    "operational": 111,
     "control_plane": 6,
     "infrastructure": 2,
     "test_harness": 3,
-    "private_helper": 20,
+    "private_helper": 21,
     "unclassified": 0
   },
   "shared_private_helpers": [
@@ -30,10 +31,13 @@
     "successionOperationHelper.ts",
     "successionPayloadCanonical.ts",
     "successionReadinessValidator.ts",
+    "successionRolePermissions.ts",
     "successionSnapshotValidator.ts",
     "successionTimezoneHelper.ts",
     "successionTransitionValidator.ts"
   ],
+  "auth_source_violations": [],
+  "frontend_violations": [],
   "inventory": [
     {
       "name": "successionAddPoolMember",
@@ -822,6 +826,16 @@
       "authorize_offset": 808,
       "domain_access_offset": 2322,
       "domain_access_entity": "EffectiveBlueprintSnapshot",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionPrivilegeEscalationTest",
+      "classification": "operational",
+      "bootstrap_offset": 1415,
+      "authorize_offset": 1750,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
       "ordering_ok": true,
       "issues": []
     },

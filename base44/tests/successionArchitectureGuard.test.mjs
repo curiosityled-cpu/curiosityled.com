@@ -480,15 +480,146 @@ function runGuard() {
   const sharedHelpers = listSharedHelpers();
   coverage.private_helper = sharedHelpers.length;
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BACKEND AUTHORIZATION SOURCE GUARD (all backend functions)
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Fail when backend authorization decisions directly read untrusted,
+  // browser-settable fields: user.data.permissions, user.permissions,
+  // user.data.app_role, browser-supplied role/actor/tenant identity,
+  // unverified custom_role_id.
+  // Allow only: successionRolePermissions, explicitly approved centralized
+  // server-derived helpers, and test fixtures clearly excluded from production.
+
+  const UNTRUSTED_AUTH_PATTERNS = [
+    { pattern: "user.data.permissions", issue: "reads_user_data_permissions" },
+    { pattern: "user.permissions", issue: "reads_user_permissions" },
+    { pattern: "user.data.app_role", issue: "reads_user_data_app_role" },
+    { pattern: ".data.app_role", issue: "reads_data_app_role" },
+  ];
+
+  // Approved authorization helpers (these are the ONLY allowed sources)
+  const APPROVED_AUTH_SOURCES = [
+    "successionRolePermissions",
+    "resolveUserScope",
+    "isUserInScope",
+    "authorizeScheduledTask",
+    "resolvePlatformOperatorContext",
+    "bootstrapSuccessionAuth",
+    "authorizeSuccessionAction",
+  ];
+
+  // Test fixtures excluded from the auth-source check
+  const AUTH_TEST_FIXTURES = new Set([
+    "successionPhase0Test",
+    "successionPhase1Test",
+    "successionPhase1_5Test",
+    "successionPrivilegeEscalationTest",
+    "debugUserContext",
+    "checkMyRole",
+    "setMyRole",
+  ]);
+
+  function listAllBackendFunctions() {
+    if (!existsSync(FUNCTIONS_DIR)) return [];
+    return readdirSync(FUNCTIONS_DIR, { withFileTypes: true })
+      .filter((e) => e.isDirectory())
+      .map((e) => e.name)
+      .sort();
+  }
+
+  const allBackendFunctions = listAllBackendFunctions();
+  const authSourceViolations = [];
+
+  for (const fnName of allBackendFunctions) {
+    if (AUTH_TEST_FIXTURES.has(fnName)) continue;
+
+    let source;
+    try {
+      source = readEntryFile(fnName);
+    } catch {
+      continue;
+    }
+
+    const stripped = stripCommentsAndStrings(source);
+
+    for (const { pattern, issue } of UNTRUSTED_AUTH_PATTERNS) {
+      if (stripped.includes(pattern)) {
+        // Check if it's in an approved helper context
+        const hasApprovedSource = APPROVED_AUTH_SOURCES.some(h => stripped.includes(h));
+        // Still flag it — the pattern itself is the violation even if approved helpers exist
+        authSourceViolations.push({
+          function: fnName,
+          category: "auth_source",
+          issue,
+          pattern,
+        });
+      }
+    }
+  }
+
+  violations.push(...authSourceViolations);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FRONTEND SERVICE-ROLE GUARD
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Fail when frontend source contains:
+  //   - base44.asServiceRole
+  //   - service-role SDK construction
+  //   - restricted secret identifiers
+  //   - direct privileged User role or CustomRole mutation
+
+  const FRONTEND_FORBIDDEN_PATTERNS = [
+    { pattern: "asServiceRole", issue: "frontend_service_role_access" },
+    { pattern: "PLATFORM_ADMIN_FULL_ACCESS", issue: "frontend_secret_identifier" },
+    { pattern: "INTERNAL_FUNCTION_SECRET", issue: "frontend_secret_identifier" },
+    { pattern: "TEAMS_WEBHOOK_SECRET", issue: "frontend_secret_identifier" },
+    { pattern: "PUBLIC_REQUEST_TOKEN_SECRET", issue: "frontend_secret_identifier" },
+    { pattern: "RESEND_API_KEY", issue: "frontend_secret_identifier" },
+    { pattern: "TYPEFORM_WEBHOOK_SECRET", issue: "frontend_secret_identifier" },
+  ];
+
+  const SRC_DIR = join(__dirname, "..", "..", "src");
+  const frontendViolations = [];
+
+  function scanFrontendDir(dir) {
+    if (!existsSync(dir)) return;
+    const entries = readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        scanFrontendDir(fullPath);
+      } else if (entry.isFile() && /\.(jsx|js|tsx|ts)$/.test(entry.name)) {
+        const source = readFileSync(fullPath, "utf-8");
+        const stripped = stripCommentsAndStrings(source);
+        for (const { pattern, issue } of FRONTEND_FORBIDDEN_PATTERNS) {
+          if (stripped.includes(pattern)) {
+            frontendViolations.push({
+              file: fullPath.replace(SRC_DIR + "/", ""),
+              category: "frontend",
+              issue,
+              pattern,
+            });
+          }
+        }
+      }
+    }
+  }
+
+  scanFrontendDir(SRC_DIR);
+  violations.push(...frontendViolations);
+
   // ── Build result ────────────────────────────────────────────────────
   const result = {
-    guard_version: "2.0-hardened",
+    guard_version: "3.0-hardened",
     checked_at: new Date().toISOString(),
     exception_list_reviewed: "2026-09-25",
     passed: violations.length === 0,
     total_functions: allFunctions.length,
+    total_backend_functions_scanned: allBackendFunctions.length,
     coverage,
     shared_private_helpers: sharedHelpers,
+    auth_source_violations: authSourceViolations,
+    frontend_violations: frontendViolations,
     inventory,
     violations,
   };

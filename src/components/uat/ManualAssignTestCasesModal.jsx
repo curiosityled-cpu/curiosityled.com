@@ -121,7 +121,7 @@ export default function ManualAssignTestCasesModal({
              };
 
              // Fetch fresh data to avoid race condition
-             const freshTestCase = await base44.asServiceRole.entities.UATTestCase.filter({ id: testCase.id });
+             const freshTestCase = await base44.entities.UATTestCase.filter({ id: testCase.id });
              const currentCase = freshTestCase?.[0];
              if (!currentCase) {
                console.warn(`Test case ${testCase.id} not found`);
@@ -133,7 +133,7 @@ export default function ManualAssignTestCasesModal({
              const updatedTestRuns = [...existingRuns, newTestRun];
              const newRiskScore = calculateRiskScore(updatedTestRuns);
 
-             await base44.asServiceRole.entities.UATTestCase.update(testCase.id, {
+             await base44.entities.UATTestCase.update(testCase.id, {
                test_runs: updatedTestRuns,
                overall_risk_score: Math.min(100, newRiskScore)
              });

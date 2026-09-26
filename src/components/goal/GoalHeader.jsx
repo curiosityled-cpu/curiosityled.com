@@ -93,13 +93,18 @@ export default function GoalHeader({
     }
   };
 
+  const [confirmingRemoval, setConfirmingRemoval] = useState(null);
+
   const handleRemoveMember = async (memberEmail) => {
     if (!canEdit) return;
-    if (!window.confirm("Remove this member from the goal?")) return;
-
+    if (confirmingRemoval !== memberEmail) {
+      setConfirmingRemoval(memberEmail);
+      return;
+    }
     const updatedMembers = members.filter(m => m.user_email !== memberEmail);
     await base44.entities.Goal.update(goal.id, { members: updatedMembers });
     onMembersUpdated(updatedMembers);
+    setConfirmingRemoval(null);
   };
 
   const getInitials = (name) => {
@@ -263,12 +268,13 @@ export default function GoalHeader({
                             </div>
                             {canEdit && member.user_email !== currentUser?.email && (
                               <Button
-                                variant="ghost"
+                                variant={confirmingRemoval === member.user_email ? "destructive" : "ghost"}
                                 size="sm"
                                 onClick={() => handleRemoveMember(member.user_email)}
                                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                aria-label={confirmingRemoval === member.user_email ? `Confirm removal of ${member.user_name || member.user_email}` : `Remove ${member.user_name || member.user_email}`}
                               >
-                                Remove
+                                {confirmingRemoval === member.user_email ? "Confirm?" : "Remove"}
                               </Button>
                             )}
                           </div>

@@ -166,16 +166,7 @@
     "user_email"
   ],
   "rls": {
-    "create": {
-      "$and": [
-        {
-          "data.user_email": "{{user.email}}"
-        },
-        {
-          "data.client_id": "{{user.data.client_id}}"
-        }
-      ]
-    },
+    "create": false,
     "read": {
       "$or": [
         {
@@ -226,25 +217,7 @@
         }
       ]
     },
-    "update": {
-      "$and": [
-        {
-          "data.user_email": "{{user.email}}"
-        },
-        {
-          "data.client_id": "{{user.data.client_id}}"
-        }
-      ]
-    },
-    "delete": {
-      "$and": [
-        {
-          "data.user_email": "{{user.email}}"
-        },
-        {
-          "data.client_id": "{{user.data.client_id}}"
-        }
-      ]
-    }
+    "update": false,
+    "delete": false
   }
 }

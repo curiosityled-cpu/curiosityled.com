@@ -109,7 +109,7 @@ export default function UATTestCaseTable({ testCases, onUpdate, onSelectTestCase
 
     try {
       // Fetch fresh data to avoid race condition
-      const freshTestCase = await base44.asServiceRole.entities.UATTestCase.filter({ id: editingCase.id });
+      const freshTestCase = await base44.entities.UATTestCase.filter({ id: editingCase.id });
       const currentCase = freshTestCase?.[0];
 
       if (!currentCase) {

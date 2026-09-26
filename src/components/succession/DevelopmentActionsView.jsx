@@ -60,9 +60,7 @@ export default function DevelopmentActionsView() {
 
       // Load actions for all plan links
       if (plans.length > 0) {
-        const allActions = await base44.asServiceRole.entities.DevelopmentAction.filter({
-          client_id: "placeholder", // RLS will handle scoping
-        });
+        const allActions = await base44.entities.DevelopmentAction.list('-created_date', 200).catch(() => []);
         setActions(allActions || []);
       }
     } catch (e) {

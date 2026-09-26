@@ -31,13 +31,12 @@ export default function MarkAtRiskModal({ open, onClose, onSuccess, users }) {
     setSubmitting(true);
     try {
       const updatePromises = userArray.map(async (targetUser) => {
-        // Update user's at-risk flag
-        await base44.asServiceRole.entities.User.update(targetUser.id, {
-          at_risk_flag: true,
-          at_risk_reason: formData.reason,
-          at_risk_notes: formData.notes || "",
-          at_risk_flagged_by: currentUser.email,
-          at_risk_flagged_date: new Date().toISOString()
+        // Update user's at-risk flag via protected backend function
+        await base44.functions.invoke('markUserAtRisk', {
+          target_user_id: targetUser.id,
+          reason: formData.reason,
+          severity: formData.severity,
+          notes: formData.notes || "",
         });
 
         // Create notification for the user

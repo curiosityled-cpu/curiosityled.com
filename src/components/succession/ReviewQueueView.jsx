@@ -59,7 +59,6 @@ export default function ReviewQueueView() {
       setReviews(res || []);
     } catch (e) {
       console.error("Failed to load reviews:", e);
-      // Fallback: try via asServiceRole through a function if available
       setReviews([]);
     } finally {
       setDataLoading(false);
