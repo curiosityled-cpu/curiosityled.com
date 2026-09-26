@@ -35,7 +35,10 @@ export async function bootstrapSuccessionAuth(base44: any): Promise<BootstrapAut
     throw new Error("Unauthorized — no authenticated user.");
   }
 
-  const role = user.app_role || user.data?.app_role || user.role || "user";
+  // SECURITY: Read ONLY the top-level app_role (server-owned). Never read
+  // user.data?.app_role — it is self-settable via updateMe. Default to
+  // 'User Level 1' (least privilege) if absent.
+  const role = user.app_role || "User Level 1";
   const email = user.email || "";
   const profile_id = user.id || "";
 

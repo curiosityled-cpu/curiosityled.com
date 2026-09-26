@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import { Plus, X, Shield, Users, BarChart3, Settings, Loader2 } from 'lucide-react';
-import { ADDON_PERMISSIONS, PERMISSION_DESCRIPTIONS } from '@/components/utils/permissions';
 
 /**
  * AddOnRoleSelector
@@ -83,8 +82,13 @@ export default function AddOnRoleSelector({ selectedUser, onUpdate }) {
 
     setLoading(true);
     try {
-      await base44.entities.User.update(selectedUser.id, {
-        custom_role_id: selectedTemplate
+      // Route through assignAddonRole backend function — it enforces
+      // privilege-escalation prevention (non-Platform-Admins cannot assign
+      // roles with high-privilege permissions) that direct SDK calls bypass.
+      await base44.functions.invoke('assignAddonRole', {
+        targetUserId: selectedUser.id,
+        customRoleId: selectedTemplate,
+        action: 'assign'
       });
       
       toast.success('Add-on role assigned successfully');
@@ -114,8 +118,10 @@ export default function AddOnRoleSelector({ selectedUser, onUpdate }) {
         return;
       }
 
-      await base44.entities.User.update(selectedUser.id, {
-        custom_role_id: customRoleId
+      await base44.functions.invoke('assignAddonRole', {
+        targetUserId: selectedUser.id,
+        customRoleId: customRoleId,
+        action: 'assign'
       });
       
       toast.success('Custom role assigned successfully');
@@ -132,8 +138,10 @@ export default function AddOnRoleSelector({ selectedUser, onUpdate }) {
   const handleRemoveAddOn = async () => {
     setLoading(true);
     try {
-      await base44.entities.User.update(selectedUser.id, {
-        custom_role_id: null
+      await base44.functions.invoke('assignAddonRole', {
+        targetUserId: selectedUser.id,
+        customRoleId: null,
+        action: 'remove'
       });
       
       toast.success('Add-on removed');
