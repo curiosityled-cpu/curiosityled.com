@@ -21,8 +21,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Team member not found' }, { status: 404 });
     }
 
-    const isManager = teamMember[0].manager_email === user.email || 
-                      user.subordinate_emails?.includes(team_member_email);
+    // Derive manager relationship server-side from the target user's
+    // manager_email field — never trust the self-editable subordinate_emails.
+    const isManager = teamMember[0].manager_email === user.email;
 
     if (!isManager) {
       return Response.json({ error: 'You are not the manager of this user' }, { status: 403 });

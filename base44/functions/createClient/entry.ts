@@ -34,12 +34,33 @@ Deno.serve(async (req) => {
       }, { status: 400 });
     }
 
-    // Create client using raw service role API
-    const client = await base44.asServiceRole.entities.Client.create({
-      ...clientData,
-      slug,
-      created_by: user.email
-    });
+    // Security: Partner Business Administrators may only set a restricted
+    // subset of Client fields. partner_id is derived server-side from the
+    // caller's own partner. license_count is omitted to prevent entitlement
+    // manipulation. Super Administrators and Platform Admins are unrestricted.
+    let createPayload;
+    if (user.app_role === 'Partner Business Administrator') {
+      const partnerId = user.partner_id || null;
+      if (!partnerId) {
+        return Response.json({ success: false, error: 'Partner Business Administrators must belong to a partner to create clients' }, { status: 403 });
+      }
+      createPayload = {
+        name: clientData.name,
+        contact_email: clientData.contact_email,
+        contact_name: clientData.contact_name || null,
+        contact_phone: clientData.contact_phone || null,
+        industry: clientData.industry || null,
+        size: clientData.size || null,
+        description: clientData.description || null,
+        slug,
+        partner_id: partnerId,
+        created_by: user.email,
+      };
+    } else {
+      createPayload = { ...clientData, slug, created_by: user.email };
+    }
+
+    const client = await base44.asServiceRole.entities.Client.create(createPayload);
 
     return Response.json({ 
       success: true,

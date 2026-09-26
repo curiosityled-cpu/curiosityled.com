@@ -48,9 +48,11 @@ Deno.serve(async (req) => {
         }
 
         // Non-admin managers may only assign goals to their direct subordinates.
+        // Derive subordinates server-side — never trust self-editable subordinate_emails.
         if (!ADMIN_ROLES.includes(appRole)) {
-            const subordinates = currentUser.subordinate_emails || [];
-            const unauthorized = targetUsers.filter(e => !subordinates.includes(e));
+            const directReports = await base44.asServiceRole.entities.User.filter({ manager_email: currentUser.email });
+            const subordinateEmails = new Set(directReports.map(u => u.email.toLowerCase()));
+            const unauthorized = targetUsers.filter(e => !subordinateEmails.has(e.toLowerCase()));
             if (unauthorized.length > 0) {
                 return Response.json({
                     success: false,

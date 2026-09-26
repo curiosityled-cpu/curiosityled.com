@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { escapeHtml } from '../../shared/safeResponses.ts';
 
 /**
  * Enhanced bulk journey assignment with role-based permissions and audit logging
@@ -121,9 +122,9 @@ Deno.serve(async (req) => {
             body: `
               <h2>New Learning Journey Assigned</h2>
               <p>Hi there,</p>
-              <p>${currentUser.full_name} has enrolled you in a learning journey to support your development.</p>
-              <h3>${journey.title}</h3>
-              <p>${journey.description || ''}</p>
+              <p>${escapeHtml(currentUser.full_name)} has enrolled you in a learning journey to support your development.</p>
+              <h3>${escapeHtml(journey.title)}</h3>
+              <p>${escapeHtml(journey.description || '')}</p>
               <p><strong>Type:</strong> ${journey.type === 'learning_path' ? 'Learning Path (sequential)' : 'Curriculum (flexible)'}</p>
               ${journey.estimated_duration_days ? `<p><strong>Estimated Duration:</strong> ${journey.estimated_duration_days} days</p>` : ''}
               ${due_date ? `<p><strong>Target Completion:</strong> ${new Date(due_date).toLocaleDateString()}</p>` : ''}

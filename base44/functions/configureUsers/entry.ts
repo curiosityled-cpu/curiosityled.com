@@ -125,6 +125,30 @@ Deno.serve(async (req) => {
                 if (userData.start_date) updateData.start_date = String(userData.start_date).trim();
                 if (userData.client_id !== undefined) updateData.client_id = userData.client_id || null;
                 if (userData.partner_id !== undefined) updateData.partner_id = userData.partner_id || null;
+
+                // Security: Validate custom_role_id against platform-permission
+                // restrictions — same check as assignAddonRole. Non-Platform-Admins
+                // must not assign add-on roles with platform-level privileges.
+                if (userData.custom_role_id !== undefined && userData.custom_role_id && !isPlatformAdmin) {
+                    const customRoles = await base44.asServiceRole.entities.CustomRole.filter({ id: userData.custom_role_id });
+                    if (customRoles.length > 0) {
+                        const role = customRoles[0];
+                        const PLATFORM_PERMISSIONS = [
+                            'users.impersonate', 'billing.manage', 'platform.admin',
+                            'users.delete', 'clients.delete', 'security.manage'
+                        ];
+                        const rolePerms = role.permissions || [];
+                        const hasPlatformPerm = rolePerms.some(p =>
+                            PLATFORM_PERMISSIONS.includes(p) ||
+                            (typeof p === 'string' && (p.startsWith('platform.') || p.startsWith('users.impersonate') || p === 'billing.manage'))
+                        );
+                        if (hasPlatformPerm) {
+                            results.failed.push({ user: userData, reason: 'Only Platform Admins may assign add-on roles with platform-level privileges.' });
+                            continue;
+                        }
+                    }
+                }
+
                 if (userData.custom_role_id !== undefined) updateData.custom_role_id = userData.custom_role_id || null;
 
                 console.log(`Updating user ${emailStr} with data:`, JSON.stringify(updateData));

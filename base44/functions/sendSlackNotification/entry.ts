@@ -51,8 +51,9 @@ Deno.serve(async (req) => {
         // actually their direct report. Without this, any User Level 2/3 can
         // post messages to any user's Slack webhook (impersonation/phishing).
         if (!isSelf && !isAdmin) {
-            const subs = currentUser.subordinate_emails || currentUser.data?.subordinate_emails || [];
-            if (targetUser.manager_email !== currentUser.email && !subs.includes(user_email)) {
+            // Derive manager relationship server-side from the target user's
+            // manager_email — never trust the self-editable subordinate_emails.
+            if (targetUser.manager_email !== currentUser.email) {
                 return Response.json({ success: false, error: 'Forbidden — target is not your direct report' }, { status: 403 });
             }
         }

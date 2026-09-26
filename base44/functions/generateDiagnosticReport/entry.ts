@@ -244,6 +244,10 @@ Deno.serve(async (req) => {
       || req.headers.get('x-real-ip') || 'unknown';
     const ipKey = `ip:${clientIp}`;
     const now = Date.now();
+    // Rate limiting: prevent abuse of this public endpoint.
+    // Per-IP: in-memory, 20/hour (secondary defense within this isolate).
+    // Per-email: durable via Prospect records, 5/hour (survives cold starts
+    // and deploys, shared across all isolates — the primary email-bombing control).
     if (!globalThis._diagRateLimit) globalThis._diagRateLimit = new Map();
     const rl = globalThis._diagRateLimit;
     const ipRlEntry = (rl.get(ipKey) || []).filter(t => now - t < 3600000);
@@ -252,12 +256,18 @@ Deno.serve(async (req) => {
     }
     ipRlEntry.push(now);
     rl.set(ipKey, ipRlEntry);
-    const rlEntry = (rl.get(rlKey) || []).filter(t => now - t < 3600000);
-    if (rlEntry.length >= 5) {
+
+    // Durable per-email rate limit: count Prospect records created in the
+    // last hour for this email. This survives cold starts and deploys,
+    // unlike the in-memory Map.
+    const oneHourAgo = new Date(now - 3600000).toISOString();
+    const recentProspects = await base44.asServiceRole.entities.Prospect.filter({
+      email: rlKey,
+      created_date: { $gte: oneHourAgo }
+    });
+    if (recentProspects.length >= 5) {
       return Response.json({ error: 'Rate limit exceeded. Please try again later.' }, { status: 429 });
     }
-    rlEntry.push(now);
-    rl.set(rlKey, rlEntry);
 
     // ── Create Prospect FIRST (lead capture must never be blocked by PDF/email failures) ──
     const prospect = await base44.asServiceRole.entities.Prospect.create({

@@ -306,6 +306,29 @@ Deno.serve(async (req) => {
                         continue;
                     }
 
+                    // Security: Validate custom_role_id against platform-permission
+                    // restrictions — same check as assignAddonRole. Non-Platform-Admins
+                    // must not assign add-on roles with platform-level privileges.
+                    if (userData.custom_role_id !== undefined && userData.custom_role_id && !scope.isPlatformAdmin) {
+                        const customRoles = await base44.asServiceRole.entities.CustomRole.filter({ id: userData.custom_role_id });
+                        if (customRoles.length > 0) {
+                            const role = customRoles[0];
+                            const PLATFORM_PERMISSIONS = [
+                                'users.impersonate', 'billing.manage', 'platform.admin',
+                                'users.delete', 'clients.delete', 'security.manage'
+                            ];
+                            const rolePerms = role.permissions || [];
+                            const hasPlatformPerm = rolePerms.some(p =>
+                                PLATFORM_PERMISSIONS.includes(p) ||
+                                (typeof p === 'string' && (p.startsWith('platform.') || p.startsWith('users.impersonate') || p === 'billing.manage'))
+                            );
+                            if (hasPlatformPerm) {
+                                results.failed.push({ user: userData, reason: 'Only Platform Admins may assign add-on roles with platform-level privileges.' });
+                                continue;
+                            }
+                        }
+                    }
+
                     // Prepare update data - only update custom fields, not built-in auth fields
                     // Always use the CSV value for display_name (can be empty string to clear it)
                     const displayNameStr = userData.display_name !== undefined && userData.display_name !== null 

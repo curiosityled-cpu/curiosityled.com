@@ -303,7 +303,13 @@ function generateCSV(metrics, users, assessments, goals, assignedLearning, journ
         });
     }
 
-    return rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+    // Sanitize cells to prevent CSV formula injection (CWE-1236).
+    const sanitizeCsvCell = (val) => {
+      const s = String(val ?? '');
+      if (s.match(/^[=+\-@\t\r]/)) return `'${s}`;
+      return s;
+    };
+    return rows.map(row => row.map(cell => `"${sanitizeCsvCell(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
 }
 
 // Helper to categorize selected fields by entity

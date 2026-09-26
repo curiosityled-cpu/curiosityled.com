@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { escapeHtml } from '../../shared/safeResponses.ts';
 
 /**
  * Bulk assigns onboarding plans to multiple users
@@ -121,9 +122,9 @@ Deno.serve(async (req) => {
             body: `
               <h2>New Onboarding Plan Assigned</h2>
               <p>Hi there,</p>
-              <p>${currentUser.full_name} has assigned you an onboarding plan to help you succeed in your role.</p>
-              <h3>${plan.title}</h3>
-              <p>${plan.description || ''}</p>
+              <p>${escapeHtml(currentUser.full_name)} has assigned you an onboarding plan to help you succeed in your role.</p>
+              <h3>${escapeHtml(plan.title)}</h3>
+              <p>${escapeHtml(plan.description || '')}</p>
               <p><strong>Duration:</strong> ${plan.duration_days} days</p>
               ${due_date ? `<p><strong>Target Completion:</strong> ${new Date(due_date).toLocaleDateString()}</p>` : ''}
               <p><a href="${Deno.env.get('APP_URL') || 'https://app.base44.com'}/MyOnboarding?planId=${assignedPlan.id}" style="background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin-top: 16px;">View Your Onboarding Plan</a></p>

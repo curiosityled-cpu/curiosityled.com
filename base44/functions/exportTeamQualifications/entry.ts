@@ -26,12 +26,10 @@ Deno.serve(async (req) => {
     if (adminRoles.includes(user.app_role)) {
       subordinate_emails = body.subordinate_emails || [];
     } else {
-      // Managers: use their own subordinate_emails, or query by manager_email
-      subordinate_emails = user.subordinate_emails || user.data?.subordinate_emails || [];
-      if (subordinate_emails.length === 0) {
-        const directReports = await base44.asServiceRole.entities.User.filter({ manager_email: user.email });
-        subordinate_emails = directReports.map(u => u.email).filter(Boolean);
-      }
+      // Managers: always derive subordinates server-side from authoritative
+      // User records — never trust the self-editable subordinate_emails field.
+      const directReports = await base44.asServiceRole.entities.User.filter({ manager_email: user.email });
+      subordinate_emails = directReports.map(u => u.email).filter(Boolean);
     }
 
     // Get team qualifications
@@ -81,8 +79,14 @@ Deno.serve(async (req) => {
         ]);
       });
 
+      // Sanitize cells to prevent CSV formula injection (CWE-1236).
+      const sanitizeCsvCell = (val) => {
+        const s = String(val ?? '');
+        if (s.match(/^[=+\-@\t\r]/)) return `'${s}`;
+        return s;
+      };
       const csvContent = csvRows.map(row => 
-        row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+        row.map(cell => `"${sanitizeCsvCell(cell).replace(/"/g, '""')}"`).join(',')
       ).join('\n');
 
       return new Response(csvContent, {

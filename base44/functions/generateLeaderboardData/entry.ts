@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
 
       const userBadges = await base44.asServiceRole.entities.UserBadge.filter({
         badge_template_id: badge_id,
-        client_id
+        client_id: effectiveClientId
       }, '-earned_date', display_count || 10);
 
       leaderboard = await Promise.all(userBadges.map(async (ub, index) => {
