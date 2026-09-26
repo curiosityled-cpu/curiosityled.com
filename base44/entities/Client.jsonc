@@ -530,6 +530,11 @@
           "default": false,
           "description": "Whether the Succession Management module is activated for this tenant. When false (the default), all succession backend functions reject access and the workspace is hidden from navigation. Must be explicitly set to true by a tenant admin or Platform Admin to activate the module."
         },
+        "succession_demo": {
+          "type": "boolean",
+          "default": false,
+          "description": "Authoritative synthetic-tenant marker for succession demo/test infrastructure. When true, the tenant is confirmed synthetic and may be used for demo seeding, E2E tests, and resets. Name/slug matching alone is insufficient \u2014 this flag must be explicitly set by a privileged tenant administrator. Production tenants must never have this set to true."
+        },
         "locks": {
           "type": "object",
           "description": "Org-override locks. When a key is true, the corresponding personal setting is locked to the org value for non-super-admin users.",

@@ -65,12 +65,9 @@ export default async function(req: Request): Promise<Response> {
     const demoClient = clients[0];
     const DEMO_CLIENT_ID = demoClient.id;
 
-    // Verify it is marked synthetic (name or slug must contain synthetic/demo/test)
-    const tn = (demoClient.name || '').toLowerCase();
-    const ts = (demoClient.slug || '').toLowerCase();
-    const isSynthetic = tn.includes('synthetic') || tn.includes('demo') || tn.includes('test') || ts.includes('synthetic') || ts.includes('demo') || ts.includes('test');
-    if (!isSynthetic) {
-      return Response.json({ error: `Tenant "${demoClient.name}" is not marked as synthetic. Demo data may only be seeded into synthetic tenants.` }, { status: 403 });
+    // Verify it is marked synthetic via the authoritative settings flag
+    if (!demoClient.settings?.succession_demo) {
+      return Response.json({ error: `Tenant "${demoClient.name}" is not marked as synthetic (settings.succession_demo is false). Demo data may only be seeded into synthetic tenants.` }, { status: 403 });
     }
 
     // Ensure succession is enabled

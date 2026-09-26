@@ -1,16 +1,16 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 
 /**
- * clearSuccessionDemoData — Deletes all demo succession data from the demo
- * tenant and restores the calling user's original client_id.
+ * clearSuccessionDemoData — Deletes all synthetic succession demo data from the
+ * HealthCo synthetic demo tenant. Requires settings.succession_demo === true.
  *
- * Platform Admin only.
+ * Platform Admin only. Audit events are preserved (append-only).
  */
 
-const DEMO_CLIENT_ID = 'demo-acme-corp';
+const DEMO_CLIENT_SLUG = 'healthco';
 
+// Entities to clear — operational records only. Audit events are NOT deleted.
 const ENTITY_NAMES = [
-  'SuccessionAuditEvent',
   'SuccessionMonitorAlert',
   'SuccessionReviewRecord',
   'KnowledgeTransferPlan',
@@ -41,6 +41,7 @@ const ENTITY_NAMES = [
   'SuccessionCycle',
   'UserProfile',
   'SuccessionOperation',
+  'SnapshotIntegrityIncident',
 ];
 
 export default async function(req: Request): Promise<Response> {
@@ -55,38 +56,45 @@ export default async function(req: Request): Promise<Response> {
       return Response.json({ error: 'Only Platform Admin can clear demo data' }, { status: 403 });
     }
 
+    // Resolve the synthetic demo tenant by slug
+    const clients = await base44.asServiceRole.entities.Client.filter({ slug: DEMO_CLIENT_SLUG }, '-created_date', 1);
+    if (clients.length === 0) {
+      return Response.json({ error: `Synthetic demo tenant "${DEMO_CLIENT_SLUG}" not found.` }, { status: 404 });
+    }
+    const demoClient = clients[0];
+    const DEMO_CLIENT_ID = demoClient.id;
+
+    // Verify the authoritative synthetic marker
+    if (!demoClient.settings?.succession_demo) {
+      return Response.json({
+        error: `Tenant "${demoClient.name}" is not marked as synthetic (settings.succession_demo is false). Refusing to clear non-synthetic tenant data.`,
+      }, { status: 403 });
+    }
+
     const deletedCounts: any = {};
 
-    // Delete all demo data from each entity type
+    // Delete all demo operational records from each entity type
+    // UserProfile uses tenant_id; all other succession entities use client_id
     for (const entityName of ENTITY_NAMES) {
       try {
-        const result = await base44.asServiceRole.entities[entityName].deleteMany({ client_id: DEMO_CLIENT_ID });
+        const filterKey = entityName === 'UserProfile' ? { tenant_id: DEMO_CLIENT_ID } : { client_id: DEMO_CLIENT_ID };
+        const result = await base44.asServiceRole.entities[entityName].deleteMany(filterKey);
         deletedCounts[entityName] = result?.deleted_count ?? 'done';
       } catch (e) {
-        // Some entities may not have any demo records — skip silently
         deletedCounts[entityName] = 'none or error';
       }
     }
 
-    // Delete the demo Client (tenant) itself
-    try {
-      await base44.asServiceRole.entities.Client.deleteMany({ slug: 'demo-acme-corp' });
-      deletedCounts['Client'] = 'deleted';
-    } catch (e) {
-      deletedCounts['Client'] = 'error: ' + (e as Error).message;
-    }
-
-    // Restore the user's original client_id
-    const originalClientId = user.data?.original_client_id || null;
-    const updateData: any = { client_id: originalClientId || '' };
-    updateData.original_client_id = '';
-    await base44.auth.updateMe(updateData);
+    // Audit events are preserved (append-only history)
 
     return Response.json({
       status: 'cleared',
-      client_id_restored: originalClientId || null,
+      client_id: DEMO_CLIENT_ID,
+      tenant_name: demoClient.name,
+      synthetic: true,
       deleted: deletedCounts,
-      message: 'Demo data cleared and your view restored to your original tenant',
+      audit_preserved: true,
+      message: 'Synthetic demo operational records cleared. Audit history preserved.',
     });
   } catch (error) {
     return Response.json({ error: (error as Error).message }, { status: 500 });

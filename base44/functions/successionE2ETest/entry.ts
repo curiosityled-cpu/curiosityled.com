@@ -90,24 +90,11 @@ export default async function(req: Request): Promise<Response> {
       throw e;
     }
 
-    // ── Verify tenant is synthetic/demo (safety: never run on real tenants) ──
-    const tenantName = (client.name || "").toLowerCase();
-    const tenantSlug = (client.slug || "").toLowerCase();
-    const isSynthetic =
-      tenantName.includes("synthetic") ||
-      tenantName.includes("demo") ||
-      tenantName.includes("e2e") ||
-      tenantName.includes("test") ||
-      tenantSlug.includes("synthetic") ||
-      tenantSlug.includes("demo") ||
-      tenantSlug.includes("e2e") ||
-      tenantSlug.includes("test") ||
-      client.settings?.is_synthetic === true;
-
-    if (!isSynthetic) {
+    // ── Verify tenant is synthetic via the authoritative settings flag ──────
+    if (!client.settings?.succession_demo) {
       harness.recordTest("PREREQ", "Synthetic tenant verification", false, {
         error:
-          `Tenant "${client.name}" is not marked as synthetic/demo. ` +
+          `Tenant "${client.name}" is not marked as synthetic (settings.succession_demo is false). ` +
           "E2E tests may only run against synthetic demo tenants to protect real data.",
         tenant_name: client.name,
         tenant_slug: client.slug,
