@@ -142,6 +142,12 @@ Deno.serve(async (req) => {
 
     for (const email of managerEmails) {
       try {
+        // Look up the manager's client_id for tenant isolation (defense-in-depth)
+        const userRecords = await base44.asServiceRole.entities.User.filter(
+          { email }, '-created_date', 1
+        );
+        const managerClientId = userRecords[0]?.data?.client_id || null;
+
         // Fetch pulses — manager-private, accessed via service role
         const allPulses = await base44.asServiceRole.entities.ManagerPulse.filter(
           { user_email: email }, '-created_date', 100
@@ -363,6 +369,7 @@ Deno.serve(async (req) => {
 
         const trendsPayload = {
           user_email: email,
+          client_id: managerClientId,
           confidence_trend,
           energy_trend,
           resilience_trend,
