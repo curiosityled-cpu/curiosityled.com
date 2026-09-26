@@ -84,6 +84,7 @@ const TEST_HARNESS_FUNCTIONS = new Set([
   "successionPhase0Test",
   "successionPhase1Test",
   "successionPhase1_5Test",
+  "successionE2ETest",
 ]);
 
 // Approved auth call markers (checked in executable code)
@@ -513,6 +514,7 @@ function runGuard() {
     "successionPhase0Test",
     "successionPhase1Test",
     "successionPhase1_5Test",
+    "successionE2ETest",
     "successionPrivilegeEscalationTest",
     "debugUserContext",
     "checkMyRole",
