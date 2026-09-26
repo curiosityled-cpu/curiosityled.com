@@ -42,6 +42,9 @@ const ENTITY_NAMES = [
   'UserProfile',
   'SuccessionOperation',
   'SnapshotIntegrityIncident',
+  'LeadershipIndexRequirementMapping',
+  'AssessmentSubmission',
+  'CustomAssessment',
 ];
 
 export default async function(req: Request): Promise<Response> {

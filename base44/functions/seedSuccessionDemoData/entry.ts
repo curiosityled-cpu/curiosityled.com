@@ -116,13 +116,13 @@ function countRecords(ids: any): any {
     org_positions: 3,
     blueprints: 1,
     role_requirements: 5,
-    critical_roles: 1,
+    critical_roles: 2,
     critical_role_requirements: 1,
     effective_snapshots: 1,
     effective_requirement_snapshots: 6,
     talent_pools: 1,
     candidacies: 3,
-    evidence_records: 6,
+    evidence_records: 8,
     evidence_review_decisions: 4,
     readiness_conclusions: 3,
     calibration_sessions: 1,
@@ -137,6 +137,11 @@ function countRecords(ids: any): any {
     monitor_alerts: 2,
     review_records: 1,
     audit_events: 3,
+    li_assessments: 1,
+    li_submissions: 1,
+    li_mappings: 1,
+    li_suggested_evidence: 1,
+    dev_suggested_evidence: 1,
   };
 }
 
@@ -277,6 +282,25 @@ async function seedAllData(base44: any, DEMO_CLIENT_ID: string): Promise<any> {
   });
   ids.criticalRole = criticalRole.id;
 
+  // ── 8b. Second Critical Role (Sales Director — medium criticality) ──
+  const criticalRole2 = await base44.asServiceRole.entities.CriticalRole.create({
+    client_id: DEMO_CLIENT_ID,
+    cycle_id: ids.cycle,
+    org_position_id: ids.posDirector,
+    criticality_level: 'important',
+    governance_tier: 'senior_leader',
+    continuity_urgency: 'medium_term',
+    designation_reason: 'Sales Director — Enterprise owns the second-largest revenue portfolio. Succession coverage needed to avoid disruption if the role becomes vacant.',
+    status: 'active',
+    designated_by_profile_id: ids.jennifer,
+    designated_at: PAST_45D,
+    status_changed_at: PAST_40D,
+    status_changed_by_profile_id: ids.jennifer,
+    integrity_status: 'active',
+    confidentiality_level: 'confidential',
+  });
+  ids.criticalRole2 = criticalRole2.id;
+
   // ── 9. CriticalRoleRequirement (1 position-specific) ───────────────
   const crr = await base44.asServiceRole.entities.CriticalRoleRequirement.create({
     client_id: DEMO_CLIENT_ID,
@@ -358,12 +382,12 @@ async function seedAllData(base44: any, DEMO_CLIENT_ID: string): Promise<any> {
     // Sarah Chen — strong evidence
     { client_id: DEMO_CLIENT_ID, candidacy_id: ids.candSarah, user_profile_id: ids.sarah, critical_role_id: ids.criticalRole, effective_blueprint_snapshot_id: ids.snapshot, effective_requirement_snapshot_id: ids.snapReq4, evidence_type: 'performance_outcome', source_system: 'curiosity_led', source_date: DATE_PAST_30D, title: 'Q3 Revenue Achievement — $58M (116% of target)', description: 'Sarah led the Enterprise Sales team to $58M in Q3 revenue, exceeding the $50M target by 16%. This marks the 3rd consecutive quarter of overachievement.', submitted_by_profile_id: ids.jennifer, submitted_at: PAST_30D, freshness_review_date: FUTURE_90D, status: 'accepted', integrity_status: 'active', confidentiality_level: 'confidential' },
     { client_id: DEMO_CLIENT_ID, candidacy_id: ids.candSarah, user_profile_id: ids.sarah, critical_role_id: ids.criticalRole, effective_blueprint_snapshot_id: ids.snapshot, effective_requirement_snapshot_id: ids.snapReq2, evidence_type: 'competency_behavior', source_system: 'manual', source_date: DATE_PAST_20D, title: '360 Leadership Assessment — Team Building', description: '360-degree feedback from 8 direct reports and 4 cross-functional peers. Strong ratings in coaching, team development, and retention. 90% retention rate on her team over 2 years.', submitted_by_profile_id: ids.jennifer, submitted_at: PAST_20D, freshness_review_date: FUTURE_90D, status: 'accepted', integrity_status: 'active', confidentiality_level: 'confidential' },
-    // Marcus Johnson — moderate evidence
-    { client_id: DEMO_CLIENT_ID, candidacy_id: ids.candMarcus, user_profile_id: ids.marcus, critical_role_id: ids.criticalRole, effective_blueprint_snapshot_id: ids.snapshot, effective_requirement_snapshot_id: ids.snapReq4, evidence_type: 'performance_outcome', source_system: 'curiosity_led', source_date: DATE_PAST_30D, title: 'Regional Team Growth — 40% YoY', description: 'Marcus grew the West Region team from 8 to 12 reps and increased regional revenue by 40% year-over-year. Strong execution but at a smaller scale than the VP role requires.', submitted_by_profile_id: ids.jennifer, submitted_at: PAST_30D, freshness_review_date: FUTURE_90D, status: 'accepted', integrity_status: 'active', confidentiality_level: 'confidential' },
-    { client_id: DEMO_CLIENT_ID, candidacy_id: ids.candMarcus, user_profile_id: ids.marcus, critical_role_id: ids.criticalRole, effective_blueprint_snapshot_id: ids.snapshot, effective_requirement_snapshot_id: ids.snapReq2, evidence_type: 'credential', source_system: 'manual', source_date: DATE_PAST_60D, title: 'Executive Coaching Certification (ICF)', description: 'Marcus completed an ICF-accredited executive coaching certification, demonstrating commitment to team development. Limited application at enterprise scale so far.', submitted_by_profile_id: ids.jennifer, submitted_at: PAST_60D, freshness_review_date: FUTURE_90D, status: 'accepted_with_limitations', integrity_status: 'active', confidentiality_level: 'confidential' },
-    // Priya Patel — limited evidence
+    // Marcus Johnson — moderate evidence (submitted, pending review)
+    { client_id: DEMO_CLIENT_ID, candidacy_id: ids.candMarcus, user_profile_id: ids.marcus, critical_role_id: ids.criticalRole, effective_blueprint_snapshot_id: ids.snapshot, effective_requirement_snapshot_id: ids.snapReq4, evidence_type: 'performance_outcome', source_system: 'curiosity_led', source_date: DATE_PAST_30D, title: 'Regional Team Growth — 40% YoY', description: 'Marcus grew the West Region team from 8 to 12 reps and increased regional revenue by 40% year-over-year. Strong execution but at a smaller scale than the VP role requires.', submitted_by_profile_id: ids.jennifer, submitted_at: PAST_30D, freshness_review_date: FUTURE_90D, status: 'submitted', integrity_status: 'active', confidentiality_level: 'confidential' },
+    { client_id: DEMO_CLIENT_ID, candidacy_id: ids.candMarcus, user_profile_id: ids.marcus, critical_role_id: ids.criticalRole, effective_blueprint_snapshot_id: ids.snapshot, effective_requirement_snapshot_id: ids.snapReq2, evidence_type: 'credential', source_system: 'manual', source_date: DATE_PAST_60D, title: 'Executive Coaching Certification (ICF)', description: 'Marcus completed an ICF-accredited executive coaching certification. However, the credential alone does not demonstrate applied coaching competency at enterprise scale.', submitted_by_profile_id: ids.jennifer, submitted_at: PAST_60D, freshness_review_date: FUTURE_90D, status: 'rejected', integrity_status: 'active', confidentiality_level: 'confidential' },
+    // Priya Patel — limited evidence (accepted_with_limitations + draft)
     { client_id: DEMO_CLIENT_ID, candidacy_id: ids.candPriya, user_profile_id: ids.priya, critical_role_id: ids.criticalRole, effective_blueprint_snapshot_id: ids.snapshot, effective_requirement_snapshot_id: ids.snapReq1, evidence_type: 'performance_outcome', source_system: 'curiosity_led', source_date: DATE_PAST_20D, title: 'Sales Ops Optimization — 25% efficiency gain', description: 'Priya led a sales operations optimization project that reduced quote-to-close cycle time by 25%. Strong operational impact but limited direct sales leadership experience.', submitted_by_profile_id: ids.jennifer, submitted_at: PAST_20D, freshness_review_date: FUTURE_90D, status: 'accepted_with_limitations', integrity_status: 'active', confidentiality_level: 'confidential' },
-    { client_id: DEMO_CLIENT_ID, candidacy_id: ids.candPriya, user_profile_id: ids.priya, critical_role_id: ids.criticalRole, effective_blueprint_snapshot_id: ids.snapshot, effective_requirement_snapshot_id: ids.snapReq2, evidence_type: 'manager_observation', source_system: 'manual', source_date: DATE_PAST_10D, title: 'Limited Team Leadership Exposure', description: 'Priya has led a 3-person sales ops team for 1 year. No direct enterprise sales leadership experience. Needs significant development in team leadership at scale.', submitted_by_profile_id: ids.jennifer, submitted_at: PAST_10D, freshness_review_date: FUTURE_90D, status: 'returned_for_clarification', integrity_status: 'active', confidentiality_level: 'confidential' },
+    { client_id: DEMO_CLIENT_ID, candidacy_id: ids.candPriya, user_profile_id: ids.priya, critical_role_id: ids.criticalRole, effective_blueprint_snapshot_id: ids.snapshot, effective_requirement_snapshot_id: ids.snapReq2, evidence_type: 'manager_observation', source_system: 'manual', source_date: DATE_PAST_10D, title: 'Limited Team Leadership Exposure (DRAFT)', description: 'Priya has led a 3-person sales ops team for 1 year. No direct enterprise sales leadership experience. Needs significant development in team leadership at scale.', submitted_by_profile_id: ids.jennifer, freshness_review_date: FUTURE_90D, status: 'draft', integrity_status: 'active', confidentiality_level: 'confidential' },
   ]);
   ids.evSarah1 = evidence[0].id;
   ids.evSarah2 = evidence[1].id;
@@ -373,10 +397,13 @@ async function seedAllData(base44: any, DEMO_CLIENT_ID: string): Promise<any> {
   ids.evPriya2 = evidence[5].id;
 
   // ── 15. EvidenceReviewDecisions (4 total) ──────────────────────────
+  // evMarcus1 is "submitted" (not yet reviewed) — no review decision.
+  // evMarcus2 is "rejected" — review decision with rejection rationale.
+  // evPriya2 is "draft" — not yet submitted, no review decision.
   await base44.asServiceRole.entities.EvidenceReviewDecision.bulkCreate([
     { client_id: DEMO_CLIENT_ID, evidence_record_id: ids.evSarah1, candidacy_id: ids.candSarah, effective_requirement_snapshot_id: ids.snapReq4, reviewer_profile_id: ids.robert, decision: 'accepted', evidence_strength: 'direct', confidence: 'high', relevance: 'high', reviewed_at: PAST_25D, integrity_status: 'active' },
     { client_id: DEMO_CLIENT_ID, evidence_record_id: ids.evSarah2, candidacy_id: ids.candSarah, effective_requirement_snapshot_id: ids.snapReq2, reviewer_profile_id: ids.lisa, decision: 'accepted', evidence_strength: 'direct', confidence: 'high', relevance: 'high', reviewed_at: PAST_15D, integrity_status: 'active' },
-    { client_id: DEMO_CLIENT_ID, evidence_record_id: ids.evMarcus1, candidacy_id: ids.candMarcus, effective_requirement_snapshot_id: ids.snapReq4, reviewer_profile_id: ids.robert, decision: 'accepted', evidence_strength: 'transferable', confidence: 'medium', relevance: 'high', reviewed_at: PAST_25D, integrity_status: 'active' },
+    { client_id: DEMO_CLIENT_ID, evidence_record_id: ids.evMarcus2, candidacy_id: ids.candMarcus, effective_requirement_snapshot_id: ids.snapReq2, reviewer_profile_id: ids.lisa, decision: 'rejected', evidence_strength: 'indicative', confidence: 'medium', relevance: 'low', limitations: 'Credential alone does not demonstrate applied coaching competency at enterprise scale. No behavioral evidence provided.', reviewed_at: PAST_30D, integrity_status: 'active' },
     { client_id: DEMO_CLIENT_ID, evidence_record_id: ids.evPriya1, candidacy_id: ids.candPriya, effective_requirement_snapshot_id: ids.snapReq1, reviewer_profile_id: ids.david, decision: 'accepted_with_limitations', evidence_strength: 'indicative', confidence: 'medium', relevance: 'medium', limitations: 'Operational impact is clear but does not demonstrate direct sales leadership capability.', reviewed_at: PAST_15D, integrity_status: 'active' },
   ]);
 
@@ -469,18 +496,39 @@ async function seedAllData(base44: any, DEMO_CLIENT_ID: string): Promise<any> {
   });
   ids.devPlan = devPlan.id;
 
-  // ── 22. DevelopmentActions (2 for Marcus) ──────────────────────────
-  await base44.asServiceRole.entities.DevelopmentAction.bulkCreate([
+  // ── 22. DevelopmentActions (2 for Marcus — one completed, one in progress) ───
+  const devActions = await base44.asServiceRole.entities.DevelopmentAction.bulkCreate([
     { client_id: DEMO_CLIENT_ID, development_plan_link_id: ids.devPlan, candidacy_id: ids.candMarcus, action_type: 'stretch_assignment', title: 'Lead Enterprise Account Review', description: 'Shadow the VP of Sales in enterprise account reviews for 2 key customers. Present strategy to the executive team.', owner_profile_id: ids.marcus, due_date: FUTURE_60D, milestone_text: 'Present enterprise account strategy to executive team', status: 'in_progress', created_by_profile_id: ids.jennifer, created_at: PAST_10D, integrity_status: 'active' },
-    { client_id: DEMO_CLIENT_ID, development_plan_link_id: ids.devPlan, candidacy_id: ids.candMarcus, action_type: 'coaching', title: 'Executive Coaching with External Coach', description: '6-month executive coaching engagement focused on enterprise sales strategy and cross-functional leadership.', owner_profile_id: ids.marcus, due_date: FUTURE_90D, milestone_text: 'Complete 6-month coaching engagement with documented growth', status: 'not_started', created_by_profile_id: ids.jennifer, created_at: PAST_10D, integrity_status: 'active' },
+    { client_id: DEMO_CLIENT_ID, development_plan_link_id: ids.devPlan, candidacy_id: ids.candMarcus, action_type: 'coaching', title: 'Executive Coaching — Initial 3-Month Sprint', description: 'Initial 3-month executive coaching sprint focused on enterprise sales strategy and cross-functional leadership. Completed ahead of schedule with documented growth.', owner_profile_id: ids.marcus, due_date: DATE_PAST_10D, milestone_text: 'Completed 3-month coaching sprint with documented growth in strategic thinking', status: 'completed', completion_date: DATE_PAST_10D, outcome_notes: 'Marcus demonstrated measurable improvement in strategic account analysis and cross-functional collaboration. Coaching engagement notes (NOT accepted evidence — requires normal evidence review).', created_by_profile_id: ids.jennifer, created_at: PAST_60D, integrity_status: 'active' },
   ]);
+  ids.devActionCompleted = devActions[1].id;
+
+  // ── 22b. Suggested EvidenceRecord from completed development action ──
+  // A completed action MAY create a suggested EvidenceRecord in draft status.
+  // This is NOT decision-eligible until it goes through normal evidence review.
+  const suggestedEv = await base44.asServiceRole.entities.EvidenceRecord.create({
+    client_id: DEMO_CLIENT_ID, candidacy_id: ids.candMarcus, user_profile_id: ids.marcus, critical_role_id: ids.criticalRole,
+    effective_blueprint_snapshot_id: ids.snapshot, effective_requirement_snapshot_id: ids.snapReq2,
+    evidence_type: 'coaching_milestone', source_system: 'curiosity_led',
+    source_record_id: ids.devActionCompleted,
+    source_date: DATE_PAST_10D,
+    title: 'SUGGESTED EVIDENCE (from completed coaching action) — Strategic Thinking Growth',
+    description: 'Auto-generated suggested evidence from completed development action. Marcus completed a 3-month executive coaching sprint with documented improvement in strategic account analysis. This evidence is in DRAFT status and is NOT decision-eligible until reviewed through the normal evidence workflow.',
+    submitted_by_profile_id: ids.jennifer, freshness_review_date: FUTURE_90D,
+    status: 'draft', integrity_status: 'active', confidentiality_level: 'confidential',
+  });
+  ids.evSuggested = suggestedEv.id;
+  // Link the suggested evidence back to the development action
+  await base44.asServiceRole.entities.DevelopmentAction.update(ids.devActionCompleted, {
+    evidence_record_id: ids.evSuggested,
+  });
 
   // ── 23. TransitionInitiation (for Sarah — promotion) ───────────────
   const transition = await base44.asServiceRole.entities.TransitionInitiation.create({
     client_id: DEMO_CLIENT_ID, cycle_id: ids.cycle, critical_role_id: ids.criticalRole, org_position_id: ids.posVP,
     successor_profile_id: ids.sarah, candidacy_id: ids.candSarah, readiness_conclusion_id: ids.conclSarah,
     initiation_type: 'promotion', initiation_basis: 'succession_process',
-    target_start_date: FUTURE_30D, status: 'approved',
+    target_start_date: FUTURE_30D, status: 'in_progress',
     sponsor_profile_id: ids.jennifer,
     initiated_by_profile_id: ids.jennifer, initiated_at: PAST_15D,
     approved_by_profile_id: ids.robert, approved_at: PAST_10D,
@@ -538,6 +586,87 @@ async function seedAllData(base44: any, DEMO_CLIENT_ID: string): Promise<any> {
     integrity_status: 'active',
     created_by_profile_id: ids.jennifer, created_at: PAST_5D,
   });
+
+  // ── 27b. Leadership Index Assessment (finalized synthetic) ────────
+  // A synthetic CustomAssessment representing the Leadership Index assessment
+  // definition. No raw assessment responses are stored in succession entities.
+  const liAssessment = await base44.asServiceRole.entities.CustomAssessment.create({
+    client_id: DEMO_CLIENT_ID,
+    title: 'Leadership Index Assessment (SYNTHETIC DEMO)',
+    description: 'Synthetic Leadership Index assessment for demo purposes. Measures strategic account management, team leadership, and executive communication competencies.',
+    type: 'custom_assessment',
+    status: 'published',
+    access_mode: 'closed',
+    assigned_user_emails: ['sarah.chen@demo-acme.com', 'marcus.johnson@demo-acme.com'],
+    passing_score_percentage: 70,
+    is_leadership_index: true,
+    leadership_index_framework_version: 'LI-v2.1-demo',
+  });
+  ids.liAssessment = liAssessment.id;
+
+  // Finalized AssessmentSubmission (scored) — no raw responses stored in succession
+  const liSubmission = await base44.asServiceRole.entities.AssessmentSubmission.create({
+    client_id: DEMO_CLIENT_ID,
+    custom_assessment_id: ids.liAssessment,
+    user_email: 'sarah.chen@demo-acme.com',
+    leadership_level: 'Level 4 (Leading Functions)',
+    sector: 'Corporate/Private',
+    submission_date: PAST_20D,
+    status: 'scored',
+    score_percentage: 82,
+    competency_scores: [
+      { competency_id: 'si', competency_name: 'Strategic Account Management', score: 4.2, max_score: 5 },
+      { competency_id: 'tl', competency_name: 'Team Leadership & Coaching', score: 4.5, max_score: 5 },
+      { competency_id: 'comm', competency_name: 'Executive Communication', score: 3.8, max_score: 5 },
+    ],
+  });
+  ids.liSubmission = liSubmission.id;
+
+  // ── 27c. Leadership Index Requirement Mapping (approved) ───────────
+  // Governance mapping: LI competency "si" (Strategic Account Management) maps
+  // to frozen requirement snapReq1 (Strategic Account Management). Approved by
+  // a different actor than the submitter (SoD).
+  const liMapping = await base44.asServiceRole.entities.LeadershipIndexRequirementMapping.create({
+    client_id: DEMO_CLIENT_ID,
+    assessment_definition_id: ids.liAssessment,
+    assessment_framework_version: 'LI-v2.1-demo',
+    assessment_leadership_level: 'Level 4 (Leading Functions)',
+    competency_id: 'si',
+    competency_key: 'si',
+    effective_blueprint_snapshot_id: ids.snapshot,
+    effective_requirement_snapshot_id: ids.snapReq1,
+    version_number: 1,
+    mapping_rationale: 'The Leadership Index Strategic Account Management competency directly aligns with the frozen blueprint requirement for strategic account management at the VP of Sales level. The assessment measures the same construct at the appropriate leadership level.',
+    status: 'approved',
+    is_current: true,
+    created_by_profile_id: ids.jennifer,
+    created_at: PAST_30D,
+    submitted_by_profile_id: ids.jennifer,
+    submitted_at: PAST_25D,
+    approved_by_profile_id: ids.robert, // SoD: submitter ≠ approver
+    approved_at: PAST_20D,
+    integrity_status: 'active',
+    confidentiality_level: 'confidential',
+  });
+  ids.liMapping = liMapping.id;
+
+  // ── 27d. Leadership Index Suggested EvidenceRecord (draft) ─────────
+  // Suggested evidence derived from the Leadership Index assessment result.
+  // This is in DRAFT status and is NOT decision-eligible until reviewed.
+  // No raw assessment responses are stored — only the derived evidence summary.
+  const liEvidence = await base44.asServiceRole.entities.EvidenceRecord.create({
+    client_id: DEMO_CLIENT_ID, candidacy_id: ids.candSarah, user_profile_id: ids.sarah, critical_role_id: ids.criticalRole,
+    effective_blueprint_snapshot_id: ids.snapshot, effective_requirement_snapshot_id: ids.snapReq1,
+    evidence_type: 'competency_behavior', source_system: 'curiosity_led',
+    source_record_id: ids.liSubmission,
+    source_competency_id: 'si',
+    source_date: DATE_PAST_20D,
+    title: 'SUGGESTED EVIDENCE (Leadership Index) — Strategic Account Management competency',
+    description: 'Auto-generated suggested evidence from the Leadership Index assessment. Sarah scored 4.2/5 on Strategic Account Management at Level 4 (Leading Functions). This evidence is in DRAFT status and is NOT decision-eligible until reviewed through the normal evidence workflow. No raw assessment responses are stored in this record.',
+    submitted_by_profile_id: ids.jennifer, freshness_review_date: FUTURE_90D,
+    status: 'draft', integrity_status: 'active', confidentiality_level: 'confidential',
+  });
+  ids.evLI = liEvidence.id;
 
   // ── 28. SuccessionAuditEvents (a few) ─────────────────────────────
   await base44.asServiceRole.entities.SuccessionAuditEvent.bulkCreate([
