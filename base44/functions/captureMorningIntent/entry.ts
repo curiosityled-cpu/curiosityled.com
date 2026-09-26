@@ -4,10 +4,19 @@
  * Scheduled Mon-Fri 8am EST. Sends morning intent prompt via Teams.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
+    // Require authentication — this sends prompts to users. Anonymous callers
+    // must not be able to trigger prompts to arbitrary email addresses.
+    const auth = await authorizeScheduledTask(req, base44);
+    if (!auth.authorized) {
+      return auth.response;
+    }
+
     const { user_email } = await req.json();
 
     if (!user_email) {

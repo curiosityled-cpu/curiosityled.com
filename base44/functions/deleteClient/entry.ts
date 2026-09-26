@@ -5,13 +5,6 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
-    // Debug logging
-    console.log('User role check:', {
-      app_role: user?.app_role,
-      data_app_role: user?.data?.app_role,
-      role: user?.role
-    });
-
     const allowedRoles = ['Platform Admin', 'Platform Administrator', 'admin'];
     const hasAccess = user && (
       allowedRoles.includes(user.app_role) || 
@@ -21,8 +14,7 @@ Deno.serve(async (req) => {
 
     if (!hasAccess) {
       return Response.json({ 
-        error: 'Unauthorized - Platform Admin only',
-        debug: { app_role: user?.app_role, data_app_role: user?.data?.app_role, role: user?.role }
+        error: 'Unauthorized - Platform Admin only'
       }, { status: 401 });
     }
 

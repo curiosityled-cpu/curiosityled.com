@@ -139,7 +139,13 @@ Deno.serve(async (req) => {
       const existingId = body.existing_record_id || fields.existing_record_id || null;
       let existing = null;
       if (existingId) {
-        existing = { id: existingId }; // trust the frontend — update directly
+        // Verify ownership — never trust a client-supplied record ID without
+        // confirming the record belongs to the authenticated caller.
+        const records = await base44.asServiceRole.entities.DailyCheckIn.filter({ id: existingId }, null, 1).catch(() => []);
+        if (records.length === 0 || records[0].user_email !== user.email) {
+          return Response.json({ error: 'Record not found or not owned by caller' }, { status: 403 });
+        }
+        existing = records[0];
       } else {
         const todayRecords = await getTodayRecords();
         const completionScore = r => (r.morning_completed ? 1 : 0) + (r.evening_completed ? 1 : 0) + (r.midday_loop_completed ? 1 : 0);

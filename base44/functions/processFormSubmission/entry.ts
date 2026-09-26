@@ -26,6 +26,16 @@ Deno.serve(async (req) => {
 
     const submission = submissions[0];
 
+    // Ownership check: only the submitter or a tenant admin may process a
+    // submission. Without this, any authenticated user who knows a submission
+    // ID can trigger entity creation from another user's form responses.
+    const adminRoles = ['Platform Admin', 'Super Administrator', 'Admin Level 1', 'Admin Level 2'];
+    const isOwner = submission.submitter_email === user.email;
+    const isAdmin = adminRoles.includes(user.app_role);
+    if (!isOwner && !isAdmin) {
+      return Response.json({ error: 'Forbidden — you can only process your own submissions' }, { status: 403 });
+    }
+
     // Get form with integration config
     const forms = await base44.asServiceRole.entities.CustomForm.filter({
       id: submission.form_id

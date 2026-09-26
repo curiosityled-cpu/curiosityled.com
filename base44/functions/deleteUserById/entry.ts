@@ -34,12 +34,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Cannot delete your own account' }, { status: 400 });
     }
 
-    // Apply role-based access control
-    if (currentUser.app_role === 'Super Administrator' && currentUser.client_id) {
-      if (targetUser.client_id !== currentUser.client_id) {
-        return Response.json({ error: 'Access denied - User not in your organization' }, { status: 403 });
+    // Apply role-based access control — fail closed when tenant membership is missing.
+    // Platform Admin has no tenant restriction. All other admin roles require a
+    // valid client_id on the caller AND the target must be in the same tenant.
+    if (currentUser.app_role !== 'Platform Admin') {
+      if (!currentUser.client_id) {
+        return Response.json({ error: 'Access denied — tenant membership required' }, { status: 403 });
       }
-    } else if (currentUser.app_role === 'Admin Level 2' && currentUser.client_id) {
       if (targetUser.client_id !== currentUser.client_id) {
         return Response.json({ error: 'Access denied - User not in your organization' }, { status: 403 });
       }

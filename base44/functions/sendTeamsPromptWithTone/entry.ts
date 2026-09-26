@@ -4,17 +4,34 @@
  * Wraps sendTeamsPrompt to vary directness/language based on manager's tone preference.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { isInternalCall } from '../../shared/urlValidation.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const internalCall = isInternalCall(req);
 
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    let user = null;
+    if (!internalCall) {
+      user = await base44.auth.me();
+      if (!user) {
+        return Response.json({ error: 'Unauthorized' }, { status: 401 });
+      }
     }
 
-    const { user_email = user.email, base_prompt, context, trigger_reason, prompt_type } = await req.json();
+    const body = await req.json();
+    const user_email = body.user_email || (user?.email);
+    const { base_prompt, context, trigger_reason, prompt_type } = body;
+
+    if (!user_email) {
+      return Response.json({ error: 'user_email required' }, { status: 400 });
+    }
+
+    // Security: direct user calls may only target themselves; internal
+    // automation calls (via base44.functions.invoke) may target any user.
+    if (!internalCall && user_email !== user.email) {
+      return Response.json({ error: 'Forbidden — can only send prompts to yourself' }, { status: 403 });
+    }
 
     const tonePrefs = await base44.entities.TonePreference.filter({ user_email }, null, 1);
     const tonePref = tonePrefs[0]?.tone_mode || 'warm_candid';

@@ -30,20 +30,24 @@ Deno.serve(async (req) => {
 
     const targetUser = users[0];
 
-    // Validate impersonation scope
+    // Validate impersonation scope using client_id (the primary tenant identifier
+    // used consistently across this codebase). Fail closed when tenant membership
+    // is missing on either party — undefined !== undefined must NOT pass vacuously.
     if (adminUser.app_role === 'Super Administrator') {
-      // Super Admins can only impersonate within their organization
-      if (targetUser.organization_id !== adminUser.organization_id) {
+      // Super Admins can only impersonate within their own client organization
+      if (!adminUser.client_id) {
+        return Response.json({ error: 'Cannot impersonate — your account has no client_id' }, { status: 403 });
+      }
+      if (targetUser.client_id !== adminUser.client_id) {
         return Response.json({ error: 'Cannot impersonate user from different organization' }, { status: 403 });
       }
     } else if (adminUser.app_role === 'Partner Business Administrator') {
-      // Partner Admins can impersonate users in their client organizations
-      if (!targetUser.organization_id) {
+      // Partner Admins can impersonate users in their managed client organizations
+      if (!targetUser.client_id) {
         return Response.json({ error: 'Target user has no organization' }, { status: 403 });
       }
-      
-      const orgs = await base44.asServiceRole.entities.Organization.filter({ id: targetUser.organization_id });
-      if (orgs.length === 0 || orgs[0].partner_id !== adminUser.partner_id) {
+      const partnerClientIds = adminUser.partner_client_ids || adminUser.data?.partner_client_ids || [];
+      if (!partnerClientIds.includes(targetUser.client_id)) {
         return Response.json({ error: 'Cannot impersonate user from non-client organization' }, { status: 403 });
       }
     }

@@ -5,17 +5,33 @@
  * schedule a gentle follow-up reflection.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { isInternalCall } from '../../shared/urlValidation.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const internalCall = isInternalCall(req);
 
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    let user = null;
+    if (!internalCall) {
+      user = await base44.auth.me();
+      if (!user) {
+        return Response.json({ error: 'Unauthorized' }, { status: 401 });
+      }
     }
 
-    const { user_email = user.email } = await req.json();
+    const body = await req.json();
+    const user_email = body.user_email || (user?.email);
+
+    if (!user_email) {
+      return Response.json({ error: 'user_email required' }, { status: 400 });
+    }
+
+    // Security: direct user calls may only target themselves; internal
+    // automation calls may target any user.
+    if (!internalCall && user_email !== user.email) {
+      return Response.json({ error: 'Forbidden — can only manage your own follow-ups' }, { status: 403 });
+    }
 
     const pulses = await base44.entities.ManagerPulse.filter({ user_email, focus_category: 'delegation' }, '-created_date', 7);
     const delegationIntents = pulses.filter(p => p.focus_intention && p.focus_category === 'delegation');
