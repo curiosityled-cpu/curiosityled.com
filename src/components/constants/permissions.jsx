@@ -686,3 +686,29 @@ export const SECTION_VIEW_CONFIG = {
 
 // LocalStorage key for persisting view preferences
 export const VIEW_PREFERENCES_KEY = 'curiosity_led_view_preferences';
+
+// ── Platform Admin explicit permission set (no wildcard) ──────────────────
+// Replaces the ['*'] wildcard with an explicit union of every permission
+// defined in this file. Defense-in-depth: the frontend no longer grants
+// Platform Admin unbounded permission matches — only the permissions that
+// actually exist in the system. If a new permission is added to any role or
+// add-on array below, it is automatically included for Platform Admin.
+//
+// NOTE: hasPermission() in useAuth still checks `includes('*')` for backward
+// compatibility, but Platform Admin no longer carries that token — every
+// check falls through to an explicit `includes(permissionKey)` match.
+const _allPermissionSet = new Set();
+[
+  EXPERIENCE_PERMISSIONS,
+  TEAM_LEADER_PERMISSIONS,
+  ANALYST_PERMISSIONS,
+  PROGRAM_MANAGER_PERMISSIONS,
+  PROGRAM_ADMIN_PERMISSIONS,
+  HR_ADMIN_PERMISSIONS,
+  USER_PERMISSIONS,
+  SUCCESSION_PERMISSIONS,
+].forEach(arr => arr.forEach(p => _allPermissionSet.add(p)));
+Object.entries(BASE_ROLE_PERMISSIONS).forEach(([role, perms]) => {
+  if (role !== 'Platform Admin') perms.forEach(p => _allPermissionSet.add(p));
+});
+BASE_ROLE_PERMISSIONS['Platform Admin'] = [..._allPermissionSet];

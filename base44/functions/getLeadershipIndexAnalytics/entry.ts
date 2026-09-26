@@ -24,21 +24,19 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const { partnerId, clientId, industry, timeframe = '6months' } = body;
 
-    // Fetch all data in parallel
-    const [users, assessments, goals, organizations, partners, clients] = await Promise.all([
+    // Fetch all data in parallel.
+    // NOTE: This app has no Organization entity — Client is the tenant entity.
+    // Querying Organization throws "Entity schema Organization not found" (500).
+    const [users, assessments, goals, partners, clients] = await Promise.all([
       base44.asServiceRole.entities.User.filter({}),
       base44.asServiceRole.entities.Assessment.filter({}),
       base44.asServiceRole.entities.Goal.filter({}),
-      base44.asServiceRole.entities.Organization.filter({}),
       base44.asServiceRole.entities.Partner.filter({}),
       base44.asServiceRole.entities.Client.filter({})
     ]);
 
-    // Merge organizations and clients for unified client list
-    const allClients = [
-      ...organizations.map(o => ({ ...o, source: 'organization' })),
-      ...clients.map(c => ({ ...c, source: 'client' }))
-    ];
+    // Client is the sole tenant entity in this app.
+    const allClients = clients.map(c => ({ ...c, source: 'client' }));
 
     // Apply role-based scoping first
     let filteredClients = [...allClients];

@@ -21,8 +21,12 @@ export default async function(req: Request): Promise<Response> {
     // catalog. Manager roles (User Level 2/3) may create tenant-private drafts
     // that require admin review before shared publication. Ordinary users are
     // denied entirely.
-    const adminRoles = ['Platform Admin', 'Super Administrator', 'Partner Business Administrator', 'Admin Level 1', 'Admin Level 2'];
-    const managerRoles = ['User Level 2', 'User Level 3'];
+    // Publication is aligned with ConversationalLearningModule.create RLS, which
+    // allows only Admin Level 2, Super Administrator, and Platform Admin to create
+    // modules. Admin Level 1 and Partner Business Administrator may still use the
+    // function but only as tenant-scoped draft creators (never shared publication).
+    const adminRoles = ['Platform Admin', 'Super Administrator', 'Admin Level 2'];
+    const managerRoles = ['User Level 2', 'User Level 3', 'Admin Level 1', 'Partner Business Administrator'];
     if (!adminRoles.includes(user.app_role) && !managerRoles.includes(user.app_role)) {
       return Response.json({ error: 'Unauthorized — only managers and admins may generate pattern workouts' }, { status: 403 });
     }
@@ -46,6 +50,27 @@ export default async function(req: Request): Promise<Response> {
     }
 
     const svc = base44.asServiceRole;
+
+    // Draft deduplication: if a tenant-scoped draft for this pattern already
+    // exists, return it instead of creating a duplicate. Prevents draft
+    // proliferation from repeated requests for the same pattern.
+    if (!canPublish) {
+      const existingDrafts = await svc.entities.ConversationalLearningModule.filter({
+        source_pattern_id: brief.pattern_id,
+        client_id: actorClientId,
+        status: 'draft'
+      }).catch(() => []);
+      if (existingDrafts.length > 0) {
+        const existing = existingDrafts[0];
+        return Response.json({
+          success: true,
+          module_id: existing.id,
+          module: existing,
+          deduplicated: true,
+        });
+      }
+    }
+
     const module = await generateWorkoutModule(svc, brief);
     const resourceIds = await attachAssets(svc, brief.competency, true);
 
