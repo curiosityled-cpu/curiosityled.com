@@ -258,8 +258,8 @@ export default function EvidencePortfolioView({ candidacy }) {
         <SuccessionSection icon={Ban} title={`Withdraw Evidence: ${withdrawTarget.title}`}>
           <div className="space-y-3">
             <div>
-              <Label htmlFor="withdraw-reason" className="text-xs text-gray-600">Withdrawal Reason *</Label>
-              <textarea id="withdraw-reason" className="mt-1 w-full text-sm border border-gray-200 rounded-md px-2 py-1.5 min-h-[60px]"
+              <Label htmlFor="withdraw-evidence-reason" className="text-xs text-gray-600">Withdrawal Reason *</Label>
+              <textarea id="withdraw-evidence-reason" className="mt-1 w-full text-sm border border-gray-200 rounded-md px-2 py-1.5 min-h-[60px]"
                 placeholder="Explain why this evidence is being withdrawn..."
                 value={withdrawReason} onChange={e => setWithdrawReason(e.target.value)} />
             </div>
@@ -403,8 +403,8 @@ function EvidenceForm({ requirements, initialData, isSupersede, onSubmit, loadin
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="sm:col-span-2">
-          <Label className="text-xs text-gray-600">Linked Frozen Requirement *</Label>
-          <select className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
+          <Label htmlFor="evidence-requirement" className="text-xs text-gray-600">Linked Frozen Requirement *</Label>
+          <select id="evidence-requirement" className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
             value={formData.effective_requirement_snapshot_id}
             onChange={e => setFormData(d => ({ ...d, effective_requirement_snapshot_id: e.target.value }))}
             required disabled={!!initialData?.effective_requirement_snapshot_id && !isSupersede}>
@@ -420,15 +420,15 @@ function EvidenceForm({ requirements, initialData, isSupersede, onSubmit, loadin
           )}
         </div>
         <div>
-          <Label className="text-xs text-gray-600">Evidence Type *</Label>
-          <select className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
+          <Label htmlFor="evidence-type" className="text-xs text-gray-600">Evidence Type *</Label>
+          <select id="evidence-type" className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
             value={formData.evidence_type} onChange={e => setFormData(d => ({ ...d, evidence_type: e.target.value }))} required>
             {EVIDENCE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
         </div>
         <div>
-          <Label className="text-xs text-gray-600">Source System *</Label>
-          <select className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
+          <Label htmlFor="evidence-source-system" className="text-xs text-gray-600">Source System *</Label>
+          <select id="evidence-source-system" className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
             value={formData.source_system} onChange={e => setFormData(d => ({ ...d, source_system: e.target.value }))} required>
             {SOURCE_SYSTEMS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>

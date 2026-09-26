@@ -189,12 +189,12 @@ export default function CandidatesView() {
 
         {withdrawTarget && (
           <div className="border border-gray-200 rounded-lg p-4 mt-3 bg-gray-50/50">
-            <Label htmlFor="withdraw-reason" className="text-xs text-gray-600">Withdrawal reason</Label>
-            <Textarea id="withdraw-reason" className="mt-1 w-full text-sm" rows={2}
+            <Label htmlFor="withdraw-candidacy-reason" className="text-xs text-gray-600">Withdrawal reason</Label>
+            <Textarea id="withdraw-candidacy-reason" className="mt-1 w-full text-sm" rows={2}
               placeholder="Reason for withdrawing this candidacy"
               value={withdrawReason} onChange={(e) => setWithdrawReason(e.target.value)}
-              aria-describedby="withdraw-reason-error" />
-            {error && <p id="withdraw-reason-error" className="text-xs text-red-600 mt-1" role="alert">{error}</p>}
+              aria-describedby="withdraw-candidacy-reason-error" />
+            {error && <p id="withdraw-candidacy-reason-error" className="text-xs text-red-600 mt-1" role="alert">{error}</p>}
             <div className="flex gap-2 mt-2">
               <Button size="sm" onClick={() => handleWithdrawCandidacy(withdrawTarget, withdrawReason)}
                 disabled={loading || !withdrawReason.trim()}>
@@ -264,24 +264,24 @@ function CreateCandidacyForm({ cycles, selectedCycleId, criticalRoles, users, sn
     <form onSubmit={handleSubmit} className="border border-gray-200 rounded-lg p-4 mb-4 bg-gray-50/50">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <Label className="text-xs text-gray-600">Critical Role *</Label>
-          <select className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
+          <Label htmlFor="candidacy-critical-role" className="text-xs text-gray-600">Critical Role *</Label>
+          <select id="candidacy-critical-role" className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
             value={formData.critical_role_id} onChange={e => setFormData(d => ({ ...d, critical_role_id: e.target.value }))} required>
             <option value="">— Select —</option>
             {criticalRoles.map(cr => <option key={cr.id} value={cr.id}>{cr.org_position_id || cr.id}</option>)}
           </select>
         </div>
         <div>
-          <Label className="text-xs text-gray-600">Candidate *</Label>
-          <select className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
+          <Label htmlFor="candidacy-candidate" className="text-xs text-gray-600">Candidate *</Label>
+          <select id="candidacy-candidate" className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
             value={formData.user_profile_id} onChange={e => setFormData(d => ({ ...d, user_profile_id: e.target.value }))} required>
             <option value="">— Select —</option>
             {users.map(u => <option key={u.id} value={u.id}>{u.full_name || u.email}</option>)}
           </select>
         </div>
         <div className="sm:col-span-2">
-          <Label className="text-xs text-gray-600">Effective Blueprint Snapshot *</Label>
-          <select className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
+          <Label htmlFor="candidacy-snapshot" className="text-xs text-gray-600">Effective Blueprint Snapshot *</Label>
+          <select id="candidacy-snapshot" className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
             value={formData.effective_blueprint_snapshot_id} onChange={e => setFormData(d => ({ ...d, effective_blueprint_snapshot_id: e.target.value }))} required disabled={!formData.critical_role_id}>
             <option value="">— Select —</option>
             {snapshots.map(s => <option key={s.id} value={s.id}>Snapshot (rev {s.blueprint_revision || "?"}, {s.generated_requirement_count || 0} requirements)</option>)}
@@ -291,8 +291,8 @@ function CreateCandidacyForm({ cycles, selectedCycleId, criticalRoles, users, sn
           )}
         </div>
         <div>
-          <Label className="text-xs text-gray-600">Discovery Source *</Label>
-          <select className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
+          <Label htmlFor="candidacy-discovery-source" className="text-xs text-gray-600">Discovery Source *</Label>
+          <select id="candidacy-discovery-source" className="mt-1 w-full h-9 text-sm border border-gray-200 rounded-md px-2 bg-white"
             value={formData.discovery_source} onChange={e => setFormData(d => ({ ...d, discovery_source: e.target.value }))} required>
             {DISCOVERY_SOURCES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
