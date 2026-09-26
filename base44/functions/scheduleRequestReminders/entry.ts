@@ -1,9 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    
+
+    // Security: require internal secret or admin session — no anonymous invocation.
+    const auth = await authorizeScheduledTask(req, base44);
+    if (!auth.authorized) return auth.response;
+
     // Service role for automated task
     const now = new Date();
     const threeDaysAgo = new Date(now - 3 * 24 * 60 * 60 * 1000);

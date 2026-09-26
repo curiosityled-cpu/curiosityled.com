@@ -31,13 +31,20 @@ Deno.serve(async (req) => {
     const targetUser = targetUsers[0];
 
     // Security: Tenant scoping — verify the target user belongs to the
-    // caller's client (or partner's clients). This mirrors assignRoleToUser
-    // and prevents cross-tenant role assignment.
-    if (user.app_role === 'Super Administrator' && user.client_id) {
+    // caller's client (or partner's clients). Fail closed when tenant scope
+    // is missing. This mirrors assignRoleToUser and prevents cross-tenant
+    // role assignment.
+    if (user.app_role === 'Super Administrator') {
+      if (!user.client_id) {
+        return Response.json({ success: false, error: 'Access denied — tenant membership required.' }, { status: 403 });
+      }
       if (targetUser.client_id !== user.client_id) {
         return Response.json({ success: false, error: 'Access denied — target user is not in your organization.' }, { status: 403 });
       }
-    } else if (user.app_role === 'Partner Business Administrator' && user.partner_id) {
+    } else if (user.app_role === 'Partner Business Administrator') {
+      if (!user.partner_id) {
+        return Response.json({ success: false, error: 'Access denied — partner scope required.' }, { status: 403 });
+      }
       const allClients = await base44.asServiceRole.entities.Client.list();
       const partnerClientIds = allClients
         .filter(c => c.partner_id === user.partner_id)
@@ -45,7 +52,10 @@ Deno.serve(async (req) => {
       if (!partnerClientIds.includes(targetUser.client_id)) {
         return Response.json({ success: false, error: 'Access denied — target user is not in your partner clients.' }, { status: 403 });
       }
-    } else if (user.app_role === 'Admin Level 2' && user.client_id) {
+    } else if (user.app_role === 'Admin Level 2') {
+      if (!user.client_id) {
+        return Response.json({ success: false, error: 'Access denied — tenant membership required.' }, { status: 403 });
+      }
       if (targetUser.client_id !== user.client_id) {
         return Response.json({ success: false, error: 'Access denied — target user is not in your organization.' }, { status: 403 });
       }

@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
-import { getOrgEmails } from '../../shared/orgScope.ts';
+import { getOrgEmails, getDirectReportEmails } from '../../shared/orgScope.ts';
 /**
  * Atreus Agent - Central Intelligence & Action Executor
  * Handles natural language intent detection and secure platform action execution
@@ -923,7 +923,7 @@ async function executeCascadeGoal(base44, user, params) {
 
   const originalGoal = originalGoals[0];
   if (!_isAdmin && originalGoal.created_by !== user.email) return { message: 'You can only cascade your own goals.' };
-  let userEmails = !_isAdmin ? (rawUserEmails || []).filter(e => (user.subordinate_emails || user.data?.subordinate_emails || []).includes(e) || e === user.email) : rawUserEmails; if (!userEmails.length) return { message: 'Target users must be your direct reports.' };
+  const dr = !_isAdmin ? await getDirectReportEmails(base44, user) : null; let userEmails = !_isAdmin ? (rawUserEmails || []).filter(e => e === user.email || (dr && dr.has((e||'').toLowerCase()))) : rawUserEmails; if (!userEmails.length) return { message: 'Target users must be your direct reports.' };
   const cascadedGoals = [];
   for (const email of userEmails) {
     const cascadedGoal = await base44.asServiceRole.entities.Goal.create({
@@ -997,10 +997,10 @@ async function executeInviteUser(base44, user, params) {
 
 async function executeSendEmail(base44, user, params) {
   const { to, subject, body, fromName } = params;
-  // Security: restrict recipients to self + subordinates (admins: anyone)
+  // Security: derive direct reports server-side — never trust self-editable subordinate_emails.
   const adminRoles = ['Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'];
-  const subs = user.subordinate_emails || user.data?.subordinate_emails || [];
-  const allowed = adminRoles.includes(user.app_role) ? to : to.filter(e => e === user.email || subs.includes(e));
+  const allowedSet = adminRoles.includes(user.app_role) ? await getOrgEmails(base44, user) : await getDirectReportEmails(base44, user);
+  const allowed = adminRoles.includes(user.app_role) ? to.filter(e => allowedSet.has(e)) : to.filter(e => e === user.email || allowedSet.has((e||'').toLowerCase()));
   if (!allowed.length) return { message: 'No permission to email those recipients.' };
   await Promise.all(allowed.map(e => base44.integrations.Core.SendEmail({ from_name: fromName || user.full_name, to: e, subject, body })));
   return { message: `Email sent to ${allowed.length} recipient(s)`, recipients: allowed, count: allowed.length };
@@ -1049,7 +1049,7 @@ async function executeBulkAssignLearning(base44, user, params) {
   if (!mgrRoles.includes(user.app_role)) return { message: 'You do not have permission to bulk-assign learning.' };
   const adminOnly = ['Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'];
   if (targetType === 'all_users' && !adminOnly.includes(user.app_role)) return { message: 'Only admins may assign learning to all users.' };
-  if (targetType === 'team') targetEmails = user.subordinate_emails || [];
+  if (targetType === 'team') { const dr = await getDirectReportEmails(base44, user); targetEmails = Array.from(dr); }
   else if (targetType === 'specific_users') targetEmails = userEmails;
   else if (targetType === 'all_users') { const all = await base44.asServiceRole.entities.User.filter({ client_id: user.client_id }); targetEmails = all.map(u => u.email); }
   else if (targetType === 'division') { const div = await base44.asServiceRole.entities.User.filter({ client_id: user.client_id, division: user.division }); targetEmails = div.map(u => u.email); }
@@ -1831,7 +1831,7 @@ async function executeBulkAssignAssessments(base44, user, params) {
 
   switch (targetType) {
     case 'team':
-      targetEmails = user.subordinate_emails || [];
+      targetEmails = Array.from(await getDirectReportEmails(base44, user));
       break;
     case 'division':
       const divisionUsers = await base44.asServiceRole.entities.User.filter({
@@ -1872,7 +1872,7 @@ async function executeAssignJourneyToTeam(base44, user, params) {
 
   switch (targetType) {
     case 'my_team':
-      targetUsers = user.subordinate_emails || [];
+      targetUsers = Array.from(await getDirectReportEmails(base44, user));
       break;
     case 'cohort':
       const cohorts = await base44.asServiceRole.entities.Cohort.filter({ id: cohortId });
@@ -1903,17 +1903,15 @@ async function executeTrackLearningProgress(base44, user, params) {
   let targetEmails = [];
   let actualScope = scope;
 
-  // Extract scope from context if not explicitly provided
-  if (!params.scope && user.subordinate_emails && user.subordinate_emails.length > 0) {
-    actualScope = 'team';
-  }
-
+  // Security: derive direct reports server-side — never trust self-editable subordinate_emails.
+  let drSet = (actualScope === 'team' || (!params.scope && ['User Level 2','User Level 3'].includes(user.app_role))) ? await getDirectReportEmails(base44, user) : null;
+  if (!params.scope && drSet && drSet.size > 0) actualScope = 'team';
   switch (actualScope) {
     case 'personal':
       targetEmails = [user.email];
       break;
     case 'team':
-      targetEmails = user.subordinate_emails || [];
+      targetEmails = drSet ? Array.from(drSet) : [];
       break;
     case 'cohort':
       const cohorts = await base44.asServiceRole.entities.Cohort.filter({ id: cohortId });
@@ -2447,11 +2445,7 @@ async function executeAnalyzeGoalDependencies(base44, user, params) {
     case 'personal':
       goals = await base44.entities.Goal.filter({ created_by: user.email });
       break;
-    case 'team':
-      goals = await base44.entities.Goal.filter({
-        created_by: { $in: user.subordinate_emails || [] }
-      });
-      break;
+    case 'team': { const dr = Array.from(await getDirectReportEmails(base44, user)); goals = await base44.entities.Goal.filter({ created_by: { $in: dr } }); break; }
     case 'org':
       goals = await base44.entities.Goal.filter({ client_id: user.client_id });
       break;
@@ -2617,12 +2611,7 @@ async function executeIdentifyGoalsAtRisk(base44, user, params) {
     case 'personal':
       goals = await base44.entities.Goal.filter({ created_by: user.email, status: 'active' });
       break;
-    case 'team':
-      goals = await base44.entities.Goal.filter({
-        created_by: { $in: user.subordinate_emails || [] },
-        status: 'active'
-      });
-      break;
+    case 'team': { const dr = Array.from(await getDirectReportEmails(base44, user)); goals = await base44.entities.Goal.filter({ created_by: { $in: dr }, status: 'active' }); break; }
     default:
       goals = await base44.entities.Goal.filter({ created_by: user.email, status: 'active' });
   }

@@ -25,10 +25,15 @@ Deno.serve(async (req) => {
     const plan = plans[0];
 
     // Security: Only the assigned user, their manager, or an admin can complete milestones.
+    // Derive manager relationship server-side — never trust self-editable subordinate_emails.
     const isAssignee = plan.assigned_to_email === user.email;
     const isAdmin = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin'].includes(user.app_role);
-    const subordinates = user.subordinate_emails || user.data?.subordinate_emails || [];
-    const isManager = ['User Level 2', 'User Level 3'].includes(user.app_role) && subordinates.includes(plan.assigned_to_email);
+    let isManager = false;
+    if (!isAssignee && !isAdmin && ['User Level 2', 'User Level 3'].includes(user.app_role)) {
+      const directReports = await base44.asServiceRole.entities.User.filter({ manager_email: user.email });
+      const subordinateEmails = new Set(directReports.map(u => (u.email || '').toLowerCase()));
+      isManager = subordinateEmails.has((plan.assigned_to_email || '').toLowerCase());
+    }
     if (!isAssignee && !isAdmin && !isManager) {
       return Response.json({ error: 'You do not have permission to complete milestones for this plan.' }, { status: 403 });
     }

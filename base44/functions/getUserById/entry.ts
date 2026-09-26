@@ -30,12 +30,18 @@ Deno.serve(async (req) => {
 
     const targetUser = users[0];
 
-    // Apply role-based access control
-    if (currentUser.app_role === 'Super Administrator' && currentUser.client_id) {
+    // Apply role-based access control — fail closed when tenant scope is missing.
+    if (currentUser.app_role === 'Super Administrator') {
+      if (!currentUser.client_id) {
+        return Response.json({ error: 'Access denied — tenant membership required' }, { status: 403 });
+      }
       if (targetUser.client_id !== currentUser.client_id) {
         return Response.json({ error: 'Access denied - User not in your organization' }, { status: 403 });
       }
-    } else if (currentUser.app_role === 'Partner Business Administrator' && currentUser.partner_id) {
+    } else if (currentUser.app_role === 'Partner Business Administrator') {
+      if (!currentUser.partner_id) {
+        return Response.json({ error: 'Access denied — partner scope required' }, { status: 403 });
+      }
       const allClients = await base44.asServiceRole.entities.Client.list();
       const partnerClientIds = allClients
         .filter(c => c.partner_id === currentUser.partner_id)
@@ -43,7 +49,10 @@ Deno.serve(async (req) => {
       if (!partnerClientIds.includes(targetUser.client_id)) {
         return Response.json({ error: 'Access denied - User not in your partner clients' }, { status: 403 });
       }
-    } else if (currentUser.app_role === 'Admin Level 2' && currentUser.client_id) {
+    } else if (currentUser.app_role === 'Admin Level 2') {
+      if (!currentUser.client_id) {
+        return Response.json({ error: 'Access denied — tenant membership required' }, { status: 403 });
+      }
       if (targetUser.client_id !== currentUser.client_id) {
         return Response.json({ error: 'Access denied - User not in your organization' }, { status: 403 });
       }

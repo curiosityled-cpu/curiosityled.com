@@ -9,6 +9,13 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Security: restrict to admin roles that manage competencies — prevents
+    // AI/file-extraction credit abuse by regular users.
+    const allowedRoles = ['Admin Level 2', 'Super Administrator', 'Platform Admin'];
+    if (!allowedRoles.includes(user.app_role)) {
+      return Response.json({ success: false, error: 'Unauthorized — admin access required to import competencies' }, { status: 403 });
+    }
+
     const body = await req.json();
     const { file_url, existing_competencies = [] } = body;
 

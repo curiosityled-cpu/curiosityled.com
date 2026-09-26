@@ -63,26 +63,31 @@ Deno.serve(async (req) => {
     }
 
     // Team members needing attention (for managers)
-    if (user.subordinate_emails && user.subordinate_emails.length > 0 && scope !== 'personal') {
-      const teamGoals = await base44.entities.Goal.filter({
-        created_by: { $in: user.subordinate_emails }
-      });
-
-      const teamMembersWithIssues = new Set();
-      teamGoals.forEach(g => {
-        if (g.progress < 30 || (g.timeframe_end && new Date(g.timeframe_end) < now && g.status !== 'archived')) {
-          teamMembersWithIssues.add(g.created_by);
-        }
-      });
-
-      if (teamMembersWithIssues.size > 0) {
-        insights.push({
-          type: 'team_needs_attention',
-          priority: 'high',
-          message: `${teamMembersWithIssues.size} team member${teamMembersWithIssues.size > 1 ? 's need' : ' needs'} attention`,
-          action_suggestion: 'Schedule check-ins with struggling team members',
-          affected_emails: Array.from(teamMembersWithIssues)
+    // Security: derive direct reports server-side — never trust self-editable subordinate_emails.
+    if (scope !== 'personal') {
+      const directReports = await base44.asServiceRole.entities.User.filter({ manager_email: user.email });
+      const subordinateEmails = directReports.map(u => u.email).filter(Boolean);
+      if (subordinateEmails.length > 0) {
+        const teamGoals = await base44.entities.Goal.filter({
+          created_by: { $in: subordinateEmails }
         });
+
+        const teamMembersWithIssues = new Set();
+        teamGoals.forEach(g => {
+          if (g.progress < 30 || (g.timeframe_end && new Date(g.timeframe_end) < now && g.status !== 'archived')) {
+            teamMembersWithIssues.add(g.created_by);
+          }
+        });
+
+        if (teamMembersWithIssues.size > 0) {
+          insights.push({
+            type: 'team_needs_attention',
+            priority: 'high',
+            message: `${teamMembersWithIssues.size} team member${teamMembersWithIssues.size > 1 ? 's need' : ' needs'} attention`,
+            action_suggestion: 'Schedule check-ins with struggling team members',
+            affected_emails: Array.from(teamMembersWithIssues)
+          });
+        }
       }
     }
 

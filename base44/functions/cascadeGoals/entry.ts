@@ -111,9 +111,11 @@ Deno.serve(async (req) => {
         }
         
         // Security: scope target users to caller's direct reports for non-admin managers.
+        // Derive subordinates server-side — never trust self-editable subordinate_emails.
         if (!isAdmin) {
-            const subs = currentUser.subordinate_emails || currentUser.data?.subordinate_emails || [];
-            targetUsers = targetUsers.filter(u => subs.includes(u.email) || u.email === currentUser.email);
+            const directReports = await base44.asServiceRole.entities.User.filter({ manager_email: currentUser.email });
+            const subordinateEmails = new Set(directReports.map(u => u.email.toLowerCase()));
+            targetUsers = targetUsers.filter(u => subordinateEmails.has((u.email || '').toLowerCase()) || u.email === currentUser.email);
         }
 
         if (targetUsers.length === 0) {
