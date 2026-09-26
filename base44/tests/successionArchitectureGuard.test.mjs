@@ -78,6 +78,7 @@ const CONTROL_PLANE_FUNCTIONS = new Set([
 const INFRASTRUCTURE_FUNCTIONS = new Set([
   "successionGetOperationStatus",
   "successionHeartbeat",
+  "successionSetActivation", // activation control — calls bootstrapSuccessionAuth but has its own auth (not authorizeSuccessionAction, since it must work when succession is disabled)
 ]);
 
 const TEST_HARNESS_FUNCTIONS = new Set([
@@ -642,7 +643,8 @@ function runGuard() {
 const result = runGuard();
 
 if (import.meta.vitest) {
-  // vitest mode
+  // vitest mode — import test/expect dynamically to support vitest v4 (no globals)
+  const { test, expect } = await import("vitest");
   test("architecture guard: all operational succession functions call auth gates before domain access", () => {
     expect(result.passed, JSON.stringify(result.violations, null, 2)).toBe(true);
   });

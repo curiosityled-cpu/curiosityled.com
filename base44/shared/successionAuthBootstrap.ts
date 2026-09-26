@@ -14,6 +14,7 @@
 
 import { isGrantFeatureEnabled } from "./successionConstants.ts";
 import { deriveServerOwnedPermissions } from "./successionRolePermissions.ts";
+import { resolveCanonicalClient, TenantResolutionError } from "./resolveClientTenant.ts";
 
 export interface BootstrapAuthContext {
   user: any;
@@ -51,14 +52,29 @@ export async function bootstrapSuccessionAuth(base44: any): Promise<BootstrapAut
   const isPartnerBusinessAdministrator = role === "Partner Business Administrator";
 
   // ── Minimal privileged reads (identity, Client, partner access) ────────
-  const client_id = user.client_id || user.data?.client_id || null;
+  // Use the canonical tenant resolver — handles both entity ID and legacy slug
+  // formats. This is the ONE server-side resolution path; all succession
+  // functions consume auth.client_id which is always the canonical entity ID.
+  const rawClientId = user.client_id || user.data?.client_id || null;
 
   let client: any = null;
-  if (client_id) {
+  let client_id: string | null = null;
+  if (rawClientId) {
     try {
-      client = await base44.asServiceRole.entities.Client.get(client_id);
-    } catch {
-      // Client may not exist; leave null
+      const resolved = await resolveCanonicalClient(base44, rawClientId);
+      client = resolved.client;
+      client_id = resolved.canonical_id;
+    } catch (e) {
+      if (e instanceof TenantResolutionError) {
+        // Ambiguous or missing client — record but don't throw; the authz
+        // gate will deny succession access since succession_enabled will be
+        // false (client is null). This prevents a bootstrap crash from
+        // blocking non-succession platform operations.
+        client = null;
+        client_id = null;
+      } else {
+        throw e;
+      }
     }
   }
 
@@ -81,7 +97,7 @@ export async function bootstrapSuccessionAuth(base44: any): Promise<BootstrapAut
     role,
     email,
     profile_id,
-    client_id: client?.id || client_id,
+    client_id: client_id,
     client,
     isPlatformAdmin,
     isPartnerBusinessAdministrator,

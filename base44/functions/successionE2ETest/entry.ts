@@ -11,6 +11,7 @@ import {
   journey8_Transition,
   journey9_Monitoring,
 } from "../../shared/successionE2ETestHelper.ts";
+import { resolveCanonicalClient, TenantResolutionError } from "../../shared/resolveClientTenant.ts";
 
 /**
  * POST /successionE2ETest
@@ -20,18 +21,17 @@ import {
  * base44.functions.invoke), creating real records, verifying state transitions,
  * and cleaning up afterward.
  *
- * Prerequisites:
- *   - Authenticated user with an admin role (Admin Level 1/2, Super Administrator)
- *   - Succession module enabled for the user's tenant (Client.settings.succession_enabled = true)
- *   - User must have a client_id (tenant context)
+ * REQUIREMENTS:
+ *   - Caller must be a TENANT ADMIN (Super Administrator, Admin Level 1/2).
+ *     Platform Admin is REJECTED — it has no standing succession access.
+ *   - The caller's tenant must be explicitly marked synthetic/demo.
+ *   - Succession module must be enabled for the tenant.
  *
- * Returns a JSON report with per-test results, per-journey summaries, and an
- * overall pass/fail count. All created records are cleaned up via asServiceRole
- * at the end (or on error).
+ * SoD constraints (submitter ≠ approver, proposer ≠ ratifier) are handled by
+ * creating prerequisite state via asServiceRole with synthetic actor profile
+ * IDs, then calling the actual succession function as the authenticated user.
  *
  * This is a TEST HARNESS — excluded from the architecture guard auth checks.
- * It does NOT call bootstrapSuccessionAuth/authorizeSuccessionAction itself;
- * the invoked succession functions handle their own authorization.
  */
 export default async function(req: Request): Promise<Response> {
   const harness = new E2ETestHarness();
@@ -45,49 +45,130 @@ export default async function(req: Request): Promise<Response> {
       return Response.json(harness.results, { status: 401 });
     }
 
-    const client_id = user.client_id || user.data?.client_id;
-    if (!client_id) {
+    const role = user.app_role || "User Level 1";
+    const isPlatformAdmin =
+      role === "Platform Admin" || role === "Platform Administrator" || role === "admin";
+
+    // ── Reject Platform Admin — it has no standing succession access ────────
+    if (isPlatformAdmin) {
+      harness.recordTest("PREREQ", "Actor role check", false, {
+        error:
+          "Platform Admin has no standing succession access. " +
+          "Log in as a synthetic Super Administrator for the demo tenant to run this test.",
+        user_role: role,
+      });
+      return Response.json(harness.results, { status: 403 });
+    }
+
+    // ── Require tenant admin role ──────────────────────────────────────────
+    const tenantAdminRoles = ["Super Administrator", "Admin Level 1", "Admin Level 2"];
+    if (!tenantAdminRoles.includes(role)) {
+      harness.recordTest("PREREQ", "Actor role check", false, {
+        error: `Role "${role}" is not a tenant admin. Required: Super Administrator, Admin Level 1, or Admin Level 2.`,
+      });
+      return Response.json(harness.results, { status: 403 });
+    }
+
+    // ── Resolve tenant via canonical resolver (handles slug or entity ID) ──
+    const rawClientId = user.client_id || user.data?.client_id;
+    if (!rawClientId) {
       harness.recordTest("PREREQ", "Tenant context", false, { error: "No client_id — user must have a tenant" });
       return Response.json(harness.results, { status: 403 });
     }
 
-    // Check succession is enabled for this tenant (same pattern as bootstrapSuccessionAuth)
-    let client: any = null;
+    let client: any;
+    let client_id: string;
     try {
-      client = await base44.asServiceRole.entities.Client.get(client_id);
-    } catch {
-      // Client may not exist; leave null
+      const resolved = await resolveCanonicalClient(base44, rawClientId);
+      client = resolved.client;
+      client_id = resolved.canonical_id;
+    } catch (e) {
+      if (e instanceof TenantResolutionError) {
+        harness.recordTest("PREREQ", "Tenant resolution", false, { error: e.message });
+        return Response.json(harness.results, { status: 403 });
+      }
+      throw e;
     }
-    if (!client) {
-      harness.recordTest("PREREQ", "Client exists", false, { error: "Client not found for client_id" });
-      return Response.json(harness.results, { status: 403 });
-    }
-    if (!client.settings?.succession_enabled) {
-      harness.recordTest("PREREQ", "Succession module enabled", false, {
-        error: "succession_enabled is false for this tenant. Activate it before running E2E tests.",
+
+    // ── Verify tenant is synthetic/demo (safety: never run on real tenants) ──
+    const tenantName = (client.name || "").toLowerCase();
+    const tenantSlug = (client.slug || "").toLowerCase();
+    const isSynthetic =
+      tenantName.includes("synthetic") ||
+      tenantName.includes("demo") ||
+      tenantName.includes("e2e") ||
+      tenantName.includes("test") ||
+      tenantSlug.includes("synthetic") ||
+      tenantSlug.includes("demo") ||
+      tenantSlug.includes("e2e") ||
+      tenantSlug.includes("test") ||
+      client.settings?.is_synthetic === true;
+
+    if (!isSynthetic) {
+      harness.recordTest("PREREQ", "Synthetic tenant verification", false, {
+        error:
+          `Tenant "${client.name}" is not marked as synthetic/demo. ` +
+          "E2E tests may only run against synthetic demo tenants to protect real data.",
+        tenant_name: client.name,
+        tenant_slug: client.slug,
       });
       return Response.json(harness.results, { status: 403 });
     }
+
+    // ── Check succession is enabled ────────────────────────────────────────
+    if (!client.settings?.succession_enabled) {
+      harness.recordTest("PREREQ", "Succession module enabled", false, {
+        error: "succession_enabled is false. Activate the module before running E2E tests.",
+      });
+      return Response.json(harness.results, { status: 403 });
+    }
+
     harness.recordTest("PREREQ", "Prerequisites check", true, {
       client_id,
+      tenant_name: client.name,
       succession_enabled: true,
-      user_role: user.app_role || user.role,
+      user_role: role,
+      is_synthetic: true,
     });
 
-    // ── Setup: create test user profiles ──────────────────────────────────
-    const profiles = await base44.asServiceRole.entities.UserProfile.bulkCreate([
-      { tenant_id: client_id, email: `e2e-candidate-${Date.now()}@test.local`, first_name: "E2E", last_name: "Candidate", department: "Sales", status: "ACTIVE", source_system: "MANUAL" },
-      { tenant_id: client_id, email: `e2e-submitter-${Date.now()}@test.local`, first_name: "E2E", last_name: "Submitter", department: "HR", status: "ACTIVE", source_system: "MANUAL" },
-    ]);
-    harness.trackId("UserProfile", profiles[0].id);
-    harness.trackId("UserProfile", profiles[1].id);
+    // ── Setup: create synthetic actor profiles for SoD ─────────────────────
+    // The authenticated user is the PRIMARY ACTOR. Synthetic profiles are used
+    // only in prerequisite state created via asServiceRole (fixtures), so that
+    // SoD checks (submitter ≠ approver, proposer ≠ ratifier) pass when the
+    // authenticated user performs the action.
+    const runId = `e2e-${Date.now()}`;
+    const profileDefs = [
+      { key: "candidate",    first: "E2E", last: "Candidate",    dept: "Sales" },
+      { key: "submitter",     first: "E2E", last: "Submitter",     dept: "HR" },
+      { key: "reviewer",      first: "E2E", last: "Reviewer",      dept: "Talent" },
+      { key: "panelist_1",    first: "E2E", last: "Panelist1",     dept: "Talent" },
+      { key: "panelist_2",    first: "E2E", last: "Panelist2",     dept: "Operations" },
+      { key: "panelist_3",    first: "E2E", last: "Panelist3",     dept: "Finance" },
+      { key: "ratifier",      first: "E2E", last: "Ratifier",      dept: "Governance" },
+      { key: "approver",      first: "E2E", last: "Approver",      dept: "HR" },
+    ];
+
+    const profiles = await base44.asServiceRole.entities.UserProfile.bulkCreate(
+      profileDefs.map((p) => ({
+        tenant_id: client_id,
+        email: `${runId}-${p.key}@synthetic-demo.local`,
+        first_name: p.first,
+        last_name: p.last,
+        department: p.dept,
+        status: "ACTIVE",
+        source_system: "MANUAL",
+      }))
+    );
 
     const ctx: any = {
       user,
-      client_id,
-      candidate_profile_id: profiles[0].id,
-      submitter_profile_id: profiles[1].id, // used for SoD (submitter ≠ approver)
+      client_id, // canonical entity ID
+      runId,
     };
+    profileDefs.forEach((p, i) => {
+      ctx[`${p.key}_profile_id`] = profiles[i].id;
+      harness.trackId("UserProfile", profiles[i].id);
+    });
 
     // ── Run 9 journeys sequentially ────────────────────────────────────────
     const journeys = [

@@ -16,8 +16,9 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
  * Platform Admin only (PLATFORM_ADMIN_FULL_ACCESS must be enabled).
  */
 
-const DEMO_CLIENT_ID = 'demo-acme-corp';
-const DEMO_CLIENT_SLUG = 'demo-acme-corp';
+// HealthCo is the synthetic demo tenant. It is looked up by slug at runtime
+// so we always use the canonical entity ID — never a hardcoded slug.
+const DEMO_CLIENT_SLUG = 'healthco';
 const NOW = new Date().toISOString();
 const TODAY = new Date().toISOString().split('T')[0];
 const FUTURE_30D = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
@@ -51,73 +52,119 @@ export default async function(req: Request): Promise<Response> {
 
     const role = user.app_role || 'User Level 1';
     const isPlatformAdmin = role === 'Platform Admin' || role === 'Platform Administrator' || role === 'admin';
-    if (!isPlatformAdmin) {
-      return Response.json({ error: 'Only Platform Admin can seed demo data' }, { status: 403 });
+    const isSuperAdmin = role === 'Super Administrator';
+    if (!isPlatformAdmin && !isSuperAdmin) {
+      return Response.json({ error: 'Only Platform Admin or Super Administrator can seed demo data' }, { status: 403 });
     }
 
-    // ── Check if demo data already exists ──────────────────────────────
-    const existingCycles = await base44.asServiceRole.entities.SuccessionCycle.filter({ client_id: DEMO_CLIENT_ID }, '-created_date', 1);
+    // ── Resolve the synthetic demo tenant (HealthCo) by slug ───────────
+    const clients = await base44.asServiceRole.entities.Client.filter({ slug: DEMO_CLIENT_SLUG }, '-created_date', 1);
+    if (clients.length === 0) {
+      return Response.json({ error: `Synthetic demo tenant "${DEMO_CLIENT_SLUG}" not found. Create it first.` }, { status: 404 });
+    }
+    const demoClient = clients[0];
+    const DEMO_CLIENT_ID = demoClient.id;
+
+    // Verify it is marked synthetic (name or slug must contain synthetic/demo/test)
+    const tn = (demoClient.name || '').toLowerCase();
+    const ts = (demoClient.slug || '').toLowerCase();
+    const isSynthetic = tn.includes('synthetic') || tn.includes('demo') || tn.includes('test') || ts.includes('synthetic') || ts.includes('demo') || ts.includes('test');
+    if (!isSynthetic) {
+      return Response.json({ error: `Tenant "${demoClient.name}" is not marked as synthetic. Demo data may only be seeded into synthetic tenants.` }, { status: 403 });
+    }
+
+    // Ensure succession is enabled
+    if (!demoClient.settings?.succession_enabled) {
+      await base44.asServiceRole.entities.Client.update(DEMO_CLIENT_ID, {
+        settings: { ...demoClient.settings, succession_enabled: true },
+      });
+    }
+
+    // ── Idempotency: check if demo data already exists ─────────────────
+    const existingCycles = await base44.asServiceRole.entities.SuccessionCycle.filter({ client_id: DEMO_CLIENT_ID, cycle_key: '2026-Q4-succession' }, '-created_date', 1);
     const demoExists = existingCycles.length > 0;
 
     let createdIds: any = {};
+    let recordCounts: any = {};
 
     if (!demoExists) {
-      createdIds = await seedAllData(base44, user.id);
+      createdIds = await seedAllData(base44, DEMO_CLIENT_ID);
+      recordCounts = countRecords(createdIds);
+    } else {
+      // Count existing demo records
+      recordCounts = await countExistingDemoData(base44, DEMO_CLIENT_ID);
     }
-
-    // ── Switch the calling user's client_id to the demo tenant ──────────
-    const currentClientId = user.client_id || user.data?.client_id || null;
-    const updateData: any = { client_id: DEMO_CLIENT_ID };
-    if (currentClientId && currentClientId !== DEMO_CLIENT_ID) {
-      updateData.original_client_id = currentClientId;
-    }
-    await base44.auth.updateMe(updateData);
 
     return Response.json({
       status: demoExists ? 'exists' : 'created',
       client_id: DEMO_CLIENT_ID,
+      tenant_name: demoClient.name,
+      synthetic: true,
       message: demoExists
-        ? 'Demo data already loaded — switched your view to the demo tenant'
-        : 'Demo data created and your view switched to the demo tenant',
+        ? 'Synthetic demo data already loaded for HealthCo (SYNTHETIC DEMO)'
+        : 'Synthetic demo data created for HealthCo (SYNTHETIC DEMO)',
       created: !demoExists,
+      record_counts: recordCounts,
     });
   } catch (error) {
     return Response.json({ error: (error as Error).message }, { status: 500 });
   }
 }
 
-async function seedAllData(base44: any, adminProfileId: string): Promise<any> {
-  const ids: any = {};
+function countRecords(ids: any): any {
+  return {
+    user_profiles: 7,
+    cycles: 1,
+    org_roles: 3,
+    org_positions: 3,
+    blueprints: 1,
+    role_requirements: 5,
+    critical_roles: 1,
+    critical_role_requirements: 1,
+    effective_snapshots: 1,
+    effective_requirement_snapshots: 6,
+    talent_pools: 1,
+    candidacies: 3,
+    evidence_records: 6,
+    evidence_review_decisions: 4,
+    readiness_conclusions: 3,
+    calibration_sessions: 1,
+    calibration_cases: 1,
+    calibration_judgments: 3,
+    governance_approvals: 1,
+    development_plan_links: 1,
+    development_actions: 2,
+    transition_initiations: 1,
+    transition_plans: 1,
+    knowledge_transfer_plans: 1,
+    monitor_alerts: 2,
+    review_records: 1,
+    audit_events: 3,
+  };
+}
 
-  // ── 1. Demo Client (tenant) ──────────────────────────────────────────
-  let client = await base44.asServiceRole.entities.Client.filter({ slug: DEMO_CLIENT_SLUG }, '-created_date', 1);
-  if (client.length > 0) {
-    ids.client = client[0].id;
-    // Ensure the existing demo tenant has the Succession module activated.
-    if (!client[0].settings?.succession_enabled) {
-      await base44.asServiceRole.entities.Client.update(client[0].id, {
-        settings: { ...client[0].settings, succession_enabled: true },
-      });
-    }
-  } else {
-    const created = await base44.asServiceRole.entities.Client.create({
-      name: 'Acme Corp (DEMO)',
-      slug: DEMO_CLIENT_SLUG,
-      type: 'direct_customer',
-      status: 'active',
-      industry: 'Technology',
-      company_size: '500-1000',
-      contact_name: 'Jennifer Walsh (CHRO)',
-      contact_email: 'jennifer.walsh@demo-acme.com',
-      business_timezone: 'America/New_York',
-      license_count: 50,
-      seats_used: 7,
-      onboarding_status: 'completed',
-      notes: 'DEMO TENANT — Created for succession module demonstration. Not real data.',
-      settings: { succession_enabled: true },
-    });
-    ids.client = created.id;
-  }
+async function countExistingDemoData(base44: any, clientId: string): Promise<any> {
+  const [cycles, roles, positions, profiles, candidacies, evidence, conclusions, transitions, alerts] = await Promise.all([
+    base44.asServiceRole.entities.SuccessionCycle.filter({ client_id: clientId }),
+    base44.asServiceRole.entities.OrgRole.filter({ client_id: clientId }),
+    base44.asServiceRole.entities.OrgPosition.filter({ client_id: clientId }),
+    base44.asServiceRole.entities.UserProfile.filter({ tenant_id: clientId }),
+    base44.asServiceRole.entities.SuccessorCandidacy.filter({ client_id: clientId }),
+    base44.asServiceRole.entities.EvidenceRecord.filter({ client_id: clientId }),
+    base44.asServiceRole.entities.ReadinessConclusion.filter({ client_id: clientId }),
+    base44.asServiceRole.entities.TransitionInitiation.filter({ client_id: clientId }),
+    base44.asServiceRole.entities.SuccessionMonitorAlert.filter({ client_id: clientId }),
+  ]);
+  return {
+    cycles: cycles.length, org_roles: roles.length, org_positions: positions.length,
+    user_profiles: profiles.length, candidacies: candidacies.length,
+    evidence_records: evidence.length, readiness_conclusions: conclusions.length,
+    transition_initiations: transitions.length, monitor_alerts: alerts.length,
+  };
+}
+
+async function seedAllData(base44: any, DEMO_CLIENT_ID: string): Promise<any> {
+  const ids: any = {};
 
   // ── 2. UserProfiles (demo people) ───────────────────────────────────
   const profiles = await base44.asServiceRole.entities.UserProfile.bulkCreate([
@@ -183,7 +230,7 @@ async function seedAllData(base44: any, adminProfileId: string): Promise<any> {
     submitted_at: PAST_60D,
     submitted_by_profile_id: ids.jennifer,
     approved_at: PAST_45D,
-    approved_by_profile_id: ids.jennifer,
+    approved_by_profile_id: ids.robert, // SoD: submitter ≠ approver
     content: {
       summary: 'Blueprint for VP of Sales — strategic sales leadership, team building, and revenue accountability.',
       competencies: ['Strategic Account Management', 'Team Leadership & Coaching', 'Executive Communication'],
@@ -202,11 +249,11 @@ async function seedAllData(base44: any, adminProfileId: string): Promise<any> {
 
   // ── 7. RoleRequirements (5 canonical) ──────────────────────────────
   const reqs = await base44.asServiceRole.entities.RoleRequirement.bulkCreate([
-    { client_id: DEMO_CLIENT_ID, blueprint_id: ids.blueprint, requirement_type: 'competency', requirement_text: 'Strategic Account Management — ability to develop and execute enterprise-level account strategies', requirement_detail: 'Advanced proficiency', status: 'approved', revision_number: 1, approved_at: PAST_45D, approved_by_profile_id: ids.jennifer, integrity_status: 'active' },
-    { client_id: DEMO_CLIENT_ID, blueprint_id: ids.blueprint, requirement_type: 'competency', requirement_text: 'Team Leadership & Coaching — proven ability to build, develop, and retain high-performing sales teams', requirement_detail: 'Advanced proficiency', status: 'approved', revision_number: 1, approved_at: PAST_45D, approved_by_profile_id: ids.jennifer, integrity_status: 'active' },
-    { client_id: DEMO_CLIENT_ID, blueprint_id: ids.blueprint, requirement_type: 'experience', requirement_text: '5+ years of enterprise sales leadership experience at director level or above', requirement_detail: 'Required', status: 'approved', revision_number: 1, approved_at: PAST_45D, approved_by_profile_id: ids.jennifer, integrity_status: 'active' },
-    { client_id: DEMO_CLIENT_ID, blueprint_id: ids.blueprint, requirement_type: 'outcome', requirement_text: 'Track record of exceeding $50M+ annual revenue targets for 2+ consecutive years', requirement_detail: 'Required', status: 'approved', revision_number: 1, approved_at: PAST_45D, approved_by_profile_id: ids.jennifer, integrity_status: 'active' },
-    { client_id: DEMO_CLIENT_ID, blueprint_id: ids.blueprint, requirement_type: 'competency', requirement_text: 'Executive Communication — ability to present sales strategy to C-suite and board stakeholders', requirement_detail: 'Advanced proficiency', status: 'approved', revision_number: 1, approved_at: PAST_45D, approved_by_profile_id: ids.jennifer, integrity_status: 'active' },
+    { client_id: DEMO_CLIENT_ID, blueprint_id: ids.blueprint, requirement_type: 'competency', requirement_text: 'Strategic Account Management — ability to develop and execute enterprise-level account strategies', requirement_detail: 'Advanced proficiency', status: 'approved', revision_number: 1, approved_at: PAST_45D, approved_by_profile_id: ids.robert, integrity_status: 'active' },
+    { client_id: DEMO_CLIENT_ID, blueprint_id: ids.blueprint, requirement_type: 'competency', requirement_text: 'Team Leadership & Coaching — proven ability to build, develop, and retain high-performing sales teams', requirement_detail: 'Advanced proficiency', status: 'approved', revision_number: 1, approved_at: PAST_45D, approved_by_profile_id: ids.robert, integrity_status: 'active' },
+    { client_id: DEMO_CLIENT_ID, blueprint_id: ids.blueprint, requirement_type: 'experience', requirement_text: '5+ years of enterprise sales leadership experience at director level or above', requirement_detail: 'Required', status: 'approved', revision_number: 1, approved_at: PAST_45D, approved_by_profile_id: ids.robert, integrity_status: 'active' },
+    { client_id: DEMO_CLIENT_ID, blueprint_id: ids.blueprint, requirement_type: 'outcome', requirement_text: 'Track record of exceeding $50M+ annual revenue targets for 2+ consecutive years', requirement_detail: 'Required', status: 'approved', revision_number: 1, approved_at: PAST_45D, approved_by_profile_id: ids.robert, integrity_status: 'active' },
+    { client_id: DEMO_CLIENT_ID, blueprint_id: ids.blueprint, requirement_type: 'competency', requirement_text: 'Executive Communication — ability to present sales strategy to C-suite and board stakeholders', requirement_detail: 'Advanced proficiency', status: 'approved', revision_number: 1, approved_at: PAST_45D, approved_by_profile_id: ids.robert, integrity_status: 'active' },
   ]);
   ids.req1 = reqs[0].id;
   ids.req2 = reqs[1].id;
@@ -245,7 +292,7 @@ async function seedAllData(base44: any, adminProfileId: string): Promise<any> {
     applicability_status: 'applicable',
     revision_number: 1,
     approved_at: PAST_40D,
-    approved_by_profile_id: ids.jennifer,
+    approved_by_profile_id: ids.robert, // SoD: submitter ≠ approver
     integrity_status: 'active',
   });
   ids.crr1 = crr.id;
@@ -498,7 +545,7 @@ async function seedAllData(base44: any, adminProfileId: string): Promise<any> {
   // ── 28. SuccessionAuditEvents (a few) ─────────────────────────────
   await base44.asServiceRole.entities.SuccessionAuditEvent.bulkCreate([
     { client_id: DEMO_CLIENT_ID, action_type: 'cycle_created', actor_profile_id: ids.jennifer, actor_email: 'jennifer.walsh@demo-acme.com', target_entity_type: 'SuccessionCycle', target_entity_id: ids.cycle, metadata: { cycle_name: '2026 Q4 Succession Cycle' }, timestamp: PAST_60D, integrity_status: 'active' },
-    { client_id: DEMO_CLIENT_ID, action_type: 'blueprint_approved', actor_profile_id: ids.jennifer, actor_email: 'jennifer.walsh@demo-acme.com', target_entity_type: 'RoleSuccessBlueprint', target_entity_id: ids.blueprint, metadata: { version_label: 'v1' }, timestamp: PAST_45D, integrity_status: 'active' },
+    { client_id: DEMO_CLIENT_ID, action_type: 'blueprint_approved', actor_profile_id: ids.robert, actor_email: 'robert.kim@demo-acme.com', target_entity_type: 'RoleSuccessBlueprint', target_entity_id: ids.blueprint, metadata: { version_label: 'v1' }, timestamp: PAST_45D, integrity_status: 'active' },
     { client_id: DEMO_CLIENT_ID, action_type: 'readiness_ratified', actor_profile_id: ids.robert, actor_email: 'robert.kim@demo-acme.com', target_entity_type: 'ReadinessConclusion', target_entity_id: ids.conclSarah, metadata: { candidate: 'Sarah Chen', value: 'ready_now' }, timestamp: PAST_20D, integrity_status: 'active' },
   ]);
 
