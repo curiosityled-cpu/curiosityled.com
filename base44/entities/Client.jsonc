@@ -615,7 +615,61 @@
         }
       ]
     },
-    "update": null,
-    "delete": null
+    "update": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "id": "{{user.data.client_id}}"
+            },
+            {
+              "$or": [
+                {
+                  "user_condition": {
+                    "role": "Admin Level 1"
+                  }
+                },
+                {
+                  "user_condition": {
+                    "role": "Admin Level 2"
+                  }
+                },
+                {
+                  "user_condition": {
+                    "role": "Super Administrator"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
   }
 }
