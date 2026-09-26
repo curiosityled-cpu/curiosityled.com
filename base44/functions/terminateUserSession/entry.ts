@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveUserScope, isUserInScope } from '../../shared/userScope.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -21,6 +22,22 @@ Deno.serve(async (req) => {
     
     if (!isAdmin && !isSelf) {
       return Response.json({ error: 'Forbidden: Cannot terminate other users sessions' }, { status: 403 });
+    }
+
+    // Tenant scoping: non-Platform-Admin admins can only terminate sessions of
+    // users within their own tenant/partner scope. Mirrors getUserActiveSessions.
+    if (isAdmin && !isSelf && currentUser.app_role !== 'Platform Admin') {
+      const scope = resolveUserScope(currentUser);
+      if (scope.role === 'Partner Business Administrator') {
+        const allClients = await base44.asServiceRole.entities.Client.list();
+        scope.partnerClientIds = allClients
+          .filter(c => c.partner_id === scope.partner_id)
+          .map(c => c.id);
+      }
+      const targetUsers = await base44.asServiceRole.entities.User.filter({ email: userEmail }).catch(() => []);
+      if (targetUsers.length === 0 || !isUserInScope(targetUsers[0], scope)) {
+        return Response.json({ error: 'Forbidden: Target user is outside your tenant scope' }, { status: 403 });
+      }
     }
 
     const endReason = isSelf ? 'force_logout_user' : 'force_logout_admin';

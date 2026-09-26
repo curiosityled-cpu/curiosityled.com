@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveUserScope, isUserInScope } from '../../shared/userScope.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -26,6 +27,21 @@ Deno.serve(async (req) => {
     
     if (!targetUser) {
       return Response.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Tenant scoping: non-Platform-Admin admins can only unlock accounts within
+    // their own tenant/partner scope. Fail-closed — mirrors deleteUserById.
+    if (currentUser.app_role !== 'Platform Admin') {
+      const scope = resolveUserScope(currentUser);
+      if (scope.role === 'Partner Business Administrator') {
+        const allClients = await base44.asServiceRole.entities.Client.list();
+        scope.partnerClientIds = allClients
+          .filter(c => c.partner_id === scope.partner_id)
+          .map(c => c.id);
+      }
+      if (!isUserInScope(targetUser, scope)) {
+        return Response.json({ error: 'Forbidden: Target user is outside your tenant scope' }, { status: 403 });
+      }
     }
 
     // Update user status

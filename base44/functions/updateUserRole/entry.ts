@@ -1,8 +1,10 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { canAssignRole } from '../../shared/userScope.ts';
 
 /**
  * Updates a user's app_role and logs the activity
- * Only admins can update user roles
+ * Only admins can update user roles, and only Platform Admin may assign
+ * platform-level roles. Tenant scoping is fail-closed.
  */
 Deno.serve(async (req) => {
     try {
@@ -45,6 +47,16 @@ Deno.serve(async (req) => {
             }, { status: 400 });
         }
 
+        // Security: Role-rank restriction — prevent vertical privilege escalation.
+        // A caller may only assign roles below their own tier; only Platform Admin
+        // may assign 'Platform Admin'. Mirrors configureUsers / assignRoleToUser.
+        if (!canAssignRole(currentUser.app_role, newRole)) {
+            return Response.json({ 
+                success: false, 
+                error: `Not permitted to assign role: ${newRole}` 
+            }, { status: 403 });
+        }
+
         // Get target user
         const targetUsers = await base44.asServiceRole.entities.User.filter({ id: userId });
         if (targetUsers.length === 0) {
@@ -56,31 +68,40 @@ Deno.serve(async (req) => {
 
         const targetUser = targetUsers[0];
 
-        // Apply role-based access control
-        if (currentUser.app_role === 'Super Administrator' && currentUser.client_id) {
-            if (targetUser.client_id !== currentUser.client_id) {
-                return Response.json({ 
-                    success: false, 
-                    error: 'Access denied - User not in your organization' 
-                }, { status: 403 });
-            }
-        } else if (currentUser.app_role === 'Partner Business Administrator' && currentUser.partner_id) {
-            const allClients = await base44.asServiceRole.entities.Client.list();
-            const partnerClientIds = allClients
-                .filter(c => c.partner_id === currentUser.partner_id)
-                .map(c => c.id);
-            if (!partnerClientIds.includes(targetUser.client_id)) {
-                return Response.json({ 
-                    success: false, 
-                    error: 'Access denied - User not in your partner clients' 
-                }, { status: 403 });
-            }
-        } else if (currentUser.app_role === 'Admin Level 2' && currentUser.client_id) {
-            if (targetUser.client_id !== currentUser.client_id) {
-                return Response.json({ 
-                    success: false, 
-                    error: 'Access denied - User not in your organization' 
-                }, { status: 403 });
+        // Apply role-based access control — fail closed when tenant identifiers are
+        // missing. Only Platform Admin is exempt from tenant scoping.
+        if (currentUser.app_role !== 'Platform Admin') {
+            if (currentUser.app_role === 'Super Administrator') {
+                if (!currentUser.client_id || targetUser.client_id !== currentUser.client_id) {
+                    return Response.json({ 
+                        success: false, 
+                        error: 'Access denied - User not in your organization' 
+                    }, { status: 403 });
+                }
+            } else if (currentUser.app_role === 'Partner Business Administrator') {
+                if (!currentUser.partner_id) {
+                    return Response.json({ 
+                        success: false, 
+                        error: 'Access denied - Partner scope not configured' 
+                    }, { status: 403 });
+                }
+                const allClients = await base44.asServiceRole.entities.Client.list();
+                const partnerClientIds = allClients
+                    .filter(c => c.partner_id === currentUser.partner_id)
+                    .map(c => c.id);
+                if (!partnerClientIds.includes(targetUser.client_id)) {
+                    return Response.json({ 
+                        success: false, 
+                        error: 'Access denied - User not in your partner clients' 
+                    }, { status: 403 });
+                }
+            } else if (currentUser.app_role === 'Admin Level 2') {
+                if (!currentUser.client_id || targetUser.client_id !== currentUser.client_id) {
+                    return Response.json({ 
+                        success: false, 
+                        error: 'Access denied - User not in your organization' 
+                    }, { status: 403 });
+                }
             }
         }
 
