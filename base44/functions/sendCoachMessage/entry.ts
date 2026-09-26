@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { escapeHtml } from '../../shared/safeResponses.ts';
 
 /**
  * sendCoachMessage
@@ -59,11 +60,13 @@ export default async function(req) {
       priority: 'medium',
     }).catch(e => console.warn('Notification create failed:', e?.message));
 
-    // 3. Send email via SendEmail integration
+    // 3. Send email via SendEmail integration (escape user content to prevent HTML injection).
+    const safeBody = escapeHtml(body);
+    const safeCoachName = escapeHtml(coachName);
     await base44.integrations.Core.SendEmail({
       to: coacheeEmail,
       subject,
-      body: `Hi,\n\n${body}\n\n— ${coachName}\n\nReply to this email to respond to your coach.`,
+      body: `Hi,\n\n${safeBody}\n\n— ${safeCoachName}\n\nReply to this email to respond to your coach.`,
     }).catch(e => console.warn('Email send failed:', e?.message));
 
     return Response.json({ success: true, message_id: message.id });

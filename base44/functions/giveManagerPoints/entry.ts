@@ -15,6 +15,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Security: validate points_amount is a finite positive integer (prevent negative/malformed).
+    const pts = Number(points_amount);
+    if (!Number.isFinite(pts) || !Number.isInteger(pts) || pts <= 0 || pts > 10000) {
+      return Response.json({ error: 'points_amount must be a positive integer between 1 and 10000' }, { status: 400 });
+    }
+
     // Verify manager relationship
     const teamMember = await base44.asServiceRole.entities.User.filter({ email: team_member_email });
     if (!teamMember.length) {
@@ -54,7 +60,7 @@ Deno.serve(async (req) => {
     const totalGivenThisWeek = pointsGivenThisWeek.reduce((sum, t) => sum + t.points_amount, 0);
     const remainingBudget = clientSettings.manager_point_budget_weekly - totalGivenThisWeek;
 
-    if (points_amount > remainingBudget) {
+    if (pts > remainingBudget) {
       return Response.json({ 
         error: `Insufficient budget. You have ${remainingBudget} points remaining this week.`,
         remaining_budget: remainingBudget
@@ -65,7 +71,7 @@ Deno.serve(async (req) => {
     const result = await base44.asServiceRole.functions.invoke('awardPoints', {
       internal_secret: Deno.env.get('INTERNAL_FUNCTION_SECRET'),
       user_email: team_member_email,
-      points_amount,
+      points_amount: pts,
       transaction_type: 'manager_award',
       given_by_email: user.email,
       reason,
@@ -74,8 +80,8 @@ Deno.serve(async (req) => {
 
     return Response.json({
       success: true,
-      points_awarded: points_amount,
-      remaining_budget: remainingBudget - points_amount,
+      points_awarded: pts,
+      remaining_budget: remainingBudget - pts,
       transaction: result.data.transaction
     });
 

@@ -34,6 +34,10 @@ Deno.serve(async (req) => {
       users = users.filter(u => partnerClientIds.includes(u.client_id));
     } else if (user.app_role === 'Admin Level 2' && user.client_id) {
       users = users.filter(u => u.client_id === user.client_id);
+    } else if (user.app_role !== 'Platform Admin') {
+      // Security: fail closed — tenant-scoped admins without a client_id/partner_id
+      // must not receive platform-wide user lists.
+      return Response.json({ error: 'Tenant membership required — no client_id assigned' }, { status: 403 });
     }
     // Platform Admin sees all users (no filtering)
 

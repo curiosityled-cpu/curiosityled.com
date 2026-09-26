@@ -27,6 +27,10 @@ Deno.serve(async (req) => {
     } else if (user.app_role === 'Super Administrator' && user.client_id) {
       // Super Admin sees only their own client
       clients = clients.filter(c => c.id === user.client_id);
+    } else if (user.app_role !== 'Platform Admin') {
+      // Security: fail closed — tenant-scoped admins without a client_id/partner_id
+      // must not receive the full client list.
+      return Response.json({ success: false, error: 'Tenant membership required — no client_id assigned', clients: [] }, { status: 403 });
     }
     // Platform Admin sees all clients (no filtering)
 

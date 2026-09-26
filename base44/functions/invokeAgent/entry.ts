@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { getOrgEmails, getDirectReportEmails } from '../../shared/orgScope.ts';
+import { escapeHtml } from '../../shared/safeResponses.ts';
 /**
  * Atreus Agent - Central Intelligence & Action Executor
  * Handles natural language intent detection and secure platform action execution
@@ -1002,7 +1003,9 @@ async function executeSendEmail(base44, user, params) {
   const allowedSet = adminRoles.includes(user.app_role) ? await getOrgEmails(base44, user) : await getDirectReportEmails(base44, user);
   const allowed = adminRoles.includes(user.app_role) ? to.filter(e => allowedSet.has(e)) : to.filter(e => e === user.email || allowedSet.has((e||'').toLowerCase()));
   if (!allowed.length) return { message: 'No permission to email those recipients.' };
-  await Promise.all(allowed.map(e => base44.integrations.Core.SendEmail({ from_name: fromName || user.full_name, to: e, subject, body })));
+  // Security: escape user-supplied subject/body to prevent HTML injection in emails.
+  const safeSubject = escapeHtml(subject); const safeBody = escapeHtml(body);
+  await Promise.all(allowed.map(e => base44.integrations.Core.SendEmail({ from_name: fromName || user.full_name, to: e, subject: safeSubject, body: safeBody })));
   return { message: `Email sent to ${allowed.length} recipient(s)`, recipients: allowed, count: allowed.length };
 }
 
@@ -2820,36 +2823,19 @@ async function executeSelectLearningResources(base44, user, params) {
 
 async function executeAddJourneyMilestones(base44, user, params) {
   const { journeyId, milestones } = params;
-
+  // Security: only admins may modify shared learning journey content.
+  if (!['Admin Level 1','Admin Level 2','Super Administrator','Platform Admin'].includes(user.app_role)) return { message: 'Only administrators may modify journey milestones.' };
   // Try fuzzy matching for journeys
   let actualJourneyId = journeyId;
-  try {
-    await base44.entities.LearningJourney.filter({ id: journeyId });
-  } catch (error) {
-    // Try searching by title
+  try { await base44.entities.LearningJourney.filter({ id: journeyId }); }
+  catch (error) {
     const allJourneys = await base44.entities.LearningJourney.filter({});
-    const matchedByTitle = allJourneys.find(j => 
-      j.title.toLowerCase().includes(journeyId.toLowerCase()) ||
-      journeyId.toLowerCase().includes(j.title.toLowerCase())
-    );
-    
-    if (matchedByTitle) {
-      actualJourneyId = matchedByTitle.id;
-    } else {
-      return {
-        message: `Journey not found. Available journeys:\n\n${allJourneys.map(j => `• ${j.title}`).join('\n')}\n\nPlease specify one of the above.`
-      };
-    }
+    const matchedByTitle = allJourneys.find(j => j.title.toLowerCase().includes(journeyId.toLowerCase()) || journeyId.toLowerCase().includes(j.title.toLowerCase()));
+    if (matchedByTitle) { actualJourneyId = matchedByTitle.id; }
+    else return { message: `Journey not found. Available journeys:\n\n${allJourneys.map(j => `• ${j.title}`).join('\n')}\n\nPlease specify one of the above.` };
   }
-
-  const journey = await base44.asServiceRole.entities.LearningJourney.update(actualJourneyId, {
-    milestones: milestones
-  });
-
-  return {
-    message: `Added ${milestones.length} milestone(s) to the learning journey`,
-    count: milestones.length
-  };
+  await base44.asServiceRole.entities.LearningJourney.update(actualJourneyId, { milestones });
+  return { message: `Added ${milestones.length} milestone(s) to the learning journey`, count: milestones.length };
 }
 
 async function executeAnalyzeJourneyEffectiveness(base44, user, params) {
@@ -2896,89 +2882,48 @@ async function executeAnalyzeJourneyEffectiveness(base44, user, params) {
 
 async function executeCloneJourneyAsTemplate(base44, user, params) {
   const { journeyId, templateName, makePublic = false } = params;
-
-  // Try fuzzy matching for journeys
+  // Security: only admins may clone journeys into templates.
+  if (!['Admin Level 1','Admin Level 2','Super Administrator','Platform Admin'].includes(user.app_role)) return { message: 'Only administrators may clone journeys as templates.' };
   let journeys = [];
-  try {
-    journeys = await base44.entities.LearningJourney.filter({ id: journeyId });
-  } catch (error) {
-    // Try searching by title
+  try { journeys = await base44.entities.LearningJourney.filter({ id: journeyId }); }
+  catch (error) {
     const allJourneys = await base44.entities.LearningJourney.filter({});
-    const matchedByTitle = allJourneys.find(j => 
-      j.title.toLowerCase().includes(journeyId.toLowerCase()) ||
-      journeyId.toLowerCase().includes(j.title.toLowerCase())
-    );
-    
-    if (matchedByTitle) {
-      journeys = [matchedByTitle];
-    }
+    const matchedByTitle = allJourneys.find(j => j.title.toLowerCase().includes(journeyId.toLowerCase()) || journeyId.toLowerCase().includes(j.title.toLowerCase()));
+    if (matchedByTitle) journeys = [matchedByTitle];
   }
-  
-  if (journeys.length === 0) {
-    return {
-      message: `Journey not found. Available journeys:\n\n${(await base44.entities.LearningJourney.filter({})).map(j => `• ${j.title}`).join('\n')}\n\nPlease specify one of the above.`
-    };
-  }
-
+  if (journeys.length === 0) return { message: `Journey not found. Available journeys:\n\n${(await base44.entities.LearningJourney.filter({})).map(j => `• ${j.title}`).join('\n')}\n\nPlease specify one of the above.` };
   const original = journeys[0];
-
-  const template = await base44.asServiceRole.entities.LearningJourney.create({
-    title: templateName,
-    description: `Template based on: ${original.title}`,
-    target_competencies: original.target_competencies,
-    estimated_duration_weeks: original.estimated_duration_weeks,
-    milestones: original.milestones,
-    resources: original.resources,
-    status: 'template',
-    is_template: true,
-    is_public: makePublic,
-    created_by: user.email,
-    client_id: user.client_id
-  });
-
-  return {
-    message: `Created template "${templateName}" from journey${makePublic ? ' (public)' : ' (private)'}`,
-    template_id: template.id
-  };
+  const template = await base44.asServiceRole.entities.LearningJourney.create({ title: templateName, description: `Template based on: ${original.title}`, target_competencies: original.target_competencies, estimated_duration_weeks: original.estimated_duration_weeks, milestones: original.milestones, resources: original.resources, status: 'template', is_template: true, is_public: makePublic, created_by: user.email, client_id: user.client_id });
+  return { message: `Created template "${templateName}" from journey${makePublic ? ' (public)' : ' (private)'}`, template_id: template.id };
 }
 
 async function executeEnrollUserInExperience(base44, user, params) {
   const { userEmail, experienceType, experienceId, startDate } = params;
-
+  // Security: managers/admins may enroll others; regular users may only self-enroll.
+  const adminRoles = ['Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'];
+  const mgrRoles = ['User Level 2','User Level 3',...adminRoles];
+  const isSelf = userEmail.toLowerCase() === user.email.toLowerCase();
+  if (!isSelf && !mgrRoles.includes(user.app_role)) return { message: 'Only managers/admins may enroll other users.' };
+  const isAdmin = adminRoles.includes(user.app_role);
   switch (experienceType) {
-    case 'journey':
-      await base44.asServiceRole.entities.JourneyEnrollment.create({
-        journey_id: experienceId,
-        user_email: userEmail,
-        enrolled_by: user.email,
-        status: 'in_progress',
-        start_date: startDate || new Date().toISOString(),
-        client_id: user.client_id
-      });
-      break;
-    case 'cohort':
+    case 'journey': {
+      const journeys = await base44.asServiceRole.entities.LearningJourney.filter({ id: experienceId });
+      if (!journeys.length || journeys[0].client_id !== user.client_id) return { message: 'Journey not found in your tenant.' };
+      await base44.asServiceRole.entities.JourneyEnrollment.create({ journey_id: experienceId, user_email: userEmail, enrolled_by: user.email, status: 'in_progress', start_date: startDate || new Date().toISOString(), client_id: user.client_id });
+      break; }
+    case 'cohort': {
       const cohorts = await base44.asServiceRole.entities.Cohort.filter({ id: experienceId });
-      if (cohorts.length > 0) {
-        const cohort = cohorts[0];
-        const updatedParticipants = [...(cohort.participant_emails || []), userEmail];
-        await base44.asServiceRole.entities.Cohort.update(experienceId, {
-          participant_emails: updatedParticipants
-        });
-      }
-      break;
-    case 'onboarding':
-      await base44.asServiceRole.entities.OnboardingPlan.update(experienceId, {
-        assigned_to_email: userEmail,
-        status: 'assigned',
-        started_date: startDate || new Date().toISOString()
-      });
-      break;
+      if (!cohorts.length || cohorts[0].client_id !== user.client_id) return { message: 'Cohort not found in your tenant.' };
+      await base44.asServiceRole.entities.Cohort.update(experienceId, { participant_emails: [...(cohorts[0].participant_emails || []), userEmail] });
+      break; }
+    case 'onboarding': {
+      if (!isAdmin) return { message: 'Only admins may reassign onboarding plans.' };
+      const plans = await base44.asServiceRole.entities.OnboardingPlan.filter({ id: experienceId });
+      if (!plans.length || plans[0].client_id !== user.client_id) return { message: 'Onboarding plan not found in your tenant.' };
+      await base44.asServiceRole.entities.OnboardingPlan.update(experienceId, { assigned_to_email: userEmail, status: 'assigned', started_date: startDate || new Date().toISOString() });
+      break; }
   }
-
-  return {
-    message: `Enrolled ${userEmail} in ${experienceType}`,
-    enrolled: true
-  };
+  return { message: `Enrolled ${userEmail} in ${experienceType}`, enrolled: true };
 }
 
 // ==================== ANALYTICS DASHBOARD EXECUTION FUNCTIONS ====================
@@ -3409,33 +3354,18 @@ Level 4: Mastery (teaches and innovates)`;
 
 async function executeLinkCompetenciesToRole(base44, user, params) {
   const { roleId, competencyIds, targetScores } = params;
-
-  // Handle targetScores format - can be array of objects OR simple array
+  // Security: only admins may modify role competency requirements.
+  if (!['Admin Level 1','Admin Level 2','Super Administrator','Platform Admin'].includes(user.app_role)) return { message: 'Only administrators may modify role competency requirements.' };
   let formattedScores = [];
   if (Array.isArray(targetScores)) {
     if (targetScores.length > 0 && typeof targetScores[0] === 'object') {
-      // Already in correct format: [{competencyId, minScore}]
-      formattedScores = targetScores.map(ts => ({
-        name: ts.competencyId,
-        target_score: ts.minScore
-      }));
+      formattedScores = targetScores.map(ts => ({ name: ts.competencyId, target_score: ts.minScore }));
     } else {
-      // Simple array [3, 3] - map to competencyIds
-      formattedScores = competencyIds.map((compId, idx) => ({
-        name: compId,
-        target_score: targetScores[idx] || 3
-      }));
+      formattedScores = competencyIds.map((compId, idx) => ({ name: compId, target_score: targetScores[idx] || 3 }));
     }
   }
-
-  const role = await base44.asServiceRole.entities.Role.update(roleId, {
-    behavioral_competencies: formattedScores
-  });
-
-  return {
-    message: `Linked ${competencyIds.length} competencies to role with target scores`,
-    count: competencyIds.length
-  };
+  await base44.asServiceRole.entities.Role.update(roleId, { behavioral_competencies: formattedScores });
+  return { message: `Linked ${competencyIds.length} competencies to role with target scores`, count: competencyIds.length };
 }
 
 async function executeSuggestCompetencyDevelopment(base44, user, params) {
