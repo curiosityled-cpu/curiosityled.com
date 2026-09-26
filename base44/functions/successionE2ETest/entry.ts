@@ -51,13 +51,18 @@ export default async function(req: Request): Promise<Response> {
       return Response.json(harness.results, { status: 403 });
     }
 
-    // Check succession is enabled for this tenant
-    const clients = await base44.asServiceRole.entities.Client.filter({ id: client_id }, "-created_date", 1);
-    if (clients.length === 0) {
-      harness.recordTest("PREREQ", "Client exists", false, { error: "Client not found" });
+    // Check succession is enabled for this tenant (same pattern as bootstrapSuccessionAuth)
+    let client: any = null;
+    try {
+      client = await base44.asServiceRole.entities.Client.get(client_id);
+    } catch {
+      // Client may not exist; leave null
+    }
+    if (!client) {
+      harness.recordTest("PREREQ", "Client exists", false, { error: "Client not found for client_id" });
       return Response.json(harness.results, { status: 403 });
     }
-    if (!clients[0].settings?.succession_enabled) {
+    if (!client.settings?.succession_enabled) {
       harness.recordTest("PREREQ", "Succession module enabled", false, {
         error: "succession_enabled is false for this tenant. Activate it before running E2E tests.",
       });

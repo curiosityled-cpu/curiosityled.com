@@ -82,7 +82,10 @@ export class E2ETestHarness {
       if (data?.error) return { ok: false, data: null, error: data.error };
       return { ok: true, data };
     } catch (e: any) {
-      return { ok: false, data: null, error: e?.message || String(e) };
+      // Try to extract the response body from the error object
+      const body = e?.response?.data || e?.data || e?.body;
+      const errMsg = body?.error || e?.message || String(e);
+      return { ok: false, data: null, error: errMsg };
     }
   }
 
