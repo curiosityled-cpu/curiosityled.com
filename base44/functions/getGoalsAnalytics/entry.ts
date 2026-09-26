@@ -39,6 +39,13 @@ Deno.serve(async (req) => {
       }, { status: 403 });
     }
 
+    // Fail-closed: non-Platform-Admin roles (except User Level 2 which uses
+    // subordinate hierarchy) must have a resolvable tenant scope to prevent
+    // cross-tenant goal aggregate exposure.
+    if (user.app_role !== 'Platform Admin' && user.app_role !== 'User Level 2' && !user.client_id) {
+      return Response.json({ success: false, error: 'Tenant scope required — client_id not configured for your account' }, { status: 403 });
+    }
+
     // Fetch all data
     const [allUsers, allGoals] = await Promise.all([
       base44.asServiceRole.entities.User.list(),

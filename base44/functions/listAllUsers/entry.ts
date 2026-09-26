@@ -21,19 +21,19 @@ Deno.serve(async (req) => {
     let users = await base44.asServiceRole.entities.User.list('-created_date');
 
     // Apply role-based filtering
+    // Security: tenant-scoped admins see only their own tenant's users.
+    // Unassigned (client-less) users are visible to Platform Admin only to
+    // prevent cross-tenant enumeration of pending invites.
     if (user.app_role === 'Super Administrator' && user.client_id) {
-      // Super Admin sees only their client's users + unassigned users
-      users = users.filter(u => u.client_id === user.client_id || !u.client_id);
+      users = users.filter(u => u.client_id === user.client_id);
     } else if (user.app_role === 'Partner Business Administrator' && user.partner_id) {
-      // Partner Admin sees users from all their partner's clients + unassigned users
       const allClients = await base44.asServiceRole.entities.Client.list();
       const partnerClientIds = allClients
         .filter(c => c.partner_id === user.partner_id)
         .map(c => c.id);
-      users = users.filter(u => partnerClientIds.includes(u.client_id) || !u.client_id);
+      users = users.filter(u => partnerClientIds.includes(u.client_id));
     } else if (user.app_role === 'Admin Level 2' && user.client_id) {
-      // Admin Level 2 sees only their client's users + unassigned users
-      users = users.filter(u => u.client_id === user.client_id || !u.client_id);
+      users = users.filter(u => u.client_id === user.client_id);
     }
     // Platform Admin sees all users (no filtering)
 

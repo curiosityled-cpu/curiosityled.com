@@ -55,6 +55,19 @@ Deno.serve(async (req) => {
       partnerClientIds = allClients.filter(c => c.partner_id === user.partner_id).map(c => c.id);
     }
 
+    // Fail-closed: non-Platform-Admin roles (except User Level 2 which uses
+    // subordinate hierarchy) must have a resolvable tenant scope to prevent
+    // cross-tenant enrollment and PII exposure.
+    if (!isPlatformAdmin && user.app_role !== 'User Level 2') {
+      const hasTenantScope = user.client_id || (isPartnerBA && partnerClientIds.length > 0);
+      if (!hasTenantScope) {
+        return Response.json({
+          success: false,
+          error: 'Tenant scope required — client_id not configured for your account'
+        }, { status: 403 });
+      }
+    }
+
     console.log('Fetching platform journey analytics for:', user.email, 'Role:', user.app_role);
 
     // Helper function to safely fetch with timeout

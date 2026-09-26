@@ -36,17 +36,19 @@ Deno.serve(async (req) => {
 
     // Security: verify the caller is enrolled in this program before awarding
     // completion points. Prevents points farming by enumerating program IDs.
-    // If the program uses Cohorts, the caller must be a participant in one.
+    // Fail-closed: if the program has no Cohort records at all, we cannot
+    // verify enrollment — reject rather than treating 'no cohorts' as enrolled.
     const cohorts = await base44.asServiceRole.entities.Cohort.filter({
       program_id: program_id
     }).catch(() => []);
-    if (cohorts.length > 0) {
-      const isEnrolled = cohorts.some(c =>
-        (c.participant_emails || []).includes(targetUserEmail)
-      );
-      if (!isEnrolled) {
-        return Response.json({ error: 'You are not enrolled in this program' }, { status: 403 });
-      }
+    if (cohorts.length === 0) {
+      return Response.json({ error: 'Cannot verify enrollment — this program has no cohorts configured. Contact your administrator.' }, { status: 403 });
+    }
+    const isEnrolled = cohorts.some(c =>
+      (c.participant_emails || []).includes(targetUserEmail)
+    );
+    if (!isEnrolled) {
+      return Response.json({ error: 'You are not enrolled in this program' }, { status: 403 });
     }
 
     // Idempotency: check if points already awarded for this program (prevents double-awarding)

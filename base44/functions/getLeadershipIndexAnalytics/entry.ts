@@ -15,6 +15,12 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'Access denied - Insufficient permissions' }, { status: 403 });
     }
 
+    // Fail-closed: non-Platform-Admin roles must have a client_id to prevent
+    // cross-tenant leadership assessment analytics exposure.
+    if (user.app_role !== 'Platform Admin' && !user.client_id) {
+      return Response.json({ success: false, error: 'Tenant scope required — client_id not configured for your account' }, { status: 403 });
+    }
+
     const body = await req.json().catch(() => ({}));
     const { partnerId, clientId, industry, timeframe = '6months' } = body;
 

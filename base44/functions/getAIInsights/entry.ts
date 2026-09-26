@@ -22,6 +22,15 @@ Deno.serve(async (req) => {
       }, { status: 403 });
     }
 
+    // Fail-closed: Super Administrator must have a client_id to prevent
+    // cross-tenant exposure of at-risk user PII. Platform Admin is exempt.
+    if (user.app_role === 'Super Administrator' && !user.client_id) {
+      return Response.json({
+        success: false,
+        error: 'Tenant scope required — client_id not configured for your account'
+      }, { status: 403 });
+    }
+
     console.log('Fetching AI insights for:', user.email, user.app_role);
 
     // Parse filters from request body

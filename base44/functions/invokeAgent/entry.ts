@@ -106,9 +106,9 @@ Deno.serve(async (req) => {
       const conversations = await base44.entities.Conversation.filter({ id: conversation_id });
       if (conversations.length > 0) conversationContext = conversations[0].context || {};
     }
-    // Security: verify server-side confirmation token to prevent bypass
-    if (confirmed && tool_call) {
-      const expected = await sha256(user.email + ':' + tool_call.tool_name + ':' + JSON.stringify(tool_call.parameters || {}) + ':' + Deno.env.get('INTERNAL_FUNCTION_SECRET'));
+    // Security: fail-closed when INTERNAL_FUNCTION_SECRET is unset (prevents trivial token forgery).
+    if (confirmed && tool_call) { const secret = Deno.env.get('INTERNAL_FUNCTION_SECRET'); if (!secret) return Response.json({ error: 'Confirmation secret missing' }, { status: 500 });
+      const expected = await sha256(user.email + ':' + tool_call.tool_name + ':' + JSON.stringify(tool_call.parameters || {}) + ':' + secret);
       if (!confirmation_token || confirmation_token !== expected) return Response.json({ error: 'Invalid confirmation token' }, { status: 403 });
       return await executeAgentAction(base44, user, tool_call);
     }
@@ -847,25 +847,12 @@ async function executeAssignLearning(base44, user, params) {
 }
 
 async function executeCreateGoal(base44, user, params) {
-  const { title, description, timeframeEnd, assignedToEmails, linkedCompetencyIds } = params;
-
-  const goal = await base44.entities.Goal.create({
-    title: title,
-    description: description || '',
-    timeframe_end: timeframeEnd || null,
-    assigned_to_emails: assignedToEmails || [],
-    linked_competency_ids: linkedCompetencyIds || [],
-    status: 'active',
-    progress: 0,
-    client_id: user.client_id
-  });
-
-  return {
-    message: assignedToEmails 
-      ? `Created goal "${title}" and assigned to ${assignedToEmails.length} user(s)`
-      : `Created goal "${title}" successfully`,
-    goal_id: goal.id
-  };
+  const { title, description, timeframeEnd, assignedToEmails: raw, linkedCompetencyIds } = params;
+  // Security: restrict assignees to caller's org (prevents cross-tenant injection).
+  const orgEmails = await getOrgEmails(base44, user);
+  const assignedToEmails = (raw || []).filter(e => e === user.email || orgEmails.has(e));
+  const goal = await base44.entities.Goal.create({ title, description: description || '', timeframe_end: timeframeEnd || null, assigned_to_emails: assignedToEmails, linked_competency_ids: linkedCompetencyIds || [], status: 'active', progress: 0, client_id: user.client_id });
+  return { message: assignedToEmails.length > 0 ? `Created goal "${title}" and assigned to ${assignedToEmails.length} user(s)` : `Created goal "${title}" successfully`, goal_id: goal.id };
 }
 
 async function executeScheduleCalendarEvent(base44, user, params) {
@@ -1097,46 +1084,19 @@ async function executeBulkAssignLearning(base44, user, params) {
 }
 
 async function executeBulkCreateGoals(base44, user, params) {
-  const { goals, assignToEmails = [] } = params;
-
+  const { goals, assignToEmails: raw = [] } = params;
+  // Security: restrict assignees to caller's org (prevents cross-tenant injection).
+  const orgEmails = await getOrgEmails(base44, user);
+  const assignToEmails = raw.filter(e => e === user.email || orgEmails.has(e));
   const createdGoals = [];
-
   for (const goalData of goals) {
-    const goal = await base44.entities.Goal.create({
-      title: goalData.title,
-      description: goalData.description || '',
-      timeframe_end: goalData.timeframeEnd || null,
-      assigned_to_emails: assignToEmails.length > 0 ? assignToEmails : [],
-      status: 'active',
-      progress: 0,
-      client_id: user.client_id
-    });
-
+    const goal = await base44.entities.Goal.create({ title: goalData.title, description: goalData.description || '', timeframe_end: goalData.timeframeEnd || null, assigned_to_emails: assignToEmails, status: 'active', progress: 0, client_id: user.client_id });
     createdGoals.push(goal);
-
-    // Create notifications for assigned users
-    if (assignToEmails.length > 0) {
-      for (const email of assignToEmails) {
-        await base44.asServiceRole.entities.Notification.create({
-          user_email: email,
-          type: 'goal_assignment',
-          title: 'New Goal Assigned',
-          message: `${user.full_name} has assigned you a goal: "${goalData.title}"`,
-          scheduled_for: new Date().toISOString(),
-          priority: 'medium',
-          status: 'pending',
-          related_entity_type: 'Goal',
-          related_entity_id: goal.id
-        });
-      }
+    for (const email of assignToEmails) {
+      await base44.asServiceRole.entities.Notification.create({ user_email: email, type: 'goal_assignment', title: 'New Goal Assigned', message: `${user.full_name} has assigned you a goal: "${goalData.title}"`, scheduled_for: new Date().toISOString(), priority: 'medium', status: 'pending', related_entity_type: 'Goal', related_entity_id: goal.id });
     }
   }
-
-  return {
-    message: `Successfully created ${createdGoals.length} goal(s)${assignToEmails.length > 0 ? ` and assigned to ${assignToEmails.length} user(s)` : ''}`,
-    goal_ids: createdGoals.map(g => g.id),
-    count: createdGoals.length
-  };
+  return { message: `Successfully created ${createdGoals.length} goal(s)${assignToEmails.length > 0 ? ` and assigned to ${assignToEmails.length} user(s)` : ''}`, goal_ids: createdGoals.map(g => g.id), count: createdGoals.length };
 }
 
 // Multi-step workflow handling

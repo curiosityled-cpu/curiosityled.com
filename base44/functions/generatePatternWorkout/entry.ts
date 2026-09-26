@@ -17,6 +17,14 @@ export default async function(req: Request): Promise<Response> {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
+    // Security: restrict on-demand module publication to manager/admin roles.
+    // Regular users must not bypass the admin-gated module-create RLS via
+    // the service role to publish content into the shared learning catalog.
+    const allowedRoles = ['Platform Admin', 'Super Administrator', 'Partner Business Administrator', 'Admin Level 1', 'Admin Level 2', 'User Level 2', 'User Level 3'];
+    if (!allowedRoles.includes(user.app_role)) {
+      return Response.json({ error: 'Unauthorized — only managers and admins may publish pattern workouts' }, { status: 403 });
+    }
+
     const body = await req.json().catch(() => ({}));
     const brief = body.brief;
     if (!brief || !brief.pattern_id || !brief.competency) {
