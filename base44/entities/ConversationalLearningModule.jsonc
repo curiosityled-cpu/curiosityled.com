@@ -151,6 +151,10 @@
         "task"
       ],
       "description": "Whether this workout builds a skill or works through a real task/situation"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Tenant ID for manager-created drafts. Null/omitted for shared published modules."
     }
   },
   "required": [

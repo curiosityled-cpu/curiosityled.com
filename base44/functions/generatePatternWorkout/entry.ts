@@ -28,8 +28,19 @@ export default async function(req: Request): Promise<Response> {
     }
     const canPublish = adminRoles.includes(user.app_role);
 
+    // Managers must have a tenant to scope their draft. Browser-supplied
+    // client_id is never trusted — only the authenticated actor's tenant is used.
+    const actorClientId = user.client_id;
+    if (!canPublish && !actorClientId) {
+      return Response.json({ error: 'Unauthorized — manager has no tenant assignment; cannot scope draft' }, { status: 403 });
+    }
+
     const body = await req.json().catch(() => ({}));
     const brief = body.brief;
+    // Reject any browser-supplied client_id — it is never trusted.
+    if (body.client_id) {
+      return Response.json({ error: 'client_id may not be supplied in the request body' }, { status: 400 });
+    }
     if (!brief || !brief.pattern_id || !brief.competency) {
       return Response.json({ error: 'Missing pattern brief (pattern_id, competency required)' }, { status: 400 });
     }
@@ -48,7 +59,7 @@ export default async function(req: Request): Promise<Response> {
       conversation_structure: module.conversation_structure,
       related_resource_ids: resourceIds,
       is_active: canPublish,
-      client_id: canPublish ? undefined : user.client_id,
+      client_id: canPublish ? undefined : actorClientId,
       points_value: WORKOUT_DEFAULTS.points_value,
       source_pattern_id: brief.pattern_id,
       workout_type: brief.type || 'skill',
