@@ -26,6 +26,14 @@ Deno.serve(async (req) => {
       filter.admin_email = adminEmail;
     }
 
+    // Tenant scoping: non-Platform-Admin callers can only see logs from their own tenant
+    if (user.app_role !== 'Platform Admin') {
+      if (!user.client_id) {
+        return Response.json({ error: 'Access denied — tenant membership required' }, { status: 403 });
+      }
+      filter.client_id = user.client_id;
+    }
+
     // Get impersonation logs
     const logs = await base44.asServiceRole.entities.ImpersonationLog.filter(
       filter,

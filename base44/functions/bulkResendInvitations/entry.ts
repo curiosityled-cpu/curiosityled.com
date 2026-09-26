@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveUserScope, isUserInScope } from '../../shared/userScope.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -34,6 +35,15 @@ Deno.serve(async (req) => {
         }
 
         const targetUser = targetUsers[0];
+
+        // Tenant scoping: admins can only resend invitations for users in their own tenant
+        if (currentUser.app_role !== 'Platform Admin') {
+          const scope = resolveUserScope(currentUser);
+          if (!isUserInScope(targetUser, scope)) {
+            results.failed.push({ userId, error: 'Target user is outside your tenant scope' });
+            continue;
+          }
+        }
 
         // Re-invite the user
         await base44.users.inviteUser(targetUser.email, targetUser.app_role || 'User Level 1');

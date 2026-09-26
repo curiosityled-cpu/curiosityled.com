@@ -10,7 +10,14 @@ Deno.serve(async (req) => {
     }
 
     const { client_id, date_range } = await req.json();
-    const targetClientId = client_id || user.client_id;
+    // Security: non-Platform-Admin callers are locked to their own tenant.
+    // Prevents cross-tenant analytics exposure via arbitrary client_id in the body.
+    const targetClientId = user.app_role === 'Platform Admin'
+      ? (client_id || user.client_id)
+      : user.client_id;
+    if (!targetClientId) {
+      return Response.json({ error: 'No client context available' }, { status: 403 });
+    }
 
     // Calculate date range
     const now = new Date();

@@ -97,7 +97,14 @@ Deno.serve(async (req) => {
     let scopedLearning = Array.isArray(assignedLearning) ? assignedLearning : [];
     let scopedPrograms = Array.isArray(programs) ? programs : [];
 
-    if ((user.app_role === 'Super Administrator' || user.app_role === 'Admin Level 1' || user.app_role === 'Admin Level 2') && user.client_id) {
+    // Fail closed: tenant-scoped roles MUST have a tenant identifier.
+    // Without this guard, a client-less admin receives the full platform dataset.
+    if (user.app_role === 'Platform Admin') {
+      // Platform Admin sees all data — no scoping
+    } else if (user.app_role === 'Super Administrator' || user.app_role === 'Admin Level 1' || user.app_role === 'Admin Level 2') {
+      if (!user.client_id) {
+        return Response.json({ success: false, error: 'Access denied — tenant membership required' }, { status: 403 });
+      }
       scopedClients = scopedClients.filter(c => c.id === user.client_id);
       scopedUsers = scopedUsers.filter(u => u.client_id === user.client_id);
       const userEmails = new Set(scopedUsers.map(u => u.email));
@@ -105,7 +112,10 @@ Deno.serve(async (req) => {
       scopedGoals = scopedGoals.filter(g => userEmails.has(g.created_by));
       scopedLearning = scopedLearning.filter(l => userEmails.has(l.user_email));
       scopedPrograms = scopedPrograms.filter(p => p.client_id === user.client_id);
-    } else if (user.app_role === 'Partner Business Administrator' && user.partner_id) {
+    } else if (user.app_role === 'Partner Business Administrator') {
+      if (!user.partner_id) {
+        return Response.json({ success: false, error: 'Access denied — partner membership required' }, { status: 403 });
+      }
       scopedClients = scopedClients.filter(c => c.partner_id === user.partner_id);
       const clientIds = new Set(scopedClients.map(c => c.id));
       scopedUsers = scopedUsers.filter(u => clientIds.has(u.client_id));
@@ -115,7 +125,6 @@ Deno.serve(async (req) => {
       scopedLearning = scopedLearning.filter(l => userEmails.has(l.user_email));
       scopedPrograms = scopedPrograms.filter(p => clientIds.has(p.client_id));
     }
-    // Platform Admin sees all data
 
     console.log('Data fetched successfully:', {
       users: users?.length || 0,

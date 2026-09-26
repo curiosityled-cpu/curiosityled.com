@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveUserScope, isUserInScope } from '../../shared/userScope.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -20,6 +21,15 @@ Deno.serve(async (req) => {
     
     if (!isAdmin && currentUser.email !== userEmail) {
       return Response.json({ error: 'Forbidden: Cannot view other users login history' }, { status: 403 });
+    }
+
+    // Tenant scoping: admins can only view users within their own tenant/partner scope
+    if (isAdmin && currentUser.app_role !== 'Platform Admin') {
+      const scope = resolveUserScope(currentUser);
+      const targetUsers = await base44.asServiceRole.entities.User.filter({ email: userEmail }).catch(() => []);
+      if (targetUsers.length === 0 || !isUserInScope(targetUsers[0], scope)) {
+        return Response.json({ error: 'Forbidden: Target user is outside your tenant scope' }, { status: 403 });
+      }
     }
 
     // Fetch login history using list() to bypass RLS completely

@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { escapeHtml } from '../../shared/safeResponses.ts';
 
 /**
  * Bulk assigns assessments to multiple users
@@ -116,7 +117,7 @@ Deno.serve(async (req) => {
               <h2>Leadership Assessment Invitation</h2>
               <p>Hi ${user?.full_name || 'there'},</p>
               <p>${currentUser.full_name} has requested that you complete the <strong>${assessmentNames[assessment_type]}</strong>.</p>
-              ${custom_message ? `<p><em>"${custom_message}"</em></p>` : ''}
+              ${custom_message ? `<p><em>"${escapeHtml(custom_message)}"</em></p>` : ''}
               <p><strong>Due Date:</strong> ${new Date(due_date).toLocaleDateString()}</p>
               <p>This assessment will help identify your leadership strengths and areas for development. It typically takes 15-20 minutes to complete.</p>
               <p><a href="${Deno.env.get('APP_URL') || 'https://app.base44.com'}${assessmentUrls[assessment_type]}" style="background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin-top: 16px;">Take Assessment Now</a></p>

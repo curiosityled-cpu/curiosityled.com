@@ -34,6 +34,21 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'This program is not in your organization' }, { status: 403 });
     }
 
+    // Security: verify the caller is enrolled in this program before awarding
+    // completion points. Prevents points farming by enumerating program IDs.
+    // If the program uses Cohorts, the caller must be a participant in one.
+    const cohorts = await base44.asServiceRole.entities.Cohort.filter({
+      program_id: program_id
+    }).catch(() => []);
+    if (cohorts.length > 0) {
+      const isEnrolled = cohorts.some(c =>
+        (c.participant_emails || []).includes(targetUserEmail)
+      );
+      if (!isEnrolled) {
+        return Response.json({ error: 'You are not enrolled in this program' }, { status: 403 });
+      }
+    }
+
     // Idempotency: check if points already awarded for this program (prevents double-awarding)
     const existingTx = await base44.asServiceRole.entities.PointTransaction.filter({
       user_email: targetUserEmail,

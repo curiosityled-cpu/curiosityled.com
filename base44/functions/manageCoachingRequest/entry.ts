@@ -262,6 +262,10 @@ export default async function(req: Request): Promise<Response> {
 
     // ─── START: mark engagement in progress ───
     if (action === 'start') {
+      const canStart = request.assigned_practitioner_email === userEmail || userRole === 'Admin Level 1' || userRole === 'Admin Level 2' || userRole === 'Super Administrator' || isPlatformAdmin;
+      if (!canStart) {
+        return Response.json({ error: 'Only the assigned practitioner or an admin can start this request' }, { status: 403 });
+      }
       if (request.linked_engagement_id) {
         await base44.entities.CoachingEngagement.update(request.linked_engagement_id, { status: 'active' });
       }
