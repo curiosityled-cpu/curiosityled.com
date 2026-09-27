@@ -311,15 +311,15 @@ export default function ReadinessProposalsView() {
 
       {/* Existing conclusions */}
       <div className="space-y-3">
-        {conclusions.length === 0 && !showForm && (
+        {filteredConclusions.length === 0 && !showForm && (
           <Card>
             <CardContent className="py-8 text-center text-gray-500">
               <FileText className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-              <p className="text-sm">No readiness proposals yet. Create one to get started.</p>
+              <p className="text-sm">No readiness proposals match this filter.</p>
             </CardContent>
           </Card>
         )}
-        {conclusions.map(c => (
+        {filteredConclusions.map(c => (
           <Card key={c.conclusion_id}>
             <CardContent className="py-4">
               <div className="flex items-start justify-between">
