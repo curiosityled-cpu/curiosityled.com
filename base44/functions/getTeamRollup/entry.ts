@@ -201,24 +201,11 @@ export default async function (req) {
     // ── Resolve leadership level (explicit field or auto from depth) ──
     const leaderLevel = resolveLeaderLevel(currentUser, allUsers);
 
-    // ── Determine effective scope: vertical if the leader has a reporting
-    //    tree, regardless of app_role. Enterprise/aggregated stays the
-    //    fallback for roles whose reporting tree is empty (Platform Admin,
-    //    Analyst, Partner BA without a tree) so they still see an org-wide
-    //    rollup instead of a blank page. HRBP keeps portfolio scope.
-    const hasReportingTree = (() => {
-      const tree = buildReportingTree(allUsers, currentUser.email, 10);
-      return tree.length > 0;
-    })();
-    const useVerticalScope = hasReportingTree && config.scope !== "portfolio";
-    const effectiveScope = useVerticalScope ? "vertical" : config.scope;
-    const effectiveConfig = { ...config, scope: effectiveScope, detail: effectiveScope === "vertical" ? "directs" : config.detail };
-
     // ── Resolve scope + detail email sets ─────────────────────────────
     let scopeEmails = [];
     let detailEmails = [];
 
-    if (effectiveConfig.scope === "vertical") {
+    if (config.scope === "vertical") {
       const tree = buildReportingTree(allUsers, currentUser.email, 10);
       scopeEmails = tree.map((u) => u.email).filter(Boolean);
       const directs = deriveDirectReports(allUsers, currentUser.email);
@@ -249,9 +236,9 @@ export default async function (req) {
     }
 
     const base = {
-      scope_type: effectiveConfig.scope,
-      detail_level: effectiveConfig.detail,
-      scope_label: effectiveConfig.label,
+      scope_type: config.scope,
+      detail_level: config.detail,
+      scope_label: config.label,
       scope_size: scopeEmails.length,
       detail_size: detailEmails.length,
       leader_level: leaderLevel,
@@ -301,7 +288,7 @@ export default async function (req) {
 
     // KPI scoping: enterprise = all fetched; vertical/portfolio = owned-in-scope + shared org-wide
     let scopedKpis;
-    if (effectiveConfig.scope === "enterprise") {
+    if (config.scope === "enterprise") {
       scopedKpis = kpisRaw;
     } else {
       const scopeSet = new Set(scopeEmails);
@@ -344,7 +331,7 @@ export default async function (req) {
     let members = [];
     let atRisk = [];
 
-    if (effectiveConfig.detail !== "aggregated" && detailEmails.length > 0) {
+    if (config.detail !== "aggregated" && detailEmails.length > 0) {
       const detailSet = new Set(detailEmails);
       const detailUsers = allUsers.filter((u) => detailSet.has(u.email));
 
@@ -417,7 +404,7 @@ export default async function (req) {
 
     // ── Subtree cards (Level 3+ — each direct report leads a sub-team) ──
     let subtreeCards = [];
-    if (leaderLevel >= 3 && effectiveConfig.scope === "vertical") {
+    if (leaderLevel >= 3 && config.scope === "vertical") {
       const directs = deriveDirectReports(allUsers, currentUser.email);
       if (directs.length > 0) {
         subtreeCards = buildSubtreeCards(allUsers, directs, goals, journeys, assessments, checkins, scopedKpis);

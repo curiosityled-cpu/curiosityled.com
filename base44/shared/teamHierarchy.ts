@@ -29,7 +29,7 @@ export function buildReportingTree(allUsers, managerEmail, maxDepth = 10) {
       for (const r of reports) {
         if (seen.has(r.email)) continue;
         seen.add(r.email);
-        result.push({ ...r, depth });
+        result.push(r);
         next.push(r.email);
       }
     }
