@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { resolveUserScope, isUserInScope, attachPartnerClientIds } from '../../shared/userScope.ts';
 
 /**
  * Cascade goals to multiple users based on organizational criteria
@@ -31,6 +32,12 @@ Deno.serve(async (req) => {
         const adminRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Partner Business Administrator', 'Platform Admin'];
         const isAdmin = adminRoles.includes(currentUser.app_role);
 
+        const scope = resolveUserScope(currentUser);
+        if (scope.role === 'Partner Business Administrator') {
+            const clientsList = await base44.asServiceRole.entities.Client.list();
+            attachPartnerClientIds(scope, clientsList);
+        }
+
         const { goal_id, target_emails, goalTemplate, targetCriteria, assignedBy, cascadeGoalId } = await req.json();
         
         // Support both new format (goal_id + target_emails) and legacy format
@@ -50,6 +57,11 @@ Deno.serve(async (req) => {
             // Security: verify the caller owns the source goal or is an admin.
             if (!isAdmin && sourceGoal.created_by !== currentUser.email) {
                 return Response.json({ success: false, error: 'Forbidden — you can only cascade your own goals' }, { status: 403 });
+            }
+            // Security: Tenant scoping — non-Platform-Admin admins can only
+            // cascade goals within their own tenant.
+            if (isAdmin && !scope.isPlatformAdmin && !isUserInScope({ client_id: sourceGoal.client_id }, scope)) {
+                return Response.json({ success: false, error: 'Forbidden — source goal is outside your tenant scope' }, { status: 403 });
             }
             targetEmails = target_emails;
         } else if (goalTemplate && targetCriteria) {
@@ -116,6 +128,12 @@ Deno.serve(async (req) => {
             const directReports = await base44.asServiceRole.entities.User.filter({ manager_email: currentUser.email });
             const subordinateEmails = new Set(directReports.map(u => u.email.toLowerCase()));
             targetUsers = targetUsers.filter(u => subordinateEmails.has((u.email || '').toLowerCase()) || u.email === currentUser.email);
+        }
+
+        // Security: Tenant scoping for admin callers — filter target users to
+        // caller's tenant. Platform Admin may act cross-tenant.
+        if (isAdmin && !scope.isPlatformAdmin) {
+            targetUsers = targetUsers.filter(u => isUserInScope(u, scope));
         }
 
         if (targetUsers.length === 0) {

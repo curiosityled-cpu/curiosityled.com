@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { resolveUserScope, isUserInScope, attachPartnerClientIds } from '../../shared/userScope.ts';
 
 /**
  * Bulk assign goals to multiple users based on criteria or direct selection
@@ -57,6 +58,32 @@ Deno.serve(async (req) => {
                 return Response.json({
                     success: false,
                     error: `Forbidden - you can only assign goals to your direct subordinates. Not allowed: ${unauthorized.join(', ')}`
+                }, { status: 403 });
+            }
+        }
+
+        // Security: Tenant scoping for admin callers — verify all target users
+        // belong to the caller's tenant (or partner-managed clients).
+        // Platform Admin may act cross-tenant.
+        if (ADMIN_ROLES.includes(appRole) && appRole !== 'Platform Admin') {
+            const scope = resolveUserScope(currentUser);
+            if (scope.role === 'Partner Business Administrator') {
+                const clientsList = await base44.asServiceRole.entities.Client.list();
+                attachPartnerClientIds(scope, clientsList);
+            }
+            const targetUserRecords = await base44.asServiceRole.entities.User.filter({
+                email: { $in: targetUsers.map(e => e.toLowerCase()) }
+            });
+            const inScopeEmails = new Set(
+                targetUserRecords
+                    .filter(u => isUserInScope(u, scope))
+                    .map(u => (u.email || '').toLowerCase())
+            );
+            const outOfScope = targetUsers.filter(e => !inScopeEmails.has(e.toLowerCase()));
+            if (outOfScope.length > 0) {
+                return Response.json({
+                    success: false,
+                    error: `Forbidden - target users outside your organization: ${outOfScope.join(', ')}`
                 }, { status: 403 });
             }
         }

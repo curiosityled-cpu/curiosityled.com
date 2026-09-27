@@ -145,6 +145,38 @@ Deno.serve(async (req) => {
                     continue;
                 }
 
+                // Security: Prevent role escalation — use shared rank check.
+                // A caller may never assign a role at or above their own tier.
+                if (!canAssignRole(currentUser.app_role, appRoleStr)) {
+                    results.failed.push({ user: userData, reason: 'Insufficient privileges to assign this role' });
+                    continue;
+                }
+
+                // Security: Tenant scoping — non-Platform-Admins can only provision
+                // users into their own tenant or partner-managed clients.
+                let resolvedClientId = userData.client_id || null;
+                let resolvedPartnerId = userData.partner_id || null;
+                if (!scope.isPlatformAdmin) {
+                    // Default to caller's client_id if neither client nor partner specified
+                    if (!resolvedClientId && !resolvedPartnerId) {
+                        resolvedClientId = scope.client_id;
+                    }
+                    // Verify specified client_id is in scope
+                    if (resolvedClientId && !isUserInScope({ client_id: resolvedClientId }, scope)) {
+                        results.failed.push({ user: userData, reason: 'Cross-tenant provisioning denied' });
+                        continue;
+                    }
+                    // Only Partner Business Administrators can assign to a partner
+                    if (resolvedPartnerId && scope.role !== 'Partner Business Administrator') {
+                        results.failed.push({ user: userData, reason: 'Only Partner Business Administrators can assign users to partners' });
+                        continue;
+                    }
+                    if (resolvedPartnerId && scope.role === 'Partner Business Administrator' && resolvedPartnerId !== scope.partner_id) {
+                        results.failed.push({ user: userData, reason: 'Cross-partner provisioning denied' });
+                        continue;
+                    }
+                }
+
                 // Validate start_date if provided
                 const startDateStr = userData.start_date ? String(userData.start_date).trim() : null;
                 if (startDateStr) {
@@ -191,8 +223,8 @@ Deno.serve(async (req) => {
                     leadership_level: leadershipLevelStr,
                     manager_email: managerEmailStr,
                     start_date: startDateStr,
-                    client_id: userData.client_id || null,
-                    partner_id: userData.partner_id || null,
+                    client_id: resolvedClientId,
+                    partner_id: resolvedPartnerId,
                     custom_role_id: userData.custom_role_id || null
                 };
 

@@ -9,6 +9,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Security: Only Platform Admin or Super Administrator can seed demo data.
+    const allowedRoles = ['Platform Admin', 'Super Administrator'];
+    if (!allowedRoles.includes(user.app_role)) {
+      return Response.json({ error: 'Forbidden - only Platform Admin or Super Administrator can seed demo data' }, { status: 403 });
+    }
+
     let clientId = user.client_id;
 
     // If user is a Platform Admin and no client_id provided, create/use demo client

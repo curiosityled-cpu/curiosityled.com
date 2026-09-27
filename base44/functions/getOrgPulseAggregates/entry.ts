@@ -16,6 +16,7 @@
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { resolveHRBPManagerEmails } from '../../shared/portfolioData.ts';
+import { resolveUserScope, attachPartnerClientIds } from '../../shared/userScope.ts';
 
 const ADMIN_ROLES = ['admin', 'Admin Level 2', 'Super Administrator', 'Partner Business Administrator', 'Platform Admin'];
 const MIN_GROUP_SIZE = 5; // never show metrics for groups smaller than this
@@ -33,6 +34,18 @@ Deno.serve(async (req) => {
 
     // Load all manager trends (aggregated signals only — never raw pulses)
     let allTrends = await base44.asServiceRole.entities.ManagerTrends.list('-last_trend_computed_at', 500);
+
+    // Security: Tenant scoping — non-Platform-Admin admins see only their own
+    // tenant's managers (or partner-managed clients for Partner Business Admins).
+    const scope = resolveUserScope(user);
+    if (scope.role === 'Partner Business Administrator') {
+      const clientsList = await base44.asServiceRole.entities.Client.list();
+      attachPartnerClientIds(scope, clientsList);
+      const partnerIds = new Set(scope.partnerClientIds || []);
+      allTrends = allTrends.filter(t => partnerIds.has(t.client_id));
+    } else if (!scope.isPlatformAdmin) {
+      allTrends = allTrends.filter(t => t.client_id === scope.client_id);
+    }
 
     // HRBP scoping: narrow to the managers in this HRBP's resolved portfolio
     // (own assignments + active delegations). Admins keep org-wide visibility.

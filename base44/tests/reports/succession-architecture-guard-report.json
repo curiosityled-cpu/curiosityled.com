@@ -1,10 +1,10 @@
 {
   "guard_version": "3.0-hardened",
-  "checked_at": "2026-09-26T19:40:05.063Z",
+  "checked_at": "2026-09-27T02:43:19.424Z",
   "exception_list_reviewed": "2026-09-25",
   "passed": true,
   "total_functions": 124,
-  "total_backend_functions_scanned": 491,
+  "total_backend_functions_scanned": 492,
   "coverage": {
     "operational": 111,
     "control_plane": 6,
@@ -635,7 +635,7 @@
       "classification": "operational",
       "bootstrap_offset": 576,
       "authorize_offset": 709,
-      "domain_access_offset": 1792,
+      "domain_access_offset": 1763,
       "domain_access_entity": "ReadinessConclusion",
       "ordering_ok": true,
       "issues": []

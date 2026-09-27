@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveUserScope, isUserInScope } from '../../shared/userScope.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -27,7 +28,9 @@ Deno.serve(async (req) => {
     // Security: Only the assigned user, their manager, or an admin can complete milestones.
     // Derive manager relationship server-side — never trust self-editable subordinate_emails.
     const isAssignee = plan.assigned_to_email === user.email;
-    const isAdmin = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin'].includes(user.app_role);
+    const scope = resolveUserScope(user);
+    const isAdminRaw = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin'].includes(user.app_role);
+    const isAdmin = isAdminRaw && (scope.isPlatformAdmin || isUserInScope({ client_id: plan.client_id }, scope));
     let isManager = false;
     if (!isAssignee && !isAdmin && ['User Level 2', 'User Level 3'].includes(user.app_role)) {
       const directReports = await base44.asServiceRole.entities.User.filter({ manager_email: user.email });

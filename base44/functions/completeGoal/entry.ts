@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveUserScope, isUserInScope } from '../../shared/userScope.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -35,7 +36,11 @@ Deno.serve(async (req) => {
     }
 
     // Authorization: only the goal owner, an assignee/member, the coach, or an admin may complete it.
+    // Tenant-scoped admins may only complete goals within their own tenant.
     const ADMIN_ROLES = ['Platform Admin', 'Super Administrator', 'Admin Level 1', 'Admin Level 2'];
+    const scope = resolveUserScope(user);
+    const isAdminInScope = ADMIN_ROLES.includes(user.app_role) &&
+      (scope.isPlatformAdmin || isUserInScope({ client_id: goal.client_id }, scope));
     const assignees = goal.assigned_to_emails || [];
     const memberEmails = (goal.members || []).map(m => m.user_email).filter(Boolean);
     const isAuthorized =
@@ -43,7 +48,7 @@ Deno.serve(async (req) => {
       assignees.includes(user.email) ||
       memberEmails.includes(user.email) ||
       goal.coach_email === user.email ||
-      ADMIN_ROLES.includes(user.app_role);
+      isAdminInScope;
     if (!isAuthorized) {
       return Response.json({ error: 'Forbidden - you are not authorized to complete this goal' }, { status: 403 });
     }
