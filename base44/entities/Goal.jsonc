@@ -245,6 +245,95 @@
     "points_value": {
       "type": "number",
       "description": "Number of gamification points awarded for completing this goal (overrides default)"
+    },
+    "evidence_entries": {
+      "type": "array",
+      "description": "Performance evidence entries attached to this goal. Supports the 'defensible' layer of performance management.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique entry ID"
+          },
+          "note_type": {
+            "type": "string",
+            "enum": [
+              "accomplishment",
+              "feedback",
+              "context",
+              "concern"
+            ],
+            "description": "Type of evidence entry"
+          },
+          "description": {
+            "type": "string",
+            "description": "Evidence description / narrative"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "checkin",
+              "coaching_session",
+              "hris_import",
+              "api_sync",
+              "sftp_sync"
+            ],
+            "default": "manual",
+            "description": "Where this evidence entry originated"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Date the evidence event occurred or was observed"
+          },
+          "added_by_email": {
+            "type": "string",
+            "description": "Email of the user who added this entry"
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "private_reflection",
+              "employee_and_manager",
+              "hr_only",
+              "formal_record"
+            ],
+            "default": "employee_and_manager",
+            "description": "Who can see this evidence entry"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional tags for categorization"
+          },
+          "linked_kpi_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "KPI IDs this evidence relates to"
+          },
+          "added_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When this entry was added"
+          }
+        },
+        "required": [
+          "id",
+          "note_type",
+          "description",
+          "date"
+        ]
+      }
+    },
+    "review_cycle_id": {
+      "type": "string",
+      "description": "ID of the review cycle (CustomForm with form_type='review_cycle') this goal is linked to"
     }
   },
   "required": [

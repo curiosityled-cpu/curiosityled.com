@@ -26,6 +26,33 @@
       "type": "string",
       "description": "Name of the submitter"
     },
+    "submitter_role": {
+      "type": "string",
+      "enum": [
+        "self",
+        "manager",
+        "peer",
+        "hr"
+      ],
+      "description": "Role of the submitter relative to the review subject. Used for performance review forms (form_type='review_form'): self = employee self-assessment, manager = manager review, peer = peer feedback, hr = HR-authored."
+    },
+    "linked_employee_email": {
+      "type": "string",
+      "description": "Email of the employee this submission is about (for review forms and 360 feedback). Differs from submitter_email when a manager or peer submits about an employee."
+    },
+    "review_cycle_id": {
+      "type": "string",
+      "description": "ID of the review cycle (CustomForm with form_type='review_cycle') this submission belongs to"
+    },
+    "acknowledged_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the employee acknowledged the review submission. Null until acknowledged."
+    },
+    "acknowledged_by_email": {
+      "type": "string",
+      "description": "Email of the employee who acknowledged this submission"
+    },
     "is_anonymous": {
       "type": "boolean",
       "default": false,
@@ -50,7 +77,8 @@
         "in_progress",
         "submitted",
         "approved",
-        "rejected"
+        "rejected",
+        "acknowledged"
       ],
       "default": "submitted",
       "description": "Submission status"
@@ -159,6 +187,9 @@
           "data.submitter_email": "{{user.email}}"
         },
         {
+          "data.linked_employee_email": "{{user.email}}"
+        },
+        {
           "$and": [
             {
               "user_condition": {
@@ -166,9 +197,18 @@
               }
             },
             {
-              "data.submitter_email": {
-                "$in": "{{user.data.subordinate_emails}}"
-              }
+              "$or": [
+                {
+                  "data.submitter_email": {
+                    "$in": "{{user.data.subordinate_emails}}"
+                  }
+                },
+                {
+                  "data.linked_employee_email": {
+                    "$in": "{{user.data.subordinate_emails}}"
+                  }
+                }
+              ]
             }
           ]
         },
@@ -186,6 +226,11 @@
               "$or": [
                 {
                   "data.submitter_email": {
+                    "$in": "{{user.data.subordinate_emails}}"
+                  }
+                },
+                {
+                  "data.linked_employee_email": {
                     "$in": "{{user.data.subordinate_emails}}"
                   }
                 },
@@ -247,6 +292,9 @@
       "$or": [
         {
           "data.submitter_email": "{{user.email}}"
+        },
+        {
+          "data.linked_employee_email": "{{user.email}}"
         },
         {
           "$and": [
