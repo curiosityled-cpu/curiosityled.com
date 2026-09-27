@@ -80,7 +80,7 @@ export default function ManagerTeam() {
 
   const isDepthAware = scopeType === "vertical";
   const isICLevel = isDepthAware && leaderLevel <= 1;
-  const isSubtreeLevel = isDepthAware && leaderLevel >= 3;
+  const isSubtreeLevel = leaderLevel >= 3 && subtreeCards.length > 0;
 
   const subtitle = isDirectsOnly
     ? `${scopeSize} in your reporting tree · ${detailSize} direct ${detailSize === 1 ? "report" : "reports"}`
