@@ -925,7 +925,9 @@ async function executeCascadeGoal(base44, user, params) {
 
   const originalGoal = originalGoals[0];
   if (!_isAdmin && originalGoal.created_by !== user.email) return { message: 'You can only cascade your own goals.' };
-  const dr = !_isAdmin ? await getDirectReportEmails(base44, user) : null; let userEmails = !_isAdmin ? (rawUserEmails || []).filter(e => e === user.email || (dr && dr.has((e||'').toLowerCase()))) : rawUserEmails; if (!userEmails.length) return { message: 'Target users must be your direct reports.' };
+  // Security: tenant-scope cascade recipients for all callers (prevents cross-tenant notification injection).
+  const _pa = user.app_role === 'Platform Admin'; const dr = !_isAdmin ? await getDirectReportEmails(base44, user) : null; const orgE = (_isAdmin && !_pa) ? await getOrgEmails(base44, user) : null;
+  let userEmails = !_isAdmin ? (rawUserEmails || []).filter(e => e === user.email || (dr && dr.has((e||'').toLowerCase()))) : _pa ? (rawUserEmails || []) : (rawUserEmails || []).filter(e => orgE.has((e||'').toLowerCase())); if (!userEmails.length) return { message: 'Target users must be within your organization.' };
   const cascadedGoals = [];
   for (const email of userEmails) {
     const cascadedGoal = await base44.asServiceRole.entities.Goal.create({
@@ -981,8 +983,8 @@ async function executeInviteUser(base44, user, params) {
   };
 
   const sdkRole = roleMapping[role] || 'user';
-  const canInvite = ['User Level 2','User Level 3','Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'].includes(user.app_role);
-  if (!canInvite) throw { message: 'Only managers and admins may invite users.', code: 'PERMISSION_DENIED', retryable: false };
+  const canInvite = ['Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'].includes(user.app_role);
+  if (!canInvite) throw { message: 'Only administrators may invite users.', code: 'PERMISSION_DENIED', retryable: false };
   const canInviteAdmin = ['Admin Level 2', 'Super Administrator', 'Platform Admin'].includes(user.app_role);
   const requestedRoleIsAdmin = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin'].includes(role);
   if (requestedRoleIsAdmin && !canInviteAdmin) throw { message: 'You do not have permission to invite admin users. Only HR Admins and Super Admins can invite admins.', code: 'PERMISSION_DENIED', retryable: false };
@@ -2235,32 +2237,27 @@ Make it actionable and specific.`;
 
 async function executeBulkUpdateRequestStatus(base44, user, params) {
   const { requestIds, newStatus, note } = params;
-  // Security: Only admins may bulk-update development request statuses.
   const adminRoles = ['Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'];
   if (!adminRoles.includes(user.app_role)) return { message: 'You do not have permission to update development requests.' };
-  for (const id of requestIds) {
-    await base44.asServiceRole.entities.DevelopmentRequest.update(id, {
-      status: newStatus, notes: note ? `${note}\n(Updated by ${user.full_name} via Atreus)` : undefined,
-      updated_date: new Date().toISOString()
-    });
-  }
-  return { message: `Updated ${requestIds.length} request(s) to status: ${newStatus}`, count: requestIds.length };
+  // Security: tenant-scope each request before updating (prevents cross-tenant IDOR).
+  const _pa = user.app_role === 'Platform Admin'; const _cid = user.client_id || user.data?.client_id; let updated = 0;
+  for (const id of requestIds) { const r = await base44.asServiceRole.entities.DevelopmentRequest.filter({ id }); if (!r.length || (!_pa && r[0].client_id !== _cid)) continue;
+    await base44.asServiceRole.entities.DevelopmentRequest.update(id, { status: newStatus, notes: note ? `${note}\n(Updated by ${user.full_name} via Atreus)` : undefined, updated_date: new Date().toISOString() }); updated++; }
+  return { message: `Updated ${updated} request(s) to status: ${newStatus}`, count: updated };
 }
 
 async function executeAssignRequestToUser(base44, user, params) {
   const { requestId, assigneeEmail, priority, dueDate } = params;
-  // Security: Only admins may reassign development requests.
   const adminRoles = ['Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'];
   if (!adminRoles.includes(user.app_role)) return { message: 'You do not have permission to assign development requests.' };
-  await base44.asServiceRole.entities.DevelopmentRequest.update(requestId, {
-    assigned_to: assigneeEmail, priority, due_date: dueDate, status: 'assigned', updated_date: new Date().toISOString()
-  });
-  await base44.asServiceRole.entities.Notification.create({
-    user_email: assigneeEmail, type: 'reminder', title: 'New Request Assigned',
-    message: `${user.full_name} has assigned you a development request${priority ? ` (Priority: ${priority})` : ''}`,
-    scheduled_for: new Date().toISOString(), priority: priority || 'medium',
-    related_entity_type: 'DevelopmentRequest', related_entity_id: requestId
-  });
+  // Security: tenant-scope the request and assignee (prevents cross-tenant IDOR).
+  const _pa = user.app_role === 'Platform Admin'; const _cid = user.client_id || user.data?.client_id;
+  const reqs = await base44.asServiceRole.entities.DevelopmentRequest.filter({ id: requestId });
+  if (!reqs.length) return { message: 'Request not found.' };
+  if (!_pa && reqs[0].client_id !== _cid) return { message: 'Request is outside your tenant.' };
+  if (!_pa) { const orgE = await getOrgEmails(base44, user); if (!orgE.has((assigneeEmail||'').toLowerCase())) return { message: 'Assignee is outside your tenant.' }; }
+  await base44.asServiceRole.entities.DevelopmentRequest.update(requestId, { assigned_to: assigneeEmail, priority, due_date: dueDate, status: 'assigned', updated_date: new Date().toISOString() });
+  await base44.asServiceRole.entities.Notification.create({ user_email: assigneeEmail, type: 'reminder', title: 'New Request Assigned', message: `${user.full_name} has assigned you a development request${priority ? ` (Priority: ${priority})` : ''}`, scheduled_for: new Date().toISOString(), priority: priority || 'medium', related_entity_type: 'DevelopmentRequest', related_entity_id: requestId });
   return { message: `Assigned request to ${assigneeEmail}${priority ? ` with ${priority} priority` : ''}`, assigned: true };
 }
 

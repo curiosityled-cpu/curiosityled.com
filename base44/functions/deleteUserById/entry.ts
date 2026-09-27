@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { roleTier } from '../../shared/userScope.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -43,6 +44,17 @@ Deno.serve(async (req) => {
       }
       if (targetUser.client_id !== currentUser.client_id) {
         return Response.json({ error: 'Access denied - User not in your organization' }, { status: 403 });
+      }
+    }
+
+    // Security: role-rank check — a caller may only delete users at a strictly
+    // lower privilege tier. Admin Level 2 cannot delete Super Administrators or
+    // other Admin Level 2 users. Platform Admin is exempt (highest tier).
+    if (currentUser.app_role !== 'Platform Admin') {
+      const callerTier = roleTier(currentUser.app_role);
+      const targetTier = roleTier(targetUser.app_role || '');
+      if (targetTier >= callerTier) {
+        return Response.json({ error: 'Access denied — cannot delete a user at or above your privilege level' }, { status: 403 });
       }
     }
 

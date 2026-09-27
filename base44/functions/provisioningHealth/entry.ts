@@ -26,7 +26,6 @@ Deno.serve(async (req) => {
     console.error(`[${requestId}] Health check failed:`, error.message);
     return Response.json({
       ok: false,
-      error: error.message,
       timestamp: new Date().toISOString(),
       requestId
     }, { status: 503 });

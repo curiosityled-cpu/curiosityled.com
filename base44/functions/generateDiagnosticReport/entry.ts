@@ -269,6 +269,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Rate limit exceeded. Please try again later.' }, { status: 429 });
     }
 
+    // Durable global rate limit: cap total verification emails per hour across
+    // all callers. This survives cold starts and isolates (unlike the in-memory
+    // per-IP Map) and prevents email-bombing with rotating victim addresses.
+    const recentGlobalProspects = await base44.asServiceRole.entities.Prospect.filter({
+      created_date: { $gte: oneHourAgo }
+    }, '-created_date', 101);
+    if (recentGlobalProspects.length >= 100) {
+      return Response.json({ error: 'Rate limit exceeded. Please try again later.' }, { status: 429 });
+    }
+
     // ── Create Prospect FIRST (lead capture must never be blocked by PDF/email failures) ──
     const prospect = await base44.asServiceRole.entities.Prospect.create({
       name: lead_info.name || "",

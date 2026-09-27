@@ -396,5 +396,7 @@ function convertToCSV(reportData, reportType) {
     });
   }
 
-  return rows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+  // Security: sanitize against CSV formula injection (CWE-1236).
+  const sanitizeCsvCell = (s) => { s = String(s == null ? '' : s); return s.match(/^[=+\-@\t\r]/) ? `'${s}` : s; };
+  return rows.map(row => row.map(cell => `"${sanitizeCsvCell(cell)}"`).join(',')).join('\n');
 }

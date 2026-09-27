@@ -23,6 +23,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Security: validate participant_emails against the caller's tenant scope
+    // to prevent cross-tenant notification injection. Platform Admin is the only
+    // cross-tenant exception.
+    let participantEmails = competitionData.participant_emails || [];
+    if (participantEmails.length && user.app_role !== 'Platform Admin') {
+      const tenantUsers = await base44.asServiceRole.entities.User.filter({
+        client_id: user.client_id
+      });
+      const tenantEmails = new Set(tenantUsers.map(u => (u.email || '').toLowerCase()));
+      participantEmails = participantEmails.filter(e => tenantEmails.has((e || '').toLowerCase()));
+    }
+
     // Create competition
     const competition = await base44.asServiceRole.entities.Competition.create({
       client_id: user.client_id,
@@ -31,7 +43,7 @@ Deno.serve(async (req) => {
       competition_type: competitionData.competition_type,
       start_date: competitionData.start_date,
       end_date: competitionData.end_date,
-      participant_emails: competitionData.participant_emails || [],
+      participant_emails: participantEmails,
       criteria_config: competitionData.criteria_config || {},
       rewards: competitionData.rewards || [],
       leaderboard_config: competitionData.leaderboard_config || {},
@@ -40,9 +52,9 @@ Deno.serve(async (req) => {
     });
 
     // Create notifications for participants (if Notification entity exists)
-    if (competitionData.participant_emails?.length) {
+    if (participantEmails.length) {
       try {
-        for (const participantEmail of competitionData.participant_emails) {
+        for (const participantEmail of participantEmails) {
           await base44.asServiceRole.entities.Notification.create({
             user_email: participantEmail,
             type: 'milestone',
