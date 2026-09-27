@@ -11,8 +11,8 @@
  * Depth-aware by leader_level (from getTeamRollup):
  *   - Level 1:    empty state (no direct reports)
  *   - Level 2:    IC roster + at-risk
- *   - Level 3-5:  subtree card grid with inline drill-down
- *   - Enterprise/Portfolio: keep existing full/aggregated layout
+ *   - Level 3-5:  subtree card grid with inline drill-down (any role with a tree)
+ *   - Enterprise (Platform Admin/Analyst/Partner BA/no-tree fallback): full/aggregated roster
  */
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -78,9 +78,8 @@ export default function ManagerTeam() {
   const isAggregatedOnly = detailLevel === "aggregated";
   const isDirectsOnly = detailLevel === "directs";
 
-  const isDepthAware = scopeType === "vertical";
-  const isICLevel = isDepthAware && leaderLevel <= 1;
-  const isSubtreeLevel = isDepthAware && leaderLevel >= 3;
+  const isSubtreeLevel = subtreeCards.length > 0 && leaderLevel >= 3;
+  const isICLevel = scopeType === "vertical" && leaderLevel <= 1 && subtreeCards.length === 0;
 
   const subtitle = isDirectsOnly
     ? `${scopeSize} in your reporting tree · ${detailSize} direct ${detailSize === 1 ? "report" : "reports"}`

@@ -155,26 +155,31 @@ Return only the synthesized paragraph.`;
 /**
  * getTeamRollup — role-aware team rollup spanning the full reporting tree.
  *
- * Scope + detail by role:
- *  - User Level 2 (rollup manager):  vertical scope, directs-only detail.
- *      Full assessment results for directs; aggregated-only for the rest of the tree.
- *  - Analyst / Executive:            enterprise scope, aggregated-only (no individual scores).
- *  - HRBP:                           portfolio scope, full detail.
- *  - Admin Level 1/2, Super Admin, Platform Admin, Partner BA: enterprise scope, full detail.
+ * Scope resolution (tree-driven):
+ *  - Platform Admin:                enterprise scope, full detail (always — needed to build/configure).
+ *  - Analyst:                       enterprise scope, aggregated-only (no individual scores).
+ *  - Partner Business Administrator: enterprise scope across partner clients, full detail.
+ *  - HRBP:                          portfolio scope, full detail.
+ *  - All other roles with a reporting tree: vertical scope, directs-only detail.
+ *      This fires the per-function subtree card grid for User Level 2, Executive,
+ *      Admin Level 1/2, Super Administrator, and any deep-tree leader.
+ *  - Roles whose reporting tree is empty (except User Level 2): fall back to
+ *      enterprise scope, full detail so they still see the org.
  *
  * Response includes scope_type, detail_level, scope_label, scope_size, detail_size,
- * members (per-member stats — empty when aggregated-only), aggregates, at_risk, kpis.
+ * members (per-member stats — empty when aggregated-only), aggregates, at_risk,
+ * subtree_cards (per-direct-report rolled-up health for Level 3+ vertical scope), kpis.
  */
 const ROLE_CONFIG = {
-  "User Level 2":                   { scope: "vertical",   detail: "directs",    label: "Your Team" },
-  Analyst:                          { scope: "enterprise", detail: "aggregated", label: "Enterprise" },
-  Executive:                        { scope: "enterprise", detail: "aggregated", label: "Enterprise" },
-  HRBP:                             { scope: "portfolio",  detail: "full",        label: "My Portfolio" },
-  "Admin Level 1":                  { scope: "enterprise", detail: "full",      label: "Enterprise" },
-  "Admin Level 2":                  { scope: "enterprise", detail: "full",      label: "Enterprise" },
-  "Super Administrator":           { scope: "enterprise", detail: "full",      label: "Enterprise" },
-  "Platform Admin":                { scope: "enterprise", detail: "full",      label: "Enterprise" },
-  "Partner Business Administrator": { scope: "enterprise", detail: "full",      label: "Enterprise" },
+  "User Level 2": true,
+  Analyst: true,
+  Executive: true,
+  HRBP: true,
+  "Admin Level 1": true,
+  "Admin Level 2": true,
+  "Super Administrator": true,
+  "Platform Admin": true,
+  "Partner Business Administrator": true,
 };
 
 const emptyAggregates = () => ({
@@ -192,8 +197,7 @@ export default async function (req) {
     if (!currentUser) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
     const role = currentUser.app_role;
-    const config = ROLE_CONFIG[role];
-    if (!config) return Response.json({ error: "Insufficient permissions" }, { status: 403 });
+    if (!ROLE_CONFIG[role]) return Response.json({ error: "Insufficient permissions" }, { status: 403 });
 
     const clientId = currentUser.client_id;
     const allUsers = await base44.asServiceRole.entities.User.list(500);
@@ -201,13 +205,47 @@ export default async function (req) {
     // ── Resolve leadership level (explicit field or auto from depth) ──
     const leaderLevel = resolveLeaderLevel(currentUser, allUsers);
 
+    // ── Resolve scope + detail ────────────────────────────────────────
+    // Platform Admin always sees the full enterprise (needed to build/configure
+    // the platform). HRBP uses portfolio scope. Analyst uses enterprise/aggregated.
+    // Partner BA uses enterprise across partner clients. All other roles with a
+    // reporting tree use vertical scope so the per-function subtree card grid
+    // renders for deep-tree leaders. Roles whose tree is empty (except User Level 2)
+    // fall back to enterprise so they still see the org instead of a blank page.
+    const FORCE_ENTERPRISE = ["Platform Admin", "Analyst", "Partner Business Administrator"];
+    let scopeType;
+    let detailLevel;
+    let scopeLabel;
+    let treeEmails = [];
+
+    if (role === "HRBP") {
+      scopeType = "portfolio";
+      detailLevel = "full";
+      scopeLabel = "My Portfolio";
+    } else if (FORCE_ENTERPRISE.includes(role)) {
+      scopeType = "enterprise";
+      detailLevel = role === "Analyst" ? "aggregated" : "full";
+      scopeLabel = "Enterprise";
+    } else {
+      treeEmails = buildReportingTree(allUsers, currentUser.email, 10)
+        .map((u) => u.email).filter(Boolean);
+      if (treeEmails.length > 0 || role === "User Level 2") {
+        scopeType = "vertical";
+        detailLevel = "directs";
+        scopeLabel = "Your Team";
+      } else {
+        scopeType = "enterprise";
+        detailLevel = "full";
+        scopeLabel = "Enterprise";
+      }
+    }
+
     // ── Resolve scope + detail email sets ─────────────────────────────
     let scopeEmails = [];
     let detailEmails = [];
 
-    if (config.scope === "vertical") {
-      const tree = buildReportingTree(allUsers, currentUser.email, 10);
-      scopeEmails = tree.map((u) => u.email).filter(Boolean);
+    if (scopeType === "vertical") {
+      scopeEmails = treeEmails;
       const directs = deriveDirectReports(allUsers, currentUser.email);
       const directSet = new Set(directs.map((u) => u.email));
       detailEmails = [...directSet].filter((e) => scopeEmails.includes(e));
@@ -217,7 +255,7 @@ export default async function (req) {
           .filter((u) => u.manager_email === currentUser.email && scopeEmails.includes(u.email))
           .map((u) => u.email);
       }
-    } else if (config.scope === "enterprise") {
+    } else if (scopeType === "enterprise") {
       let enterpriseUsers;
       if (role === "Platform Admin") {
         enterpriseUsers = allUsers;
@@ -228,17 +266,17 @@ export default async function (req) {
         enterpriseUsers = allUsers.filter((u) => u.client_id === clientId);
       }
       scopeEmails = enterpriseUsers.map((u) => u.email).filter(Boolean).filter((e) => e !== currentUser.email);
-      if (config.detail === "full") detailEmails = [...scopeEmails];
-    } else if (config.scope === "portfolio") {
+      if (detailLevel === "full") detailEmails = [...scopeEmails];
+    } else if (scopeType === "portfolio") {
       const { managers } = await resolveHRBPManagerEmails(base44, currentUser.email);
       scopeEmails = managers.map((m) => m.email).filter(Boolean);
       detailEmails = [...scopeEmails];
     }
 
     const base = {
-      scope_type: config.scope,
-      detail_level: config.detail,
-      scope_label: config.label,
+      scope_type: scopeType,
+      detail_level: detailLevel,
+      scope_label: scopeLabel,
       scope_size: scopeEmails.length,
       detail_size: detailEmails.length,
       leader_level: leaderLevel,
@@ -288,7 +326,7 @@ export default async function (req) {
 
     // KPI scoping: enterprise = all fetched; vertical/portfolio = owned-in-scope + shared org-wide
     let scopedKpis;
-    if (config.scope === "enterprise") {
+    if (scopeType === "enterprise") {
       scopedKpis = kpisRaw;
     } else {
       const scopeSet = new Set(scopeEmails);
@@ -331,7 +369,7 @@ export default async function (req) {
     let members = [];
     let atRisk = [];
 
-    if (config.detail !== "aggregated" && detailEmails.length > 0) {
+    if (detailLevel !== "aggregated" && detailEmails.length > 0) {
       const detailSet = new Set(detailEmails);
       const detailUsers = allUsers.filter((u) => detailSet.has(u.email));
 
@@ -404,7 +442,7 @@ export default async function (req) {
 
     // ── Subtree cards (Level 3+ — each direct report leads a sub-team) ──
     let subtreeCards = [];
-    if (leaderLevel >= 3 && config.scope === "vertical") {
+    if (leaderLevel >= 3 && scopeType === "vertical") {
       const directs = deriveDirectReports(allUsers, currentUser.email);
       if (directs.length > 0) {
         subtreeCards = buildSubtreeCards(allUsers, directs, goals, journeys, assessments, checkins, scopedKpis);
