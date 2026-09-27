@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { escapeHtml } from '../../shared/safeResponses.ts';
 
 /**
  * Shares an onboarding plan via email with formatted HTML content
@@ -11,7 +12,7 @@ Deno.serve(async (req) => {
         if (phases.length > 0) {
             return phases.map(phase => {
                 const phaseMilestones = milestones.filter(m => m.phase === phase);
-                const phaseLabel = phaseMilestones[0]?.phase_label || phase;
+                const phaseLabel = escapeHtml(phaseMilestones[0]?.phase_label || phase);
                 
                 return `
                     <div class="phase-header">${phaseLabel}</div>
@@ -29,12 +30,12 @@ Deno.serve(async (req) => {
             <div class="milestone ${isCompleted ? 'completed' : ''}">
                 <div class="milestone-header">
                     <span class="checkbox ${isCompleted ? 'checked' : ''}"></span>
-                    <span class="milestone-title">${milestone.title || 'Untitled Milestone'}</span>
+                    <span class="milestone-title">${escapeHtml(milestone.title || 'Untitled Milestone')}</span>
                 </div>
-                ${milestone.description ? `<p style="margin: 5px 0; font-size: 14px; color: #4b5563;">${milestone.description}</p>` : ''}
+                ${milestone.description ? `<p style="margin: 5px 0; font-size: 14px; color: #4b5563;">${escapeHtml(milestone.description)}</p>` : ''}
                 <div class="milestone-meta">
-                    ${milestone.due_day ? `<span class="badge badge-blue">Day ${milestone.due_day}</span> ` : ''}
-                    ${milestone.type ? `<span class="badge badge-yellow">${milestone.type}</span> ` : ''}
+                    ${milestone.due_day ? `<span class="badge badge-blue">Day ${escapeHtml(milestone.due_day)}</span> ` : ''}
+                    ${milestone.type ? `<span class="badge badge-yellow">${escapeHtml(milestone.type)}</span> ` : ''}
                     ${isCompleted ? '<span class="badge badge-green">Completed</span>' : ''}
                 </div>
             </div>
@@ -66,6 +67,23 @@ Deno.serve(async (req) => {
                 success: false, 
                 error: 'Invalid email format' 
             }, { status: 400 });
+        }
+
+        // Security: Restrict recipient to a registered app user to prevent the
+        // platform from being used as an open mail relay to arbitrary external
+        // addresses for phishing/spam.
+        const normalizedRecipient = recipientEmail.trim().toLowerCase();
+        const registeredUsers = await base44.asServiceRole.entities.User.filter({
+            email: { $in: [normalizedRecipient] }
+        });
+        const isRegistered = registeredUsers.some(
+            u => u.email.toLowerCase() === normalizedRecipient
+        );
+        if (!isRegistered) {
+            return Response.json({ 
+                success: false, 
+                error: 'Recipient must be a registered user of the platform.' 
+            }, { status: 403 });
         }
 
         // Fetch the onboarding plan
@@ -130,17 +148,17 @@ Deno.serve(async (req) => {
 </head>
 <body>
     <div class="header">
-        <h1>${plan.title || 'Onboarding Plan'}</h1>
-        <p>Shared by ${user.full_name} on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        <h1>${escapeHtml(plan.title || 'Onboarding Plan')}</h1>
+        <p>Shared by ${escapeHtml(user.full_name)} on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
     </div>
 
     <div class="section">
         <h2>Plan Overview</h2>
-        <p><strong>Target Role:</strong> ${plan.target_role || 'Not specified'}</p>
-        <p><strong>Duration:</strong> ${plan.duration_days || 'N/A'} days</p>
-        <p><strong>Status:</strong> <span class="badge badge-blue">${plan.status || 'draft'}</span></p>
-        <p><strong>Assigned to:</strong> ${plan.assigned_to_email || 'Unassigned'}</p>
-        ${plan.description ? `<p><strong>Description:</strong> ${plan.description}</p>` : ''}
+        <p><strong>Target Role:</strong> ${escapeHtml(plan.target_role || 'Not specified')}</p>
+        <p><strong>Duration:</strong> ${escapeHtml(plan.duration_days || 'N/A')} days</p>
+        <p><strong>Status:</strong> <span class="badge badge-blue">${escapeHtml(plan.status || 'draft')}</span></p>
+        <p><strong>Assigned to:</strong> ${escapeHtml(plan.assigned_to_email || 'Unassigned')}</p>
+        ${plan.description ? `<p><strong>Description:</strong> ${escapeHtml(plan.description)}</p>` : ''}
     </div>
 
     <div class="section">

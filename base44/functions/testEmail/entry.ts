@@ -43,6 +43,19 @@ Deno.serve(async (req) => {
             });
         }
         
+        // Security: Restrict recipient to the authenticated caller's own email
+        // to prevent the app from being used as an open email relay for
+        // phishing/spam to arbitrary external recipients.
+        if (to.toLowerCase().trim() !== user.email.toLowerCase().trim()) {
+            return new Response(JSON.stringify({ 
+                success: false, 
+                error: 'Forbidden: You can only send emails to your own address.'
+            }), {
+                status: 403,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+        
         // Use service role to send test email (user is authenticated)
         const result = await base44.asServiceRole.integrations.invoke('Core', 'SendEmail', {
             to: to,
