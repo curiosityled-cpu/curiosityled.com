@@ -193,11 +193,13 @@ export default function ManagerToday() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
-  const { data: tonePref, isPending: tonePending, isError: toneError } = useQuery({
+  const { data: tonePref = null, isPending: tonePending } = useQuery({
     queryKey: ['ml-tone', user?.email],
     queryFn: async () => {
-      const rows = await base44.entities.TonePreference.filter({ user_email: user.email }, null, 1);
-      return rows[0] || null;
+      try {
+        const rows = await base44.entities.TonePreference.filter({ user_email: user.email }, null, 1);
+        return rows[0] || null;
+      } catch { return null; }
     },
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
@@ -340,10 +342,10 @@ export default function ManagerToday() {
   // Only surface tone onboarding once the preference query has resolved —
   // otherwise the banner flashes on every load while tonePref is still null
   // during the initial fetch (the "old-style Atreus settings" flash).
-  const needsToneOnboarding = !tonePending && !toneError && tonePref == null;
+  const needsToneOnboarding = !tonePending && tonePref === null;
   const firstName = getFirstName(user);
   const hour = parseInt(new Intl.DateTimeFormat('en-US', {
-    hour: 'numeric', hour12: false
+    timeZone: 'America/New_York', hour: 'numeric', hour12: false
   }).format(new Date()), 10);
 
   const isMorningWindow = hour >= 5 && hour < 15;
@@ -360,7 +362,7 @@ export default function ManagerToday() {
   // ── Headline derivations ──
   const etHour = hour;
   const greeting = etHour < 12 ? 'Good morning' : etHour < 17 ? 'Good afternoon' : 'Good evening';
-  const day = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const day = new Date().toLocaleDateString('en-US', { timeZone: 'America/New_York', weekday: 'long', month: 'long', day: 'numeric' });
 
   // ── Zone 1 content (Today's Rhythm) ──
   const rhythmContent = (
