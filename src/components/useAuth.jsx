@@ -315,13 +315,9 @@ export const AuthProvider = ({ children }) => {
   const hasPermission = (permissionKey) => {
     if (!user) return false;
     
-    // Platform Admin has all permissions
-    if (user.app_role === 'Platform Admin') return true;
-    
-    // Check if user has wildcard permission
-    if (userPermissions.includes('*')) return true;
-    
-    // Check specific permission
+    // Check specific permission (Platform Admin's explicit permission set
+    // is populated from the union of all permissions in permissions.jsx —
+    // no wildcard bypass, no role-based short-circuit).
     return userPermissions.includes(permissionKey);
   };
 

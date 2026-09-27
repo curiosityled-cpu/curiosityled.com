@@ -327,7 +327,7 @@ export const PERMISSION_CATEGORIES = [
 
 // Base role permission mappings (existing from useAuth)
 export const BASE_ROLE_PERMISSIONS = {
-  'Platform Admin': ['*'], // All permissions
+  'Platform Admin': [], // Populated below from the union of all permissions (no wildcard)
   'Super Administrator': [
     'users.view', 'users.create', 'users.edit', 'users.delete',
     'analytics.view_client', 'analytics.export',
