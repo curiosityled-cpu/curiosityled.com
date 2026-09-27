@@ -47,7 +47,7 @@ export default function TeamHeroHeader({ scopeLabel, subtitle, pulse, isFetching
         </h1>
         <div className="mt-2">
           {pulse?.headline ? (
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 text-slate-700 border border-white/40 text-xs font-medium backdrop-blur-sm max-w-lg">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 text-white border border-white/20 text-xs font-medium backdrop-blur-sm max-w-lg">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
               <span className="line-clamp-2 leading-snug">{pulse.headline}</span>
             </div>
