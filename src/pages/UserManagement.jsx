@@ -85,6 +85,7 @@ function UserManagement() {
   const [selectedUserForRole, setSelectedUserForRole] = useState(null);
   const [showEditUserModal, setShowEditUserModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [originalEditingUser, setOriginalEditingUser] = useState(null);
   const [clients, setClients] = useState([]);
   const [partners, setPartners] = useState([]);
   const [addonRoles, setAddonRoles] = useState([]);
@@ -178,20 +179,70 @@ function UserManagement() {
   const handleEditUser = async (user) => {
     try {
       const response = await base44.functions.invoke('getUserById', { userId: user.id });
-      if (response.data?.success) { setEditingUser(response.data.user); setShowEditUserModal(true); }
+      if (response.data?.success) {
+        const u = response.data.user;
+        setEditingUser(u);
+        setOriginalEditingUser({ ...u });
+        setShowEditUserModal(true);
+      }
       else toast.error(response.data?.error || 'User not found');
     } catch { toast.error('Failed to load user details'); }
   };
 
   const handleUpdateUser = async (userId, userData) => {
     try {
-      const { full_name, email, created_date, updated_date, id, ...editableData } = userData;
+      // Separate privileged fields (routed to dedicated functions) from
+      // regular editable fields (sent to updateUserById).
+      const { full_name, email, created_date, updated_date, id,
+              app_role, client_id, partner_id, custom_role_id,
+              ...editableData } = userData;
+
+      const errors = [];
+
+      // 1. Save non-privileged fields via updateUserById
       const response = await base44.functions.invoke('updateUserById', { userId, userData: editableData });
-      if (response.data?.success) {
+      if (!response.data?.success) {
+        errors.push(response.data?.error || 'Failed to update profile fields');
+      }
+
+      // 2. Route app_role change through updateUserRole
+      if (app_role && originalEditingUser?.app_role !== app_role) {
+        try {
+          const roleResp = await base44.functions.invoke('updateUserRole', { userId, newRole: app_role, oldRole: originalEditingUser?.app_role });
+          if (!roleResp.data?.success) errors.push(`Role: ${roleResp.data?.error || 'failed'}`);
+        } catch (e) { errors.push(`Role: ${e.message || 'failed'}`); }
+      }
+
+      // 3. Route client_id change through assignUserToClient
+      if (client_id !== undefined && originalEditingUser?.client_id !== client_id) {
+        if (client_id) {
+          try {
+            const clientResp = await base44.functions.invoke('assignUserToClient', { user_id: userId, client_id });
+            if (clientResp.data?.error) errors.push(`Client: ${clientResp.data.error}`);
+          } catch (e) { errors.push(`Client: ${e.message || 'failed'}`); }
+        }
+      }
+
+      // 4. Route custom_role_id change through assignAddonRole
+      if (custom_role_id !== undefined && originalEditingUser?.custom_role_id !== custom_role_id) {
+        try {
+          if (custom_role_id) {
+            const addonResp = await base44.functions.invoke('assignAddonRole', { user_id: userId, custom_role_id });
+            if (addonResp.data?.error) errors.push(`Addon role: ${addonResp.data.error}`);
+          } else {
+            const addonResp = await base44.functions.invoke('assignAddonRole', { user_id: userId, action: 'remove' });
+            if (addonResp.data?.error) errors.push(`Addon role: ${addonResp.data.error}`);
+          }
+        } catch (e) { errors.push(`Addon role: ${e.message || 'failed'}`); }
+      }
+
+      if (errors.length > 0) {
+        toast.error(errors.join('; '));
+      } else {
         toast.success('User updated successfully');
-        setShowEditUserModal(false); setEditingUser(null);
+        setShowEditUserModal(false); setEditingUser(null); setOriginalEditingUser(null);
         await loadData();
-      } else toast.error(response.data?.error || 'Failed to update user');
+      }
     } catch { toast.error('Failed to update user'); }
   };
 

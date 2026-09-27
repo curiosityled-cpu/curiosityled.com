@@ -89,11 +89,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (rejectedFields.length > 0) {
-      return Response.json({
-        error: `Privileged fields must be updated through their dedicated functions: ${rejectedFields.join(', ')}`
-      }, { status: 403 });
-    }
+    // Privileged fields are silently skipped (not applied through this
+    // function). They have dedicated admin functions with their own
+    // validation. The frontend routes those changes separately.
+    // We do NOT reject the entire request — non-privileged fields should
+    // still save successfully even when privileged fields are present in
+    // the payload (the modal always includes them in the form state).
 
     // Update user using service role
     await base44.asServiceRole.entities.User.update(userId, filteredData);
