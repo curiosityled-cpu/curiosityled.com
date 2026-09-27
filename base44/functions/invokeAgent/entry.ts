@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { getOrgEmails, getDirectReportEmails } from '../../shared/orgScope.ts';
 import { escapeHtml } from '../../shared/safeResponses.ts';
+import { executeVerifyCertification, executeProcessExternalAssessment, executeRecommendCareerPathFromCerts } from '../../shared/agentCertTools.ts';
 /**
  * Atreus Agent - Central Intelligence & Action Executor
  * Handles natural language intent detection and secure platform action execution
@@ -3403,146 +3404,7 @@ Suggest:
 }
 
 // ==================== CERTIFICATION & EXTERNAL ASSESSMENT EXECUTION FUNCTIONS ====================
-async function executeVerifyCertification(base44, user, params) {
-  const { userEmail, certificationName, issuingBody, verificationUrl } = params;
-  if (!['Admin Level 1','Admin Level 2','Super Administrator','Platform Admin'].includes(user.app_role)) return { message: 'Only administrators may verify certifications.' };
-  // Get client_id: try target user first, then admin, then use 'default'
-  let clientId = null;
-  try {
-    const targetUsers = await base44.asServiceRole.entities.User.filter({ email: userEmail });
-    clientId = targetUsers.length > 0 ? targetUsers[0].client_id : null;
-  } catch (error) {
-    console.log('Could not fetch target user for client_id');
-  }
-  
-  // Fallback to admin's client_id
-  if (!clientId) {
-    clientId = user.client_id || 'default_client';
-  }
-
-  // Create certification record with verified status directly
-  const certification = await base44.asServiceRole.entities.Certification.create({
-    user_email: userEmail,
-    client_id: clientId,
-    name: certificationName,
-    issuing_body: issuingBody,
-    credential_id_or_url: verificationUrl,
-    status: 'verified',
-    verified_by: user.email,
-    verified_at: new Date().toISOString(),
-    issue_date: new Date().toISOString().split('T')[0]
-  });
-
-  // Create notification
-  await base44.asServiceRole.entities.Notification.create({
-    user_email: userEmail,
-    type: 'certification_status',
-    title: 'Certification Verified',
-    message: `Your ${certificationName} certification has been verified by ${user.full_name}.`,
-    scheduled_for: new Date().toISOString(),
-    priority: 'medium',
-    related_entity_type: 'Certification',
-    related_entity_id: certification.id
-  });
-
-  return {
-    message: `✅ Certification verified for ${userEmail}\n\n📜 ${certificationName} from ${issuingBody}`,
-    certification_id: certification.id
-  };
-}
-
-async function executeProcessExternalAssessment(base44, user, params) {
-  const { userEmail, assessmentType, fileUrl, keyFindings } = params;
-  if (!['Admin Level 1','Admin Level 2','Super Administrator','Platform Admin'].includes(user.app_role)) return { message: 'Only administrators may process external assessments.' };
-  // Get client_id: try target user first, then admin, then use 'default'
-  let clientId = null;
-  try {
-    const targetUsers = await base44.asServiceRole.entities.User.filter({ email: userEmail });
-    clientId = targetUsers.length > 0 ? targetUsers[0].client_id : null;
-  } catch (error) {
-    console.log('Could not fetch target user for client_id');
-  }
-  
-  // Fallback to admin's client_id
-  if (!clientId) {
-    clientId = user.client_id || 'default_client';
-  }
-
-  // Create external assessment with verified status directly
-  const assessment = await base44.asServiceRole.entities.ExternalAssessmentResult.create({
-    user_email: userEmail,
-    client_id: clientId,
-    assessment_type: assessmentType,
-    document_uri: fileUrl,
-    designation_or_score: keyFindings || 'Results processed',
-    date_completed: new Date().toISOString().split('T')[0],
-    status: 'verified',
-    verified_by: user.email,
-    verified_at: new Date().toISOString(),
-    ai_summary: keyFindings
-  });
-
-  // Create notification
-  await base44.asServiceRole.entities.Notification.create({
-    user_email: userEmail,
-    type: 'assessment_status',
-    title: 'External Assessment Processed',
-    message: `Your ${assessmentType} assessment has been processed: ${keyFindings}`,
-    scheduled_for: new Date().toISOString(),
-    priority: 'medium',
-    related_entity_type: 'ExternalAssessmentResult',
-    related_entity_id: assessment.id
-  });
-
-  return {
-    message: `✅ Processed ${assessmentType} assessment for ${userEmail}\n\n📊 Key findings: ${keyFindings}`,
-    assessment_id: assessment.id
-  };
-}
-
-async function executeRecommendCareerPathFromCerts(base44, user, params) {
-  const { userEmail, includeGapAnalysis = true } = params;
-
-  const [certs, extAssessments] = await Promise.all([
-    base44.asServiceRole.entities.Certification.filter({ user_email: userEmail, status: 'verified' }),
-    base44.asServiceRole.entities.ExternalAssessmentResult.filter({ user_email: userEmail, status: 'verified' })
-  ]);
-
-  const prompt = `Recommend career paths for a user with:
-
-Certifications: ${certs.map(c => c.name).join(', ') || 'None'}
-External Assessments: ${extAssessments.map(a => `${a.assessment_type}: ${a.designation_or_score}`).join(', ') || 'None'}
-
-${includeGapAnalysis ? 'Include gap analysis showing what additional qualifications would strengthen each path.' : ''}
-
-Return top 3 career paths with readiness scores.`;
-
-  const paths = await base44.integrations.Core.InvokeLLM({
-    prompt: prompt,
-    response_json_schema: {
-      type: "object",
-      properties: {
-        recommended_paths: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              role: { type: "string" },
-              readiness_score: { type: "number" },
-              reasoning: { type: "string" },
-              gaps: { type: "array", items: { type: "string" } }
-            }
-          }
-        }
-      }
-    }
-  });
-
-  return {
-    message: `**Career Path Recommendations:**\n\n${paths.recommended_paths.map((p, i) => `**${i + 1}. ${p.role}** (${p.readiness_score}% ready)\n${p.reasoning}\n${includeGapAnalysis ? `\nGaps:\n${p.gaps.map(g => `• ${g}`).join('\n')}` : ''}`).join('\n\n')}`,
-    career_paths: paths.recommended_paths
-  };
-}
+// (Extracted to ../../shared/agentCertTools.ts for tenant-scope security)
 
 async function executeSetCertificationReminder(base44, user, params) {
   const { certificationId, expirationDate, reminderDaysBefore = 90 } = params;

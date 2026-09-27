@@ -103,6 +103,14 @@ export default function ResourceCard({
     const handleAccess = async () => {
         if (isLocked) return;
 
+        // Security: Validate URL scheme before opening to prevent
+        // javascript:/data: DOM-XSS via stored resource URLs.
+        const url = resource.url;
+        if (!url || !/^https?:\/\//i.test(url)) {
+            toast.error("This resource has an invalid or unsafe link.");
+            return;
+        }
+
         // Track access
         try {
             if (!progress) {
@@ -120,10 +128,10 @@ export default function ResourceCard({
                 });
             }
             
-            window.open(resource.url, '_blank');
+            window.open(url, '_blank');
         } catch (error) {
             console.error('Error tracking access:', error);
-            window.open(resource.url, '_blank');
+            window.open(url, '_blank');
         }
     };
 
