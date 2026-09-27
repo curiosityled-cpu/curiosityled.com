@@ -67,9 +67,15 @@ Deno.serve(async (req) => {
       return [row, u.email, u.first_name, u.last_name, errorCodes, errorMessages];
     });
 
+    // Sanitize cells to prevent CSV formula injection (CWE-1236).
+    const sanitizeCsvCell = (val) => {
+      const s = String(val ?? '');
+      if (s.match(/^[=+\-@\t\r]/)) return `'${s}`;
+      return s;
+    };
     const csvContent = [
       headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ...rows.map(row => row.map(cell => `"${sanitizeCsvCell(cell).replace(/"/g, '""')}"`).join(','))
     ].join('\n');
 
     return new Response(csvContent, {

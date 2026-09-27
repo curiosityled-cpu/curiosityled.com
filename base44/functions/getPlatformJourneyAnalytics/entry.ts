@@ -177,9 +177,10 @@ Deno.serve(async (req) => {
     let filteredCoachingSessions = coachingSessions;
     let scopeLabel = 'Platform';
 
-    // Security: Tenant scoping for Admin Level 1/2 and Partner BA —
-    // these roles must only see their own tenant's data, not platform-wide.
-    if (['Admin Level 1', 'Admin Level 2'].includes(user.app_role) && user.client_id) {
+    // Security: Tenant scoping for Admin Level 1/2, Super Administrator, and
+    // Partner BA — these roles must only see their own tenant's data, not
+    // platform-wide. Super Administrator is tenant-scoped like Admin Level 1/2.
+    if (['Admin Level 1', 'Admin Level 2', 'Super Administrator'].includes(user.app_role) && user.client_id) {
       filteredUsers = users.filter(u => u.client_id === user.client_id);
       const clientUserEmails = new Set(filteredUsers.map(u => u.email));
       filteredEnrollments = enrollments.filter(e => clientUserEmails.has(e.user_email));
