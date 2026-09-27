@@ -33,6 +33,16 @@ Deno.serve(async (req) => {
 
         const commission = commissions[0];
 
+        // Security: Non-Platform-Admin callers may only approve commissions
+        // belonging to their own tenant.
+        if (user.app_role !== 'Platform Admin') {
+          const callerClientId = user.client_id || user.data?.client_id;
+          if (commission.client_id && commission.client_id !== callerClientId) {
+            results.failed.push({ id: commissionId, error: 'Outside your tenant' });
+            continue;
+          }
+        }
+
         if (commission.status !== 'pending') {
           results.failed.push({ id: commissionId, error: `Already ${commission.status}` });
           continue;

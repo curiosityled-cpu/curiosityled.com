@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { isInternalCall } from '../../shared/urlValidation.ts';
+import { resolveUserScope, isUserInScope, attachPartnerClientIds } from '../../shared/userScope.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -22,9 +23,29 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Security: Non-Platform-Admin callers are scoped to their own tenant;
+    // only Platform Admin may enumerate an arbitrary client's badges.
+    let effectiveClientId = client_id;
+    if (!internalCall && callerUser && callerUser.app_role !== 'Platform Admin') {
+      if (callerUser.email !== user_email) {
+        const targetUsers = await base44.asServiceRole.entities.User.filter({ email: user_email });
+        if (targetUsers.length > 0) {
+          const scope = resolveUserScope(callerUser);
+          if (scope.role === 'Partner Business Administrator' && scope.partner_id) {
+            const pClients = await base44.asServiceRole.entities.Client.filter({ partner_id: scope.partner_id });
+            attachPartnerClientIds(scope, pClients);
+          }
+          if (!isUserInScope(targetUsers[0], scope)) {
+            return Response.json({ error: 'Forbidden — target user is outside your tenant' }, { status: 403 });
+          }
+        }
+      }
+      effectiveClientId = callerUser.client_id || callerUser.data?.client_id || client_id;
+    }
+
     // Get all badge templates for the client
     const allBadges = await base44.asServiceRole.entities.BadgeTemplate.filter({
-      client_id: client_id || undefined,
+      client_id: effectiveClientId || undefined,
       is_active: true
     });
 

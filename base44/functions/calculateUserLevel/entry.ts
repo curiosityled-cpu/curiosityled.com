@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { isInternalCall } from '../../shared/urlValidation.ts';
+import { resolveUserScope, isUserInScope, attachPartnerClientIds } from '../../shared/userScope.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -28,6 +29,19 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'User not found' }, { status: 404 });
     }
     const user = users[0];
+
+    // Security: tenant-scope check for admin callers.
+    if (!internalCall && callerUser && callerUser.email !== user_email && callerUser.app_role !== 'Platform Admin') {
+      const scope = resolveUserScope(callerUser);
+      if (scope.role === 'Partner Business Administrator' && scope.partner_id) {
+        const pClients = await base44.asServiceRole.entities.Client.filter({ partner_id: scope.partner_id });
+        attachPartnerClientIds(scope, pClients);
+      }
+      if (!isUserInScope(user, scope)) {
+        return Response.json({ error: 'Forbidden — target user is outside your tenant' }, { status: 403 });
+      }
+    }
+
     const totalPoints = user.total_points || 0;
 
     // Get all levels for this client (or platform defaults)

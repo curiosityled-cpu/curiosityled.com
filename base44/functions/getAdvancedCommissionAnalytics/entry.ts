@@ -24,17 +24,18 @@ Deno.serve(async (req) => {
     } = await req.json();
 
     // Determine if user is partner or admin
-    const isAdmin = ['Platform Admin', 'Super Administrator'].includes(user.app_role);
+    const isPlatformAdmin = user.app_role === 'Platform Admin';
+    const isSuperAdmin = user.app_role === 'Super Administrator';
     const isPartner = user.partner_id;
 
     // Security: Reject callers who are neither admin nor partner.
-    if (!isAdmin && !isPartner) {
+    if (!isPlatformAdmin && !isSuperAdmin && !isPartner) {
       return Response.json({ error: 'Forbidden — admin or partner access required' }, { status: 403 });
     }
 
     // Set partnerId based on user role
     let targetPartnerId = partnerId;
-    if (isPartner && !isAdmin) {
+    if (isPartner && !isPlatformAdmin && !isSuperAdmin) {
       targetPartnerId = user.partner_id; // Partners can only see their own data
     }
 
@@ -42,6 +43,11 @@ Deno.serve(async (req) => {
     let query = {};
     if (targetPartnerId) {
       query.partner_id = targetPartnerId;
+    }
+
+    // Security: Super Administrators are scoped to their own tenant.
+    if (isSuperAdmin) {
+      query.client_id = user.client_id || user.data?.client_id;
     }
 
     const allCommissions = await base44.asServiceRole.entities.PartnerCommission.filter(query);

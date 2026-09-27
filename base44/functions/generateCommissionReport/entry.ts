@@ -22,15 +22,16 @@ Deno.serve(async (req) => {
       includeDetails = false
     } = await req.json();
 
-    const isAdmin = ['Platform Admin', 'Super Administrator'].includes(user.app_role);
+    const isPlatformAdmin = user.app_role === 'Platform Admin';
+    const isSuperAdmin = user.app_role === 'Super Administrator';
     const isPartner = user.partner_id;
 
     // Security: Require admin or partner role to access commission data.
-    if (!isAdmin && !isPartner) {
+    if (!isPlatformAdmin && !isSuperAdmin && !isPartner) {
       return Response.json({ error: 'Forbidden — admin or partner access required' }, { status: 403 });
     }
 
-    if (!isAdmin && reportType !== 'partner_performance') {
+    if (!isPlatformAdmin && !isSuperAdmin && reportType !== 'partner_performance') {
       return Response.json({ error: 'Admin access required for this report' }, { status: 403 });
     }
 
@@ -38,12 +39,17 @@ Deno.serve(async (req) => {
     let query = {};
     if (partnerId) {
       // Security: Non-admin partners may only query their own partner_id.
-      if (!isAdmin && partnerId !== user.partner_id) {
+      if (!isPlatformAdmin && !isSuperAdmin && partnerId !== user.partner_id) {
         return Response.json({ error: 'Forbidden — cannot access another partner\'s commissions' }, { status: 403 });
       }
       query.partner_id = partnerId;
-    } else if (user.partner_id && !isAdmin) {
+    } else if (user.partner_id && !isPlatformAdmin && !isSuperAdmin) {
       query.partner_id = user.partner_id;
+    }
+
+    // Security: Super Administrators are scoped to their own tenant.
+    if (isSuperAdmin) {
+      query.client_id = user.client_id || user.data?.client_id;
     }
 
     const allCommissions = await base44.asServiceRole.entities.PartnerCommission.filter(query);

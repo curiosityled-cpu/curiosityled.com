@@ -17,11 +17,19 @@ Deno.serve(async (req) => {
     if (!internalCall && !callerUser) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const adminRoles = ['Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'];
-    const effectiveClientId = (internalCall || (callerUser && adminRoles.includes(callerUser.app_role)))
-      ? client_id
-      : (callerUser?.client_id || null);
-    if (!internalCall && !adminRoles.includes(callerUser?.app_role) && !effectiveClientId) {
+    // Security: Only Platform Admin and internal calls may honor a request-supplied
+    // client_id; all other admin roles are pinned to their own tenant (or partner scope).
+    const isPlatformAdmin = callerUser?.app_role === 'Platform Admin';
+    let effectiveClientId = null;
+    if (internalCall || isPlatformAdmin) {
+      effectiveClientId = client_id || null;
+    } else if (callerUser?.app_role === 'Partner Business Administrator' && callerUser?.partner_id) {
+      const pClients = await base44.asServiceRole.entities.Client.filter({ partner_id: callerUser.partner_id });
+      effectiveClientId = pClients.length > 0 ? { $in: pClients.map(c => c.id) } : null;
+    } else {
+      effectiveClientId = callerUser?.client_id || null;
+    }
+    if (!internalCall && !isPlatformAdmin && !effectiveClientId) {
       return Response.json({ error: 'Forbidden — cannot determine client scope' }, { status: 403 });
     }
 

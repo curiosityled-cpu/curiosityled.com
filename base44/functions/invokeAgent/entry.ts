@@ -2155,11 +2155,11 @@ Return top 3 with relevance scores (0-100) and reasoning.`;
 
 async function executeAnalyzeFormSubmissions(base44, user, params) {
   const { formId, analysisType, dateRange = '30days' } = params;
-  // Security: verify form ownership before service-role submission read.
   const adminRoles = ['Admin Level 1','Admin Level 2','Super Administrator','Partner Business Administrator','Platform Admin'];
   let forms = []; try { forms = await base44.entities.CustomForm.filter({ id: formId }); } catch (e) {}
-  if (!forms[0] || (!adminRoles.includes(user.app_role) && forms[0].created_by !== user.email)) return { message: 'Form not found or you lack permission to analyze its submissions.' };
-  const submissions = await base44.asServiceRole.entities.CustomFormSubmission.filter({ form_id: formId });
+  if (!forms[0] || (user.app_role !== 'Platform Admin' && forms[0].client_id && forms[0].client_id !== (user.client_id || user.data?.client_id)) || (user.app_role !== 'Platform Admin' && !adminRoles.includes(user.app_role) && forms[0].created_by !== user.email)) return { message: 'Form not found or outside your tenant.' };
+  const cid = user.app_role !== 'Platform Admin' ? (user.client_id || user.data?.client_id) : null;
+  const submissions = await base44.asServiceRole.entities.CustomFormSubmission.filter({ form_id: formId, ...(cid ? { client_id: cid } : {}) });
   const prompt = `Analyze these form submissions (${submissions.length} responses):\n\nAnalysis Type: ${analysisType}\nDate Range: ${dateRange}\n\nSubmissions Summary: ${JSON.stringify(submissions.slice(0, 50).map(s => s.responses))}\n\nProvide:\n1. Key findings (3-5 bullets)\n2. Patterns or trends\n3. Notable insights\n4. Recommendations`;
   const analysis = await base44.integrations.Core.InvokeLLM({ prompt, response_json_schema: { type: "object", properties: { summary: { type: "string" }, findings: { type: "array", items: { type: "string" } }, patterns: { type: "array", items: { type: "string" } }, recommendations: { type: "array", items: { type: "string" } } } } });
   return { message: `**Form Analysis (${submissions.length} responses):**\n\n${analysis.summary}\n\n**Key Findings:**\n${analysis.findings.map(f => `• ${f}`).join('\n')}\n\n**Recommendations:**\n${analysis.recommendations.map(r => `• ${r}`).join('\n')}`, analysis_data: analysis };
@@ -2797,7 +2797,6 @@ async function executeSelectLearningResources(base44, user, params) {
 
 async function executeAddJourneyMilestones(base44, user, params) {
   const { journeyId, milestones } = params;
-  // Security: only admins may modify shared learning journey content.
   if (!['Admin Level 1','Admin Level 2','Super Administrator','Platform Admin'].includes(user.app_role)) return { message: 'Only administrators may modify journey milestones.' };
   // Try fuzzy matching for journeys
   let actualJourneyId = journeyId;
@@ -2808,6 +2807,7 @@ async function executeAddJourneyMilestones(base44, user, params) {
     if (matchedByTitle) { actualJourneyId = matchedByTitle.id; }
     else return { message: `Journey not found. Available journeys:\n\n${allJourneys.map(j => `• ${j.title}`).join('\n')}\n\nPlease specify one of the above.` };
   }
+  if (user.app_role !== 'Platform Admin') { const jr = (await base44.entities.LearningJourney.filter({ id: actualJourneyId }))[0]; if (jr?.client_id && jr.client_id !== (user.client_id || user.data?.client_id)) return { message: 'Journey is outside your tenant.' }; }
   await base44.asServiceRole.entities.LearningJourney.update(actualJourneyId, { milestones });
   return { message: `Added ${milestones.length} milestone(s) to the learning journey`, count: milestones.length };
 }
@@ -3328,7 +3328,6 @@ Level 4: Mastery (teaches and innovates)`;
 
 async function executeLinkCompetenciesToRole(base44, user, params) {
   const { roleId, competencyIds, targetScores } = params;
-  // Security: only admins may modify role competency requirements.
   if (!['Admin Level 1','Admin Level 2','Super Administrator','Platform Admin'].includes(user.app_role)) return { message: 'Only administrators may modify role competency requirements.' };
   let formattedScores = [];
   if (Array.isArray(targetScores)) {
@@ -3338,6 +3337,7 @@ async function executeLinkCompetenciesToRole(base44, user, params) {
       formattedScores = competencyIds.map((compId, idx) => ({ name: compId, target_score: targetScores[idx] || 3 }));
     }
   }
+  if (user.app_role !== 'Platform Admin') { const r = (await base44.entities.Role.filter({ id: roleId }))[0]; if (r?.client_id && r.client_id !== (user.client_id || user.data?.client_id)) return { message: 'Role is outside your tenant.' }; }
   await base44.asServiceRole.entities.Role.update(roleId, { behavioral_competencies: formattedScores });
   return { message: `Linked ${competencyIds.length} competencies to role with target scores`, count: competencyIds.length };
 }

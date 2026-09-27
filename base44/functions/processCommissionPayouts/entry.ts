@@ -23,6 +23,19 @@ Deno.serve(async (req) => {
 
     const partner = partners[0];
 
+    // Security: Non-Platform-Admin callers may only process payouts for
+    // partners who manage a client in their own tenant.
+    if (user.app_role !== 'Platform Admin') {
+      const callerClientId = user.client_id || user.data?.client_id;
+      if (!callerClientId) {
+        return Response.json({ error: 'Forbidden — cannot determine tenant scope' }, { status: 403 });
+      }
+      const partnerClients = await base44.asServiceRole.entities.Client.filter({ partner_id: partnerId });
+      if (!partnerClients.map(c => c.id).includes(callerClientId)) {
+        return Response.json({ error: 'Forbidden — partner is outside your tenant' }, { status: 403 });
+      }
+    }
+
     // Get commissions
     const commissions = await base44.asServiceRole.entities.PartnerCommission.filter({
       partner_id: partnerId
