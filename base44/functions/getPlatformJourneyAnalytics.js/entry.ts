@@ -24,10 +24,26 @@ Deno.serve(async (req) => {
       }, { status: 403 });
     }
 
-    // Security: Tenant scoping for Admin Level 1/2 — these roles must only
-    // see their own tenant's data, not platform-wide enrollment rows.
+    // Security: Tenant scoping — non-Platform-Admin roles must be scoped to
+    // their own tenant/partner. Fail closed if no scope can be resolved.
     const isPlatformAdmin = user.app_role === 'Platform Admin';
-    const needsTenantScope = ['Admin Level 1', 'Admin Level 2'].includes(user.app_role) && user.client_id;
+    const isPartnerBA = user.app_role === 'Partner Business Administrator';
+    let partnerClientIds = [];
+    if (isPartnerBA) {
+      const allClients = await base44.asServiceRole.entities.Client.list();
+      partnerClientIds = allClients.filter(c => c.partner_id === user.partner_id).map(c => c.id);
+    }
+    const tenantScopedRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'User Level 3'];
+    const needsTenantScope = tenantScopedRoles.includes(user.app_role);
+    if (!isPlatformAdmin && (needsTenantScope || isPartnerBA)) {
+      const hasScope = user.client_id || (isPartnerBA && partnerClientIds.length > 0);
+      if (!hasScope) {
+        return Response.json({
+          success: false,
+          error: 'Tenant scope required — client_id not configured for your account'
+        }, { status: 403 });
+      }
+    }
 
     console.log('Fetching platform journey analytics for:', user.email, 'Role:', user.app_role);
 
@@ -104,12 +120,21 @@ Deno.serve(async (req) => {
       learningResources: learningResources?.length || 0
     });
 
-    // Security: Apply tenant scoping for Admin Level 1/2 before analytics
+    // Security: Apply tenant scoping for all non-Platform-Admin roles before analytics
     let scopedEnrollments = enrollments;
     let scopedUsers = users;
     let scopedAssessments = assessments;
     let scopedGoals = goals;
-    if (needsTenantScope) {
+    if (isPlatformAdmin) {
+      // Platform Admin sees all data — no scoping
+    } else if (isPartnerBA && partnerClientIds.length > 0) {
+      scopedUsers = users.filter(u => partnerClientIds.includes(u.client_id));
+      const clientUserEmails = new Set(scopedUsers.map(u => u.email));
+      scopedEnrollments = enrollments.filter(e => clientUserEmails.has(e.user_email));
+      scopedAssessments = assessments.filter(a => clientUserEmails.has(a.email));
+      scopedGoals = goals.filter(g => g.created_by && clientUserEmails.has(g.created_by));
+    } else if (user.client_id) {
+      // Admin Level 1/2, Super Administrator, User Level 3 — scope to own client
       scopedUsers = users.filter(u => u.client_id === user.client_id);
       const clientUserEmails = new Set(scopedUsers.map(u => u.email));
       scopedEnrollments = enrollments.filter(e => clientUserEmails.has(e.user_email));

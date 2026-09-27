@@ -25,6 +25,15 @@ Deno.serve(async (req) => {
     }
     const template = templates[0];
 
+    // Security: Verify the template belongs to the caller's tenant (or caller
+    // is Platform Admin / internal) to prevent cross-tenant leaderboard access.
+    if (!internalCall && callerUser && callerUser.app_role !== 'Platform Admin') {
+      const callerClientId = callerUser.client_id || callerUser.data?.client_id;
+      if (template.client_id && template.client_id !== callerClientId) {
+        return Response.json({ error: 'Leaderboard not found' }, { status: 404 });
+      }
+    }
+
     // Generate leaderboard data based on template configuration
     const leaderboardData = await base44.asServiceRole.functions.invoke('generateLeaderboardData', {
       scope: template.scope,

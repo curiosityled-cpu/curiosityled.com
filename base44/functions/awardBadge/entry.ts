@@ -48,14 +48,34 @@ Deno.serve(async (req) => {
 
     // Get user's client_id
     const users = await base44.asServiceRole.entities.User.filter({ email: user_email });
-    const client_id = users.length > 0 ? users[0].client_id : null;
+    const targetUser = users[0];
+    const client_id = targetUser ? targetUser.client_id : null;
+
+    // Security: For non-Platform-Admin callers, verify the target user is in
+    // the caller's tenant/partner scope before awarding a badge.
+    if (!internalCall && callerUser && callerUser.app_role !== 'Platform Admin') {
+      const callerClientId = callerUser.client_id || callerUser.data?.client_id;
+      if (callerUser.app_role === 'Partner Business Administrator' && callerUser.partner_id) {
+        const clients = await base44.asServiceRole.entities.Client.list();
+        const partnerClientIds = clients.filter(c => c.partner_id === callerUser.partner_id).map(c => c.id);
+        if (targetUser && !partnerClientIds.includes(targetUser.client_id)) {
+          return Response.json({ error: 'Forbidden — target user is outside your partner scope' }, { status: 403 });
+        }
+      } else if (targetUser && targetUser.client_id !== callerClientId) {
+        return Response.json({ error: 'Forbidden — target user is outside your tenant' }, { status: 403 });
+      }
+    }
+
+    // Security: Derive awarded_by_email from the authenticated caller, not the
+    // request body, to prevent spoofing the awarder identity.
+    const resolvedAwarderEmail = internalCall ? awarded_by_email : (callerUser?.email || awarded_by_email);
 
     // Create UserBadge record
     const userBadge = await base44.asServiceRole.entities.UserBadge.create({
       user_email,
       badge_template_id,
       earned_date: new Date().toISOString(),
-      awarded_by_email,
+      awarded_by_email: resolvedAwarderEmail,
       client_id
     });
 

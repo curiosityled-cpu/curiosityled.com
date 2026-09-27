@@ -9,7 +9,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized - Super Administrator only' }, { status: 403 });
     }
 
-    const clients = await base44.asServiceRole.entities.Client.list('-created_date');
+    // Security: Super Administrator is tenant-scoped to their own client only.
+    if (!user.client_id) {
+      return Response.json({ error: 'Tenant scope required — client_id not configured' }, { status: 403 });
+    }
+
+    let clients = await base44.asServiceRole.entities.Client.list('-created_date');
+    clients = clients.filter(c => c.id === user.client_id);
 
     // Get user count for each client
     const allUsers = await base44.asServiceRole.entities.User.list();

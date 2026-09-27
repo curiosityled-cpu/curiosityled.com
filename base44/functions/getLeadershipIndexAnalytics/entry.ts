@@ -79,10 +79,14 @@ Deno.serve(async (req) => {
 
     const filteredClientIds = filteredClients.map(o => o.id);
     
-    // Filter users by organization/client
+    // Security: Always scope users to the caller's resolved client/partner
+    // scope, regardless of filter values, to prevent cross-tenant exposure.
     let filteredUsers = users;
-    if (filteredClientIds.length > 0 && (partnerId !== 'all' || clientId !== 'all' || industry !== 'all')) {
+    if (filteredClientIds.length > 0) {
       filteredUsers = users.filter(u => filteredClientIds.includes(u.client_id));
+    } else if (user.app_role !== 'Platform Admin') {
+      // Non-Platform-Admin with no resolved clients — return nothing
+      filteredUsers = [];
     }
 
     const filteredEmails = filteredUsers.map(u => u.email);
@@ -336,8 +340,8 @@ Deno.serve(async (req) => {
       }
     ];
 
-    // Unique industries for filter
-    const industries = [...new Set(allClients.map(o => o.industry).filter(Boolean))].sort();
+    // Unique industries for filter — scoped to caller's visible clients
+    const industries = [...new Set(filteredClients.map(o => o.industry).filter(Boolean))].sort();
 
     return Response.json({
       success: true,
@@ -365,8 +369,11 @@ Deno.serve(async (req) => {
         trendData,
         platformHealth,
         filterOptions: {
-          partners: partners.map(p => ({ id: p.id, name: p.name })),
-          clients: allClients.map(o => ({ id: o.id, name: o.name, partnerId: o.partner_id })),
+          partners: partners.filter(p => {
+            const visiblePartnerIds = new Set(filteredClients.map(c => c.partner_id).filter(Boolean));
+            return visiblePartnerIds.has(p.id);
+          }).map(p => ({ id: p.id, name: p.name })),
+          clients: filteredClients.map(o => ({ id: o.id, name: o.name, partnerId: o.partner_id })),
           industries
         }
       }

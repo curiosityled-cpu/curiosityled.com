@@ -24,8 +24,17 @@ Deno.serve(async (req) => {
     if (user.app_role === 'Partner Business Administrator' && user.partner_id) {
       // Partner Admin sees only their own partner
       partners = partners.filter(p => p.id === user.partner_id);
+    } else if (user.app_role === 'Super Administrator') {
+      // Security: Super Administrator is scoped to their own partner only.
+      if (user.client_id) {
+        const ownClient = await base44.asServiceRole.entities.Client.filter({ id: user.client_id });
+        const partnerId = ownClient[0]?.partner_id;
+        partners = partnerId ? partners.filter(p => p.id === partnerId) : [];
+      } else {
+        partners = [];
+      }
     }
-    // Platform Admin and Super Admin see all partners (no filtering)
+    // Platform Admin sees all partners (no filtering)
 
     console.log('Successfully fetched', partners.length, 'partners');
 

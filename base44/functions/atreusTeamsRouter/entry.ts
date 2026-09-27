@@ -256,19 +256,23 @@ Deno.serve(async (req) => {
     const teamsUserEmail = body?.from?.email || body?.from?.aadObjectId;
 
     // Security: validate that the Teams-supplied identity maps to a registered
-    // app user before any service-role read/write. Reject payloads whose
-    // identity cannot be resolved to a real User record, so a compromised
-    // shared secret cannot be used to impersonate arbitrary email addresses.
-    if (teamsUserEmail) {
-      const matchedUsers = await serviceBase44.entities.User.filter({
-        email: String(teamsUserEmail).toLowerCase()
-      }).catch(() => []);
-      if (matchedUsers.length === 0) {
-        return Response.json({
-          type: 'message',
-          text: 'Unable to verify your identity. Please ensure your Teams account email matches your registered app email.'
-        });
-      }
+    // app user before any service-role read/write. Fail closed if the identity
+    // is missing or cannot be resolved, so a compromised shared secret cannot
+    // be used to access all users' data via undefined email filters.
+    if (!teamsUserEmail) {
+      return Response.json({
+        type: 'message',
+        text: 'Unable to verify your identity. No Teams identity provided.'
+      });
+    }
+    const matchedUsers = await serviceBase44.entities.User.filter({
+      email: String(teamsUserEmail).toLowerCase()
+    }).catch(() => []);
+    if (matchedUsers.length === 0) {
+      return Response.json({
+        type: 'message',
+        text: 'Unable to verify your identity. Please ensure your Teams account email matches your registered app email.'
+      });
     }
 
     // Teams Activity Types

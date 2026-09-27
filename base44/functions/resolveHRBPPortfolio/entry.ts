@@ -28,6 +28,30 @@ export default async function (req) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    // Security: For non-Platform-Admin callers, verify the target HRBP belongs
+    // to the caller's tenant before returning portfolio or signal data.
+    if (userRole !== "Platform Admin" && targetHrbpEmail !== user.email) {
+      const targetUserRecords = await base44.asServiceRole.entities.User.filter({
+        email: targetHrbpEmail.toLowerCase(),
+      }).catch(() => []);
+      const targetUser = targetUserRecords[0];
+      if (!targetUser) {
+        return Response.json({ error: "Forbidden — target HRBP not found" }, { status: 403 });
+      }
+      const callerClientId = user.client_id || user.data?.client_id;
+      if (userRole === "Partner Business Administrator" && user.partner_id) {
+        const clients = await base44.asServiceRole.entities.Client.list();
+        const partnerClientIds = clients
+          .filter((c) => c.partner_id === user.partner_id)
+          .map((c) => c.id);
+        if (!partnerClientIds.includes(targetUser.client_id)) {
+          return Response.json({ error: "Forbidden — target HRBP is outside your partner scope" }, { status: 403 });
+        }
+      } else if (targetUser.client_id !== callerClientId) {
+        return Response.json({ error: "Forbidden — target HRBP is outside your tenant" }, { status: 403 });
+      }
+    }
+
     // Resolve own portfolio + active delegations (shared scoping logic)
     const { managers, ownPortfolios, delegationSummaries } =
       await resolveHRBPManagerEmails(base44, targetHrbpEmail);

@@ -11,8 +11,9 @@ Deno.serve(async (req) => {
     const internalSecret = Deno.env.get('INTERNAL_FUNCTION_SECRET');
     const isInternal = !!(internalSecret && internal_secret && internal_secret === internalSecret);
 
+    let caller = null;
     if (!isInternal) {
-      const caller = await base44.auth.me().catch(() => null);
+      caller = await base44.auth.me().catch(() => null);
       const ADMIN_ROLES = ['Platform Admin', 'Super Administrator', 'Admin Level 1', 'Admin Level 2'];
       if (!caller || !ADMIN_ROLES.includes(caller.app_role)) {
         return Response.json({ error: 'Forbidden - authenticated admin access required' }, { status: 403 });
@@ -28,6 +29,21 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'User not found' }, { status: 404 });
     }
     const user = users[0];
+
+    // Security: For non-Platform-Admin callers, verify the target user is in
+    // the caller's tenant/partner scope before writing points.
+    if (caller && caller.app_role !== 'Platform Admin') {
+      const callerClientId = caller.client_id || caller.data?.client_id;
+      if (caller.app_role === 'Partner Business Administrator' && caller.partner_id) {
+        const clients = await base44.asServiceRole.entities.Client.list();
+        const partnerClientIds = clients.filter(c => c.partner_id === caller.partner_id).map(c => c.id);
+        if (!partnerClientIds.includes(user.client_id)) {
+          return Response.json({ error: 'Forbidden — target user is outside your partner scope' }, { status: 403 });
+        }
+      } else if (user.client_id !== callerClientId) {
+        return Response.json({ error: 'Forbidden — target user is outside your tenant' }, { status: 403 });
+      }
+    }
 
     const transaction = await base44.asServiceRole.entities.PointTransaction.create({
       user_email,
