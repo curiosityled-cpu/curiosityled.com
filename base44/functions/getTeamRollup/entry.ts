@@ -14,7 +14,14 @@ const LEVEL_TIER = {
 
 function resolveLeaderLevel(user, allUsers) {
   const explicit = user?.leadership_level ?? user?.data?.leadership_level;
-  if (explicit && LEVEL_TIER[String(explicit)]) return LEVEL_TIER[String(explicit)];
+  if (explicit) {
+    const str = String(explicit);
+    // Handle "Level 5 (Leading Organizations)" format — extract the number.
+    const match = str.match(/Level\s+(\d+)/i);
+    if (match && LEVEL_TIER[match[1]]) return LEVEL_TIER[match[1]];
+    if (str.toLowerCase().includes("hipo")) return LEVEL_TIER["hipo"];
+    if (LEVEL_TIER[str]) return LEVEL_TIER[str];
+  }
   // Auto-detect from reporting-tree depth (number of layers below this user).
   const tree = buildReportingTree(allUsers, user.email, 10);
   // depth = max generations below root (0 = no reports, 1 = only directs, etc.)
