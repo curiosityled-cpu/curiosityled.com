@@ -41,6 +41,19 @@ export default function ReadinessProposalsView() {
   const [citations, setCitations] = useState([]);
   const [conditions, setConditions] = useState([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const STATUS_FILTERS = [
+    { value: "all", label: "All Statuses" },
+    { value: "draft", label: "Draft" },
+    { value: "proposed", label: "Proposed" },
+    { value: "in_calibration", label: "In Calibration" },
+    { value: "awaiting_ratification", label: "Awaiting Ratification" },
+    { value: "ratified", label: "Ratified" },
+    { value: "overridden", label: "Overridden" },
+    { value: "superseded", label: "Superseded" },
+    { value: "withdrawn", label: "Withdrawn" },
+  ];
 
   const loadData = useCallback(async () => {
     setDataLoading(true);
@@ -48,7 +61,7 @@ export default function ReadinessProposalsView() {
       const [conclRes, candRes] = await Promise.all([
         base44.functions.invoke("successionListDeliberationCases", {
           operation_id: `load-conclusions-${Date.now()}`,
-          list_type: "ratification_queue",
+          list_type: "all_conclusions",
         }),
         base44.functions.invoke("successionListCandidacies", {
           operation_id: `load-candidacies-${Date.now()}`,
@@ -62,6 +75,10 @@ export default function ReadinessProposalsView() {
       setDataLoading(false);
     }
   }, []);
+
+  const filteredConclusions = statusFilter === "all"
+    ? conclusions
+    : conclusions.filter(c => c.workflow_status === statusFilter);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -173,6 +190,18 @@ export default function ReadinessProposalsView() {
           <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
+
+      {/* Status filter */}
+      <div className="flex items-center gap-2">
+        <Label className="text-xs text-gray-500 whitespace-nowrap">Filter:</Label>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-48" aria-label="Filter by status"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {STATUS_FILTERS.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <span className="text-xs text-gray-400">{filteredConclusions.length} of {conclusions.length}</span>
+      </div>
 
       {showForm && (
         <Card>

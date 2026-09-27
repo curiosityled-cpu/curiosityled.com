@@ -47,6 +47,48 @@ export default async function(req: Request): Promise<Response> {
 
     const type = list_type || "calibration_cases";
 
+    if (type === "all_conclusions") {
+      // ── List ALL conclusions for the tenant (full lifecycle view) ──
+      const filter: any = {
+        client_id: auth.client_id, integrity_status: "active",
+      };
+      if (cycle_id) filter.cycle_id = cycle_id;
+
+      const conclusions = await base44.asServiceRole.entities.ReadinessConclusion.filter(
+        filter, "-proposed_at", 200
+      );
+
+      // Data minimization — same field set as ratification_queue, no rank/score/recommendation
+      const minimized = conclusions.map(c => ({
+        conclusion_id: c.id,
+        candidacy_id: c.candidacy_id,
+        critical_role_id: c.critical_role_id,
+        cycle_id: c.cycle_id,
+        version: c.version,
+        proposed_value: c.proposed_value,
+        calibrated_value: c.calibrated_value,
+        ratified_value: c.ratified_value,
+        proposed_by_profile_id: c.proposed_by_profile_id,
+        proposed_at: c.proposed_at,
+        workflow_status: c.workflow_status,
+        rationale: c.rationale,
+        missing_evidence: c.missing_evidence,
+        conflicting_evidence: c.conflicting_evidence,
+        next_review_date: c.next_review_date,
+        transition_horizon: c.transition_horizon,
+        supersedes_conclusion_id: c.supersedes_conclusion_id,
+      }));
+
+      await completeOperation(base44, opResult.operation.id, null, {
+        count: minimized.length, list_type: "all_conclusions",
+      });
+
+      return Response.json({
+        operation_id, list_type: "all_conclusions",
+        conclusions: minimized, count: minimized.length,
+      });
+    }
+
     if (type === "ratification_queue") {
       // ── List conclusions awaiting ratification ──
       const filter: any = {
