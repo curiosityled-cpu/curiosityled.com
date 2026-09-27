@@ -1,15 +1,18 @@
 /**
  * DynamicHeroHeader — animated hero banner for the Today page.
  *
- * Renders a time-of-day landscape illustration as the background, overlaid
- * with CSS-animated weather effects (rain, snow, fog, clouds, lightning)
- * fetched from Open-Meteo.  Includes the date, greeting, and the
+ * Renders a cinematic dark landscape (morning / afternoon / evening / night)
+ * as the background, overlaid with realistic CSS-animated weather effects
+ * fetched from Open-Meteo. Includes the date, greeting, and the
  * context-aware HeadlineSignal pill.
  *
- * Time-of-day mapping:
- *   05:00–11:59  → morning  (sunrise landscape)
- *   12:00–16:59  → afternoon (midday landscape)
- *   17:00–04:59  → evening  (twilight landscape)
+ * Image bucket (4-state, driven by local hour + Open-Meteo is_day):
+ *   05:00–11:59  → morning
+ *   12:00–16:59  → afternoon
+ *   17:00+       → evening  (until the sun is down)
+ *   is_day === 0 → night    (after local sunset)
+ *
+ * Greeting bucket (3-state, unchanged) is passed in from ManagerToday.
  */
 import React, { useState, useEffect } from "react";
 import { SlidersHorizontal } from "lucide-react";
@@ -17,9 +20,10 @@ import HeadlineSignal from "@/components/density/HeadlineSignal";
 import WeatherOverlay from "@/components/lead/WeatherOverlay";
 
 const HERO_IMAGES = {
-  morning: "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/b203d2183_generated_image.png",
-  afternoon: "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/13bbf1f65_generated_image.png",
-  evening: "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/8636a7a38_generated_image.png",
+  morning: "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/abed61c89_generated_image.png",
+  afternoon: "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/e21d2fecc_generated_image.png",
+  evening: "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/1ed560824_generated_image.png",
+  night: "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/48a225267_generated_image.png",
 };
 
 function mapWeatherCode(code) {
@@ -50,21 +54,29 @@ function Birds({ color }) {
 export default function DynamicHeroHeader({ firstName, greeting, day, hour, todayRecord, userEmail, onSettingsClick }) {
   const [weather, setWeather] = useState(null);
 
-  const timeOfDay = hour >= 5 && hour < 12 ? "morning" : hour >= 12 && hour < 17 ? "afternoon" : "evening";
+  // Image bucket — 4-state. Night is driven by Open-Meteo's is_day flag
+  // (0 = after local sunset). Until weather resolves, fall back to hour-based.
+  const hourBucket = hour >= 5 && hour < 12 ? "morning" : hour >= 12 && hour < 17 ? "afternoon" : "evening";
+  const isNight = weather ? !weather.isDay : false;
+  const timeOfDay = isNight ? "night" : hourBucket;
   const bgImage = HERO_IMAGES[timeOfDay];
-  const birdColor = timeOfDay === "evening" ? "rgba(240,240,240,0.5)" : "rgba(30,30,50,0.4)";
+  const birdColor = timeOfDay === "evening" || timeOfDay === "night" ? "rgba(240,240,240,0.5)" : "rgba(30,30,50,0.4)";
 
   useEffect(() => {
     let cancelled = false;
     const fetchWeather = async (lat, lon) => {
       try {
         const res = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=weather_code,is_day,wind_speed_10m`
+          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=weather_code,is_day,wind_speed_10m&daily=sunrise,sunset`
         );
         const data = await res.json();
         if (cancelled) return;
         const code = data?.current?.weather_code;
-        setWeather({ condition: mapWeatherCode(code), isDay: data?.current?.is_day === 1, windSpeed: data?.current?.wind_speed_10m ?? 0 });
+        setWeather({
+          condition: mapWeatherCode(code),
+          isDay: data?.current?.is_day === 1,
+          windSpeed: data?.current?.wind_speed_10m ?? 0,
+        });
       } catch {
         if (!cancelled) setWeather(null);
       }
@@ -94,7 +106,7 @@ export default function DynamicHeroHeader({ firstName, greeting, day, hour, toda
       <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
 
       {/* Weather overlay */}
-      {weather && <WeatherOverlay condition={weather.condition} windSpeed={weather.windSpeed} />}
+      {weather && <WeatherOverlay condition={weather.condition} windSpeed={weather.windSpeed} isNight={isNight} />}
 
       {/* Birds */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">

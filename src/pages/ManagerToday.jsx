@@ -345,7 +345,7 @@ export default function ManagerToday() {
   const needsToneOnboarding = !tonePending && tonePref === null;
   const firstName = getFirstName(user);
   const hour = parseInt(new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/New_York', hour: 'numeric', hour12: false
+    hour: 'numeric', hour12: false
   }).format(new Date()), 10);
 
   const isMorningWindow = hour >= 5 && hour < 15;
@@ -362,7 +362,7 @@ export default function ManagerToday() {
   // ── Headline derivations ──
   const etHour = hour;
   const greeting = etHour < 12 ? 'Good morning' : etHour < 17 ? 'Good afternoon' : 'Good evening';
-  const day = new Date().toLocaleDateString('en-US', { timeZone: 'America/New_York', weekday: 'long', month: 'long', day: 'numeric' });
+  const day = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
   // ── Zone 1 content (Today's Rhythm) ──
   const rhythmContent = (

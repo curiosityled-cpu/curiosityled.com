@@ -464,3 +464,36 @@
 }
 .reqstats-enter { animation: reqstats-enter 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 .reqstats-glow-circle { animation: reqstats-glow 5s ease-in-out infinite; }
+
+/* ── Lead hero: realistic window-droplet rain ───────────────────────────── */
+/* A droplet grows in place, then slides down leaving a fading trail. */
+@keyframes hero-droplet {
+  0% { transform: scale(0); opacity: 0; }
+  15% { transform: scale(1); opacity: 0.55; }
+  40% { transform: scale(1.15); opacity: 0.5; }
+  /* hold grown droplet */
+  60% { transform: scale(1.1) translateY(0); opacity: 0.45; }
+  /* slide down with streak trail */
+  100% { transform: scale(0.7) translateY(var(--slide-distance, 50px)); opacity: 0; }
+}
+
+/* ── Lead hero: double-flash lightning (thunderstorm) ──────────────────── */
+/* Bright flash, brief dark, second dimmer flash, then settle. */
+@keyframes hero-lightning-double {
+  0%, 88%, 100% { opacity: 0; }
+  89% { opacity: 0.85; }
+  90% { opacity: 0; }
+  91.5% { opacity: 0; }
+  92.5% { opacity: 0.5; }
+  93.5% { opacity: 0; }
+}
+
+/* ── Lead hero: blue-tint rumble pulse (thunderstorm) ──────────────────── */
+/* A subtle screen tint that pulses just after the lightning flash. */
+@keyframes hero-rumble {
+  0%, 88%, 100% { opacity: 0; }
+  90% { opacity: 0.4; }
+  92% { opacity: 0.1; }
+  94% { opacity: 0.25; }
+  96% { opacity: 0; }
+}
