@@ -64,20 +64,115 @@ async function _buildTeamsOrchestratorResponse(serviceBase44, userEmail, message
   }
 }
 
-// Validate Teams bot webhook requests via a shared secret bearer token (TEAMS_WEBHOOK_SECRET).
-// A dummy/short token is never accepted — the presented token must match the configured secret.
-async function validateTeamsRequest(req, body) {
-  const secret = Deno.env.get('TEAMS_WEBHOOK_SECRET');
-  if (!secret) return false;
+// Validate Teams bot webhook requests by verifying the Bot Framework JWT
+// in the Authorization header against TEAMS_BOT_APP_ID. This replaces the
+// previous static shared secret (TEAMS_WEBHOOK_SECRET) which allowed anyone
+// with the secret to impersonate any user by supplying an arbitrary email
+// in the request body. The Bot Framework signs the JWT with RS256; we verify
+// the signature against the published JWKS, validate the issuer and audience
+// (the bot's App ID), and check expiry. If TEAMS_BOT_APP_ID is not configured
+// the function fails closed — no static-secret fallback.
+//
+// Ref: https://learn.microsoft.com/en-us/azure/bot-service/rest-api/bot-framework-rest-3-authentication
+
+const BOT_OPENID_CONFIG_URL = 'https://login.botframework.com/v1/.well-known/openidconfiguration';
+
+// Cache OpenID config and JWKS across invocations within the same isolate.
+let _openIdConfig = null;
+let _openIdConfigExpiry = 0;
+let _jwks = null;
+let _jwksExpiry = 0;
+
+async function _fetchJson(url) {
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return await resp.json();
+}
+
+function _base64UrlDecode(str) {
+  const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function _decodeJwt(token) {
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  try {
+    const header = JSON.parse(new TextDecoder().decode(_base64UrlDecode(parts[0])));
+    const payload = JSON.parse(new TextDecoder().decode(_base64UrlDecode(parts[1])));
+    return { header, payload, signature: _base64UrlDecode(parts[2]), signingInput: parts[0] + '.' + parts[1] };
+  } catch {
+    return null;
+  }
+}
+
+async function validateTeamsRequest(req, _body) {
+  const appId = Deno.env.get('TEAMS_BOT_APP_ID');
+  // Fail closed if the bot App ID is not configured — no static-secret fallback.
+  if (!appId) {
+    console.error('atreusTeamsRouter: TEAMS_BOT_APP_ID not configured — rejecting request');
+    return false;
+  }
+
   const authHeader = req.headers.get('Authorization') || '';
   if (!authHeader.startsWith('Bearer ')) return false;
-  const token = authHeader.slice(7);
-  if (token.length !== secret.length) return false;
-  let diff = 0;
-  for (let i = 0; i < secret.length; i++) {
-    diff |= token.charCodeAt(i) ^ secret.charCodeAt(i);
+  const token = authHeader.slice(7).trim();
+  if (!token) return false;
+
+  const decoded = _decodeJwt(token);
+  if (!decoded) return false;
+  const { header, payload, signature, signingInput } = decoded;
+
+  // Validate expiry / not-before
+  const nowSec = Math.floor(Date.now() / 1000);
+  if (payload.exp && nowSec >= payload.exp) return false;
+  if (payload.nbf && nowSec < payload.nbf) return false;
+
+  // Validate audience — must match the bot's Microsoft App ID
+  if (payload.aud !== appId) return false;
+
+  try {
+    // Fetch and cache OpenID config
+    const now = Date.now();
+    if (!_openIdConfig || now >= _openIdConfigExpiry) {
+      _openIdConfig = await _fetchJson(BOT_OPENID_CONFIG_URL);
+      _openIdConfigExpiry = now + 24 * 60 * 60 * 1000;
+    }
+
+    // Validate issuer
+    if (payload.iss !== _openIdConfig.issuer) return false;
+
+    // Fetch and cache JWKS
+    if (!_jwks || now >= _jwksExpiry) {
+      _jwks = await _fetchJson(_openIdConfig.jwks_uri);
+      _jwksExpiry = now + 24 * 60 * 60 * 1000;
+    }
+
+    const key = _jwks.keys.find(k => k.kid === header.kid);
+    if (!key) return false;
+
+    // Verify RS256 signature via Web Crypto API
+    const cryptoKey = await crypto.subtle.importKey(
+      'jwk',
+      key,
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+      false,
+      ['verify']
+    );
+    return await crypto.subtle.verify(
+      'RSASSA-PKCS1-v1_5',
+      cryptoKey,
+      signature,
+      new TextEncoder().encode(signingInput)
+    );
+  } catch (e) {
+    console.error('atreusTeamsRouter: JWT validation error:', e.message);
+    return false;
   }
-  return diff === 0;
 }
 
 function buildCheckInCard(type = 'morning') {

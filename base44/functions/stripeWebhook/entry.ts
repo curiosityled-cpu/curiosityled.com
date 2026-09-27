@@ -110,6 +110,18 @@ async function handleInvoicePaymentSucceeded(base44, invoice) {
       ? new Date(invoice.period_end * 1000).toISOString().split('T')[0]
       : new Date().toISOString().split('T')[0];
 
+    // Idempotency: Stripe redelivers events until a 2xx is returned. If a
+    // PartnerCommission already exists for this invoice, the event is a
+    // retry — short-circuit to avoid duplicate commissions and inflated
+    // partner payout totals.
+    const existingCommissions = await base44.asServiceRole.entities.PartnerCommission.filter({
+      stripe_invoice_id: invoice.id
+    });
+    if (existingCommissions.length > 0) {
+      console.log('Commission already exists for invoice, skipping (idempotent):', invoice.id);
+      return;
+    }
+
     await base44.asServiceRole.entities.PartnerCommission.create({
       partner_id: partner.id,
       client_id: client.id,
@@ -203,6 +215,11 @@ async function handleChargeRefunded(base44, charge) {
     const originalAmount = commission.base_amount;
 
     if (refundAmount === originalAmount) {
+      // Idempotency: skip if the commission is already cancelled (event retry).
+      if (commission.status === 'cancelled') {
+        console.log('Commission already cancelled for this charge, skipping (idempotent)');
+        return;
+      }
       await base44.asServiceRole.entities.PartnerCommission.update(commission.id, {
         status: 'cancelled',
         notes: `Full refund processed on ${new Date().toISOString()}`
@@ -221,6 +238,16 @@ async function handleChargeRefunded(base44, charge) {
         });
       }
     } else {
+      // Idempotency: check if a negative adjustment already exists for this
+      // charge (event retry) before creating a duplicate refund commission.
+      const existingAdjustments = await base44.asServiceRole.entities.PartnerCommission.filter({
+        stripe_invoice_id: charge.invoice
+      });
+      if (existingAdjustments.some(c => c.commission_amount < 0 && c.notes && c.notes.includes(charge.id))) {
+        console.log('Refund adjustment already exists for charge, skipping (idempotent):', charge.id);
+        return;
+      }
+
       const refundCommissionAmount = Math.round((refundAmount * commission.commission_rate) / 100);
       
       await base44.asServiceRole.entities.PartnerCommission.create({
