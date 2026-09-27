@@ -103,10 +103,10 @@ export default function HeadlineSignal({ todayRecord, hasCheckedIn, userEmail, h
   }
 
   const toneStyles = {
-    heavy:   "bg-amber-50 text-amber-800 border-amber-100",
-    strong:  "bg-emerald-50 text-emerald-800 border-emerald-100",
-    steady:  "bg-slate-50 text-slate-700 border-slate-200",
-    neutral: "bg-slate-50 text-slate-600 border-slate-200",
+    heavy:   "bg-black/50 text-white border-white/20",
+    strong:  "bg-black/50 text-white border-white/20",
+    steady:  "bg-black/50 text-white border-white/20",
+    neutral: "bg-black/50 text-white border-white/20",
   };
 
   const dotColor = tone === "heavy" ? "#f59e0b" : tone === "strong" ? "#10b981" : "#64748b";
