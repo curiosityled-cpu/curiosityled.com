@@ -3,7 +3,7 @@ import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Sparkles } from "lucide-react";
 import CompetencyManagerTab from "@/components/talent/CompetencyManagerTab";
-import SuccessionLaunchCard from "@/components/succession/SuccessionLaunchCard";
+import SuccessionWorkspaceContent from "@/components/succession/SuccessionWorkspaceContent";
 import { useSuccessionEnabled } from "@/components/succession/useSuccessionEnabled";
 
 export default function TalentManager() {
@@ -45,7 +45,7 @@ export default function TalentManager() {
 
         {successionEnabled && (
           <TabsContent value="succession" className="mt-5 focus-visible:outline-none">
-            <SuccessionLaunchCard />
+            <SuccessionWorkspaceContent />
           </TabsContent>
         )}
       </Tabs>
