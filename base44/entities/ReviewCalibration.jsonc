@@ -1,0 +1,279 @@
+{
+  "name": "ReviewCalibration",
+  "type": "object",
+  "description": "A calibration session for a performance review cycle. Aggregates manager and self-assessment ratings for organizational alignment. Allows authorized calibrators to adjust ratings with documented reasons.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Tenant ID for multi-tenant scoping"
+    },
+    "review_cycle_id": {
+      "type": "string",
+      "description": "CustomForm ID of the review cycle being calibrated"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "completed"
+      ],
+      "default": "draft",
+      "description": "Calibration lifecycle. draft = being populated. active = open for adjustments. completed = finalized."
+    },
+    "calibrator_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Authorized calibrators for this session"
+    },
+    "calibrated_employees": {
+      "type": "array",
+      "description": "Per-employee calibration data with original and adjusted ratings",
+      "items": {
+        "type": "object",
+        "properties": {
+          "employee_email": {
+            "type": "string"
+          },
+          "employee_name": {
+            "type": "string"
+          },
+          "manager_email": {
+            "type": "string"
+          },
+          "manager_rating": {
+            "type": "number",
+            "description": "Original rating from the manager review"
+          },
+          "self_rating": {
+            "type": "number",
+            "description": "Rating from the self-assessment, if available"
+          },
+          "peer_avg_rating": {
+            "type": "number",
+            "description": "Average rating from peer feedback, if available"
+          },
+          "calibrated_rating": {
+            "type": "number",
+            "description": "Final calibrated rating after adjustment"
+          },
+          "adjustment_reason": {
+            "type": "string",
+            "description": "Reason for rating adjustment, required when calibrated_rating differs from manager_rating"
+          },
+          "calibrated_by_email": {
+            "type": "string"
+          },
+          "calibrated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "employee_email"
+        ]
+      },
+      "default": []
+    },
+    "summary_stats": {
+      "type": "object",
+      "description": "Aggregated calibration statistics",
+      "properties": {
+        "total_employees": {
+          "type": "number"
+        },
+        "adjusted_count": {
+          "type": "number"
+        },
+        "avg_manager_rating": {
+          "type": "number"
+        },
+        "avg_calibrated_rating": {
+          "type": "number"
+        }
+      }
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When calibration was finalized"
+    },
+    "completed_by_email": {
+      "type": "string",
+      "description": "Email of the user who finalized the calibration"
+    }
+  },
+  "required": [
+    "client_id",
+    "review_cycle_id"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.calibrator_emails": "{{user.email}}"
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            },
+            {
+              "data.client_id": {
+                "$in": "{{user.data.partner_client_ids}}"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

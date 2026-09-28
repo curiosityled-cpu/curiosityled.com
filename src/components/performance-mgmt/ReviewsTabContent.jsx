@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Loader2, Plus, ClipboardList, Users, Star, CheckCircle2, Clock, FileText, Eye,
+  Loader2, Plus, ClipboardList, Users, Star, CheckCircle2, Clock, FileText, Eye, Scale,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import ReviewCyclesTab from "./ReviewCyclesTab";
 import ReviewFormRenderer, { DEFAULT_REVIEW_FORM_CONFIG } from "./ReviewFormRenderer";
 import ManagerConsolidationView from "./ManagerConsolidationView";
+import CalibrationView from "./CalibrationView";
 
 const SUB_ROLE_LABELS = {
   self: "Self-Assessment",
@@ -416,6 +417,32 @@ function ManagerConsolidationSection({ user, cycles }) {
   );
 }
 
+function CalibrationSection({ user, cycles }) {
+  const [selectedCycleId, setSelectedCycleId] = useState("");
+
+  const activeCycles = cycles.filter(c => c.status === "active" || c.status === "archived");
+  const selectedCycle = activeCycles.find(c => c.id === selectedCycleId);
+
+  if (activeCycles.length === 0) return null;
+
+  return (
+    <div>
+      <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+        <Scale className="w-4 h-4 text-[#0202ff]" /> Calibration
+      </h3>
+      <div className="space-y-3">
+        <Select value={selectedCycleId} onValueChange={setSelectedCycleId}>
+          <SelectTrigger className="w-64"><SelectValue placeholder="Select a review cycle..." /></SelectTrigger>
+          <SelectContent>
+            {activeCycles.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        {selectedCycle && <CalibrationView cycle={selectedCycle} user={user} />}
+      </div>
+    </div>
+  );
+}
+
 export default function ReviewsTabContent({ user }) {
   const [cycles, setCycles] = useState([]);
 
@@ -445,6 +472,9 @@ export default function ReviewsTabContent({ user }) {
 
       {/* Manager Consolidation */}
       <ManagerConsolidationSection user={user} cycles={cycles} />
+
+      {/* Calibration */}
+      <CalibrationSection user={user} cycles={cycles} />
 
       {/* Review Submissions */}
       <div>

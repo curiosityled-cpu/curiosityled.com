@@ -1,0 +1,44 @@
+{
+  "description": "Daily check for active review cycles \u2014 sends deadline reminders to participants who haven't submitted and auto-closes completed/expired cycles",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 9 * * *",
+      "one_time_date": null,
+      "timezone": "America/New_York",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "name": "Review Cycle Deadline Reminders",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "review_cycle_reminders",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "process_reminders": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "processReviewCycleReminders"
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Process review cycle reminders",
+            "description": "Send deadline reminders and auto-close completed cycles"
+          }
+        }
+      }
+    ]
+  }
+}
