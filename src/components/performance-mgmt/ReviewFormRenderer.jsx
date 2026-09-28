@@ -194,8 +194,10 @@ function OverallSection({ section, responses, onChange }) {
   );
 }
 
-export default function ReviewFormRenderer({ formConfig, employeeEmail, responses, onChange }) {
-  const sections = formConfig?.sections || [];
+export default function ReviewFormRenderer({ formConfig, employeeEmail, responses, onChange, activeSection }) {
+  const allSections = formConfig?.sections || [];
+  // When activeSection is a number, only render that section (for guided flow)
+  const sections = typeof activeSection === "number" ? [allSections[activeSection]].filter(Boolean) : allSections;
 
   const handleSectionChange = (sectionId, newSectionResponses) => {
     onChange({ ...responses, ...newSectionResponses });

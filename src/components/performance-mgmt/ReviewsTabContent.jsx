@@ -15,6 +15,7 @@ import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ReviewCyclesTab from "./ReviewCyclesTab";
 import ReviewFormRenderer, { DEFAULT_REVIEW_FORM_CONFIG } from "./ReviewFormRenderer";
+import GuidedReviewFlow from "./GuidedReviewFlow";
 import ManagerConsolidationView from "./ManagerConsolidationView";
 import CalibrationView from "./CalibrationView";
 import AcknowledgeDialog from "./AcknowledgeDialog";
@@ -149,11 +150,14 @@ function ReviewSubmissionModal({ isOpen, onClose, cycle, user, onSaved }) {
           </div>
 
           {reviewForm ? (
-            <ReviewFormRenderer
-              formConfig={reviewForm.config || DEFAULT_REVIEW_FORM_CONFIG}
+            <GuidedReviewFlow
+              role={role}
               employeeEmail={employeeEmail}
+              formConfig={reviewForm.config || DEFAULT_REVIEW_FORM_CONFIG}
               responses={responses}
               onChange={setResponses}
+              onSubmit={handleSubmit}
+              submitting={submitting}
             />
           ) : (
             <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-[#0202ff]" /></div>
@@ -161,13 +165,6 @@ function ReviewSubmissionModal({ isOpen, onClose, cycle, user, onSaved }) {
 
           <div className="flex justify-end gap-2 pt-2 sticky bottom-0 bg-white pb-2">
             <Button variant="outline" onClick={onClose}>Cancel</Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={submitting || !employeeEmail.trim()}
-              className="bg-[#0202ff] hover:bg-[#0101dd] text-white"
-            >
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit Review"}
-            </Button>
           </div>
         </div>
       </DialogContent>

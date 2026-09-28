@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Loader2, Plus, Users, Trash2, Upload, Rocket, CheckCircle2, Clock, AlertCircle,
+  Loader2, Plus, Users, Trash2, Upload, Rocket, CheckCircle2, Clock, AlertCircle, Sparkles,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import RosterAutoPopulate from "./RosterAutoPopulate";
 
 const STATUS_STYLES = {
   assigned: "bg-gray-50 text-gray-600 border-gray-200",
@@ -169,6 +170,7 @@ export default function RosterManager({ cycle, user, onRosterUpdated }) {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [showCSV, setShowCSV] = useState(false);
+  const [showAutoPopulate, setShowAutoPopulate] = useState(false);
   const [launching, setLaunching] = useState(false);
 
   const loadRoster = async () => {
@@ -229,6 +231,9 @@ export default function RosterManager({ cycle, user, onRosterUpdated }) {
       <div className="flex flex-wrap gap-2">
         <Button size="sm" onClick={() => setShowAdd(true)} className="h-8 text-xs bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1">
           <Plus className="w-3.5 h-3.5" /> Add Participant
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => setShowAutoPopulate(true)} className="h-8 text-xs gap-1 border-indigo-200 text-indigo-700 hover:bg-indigo-50">
+          <Sparkles className="w-3.5 h-3.5" /> Auto-Populate
         </Button>
         <Button size="sm" variant="outline" onClick={() => setShowCSV(true)} className="h-8 text-xs gap-1">
           <Upload className="w-3.5 h-3.5" /> Bulk CSV
@@ -297,6 +302,7 @@ export default function RosterManager({ cycle, user, onRosterUpdated }) {
 
       {showAdd && <AddParticipantModal isOpen={showAdd} onClose={() => setShowAdd(false)} cycleId={cycle.id} clientId={user.client_id || user.data?.client_id} onAdded={loadRoster} />}
       {showCSV && <CSVUploadModal isOpen={showCSV} onClose={() => setShowCSV(false)} cycleId={cycle.id} clientId={user.client_id || user.data?.client_id} onUploaded={loadRoster} />}
+      {showAutoPopulate && <RosterAutoPopulate isOpen={showAutoPopulate} onClose={() => setShowAutoPopulate(false)} cycle={cycle} user={user} onPopulated={loadRoster} />}
     </div>
   );
 }

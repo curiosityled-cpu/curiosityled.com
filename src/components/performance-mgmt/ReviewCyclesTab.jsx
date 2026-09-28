@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Loader2, Plus, ClipboardList, Users, Calendar, CheckCircle2, Clock, Download, AlertCircle } from "lucide-react";
+import { Loader2, Plus, ClipboardList, Users, Calendar, CheckCircle2, Clock, Download, AlertCircle, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -14,10 +14,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import RosterManager from "./RosterManager";
 import CommunicationTimeline from "./CommunicationTimeline";
 import QuarterlyCheckpoint from "./QuarterlyCheckpoint";
+import CycleAIAssist from "./CycleAIAssist";
 
-const REVIEW_TYPES = [
+const REVIEW_PHASES = [
+  { value: "self_review", label: "Self Review" },
   { value: "manager_review", label: "Manager Review" },
-  { value: "self_assessment", label: "Self Assessment" },
   { value: "peer_review", label: "Peer Review" },
   { value: "360", label: "360° Review" },
 ];
@@ -36,10 +37,11 @@ const CYCLE_STATUS_STYLES = {
 };
 
 // We store review cycles in CustomForm entity with form_type='review_cycle'
-function CreateCycleModal({ isOpen, onClose, onSubmit }) {
+function CreateCycleModal({ isOpen, onClose, onSubmit, initialData, onEdit }) {
+  const isEdit = !!initialData;
   const [form, setForm] = useState({
     name: "",
-    review_type: "manager_review",
+    review_type: "self_review",
     cycle_length: "annual",
     skip_level_review_enabled: false,
     period_start: "",
@@ -48,22 +50,46 @@ function CreateCycleModal({ isOpen, onClose, onSubmit }) {
   });
   const [submitting, setSubmitting] = useState(false);
 
+  // Populate form when editing
   useEffect(() => {
-    if (form.period_start && form.cycle_length) {
+    if (initialData) {
+      const s = initialData.settings || {};
+      setForm({
+        name: initialData.title || "",
+        review_type: s.review_type || "self_review",
+        cycle_length: s.cycle_length || "annual",
+        skip_level_review_enabled: s.skip_level_review_enabled || false,
+        period_start: s.period_start || "",
+        period_end: s.period_end || "",
+        description: initialData.description || "",
+      });
+    } else {
+      setForm({ name: "", review_type: "self_review", cycle_length: "annual", skip_level_review_enabled: false, period_start: "", period_end: "", description: "" });
+    }
+  }, [initialData, isOpen]);
+
+  useEffect(() => {
+    if (form.period_start && form.cycle_length && !isEdit) {
       const start = new Date(form.period_start);
       const months = CYCLE_LENGTHS.find(c => c.value === form.cycle_length)?.months || 12;
       start.setMonth(start.getMonth() + months);
       setForm(p => ({ ...p, period_end: start.toISOString().split("T")[0] }));
     }
-  }, [form.period_start, form.cycle_length]);
+  }, [form.period_start, form.cycle_length, isEdit]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.period_start || !form.period_end) return;
     setSubmitting(true);
     try {
-      await onSubmit(form);
-      setForm({ name: "", review_type: "manager_review", cycle_length: "annual", skip_level_review_enabled: false, period_start: "", period_end: "", description: "" });
+      if (isEdit) {
+        await onEdit(initialData.id, form);
+      } else {
+        await onSubmit(form);
+      }
+      if (!isEdit) {
+        setForm({ name: "", review_type: "self_review", cycle_length: "annual", skip_level_review_enabled: false, period_start: "", period_end: "", description: "" });
+      }
     } finally {
       setSubmitting(false);
     }
@@ -72,19 +98,22 @@ function CreateCycleModal({ isOpen, onClose, onSubmit }) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-xl">
-        <DialogHeader><DialogTitle>Create Review Cycle</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{isEdit ? "Edit Review Cycle" : "Create Review Cycle"}</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 max-h-[60vh] overflow-y-auto px-3 -mx-1">
+          {/* AI Assist */}
+          {!isEdit && <CycleAIAssist form={form} onApply={(suggestions) => setForm(p => ({ ...p, ...suggestions }))} />}
+
           <div className="space-y-1.5">
             <Label>Cycle Name *</Label>
             <Input placeholder="e.g., Q2 2026 Performance Review" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Review Type *</Label>
+              <Label>Review Phase *</Label>
               <Select value={form.review_type} onValueChange={v => setForm(p => ({ ...p, review_type: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {REVIEW_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                  {REVIEW_PHASES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -130,7 +159,7 @@ function CreateCycleModal({ isOpen, onClose, onSubmit }) {
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button type="submit" disabled={submitting || !form.name || !form.period_start || !form.period_end} className="bg-[#0202ff] hover:bg-[#0101dd] text-white">
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create Cycle"}
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (isEdit ? "Save Changes" : "Create Cycle")}
             </Button>
           </div>
         </form>
@@ -143,6 +172,7 @@ export default function ReviewCyclesTab({ user }) {
   const [cycles, setCycles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [editCycle, setEditCycle] = useState(null);
   const [filterType, setFilterType] = useState("all");
   const [expandedCycleId, setExpandedCycleId] = useState(null);
   const [checkpointCycle, setCheckpointCycle] = useState(null);
@@ -187,6 +217,27 @@ export default function ReviewCyclesTab({ user }) {
       toast.success("Review cycle created");
     } catch {
       toast.error("Failed to create review cycle");
+    }
+  };
+
+  const handleEdit = async (cycleId, form) => {
+    try {
+      const updated = await base44.entities.CustomForm.update(cycleId, {
+        title: form.name,
+        description: form.description,
+        settings: {
+          review_type: form.review_type,
+          cycle_length: form.cycle_length,
+          skip_level_review_enabled: form.skip_level_review_enabled,
+          period_start: form.period_start,
+          period_end: form.period_end,
+        },
+      });
+      setCycles(prev => prev.map(c => c.id === cycleId ? updated : c));
+      setEditCycle(null);
+      toast.success("Review cycle updated");
+    } catch {
+      toast.error("Failed to update cycle");
     }
   };
 
@@ -263,8 +314,8 @@ export default function ReviewCyclesTab({ user }) {
         <Select value={filterType} onValueChange={setFilterType}>
           <SelectTrigger className="w-44"><SelectValue placeholder="Review Type" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            {REVIEW_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+            <SelectItem value="all">All Phases</SelectItem>
+            {REVIEW_PHASES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
@@ -285,7 +336,7 @@ export default function ReviewCyclesTab({ user }) {
         <div className="space-y-3">
           {filtered.map((cycle, i) => {
             const settings = cycle.settings || {};
-            const reviewTypeLabel = REVIEW_TYPES.find(t => t.value === settings.review_type)?.label || "Manager Review";
+            const reviewTypeLabel = REVIEW_PHASES.find(t => t.value === settings.review_type)?.label || "Self Review";
             return (
               <motion.div key={cycle.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
                 <Card className="border border-gray-100 shadow-sm rounded-2xl hover:shadow-md transition-all">
@@ -326,9 +377,14 @@ export default function ReviewCyclesTab({ user }) {
                           </div>
                           <div className="flex gap-2 flex-shrink-0">
                             {cycle.status === "draft" && (
-                              <Button size="sm" className="h-8 text-xs bg-[#0202ff] hover:bg-[#0101dd] text-white" onClick={() => handleActivate(cycle)}>
-                                Activate
-                              </Button>
+                              <>
+                                <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={() => setEditCycle(cycle)}>
+                                  <Pencil className="w-3 h-3" /> Edit
+                                </Button>
+                                <Button size="sm" className="h-8 text-xs bg-[#0202ff] hover:bg-[#0101dd] text-white" onClick={() => handleActivate(cycle)}>
+                                  Activate
+                                </Button>
+                              </>
                             )}
                             {cycle.status === "active" && (
                               <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => handleClose(cycle)}>
@@ -378,6 +434,14 @@ export default function ReviewCyclesTab({ user }) {
       )}
 
       <CreateCycleModal isOpen={showCreate} onClose={() => setShowCreate(false)} onSubmit={handleCreate} />
+      {editCycle && (
+        <CreateCycleModal
+          isOpen={!!editCycle}
+          onClose={() => setEditCycle(null)}
+          initialData={editCycle}
+          onEdit={handleEdit}
+        />
+      )}
       {checkpointCycle && (
         <QuarterlyCheckpoint
           cycle={checkpointCycle}
