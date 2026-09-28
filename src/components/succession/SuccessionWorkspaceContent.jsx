@@ -205,10 +205,6 @@ export default function SuccessionWorkspaceContent() {
           </div>
         )}
         <DemoDataButton isDemoTenant={isDemoTenant} />
-        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200">
-          <Lock className="w-3.5 h-3.5 text-amber-600" />
-          <span className="text-xs font-medium text-amber-700">Phase 1 — Development Only (Non-Production)</span>
-        </div>
       </div>
 
       {loadingCycle || roleLoading ? (
