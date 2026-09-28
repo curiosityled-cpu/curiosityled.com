@@ -14,7 +14,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import RosterManager from "./RosterManager";
 import CommunicationTimeline from "./CommunicationTimeline";
 import QuarterlyCheckpoint from "./QuarterlyCheckpoint";
-import ReviewCyclePhaseTracker from "./ReviewCyclePhaseTracker";
 
 const REVIEW_TYPES = [
   { value: "manager_review", label: "Manager Review" },
@@ -366,12 +365,9 @@ export default function ReviewCyclesTab({ user }) {
                 </Card>
                 {expandedCycleId === cycle.id && (
                   <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-3">
-                    <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/50 space-y-4">
-                      <ReviewCyclePhaseTracker cycle={cycle} user={user} />
-                      <div className="pt-3 border-t border-gray-100">
-                        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Participant Roster</h4>
-                        <RosterManager cycle={cycle} user={user} onRosterUpdated={loadCycles} />
-                      </div>
+                    <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/50">
+                      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Participant Roster</h4>
+                      <RosterManager cycle={cycle} user={user} onRosterUpdated={loadCycles} />
                     </div>
                   </motion.div>
                 )}
