@@ -13,7 +13,9 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import RosterAutoPopulate from "./RosterAutoPopulate";
+import OrgUserPicker from "./OrgUserPicker";
 
 const STATUS_STYLES = {
   assigned: "bg-gray-50 text-gray-600 border-gray-200",
@@ -23,28 +25,85 @@ const STATUS_STYLES = {
   acknowledged: "bg-purple-50 text-purple-700 border-purple-200",
 };
 
-function AddParticipantModal({ isOpen, onClose, cycleId, clientId, onAdded }) {
-  const [form, setForm] = useState({ employee_email: "", employee_name: "", manager_email: "", peer_emails: "", self_assessment_due: "", manager_review_due: "" });
+function AddParticipantModal({ isOpen, onClose, cycleId, cycle, clientId, onAdded }) {
+  const [form, setForm] = useState({ employee_email: "", employee_name: "", manager_email: "", peer_emails: [], self_assessment_due: "", manager_review_due: "" });
   const [submitting, setSubmitting] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      const s = cycle?.settings || {};
+      setForm({
+        employee_email: "",
+        employee_name: "",
+        manager_email: "",
+        peer_emails: [],
+        self_assessment_due: s.self_assessment_due || "",
+        manager_review_due: s.manager_review_due || "",
+      });
+      loadUsers();
+    }
+  }, [isOpen]);
+
+  const loadUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const userList = await base44.entities.User.list(500);
+      let profiles = [];
+      try {
+        profiles = await base44.entities.UserProfile.filter({ tenant_id: clientId }, "-created_date", 500);
+      } catch (e) { /* profiles may not exist */ }
+      const profileMap = {};
+      profiles.forEach(p => { if (p.email) profileMap[p.email.toLowerCase()] = p; });
+      const enriched = userList
+        .filter(u => u.email)
+        .map(u => {
+          const profile = profileMap[u.email.toLowerCase()];
+          return {
+            email: u.email,
+            name: u.full_name || u.email,
+            department: profile?.department || u.data?.department || "Unassigned",
+            manager_email: profile?.manager_email || u.data?.manager_email || "",
+          };
+        });
+      setUsers(enriched);
+    } catch (err) {
+      toast.error("Failed to load users: " + err.message);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const handleSelectEmployee = (email) => {
+    const u = users.find(x => x.email === email);
+    if (u) {
+      setForm(p => ({
+        ...p,
+        employee_email: u.email.toLowerCase(),
+        employee_name: u.name,
+        manager_email: u.manager_email?.toLowerCase() || "",
+        peer_emails: p.peer_emails.filter(e => e !== email),
+      }));
+    }
+  };
 
   const handleSubmit = async () => {
     if (!form.employee_email.trim()) return;
     setSubmitting(true);
     try {
-      const peerEmails = form.peer_emails.split(",").map(e => e.trim()).filter(Boolean);
       await base44.entities.ReviewParticipant.create({
         client_id: clientId,
         review_cycle_id: cycleId,
         employee_email: form.employee_email.toLowerCase().trim(),
         employee_name: form.employee_name,
         manager_email: form.manager_email.toLowerCase().trim(),
-        peer_emails: peerEmails,
+        peer_emails: form.peer_emails,
         self_assessment_due: form.self_assessment_due || null,
         manager_review_due: form.manager_review_due || null,
         status: "assigned",
       });
       toast.success("Participant added");
-      setForm({ employee_email: "", employee_name: "", manager_email: "", peer_emails: "", self_assessment_due: "", manager_review_due: "" });
       onAdded?.();
       onClose();
     } catch (err) {
@@ -58,42 +117,67 @@ function AddParticipantModal({ isOpen, onClose, cycleId, clientId, onAdded }) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader><DialogTitle>Add Participant</DialogTitle></DialogHeader>
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+        {loadingUsers ? (
+          <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-[#0202ff]" /></div>
+        ) : (
+          <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label>Employee Email *</Label>
-              <Input placeholder="employee@company.com" value={form.employee_email} onChange={e => setForm(p => ({ ...p, employee_email: e.target.value }))} />
+              <Label>Select Employee *</Label>
+              <Select onValueChange={handleSelectEmployee} value={form.employee_email}>
+                <SelectTrigger><SelectValue placeholder="Choose a user to review..." /></SelectTrigger>
+                <SelectContent>
+                  {users.map(u => (
+                    <SelectItem key={u.email} value={u.email}>
+                      {u.name} — {u.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {form.employee_email && (
+              <div className="grid grid-cols-2 gap-3 bg-gray-50 rounded-lg p-2.5">
+                <div>
+                  <p className="text-[10px] text-gray-400 font-medium">Email</p>
+                  <p className="text-xs text-gray-700 truncate">{form.employee_email}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-400 font-medium">Name</p>
+                  <p className="text-xs text-gray-700 truncate">{form.employee_name}</p>
+                </div>
+              </div>
+            )}
+            <div className="space-y-1.5">
+              <Label>Manager Email</Label>
+              <Input placeholder="manager@company.com" value={form.manager_email} onChange={e => setForm(p => ({ ...p, manager_email: e.target.value }))} />
+              <p className="text-[10px] text-gray-400">Auto-filled from profile; edit if needed</p>
             </div>
             <div className="space-y-1.5">
-              <Label>Employee Name</Label>
-              <Input placeholder="Jane Doe" value={form.employee_name} onChange={e => setForm(p => ({ ...p, employee_name: e.target.value }))} />
+              <Label>Peer Reviewers</Label>
+              <OrgUserPicker
+                users={users}
+                selected={form.peer_emails}
+                onChange={(emails) => setForm(p => ({ ...p, peer_emails: emails }))}
+                excludeEmails={[form.employee_email].filter(Boolean)}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Self-Assessment Due</Label>
+                <Input type="date" value={form.self_assessment_due} onChange={e => setForm(p => ({ ...p, self_assessment_due: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Manager Review Due</Label>
+                <Input type="date" value={form.manager_review_due} onChange={e => setForm(p => ({ ...p, manager_review_due: e.target.value }))} />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={onClose}>Cancel</Button>
+              <Button onClick={handleSubmit} disabled={submitting || !form.employee_email.trim()} className="bg-[#0202ff] hover:bg-[#0101dd] text-white">
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Add"}
+              </Button>
             </div>
           </div>
-          <div className="space-y-1.5">
-            <Label>Manager Email</Label>
-            <Input placeholder="manager@company.com" value={form.manager_email} onChange={e => setForm(p => ({ ...p, manager_email: e.target.value }))} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Peer Reviewers (comma-separated)</Label>
-            <Input placeholder="peer1@company.com, peer2@company.com" value={form.peer_emails} onChange={e => setForm(p => ({ ...p, peer_emails: e.target.value }))} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Self-Assessment Due</Label>
-              <Input type="date" value={form.self_assessment_due} onChange={e => setForm(p => ({ ...p, self_assessment_due: e.target.value }))} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Manager Review Due</Label>
-              <Input type="date" value={form.manager_review_due} onChange={e => setForm(p => ({ ...p, manager_review_due: e.target.value }))} />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
-            <Button onClick={handleSubmit} disabled={submitting || !form.employee_email.trim()} className="bg-[#0202ff] hover:bg-[#0101dd] text-white">
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Add"}
-            </Button>
-          </div>
-        </div>
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -300,7 +384,7 @@ export default function RosterManager({ cycle, user, onRosterUpdated }) {
         </div>
       )}
 
-      {showAdd && <AddParticipantModal isOpen={showAdd} onClose={() => setShowAdd(false)} cycleId={cycle.id} clientId={user.client_id || user.data?.client_id} onAdded={loadRoster} />}
+      {showAdd && <AddParticipantModal isOpen={showAdd} onClose={() => setShowAdd(false)} cycleId={cycle.id} cycle={cycle} clientId={user.client_id || user.data?.client_id} onAdded={loadRoster} />}
       {showCSV && <CSVUploadModal isOpen={showCSV} onClose={() => setShowCSV(false)} cycleId={cycle.id} clientId={user.client_id || user.data?.client_id} onUploaded={loadRoster} />}
       {showAutoPopulate && <RosterAutoPopulate isOpen={showAutoPopulate} onClose={() => setShowAutoPopulate(false)} cycle={cycle} user={user} onPopulated={loadRoster} />}
     </div>

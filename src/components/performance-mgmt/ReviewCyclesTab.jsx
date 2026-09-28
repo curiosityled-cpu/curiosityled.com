@@ -46,6 +46,8 @@ function CreateCycleModal({ isOpen, onClose, onSubmit, initialData, onEdit }) {
     skip_level_review_enabled: false,
     period_start: "",
     period_end: "",
+    self_assessment_due: "",
+    manager_review_due: "",
     description: "",
   });
   const [submitting, setSubmitting] = useState(false);
@@ -61,6 +63,8 @@ function CreateCycleModal({ isOpen, onClose, onSubmit, initialData, onEdit }) {
         skip_level_review_enabled: s.skip_level_review_enabled || false,
         period_start: s.period_start || "",
         period_end: s.period_end || "",
+        self_assessment_due: s.self_assessment_due || "",
+        manager_review_due: s.manager_review_due || "",
         description: initialData.description || "",
       });
     } else {
@@ -72,8 +76,18 @@ function CreateCycleModal({ isOpen, onClose, onSubmit, initialData, onEdit }) {
     if (form.period_start && form.cycle_length && !isEdit) {
       const start = new Date(form.period_start);
       const months = CYCLE_LENGTHS.find(c => c.value === form.cycle_length)?.months || 12;
-      start.setMonth(start.getMonth() + months);
-      setForm(p => ({ ...p, period_end: start.toISOString().split("T")[0] }));
+      const end = new Date(start);
+      end.setMonth(end.getMonth() + months);
+      const selfDue = new Date(end);
+      selfDue.setDate(selfDue.getDate() - 14);
+      const mgrDue = new Date(end);
+      mgrDue.setDate(mgrDue.getDate() - 7);
+      setForm(p => ({
+        ...p,
+        period_end: end.toISOString().split("T")[0],
+        self_assessment_due: p.self_assessment_due || selfDue.toISOString().split("T")[0],
+        manager_review_due: p.manager_review_due || mgrDue.toISOString().split("T")[0],
+      }));
     }
   }, [form.period_start, form.cycle_length, isEdit]);
 
@@ -88,7 +102,7 @@ function CreateCycleModal({ isOpen, onClose, onSubmit, initialData, onEdit }) {
         await onSubmit(form);
       }
       if (!isEdit) {
-        setForm({ name: "", review_type: "self_review", cycle_length: "annual", skip_level_review_enabled: false, period_start: "", period_end: "", description: "" });
+        setForm({ name: "", review_type: "self_review", cycle_length: "annual", skip_level_review_enabled: false, period_start: "", period_end: "", self_assessment_due: "", manager_review_due: "", description: "" });
       }
     } finally {
       setSubmitting(false);
@@ -135,6 +149,18 @@ function CreateCycleModal({ isOpen, onClose, onSubmit, initialData, onEdit }) {
             <div className="space-y-1.5">
               <Label>Period End *</Label>
               <Input type="date" value={form.period_end} onChange={e => setForm(p => ({ ...p, period_end: e.target.value }))} required />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Self-Assessment Due</Label>
+              <Input type="date" value={form.self_assessment_due} onChange={e => setForm(p => ({ ...p, self_assessment_due: e.target.value }))} />
+              <p className="text-[10px] text-gray-400">Default for all participants; override per-person when adding</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Manager Review Due</Label>
+              <Input type="date" value={form.manager_review_due} onChange={e => setForm(p => ({ ...p, manager_review_due: e.target.value }))} />
+              <p className="text-[10px] text-gray-400">Default for all participants; override per-person when adding</p>
             </div>
           </div>
           <label className="flex items-center gap-2.5 cursor-pointer">
@@ -210,6 +236,8 @@ export default function ReviewCyclesTab({ user }) {
           skip_level_review_enabled: form.skip_level_review_enabled,
           period_start: form.period_start,
           period_end: form.period_end,
+          self_assessment_due: form.self_assessment_due,
+          manager_review_due: form.manager_review_due,
         },
       });
       setCycles(prev => [newCycle, ...prev]);
@@ -231,6 +259,8 @@ export default function ReviewCyclesTab({ user }) {
           skip_level_review_enabled: form.skip_level_review_enabled,
           period_start: form.period_start,
           period_end: form.period_end,
+          self_assessment_due: form.self_assessment_due,
+          manager_review_due: form.manager_review_due,
         },
       });
       setCycles(prev => prev.map(c => c.id === cycleId ? updated : c));
