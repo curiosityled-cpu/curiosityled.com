@@ -73,7 +73,7 @@ function CreateCycleModal({ isOpen, onClose, onSubmit }) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader><DialogTitle>Create Review Cycle</DialogTitle></DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
           <div className="space-y-1.5">
             <Label>Cycle Name *</Label>
             <Input placeholder="e.g., Q2 2026 Performance Review" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
