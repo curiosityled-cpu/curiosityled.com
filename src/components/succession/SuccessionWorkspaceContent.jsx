@@ -1,23 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
-  LayoutDashboard,
-  Repeat,
-  Briefcase,
-  Building2,
-  Shield,
-  FileText,
-  Camera,
-  ShieldCheck,
-  Activity,
   Lock,
-  Users,
-  UserCheck,
-  ClipboardCheck,
-  Target,
-  Zap,
-  ArrowRightCircle,
   FlaskConical,
+  Loader2,
 } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 import OverviewView from "@/components/succession/OverviewView";
 import CyclesView from "@/components/succession/CyclesView";
 import RolesView from "@/components/succession/RolesView";
@@ -40,50 +27,13 @@ import ReviewQueueView from "@/components/succession/ReviewQueueView";
 import DemoDataButton from "@/components/succession/DemoDataButton";
 import { useClient } from "@/components/contexts/ClientContext";
 
-const PHASE_1_VIEWS = [
-  { key: "overview", label: "Overview", icon: LayoutDashboard },
-  { key: "cycles", label: "Succession Cycles", icon: Repeat },
-  { key: "roles", label: "Organizational Roles", icon: Briefcase },
-  { key: "positions", label: "Organizational Positions", icon: Building2 },
-  { key: "critical-roles", label: "Critical Roles", icon: Shield },
-  { key: "blueprints", label: "Role Success Blueprints", icon: FileText },
-  { key: "snapshots", label: "Effective Snapshots", icon: Camera },
-];
-
-const PHASE_2A_VIEWS = [
-  { key: "talent-pools", label: "Talent Pools", icon: Users },
-  { key: "candidates", label: "Candidates", icon: UserCheck },
-];
-
-const PHASE_2B_VIEWS = [
-  { key: "evidence-queue", label: "Evidence Review", icon: ClipboardCheck },
-];
-
-const PHASE_2C_VIEWS = [
-  { key: "readiness-proposals", label: "Readiness Proposals", icon: ClipboardCheck },
-  { key: "calibration", label: "Calibration", icon: Users },
-  { key: "ratification", label: "Ratification", icon: ShieldCheck },
-];
-
-const PHASE_2D_VIEWS = [
-  { key: "development-plans", label: "Development Plans", icon: Target },
-  { key: "development-actions", label: "Development Actions", icon: Zap },
-];
-
-const PHASE_2E_VIEWS = [
-  { key: "transitions", label: "Transitions", icon: ArrowRightCircle },
-];
-
-const PHASE_2F_VIEWS = [
-  { key: "operational-monitor", label: "Operational Monitor", icon: Activity },
-  { key: "review-queue", label: "Review Queue", icon: ClipboardCheck },
-];
-
-const PHASE_0_VIEWS = [
-  { key: "governance", label: "Governance", icon: ShieldCheck },
-];
-
-const ALL_VIEWS = [...PHASE_1_VIEWS, ...PHASE_2A_VIEWS, ...PHASE_2B_VIEWS, ...PHASE_2C_VIEWS, ...PHASE_2D_VIEWS, ...PHASE_2E_VIEWS, ...PHASE_2F_VIEWS, ...PHASE_0_VIEWS];
+// Guided shell components
+import { STAGES, STAGE_MAP } from "@/components/succession/guided/stageConfig";
+import StageRail from "@/components/succession/guided/StageRail";
+import WhatToDoNext from "@/components/succession/guided/WhatToDoNext";
+import AllViewsDrawer from "@/components/succession/guided/AllViewsDrawer";
+import StageHeader from "@/components/succession/guided/StageHeader";
+import { useCycleRole } from "@/components/succession/guided/useCycleRole";
 
 function renderView(viewKey) {
   switch (viewKey) {
@@ -138,7 +88,7 @@ function GovernanceView() {
       <div className="border border-gray-200 rounded-lg p-6 bg-white">
         <div className="flex items-start gap-4">
           <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-[#0202ff]/10 flex items-center justify-center">
-            <ShieldCheck className="w-5 h-5 text-[#0202ff]" />
+            <Lock className="w-5 h-5 text-[#0202ff]" />
           </div>
           <div>
             <h3 className="text-base font-semibold text-gray-900">Cross-Tenant Access Governance</h3>
@@ -166,15 +116,83 @@ function GovernanceView() {
 }
 
 /**
- * SuccessionWorkspaceContent — the inner content of the Succession workspace
- * (sub-nav pills + view content + demo/phase badges). Renders without a page
- * shell so it can be embedded inside Talent Manager or wrapped by the
- * standalone SuccessionWorkspace page.
+ * SuccessionWorkspaceContent — the guided succession workspace.
+ *
+ * Replaces the flat 19-pill sub-nav with a 9-stage stepper driven by
+ * SuccessionCycle.process_stage. Includes a "What to do next" panel,
+ * inline AI Assist per stage, role-aware stage filtering, and an
+ * "All views" drawer for power-user direct navigation.
+ *
+ * Renders without a page shell so it can be embedded inside Talent Manager
+ * or wrapped by the standalone SuccessionWorkspace page.
  */
 export default function SuccessionWorkspaceContent() {
-  const [activeView, setActiveView] = useState("overview");
+  const [activeStage, setActiveStage] = useState("frame");
+  const [activeView, setActiveView] = useState("cycles");
+  const [activeCycle, setActiveCycle] = useState(null);
+  const [loadingCycle, setLoadingCycle] = useState(true);
   const { client } = useClient();
   const isDemoTenant = Boolean(client?.settings?.succession_demo);
+  const { role, loading: roleLoading } = useCycleRole();
+
+  // Fetch the active cycle on mount
+  useEffect(() => {
+    const fetchCycle = async () => {
+      try {
+        const { data } = await base44.functions.invoke("successionListCycles", {});
+        const cycles = data?.cycles || [];
+        const active =
+          cycles.find((c) => c.status !== "closed" && c.status !== "archived") ||
+          cycles[0] ||
+          null;
+        setActiveCycle(active);
+        if (active?.process_stage) {
+          setActiveStage(active.process_stage);
+          const stage = STAGE_MAP[active.process_stage];
+          if (stage?.views?.length) {
+            setActiveView(stage.views[0]);
+          }
+        }
+      } catch {
+        /* no cycles or error — user starts at frame stage */
+      } finally {
+        setLoadingCycle(false);
+      }
+    };
+    fetchCycle();
+  }, []);
+
+  const handleStageSelect = (stageKey, viewKey) => {
+    setActiveStage(stageKey);
+    if (viewKey) {
+      setActiveView(viewKey);
+    } else {
+      const stage = STAGE_MAP[stageKey];
+      if (stage?.views?.length) {
+        setActiveView(stage.views[0]);
+      }
+    }
+  };
+
+  const handleViewSelect = (viewKey) => {
+    setActiveView(viewKey);
+    // If the view belongs to a stage, switch the active stage too
+    const viewEntry = STAGES.flatMap((s) =>
+      s.views.map((v) => ({ stage: s.key, view: v }))
+    ).find((e) => e.view === viewKey);
+    if (viewEntry) {
+      setActiveStage(viewEntry.stage);
+    }
+  };
+
+  const stage = STAGE_MAP[activeStage];
+  const isReadOnly =
+    role !== "admin" && stage && !stage.roles.includes(role);
+
+  const assistContext = {
+    cycleName: activeCycle?.name,
+    cycleKey: activeCycle?.cycle_key,
+  };
 
   return (
     <>
@@ -193,33 +211,86 @@ export default function SuccessionWorkspaceContent() {
         </div>
       </div>
 
-      {/* Sub-nav pills */}
-      <nav aria-label="Succession workspace views" className="flex flex-wrap gap-2">
-        {ALL_VIEWS.map((v) => {
-          const Icon = v.icon;
-          const active = activeView === v.key;
-          return (
-            <button
-              key={v.key}
-              onClick={() => setActiveView(v.key)}
-              aria-current={active ? "page" : undefined}
-              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium border transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0202ff] ${
-                active
-                  ? "bg-[#0202ff] text-white border-[#0202ff] shadow-sm"
-                  : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
-              }`}
-            >
-              <Icon className="w-4 h-4" aria-hidden="true" />
-              {v.label}
-            </button>
-          );
-        })}
-      </nav>
+      {loadingCycle || roleLoading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-6 h-6 text-gray-300 animate-spin" />
+        </div>
+      ) : (
+        <div className="flex gap-5">
+          {/* Left rail — desktop */}
+          <aside className="hidden lg:block w-56 flex-shrink-0 space-y-3">
+            <StageRail
+              stages={STAGES}
+              currentStage={activeCycle?.process_stage || activeStage}
+              activeStage={activeStage}
+              onSelect={(key) => handleStageSelect(key)}
+              role={role}
+            />
+            <AllViewsDrawer activeView={activeView} onSelect={handleViewSelect} />
+          </aside>
 
-      {/* Content area */}
-      <section aria-label="Succession workspace content" className="mt-5">
-        {renderView(activeView)}
-      </section>
+          {/* Main content */}
+          <div className="flex-1 min-w-0 space-y-4">
+            {/* Mobile stage scroller */}
+            <div className="lg:hidden">
+              <StageRail
+                stages={STAGES}
+                currentStage={activeCycle?.process_stage || activeStage}
+                activeStage={activeStage}
+                onSelect={(key) => handleStageSelect(key)}
+                role={role}
+                horizontal
+              />
+            </div>
+
+            {/* Mobile all-views drawer */}
+            <div className="lg:hidden">
+              <AllViewsDrawer activeView={activeView} onSelect={handleViewSelect} />
+            </div>
+
+            {/* What to do next */}
+            <WhatToDoNext
+              activeCycle={activeCycle}
+              role={role}
+              onNavigate={(stageKey, viewKey) => handleStageSelect(stageKey, viewKey)}
+            />
+
+            {/* Stage header with AI assist */}
+            <StageHeader stage={stage} readOnly={isReadOnly} context={assistContext} />
+
+            {/* Stage sub-view tabs */}
+            {stage && stage.views.length > 1 && (
+              <div className="flex gap-1.5 flex-wrap">
+                {stage.views.map((viewKey) => {
+                  const displayLabel = viewKey
+                    .split("-")
+                    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                    .join(" ");
+                  const isActive = activeView === viewKey;
+                  return (
+                    <button
+                      key={viewKey}
+                      onClick={() => setActiveView(viewKey)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                        isActive
+                          ? "bg-[#0202ff] text-white border-[#0202ff]"
+                          : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                      }`}
+                    >
+                      {displayLabel}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Active view content */}
+            <section aria-label="Succession workspace content">
+              {renderView(activeView)}
+            </section>
+          </div>
+        </div>
+      )}
     </>
   );
 }
