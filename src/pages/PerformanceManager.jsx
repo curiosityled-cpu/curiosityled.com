@@ -2,21 +2,29 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/components/useAuth";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
-import { BarChart2, Target } from "lucide-react";
+import { BarChart2, Target, Calendar, ClipboardList, Plug } from "lucide-react";
 import { motion } from "framer-motion";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import PerformanceOverviewTab from "@/components/performance-mgmt/PerformanceOverviewTab";
-import GoalsAndOKRsTab from "@/components/performance-mgmt/GoalsAndOKRsTab";
+import ExpectationsTab from "@/components/performance-mgmt/ExpectationsTab";
+import OneOnOnesTab from "@/components/performance-mgmt/OneOnOnesTab";
+import ReviewsTabContent from "@/components/performance-mgmt/ReviewsTabContent";
+import TeamCockpit from "@/components/performance-mgmt/TeamCockpit";
+import IntegrationTab from "@/components/performance-mgmt/IntegrationTab";
 import { useCoachCoacheeScope } from "@/hooks/useCoachCoacheeScope";
+
 const TABS = [
-  { id: "overview", label: "Overview & Analytics", icon: BarChart2 },
-  { id: "goals", label: "Goals & OKRs", icon: Target },
+  { id: "expectations", label: "Expectations", icon: Target },
+  { id: "checkins", label: "Check-ins & 1:1s", icon: Calendar },
+  { id: "reviews", label: "Reviews", icon: ClipboardList },
+  { id: "overview", label: "Overview", icon: BarChart2 },
+  { id: "integration", label: "Integration", icon: Plug },
 ];
 
 export default function PerformanceManager() {
   const { user, loading: authLoading } = useAuth();
   const { coacheeEmails } = useCoachCoacheeScope(user);
-  const [section, setSection] = useState("overview");
+  const [section, setSection] = useState("expectations");
   const [fullUser, setFullUser] = useState(null);
 
   useEffect(() => {
@@ -46,8 +54,8 @@ export default function PerformanceManager() {
 
   return (
     <MVPPageLayout
-      title="Goal Manager"
-      subtitle="Manage goals and OKRs across your organization"
+      title="Performance"
+      subtitle="Goals, reviews, check-ins, and evidence — unified"
     >
       {/* Tab navigation */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
@@ -79,9 +87,19 @@ export default function PerformanceManager() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.05 }}
       >
-        {section === "overview" && <PerformanceOverviewTab user={fullUser} coacheeEmails={coacheeEmails} />}
-        {section === "goals" && <GoalsAndOKRsTab user={fullUser} coacheeEmails={coacheeEmails} />}
-
+        {section === "expectations" && <ExpectationsTab user={fullUser} />}
+        {section === "checkins" && <OneOnOnesTab user={fullUser} />}
+        {section === "reviews" && <ReviewsTabContent user={fullUser} />}
+        {section === "overview" && (
+          <div className="space-y-6">
+            <PerformanceOverviewTab user={fullUser} coacheeEmails={coacheeEmails} />
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">Team Cockpit</h3>
+              <TeamCockpit user={fullUser} />
+            </div>
+          </div>
+        )}
+        {section === "integration" && <IntegrationTab user={fullUser} />}
       </motion.div>
     </MVPPageLayout>
   );

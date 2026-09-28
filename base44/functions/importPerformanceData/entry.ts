@@ -19,19 +19,19 @@ export default async function(req: Request): Promise<Response> {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-    const client_id = user.data?.client_id;
-    if (!client_id) return Response.json({ error: "No client_id on user profile" }, { status: 400 });
-
     const body = await req.json();
     const mode = body.mode || "preview";
 
-    // Template download
+    // Template download — no client_id needed
     if (mode === "template") {
       return new Response(generateCSVTemplate(), {
         status: 200,
         headers: { "Content-Type": "text/csv", "Content-Disposition": "attachment; filename=performance_import_template.csv" },
       });
     }
+
+    const client_id = user.data?.client_id;
+    if (!client_id) return Response.json({ error: "No client_id on user profile" }, { status: 400 });
 
     // Get CSV text — either from payload or from uploaded file URL
     let csvText = "";

@@ -43,7 +43,7 @@ export default async function(req: Request): Promise<Response> {
 
     // Use service role since this is an API-authenticated call (no user session)
     const base44 = createClientFromRequest(req);
-    const result = await processPerformanceRows(base44.asServiceRole._base44 || base44, employees, client_id, "api_sync", false);
+    const result = await processPerformanceRows(base44, employees, client_id, "api_sync", false);
 
     return Response.json({
       success: result.errors.length === 0,

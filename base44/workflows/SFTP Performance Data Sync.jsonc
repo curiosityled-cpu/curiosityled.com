@@ -1,0 +1,47 @@
+{
+  "name": "SFTP Performance Data Sync",
+  "description": "Daily scheduled pull of performance CSV data from the customer's SFTP server. Processes goals, KPIs, and review ratings. Requires SFTP secrets (SFTP_HOST, SFTP_USERNAME, SFTP_PRIVATE_KEY, SFTP_REMOTE_DIR, SFTP_ARCHIVE_DIR) and a valid client_id configured in the workflow args. Deactivate this workflow if SFTP is not in use.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 2 * * *",
+      "one_time_date": null,
+      "timezone": "America/New_York",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "sftp_performance_sync",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "sync_sftp_data": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "sftpPullPerformanceData",
+            "args": {
+              "client_id": "CONFIGURE_YOUR_CLIENT_ID_HERE"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Sync SFTP Performance Data",
+            "description": "Pull CSV from SFTP and process goals, KPIs, reviews"
+          }
+        }
+      }
+    ]
+  }
+}

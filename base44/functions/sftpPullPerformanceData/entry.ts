@@ -23,24 +23,24 @@ import { csvToObjects, processPerformanceRows } from '../../shared/performanceIm
  */
 export default async function(req: Request): Promise<Response> {
   try {
-    // Validate API key
-    const authHeader = req.headers.get("authorization") || "";
-    const apiKeyHeader = req.headers.get("x-api-key") || "";
-    const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
-    const providedKey = bearerToken || apiKeyHeader;
-
-    const expectedKey = secrets.get("PERFORMANCE_SYNC_API_KEY");
-    if (!expectedKey) {
-      return Response.json({ error: "Server not configured: PERFORMANCE_SYNC_API_KEY not set" }, { status: 500 });
-    }
-    if (providedKey !== expectedKey) {
-      return Response.json({ error: "Invalid API key" }, { status: 401 });
-    }
-
     const body = await req.json();
     const client_id = body.client_id;
     if (!client_id) {
       return Response.json({ error: "client_id is required" }, { status: 400 });
+    }
+
+    // Validate API key if provided (external HTTP calls from customer's cron job).
+    // When called from a scheduled workflow, no API key is present — the platform authenticates internally.
+    const authHeader = req.headers.get("authorization") || "";
+    const apiKeyHeader = req.headers.get("x-api-key") || "";
+    const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+    const providedKey = bearerToken || apiKeyHeader || body.api_key;
+
+    if (providedKey) {
+      const expectedKey = secrets.get("PERFORMANCE_SYNC_API_KEY");
+      if (!expectedKey || providedKey !== expectedKey) {
+        return Response.json({ error: "Invalid API key" }, { status: 401 });
+      }
     }
 
     // Get CSV text — either from payload or from a URL (SFTP-to-HTTP gateway)
