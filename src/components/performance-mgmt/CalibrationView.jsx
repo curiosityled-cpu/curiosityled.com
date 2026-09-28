@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Scale, Play, CheckCircle2, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import RatingDistribution from "./RatingDistribution";
 
 const RATING_OPTIONS = [
   { value: "5", label: "5 — Exceeds" },
@@ -214,6 +215,11 @@ export default function CalibrationView({ cycle, user }) {
           </span>
         )}
       </div>
+
+      {/* Rating distribution chart */}
+      {employees.length > 0 && (
+        <RatingDistribution employees={employees} />
+      )}
 
       {/* Calibration table */}
       <div className="border border-gray-100 rounded-xl overflow-hidden">

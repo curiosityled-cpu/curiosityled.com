@@ -17,12 +17,13 @@ import ReviewCyclesTab from "./ReviewCyclesTab";
 import ReviewFormRenderer, { DEFAULT_REVIEW_FORM_CONFIG } from "./ReviewFormRenderer";
 import ManagerConsolidationView from "./ManagerConsolidationView";
 import CalibrationView from "./CalibrationView";
+import AcknowledgeDialog from "./AcknowledgeDialog";
 
 const SUB_ROLE_LABELS = {
   self: "Self-Assessment",
   manager: "Manager Review",
   peer: "Peer Feedback",
-  hr: "HR Review",
+  hr: "Skip-Level / HR Review",
 };
 
 const SUB_STATUS_STYLES = {
@@ -132,7 +133,7 @@ function ReviewSubmissionModal({ isOpen, onClose, cycle, user, onSaved }) {
                   <SelectItem value="self">Self-Assessment</SelectItem>
                   <SelectItem value="manager">Manager Review</SelectItem>
                   <SelectItem value="peer">Peer Feedback</SelectItem>
-                  <SelectItem value="hr">HR Review</SelectItem>
+                  <SelectItem value="hr">Skip-Level / HR Review</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -174,29 +175,23 @@ function ReviewSubmissionModal({ isOpen, onClose, cycle, user, onSaved }) {
   );
 }
 
-function AcknowledgeButton({ submission, onAcked }) {
-  const [loading, setLoading] = useState(false);
-  const handleAck = async () => {
-    setLoading(true);
-    try {
-      await base44.entities.CustomFormSubmission.update(submission.id, {
-        acknowledged_at: new Date().toISOString(),
-        acknowledged_by_email: submission.linked_employee_email,
-        status: "acknowledged",
-      });
-      toast.success("Review acknowledged");
-      onAcked?.();
-    } catch (err) {
-      toast.error("Failed to acknowledge");
-    } finally {
-      setLoading(false);
-    }
-  };
+function AcknowledgeButton({ submission, cycle, onAcked }) {
+  const [showDialog, setShowDialog] = useState(false);
   return (
-    <Button size="sm" className="h-7 text-xs bg-purple-600 hover:bg-purple-700 text-white" disabled={loading} onClick={handleAck}>
-      {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
-      Acknowledge
-    </Button>
+    <>
+      <Button size="sm" className="h-7 text-xs bg-purple-600 hover:bg-purple-700 text-white" onClick={() => setShowDialog(true)}>
+        <CheckCircle2 className="w-3 h-3" />
+        Acknowledge
+      </Button>
+      {showDialog && (
+        <AcknowledgeDialog
+          submission={submission}
+          cycle={cycle}
+          onClose={() => setShowDialog(false)}
+          onAcked={onAcked}
+        />
+      )}
+    </>
   );
 }
 
@@ -289,7 +284,7 @@ function ReviewSubmissionsView({ user, cycles }) {
                             <Badge variant="outline" className={`text-[10px] border ${SUB_STATUS_STYLES[sub.status] || SUB_STATUS_STYLES.submitted}`}>
                               {sub.status}
                             </Badge>
-                            {canAcknowledge && <AcknowledgeButton submission={sub} onAcked={loadSubmissions} />}
+                            {canAcknowledge && <AcknowledgeButton submission={sub} cycle={cycle} onAcked={loadSubmissions} />}
                           </div>
                         </div>
                         <div className="flex items-center gap-2 mt-1.5">
@@ -305,6 +300,17 @@ function ReviewSubmissionsView({ user, cycles }) {
                             </span>
                           )}
                         </div>
+                        {sub.acknowledged_at && sub.metadata?.acknowledgment_disagreement && (
+                          <Badge variant="outline" className="text-[10px] border-amber-200 text-amber-700 bg-amber-50 mt-1.5">
+                            Disagreement noted
+                          </Badge>
+                        )}
+                        {sub.acknowledged_at && sub.metadata?.acknowledgment_comments && (
+                          <div className="mt-1.5 pt-1.5 border-t border-gray-50">
+                            <p className="text-[10px] text-gray-500">Employee comments:</p>
+                            <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">{sub.metadata.acknowledgment_comments}</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>

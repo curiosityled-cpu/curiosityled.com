@@ -12,12 +12,20 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import RosterManager from "./RosterManager";
+import CommunicationTimeline from "./CommunicationTimeline";
+import QuarterlyCheckpoint from "./QuarterlyCheckpoint";
 
 const REVIEW_TYPES = [
   { value: "manager_review", label: "Manager Review" },
   { value: "self_assessment", label: "Self Assessment" },
   { value: "peer_review", label: "Peer Review" },
   { value: "360", label: "360° Review" },
+];
+
+const CYCLE_LENGTHS = [
+  { value: "annual", label: "Annual (12 months)", months: 12 },
+  { value: "semi_annual", label: "Semi-Annual (6 months)", months: 6 },
+  { value: "quarterly", label: "Quarterly (3 months)", months: 3 },
 ];
 
 const CYCLE_STATUS_STYLES = {
@@ -32,11 +40,22 @@ function CreateCycleModal({ isOpen, onClose, onSubmit }) {
   const [form, setForm] = useState({
     name: "",
     review_type: "manager_review",
+    cycle_length: "annual",
+    skip_level_review_enabled: false,
     period_start: "",
     period_end: "",
     description: "",
   });
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (form.period_start && form.cycle_length) {
+      const start = new Date(form.period_start);
+      const months = CYCLE_LENGTHS.find(c => c.value === form.cycle_length)?.months || 12;
+      start.setMonth(start.getMonth() + months);
+      setForm(p => ({ ...p, period_end: start.toISOString().split("T")[0] }));
+    }
+  }, [form.period_start, form.cycle_length]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -44,7 +63,7 @@ function CreateCycleModal({ isOpen, onClose, onSubmit }) {
     setSubmitting(true);
     try {
       await onSubmit(form);
-      setForm({ name: "", review_type: "manager_review", period_start: "", period_end: "", description: "" });
+      setForm({ name: "", review_type: "manager_review", cycle_length: "annual", skip_level_review_enabled: false, period_start: "", period_end: "", description: "" });
     } finally {
       setSubmitting(false);
     }
@@ -59,14 +78,25 @@ function CreateCycleModal({ isOpen, onClose, onSubmit }) {
             <Label>Cycle Name *</Label>
             <Input placeholder="e.g., Q2 2026 Performance Review" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
           </div>
-          <div className="space-y-1.5">
-            <Label>Review Type *</Label>
-            <Select value={form.review_type} onValueChange={v => setForm(p => ({ ...p, review_type: v }))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {REVIEW_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Review Type *</Label>
+              <Select value={form.review_type} onValueChange={v => setForm(p => ({ ...p, review_type: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {REVIEW_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Cycle Length *</Label>
+              <Select value={form.cycle_length} onValueChange={v => setForm(p => ({ ...p, cycle_length: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {CYCLE_LENGTHS.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
@@ -78,6 +108,21 @@ function CreateCycleModal({ isOpen, onClose, onSubmit }) {
               <Input type="date" value={form.period_end} onChange={e => setForm(p => ({ ...p, period_end: e.target.value }))} required />
             </div>
           </div>
+          <label className="flex items-center gap-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.skip_level_review_enabled}
+              onChange={e => setForm(p => ({ ...p, skip_level_review_enabled: e.target.checked }))}
+              className="w-4 h-4 rounded border-gray-300 text-[#0202ff] focus:ring-[#0202ff]"
+            />
+            <div>
+              <span className="text-sm font-medium text-gray-700">Enable skip-level review</span>
+              <p className="text-xs text-gray-400">The manager's manager reviews and approves the assessment before calibration</p>
+            </div>
+          </label>
+          {form.period_end && (
+            <CommunicationTimeline periodEnd={form.period_end} />
+          )}
           <div className="space-y-1.5">
             <Label>Description (optional)</Label>
             <Input placeholder="What's the focus of this review cycle?" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
@@ -100,6 +145,7 @@ export default function ReviewCyclesTab({ user }) {
   const [showCreate, setShowCreate] = useState(false);
   const [filterType, setFilterType] = useState("all");
   const [expandedCycleId, setExpandedCycleId] = useState(null);
+  const [checkpointCycle, setCheckpointCycle] = useState(null);
 
   useEffect(() => { loadCycles(); }, [user]);
 
@@ -130,6 +176,8 @@ export default function ReviewCyclesTab({ user }) {
         status: "draft",
         settings: {
           review_type: form.review_type,
+          cycle_length: form.cycle_length,
+          skip_level_review_enabled: form.skip_level_review_enabled,
           period_start: form.period_start,
           period_end: form.period_end,
         },
@@ -258,6 +306,16 @@ export default function ReviewCyclesTab({ user }) {
                               <Badge variant="outline" className="text-xs border border-gray-200 text-gray-600">
                                 {reviewTypeLabel}
                               </Badge>
+                              {settings.cycle_length && settings.cycle_length !== "annual" && (
+                                <Badge variant="outline" className="text-xs border border-gray-200 text-gray-600">
+                                  {CYCLE_LENGTHS.find(c => c.value === settings.cycle_length)?.label || settings.cycle_length}
+                                </Badge>
+                              )}
+                              {settings.skip_level_review_enabled && (
+                                <Badge variant="outline" className="text-xs border border-blue-200 text-blue-700 bg-blue-50">
+                                  Skip-Level Review
+                                </Badge>
+                              )}
                               {settings.period_start && settings.period_end && (
                                 <span className="flex items-center gap-1 text-xs text-gray-400">
                                   <Calendar className="w-3 h-3" />
@@ -280,6 +338,16 @@ export default function ReviewCyclesTab({ user }) {
                             <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={() => handleExport(cycle)}>
                               <Download className="w-3 h-3" /> Export
                             </Button>
+                            {cycle.status === "active" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 text-xs gap-1"
+                                onClick={() => setCheckpointCycle(cycle)}
+                              >
+                                <Calendar className="w-3 h-3" /> Checkpoint
+                              </Button>
+                            )}
                             <Button
                               size="sm"
                               variant={expandedCycleId === cycle.id ? "default" : "outline"}
@@ -310,6 +378,14 @@ export default function ReviewCyclesTab({ user }) {
       )}
 
       <CreateCycleModal isOpen={showCreate} onClose={() => setShowCreate(false)} onSubmit={handleCreate} />
+      {checkpointCycle && (
+        <QuarterlyCheckpoint
+          cycle={checkpointCycle}
+          user={user}
+          onClose={() => setCheckpointCycle(null)}
+          onSaved={loadCycles}
+        />
+      )}
     </div>
   );
 }

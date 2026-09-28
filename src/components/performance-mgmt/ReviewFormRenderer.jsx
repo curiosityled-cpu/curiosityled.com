@@ -4,7 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, Star, Target, TrendingUp, FileText } from "lucide-react";
+import { Loader2, Star, Target, TrendingUp, FileText, ClipboardList } from "lucide-react";
+import EvidenceSection from "./EvidenceSection";
 
 const RATING_OPTIONS = [
   { value: 5, label: "5 — Exceeds" },
@@ -205,6 +206,7 @@ export default function ReviewFormRenderer({ formConfig, employeeEmail, response
       {sections.map(section => {
         const Icon = section.type === "competency_ratings" ? Star :
                      section.type === "goal_achievement" ? Target :
+                     section.type === "evidence" ? ClipboardList :
                      section.type === "overall" ? TrendingUp : FileText;
         return (
           <Card key={section.id} className="border border-gray-100 shadow-sm rounded-xl">
@@ -241,6 +243,9 @@ export default function ReviewFormRenderer({ formConfig, employeeEmail, response
                   onChange={(newResponses) => handleSectionChange(section.id, newResponses)}
                 />
               )}
+              {section.type === "evidence" && (
+                <EvidenceSection employeeEmail={employeeEmail} />
+              )}
               {section.type === "overall" && (
                 <OverallSection
                   section={section}
@@ -269,6 +274,12 @@ export const DEFAULT_REVIEW_FORM_CONFIG = {
       title: "Goal Achievement",
       type: "goal_achievement",
       description: "Review progress on assigned goals",
+    },
+    {
+      id: "evidence_review",
+      title: "Performance Evidence",
+      type: "evidence",
+      description: "Documented evidence from goals — review before rating",
     },
     {
       id: "development_plan",
