@@ -190,13 +190,13 @@ const AuthenticatedApp = () => {
       <Route path="/DiagnosticAnalytics" element={mvpRole ? <MVPPage><DiagnosticAnalytics /></MVPPage> : <LayoutWrapper currentPageName="DiagnosticAnalytics"><DiagnosticAnalytics /></LayoutWrapper>} />
       <Route path="/SeedLinkedInCourses" element={<SeedLinkedInCourses />} />
       <Route path="/OrgBusinessGoals" element={mvpRole ? <MVPPage><OrgBusinessGoals /></MVPPage> : <LayoutWrapper currentPageName="OrgBusinessGoals"><OrgBusinessGoals /></LayoutWrapper>} />
-      <Route path="/PerformanceManager" element={<Navigate to="/GoalManager" replace />} />
-      <Route path="/GoalManager" element={
+      <Route path="/GoalManager" element={<Navigate to="/PerformanceManager" replace />} />
+      <Route path="/PerformanceManager" element={
         (user?.app_role || user?.data?.app_role || user?.role) === 'Consultant'
           ? <Navigate to="/experience-workspace" replace />
           : (user?.app_role || user?.data?.app_role || user?.role) === 'Leadership Coach'
             ? <Navigate to="/coaching-workspace" replace />
-            : mvpRole ? <MVPPage><PerformanceManager /></MVPPage> : <LayoutWrapper currentPageName="GoalManager"><PerformanceManager /></LayoutWrapper>
+            : mvpRole ? <MVPPage><PerformanceManager /></MVPPage> : <LayoutWrapper currentPageName="PerformanceManager"><PerformanceManager /></LayoutWrapper>
       } />
       <Route path="/my-performance" element={<MVPPage><MyPerformance /></MVPPage>} />
       <Route path="/my-goals" element={<Navigate to="/my-performance" replace />} />
