@@ -24,7 +24,6 @@ import TransitionsView from "@/components/succession/TransitionsView";
 import TransitionDetailView from "@/components/succession/TransitionDetailView";
 import OperationalMonitorView from "@/components/succession/OperationalMonitorView";
 import ReviewQueueView from "@/components/succession/ReviewQueueView";
-import DemoDataButton from "@/components/succession/DemoDataButton";
 import { useClient } from "@/components/contexts/ClientContext";
 
 // Guided shell components
@@ -204,11 +203,6 @@ export default function SuccessionWorkspaceContent() {
             <span className="text-xs font-medium text-blue-700">Synthetic Demo Tenant</span>
           </div>
         )}
-        <DemoDataButton isDemoTenant={isDemoTenant} />
-        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200">
-          <Lock className="w-3.5 h-3.5 text-amber-600" />
-          <span className="text-xs font-medium text-amber-700">Phase 1 — Development Only (Non-Production)</span>
-        </div>
       </div>
 
       {loadingCycle || roleLoading ? (
