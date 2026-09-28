@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import RosterManager from "./RosterManager";
 
 const REVIEW_TYPES = [
   { value: "manager_review", label: "Manager Review" },
@@ -98,6 +99,7 @@ export default function ReviewCyclesTab({ user }) {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [filterType, setFilterType] = useState("all");
+  const [expandedCycleId, setExpandedCycleId] = useState(null);
 
   useEffect(() => { loadCycles(); }, [user]);
 
@@ -123,6 +125,7 @@ export default function ReviewCyclesTab({ user }) {
         title: form.name,
         description: form.description,
         form_type: "review_cycle",
+        form_category: "operational",
         client_id: user.client_id,
         status: "draft",
         settings: {
@@ -277,12 +280,29 @@ export default function ReviewCyclesTab({ user }) {
                             <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={() => handleExport(cycle)}>
                               <Download className="w-3 h-3" /> Export
                             </Button>
+                            <Button
+                              size="sm"
+                              variant={expandedCycleId === cycle.id ? "default" : "outline"}
+                              className="h-8 text-xs gap-1"
+                              onClick={() => setExpandedCycleId(expandedCycleId === cycle.id ? null : cycle.id)}
+                            >
+                              <Users className="w-3 h-3" />
+                              {expandedCycleId === cycle.id ? "Hide Roster" : "Manage Roster"}
+                            </Button>
                           </div>
                         </div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
+                {expandedCycleId === cycle.id && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-3">
+                    <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/50">
+                      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Participant Roster</h4>
+                      <RosterManager cycle={cycle} user={user} onRosterUpdated={loadCycles} />
+                    </div>
+                  </motion.div>
+                )}
               </motion.div>
             );
           })}

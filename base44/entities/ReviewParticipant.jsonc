@@ -1,0 +1,246 @@
+{
+  "name": "ReviewParticipant",
+  "type": "object",
+  "description": "Participant roster entry for a review cycle. Maps an employee to their self-assessment, manager reviewer, and optional peer reviewers. Stored per tenant.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Tenant ID for multi-tenant scoping"
+    },
+    "review_cycle_id": {
+      "type": "string",
+      "description": "CustomForm ID of the review cycle (form_type='review_cycle') this participant belongs to"
+    },
+    "employee_email": {
+      "type": "string",
+      "description": "Email of the employee being reviewed"
+    },
+    "employee_name": {
+      "type": "string",
+      "description": "Display name of the employee"
+    },
+    "manager_email": {
+      "type": "string",
+      "description": "Email of the manager who will complete the manager review for this employee"
+    },
+    "peer_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "List of peer reviewer emails assigned to provide peer feedback for this employee"
+    },
+    "self_assessment_due": {
+      "type": "string",
+      "format": "date",
+      "description": "Deadline for the employee's self-assessment"
+    },
+    "manager_review_due": {
+      "type": "string",
+      "format": "date",
+      "description": "Deadline for the manager's review"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "assigned",
+        "self_submitted",
+        "manager_submitted",
+        "completed",
+        "acknowledged"
+      ],
+      "default": "assigned",
+      "description": "Roster status tracking submission progress for this employee"
+    }
+  },
+  "required": [
+    "client_id",
+    "review_cycle_id",
+    "employee_email"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.employee_email": "{{user.email}}"
+        },
+        {
+          "data.manager_email": "{{user.email}}"
+        },
+        {
+          "data.peer_emails": "{{user.email}}"
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            },
+            {
+              "data.client_id": {
+                "$in": "{{user.data.partner_client_ids}}"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

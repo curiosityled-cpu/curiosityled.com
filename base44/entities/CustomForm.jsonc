@@ -33,6 +33,8 @@
         "coaching_evaluation_group",
         "quiz",
         "exam",
+        "review_cycle",
+        "review_form",
         "custom"
       ],
       "description": "Type of form"

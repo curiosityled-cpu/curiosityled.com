@@ -4,17 +4,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Loader2, Plus, ClipboardList, Users, Star, CheckCircle2, Clock, FileText,
+  Loader2, Plus, ClipboardList, Users, Star, CheckCircle2, Clock, FileText, Eye,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ReviewCyclesTab from "./ReviewCyclesTab";
+import ReviewFormRenderer, { DEFAULT_REVIEW_FORM_CONFIG } from "./ReviewFormRenderer";
+import ManagerConsolidationView from "./ManagerConsolidationView";
 
 const SUB_ROLE_LABELS = {
   self: "Self-Assessment",
@@ -34,39 +35,46 @@ const SUB_STATUS_STYLES = {
 function ReviewSubmissionModal({ isOpen, onClose, cycle, user, onSaved }) {
   const [role, setRole] = useState("self");
   const [employeeEmail, setEmployeeEmail] = useState("");
-  const [rating, setRating] = useState("");
-  const [comments, setComments] = useState("");
+  const [responses, setResponses] = useState({});
+  const [reviewForm, setReviewForm] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setRole("self");
-      setEmployeeEmail(role === "self" ? user.email : "");
-      setRating("");
-      setComments("");
+      setEmployeeEmail(user.email);
+      setResponses({});
+      // Find or create review form
+      const loadForm = async () => {
+        try {
+          let forms = await base44.entities.CustomForm.filter({
+            form_type: "review_form",
+            client_id: user.client_id || user.data?.client_id,
+          });
+          let form = forms[0];
+          if (!form) {
+            form = await base44.entities.CustomForm.create({
+              title: "Performance Review Form",
+              form_type: "review_form",
+              form_category: "evaluation",
+              client_id: user.client_id || user.data?.client_id,
+              status: "published",
+              config: DEFAULT_REVIEW_FORM_CONFIG,
+            });
+          }
+          setReviewForm(form);
+        } catch (e) {
+          console.error(e);
+        }
+      };
+      loadForm();
     }
   }, [isOpen]);
 
   const handleSubmit = async () => {
-    if (!employeeEmail.trim() || !rating.trim()) return;
+    if (!employeeEmail.trim()) return;
     setSubmitting(true);
     try {
-      // Find or create a review form for this tenant
-      let reviewForms = await base44.entities.CustomForm.filter({
-        form_type: "review_form",
-        client_id: user.client_id,
-      });
-      let reviewForm = reviewForms[0];
-      if (!reviewForm) {
-        reviewForm = await base44.entities.CustomForm.create({
-          title: "Performance Review Form",
-          form_type: "review_form",
-          client_id: user.client_id,
-          status: "active",
-          settings: { questions: ["overall_rating", "comments"] },
-        });
-      }
-
       // Check if a submission already exists for this cycle + employee + role
       const existing = await base44.entities.CustomFormSubmission.filter({
         form_id: reviewForm.id,
@@ -77,7 +85,7 @@ function ReviewSubmissionModal({ isOpen, onClose, cycle, user, onSaved }) {
 
       if (existing.length > 0) {
         await base44.entities.CustomFormSubmission.update(existing[0].id, {
-          responses: { overall_rating: rating, comments: comments },
+          responses,
           submitted_at: new Date().toISOString(),
           status: "submitted",
         });
@@ -85,13 +93,13 @@ function ReviewSubmissionModal({ isOpen, onClose, cycle, user, onSaved }) {
       } else {
         await base44.entities.CustomFormSubmission.create({
           form_id: reviewForm.id,
-          client_id: user.client_id,
+          client_id: user.client_id || user.data?.client_id,
           submitter_email: user.email,
           submitter_name: user.full_name || user.email,
           submitter_role: role,
           linked_employee_email: employeeEmail.trim().toLowerCase(),
           review_cycle_id: cycle.id,
-          responses: { overall_rating: rating, comments: comments },
+          responses,
           status: "submitted",
           submitted_at: new Date().toISOString(),
           submission_source: "direct",
@@ -109,59 +117,51 @@ function ReviewSubmissionModal({ isOpen, onClose, cycle, user, onSaved }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Complete Review — {cycle?.title}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label>Your Role *</Label>
-            <Select value={role} onValueChange={(v) => { setRole(v); if (v === "self") setEmployeeEmail(user.email); }}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="self">Self-Assessment</SelectItem>
-                <SelectItem value="manager">Manager Review</SelectItem>
-                <SelectItem value="peer">Peer Feedback</SelectItem>
-                <SelectItem value="hr">HR Review</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Your Role *</Label>
+              <Select value={role} onValueChange={(v) => { setRole(v); if (v === "self") setEmployeeEmail(user.email); }}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="self">Self-Assessment</SelectItem>
+                  <SelectItem value="manager">Manager Review</SelectItem>
+                  <SelectItem value="peer">Peer Feedback</SelectItem>
+                  <SelectItem value="hr">HR Review</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Employee Email *</Label>
+              <Input
+                placeholder="employee@company.com"
+                value={employeeEmail}
+                onChange={(e) => setEmployeeEmail(e.target.value)}
+                disabled={role === "self"}
+              />
+            </div>
           </div>
-          <div className="space-y-1.5">
-            <Label>Employee Email *</Label>
-            <Input
-              placeholder="employee@company.com"
-              value={employeeEmail}
-              onChange={(e) => setEmployeeEmail(e.target.value)}
-              disabled={role === "self"}
+
+          {reviewForm ? (
+            <ReviewFormRenderer
+              formConfig={reviewForm.config || DEFAULT_REVIEW_FORM_CONFIG}
+              employeeEmail={employeeEmail}
+              responses={responses}
+              onChange={setResponses}
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Overall Rating *</Label>
-            <Select value={rating} onValueChange={setRating}>
-              <SelectTrigger><SelectValue placeholder="Select rating" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="5">5 — Exceeds Expectations</SelectItem>
-                <SelectItem value="4">4 — Meets Expectations</SelectItem>
-                <SelectItem value="3">3 — Partially Meets</SelectItem>
-                <SelectItem value="2">2 — Below Expectations</SelectItem>
-                <SelectItem value="1">1 — Far Below Expectations</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Comments</Label>
-            <Textarea
-              placeholder="Provide supporting comments and evidence..."
-              value={comments}
-              onChange={(e) => setComments(e.target.value)}
-              rows={4}
-            />
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
+          ) : (
+            <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-[#0202ff]" /></div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-2 sticky bottom-0 bg-white pb-2">
             <Button variant="outline" onClick={onClose}>Cancel</Button>
             <Button
               onClick={handleSubmit}
-              disabled={submitting || !employeeEmail.trim() || !rating}
+              disabled={submitting || !employeeEmail.trim()}
               className="bg-[#0202ff] hover:bg-[#0101dd] text-white"
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit Review"}
@@ -210,7 +210,7 @@ function ReviewSubmissionsView({ user, cycles }) {
     setLoading(true);
     try {
       const subs = await base44.entities.CustomFormSubmission.filter({
-        client_id: user.client_id,
+        client_id: user.client_id || user.data?.client_id,
         review_cycle_id: { $exists: true },
       }, "-submitted_at", 100);
       setSubmissions(subs);
@@ -280,8 +280,8 @@ function ReviewSubmissionsView({ user, cycles }) {
                             <p className="text-xs text-gray-500 mt-0.5">
                               Employee: {sub.linked_employee_email} · By: {sub.submitter_email}
                             </p>
-                            {sub.responses?.comments && (
-                              <p className="text-xs text-gray-600 mt-1 line-clamp-2">{sub.responses.comments}</p>
+                            {sub.responses?.strengths && (
+                              <p className="text-xs text-gray-600 mt-1 line-clamp-2">{sub.responses.strengths}</p>
                             )}
                           </div>
                           <div className="flex items-center gap-2 flex-shrink-0">
@@ -327,6 +327,95 @@ function ReviewSubmissionsView({ user, cycles }) {
   );
 }
 
+function ManagerConsolidationSection({ user, cycles }) {
+  const [assignments, setAssignments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [selectedCycle, setSelectedCycle] = useState(null);
+
+  const loadAssignments = async () => {
+    setLoading(true);
+    try {
+      // Get all active cycles
+      const activeCycles = cycles.filter(c => c.status === "active" || c.status === "draft");
+      if (activeCycles.length === 0) {
+        setAssignments([]);
+        setLoading(false);
+        return;
+      }
+      // Get roster entries where this user is the manager
+      const allRoster = await base44.entities.ReviewParticipant.filter({
+        manager_email: user.email,
+      });
+      setAssignments(allRoster);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadAssignments(); }, [user, cycles]);
+
+  const openConsolidation = (assignment) => {
+    const cycle = cycles.find(c => c.id === assignment.review_cycle_id);
+    setSelectedCycle(cycle);
+    setSelectedEmployee(assignment.employee_email);
+  };
+
+  if (loading) return null;
+  if (assignments.length === 0) return null;
+
+  return (
+    <div>
+      <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+        <Users className="w-4 h-4 text-[#0202ff]" /> Manager Consolidation
+        <Badge variant="outline" className="text-[10px]">{assignments.length} assigned</Badge>
+      </h3>
+      <div className="space-y-2">
+        {assignments.map((a, i) => {
+          const cycle = cycles.find(c => c.id === a.review_cycle_id);
+          if (!cycle) return null;
+          return (
+            <motion.div key={a.id} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
+              <Card className="border border-gray-100 shadow-sm rounded-xl hover:shadow-md transition-all cursor-pointer" onClick={() => openConsolidation(a)}>
+                <CardContent className="p-3 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                    <Users className="w-4 h-4 text-amber-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">{a.employee_name || a.employee_email}</p>
+                    <p className="text-[10px] text-gray-400">{cycle.title}</p>
+                  </div>
+                  <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
+                    <Eye className="w-3 h-3" /> Review
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {selectedEmployee && selectedCycle && (
+        <Dialog open={!!selectedEmployee} onOpenChange={() => { setSelectedEmployee(null); setSelectedCycle(null); }}>
+          <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Manager Consolidation — {selectedEmployee}</DialogTitle>
+            </DialogHeader>
+            <ManagerConsolidationView
+              cycle={selectedCycle}
+              employeeEmail={selectedEmployee}
+              user={user}
+              onSaved={() => loadAssignments()}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
+  );
+}
+
 export default function ReviewsTabContent({ user }) {
   const [cycles, setCycles] = useState([]);
 
@@ -334,7 +423,7 @@ export default function ReviewsTabContent({ user }) {
     try {
       const data = await base44.entities.CustomForm.filter({
         form_type: "review_cycle",
-        client_id: user.client_id,
+        client_id: user.client_id || user.data?.client_id,
       }, "-created_date");
       setCycles(data);
     } catch (err) {
@@ -346,13 +435,16 @@ export default function ReviewsTabContent({ user }) {
 
   return (
     <div className="space-y-6">
-      {/* Review Cycles (existing component) */}
+      {/* Review Cycles with Roster Management */}
       <div>
         <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
           <ClipboardList className="w-4 h-4 text-[#0202ff]" /> Review Cycles
         </h3>
         <ReviewCyclesTab user={user} />
       </div>
+
+      {/* Manager Consolidation */}
+      <ManagerConsolidationSection user={user} cycles={cycles} />
 
       {/* Review Submissions */}
       <div>
