@@ -4,24 +4,25 @@ import { getIndustryConfig } from "./industryConfig";
 
 const defaultNotList = [
   "Another LMS or e-learning platform",
-  "Another standalone leadership program",
-  "Another coaching marketplace",
+  "Another standalone coaching app",
+  "Another 360 or assessment tool",
+  "Another 1:1 or check-in tool",
 ];
 
 const defaultIsList = [
-  "A connected system for manager support, readiness, and succession",
-  "In-workflow guidance tied to real management challenges",
-  "One clear view of development progress and organizational readiness",
-  "Compatible with your existing competency model and leadership programs",
+  "The intelligence layer that makes your existing tools produce evidence",
+  "Conversational learning, coaching flows, and Atreus — in Teams, Slack, and email",
+  "A closed loop: commit → act → follow up → evidence of change",
+  "Consolidates 6–8 point tools into one layer. Net tool count goes down.",
 ];
 
 export default function LandingBeyond({ industry }) {
   const cfg = industry ? getIndustryConfig(industry) : null;
   const b = cfg?.beyond;
 
-  const label = b?.label || "Who we are";
-  const heading = b?.heading || "Not another tool. A clearer system.";
-  const intro = b?.intro || "Curiosity Led is not another LMS, leadership program, or coaching marketplace. It brings together the development activity you are already running and makes it more visible, more timely, and easier to act on — giving organizations a stronger foundation for succession planning, readiness conversations, and leadership investment decisions.";
+  const label = b?.label || "Why it's different";
+  const heading = b?.heading || "Not another tool. The layer that makes your tools produce evidence.";
+  const intro = b?.intro || "Skillsoft builds skills. Zensai delivers in Teams. Workday owns enterprise context. Curiosity Led owns the one thing they can't assemble: understanding of managerial judgment and evidence that it changed. It consolidates the point tools you're already paying for and makes them produce evidence instead of activity.";
   const notList = b?.notList || defaultNotList;
   const isList = b?.isList || defaultIsList;
 

@@ -28,14 +28,24 @@ export default function LandingHero() {
           {/* Left: Copy */}
           <div>
             {/* Headline */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full border border-blue-100 bg-blue-50"
+            >
+              <span className="w-2 h-2 rounded-full bg-[#0202ff]" />
+              <span className="text-xs font-semibold text-[#0202ff] uppercase tracking-wider">Manager Intelligence Platform</span>
+            </motion.div>
+
             <motion.h1
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.2 }}
               className="text-4xl lg:text-5xl xl:text-[52px] font-bold text-[#0a0a0a] leading-[1.1] tracking-tight mb-6"
             >
-              Support for every manager.{" "}
-              <span style={{ color: "#0202ff" }}>Clarity for HR.</span>
+              Can you prove your{" "}
+              <span style={{ color: "#0202ff" }}>managers</span> are getting better?
             </motion.h1>
 
             {/* Subheadline */}
@@ -45,7 +55,7 @@ export default function LandingHero() {
              transition={{ duration: 0.7, delay: 0.4 }}
              className="text-lg text-gray-600 leading-relaxed mb-8 font-medium"
             >
-             Curiosity Led is a Leadership Intelligence System designed to support managers in the flow of work, build clearer readiness and succession visibility, and connect leadership development to measurable impact.
+             Curiosity Led is the manager intelligence platform that develops better judgment and proves it changed — through conversational learning, coaching flows, and Atreus, right inside Teams, Slack, and email.
             </motion.p>
 
             {/* Bullets */}
@@ -59,9 +69,9 @@ export default function LandingHero() {
               }}
             >
               {[
-                "Support managers with timely, in-workflow guidance and development.",
-                "See readiness, bench strength, and succession gaps more clearly.",
-                "Bring assessments, goals, and development activity into one leadership view.",
+                "Assess where judgment needs work — a development compass, not a certification.",
+                "Develop through conversations that produce evidence of behavioral change.",
+                "Prove your manager development spend is working — commit, act, follow up, evidence.",
               ].map((b, i) => (
                 <motion.li
                   key={i}
@@ -87,22 +97,21 @@ export default function LandingHero() {
               className="flex flex-col sm:flex-row gap-3"
             >
               <a
-                href="https://calendly.com/team-curiosityled/discoverycall"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/diagnostic"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg font-semibold text-white text-sm transition-all hover:opacity-90"
                 style={{ backgroundColor: "#0202ff" }}
               >
-                Book a demo
+                Take the 8-minute diagnostic
                 <ArrowRight className="w-4 h-4" />
               </a>
-              <button
-                onClick={scrollToHow}
+              <a
+                href="https://calendly.com/team-curiosityled/discoverycall"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg font-semibold text-gray-700 text-sm border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all"
               >
-                See how it works
-                <ChevronDown className="w-4 h-4" />
-              </button>
+                Book a demo
+              </a>
             </motion.div>
           </div>
 
@@ -221,7 +230,7 @@ export default function LandingHero() {
         {/* Proof strip */}
         <div className="mt-16 pt-8 border-t border-gray-100">
           <p className="text-center text-xs text-gray-400 max-w-2xl mx-auto">
-            Designed for healthcare HR, Talent, and L&D teams — helping organizations connect manager development to readiness, succession, and measurable leadership impact.
+            $482B lost annually to bad management decisions. 40–50% of employees would leave over a bad manager. You're already paying for this — Curiosity Led makes that cost visible and reducible.
           </p>
         </div>
       </div>

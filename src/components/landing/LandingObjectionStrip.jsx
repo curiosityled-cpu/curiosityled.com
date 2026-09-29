@@ -2,7 +2,7 @@ import React from "react";
 import { getIndustryConfig } from "./industryConfig";
 
 const defaultText =
-  "Already have leadership programs, assessments, or a competency model? Curiosity Led helps bring them into one clearer system for action, readiness, and visibility.";
+  "Not another tool — the layer that makes your existing tools produce evidence. Curiosity Led consolidates 360s, coaching apps, and 1:1 tools into one intelligence layer. Net tool count goes down.";
 
 export default function LandingObjectionStrip({ industry }) {
   const cfg = industry ? getIndustryConfig(industry) : null;

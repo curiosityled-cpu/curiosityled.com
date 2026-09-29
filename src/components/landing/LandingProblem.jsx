@@ -2,19 +2,19 @@ import React from "react";
 import { getIndustryConfig } from "./industryConfig";
 
 const defaultProofPoints = [
-  { title: "Development happens after strain is already visible.", body: "Support gets triggered once a behavior has impacted the team — not before." },
-  { title: "HR gets disconnected signals instead of one defensible story.", body: "Assessments, coaching, and goals sit in different places, making impact hard to explain." },
-  { title: "Succession discussions begin without enough visibility.", body: "Readiness conversations start without a clear view of bench strength or progression." },
+  { title: "You're already paying for bad management — you just can't see it.", body: "$482B/year in lost productivity, turnover, and stress-related costs. 40–50% of employees would leave over a bad manager. The cost is real; the line item isn't." },
+  { title: "No HR team can answer the question that matters most.", body: "“Are our managers getting better?” Assessments, coaching, and 1:1 tools all produce activity data — none of it proves judgment actually changed." },
+  { title: "Manager development spend is a black box.", body: "You invest in programs, coaching, and platforms. What you can't show is which managers improved, which didn't, and whether the investment moved anything." },
 ];
 
-const defaultHeading = "Most leadership development starts too late and stays too fragmented.";
-const defaultIntro = "Healthcare organizations are already investing in manager development, coaching, and assessments. The challenge is that support often sits outside the flow of work, leadership signals are scattered across systems, and succession conversations start without a clear view of readiness or progress.";
+const defaultHeading = "The most expensive thing in your org is the one you can't measure.";
+const defaultIntro = "Every organization invests in manager development. Almost none can prove it's working. The cost of bad management is hidden in turnover, disengagement, and failed initiatives — and the tools meant to fix it produce activity metrics, not evidence of change.";
 const defaultImage = "/web_overworked_CREDIT-PeopleImages_iStock-654187068.png";
 const defaultQuotesLabel = "What we hear from healthcare teams";
 const defaultQuotes = [
-  { persona: "Manager", quote: "I do not need another program to finish. I need help with what is happening this week." },
-  { persona: "HR / Talent", quote: "I have programs and coaching, but no single, defensible leadership story." },
-  { persona: "Executive Sponsor", quote: "We are investing in leadership, but succession conversations still start without a clear picture of who is ready." },
+  { persona: "CHRO", quote: "I can tell you what we spent on manager development. I can't tell you whether any of it worked." },
+  { persona: "HR / Talent", quote: "We have assessments, coaching, and 1:1 tools. What we don't have is evidence that judgment actually changed." },
+  { persona: "Executive Sponsor", quote: "The board asks if our managers are capable. I have activity data. I don't have proof." },
 ];
 
 export default function LandingProblem({ industry }) {
