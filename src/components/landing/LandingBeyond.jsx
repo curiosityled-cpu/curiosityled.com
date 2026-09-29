@@ -11,7 +11,7 @@ const defaultNotList = [
 
 const defaultIsList = [
   "The intelligence layer that makes your existing tools produce evidence",
-  "Conversational learning, coaching flows, and a built-in work companion — in Teams, Slack, and email",
+  "Conversational learning, coaching flows, and a manager development companion — in Teams, Slack, and email",
   "A closed loop: commit → act → follow up → evidence of change",
   "Consolidates 6–8 point tools into one layer. Net tool count goes down.",
 ];

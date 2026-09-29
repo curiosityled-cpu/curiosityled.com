@@ -45,7 +45,7 @@ const steps = [
     icon: MessageSquareText,
     label: "Develop",
     title: "Build judgment through conversation",
-    body: "Conversational learning, coaching flows, and a built-in work companion — delivered in Teams, Slack, and email. Managers practice real situations and produce evidence of how they think, not just what they watched.",
+    body: "Conversational learning, coaching flows, and a manager development companion — delivered in Teams, Slack, and email. Managers practice real situations and produce evidence of how they think, not just what they watched.",
     accent: "#7c3aed",
     accentBg: "#f3e8ff",
     visual: (
