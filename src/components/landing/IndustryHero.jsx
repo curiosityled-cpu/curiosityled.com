@@ -1,5 +1,6 @@
 import React from "react";
-import { ArrowRight, ChevronDown } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { getIndustryConfig } from "./industryConfig";
 
@@ -100,23 +101,23 @@ export default function IndustryHero({ industry }) {
               transition={{ duration: 0.6, delay: 1.1 }}
               className="flex flex-col sm:flex-row gap-3"
             >
-              <a
-                href={hero.primaryCta.href}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                to={hero.primaryCta.href}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg font-semibold text-white text-sm transition-all hover:opacity-90"
                 style={{ backgroundColor: "#0202ff" }}
               >
                 {hero.primaryCta.label}
                 <ArrowRight className="w-4 h-4" />
-              </a>
-              <button
-                onClick={scrollToHow}
+              </Link>
+              <a
+                href={hero.secondaryCta.href}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg font-semibold text-gray-700 text-sm border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all"
               >
                 {hero.secondaryCta.label}
-                <ChevronDown className="w-4 h-4" />
-              </button>
+                <ArrowRight className="w-4 h-4" />
+              </a>
             </motion.div>
           </div>
 

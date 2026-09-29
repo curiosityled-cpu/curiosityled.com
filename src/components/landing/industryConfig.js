@@ -39,7 +39,7 @@ export const industryContent = {
         "See the seven BPO leadership risk patterns before they compound.",
         "Coach in the flow of work — inside Microsoft Teams, Slack, or email.",
       ],
-      primaryCta: { label: "Book a demo", href: "https://cal.com/curiosityled/bookdemo" },
+      primaryCta: { label: "Take the 8-minute diagnostic", href: "/bpo-diagnostic" },
       secondaryCta: { label: "Book a demo", href: "https://cal.com/curiosityled/bookdemo" },
     },
     mockup: {
@@ -206,8 +206,8 @@ export const industryContent = {
         "Build psychological safety through low-burden, private check-ins.",
         "Strengthen manager readiness and succession visibility for HR and Talent teams.",
       ],
-      primaryCta: { label: "Book a demo", href: "https://cal.com/curiosityled/bookdemo" },
-      secondaryCta: { label: "See how it works", href: "https://cal.com/curiosityled/bookdemo" },
+      primaryCta: { label: "Take the 8-minute diagnostic", href: "/diagnostic" },
+      secondaryCta: { label: "Book a demo", href: "https://cal.com/curiosityled/bookdemo" },
     },
     mockup: {
       browserLabel: "app.curiosityled.com · Healthcare",
@@ -381,7 +381,7 @@ export const industryContent = {
         "Configure your own competency models, frameworks, and branded prompts.",
         "Scale your methodology across 10 clients or 1,000 — without scaling headcount.",
       ],
-      primaryCta: { label: "Explore the partner model", href: "https://cal.com/curiosityled/bookdemo" },
+      primaryCta: { label: "Take the 8-minute diagnostic", href: "/diagnostic" },
       secondaryCta: { label: "Book a demo", href: "https://cal.com/curiosityled/bookdemo" },
     },
     mockup: {
