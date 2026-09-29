@@ -29,7 +29,7 @@ export default function LandingConversationalLearning() {
               Not a better video.<br />A different relationship with the material.
             </h2>
             <p className="text-gray-500 text-lg leading-relaxed mb-8">
-              Conversational learning is to eLearning what coaching is to training. Managers learn through dialogue — with Atreus, with media, and with knowledge checks — that produces a transcript of their actual thinking. That's behavioral data. That's evidence.
+              Conversational learning is to eLearning what coaching is to training. Managers learn through dialogue — with a built-in AI coach, with media, and with knowledge checks — that produces a transcript of their actual thinking. That's behavioral data. That's evidence.
             </p>
 
             <div className="grid sm:grid-cols-2 gap-4 mb-8">
@@ -92,7 +92,7 @@ export default function LandingConversationalLearning() {
 
               {/* Chat body */}
               <div className="p-4 space-y-3 bg-white min-h-[360px]">
-                {/* Atreus message */}
+                {/* AI coach message */}
                 <div className="flex gap-2.5">
                   <div className="w-7 h-7 rounded-full bg-purple-600 flex items-center justify-center flex-shrink-0">
                     <span className="text-white text-[10px] font-bold">CL</span>
@@ -113,7 +113,7 @@ export default function LandingConversationalLearning() {
                   </div>
                 </div>
 
-                {/* Atreus follow-up + media */}
+                {/* AI coach follow-up + media */}
                 <div className="flex gap-2.5">
                   <div className="w-7 h-7 rounded-full bg-purple-600 flex items-center justify-center flex-shrink-0">
                     <span className="text-white text-[10px] font-bold">CL</span>
