@@ -3,6 +3,7 @@ import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Sparkles } from "lucide-react";
 import CompetencyManagerTab from "@/components/talent/CompetencyManagerTab";
+import ConversationalLearningTab from "@/components/talent/ConversationalLearningTab";
 import SuccessionWorkspaceContent from "@/components/succession/SuccessionWorkspaceContent";
 import { useSuccessionEnabled } from "@/components/succession/useSuccessionEnabled";
 
@@ -29,6 +30,12 @@ export default function TalentManager() {
           >
             Competency Manager
           </TabsTrigger>
+          <TabsTrigger
+            value="conversational-learning"
+            className="data-[state=active]:bg-[#0202ff] data-[state=active]:text-white data-[state=active]:shadow-sm"
+          >
+            Conversational Learning
+          </TabsTrigger>
           {successionEnabled && (
             <TabsTrigger
               value="succession"
@@ -41,6 +48,10 @@ export default function TalentManager() {
 
         <TabsContent value="competency-manager" className="mt-5 focus-visible:outline-none">
           <CompetencyManagerTab />
+        </TabsContent>
+
+        <TabsContent value="conversational-learning" className="mt-5 focus-visible:outline-none">
+          <ConversationalLearningTab />
         </TabsContent>
 
         {successionEnabled && (

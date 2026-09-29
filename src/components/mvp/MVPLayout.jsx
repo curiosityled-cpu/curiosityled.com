@@ -62,7 +62,8 @@ const NAV_CONFIG = {
   manager: [
   { label: 'Lead', path: '/today', icon: Home },
   { label: 'Team', path: '/team', icon: Users },
-  { label: 'Practice', path: '/practice', icon: Dumbbell }],
+  { label: 'Practice', path: '/practice', icon: Dumbbell },
+  { label: 'Assessments', path: '/Assessments', icon: ClipboardList }],
 
   buyer: [
    { label: 'Lead', path: '/today', icon: Home },
@@ -73,6 +74,7 @@ const NAV_CONFIG = {
      { label: 'Development Manager', path: '/DevelopmentManager', icon: Users },
      { label: 'Performance Manager', path: '/PerformanceManager', icon: Target },
      { label: 'Talent Manager', path: '/talent-manager', icon: Layers },
+     { label: 'Assessments', path: '/Assessments', icon: ClipboardList },
      { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 },
      { label: 'User Management', path: '/UserManagement', icon: UserCog },
      ]}],

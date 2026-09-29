@@ -12,7 +12,11 @@
     },
     "learning_resource_id": {
       "type": "string",
-      "description": "ID of the assigned learning resource"
+      "description": "ID of the assigned learning resource (null for conversational learning module assignments)"
+    },
+    "conversational_learning_module_id": {
+      "type": "string",
+      "description": "ID of the assigned ConversationalLearningModule (for conversational learning assignments)"
     },
     "assigned_by": {
       "type": "string",
@@ -79,7 +83,6 @@
   },
   "required": [
     "user_email",
-    "learning_resource_id",
     "assigned_by",
     "title"
   ],
