@@ -14,13 +14,11 @@
       "type": "string",
       "enum": [
         "draft",
-        "awaiting_approval",
-        "live",
-        "disabled",
+        "published",
         "archived"
       ],
       "default": "draft",
-      "description": "Publication lifecycle: draft = being authored, awaiting_approval = submitted for review, live = published and assignable, disabled = temporarily taken offline, archived = retired"
+      "description": "Publication status"
     },
     "competencies": {
       "type": "array",
@@ -189,7 +187,7 @@
         {
           "$and": [
             {
-              "data.status": "live"
+              "data.status": "published"
             },
             {
               "created_by": "{{user.email}}"

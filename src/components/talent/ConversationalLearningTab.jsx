@@ -7,8 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Plus, Edit2, Trash2, Search, Filter, Power, PowerOff, Rocket,
-  Users, Clock, Loader2, MessageSquare, MoreVertical, X,
-  Send, ArrowLeft, Archive as ArchiveIcon
+  Users, Clock, Loader2, MessageSquare, MoreVertical, X
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -26,10 +25,8 @@ import AssignConversationalModuleModal from "@/components/learning/AssignConvers
 
 const STATUS_CONFIG = {
   draft: { label: "Draft", className: "bg-gray-100 text-gray-700 border-gray-200" },
-  awaiting_approval: { label: "Awaiting Approval", className: "bg-amber-100 text-amber-700 border-amber-200" },
-  live: { label: "Live", className: "bg-green-100 text-green-700 border-green-200" },
-  disabled: { label: "Disabled", className: "bg-red-100 text-red-700 border-red-200" },
-  archived: { label: "Archived", className: "bg-gray-100 text-gray-500 border-gray-200" },
+  published: { label: "Published", className: "bg-green-100 text-green-700 border-green-200" },
+  archived: { label: "Archived", className: "bg-amber-100 text-amber-700 border-amber-200" },
 };
 
 export default function ConversationalLearningTab() {
@@ -81,10 +78,11 @@ export default function ConversationalLearningTab() {
     }
   };
 
-  const changeStatus = async (mod, newStatus, label) => {
+  const handlePublish = async (mod) => {
+    const newStatus = mod.status === "published" ? "draft" : "published";
     try {
       await base44.entities.ConversationalLearningModule.update(mod.id, { status: newStatus });
-      toast.success(label);
+      toast.success(newStatus === "published" ? "Module published — learners can now access it" : "Module unpublished");
       loadModules();
     } catch (e) {
       toast.error("Failed to change status");
@@ -145,7 +143,7 @@ export default function ConversationalLearningTab() {
           />
         </div>
         <div className="flex gap-2">
-          {["all", "draft", "awaiting_approval", "live", "disabled", "archived"].map(s => (
+          {["all", "draft", "published", "archived"].map(s => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
@@ -213,36 +211,17 @@ export default function ConversationalLearningTab() {
                                 <Edit2 className="w-3.5 h-3.5 mr-2" /> Edit
                               </Link>
                             </DropdownMenuItem>
-                            {mod.status === "draft" && (
-                              <DropdownMenuItem onClick={() => changeStatus(mod, "awaiting_approval", "Submitted for approval")}>
-                                <Send className="w-3.5 h-3.5 mr-2" /> Submit for Approval
-                              </DropdownMenuItem>
-                            )}
-                            {mod.status === "awaiting_approval" && (
-                              <>
-                                <DropdownMenuItem onClick={() => changeStatus(mod, "live", "Approved — module is now live")}>
-                                  <Rocket className="w-3.5 h-3.5 mr-2" /> Approve & Go Live
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => changeStatus(mod, "draft", "Sent back to draft")}>
-                                  <ArrowLeft className="w-3.5 h-3.5 mr-2" /> Send Back to Draft
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                            {mod.status === "live" && (
-                              <DropdownMenuItem onClick={() => changeStatus(mod, "disabled", "Module disabled")}>
-                                <PowerOff className="w-3.5 h-3.5 mr-2" /> Disable
-                              </DropdownMenuItem>
-                            )}
-                            {mod.status === "disabled" && (
-                              <DropdownMenuItem onClick={() => changeStatus(mod, "live", "Module re-enabled")}>
-                                <Power className="w-3.5 h-3.5 mr-2" /> Re-enable
-                              </DropdownMenuItem>
-                            )}
-                            {mod.status !== "archived" && (
-                              <DropdownMenuItem onClick={() => changeStatus(mod, "archived", "Module archived")}>
-                                <ArchiveIcon className="w-3.5 h-3.5 mr-2" /> Archive
-                              </DropdownMenuItem>
-                            )}
+                            <DropdownMenuItem onClick={() => handlePublish(mod)}>
+                              <Rocket className="w-3.5 h-3.5 mr-2" />
+                              {mod.status === "published" ? "Unpublish" : "Publish"}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleToggleActive(mod)}>
+                              {mod.is_active ? (
+                                <><PowerOff className="w-3.5 h-3.5 mr-2" /> Disable</>
+                              ) : (
+                                <><Power className="w-3.5 h-3.5 mr-2" /> Enable</>
+                              )}
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setAssignModule(mod)}>
                               <Users className="w-3.5 h-3.5 mr-2" /> Assign to Team
                             </DropdownMenuItem>
@@ -291,7 +270,7 @@ export default function ConversationalLearningTab() {
                           Preview
                         </Button>
                       </Link>
-                      {isAdmin && mod.status === "live" && (
+                      {isAdmin && mod.status === "published" && (
                         <Button
                           size="sm"
                           className="h-8 text-xs bg-[#0202ff] hover:bg-[#0202ff]/90"
