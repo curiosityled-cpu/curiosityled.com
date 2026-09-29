@@ -29,7 +29,7 @@ export default function LandingConversationalLearning() {
               Not a better video.<br />A different relationship with the material.
             </h2>
             <p className="text-gray-500 text-lg leading-relaxed mb-8">
-              Conversational learning is to eLearning what coaching is to training. Managers learn through dialogue — with a built-in work companion, with media, and with knowledge checks — that produces a transcript of their actual thinking. That's behavioral data. That's evidence.
+              Conversational learning is to eLearning what coaching is to training. Managers learn through dialogue — with a manager development companion, with media, and with knowledge checks — that produces a transcript of their actual thinking. That's behavioral data. That's evidence.
             </p>
 
             <div className="grid sm:grid-cols-2 gap-4 mb-8">
