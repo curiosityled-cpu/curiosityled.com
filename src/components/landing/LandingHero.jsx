@@ -105,7 +105,7 @@ export default function LandingHero() {
                 <ArrowRight className="w-4 h-4" />
               </a>
               <a
-                href="https://calendly.com/team-curiosityled/discoverycall"
+                href="https://cal.com/curiosityled/bookdemo"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg font-semibold text-gray-700 text-sm border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all"

@@ -37,7 +37,7 @@ export const industryContent = {
       bullets: [
         "Replace subjective scorecards with objective leadership signals.",
         "See the seven BPO leadership risk patterns before they compound.",
-        "Coach in the flow of work — inside Microsoft Teams.",
+        "Coach in the flow of work — inside Microsoft Teams, Slack, or email.",
       ],
       primaryCta: { label: "Start a 12-week pilot", href: "https://cal.com/curiosityled/bookdemo" },
       secondaryCta: { label: "Book a demo", href: "https://cal.com/curiosityled/bookdemo" },
