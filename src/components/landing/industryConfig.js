@@ -39,7 +39,7 @@ export const industryContent = {
         "See the seven BPO leadership risk patterns before they compound.",
         "Coach in the flow of work — inside Microsoft Teams, Slack, or email.",
       ],
-      primaryCta: { label: "Start a 12-week pilot", href: "https://cal.com/curiosityled/bookdemo" },
+      primaryCta: { label: "Book a demo", href: "https://cal.com/curiosityled/bookdemo" },
       secondaryCta: { label: "Book a demo", href: "https://cal.com/curiosityled/bookdemo" },
     },
     mockup: {
