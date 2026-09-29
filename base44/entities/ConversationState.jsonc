@@ -1,0 +1,78 @@
+{
+  "name": "ConversationState",
+  "type": "object",
+  "description": "Persistent turn-by-turn conversation state for the Teams/Slack conversational state machine. One active record per user per channel. Stores the current flow, current step, and collected data between turns. Written by the atreusTeamsRouter (service role).",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user this conversation state belongs to"
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "teams",
+        "slack",
+        "web"
+      ],
+      "description": "Which channel this conversation is happening on"
+    },
+    "channel_conversation_id": {
+      "type": "string",
+      "description": "The Teams/Slack conversation or thread ID, for reference"
+    },
+    "flow_id": {
+      "type": "string",
+      "description": "Current flow ID (e.g. 'morning_checkin', 'evening_checkin', 'big3_quickset', 'weekly_reflection')"
+    },
+    "step_id": {
+      "type": "string",
+      "description": "Current step ID within the flow"
+    },
+    "collected_data": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Answers collected so far, keyed by step field name"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "completed",
+        "abandoned"
+      ],
+      "default": "active",
+      "description": "Lifecycle status. active = in progress, completed = flow finished, abandoned = cancelled or superseded"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this flow was started"
+    },
+    "last_turn_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the last turn was processed"
+    }
+  },
+  "required": [
+    "user_email",
+    "channel",
+    "flow_id",
+    "step_id",
+    "status"
+  ],
+  "rls": {
+    "create": {
+      "data.user_email": "{{user.email}}"
+    },
+    "read": {
+      "data.user_email": "{{user.email}}"
+    },
+    "update": {
+      "data.user_email": "{{user.email}}"
+    },
+    "delete": {
+      "data.user_email": "{{user.email}}"
+    }
+  }
+}
