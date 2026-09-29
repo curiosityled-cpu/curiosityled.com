@@ -14,11 +14,66 @@
       "type": "string",
       "enum": [
         "draft",
+        "awaiting_approval",
         "published",
+        "disabled",
         "archived"
       ],
       "default": "draft",
-      "description": "Publication status"
+      "description": "Publication lifecycle. draft = being authored. awaiting_approval = submitted for review. published = live and assignable. disabled = temporarily taken offline. archived = retired from active use."
+    },
+    "module_key": {
+      "type": "string",
+      "description": "Stable identifier shared across all versions of the same module. Auto-generated on first creation. Used to group version history."
+    },
+    "version_number": {
+      "type": "number",
+      "default": 1,
+      "description": "Version number. Increments when a new version is created from a published module."
+    },
+    "is_current_version": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this is the current version shown to learners. Only one version per module_key should be current."
+    },
+    "version_label": {
+      "type": "string",
+      "description": "Optional human-readable version label (e.g. 'v1.0', '2024 Q1 revision')"
+    },
+    "version_notes": {
+      "type": "string",
+      "description": "Changelog describing what changed in this version"
+    },
+    "published_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this version was published (went live)"
+    },
+    "published_by": {
+      "type": "string",
+      "description": "Email of the user who published this version"
+    },
+    "submitted_for_approval_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the module was submitted for approval"
+    },
+    "submitted_for_approval_by": {
+      "type": "string",
+      "description": "Email of the user who submitted the module for approval"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the module was approved and published"
+    },
+    "approved_by": {
+      "type": "string",
+      "description": "Email of the user who approved the module"
+    },
+    "rejection_reason": {
+      "type": "string",
+      "description": "Reason for rejection if the module was sent back to draft"
     },
     "competencies": {
       "type": "array",
@@ -167,6 +222,11 @@
       "$or": [
         {
           "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
             "role": "Admin Level 2"
           }
         },
@@ -228,6 +288,11 @@
     },
     "update": {
       "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
         {
           "user_condition": {
             "role": "Admin Level 2"

@@ -182,7 +182,13 @@ export default function ConversationalModuleBuilder() {
         await base44.entities.ConversationalLearningModule.update(moduleId, module);
         toast.success("Module updated successfully");
       } else {
-        await base44.entities.ConversationalLearningModule.create(module);
+        const moduleKey = `clm_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        await base44.entities.ConversationalLearningModule.create({
+          ...module,
+          module_key: moduleKey,
+          version_number: 1,
+          is_current_version: true,
+        });
         toast.success("Module created successfully");
         window.location.href = createPageUrl("Development");
       }
