@@ -40,7 +40,7 @@ export const industryContent = {
         "Coach in the flow of work — inside Microsoft Teams, Slack, or email.",
       ],
       primaryCta: { label: "Book a demo", href: "https://cal.com/curiosityled/bookdemo" },
-      secondaryCta: { label: "See how it works", href: "https://cal.com/curiosityled/bookdemo" },
+      secondaryCta: { label: "Book a demo", href: "https://cal.com/curiosityled/bookdemo" },
     },
     mockup: {
       browserLabel: "app.curiosityled.com · BPO Operations",
@@ -381,8 +381,8 @@ export const industryContent = {
         "Configure your own competency models, frameworks, and branded prompts.",
         "Scale your methodology across 10 clients or 1,000 — without scaling headcount.",
       ],
-      primaryCta: { label: "Book a demo", href: "https://cal.com/curiosityled/bookdemo" },
-      secondaryCta: { label: "See how it works", href: "https://cal.com/curiosityled/bookdemo" },
+      primaryCta: { label: "Explore the partner model", href: "https://cal.com/curiosityled/bookdemo" },
+      secondaryCta: { label: "Book a demo", href: "https://cal.com/curiosityled/bookdemo" },
     },
     mockup: {
       browserLabel: "YourFirm.curiosityled.com",
