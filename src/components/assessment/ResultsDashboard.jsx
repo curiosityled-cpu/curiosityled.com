@@ -86,6 +86,9 @@ export default function ResultsDashboard({ data }) {
                         <User className="w-4 h-4" />
                         <span>{user?.role_level || 'Leader'} in {user?.sector || 'your industry'}</span>
                     </div>
+                    <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
+                        🧭 This is a development compass, not a certification
+                    </div>
                 </motion.div>
 
                 <div className="grid lg:grid-cols-3 gap-8">

@@ -57,6 +57,28 @@ export default function ConversationalModule() {
       const moduleData = modules[0];
       setModule(moduleData);
 
+      // Check prerequisites before starting
+      const prereqModuleIds = moduleData.prerequisite_module_ids || [];
+      if (prereqModuleIds.length > 0) {
+        const completed = await base44.entities.LearnerProgress.filter({
+          user_email: user.email,
+          status: 'completed'
+        });
+        const completedModuleIds = new Set(completed.map(p => p.conversational_learning_module_id));
+        const missing = prereqModuleIds.filter(id => !completedModuleIds.has(id));
+        if (missing.length > 0) {
+          const missingModules = await Promise.all(
+            missing.slice(0, 3).map(id =>
+              base44.entities.ConversationalLearningModule.filter({ id }).then(r => r[0]).catch(() => null)
+            )
+          );
+          const titles = missingModules.filter(Boolean).map(m => m.title).join(', ');
+          toast.error(`Complete these prerequisites first: ${titles}`);
+          setLoading(false);
+          return;
+        }
+      }
+
       let progressRecord = progressRecords.length > 0 ? progressRecords[0] : null;
 
       if (!progressRecord) {
@@ -81,7 +103,9 @@ export default function ConversationalModule() {
         setMessages([{
           role: "assistant",
           content: firstStep.content,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          media_type: firstStep.media_type,
+          media_url: firstStep.media_url
         }]);
       }
     } catch (error) {
@@ -182,7 +206,9 @@ Respond as Atreus, providing guidance and determining if this step is complete.`
         role: "assistant",
         content: nextStep.content,
         timestamp: new Date().toISOString(),
-        isStepTransition: true
+        isStepTransition: true,
+        media_type: nextStep.media_type,
+        media_url: nextStep.media_url
       }]);
     }
   };
@@ -195,14 +221,27 @@ Respond as Atreus, providing guidance and determining if this step is complete.`
         completed_date: new Date().toISOString()
       });
 
+      // Award gamification points
+      const points = module.points_value || 50;
+      try {
+        await base44.functions.invoke('awardPoints', {
+          user_email: user.email,
+          points: points,
+          reason: `Completed learning module: ${module.title}`,
+          source: 'conversational_learning'
+        });
+      } catch (e) {
+        console.warn('Could not award points:', e.message);
+      }
+
       setMessages(prev => [...prev, {
         role: "assistant",
-        content: `🎉 Congratulations! You've completed the module "${module.title}". You've demonstrated great insight and growth throughout this learning journey. Keep applying these principles in your leadership practice!`,
+        content: `🎉 Congratulations! You've completed the module "${module.title}". You've earned **${points} points**. You've demonstrated great insight and growth throughout this learning journey. Keep applying these principles in your leadership practice!`,
         timestamp: new Date().toISOString(),
         isCompletion: true
       }]);
 
-      toast.success("Module completed!");
+      toast.success(`Module completed! +${points} points`);
     } catch (error) {
       console.error("Error completing module:", error);
     }
@@ -298,6 +337,12 @@ Respond as Atreus, providing guidance and determining if this step is complete.`
                           <CheckCircle2 className="w-4 h-4" />
                           Next Step
                         </div>
+                      )}
+                      {msg.media_type === 'video' && msg.media_url && (
+                        <video src={msg.media_url} controls className="w-full rounded-lg mb-3 max-h-60" />
+                      )}
+                      {msg.media_type === 'image' && msg.media_url && (
+                        <img src={msg.media_url} alt="" className="w-full rounded-lg mb-3 max-h-60 object-cover" />
                       )}
                       <ReactMarkdown className="prose prose-sm max-w-none">
                         {msg.content}

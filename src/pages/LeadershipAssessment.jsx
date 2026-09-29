@@ -399,6 +399,9 @@ function LeadershipAssessment() {
         <p className="text-gray-600 text-sm">
           Complete this assessment to discover your leadership strengths and opportunities
         </p>
+        <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
+          🧭 This is a development compass, not a certification
+        </div>
       </div>
 
       <div className="flex-1 overflow-hidden">

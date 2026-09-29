@@ -23,6 +23,11 @@
  */
 
 import { GROUP1_FLOWS } from './flows/group1DailyRhythm.ts';
+import { GROUP2_FLOWS } from './flows/group2CommitmentCapture.ts';
+import { GROUP3_FLOWS } from './flows/group3CommitmentFollowup.ts';
+import { GROUP4_FLOWS } from './flows/group4PracticeLearning.ts';
+import { GROUP5_FLOWS } from './flows/group5Assessment.ts';
+import { GROUP6_FLOWS } from './flows/group6AlertsCalendar.ts';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -33,6 +38,7 @@ export interface FlowStep {
   label?: string;
   placeholder?: string;
   choices?: { label: string; value: string }[];
+  dynamic_choices?: (serviceBase44: any, userEmail: string) => Promise<{ label: string; value: string }[]>;
   field: string;
   optional?: boolean;
   next?: string;
@@ -61,7 +67,7 @@ export interface TurnResponse {
 // ── Flow Registry ──────────────────────────────────────────────────────────
 
 const FLOWS: Record<string, Flow> = {};
-for (const flow of GROUP1_FLOWS) {
+for (const flow of [...GROUP1_FLOWS, ...GROUP2_FLOWS, ...GROUP3_FLOWS, ...GROUP4_FLOWS, ...GROUP5_FLOWS, ...GROUP6_FLOWS]) {
   FLOWS[flow.id] = flow;
 }
 
@@ -156,6 +162,20 @@ function findNextStep(flow: Flow, currentStep: FlowStep, data: Record<string, an
     return step;
   }
   return null;
+}
+
+// ── Dynamic Choice Resolution ──────────────────────────────────────────────
+
+async function resolveStepChoices(serviceBase44: any, userEmail: string, step: FlowStep): Promise<FlowStep> {
+  if (step.dynamic_choices) {
+    try {
+      const choices = await step.dynamic_choices(serviceBase44, userEmail);
+      return { ...step, choices };
+    } catch {
+      return { ...step, choices: [] };
+    }
+  }
+  return step;
 }
 
 // ── Freeform Text Parsing ──────────────────────────────────────────────────
@@ -302,7 +322,20 @@ export async function processTurn(
     const activeState = await loadActiveState(serviceBase44, userEmail, channel);
     if (activeState) await abandonActiveFlow(serviceBase44, activeState);
 
-    const firstStep = flow.steps[0];
+    // If flow has no steps, complete immediately (e.g. view_alerts)
+    if (flow.steps.length === 0) {
+      const completionMessage = await flow.onComplete(serviceBase44, userEmail, {});
+      const suggestions = getAllFlows()
+        .filter(f => f.group <= 3 && f.id !== flow.id)
+        .slice(0, 3)
+        .map(f => ({ label: `${f.trigger_icon} ${f.trigger_label}`, flow_id: f.id }));
+      return { message: completionMessage, card: renderCompletionCard(completionMessage, suggestions), is_complete: true, matched: true, suggested_actions: suggestions };
+    }
+
+    const firstStep = await resolveStepChoices(serviceBase44, userEmail, flow.steps[0]);
+    if (firstStep.input_type === 'choice' && (!firstStep.choices || firstStep.choices.length === 0)) {
+      return { message: 'No items available right now.', card: renderMenuCard(getAllFlows()), is_complete: true, matched: true };
+    }
     await createState(serviceBase44, userEmail, channel, conversationId, flow.id, firstStep.id);
     return { message: firstStep.prompt, card: renderStepCard(flow, firstStep), is_complete: false, matched: true };
   }
@@ -361,8 +394,12 @@ export async function processTurn(
       return { message: completionMessage, card: renderCompletionCard(completionMessage, suggestions), is_complete: true, matched: true, suggested_actions: suggestions };
     }
 
-    await updateState(serviceBase44, activeState, { step_id: nextStep.id, collected_data: collectedData });
-    return { message: nextStep.prompt, card: renderStepCard(flow, nextStep), is_complete: false, matched: true };
+    const nextStepResolved = await resolveStepChoices(serviceBase44, userEmail, nextStep);
+    if (nextStepResolved.input_type === 'choice' && (!nextStepResolved.choices || nextStepResolved.choices.length === 0)) {
+      return { message: 'No items available right now.', card: renderMenuCard(getAllFlows()), is_complete: true, matched: true };
+    }
+    await updateState(serviceBase44, activeState, { step_id: nextStepResolved.id, collected_data: collectedData });
+    return { message: nextStepResolved.prompt, card: renderStepCard(flow, nextStepResolved), is_complete: false, matched: true };
   }
 
   // ── Freeform text ───────────────────────────────────────────────────────
@@ -391,7 +428,18 @@ export async function processTurn(
     // No active flow — try to match trigger
     const matchedFlow = matchFlowTrigger(input.text);
     if (matchedFlow) {
-      const firstStep = matchedFlow.steps[0];
+      if (matchedFlow.steps.length === 0) {
+        const completionMessage = await matchedFlow.onComplete(serviceBase44, userEmail, {});
+        const suggestions = getAllFlows()
+          .filter(f => f.group <= 3 && f.id !== matchedFlow.id)
+          .slice(0, 3)
+          .map(f => ({ label: `${f.trigger_icon} ${f.trigger_label}`, flow_id: f.id }));
+        return { message: completionMessage, card: renderCompletionCard(completionMessage, suggestions), is_complete: true, matched: true, suggested_actions: suggestions };
+      }
+      const firstStep = await resolveStepChoices(serviceBase44, userEmail, matchedFlow.steps[0]);
+      if (firstStep.input_type === 'choice' && (!firstStep.choices || firstStep.choices.length === 0)) {
+        return { message: 'No items available right now.', card: renderMenuCard(getAllFlows()), is_complete: true, matched: true };
+      }
       await createState(serviceBase44, userEmail, channel, conversationId, matchedFlow.id, firstStep.id);
       return { message: firstStep.prompt, card: renderStepCard(matchedFlow, firstStep), is_complete: false, matched: true };
     }

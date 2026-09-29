@@ -34,6 +34,9 @@ export default function ResultsDashboard({ assessment, user }) {
                 day: 'numeric' 
               })}
             </p>
+            <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
+              🧭 This is a development compass, not a certification
+            </div>
           </div>
           <Badge className="bg-green-100 text-green-800 text-sm">
             <BarChart3 className="w-4 h-4 mr-1" />

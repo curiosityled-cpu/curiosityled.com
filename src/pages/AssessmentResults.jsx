@@ -67,7 +67,7 @@ function AssessmentResults() {
     {
       id: 'leadership-index',
       title: 'Leadership Index Assessment',
-      description: 'Comprehensive evaluation of your leadership capabilities across 6 core competencies.',
+      description: 'A development compass — not a certification — evaluating your leadership capabilities across 6 core competencies.',
       duration: '20-30 min',
       status: assessment ? 'completed' : 'available',
       url: 'LeadershipAssessment',
@@ -332,6 +332,7 @@ function AssessmentResults() {
           subtitle: 'View your leadership assessment results and track your growth',
           badges: [
             { text: roleDisplayName, className: "bg-white text-[#0202ff]" },
+            { text: '🧭 Development Compass', className: "bg-amber-50 text-amber-700" },
             assessment ? { text: `${assessment.overall_pct}% Overall`, className: "bg-white text-green-600" } : null,
             assessment?.archetype_label ? { text: assessment.archetype_label, className: "bg-white text-purple-600" } : null
           ].filter(Boolean)
@@ -574,8 +575,11 @@ function AssessmentResults() {
           <p className="text-gray-600 mb-2">
             We couldn't find any completed assessments for your account.
           </p>
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-sm text-gray-500 mb-2">
             Take the Leadership Index Assessment to get personalized insights into your leadership capabilities.
+          </p>
+          <p className="text-xs text-amber-600 mb-6">
+            🧭 This is a development compass, not a certification.
           </p>
 
           <div className="space-y-3">
