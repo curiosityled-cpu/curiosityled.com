@@ -45,7 +45,7 @@ const steps = [
     icon: MessageSquareText,
     label: "Develop",
     title: "Build judgment through conversation",
-    body: "Conversational learning, coaching flows, and a built-in AI coach — delivered in Teams, Slack, and email. Managers practice real situations and produce evidence of how they think, not just what they watched.",
+    body: "Conversational learning, coaching flows, and a built-in work companion — delivered in Teams, Slack, and email. Managers practice real situations and produce evidence of how they think, not just what they watched.",
     accent: "#7c3aed",
     accentBg: "#f3e8ff",
     visual: (
@@ -56,7 +56,7 @@ const steps = [
             <div className="w-5 h-5 rounded bg-[#0202ff] flex items-center justify-center">
               <span className="text-white text-[8px] font-bold">CL</span>
             </div>
-            <span className="text-[11px] font-semibold text-gray-700">AI Coach</span>
+            <span className="text-[11px] font-semibold text-gray-700">Companion</span>
             <span className="text-[9px] text-gray-400 ml-auto">Now</span>
           </div>
           <div className="p-3 space-y-2">
