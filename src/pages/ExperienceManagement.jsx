@@ -6,7 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   Loader2, Map, GraduationCap, Star, Inbox, BarChart2,
-  Search, Plus, Clock, CheckCircle2, XCircle, Eye, Settings, Dumbbell
+  Search, Plus, Clock, CheckCircle2, XCircle, Eye, Settings, Dumbbell,
+  MessageSquare
 } from "lucide-react";
 import PracticeHubTab from "@/components/practice/PracticeHubTab";
 import { useAuth } from "@/components/useAuth";
@@ -20,6 +21,7 @@ import AdminLearningManagementTab from "@/components/experience-mgmt/AdminLearni
 import AdminExperiencesTab from "@/components/experience-mgmt/AdminExperiencesTab";
 import ExperienceAnalyticsTab from "@/components/experience-mgmt/ExperienceAnalyticsTab";
 import CoachAnalyticsTab from "@/components/experience-mgmt/CoachAnalyticsTab";
+import ConversationalLearningTab from "@/components/talent/ConversationalLearningTab";
 import { useCoachCoacheeScope } from "@/hooks/useCoachCoacheeScope";
 
 // Lazy load request components
@@ -46,6 +48,7 @@ const PRIORITY_COLORS = {
 const TABS = [
   { id: 'analytics', label: 'Overview & Analytics', icon: BarChart2 },
   { id: 'journeys', label: 'Journeys', icon: Map },
+  { id: 'conversational_learning', label: 'Conv. Learning', icon: MessageSquare },
   { id: 'programs', label: 'Learning', icon: GraduationCap },
   { id: 'experiences', label: 'Experiences', icon: Star },
   { id: 'practice', label: 'Practice', icon: Dumbbell },
@@ -188,6 +191,13 @@ export default function ExperienceManagement() {
       {section === 'journeys' && (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <AdminJourneysTab user={user} coacheeEmails={coacheeEmails} />
+        </motion.div>
+      )}
+
+      {/* ── CONVERSATIONAL LEARNING ── */}
+      {section === 'conversational_learning' && (
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <ConversationalLearningTab />
         </motion.div>
       )}
 

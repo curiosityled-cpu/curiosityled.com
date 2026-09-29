@@ -221,7 +221,7 @@ export default function ConversationalModuleBuilder() {
             </div>
           </div>
           <div className="flex gap-2">
-            {module.status === "published" && (
+            {(module.status === "live" || module.status === "awaiting_approval") && (
               <Link to={`${createPageUrl("ConversationalModule")}?moduleId=${moduleId}`}>
                 <Button variant="outline">
                   <Play className="w-4 h-4 mr-2" />
@@ -318,7 +318,9 @@ export default function ConversationalModuleBuilder() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="awaiting_approval">Awaiting Approval</SelectItem>
+                  <SelectItem value="live">Live</SelectItem>
+                  <SelectItem value="disabled">Disabled</SelectItem>
                   <SelectItem value="archived">Archived</SelectItem>
                 </SelectContent>
               </Select>
