@@ -16,6 +16,43 @@ Deno.serve(async (req) => {
 
         const { role } = await req.json();
 
+        // Privileged operator: team@curiosityled.com may self-assign ANY role,
+        // including privileged ones. This is the single trust anchor for
+        // privileged role management.
+        const PRIVILEGED_OPERATOR_EMAIL = 'team@curiosityled.com';
+        const ALL_ROLES = [
+            'User Level 1', 'User Level 2', 'Analyst', 'Executive', 'HRBP',
+            'Admin Level 1', 'Leadership Coach', 'Consultant', 'Admin Level 2',
+            'Super Administrator', 'Partner Business Administrator', 'Platform Admin'
+        ];
+        if (user.email === PRIVILEGED_OPERATOR_EMAIL) {
+            if (!ALL_ROLES.includes(role)) {
+                return Response.json({ error: 'Invalid role selection.' }, { status: 400 });
+            }
+            const previousRole = user.app_role;
+            await base44.asServiceRole.entities.User.update(user.id, { app_role: role });
+            try {
+                await base44.asServiceRole.entities.ActivityLog.create({
+                    timestamp: new Date().toISOString(),
+                    initiator_user_email: user.email,
+                    action_type: 'USER_ROLE_CHANGE',
+                    target_user_email: user.email,
+                    client_id: user.client_id || 'platform',
+                    old_value: previousRole,
+                    new_value: role,
+                    metadata: { action: 'self_role_change', source: 'privileged_operator' }
+                });
+            } catch (logError) {
+                console.error('Failed to log role change:', logError);
+            }
+            return Response.json({
+                success: true,
+                message: `Your role has been updated to: ${role}`,
+                previous_role: previousRole,
+                new_role: role
+            });
+        }
+
         // Security: Self-service role changes are restricted to privileged users
         // (Platform Admin, Super Administrator, Partner Business Administrator)
         // who already hold elevated access and use the Role Selector only to

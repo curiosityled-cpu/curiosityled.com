@@ -113,7 +113,8 @@ function RoleSelector() {
     'User Level 1', 'User Level 2', 'Analyst', 'Executive', 'HRBP',
     'Admin Level 1', 'Leadership Coach', 'Consultant'
   ];
-  const isPrivilegedUser = privilegedRoles.includes(user?.app_role);
+  const isPrivilegedOperator = user?.email === 'team@curiosityled.com';
+  const isPrivilegedUser = isPrivilegedOperator || privilegedRoles.includes(user?.app_role);
   const selectableRoles = isPrivilegedUser
     ? roles
     : roles.filter((r) => selfServiceRoleIds.includes(r.id));
