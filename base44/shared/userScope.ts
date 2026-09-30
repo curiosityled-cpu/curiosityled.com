@@ -100,6 +100,8 @@ export function roleTier(role: string): number {
     'User Level 2': 2,
     'User Level 3': 2,
     Analyst: 2,
+    Executive: 2,
+    HRBP: 2,
     'Leadership Coach': 2,
     Consultant: 2,
     'Admin Level 1': 3,

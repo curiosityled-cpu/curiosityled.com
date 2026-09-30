@@ -35,8 +35,8 @@ Deno.serve(async (req) => {
 
         // Valid roles
         const validRoles = [
-            'User Level 1', 'User Level 2', 'Analyst',
-            'Admin Level 1', 'Admin Level 2', 'Super Administrator',
+            'User Level 1', 'User Level 2', 'Analyst', 'Executive', 'HRBP',
+            'Leadership Coach', 'Consultant', 'Admin Level 1', 'Admin Level 2', 'Super Administrator',
             'Partner Business Administrator', 'Platform Admin'
         ];
 
