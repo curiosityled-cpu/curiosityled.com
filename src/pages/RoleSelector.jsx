@@ -8,6 +8,7 @@ import { useAuth } from "@/components/useAuth";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { withAuthProtection } from "@/components/hoc/withAuthProtection";
+import PrivilegedRoleAssignmentPanel from "@/components/roles/PrivilegedRoleAssignmentPanel";
 
 function RoleSelector() {
   const { user, refreshUser } = useAuth();
@@ -283,6 +284,8 @@ function RoleSelector() {
             </CardContent>
           </Card>
         </motion.div>
+
+        <PrivilegedRoleAssignmentPanel currentUserEmail={user?.email} />
       </div>
     </div>
   );
