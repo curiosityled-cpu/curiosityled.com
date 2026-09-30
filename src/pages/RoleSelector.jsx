@@ -2,13 +2,6 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Shield, Check, AlertCircle, User, Users, Building2, Target, Crown, Sparkles, BarChart3 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/components/useAuth";
@@ -215,37 +208,6 @@ function RoleSelector() {
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <label className="text-sm font-medium text-gray-700">
-                  Select New Role
-                </label>
-                <Select value={selectedRole} onValueChange={setSelectedRole}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {selectableRoles.map((role) => (
-                      <SelectItem key={role.id} value={role.id}>
-                        <div className="flex items-center gap-2">
-                          <role.icon className="h-4 w-4 text-gray-500" />
-                          <div className="flex flex-col">
-                            <span className="font-medium flex items-center gap-2">
-                              {role.title}
-                              {role.badge && (
-                                <Badge variant="outline" className="text-xs px-1 py-0.5 ml-2 border-purple-400 text-purple-700">
-                                  {role.badge}
-                                </Badge>
-                              )}
-                            </span>
-                            <span className="text-xs text-gray-500">{role.description}</span>
-                          </div>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
               {selectedRole !== user?.app_role && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
@@ -278,22 +240,26 @@ function RoleSelector() {
                 )}
               </Button>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-4 border-t">
                 {roles.map((role) => {
                   const canSelect = selectableRoles.some((r) => r.id === role.id);
+                  const isSelected = selectedRole === role.id;
                   return (
-                    <div
+                    <button
                       key={role.id}
-                      className={`p-3 rounded-lg border-2 transition-all ${
-                        selectedRole === role.id
-                          ? 'border-purple-600 bg-purple-50'
+                      type="button"
+                      disabled={!canSelect}
+                      onClick={() => canSelect && setSelectedRole(role.id)}
+                      className={`p-3 rounded-lg border-2 transition-all text-left flex items-start gap-3 ${
+                        isSelected
+                          ? 'border-purple-600 bg-purple-50 ring-2 ring-purple-200'
                           : canSelect
-                            ? 'border-gray-200 bg-white'
-                            : 'border-gray-100 bg-gray-50 opacity-60'
-                      } flex items-start gap-3`}
+                            ? 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/30 cursor-pointer'
+                            : 'border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed'
+                      }`}
                     >
-                      <role.icon className="h-5 w-5 text-gray-600 mt-0.5" />
-                      <div>
+                      <role.icon className="h-5 w-5 text-gray-600 mt-0.5 flex-shrink-0" />
+                      <div className="min-w-0">
                         <p className="text-sm font-medium text-gray-900 flex items-center">
                           {role.title}
                           {role.badge && (
@@ -307,7 +273,10 @@ function RoleSelector() {
                           <p className="text-[10px] text-gray-400 mt-1 italic">Requires admin access</p>
                         )}
                       </div>
-                    </div>
+                      {isSelected && (
+                        <Check className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                      )}
+                    </button>
                   );
                 })}
               </div>
