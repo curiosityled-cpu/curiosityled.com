@@ -1,6 +1,5 @@
 import React from 'react';
-import { useAuth } from '@/components/useAuth';
-import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/lib/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { AccessDeniedPage } from '@/components/AccessDeniedPage';
 
@@ -14,7 +13,10 @@ import { AccessDeniedPage } from '@/components/AccessDeniedPage';
  */
 export function withAuthProtection(Component, options = {}) {
   return function ProtectedComponent(props) {
-    const { user, appRole, loading, isPlatformAdmin } = useAuth();
+    const { user, isLoadingAuth } = useAuth();
+    const appRole = user?.app_role || user?.data?.app_role || user?.role;
+    const isPlatformAdmin = appRole === 'Platform Admin';
+    const loading = isLoadingAuth;
     const { allowedRoles = [], checkAccess } = options;
     const [redirectAttempted, setRedirectAttempted] = React.useState(false);
     const redirectTimeoutRef = React.useRef(null);
