@@ -104,7 +104,7 @@ export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals =
   const activeGoals = goals.filter(g => g.status === "active" && g.goal_type !== "kpi");
   const hasPerfData = topKpis.length > 0 || activeCascaded.length > 0 || activeGoals.length > 0;
   const hasDevData = devStats.journeys > 0 || devStats.learning > 0 || devStats.experiences > 0;
-  if (!hasPerfData && !hasDevData) return null;
+  const hasAnyData = hasPerfData || hasDevData;
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden">
@@ -127,6 +127,22 @@ export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals =
       {/* ── Content area ─────────────────────────────────────────────── */}
       {scorecardExpanded && (
       <div className="px-4 pb-4 space-y-3 border-t border-slate-100 pt-3">
+
+        {/* ── Empty state when no performance or development data ─────── */}
+        {!hasAnyData && (
+          <div className="bg-card border border-dashed border-border rounded-2xl px-5 py-6 text-center">
+            <Trophy className="w-6 h-6 text-muted-foreground/40 mx-auto mb-2" />
+            <p className="text-xs font-medium text-foreground mb-1">No talent data yet</p>
+            <p className="text-[10px] text-muted-foreground mb-3 leading-relaxed">
+              Add KPIs, goals, or development plans to see your progress here.
+            </p>
+            <div className="flex items-center justify-center gap-3">
+              <SectionLink to="/my-performance" label="Set up performance" />
+              <span className="text-muted-foreground/30">·</span>
+              <SectionLink to="/my-development" label="Set up development" />
+            </div>
+          </div>
+        )}
 
         {/* ── KPI sub-card ────────────────────────────────────────────── */}
         {topKpis.length > 0 && (
