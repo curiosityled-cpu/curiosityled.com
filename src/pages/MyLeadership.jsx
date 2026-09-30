@@ -535,14 +535,17 @@ export default function MyLeadership() {
   });
 
   // Check if tone onboarding is complete
-  const { data: tonePref = null } = useQuery({
+  const { data: tonePref = null, isPending: tonePending } = useQuery({
     queryKey: ['ml-tone', user?.email],
     queryFn: async () => {
-      const rows = await base44.entities.TonePreference.filter({ user_email: user.email }, null, 1);
-      return rows[0] || null;
+      try {
+        const rows = await base44.entities.TonePreference.filter({ user_email: user.email }, null, 1);
+        return rows[0] || null;
+      } catch { return null; }
     },
     enabled: !!user?.email,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   // Manager-private trend memory
@@ -583,8 +586,10 @@ export default function MyLeadership() {
     return rotation[day % rotation.length];
   })();
 
-  // Tone onboarding needed if no TonePreference record exists yet
-  const needsToneOnboarding = tonePref === null;
+  // Tone onboarding needed if no TonePreference record exists yet.
+  // Guard against the initial loading state so the banner doesn't flash
+  // on every page load while the query is still pending.
+  const needsToneOnboarding = !tonePending && tonePref === null;
 
   return (
     <MVPPageLayout
@@ -611,7 +616,8 @@ export default function MyLeadership() {
               <div className="px-5 pb-5">
                 <ToneOnboarding
                   existingTone={null}
-                  onComplete={() => {
+                  onComplete={(tone) => {
+                    queryClient.setQueryData(['ml-tone', user?.email], (old) => ({ ...old, tone_mode: tone, teams_onboarding_complete: true, user_email: user?.email }));
                     queryClient.invalidateQueries({ queryKey: ['ml-tone', user?.email] });
                   }}
                 />

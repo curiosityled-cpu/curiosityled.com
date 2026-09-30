@@ -201,7 +201,7 @@ export default function ManagerToday() {
         return rows[0] || null;
       } catch { return null; }
     },
-    enabled: !!user?.email, staleTime: 5 * 60 * 1000,
+    enabled: !!user?.email, staleTime: 0, refetchOnMount: true,
   });
 
   const { data: trends = null } = useQuery({
@@ -485,7 +485,10 @@ export default function ManagerToday() {
             <p className="text-xs font-semibold text-slate-900">How should Atreus talk to you?</p>
           </div>
           <div className="px-4 pb-4">
-            <ToneOnboarding existingTone={null} onComplete={() => queryClient.invalidateQueries({ queryKey: ['ml-tone', user?.email] })} />
+            <ToneOnboarding existingTone={null} onComplete={(tone) => {
+              queryClient.setQueryData(['ml-tone', user?.email], (old) => ({ ...old, tone_mode: tone, teams_onboarding_complete: true, user_email: user?.email }));
+              queryClient.invalidateQueries({ queryKey: ['ml-tone', user?.email] });
+            }} />
           </div>
         </div>
       )}
