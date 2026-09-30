@@ -18,6 +18,7 @@ import { usePageIntelligence } from "@/components/ai/usePageIntelligence";
 import { useActivityTracker, getActivitySummary } from "@/components/ai/ActivityTracker";
 import { getToolsForUser } from "@/components/ai/agentTools";
 import UATTestingCoach from "@/components/uat/UATTestingCoach";
+import DraggableAtreusButton from "@/components/ai/DraggableAtreusButton";
 import PullToRefresh from "@/components/mobile/PullToRefresh";
 import { useTabNavigation } from "@/components/mobile/TabNavigationManager";
 import DeleteAccountDialog from "@/components/mobile/DeleteAccountDialog";
@@ -1432,25 +1433,11 @@ function LayoutContent({ children }) {
               </motion.div>
             )}
 
-            {/* AI Coach Button */}
-            {!loading && user && !showAtreus && !showUATCoach && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                exit={{ scale: 0 }}
-              >
-                <Button
-                  onClick={toggleAtreus}
-                  className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all select-none"
-                  style={{ backgroundColor: '#0202ff' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0101dd'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0202ff'}
-                  title="Ask Atreus - Your AI Coach"
-                >
-                  <Brain className="w-6 h-6 text-white select-none" />
-                </Button>
-              </motion.div>
-            )}
+            {/* AI Coach Button — draggable, click to open */}
+            <DraggableAtreusButton
+              visible={!loading && !!user && !showAtreus && !showUATCoach}
+              onClick={toggleAtreus}
+            />
           </div>
 
           {/* UAT Testing Coach */}
