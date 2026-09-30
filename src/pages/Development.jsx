@@ -18,7 +18,6 @@ const TeamLearning = lazy(() => import("./TeamLearning"));
 const TeamCareerPaths = lazy(() => import("./TeamCareerPaths"));
 const ConversationalModulesLibrary = lazy(() => import("./ConversationalModulesLibrary"));
 const BulkLearningOperations = lazy(() => import("./BulkLearningOperations"));
-const CustomAssessmentBuilder = lazy(() => import("./CustomAssessmentBuilder"));
 const CareerPathAnalytics = lazy(() => import("@/components/analytics/CareerPathAnalytics"));
 
 export default function Development() {

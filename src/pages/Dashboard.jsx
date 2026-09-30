@@ -22,7 +22,14 @@ const InsightsOverview = lazy(() => import("../components/dashboard/InsightsOver
 const PlatformAdminDashboard = lazy(() => import("../components/dashboard/PlatformAdminDashboard"));
 const EnterpriseAnalytics = lazy(() => import("@/components/analytics/EnterpriseAnalytics"));
 const ExperienceAnalytics = lazy(() => import("./ExperienceAnalytics"));
-const AssessmentAnalytics = lazy(() => import("./AssessmentAnalyticsDashboard"));
+const AssessmentAnalytics = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="text-center">
+      <p className="text-gray-600 mb-4">Assessment analytics has moved to the Assessment Manager.</p>
+      <a href="/assessment-manager" className="text-[#0202ff] hover:underline font-medium">Go to Assessment Manager →</a>
+    </div>
+  </div>
+);
 const LearningAnalyticsDashboard = lazy(() => import("./LearningAnalyticsDashboard"));
 const ReportBuilder = lazy(() => import("./ReportBuilder"));
 const Insights = lazy(() => import("./Insights"));

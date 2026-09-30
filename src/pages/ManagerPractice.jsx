@@ -25,6 +25,7 @@ import WorkoutsSection from "@/components/practice/WorkoutsSection";
 import PracticeHeroHeader from "@/components/practice/PracticeHeroHeader";
 import PrescribedPracticeCard from "@/components/practice/PrescribedPracticeCard";
 import PracticeSessionsLog from "@/components/practice/PracticeSessionsLog";
+import AssessmentsCard from "@/components/practice/AssessmentsCard";
 import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
 import PracticeSettings from "@/components/practice/PracticeSettings";
 import {
@@ -307,6 +308,8 @@ export default function ManagerPractice() {
             </div>
 
             <PracticeSessionsLog />
+
+            <AssessmentsCard />
           </div>
         </div>
       )}

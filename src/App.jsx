@@ -34,6 +34,8 @@ import RequestSubmit from './pages/RequestSubmit';
 import TalentManager from './pages/TalentManager';
 import SuccessionWorkspace from './pages/SuccessionWorkspace';
 import TestLanding from './pages/TestLanding';
+import AssessmentManager from './pages/AssessmentManager';
+import AssessmentLibrary from './pages/AssessmentLibrary';
 
 import LeadershipIntelligenceHub from './pages/LeadershipIntelligenceHub';
 import CoachingWorkspace from './pages/CoachingWorkspace';
@@ -174,6 +176,15 @@ const AuthenticatedApp = () => {
       <Route path="/request-triage" element={<Navigate to="/DevelopmentManager" replace />} />
       <Route path="/talent-manager" element={<MVPLayout><ContextProviders><TalentManager /></ContextProviders></MVPLayout>} />
       <Route path="/succession" element={<MVPLayout><ContextProviders><SuccessionWorkspace /></ContextProviders></MVPLayout>} />
+      <Route path="/assessment-manager" element={<MVPLayout><AssessmentManager /></MVPLayout>} />
+      <Route path="/assessment-library" element={<MVPLayout><AssessmentLibrary /></MVPLayout>} />
+
+      {/* Retired assessment routes — redirect to new locations */}
+      <Route path="/Assessments" element={mvpRole === 'manager' ? <Navigate to="/practice" replace /> : <Navigate to="/assessment-manager" replace />} />
+      <Route path="/AssessmentDetails" element={<Navigate to="/assessment-manager" replace />} />
+      <Route path="/AssessmentResults" element={<Navigate to="/practice" replace />} />
+      <Route path="/AssessmentAnalyticsDashboard" element={<Navigate to="/assessment-manager" replace />} />
+      <Route path="/CustomAssessmentBuilder" element={<Navigate to="/assessment-manager?tab=builder" replace />} />
       <Route path="/my-development" element={<MVPLayout><MyDevelopment /></MVPLayout>} />
       <Route path="/experience-overview" element={<MVPLayout><ExperienceOverview /></MVPLayout>} />
       <Route path="/report-builder-mvp" element={<MVPLayout><ReportBuilderMVP /></MVPLayout>} />

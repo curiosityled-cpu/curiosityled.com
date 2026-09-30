@@ -9,10 +9,7 @@
  * mainPage controls which page is the landing page (shown when users visit the app).
  */
 import Achievements from './pages/Achievements';
-import AssessmentAnalyticsDashboard from './pages/AssessmentAnalyticsDashboard';
-import AssessmentDetails from './pages/AssessmentDetails';
-import AssessmentResults from './pages/AssessmentResults';
-import Assessments from './pages/Assessments';
+
 import Automations from './pages/Automations';
 import Billing from './pages/Billing';
 import BulkLearningOperations from './pages/BulkLearningOperations';
@@ -25,7 +22,6 @@ import CompetencyManagement from './pages/CompetencyManagement';
 import ConversationalModule from './pages/ConversationalModule';
 import ConversationalModuleBuilder from './pages/ConversationalModuleBuilder';
 import ConversationalModulesLibrary from './pages/ConversationalModulesLibrary';
-import CustomAssessmentBuilder from './pages/CustomAssessmentBuilder';
 import Dashboard from './pages/Dashboard';
 import Development from './pages/Development';
 import EmailTemplates from './pages/EmailTemplates';
@@ -80,10 +76,6 @@ import __Layout from './Layout.jsx';
 
 export const PAGES = {
     "Achievements": Achievements,
-    "AssessmentAnalyticsDashboard": AssessmentAnalyticsDashboard,
-    "AssessmentDetails": AssessmentDetails,
-    "AssessmentResults": AssessmentResults,
-    "Assessments": Assessments,
     "Automations": Automations,
     "Billing": Billing,
     "BulkLearningOperations": BulkLearningOperations,
@@ -96,7 +88,6 @@ export const PAGES = {
     "ConversationalModule": ConversationalModule,
     "ConversationalModuleBuilder": ConversationalModuleBuilder,
     "ConversationalModulesLibrary": ConversationalModulesLibrary,
-    "CustomAssessmentBuilder": CustomAssessmentBuilder,
     "Dashboard": Dashboard,
     "Development": Development,
     "EmailTemplates": EmailTemplates,
