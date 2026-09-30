@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { useAuth } from '@/components/useAuth';
 import { withAuthProtection } from '@/components/hoc/withAuthProtection';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Brain, FileEdit, BarChart3, User, Users, RefreshCw, FileText, FileDown, Loader2 } from 'lucide-react';
+import { Brain, FileEdit, BarChart3, User, Users, RefreshCw, FileText, FileDown, Loader2, ClipboardList } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
-import SubNavMenu from '@/components/common/SubNavMenu';
+import MVPPageLayout from '@/components/mvp/MVPPageLayout';
 
 // Lazy load assessment views
 const StandardAssessmentsView = lazy(() => import('@/components/assessments/StandardAssessmentsView'));
@@ -19,8 +17,8 @@ const TeamAssessmentsView = lazy(() => import('@/components/dashboard/assessment
 const OrgAssessmentsView = lazy(() => import('@/components/dashboard/assessments/OrgAssessmentsView'));
 
 function Assessments() {
-  const { 
-    user, 
+  const {
+    user,
     appRole,
     roleDisplayName,
     isManagerOfManagers,
@@ -41,7 +39,7 @@ function Assessments() {
     }
     return 'my';
   };
-  
+
   const [activeTab, setActiveTab] = useState(getInitialTab());
   const [loading, setLoading] = useState(false);
   const [assessmentCount, setAssessmentCount] = useState(0);
@@ -52,7 +50,7 @@ function Assessments() {
     canViewPersonal: Boolean(hasPermission?.('personal.assessments.view')),
     canViewTeam: Boolean(hasPermission?.('team.assessments.view')),
     canViewOrg: Boolean(
-      hasPermission?.('analytics.assessments.view') || 
+      hasPermission?.('analytics.assessments.view') ||
       isProgramManager || isHRAdmin || isSuperAdmin || isPartnerBusinessAdmin || isPlatformAdmin
     ),
     canManageCustomAssessments: Boolean(
@@ -64,10 +62,10 @@ function Assessments() {
   const allTabs = useMemo(() => {
     const tabs = [];
     if (permissions.canViewPersonal) tabs.push({ id: 'my', label: 'My Assessments', icon: User });
-    if (permissions.canViewTeam) tabs.push({ id: 'team', label: 'Team Assessments', icon: Users });
-    tabs.push({ id: 'standard', label: 'Validated Assessments', icon: Brain });
-    tabs.push({ id: 'custom', label: 'Custom Assessments', icon: FileEdit });
-    if (permissions.canViewOrg) tabs.push({ id: 'analytics', label: 'Assessment Analytics', icon: BarChart3 });
+    if (permissions.canViewTeam) tabs.push({ id: 'team', label: 'Team', icon: Users });
+    tabs.push({ id: 'standard', label: 'Validated', icon: Brain });
+    tabs.push({ id: 'custom', label: 'Custom', icon: FileEdit });
+    if (permissions.canViewOrg) tabs.push({ id: 'analytics', label: 'Analytics', icon: BarChart3 });
     return tabs;
   }, [permissions]);
 
@@ -123,114 +121,137 @@ function Assessments() {
     toast.success('PDF export started');
   };
 
+  const visibleTabs = isOrgLeader ? [] : allTabs;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <Card className="border-0 shadow-xl text-white" style={{ backgroundColor: '#0201ff' }}>
-            <CardContent className="p-4 sm:p-6 md:p-8">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex-1">
-                  <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Assessments</h1>
-                  <p className="opacity-90 text-sm sm:text-base">Manage and track leadership assessments across your organization</p>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {!isOrgLeader && allTabs.length > 0 && (
-                    <SubNavMenu
-                      items={allTabs}
-                      activeId={activeTab}
-                      onItemClick={handleTabChange}
-                      variant="header"
-                    />
-                  )}
-                  <Badge className="bg-white text-gray-800 border border-gray-200 hover:bg-gray-50">
-                    {roleDisplayName || appRole}
-                  </Badge>
-                  <Badge className="bg-white text-gray-800 border border-gray-200 hover:bg-gray-50">
-                    {assessmentCount} Assessments
-                  </Badge>
-                  <Badge className="bg-white text-gray-800 border border-gray-200 hover:bg-gray-50">
-                    {completionRate}% Complete
-                  </Badge>
-                  <Button
-                    onClick={handleRefresh}
-                    variant="ghost"
-                    size="icon"
-                    className="text-white hover:bg-white/20"
-                    title="Refresh data"
-                    disabled={loading}
-                  >
-                    <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                  </Button>
-                  <Button
-                    onClick={handleExportCSV}
-                    variant="ghost"
-                    size="icon"
-                    className="text-white hover:bg-white/20"
-                    title="Export to CSV"
-                  >
-                    <FileText className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    onClick={handleExportPDF}
-                    variant="ghost"
-                    size="icon"
-                    className="text-white hover:bg-white/20"
-                    title="Export to PDF"
-                  >
-                    <FileDown className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-
-
-        {/* Content based on active tab */}
-        <div className="mt-6">
-          {activeTab === 'standard' && !isOrgLeader && (
-            <Suspense fallback={<div className="flex justify-center p-8"><Loader2 className="w-12 h-12 animate-spin" style={{ color: '#0202ff' }} /></div>}>
-              <StandardAssessmentsView />
-            </Suspense>
-          )}
-
-          {activeTab === 'custom' && !isOrgLeader && (
-            <Suspense fallback={<div className="flex justify-center p-8"><Loader2 className="w-12 h-12 animate-spin" style={{ color: '#0202ff' }} /></div>}>
-              {permissions.canManageCustomAssessments ? (
-                <AssessmentManagement />
-              ) : (
-                <MyCustomAssessmentsView />
-              )}
-            </Suspense>
-          )}
-
-          {activeTab === 'analytics' && (
-            <Suspense fallback={<div className="flex justify-center p-8"><Loader2 className="w-12 h-12 animate-spin" style={{ color: '#0202ff' }} /></div>}>
-              <OrgAssessmentsView />
-            </Suspense>
-          )}
-
-          {activeTab === 'my' && (
-            <Suspense fallback={<div className="flex justify-center p-8"><Loader2 className="w-12 h-12 animate-spin" style={{ color: '#0202ff' }} /></div>}>
-              <MyAssessmentsView />
-            </Suspense>
-          )}
-
-          {activeTab === 'team' && (
-            <Suspense fallback={<div className="flex justify-center p-8"><Loader2 className="w-12 h-12 animate-spin" style={{ color: '#0202ff' }} /></div>}>
-              <TeamAssessmentsView />
-            </Suspense>
-          )}
+    <MVPPageLayout
+      title="Assessments"
+      subtitle="Manage and track leadership assessments across your organization."
+      action={
+        <div className="hidden sm:flex items-center gap-2">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0202ff]/5 border border-[#0202ff]/15">
+            <ClipboardList className="w-3.5 h-3.5 text-[#0202ff]" />
+            <span className="text-xs font-medium text-[#0202ff]">{assessmentCount} Assessments</span>
+            <span className="w-px h-3 bg-[#0202ff]/20" />
+            <span className="text-xs font-medium text-[#0202ff]">{completionRate}% Complete</span>
+          </div>
+          <Button
+            onClick={handleRefresh}
+            variant="outline"
+            size="icon"
+            title="Refresh data"
+            disabled={loading}
+            className="h-8 w-8"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+          </Button>
+          <Button
+            onClick={handleExportCSV}
+            variant="outline"
+            size="icon"
+            title="Export to CSV"
+            className="h-8 w-8"
+          >
+            <FileText className="w-3.5 h-3.5" />
+          </Button>
+          <Button
+            onClick={handleExportPDF}
+            variant="outline"
+            size="icon"
+            title="Export to PDF"
+            className="h-8 w-8"
+          >
+            <FileDown className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+      }
+    >
+      {/* Mobile stats + actions */}
+      <div className="sm:hidden flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0202ff]/5 border border-[#0202ff]/15">
+          <ClipboardList className="w-3.5 h-3.5 text-[#0202ff]" />
+          <span className="text-xs font-medium text-[#0202ff]">{assessmentCount} · {completionRate}%</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button onClick={handleRefresh} variant="outline" size="icon" title="Refresh" disabled={loading} className="h-8 w-8">
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+          </Button>
+          <Button onClick={handleExportCSV} variant="outline" size="icon" title="Export CSV" className="h-8 w-8">
+            <FileText className="w-3.5 h-3.5" />
+          </Button>
+          <Button onClick={handleExportPDF} variant="outline" size="icon" title="Export PDF" className="h-8 w-8">
+            <FileDown className="w-3.5 h-3.5" />
+          </Button>
         </div>
       </div>
-    </div>
+
+      {/* Tab navigation */}
+      {visibleTabs.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="flex gap-1 bg-gray-100 rounded-xl p-1 overflow-x-auto">
+            {visibleTabs.map(tab => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-medium py-2 px-2 rounded-lg transition-all whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? 'bg-white shadow-sm text-gray-900'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Content based on active tab */}
+      <motion.div
+        key={activeTab}
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+      >
+        {activeTab === 'standard' && !isOrgLeader && (
+          <Suspense fallback={<div className="flex justify-center p-8"><Loader2 className="w-12 h-12 animate-spin" style={{ color: '#0202ff' }} /></div>}>
+            <StandardAssessmentsView />
+          </Suspense>
+        )}
+
+        {activeTab === 'custom' && !isOrgLeader && (
+          <Suspense fallback={<div className="flex justify-center p-8"><Loader2 className="w-12 h-12 animate-spin" style={{ color: '#0202ff' }} /></div>}>
+            {permissions.canManageCustomAssessments ? (
+              <AssessmentManagement />
+            ) : (
+              <MyCustomAssessmentsView />
+            )}
+          </Suspense>
+        )}
+
+        {activeTab === 'analytics' && (
+          <Suspense fallback={<div className="flex justify-center p-8"><Loader2 className="w-12 h-12 animate-spin" style={{ color: '#0202ff' }} /></div>}>
+            <OrgAssessmentsView />
+          </Suspense>
+        )}
+
+        {activeTab === 'my' && (
+          <Suspense fallback={<div className="flex justify-center p-8"><Loader2 className="w-12 h-12 animate-spin" style={{ color: '#0202ff' }} /></div>}>
+            <MyAssessmentsView />
+          </Suspense>
+        )}
+
+        {activeTab === 'team' && (
+          <Suspense fallback={<div className="flex justify-center p-8"><Loader2 className="w-12 h-12 animate-spin" style={{ color: '#0202ff' }} /></div>}>
+            <TeamAssessmentsView />
+          </Suspense>
+        )}
+      </motion.div>
+    </MVPPageLayout>
   );
 }
 
