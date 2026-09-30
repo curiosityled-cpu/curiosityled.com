@@ -123,6 +123,9 @@ function RoleSelector() {
   const selectableRoles = isPrivilegedUser
     ? roles
     : roles.filter((r) => selfServiceRoleIds.includes(r.id));
+  // All roles are shown in the grid for visibility; the dropdown only lists
+  // roles the current user is allowed to switch to. The backend (setMyRole)
+  // enforces the restriction regardless.
 
   const currentUserRole = roles.find((r) => r.id === user?.app_role);
   const CurrentRoleIcon = currentUserRole?.icon || Shield;
@@ -276,29 +279,37 @@ function RoleSelector() {
               </Button>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-                {selectableRoles.map((role) => (
-                  <div
-                    key={role.id}
-                    className={`p-3 rounded-lg border-2 transition-all ${
-                      selectedRole === role.id
-                        ? 'border-purple-600 bg-purple-50'
-                        : 'border-gray-200 bg-white'
-                    } flex items-start gap-3`}
-                  >
-                    <role.icon className="h-5 w-5 text-gray-600 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 flex items-center">
-                        {role.title}
-                        {role.badge && (
-                          <Badge variant="outline" className="text-xs px-1 py-0.5 ml-2 border-purple-400 text-purple-700">
-                            {role.badge}
-                          </Badge>
+                {roles.map((role) => {
+                  const canSelect = selectableRoles.some((r) => r.id === role.id);
+                  return (
+                    <div
+                      key={role.id}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        selectedRole === role.id
+                          ? 'border-purple-600 bg-purple-50'
+                          : canSelect
+                            ? 'border-gray-200 bg-white'
+                            : 'border-gray-100 bg-gray-50 opacity-60'
+                      } flex items-start gap-3`}
+                    >
+                      <role.icon className="h-5 w-5 text-gray-600 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 flex items-center">
+                          {role.title}
+                          {role.badge && (
+                            <Badge variant="outline" className="text-xs px-1 py-0.5 ml-2 border-purple-400 text-purple-700">
+                              {role.badge}
+                            </Badge>
+                          )}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">{role.description}</p>
+                        {!canSelect && (
+                          <p className="text-[10px] text-gray-400 mt-1 italic">Requires admin access</p>
                         )}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">{role.description}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
