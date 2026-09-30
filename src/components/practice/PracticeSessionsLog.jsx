@@ -9,7 +9,7 @@ import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { Dumbbell, ChevronRight, Loader2, Inbox } from "lucide-react";
+import { Dumbbell, ChevronRight, ChevronDown, ChevronUp, Loader2, Inbox } from "lucide-react";
 
 const PAGE_SIZE = 10;
 
@@ -54,6 +54,9 @@ export default function PracticeSessionsLog() {
   const { user } = useAuth();
   const [showAll, setShowAll] = useState(false);
   const [page, setPage] = useState(0);
+  const [expanded, setExpanded] = useState(() => {
+    try { const s = localStorage.getItem("cl_collapse_sessions"); return s !== null ? JSON.parse(s) : true; } catch { return true; }
+  });
 
   const { data: allPulses = [], isLoading } = useQuery({
     queryKey: ["practice-sessions", user?.email],
@@ -80,7 +83,10 @@ export default function PracticeSessionsLog() {
   return (
     <div className="bg-card border border-border rounded-2xl overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border">
+      <button
+        onClick={() => { const v = !expanded; setExpanded(v); try { localStorage.setItem("cl_collapse_sessions", JSON.stringify(v)); } catch {} }}
+        className="flex items-center gap-2.5 px-4 py-3 w-full text-left group"
+      >
         <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-100 dark:border-amber-900/40 flex items-center justify-center flex-shrink-0">
           <Dumbbell className="w-3.5 h-3.5 text-amber-600" />
         </div>
@@ -88,10 +94,14 @@ export default function PracticeSessionsLog() {
           Recent Sessions
         </p>
         <span className="text-[10px] text-muted-foreground">{sessions.length} total</span>
-      </div>
+        {expanded
+          ? <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+          : <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
+      </button>
 
       {/* Body */}
-      <div className="p-4">
+      {expanded && (
+      <div className="p-4 border-t border-border">
         {isLoading ? (
           <div className="flex items-center justify-center py-6">
             <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
@@ -181,6 +191,7 @@ export default function PracticeSessionsLog() {
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

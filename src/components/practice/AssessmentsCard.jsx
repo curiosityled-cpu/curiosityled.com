@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { Link } from "react-router-dom";
-import { ClipboardList, ChevronRight, Loader2, Inbox, CheckCircle, Clock, Brain, ArrowRight } from "lucide-react";
+import { ClipboardList, ChevronRight, ChevronDown, ChevronUp, Loader2, Inbox, CheckCircle, Clock, Brain, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import AssessmentResultsDrawer from "./AssessmentResultsDrawer";
 
@@ -21,6 +21,9 @@ function formatWhen(iso) {
 export default function AssessmentsCard() {
   const { user } = useAuth();
   const [drawer, setDrawer] = useState({ open: false, result: null });
+  const [expanded, setExpanded] = useState(() => {
+    try { const s = localStorage.getItem("cl_collapse_assessments"); return s !== null ? JSON.parse(s) : true; } catch { return true; }
+  });
 
   // Leadership Index results (Assessment entity)
   const { data: leadershipResults = [], isLoading: loadingLI } = useQuery({
@@ -127,18 +130,27 @@ export default function AssessmentsCard() {
       <div className="bg-card border border-border rounded-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border">
-          <div className="w-7 h-7 rounded-lg bg-violet-50 dark:bg-violet-950/40 border border-violet-100 dark:border-violet-900/40 flex items-center justify-center flex-shrink-0">
-            <ClipboardList className="w-3.5 h-3.5 text-violet-600" />
-          </div>
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex-1">
-            Assessments
-          </p>
+          <button
+            onClick={() => { const v = !expanded; setExpanded(v); try { localStorage.setItem("cl_collapse_assessments", JSON.stringify(v)); } catch {} }}
+            className="flex items-center gap-2.5 flex-1 text-left group"
+          >
+            <div className="w-7 h-7 rounded-lg bg-violet-50 dark:bg-violet-950/40 border border-violet-100 dark:border-violet-900/40 flex items-center justify-center flex-shrink-0">
+              <ClipboardList className="w-3.5 h-3.5 text-violet-600" />
+            </div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex-1">
+              Assessments
+            </p>
+            {expanded
+              ? <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              : <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
+          </button>
           <Link to="/assessment-library" className="text-[10px] font-medium text-[#0202ff] hover:underline flex items-center gap-0.5">
             Library <ChevronRight className="w-3 h-3" />
           </Link>
         </div>
 
         {/* Body */}
+        {expanded && (
         <div className="p-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-6">
@@ -205,6 +217,7 @@ export default function AssessmentsCard() {
             </div>
           )}
         </div>
+        )}
       </div>
 
       <AssessmentResultsDrawer

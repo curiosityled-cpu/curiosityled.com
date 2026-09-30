@@ -10,7 +10,7 @@
  * returns and captures their commitment to mark the workout complete.
  */
 import React, { useState, useEffect } from "react";
-import { Dumbbell, CheckCircle2, Brain, RotateCcw, Clock, Target, Zap } from "lucide-react";
+import { Dumbbell, CheckCircle2, Brain, RotateCcw, Clock, Target, Zap, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
@@ -66,6 +66,9 @@ export default function WorkoutsSection({ goals = [], trends = null, insight = n
   const [completedIds, setCompletedIds] = useState(() => {
     try { return JSON.parse(sessionStorage.getItem('cl_workouts_done') || '[]'); } catch { return []; }
   });
+  const [expanded, setExpanded] = useState(() => {
+    try { const s = localStorage.getItem("cl_collapse_workouts"); return s !== null ? JSON.parse(s) : true; } catch { return true; }
+  });
 
   useEffect(() => {
     if (!user?.email) return;
@@ -110,7 +113,10 @@ export default function WorkoutsSection({ goals = [], trends = null, insight = n
 
   return (
     <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
-      <div className="px-5 pt-5 pb-2 flex items-center justify-between">
+      <button
+        onClick={() => { const v = !expanded; setExpanded(v); try { localStorage.setItem("cl_collapse_workouts", JSON.stringify(v)); } catch {} }}
+        className="px-5 pt-5 pb-2 flex items-center justify-between w-full text-left group"
+      >
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-violet-50 border border-violet-100 flex items-center justify-center">
             <Dumbbell className="w-3.5 h-3.5 text-violet-600" />
@@ -124,7 +130,11 @@ export default function WorkoutsSection({ goals = [], trends = null, insight = n
             </p>
           </div>
         </div>
-      </div>
+        {expanded
+          ? <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          : <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />}
+      </button>
+      {expanded && (
       <CardContent className="px-5 pt-2 pb-5 space-y-2">
         {/* Dynamic pattern-driven workouts */}
         {loadingDynamic ? (
@@ -277,6 +287,7 @@ export default function WorkoutsSection({ goals = [], trends = null, insight = n
           </button>
         )}
       </CardContent>
+      )}
     </Card>
   );
 }
