@@ -67,8 +67,17 @@ function Birds({ color }) {
   return (
     <div className="flex gap-3" style={{ color, animation: "hero-bird-bob 3s ease-in-out infinite" }}>
       {[0, 1, 2].map((i) => (
-        <svg key={i} width="14" height="7" viewBox="0 0 14 7" fill="none">
-          <path d="M0 5 Q3.5 0 7 4 Q10.5 0 14 5" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+        <svg key={i} width="14" height="10" viewBox="0 0 14 10" fill="none">
+          <path stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round">
+            <animate
+              attributeName="d"
+              dur="0.5s"
+              repeatCount="indefinite"
+              begin={`${i * 0.12}s`}
+              values="M0 6 Q3.5 1 7 5 Q10.5 1 14 6; M0 4 Q3.5 8 7 5 Q10.5 8 14 4; M0 6 Q3.5 1 7 5 Q10.5 1 14 6"
+              keyTimes="0; 0.5; 1"
+            />
+          </path>
         </svg>
       ))}
     </div>
