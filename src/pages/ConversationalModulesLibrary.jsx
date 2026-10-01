@@ -6,10 +6,9 @@ import { Plus, Brain, Clock, Edit2, Play, Lock } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/components/useAuth";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import AtreusCoach from "@/components/ai/AtreusCoach";
+import ConversationalModuleBuilderDialog from "@/components/dev-manager/ConversationalModuleBuilderDialog";
 
 export default function ConversationalModulesLibrary() {
   const { user, hasPermission } = useAuth();
@@ -18,6 +17,8 @@ export default function ConversationalModulesLibrary() {
   const [loading, setLoading] = useState(true);
   const [showAtreus, setShowAtreus] = useState(false);
   const [selectedModule, setSelectedModule] = useState(null);
+  const [builderOpen, setBuilderOpen] = useState(false);
+  const [editingModuleId, setEditingModuleId] = useState(null);
 
   const canCreate = hasPermission("content.create");
 
@@ -80,6 +81,22 @@ export default function ConversationalModulesLibrary() {
     loadData(); // Refresh progress
   };
 
+  const openNewModuleBuilder = () => {
+    setEditingModuleId(null);
+    setBuilderOpen(true);
+  };
+
+  const openEditModuleBuilder = (mod) => {
+    setEditingModuleId(mod.id);
+    setBuilderOpen(true);
+  };
+
+  const handleBuilderSaved = () => {
+    setBuilderOpen(false);
+    setEditingModuleId(null);
+    loadData();
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -99,12 +116,10 @@ export default function ConversationalModulesLibrary() {
           <p className="text-gray-600 mt-1">AI-guided learning experiences with Atreus</p>
         </div>
         {canCreate && (
-          <Link to={createPageUrl("ConversationalModuleBuilder")}>
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Create Module
-            </Button>
-          </Link>
+          <Button className="bg-blue-600 hover:bg-blue-700" onClick={openNewModuleBuilder}>
+            <Plus className="w-4 h-4 mr-2" />
+            Create Module
+          </Button>
         )}
       </div>
 
@@ -119,12 +134,10 @@ export default function ConversationalModulesLibrary() {
               Conversational learning modules will appear here
             </p>
             {canCreate && (
-              <Link to={createPageUrl("ConversationalModuleBuilder")}>
-                <Button className="bg-blue-600 hover:bg-blue-700">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create First Module
-                </Button>
-              </Link>
+              <Button className="bg-blue-600 hover:bg-blue-700" onClick={openNewModuleBuilder}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create First Module
+              </Button>
             )}
           </CardContent>
         </Card>
@@ -187,12 +200,10 @@ export default function ConversationalModulesLibrary() {
 
                       <div className="flex gap-2 pt-2">
                         {canCreate && (
-                          <Link to={`${createPageUrl("ConversationalModuleBuilder")}?moduleId=${module.id}`} className="flex-1">
-                            <Button variant="outline" size="sm" className="w-full">
-                              <Edit2 className="w-4 h-4 mr-2" />
-                              Edit
-                            </Button>
-                          </Link>
+                          <Button variant="outline" size="sm" className="flex-1" onClick={() => openEditModuleBuilder(module)}>
+                            <Edit2 className="w-4 h-4 mr-2" />
+                            Edit
+                          </Button>
                         )}
                         <Button 
                           size="sm" 
@@ -229,6 +240,13 @@ export default function ConversationalModulesLibrary() {
           />
         )}
       </AnimatePresence>
+
+      <ConversationalModuleBuilderDialog
+        open={builderOpen}
+        onClose={() => { setBuilderOpen(false); setEditingModuleId(null); }}
+        moduleId={editingModuleId}
+        onSaved={handleBuilderSaved}
+      />
     </div>
   );
 }
