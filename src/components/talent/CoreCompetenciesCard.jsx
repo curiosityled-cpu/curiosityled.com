@@ -9,7 +9,7 @@ import CompetencyAiAssistDialog from "@/components/talent/CompetencyAiAssistDial
 export default function CoreCompetenciesCard() {
   const { user } = useAuth();
   const appRole = user?.app_role || user?.data?.app_role || user?.role;
-  const isSuperAdmin = appRole === "Super Administrator";
+  const canManageClient = appRole === "Super Administrator" || appRole === "Platform Admin";
   const { client, loading: clientLoading, refreshContext } = useClient();
   const [competencies, setCompetencies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,14 +19,14 @@ export default function CoreCompetenciesCard() {
   const selectedIds = client?.selected_competency_ids || [];
 
   useEffect(() => {
-    if (!isSuperAdmin) return;
+    if (!canManageClient) return;
     let cancelled = false;
     base44.entities.Competency.list()
       .then((rows) => { if (!cancelled) setCompetencies(rows || []); })
       .catch(() => {})
       .finally(() => !cancelled && setLoading(false));
     return () => { cancelled = true; };
-  }, [isSuperAdmin, user?.app_role, user?.data?.app_role, user?.role]);
+  }, [canManageClient, user?.app_role, user?.data?.app_role, user?.role]);
 
   const coreCompetencies = useMemo(
     () => competencies.filter((c) => c.is_platform_default),
@@ -37,7 +37,7 @@ export default function CoreCompetenciesCard() {
     [competencies, client?.id]
   );
 
-  if (!isSuperAdmin) return null;
+  if (!canManageClient) return null;
 
   const competencySetLocked = client?.settings?.locks?.competency_set;
 

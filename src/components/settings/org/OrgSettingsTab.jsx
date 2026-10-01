@@ -19,7 +19,7 @@ import ReportingSection from "./ReportingSection";
 import SuperAdminSection from "./SuperAdminSection";
 
 export default function OrgSettingsTab() {
-  const { user, isSuperAdmin } = useAuth();
+  const { user, isSuperAdmin, isPlatformAdmin } = useAuth();
   const { client, loading, refreshContext } = useClient();
   const [settings, setSettings] = useState(null);
   const [selectedCompetencyIds, setSelectedCompetencyIds] = useState([]);
@@ -34,12 +34,12 @@ export default function OrgSettingsTab() {
     }
   }, [client]);
 
-  if (!isSuperAdmin) {
+  if (!isSuperAdmin && !isPlatformAdmin) {
     return (
       <Alert>
         <Lock className="w-4 h-4" />
         <AlertDescription>
-          Organization settings are only available to Super Administrators.
+          Organization settings are only available to Super Administrators and Platform Admins.
         </AlertDescription>
       </Alert>
     );
@@ -95,7 +95,7 @@ export default function OrgSettingsTab() {
   };
 
   const locks = settings.locks || {};
-  const sharedProps = { settings, update, locks, toggleLock, canLock: isSuperAdmin };
+  const sharedProps = { settings, update, locks, toggleLock, canLock: isSuperAdmin || isPlatformAdmin };
 
   return (
     <div className="space-y-6">

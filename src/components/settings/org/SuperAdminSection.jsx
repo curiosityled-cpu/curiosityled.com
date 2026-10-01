@@ -10,14 +10,14 @@ import { useAuth } from "@/components/useAuth";
  * reusable without leaking editable org controls to lower-level admins.
  */
 export default function SuperAdminSection({ children, label = "this section" }) {
-  const { isSuperAdmin } = useAuth();
+  const { isSuperAdmin, isPlatformAdmin } = useAuth();
 
-  if (!isSuperAdmin) {
+  if (!isSuperAdmin && !isPlatformAdmin) {
     return (
       <Alert>
         <Lock className="w-4 h-4" />
         <AlertDescription>
-          {label.charAt(0).toUpperCase() + label.slice(1)} is only available to Super Administrators.
+          {label.charAt(0).toUpperCase() + label.slice(1)} is only available to Super Administrators and Platform Admins.
         </AlertDescription>
       </Alert>
     );
