@@ -53,10 +53,11 @@ const SIGNAL_TYPE_META = {
   survey: { label: "Survey", entity: "CustomForm", color: "#10b981", icon: BarChart3 },
   pulse: { label: "Pulse", entity: "CustomForm", color: "#f59e0b", icon: Radio },
   feedback: { label: "Feedback", entity: "CustomForm", color: "#ec4899", icon: MessageSquare },
+  custom: { label: "Custom Form", entity: "CustomForm", color: "#64748b", icon: FileText },
 };
 
 // CustomForm form_types that are "signal-like" (not request, enrollment, review, etc.)
-const SIGNAL_FORM_TYPES = ["feedback_survey", "satisfaction_survey", "poll", "quiz"];
+const SIGNAL_FORM_TYPES = ["feedback_survey", "satisfaction_survey", "poll", "quiz", "custom"];
 
 // Map CustomForm form_type to a signal type
 function getSignalTypeFromForm(form) {
@@ -64,12 +65,15 @@ function getSignalTypeFromForm(form) {
   if (form.form_type === "satisfaction_survey") return "feedback";
   if (form.form_type === "feedback_survey") return "survey";
   if (form.form_type === "quiz") return "quiz";
+  if (form.form_type === "custom") return "custom";
   return "survey";
 }
 
-// Map CustomAssessment type to a signal type
+// Map CustomAssessment.type enum to a signal-type key used by SIGNAL_TYPE_META
 function getSignalTypeFromAssessment(assessment) {
-  return assessment.type || "assessment";
+  const t = assessment.type;
+  if (t === "custom_assessment") return "assessment";
+  return t || "assessment";
 }
 
 export default function SignalsTab({ user }) {
@@ -380,6 +384,11 @@ export default function SignalsTab({ user }) {
                         {assigneeCount > 0 && (
                           <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-600 flex items-center gap-1">
                             <Users className="w-3 h-3" />{assigneeCount}
+                          </span>
+                        )}
+                        {(signal.entityRef.submission_count > 0) && (
+                          <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-blue-50 text-blue-700 flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3" />{signal.entityRef.submission_count} submitted
                           </span>
                         )}
                       </div>
