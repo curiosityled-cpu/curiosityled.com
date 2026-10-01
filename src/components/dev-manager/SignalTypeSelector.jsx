@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { ClipboardList, HelpCircle, CheckCircle, BarChart3, Radio, MessageSquare } from "lucide-react";
+import { ClipboardList, HelpCircle, CheckCircle, BarChart3, Radio, MessageSquare, FileText } from "lucide-react";
 
 const SIGNAL_TYPES = [
   {
@@ -45,12 +45,19 @@ const SIGNAL_TYPES = [
     icon: MessageSquare,
     color: "#ec4899",
   },
+  {
+    id: "custom",
+    label: "Custom Form",
+    description: "Build your own signal from scratch — no preset scoring or structure.",
+    icon: FileText,
+    color: "#64748b",
+  },
 ];
 
 export default function SignalTypeSelector({ onSelect }) {
   return (
     <div className="space-y-4">
-      <p className="text-xs text-gray-500">Choose the type of signal you want to create. Each type routes to the right builder automatically.</p>
+      <p className="text-xs text-gray-500">Choose the type of signal you want to create. Each type pre-configures the right settings — you add the questions.</p>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {SIGNAL_TYPES.map((type) => {
           const Icon = type.icon;

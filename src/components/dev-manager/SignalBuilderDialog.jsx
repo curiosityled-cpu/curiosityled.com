@@ -1,15 +1,16 @@
 import React, { useRef, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, X } from "lucide-react";
 import SignalTypeSelector from "./SignalTypeSelector";
 import SignalBuilder from "./SignalBuilder";
+import { SIGNAL_TYPE_CONFIG } from "./signalTemplateConfig";
 
 /**
- * SignalBuilderDialog — modal popup for creating or editing a Signal.
- * Two-step flow inside a single dialog:
- *   1. Type selector (only when creating, not editing)
- *   2. Builder form
+ * SignalBuilderDialog — modal for creating or editing a Signal.
+ * Two-step flow:
+ *   1. Type selector (compact, only when creating)
+ *   2. Full-screen visual builder (FormBuilderEditor + settings + AI Assist)
  *
  * Props:
  *   open          — controlled open state
@@ -54,45 +55,63 @@ export default function SignalBuilderDialog({ open, onClose, editingSignal, user
     onClose?.();
   };
 
+  const isBuilder = step === "builder" && selectedType;
+  const typeLabel = selectedType ? SIGNAL_TYPE_CONFIG[selectedType]?.label : "";
+
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center gap-2">
-            {step === "builder" && !editingSignal && (
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={handleBack}>
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
-            )}
-            <DialogTitle>
-              {step === "selector" ? "Create a Signal" : editingSignal ? "Edit Signal" : "New Signal"}
-            </DialogTitle>
+      <DialogContent
+        className={
+          isBuilder
+            ? "max-w-7xl w-[calc(100vw-2rem)] h-[calc(100vh-2rem)] p-0 gap-0 overflow-hidden rounded-2xl"
+            : "max-w-2xl max-h-[90vh] overflow-y-auto"
+        }
+      >
+        {isBuilder ? (
+          <div className="flex flex-col h-full">
+            {/* Header bar */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-white flex-shrink-0">
+              <div className="flex items-center gap-2 min-w-0">
+                {!editingSignal && (
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 flex-shrink-0" onClick={handleBack}>
+                    <ArrowLeft className="w-4 h-4" />
+                  </Button>
+                )}
+                <DialogTitle className="text-base font-semibold truncate">
+                  {editingSignal ? `Edit ${typeLabel}` : `New ${typeLabel}`}
+                </DialogTitle>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Button variant="outline" size="sm" onClick={handleClose}>
+                  <X className="w-4 h-4 mr-1.5" />
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveClick} disabled={saving} className="bg-[#0202ff] hover:bg-[#0101dd] text-white">
+                  {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                  {saving ? "Saving…" : editingSignal ? "Update Signal" : "Create Signal"}
+                </Button>
+              </div>
+            </div>
+
+            {/* Builder body */}
+            <div className="flex-1 min-h-0 p-4 overflow-hidden">
+              <SignalBuilder
+                ref={formRef}
+                signalType={selectedType}
+                editingSignal={editingSignal}
+                onClose={handleFormClose}
+                users={users}
+                showChrome={false}
+              />
+            </div>
           </div>
-        </DialogHeader>
-
-        {step === "selector" && (
-          <SignalTypeSelector onSelect={handleTypeSelect} />
-        )}
-
-        {step === "builder" && selectedType && (
-          <SignalBuilder
-            ref={formRef}
-            signalType={selectedType}
-            editingSignal={editingSignal}
-            onClose={handleFormClose}
-            users={users}
-            showChrome={false}
-          />
-        )}
-
-        {step === "builder" && (
-          <DialogFooter className="mt-2">
-            <Button variant="outline" onClick={handleClose}>Cancel</Button>
-            <Button onClick={handleSaveClick} disabled={saving} className="bg-[#0202ff] hover:bg-[#0101dd] text-white">
-              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-              {saving ? "Saving..." : editingSignal ? "Update Signal" : "Create Signal"}
-            </Button>
-          </DialogFooter>
+        ) : (
+          <>
+            <DialogTitle className="text-base font-semibold">Create a Signal</DialogTitle>
+            <div className="mt-2">
+              <SignalTypeSelector onSelect={handleTypeSelect} />
+            </div>
+          </>
         )}
       </DialogContent>
     </Dialog>
