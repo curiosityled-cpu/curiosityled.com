@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Users, Globe, Lock, Settings2, ListChecks } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+import { useAuth } from "@/components/useAuth";
 import FormBuilderEditor from "@/components/forms/FormBuilderEditor";
 import SignalAIAssist from "./SignalAIAssist";
 import { SIGNAL_TYPE_CONFIG, configToSections, sectionsToConfig } from "./signalTemplateConfig";
@@ -34,6 +35,7 @@ const SignalBuilder = forwardRef(function SignalBuilder(
 ) {
   const config = SIGNAL_TYPE_CONFIG[signalType];
   const isAssessment = config?.entity === "CustomAssessment";
+  const { isAnyAdmin } = useAuth();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -120,6 +122,7 @@ const SignalBuilder = forwardRef(function SignalBuilder(
           form_type: formData.form_type,
           form_category: formData.form_category,
           status: formData.status,
+          access_mode: formData.access_mode,
           assigned_to_emails: formData.assigned_user_emails,
           config: builtConfig,
         };
@@ -212,13 +215,20 @@ const SignalBuilder = forwardRef(function SignalBuilder(
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">Access</Label>
-              <Select value={formData.access_mode} onValueChange={(v) => setFormData({ ...formData, access_mode: v })}>
+              <Select
+                value={formData.access_mode}
+                onValueChange={(v) => setFormData({ ...formData, access_mode: v })}
+                disabled={!isAnyAdmin}
+              >
                 <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="open"><div className="flex items-center gap-2"><Globe className="w-3.5 h-3.5" /> Open</div></SelectItem>
                   <SelectItem value="closed"><div className="flex items-center gap-2"><Lock className="w-3.5 h-3.5" /> Closed</div></SelectItem>
                 </SelectContent>
               </Select>
+              {!isAnyAdmin && (
+                <p className="text-[11px] text-gray-400 leading-tight">Enterprise-wide (Open) access requires a Program Administrator or above.</p>
+              )}
             </div>
           </div>
 

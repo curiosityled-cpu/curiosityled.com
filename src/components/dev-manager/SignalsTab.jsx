@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import {
   Radio, MoreHorizontal, Send, Play, Pause, Trash2, Copy, Loader2,
   Search, Users, Plus, FileText, ClipboardList, Brain,
-  MessageSquare, BarChart3, HelpCircle, CheckCircle, ArrowRight, Radio as RadioIcon
+  MessageSquare, BarChart3, HelpCircle, CheckCircle, ArrowRight, Radio as RadioIcon, Globe
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -381,6 +381,11 @@ export default function SignalsTab({ user }) {
                       {signal.description && <p className="text-xs text-gray-500 line-clamp-2">{signal.description}</p>}
                       <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-gray-100">
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badge.className}`}>{badge.label}</span>
+                        {signal.entityRef.access_mode === "open" && signal.status === "published" && (
+                          <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-indigo-50 text-indigo-700 flex items-center gap-1">
+                            <Globe className="w-3 h-3" />Enterprise
+                          </span>
+                        )}
                         {assigneeCount > 0 && (
                           <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-600 flex items-center gap-1">
                             <Users className="w-3 h-3" />{assigneeCount}
