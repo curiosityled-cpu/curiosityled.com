@@ -59,6 +59,15 @@
       "default": "draft",
       "description": "Publication status"
     },
+    "access_mode": {
+      "type": "string",
+      "enum": [
+        "open",
+        "closed"
+      ],
+      "default": "closed",
+      "description": "Open: available to everyone in the enterprise (tenant). Closed: requires assignment via assigned_to_emails."
+    },
     "version": {
       "type": "number",
       "default": 1,
@@ -283,6 +292,11 @@
               "{{user.email}}"
             ]
           }
+        },
+        {
+          "data.access_mode": "open",
+          "data.status": "published",
+          "data.client_id": "{{user.data.client_id}}"
         },
         {
           "data.public_access_enabled": true,
