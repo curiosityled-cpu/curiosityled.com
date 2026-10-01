@@ -34,7 +34,7 @@ const SIGNAL_TYPES = [
   {
     id: "pulse",
     label: "Pulse",
-    description: "Short, frequent one-question check on sentiment or sentiment.",
+    description: "Short, frequent one-question check on sentiment or morale.",
     icon: Radio,
     color: "#f59e0b",
   },
@@ -50,23 +50,23 @@ const SIGNAL_TYPES = [
 export default function SignalTypeSelector({ onSelect }) {
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-500">Choose the type of signal you want to create. Each type routes to the right builder automatically.</p>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <p className="text-xs text-gray-500">Choose the type of signal you want to create. Each type routes to the right builder automatically.</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {SIGNAL_TYPES.map((type) => {
           const Icon = type.icon;
           return (
             <Card
               key={type.id}
-              className="hover:shadow-lg transition-all cursor-pointer border border-gray-100 hover:border-gray-200"
+              className="hover:shadow-md transition-all cursor-pointer border border-gray-100 rounded-2xl hover:border-gray-200"
               onClick={() => onSelect(type.id)}
             >
-              <CardContent className="p-5 space-y-3">
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${type.color}15` }}>
-                  <Icon className="w-5.5 h-5.5" style={{ color: type.color }} />
+              <CardContent className="p-4 space-y-2.5">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${type.color}15` }}>
+                  <Icon className="w-4.5 h-4.5" style={{ color: type.color }} />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-sm">{type.label}</h4>
-                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">{type.description}</p>
+                  <h4 className="font-medium text-sm text-gray-900">{type.label}</h4>
+                  <p className="text-xs text-gray-500 mt-1 leading-relaxed line-clamp-2">{type.description}</p>
                 </div>
               </CardContent>
             </Card>

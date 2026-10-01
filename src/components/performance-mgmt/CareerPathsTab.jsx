@@ -1,15 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Briefcase, GitBranch, Pencil, Grid3x3, List, Search, Upload, Download, Trash2 } from "lucide-react";
+import { Plus, Briefcase, GitBranch, Pencil, Grid3x3, List, Search, Upload, Download, Trash2, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import RoleModal from "@/components/careerpath/RoleModal";
 import CareerPathModal from "@/components/careerpath/CareerPathModal";
+
+const SUB_SECTIONS = [
+  { id: 'roles', label: 'Roles', icon: Briefcase },
+  { id: 'paths', label: 'Career Paths', icon: GitBranch },
+];
 
 export default function CareerPathsTab({ user }) {
   const [roles, setRoles] = useState([]);
@@ -51,7 +56,7 @@ export default function CareerPathsTab({ user }) {
   };
 
   if (isLoading) {
-    return <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0202ff]" /></div>;
+    return <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-[#0202ff]" /></div>;
   }
 
   const openRoleModal = (role = null) => { setSelectedRole(role); setShowRoleModal(true); };
@@ -128,93 +133,118 @@ Senior Product Manager,leading_others,product,"Lead product strategy and cross-f
   };
 
   return (
-    <div className="space-y-6">
-      {/* Tab Navigation */}
-      <div className="flex gap-4 border-b border-gray-200">
-        <button onClick={() => setActiveTab('roles')} className={`pb-2 px-4 font-medium text-sm transition-colors ${activeTab === 'roles' ? 'text-[#0202ff] border-b-2 border-[#0202ff]' : 'text-gray-600 hover:text-gray-900'}`}>
-          <div className="flex items-center gap-2"><Briefcase className="w-4 h-4" /> Roles ({roles.length})</div>
-        </button>
-        <button onClick={() => setActiveTab('paths')} className={`pb-2 px-4 font-medium text-sm transition-colors ${activeTab === 'paths' ? 'text-[#0202ff] border-b-2 border-[#0202ff]' : 'text-gray-600 hover:text-gray-900'}`}>
-          <div className="flex items-center gap-2"><GitBranch className="w-4 h-4" /> Career Paths ({careerPaths.length})</div>
-        </button>
+    <div className="space-y-4">
+      {/* Sub-section toggle */}
+      <div className="flex gap-1 bg-gray-50 border border-gray-100 rounded-xl p-1 w-fit overflow-x-auto">
+        {SUB_SECTIONS.map(sub => {
+          const Icon = sub.icon;
+          return (
+            <button
+              key={sub.id}
+              onClick={() => { setActiveTab(sub.id); setSearchTerm(''); }}
+              className={`flex items-center gap-1.5 text-xs font-medium py-1.5 px-3 rounded-lg transition-all whitespace-nowrap ${
+                activeTab === sub.id
+                  ? 'bg-white shadow-sm text-gray-900'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" /> {sub.label}
+              <span className="text-gray-400">({sub.id === 'roles' ? roles.length : careerPaths.length})</span>
+            </button>
+          );
+        })}
       </div>
 
       {activeTab === 'roles' && (
         <div className="space-y-4">
-          <div className="flex justify-between items-center flex-wrap gap-3">
-            <h3 className="text-base font-semibold text-gray-900">Organizational Roles</h3>
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { label: 'Total Roles', value: roles.length, color: 'text-[#0202ff]' },
+              { label: 'Departments', value: [...new Set(roles.map(r => r.department).filter(Boolean))].length, color: 'text-purple-600' },
+              { label: 'Active', value: roles.filter(r => r.is_active !== false).length, color: 'text-green-600' },
+            ].map(s => (
+              <Card key={s.label} className="shadow-sm border border-gray-100 rounded-2xl">
+                <CardContent className="p-4 text-center">
+                  <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Filters + Actions */}
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="relative flex-1 max-w-xs">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Input placeholder="Search roles..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 h-9 text-sm" />
+            </div>
             <div className="flex gap-2 flex-wrap">
-              <Button variant="outline" size="sm" onClick={downloadCSVTemplate}><Download className="w-4 h-4 mr-1.5" /> CSV Template</Button>
-              <Button variant="outline" size="sm" onClick={() => uploadInputRef.current?.click()}><Upload className="w-4 h-4 mr-1.5" /> Bulk Upload</Button>
-              <Button variant="outline" size="sm" onClick={() => deleteInputRef.current?.click()}><Trash2 className="w-4 h-4 mr-1.5" /> Bulk Delete</Button>
-              <Button size="sm" className="bg-[#0202ff] hover:bg-[#0101dd] text-white" onClick={() => openRoleModal()}><Plus className="w-4 h-4 mr-1.5" /> Add New Role</Button>
+              <Button variant="outline" size="sm" className="h-9 text-xs" onClick={downloadCSVTemplate}><Download className="w-3.5 h-3.5 mr-1" /> Template</Button>
+              <Button variant="outline" size="sm" className="h-9 text-xs" onClick={() => uploadInputRef.current?.click()}><Upload className="w-3.5 h-3.5 mr-1" /> Upload</Button>
+              <Button variant="outline" size="sm" className="h-9 text-xs" onClick={() => deleteInputRef.current?.click()}><Trash2 className="w-3.5 h-3.5 mr-1" /> Bulk Delete</Button>
+              <Button size="sm" className="h-9 text-xs bg-[#0202ff] hover:bg-[#0101dd] text-white" onClick={() => openRoleModal()}><Plus className="w-3.5 h-3.5 mr-1" /> Add Role</Button>
               <input ref={uploadInputRef} type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" />
               <input ref={deleteInputRef} type="file" accept=".csv" onChange={handleCSVDelete} className="hidden" />
             </div>
           </div>
 
-          <Card className="border border-gray-100 shadow-sm rounded-xl">
-            <CardContent className="p-4">
-              <div className="flex flex-wrap gap-3 items-center">
-                <div className="relative flex-1 min-w-[200px]">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input placeholder="Search roles..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 h-9" />
-                </div>
-                <Select value={rolesFilterDept} onValueChange={setRolesFilterDept}>
-                  <SelectTrigger className="w-[150px] h-9 text-xs"><SelectValue placeholder="Department" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Departments</SelectItem>
-                    {["operations","sales","product","technology","finance","hr","marketing","corporate"].map(d => <SelectItem key={d} value={d}>{d.charAt(0).toUpperCase()+d.slice(1)}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <Select value={rolesFilterLevel} onValueChange={setRolesFilterLevel}>
-                  <SelectTrigger className="w-[150px] h-9 text-xs"><SelectValue placeholder="Level" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Levels</SelectItem>
-                    {["leading_self","leading_others","leading_managers","leading_functions","leading_organizations"].map(l => <SelectItem key={l} value={l}>{l.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <Select value={rolesSortBy} onValueChange={setRolesSortBy}>
-                  <SelectTrigger className="w-[120px] h-9 text-xs"><SelectValue placeholder="Sort by" /></SelectTrigger>
-                  <SelectContent><SelectItem value="title">Title</SelectItem><SelectItem value="level">Level</SelectItem><SelectItem value="department">Department</SelectItem></SelectContent>
-                </Select>
-                <div className="flex gap-1 border rounded-md">
-                  <Button variant={rolesView === 'cards' ? 'default' : 'ghost'} size="sm" onClick={() => setRolesView('cards')}><Grid3x3 className="w-4 h-4" /></Button>
-                  <Button variant={rolesView === 'list' ? 'default' : 'ghost'} size="sm" onClick={() => setRolesView('list')}><List className="w-4 h-4" /></Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Secondary filters */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={rolesFilterDept} onValueChange={setRolesFilterDept}>
+              <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue placeholder="Department" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Departments</SelectItem>
+                {["operations","sales","product","technology","finance","hr","marketing","corporate"].map(d => <SelectItem key={d} value={d}>{d.charAt(0).toUpperCase()+d.slice(1)}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={rolesFilterLevel} onValueChange={setRolesFilterLevel}>
+              <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue placeholder="Level" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Levels</SelectItem>
+                {["leading_self","leading_others","leading_managers","leading_functions","leading_organizations"].map(l => <SelectItem key={l} value={l}>{l.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={rolesSortBy} onValueChange={setRolesSortBy}>
+              <SelectTrigger className="w-[110px] h-8 text-xs"><SelectValue placeholder="Sort by" /></SelectTrigger>
+              <SelectContent><SelectItem value="title">Title</SelectItem><SelectItem value="level">Level</SelectItem><SelectItem value="department">Department</SelectItem></SelectContent>
+            </Select>
+            <div className="flex gap-1 border border-gray-100 rounded-lg p-0.5">
+              <Button variant={rolesView === 'cards' ? 'default' : 'ghost'} size="sm" className="h-7 w-7 p-0" onClick={() => setRolesView('cards')}><Grid3x3 className="w-3.5 h-3.5" /></Button>
+              <Button variant={rolesView === 'list' ? 'default' : 'ghost'} size="sm" className="h-7 w-7 p-0" onClick={() => setRolesView('list')}><List className="w-3.5 h-3.5" /></Button>
+            </div>
+          </div>
 
+          {/* Role cards/list */}
           {getFilteredAndSortedRoles().length === 0 ? (
-            <Card className="border border-gray-100 shadow-sm rounded-xl"><CardContent className="p-12 text-center">
-              <Briefcase className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <h3 className="text-lg font-semibold mb-1">No Roles Defined Yet</h3>
-              <p className="text-sm text-gray-500 mb-4">Start by creating your first organizational role.</p>
-              <Button className="bg-[#0202ff] hover:bg-[#0101dd] text-white" onClick={() => openRoleModal()}><Plus className="w-4 h-4 mr-1.5" /> Create First Role</Button>
-            </CardContent></Card>
+            <Card className="shadow-sm border border-gray-100 rounded-2xl">
+              <CardContent className="p-8 text-center">
+                <Briefcase className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                <p className="font-semibold text-gray-800">No roles found</p>
+                <p className="text-sm text-gray-500 mt-1 mb-4">{searchTerm ? "Try a different search term." : "Start by creating your first organizational role."}</p>
+                {!searchTerm && <Button className="bg-[#0202ff] hover:bg-[#0101dd] text-white h-9 text-xs" onClick={() => openRoleModal()}><Plus className="w-4 h-4 mr-1" /> Create First Role</Button>}
+              </CardContent>
+            </Card>
           ) : rolesView === 'cards' ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
               {getFilteredAndSortedRoles().map((role, i) => (
-                <motion.div key={role.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-                  <Card className="border border-gray-100 shadow-sm rounded-xl hover:shadow-md transition-shadow cursor-pointer" onClick={() => openRoleModal(role)}>
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <CardTitle className="text-sm mb-2">{role.title}</CardTitle>
-                          <div className="flex gap-2">
-                            <Badge variant="outline" className="text-[10px]">{role.department}</Badge>
-                            <Badge className="text-[10px] bg-blue-100 text-blue-800">{role.level?.replace(/_/g,' ')}</Badge>
+                <motion.div key={role.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
+                  <Card className="shadow-sm border border-gray-100 rounded-2xl hover:shadow-md transition-shadow cursor-pointer h-full" onClick={() => openRoleModal(role)}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm text-gray-900 mb-1.5 truncate">{role.title}</p>
+                          <div className="flex gap-1.5 flex-wrap">
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">{role.department}</span>
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">{role.level?.replace(/_/g,' ')}</span>
                           </div>
                         </div>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={e => { e.stopPropagation(); openRoleModal(role); }}><Pencil className="w-3.5 h-3.5" /></Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={e => { e.stopPropagation(); openRoleModal(role); }}><Pencil className="w-3.5 h-3.5" /></Button>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-xs text-gray-600 mb-3 line-clamp-3">{role.description}</p>
-                      <div className="text-xs space-y-1">
-                        <div><span className="font-medium">Required Competencies:</span> <span className="text-gray-600 ml-1">{role.required_competencies?.length || 0}</span></div>
-                        <div><span className="font-medium">Experience:</span> <span className="text-gray-600 ml-1">{role.typical_experience_years}+ years</span></div>
+                      {role.description && <p className="text-xs text-gray-500 mb-3 line-clamp-2">{role.description}</p>}
+                      <div className="text-xs space-y-1 pt-2 border-t border-gray-100">
+                        <div className="flex justify-between"><span className="text-gray-500">Competencies</span><span className="font-medium text-gray-700">{role.required_competencies?.length || 0}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Experience</span><span className="font-medium text-gray-700">{role.typical_experience_years || 0}+ years</span></div>
                       </div>
                     </CardContent>
                   </Card>
@@ -222,20 +252,20 @@ Senior Product Manager,leading_others,product,"Lead product strategy and cross-f
               ))}
             </div>
           ) : (
-            <Card className="border border-gray-100 shadow-sm rounded-xl">
+            <Card className="shadow-sm border border-gray-100 rounded-2xl">
               <CardContent className="p-0">
                 <div className="divide-y divide-gray-50">
                   {getFilteredAndSortedRoles().map((role, i) => (
-                    <motion.div key={role.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }} className="p-4 hover:bg-gray-50 cursor-pointer flex items-center justify-between" onClick={() => openRoleModal(role)}>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-1">
-                          <h3 className="font-semibold text-sm">{role.title}</h3>
-                          <Badge variant="outline" className="text-[10px]">{role.department}</Badge>
-                          <Badge className="text-[10px] bg-blue-100 text-blue-800">{role.level?.replace(/_/g,' ')}</Badge>
+                    <motion.div key={role.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }} className="p-3.5 hover:bg-gray-50 cursor-pointer flex items-center justify-between" onClick={() => openRoleModal(role)}>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <p className="font-medium text-sm text-gray-900">{role.title}</p>
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">{role.department}</span>
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">{role.level?.replace(/_/g,' ')}</span>
                         </div>
-                        <p className="text-xs text-gray-600 line-clamp-2">{role.description}</p>
+                        {role.description && <p className="text-xs text-gray-500 line-clamp-1">{role.description}</p>}
                       </div>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={e => { e.stopPropagation(); openRoleModal(role); }}><Pencil className="w-3.5 h-3.5" /></Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={e => { e.stopPropagation(); openRoleModal(role); }}><Pencil className="w-3.5 h-3.5" /></Button>
                     </motion.div>
                   ))}
                 </div>
@@ -247,59 +277,75 @@ Senior Product Manager,leading_others,product,"Lead product strategy and cross-f
 
       {activeTab === 'paths' && (
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-base font-semibold text-gray-900">Career Progression Paths</h3>
-            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => openPathModal()}><Plus className="w-4 h-4 mr-1.5" /> Add New Path</Button>
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { label: 'Total Paths', value: careerPaths.length, color: 'text-[#0202ff]' },
+              { label: 'Vertical', value: careerPaths.filter(p => p.path_type === 'vertical').length, color: 'text-green-600' },
+              { label: 'Lateral', value: careerPaths.filter(p => p.path_type === 'lateral').length, color: 'text-blue-600' },
+            ].map(s => (
+              <Card key={s.label} className="shadow-sm border border-gray-100 rounded-2xl">
+                <CardContent className="p-4 text-center">
+                  <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
 
-          <Card className="border border-gray-100 shadow-sm rounded-xl">
-            <CardContent className="p-4">
-              <div className="flex flex-wrap gap-3 items-center">
-                <div className="relative flex-1 min-w-[200px]">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input placeholder="Search career paths..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 h-9" />
-                </div>
-                <Select value={pathsSortBy} onValueChange={setPathsSortBy}>
-                  <SelectTrigger className="w-[120px] h-9 text-xs"><SelectValue placeholder="Sort by" /></SelectTrigger>
-                  <SelectContent><SelectItem value="title">Title</SelectItem><SelectItem value="duration">Duration</SelectItem><SelectItem value="difficulty">Difficulty</SelectItem></SelectContent>
-                </Select>
-                <div className="flex gap-1 border rounded-md">
-                  <Button variant={pathsView === 'cards' ? 'default' : 'ghost'} size="sm" onClick={() => setPathsView('cards')}><Grid3x3 className="w-4 h-4" /></Button>
-                  <Button variant={pathsView === 'list' ? 'default' : 'ghost'} size="sm" onClick={() => setPathsView('list')}><List className="w-4 h-4" /></Button>
-                </div>
+          {/* Filters + Create */}
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="relative flex-1 max-w-xs">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Input placeholder="Search career paths..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 h-9 text-sm" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Select value={pathsSortBy} onValueChange={setPathsSortBy}>
+                <SelectTrigger className="w-[110px] h-8 text-xs"><SelectValue placeholder="Sort by" /></SelectTrigger>
+                <SelectContent><SelectItem value="title">Title</SelectItem><SelectItem value="duration">Duration</SelectItem><SelectItem value="difficulty">Difficulty</SelectItem></SelectContent>
+              </Select>
+              <div className="flex gap-1 border border-gray-100 rounded-lg p-0.5">
+                <Button variant={pathsView === 'cards' ? 'default' : 'ghost'} size="sm" className="h-7 w-7 p-0" onClick={() => setPathsView('cards')}><Grid3x3 className="w-3.5 h-3.5" /></Button>
+                <Button variant={pathsView === 'list' ? 'default' : 'ghost'} size="sm" className="h-7 w-7 p-0" onClick={() => setPathsView('list')}><List className="w-3.5 h-3.5" /></Button>
               </div>
-            </CardContent>
-          </Card>
+              <Button size="sm" className="h-9 text-xs bg-[#0202ff] hover:bg-[#0101dd] text-white" onClick={() => openPathModal()}><Plus className="w-3.5 h-3.5 mr-1" /> Add Path</Button>
+            </div>
+          </div>
 
+          {/* Path cards/list */}
           {getFilteredAndSortedPaths().length === 0 ? (
-            <Card className="border border-gray-100 shadow-sm rounded-xl"><CardContent className="p-12 text-center">
-              <GitBranch className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <h3 className="text-lg font-semibold mb-1">No Career Paths Defined Yet</h3>
-              <p className="text-sm text-gray-500 mb-4">Create career progression paths between roles.</p>
-              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => openPathModal()}><Plus className="w-4 h-4 mr-1.5" /> Create First Path</Button>
-            </CardContent></Card>
+            <Card className="shadow-sm border border-gray-100 rounded-2xl">
+              <CardContent className="p-8 text-center">
+                <GitBranch className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                <p className="font-semibold text-gray-800">No career paths found</p>
+                <p className="text-sm text-gray-500 mt-1 mb-4">{searchTerm ? "Try a different search term." : "Create career progression paths between roles."}</p>
+                {!searchTerm && <Button className="bg-[#0202ff] hover:bg-[#0101dd] text-white h-9 text-xs" onClick={() => openPathModal()}><Plus className="w-4 h-4 mr-1" /> Create First Path</Button>}
+              </CardContent>
+            </Card>
           ) : pathsView === 'list' ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {getFilteredAndSortedPaths().map((path, i) => (
-                <motion.div key={path.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}>
-                  <Card className="border border-gray-100 shadow-sm rounded-xl hover:shadow-md transition-shadow cursor-pointer" onClick={() => openPathModal(path)}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-1">
-                            <h3 className="font-semibold text-sm">{path.from_role_id}</h3>
-                            <span className="text-gray-400">→</span>
-                            <h3 className="font-semibold text-sm">{path.to_role_id}</h3>
-                            <Badge className={`text-[10px] ${path.path_type === 'vertical' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>{path.path_type}</Badge>
+                <motion.div key={path.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
+                  <Card className="shadow-sm border border-gray-100 rounded-2xl hover:shadow-md transition-shadow cursor-pointer" onClick={() => openPathModal(path)}>
+                    <CardContent className="p-3.5">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <p className="font-medium text-sm text-gray-900">{path.from_role_id}</p>
+                            <span className="text-gray-400 text-xs">→</span>
+                            <p className="font-medium text-sm text-gray-900">{path.to_role_id}</p>
+                            <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${path.path_type === 'vertical' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>{path.path_type}</span>
                           </div>
-                          <p className="text-xs text-gray-600 mb-2">{path.brief_description}</p>
+                          {path.brief_description && <p className="text-xs text-gray-500 line-clamp-1 mb-1.5">{path.brief_description}</p>}
                           <div className="flex gap-3 text-xs text-gray-500">
-                            <span>Duration: {path.typical_duration_months} months</span><span>•</span>
-                            <span>Difficulty: {path.difficulty_level}</span><span>•</span>
-                            <span>Competencies: {path.core_competencies?.length || 0}</span>
+                            <span>{path.typical_duration_months} months</span>
+                            <span>•</span>
+                            <span>{path.difficulty_level}</span>
+                            <span>•</span>
+                            <span>{path.core_competencies?.length || 0} competencies</span>
                           </div>
                         </div>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={e => { e.stopPropagation(); openPathModal(path); }}><Pencil className="w-3.5 h-3.5" /></Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={e => { e.stopPropagation(); openPathModal(path); }}><Pencil className="w-3.5 h-3.5" /></Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -307,26 +353,23 @@ Senior Product Manager,leading_others,product,"Lead product strategy and cross-f
               ))}
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-2 gap-3">
               {getFilteredAndSortedPaths().map((path, i) => (
-                <motion.div key={path.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-                  <Card className="border border-gray-100 shadow-sm rounded-xl hover:shadow-md transition-shadow cursor-pointer" onClick={() => openPathModal(path)}>
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <CardTitle className="text-sm">{path.title}</CardTitle>
-                            <Badge className={`text-[10px] ${path.path_type === 'vertical' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>{path.path_type}</Badge>
-                          </div>
-                          <p className="text-xs text-gray-600">{path.brief_description}</p>
+                <motion.div key={path.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
+                  <Card className="shadow-sm border border-gray-100 rounded-2xl hover:shadow-md transition-shadow cursor-pointer h-full" onClick={() => openPathModal(path)}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm text-gray-900 mb-1">{path.title}</p>
+                          <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${path.path_type === 'vertical' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>{path.path_type}</span>
                         </div>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={e => { e.stopPropagation(); openPathModal(path); }}><Pencil className="w-3.5 h-3.5" /></Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={e => { e.stopPropagation(); openPathModal(path); }}><Pencil className="w-3.5 h-3.5" /></Button>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex gap-3 text-xs text-gray-500">
-                        <span>Duration: {path.typical_duration_months} months</span><span>•</span>
-                        <span>Difficulty: {path.difficulty_level}</span>
+                      {path.brief_description && <p className="text-xs text-gray-500 mb-3 line-clamp-2">{path.brief_description}</p>}
+                      <div className="flex gap-3 text-xs text-gray-500 pt-2 border-t border-gray-100">
+                        <span>{path.typical_duration_months} months</span>
+                        <span>•</span>
+                        <span>{path.difficulty_level}</span>
                       </div>
                     </CardContent>
                   </Card>

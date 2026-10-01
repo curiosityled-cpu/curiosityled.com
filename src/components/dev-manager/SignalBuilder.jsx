@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,7 +46,7 @@ const TYPE_CONFIG = {
   },
 };
 
-export default function SignalBuilder({ signalType, editingSignal, onClose, users }) {
+const SignalBuilder = forwardRef(function SignalBuilder({ signalType, editingSignal, onClose, onBack, users, showChrome = true }, ref) {
   const config = TYPE_CONFIG[signalType];
   const isAssessment = config?.entity === "CustomAssessment";
 
@@ -57,28 +57,31 @@ export default function SignalBuilder({ signalType, editingSignal, onClose, user
     access_mode: "closed",
     assigned_user_emails: [],
     config: "{}",
-    // Assessment-specific
     passing_score_percentage: 70,
-    // Form-specific
     form_type: "feedback_survey",
     form_category: "survey",
   });
   const [saving, setSaving] = useState(false);
   const [showUserSelector, setShowUserSelector] = useState(false);
+  const saveRef = useRef(null);
+
+  useImperativeHandle(ref, () => ({
+    save: () => saveRef.current?.()
+  }));
 
   useEffect(() => {
     if (editingSignal) {
-      const ref = editingSignal.entityRef;
+      const refData = editingSignal.entityRef;
       setFormData({
-        title: ref.title || "",
-        description: ref.description || "",
-        status: ref.status || "draft",
-        access_mode: ref.access_mode || "closed",
-        assigned_user_emails: ref.assigned_user_emails || ref.assigned_to_emails || [],
-        config: JSON.stringify(ref.config || {}, null, 2),
-        passing_score_percentage: ref.passing_score_percentage || 70,
-        form_type: ref.form_type || config.defaultData.form_type,
-        form_category: ref.form_category || config.defaultData.form_category,
+        title: refData.title || "",
+        description: refData.description || "",
+        status: refData.status || "draft",
+        access_mode: refData.access_mode || "closed",
+        assigned_user_emails: refData.assigned_user_emails || refData.assigned_to_emails || [],
+        config: JSON.stringify(refData.config || {}, null, 2),
+        passing_score_percentage: refData.passing_score_percentage || 70,
+        form_type: refData.form_type || config.defaultData.form_type,
+        form_category: refData.form_category || config.defaultData.form_category,
       });
     } else {
       setFormData(prev => ({
@@ -139,43 +142,48 @@ export default function SignalBuilder({ signalType, editingSignal, onClose, user
       setSaving(false);
     }
   };
+  saveRef.current = handleSave;
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          <ArrowLeft className="w-4 h-4 mr-1" /> Back to library
-        </Button>
-        <h3 className="text-sm font-semibold">
-          {editingSignal ? "Edit" : "Create"} {config.label}
-        </h3>
-      </div>
+      {showChrome && (
+        <div className="flex items-center justify-between">
+          <Button variant="ghost" size="sm" onClick={onBack || onClose}>
+            <ArrowLeft className="w-4 h-4 mr-1" /> {onBack ? "Back to signal types" : "Back to library"}
+          </Button>
+          <h3 className="text-sm font-semibold">
+            {editingSignal ? "Edit" : "Create"} {config.label}
+          </h3>
+        </div>
+      )}
 
-      <Card><CardContent className="p-5 space-y-4">
+      <div className="space-y-4">
         <div className="space-y-2">
-          <Label>Title *</Label>
+          <Label className="text-xs font-medium">Title *</Label>
           <Input
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             placeholder={`e.g., ${isAssessment ? "Sales Leadership Assessment" : "Post-Program Feedback Survey"}`}
+            className="h-9 text-sm"
           />
         </div>
 
         <div className="space-y-2">
-          <Label>Description</Label>
+          <Label className="text-xs font-medium">Description</Label>
           <Textarea
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             placeholder="Describe the purpose and content of this signal"
-            rows={3}
+            rows={2}
+            className="text-sm"
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
-            <Label>Status</Label>
+            <Label className="text-xs font-medium">Status</Label>
             <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="draft">Draft</SelectItem>
                 <SelectItem value="published">Published</SelectItem>
@@ -184,12 +192,12 @@ export default function SignalBuilder({ signalType, editingSignal, onClose, user
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Access Mode</Label>
+            <Label className="text-xs font-medium">Access Mode</Label>
             <Select value={formData.access_mode} onValueChange={(v) => setFormData({ ...formData, access_mode: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="open"><div className="flex items-center gap-2"><Globe className="w-4 h-4" /> Open (Anyone can take)</div></SelectItem>
-                <SelectItem value="closed"><div className="flex items-center gap-2"><Lock className="w-4 h-4" /> Closed (Assignment required)</div></SelectItem>
+                <SelectItem value="open"><div className="flex items-center gap-2"><Globe className="w-3.5 h-3.5" /> Open</div></SelectItem>
+                <SelectItem value="closed"><div className="flex items-center gap-2"><Lock className="w-3.5 h-3.5" /> Closed</div></SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -197,61 +205,68 @@ export default function SignalBuilder({ signalType, editingSignal, onClose, user
 
         {isAssessment && (
           <div className="space-y-2">
-            <Label>Passing Score (%)</Label>
+            <Label className="text-xs font-medium">Passing Score (%)</Label>
             <Input
               type="number" min="0" max="100"
               value={formData.passing_score_percentage}
               onChange={(e) => setFormData({ ...formData, passing_score_percentage: parseInt(e.target.value) || 0 })}
+              className="h-9 text-sm"
             />
           </div>
         )}
 
         {formData.access_mode === "closed" && (
           <div className="space-y-2">
-            <Label>Assigned Users ({formData.assigned_user_emails.length})</Label>
-            <div className="flex flex-wrap gap-2 p-3 border rounded-lg min-h-[50px]">
-              {formData.assigned_user_emails.map((email) => (
-                <Badge key={email} variant="secondary">
-                  {email}
-                  <button
-                    onClick={() => setFormData({ ...formData, assigned_user_emails: formData.assigned_user_emails.filter((e) => e !== email) })}
-                    className="ml-2 hover:text-red-600"
-                  >×</button>
-                </Badge>
-              ))}
+            <Label className="text-xs font-medium">Assigned Users ({formData.assigned_user_emails.length})</Label>
+            <div className="flex flex-wrap gap-1.5 p-2.5 border border-gray-100 rounded-xl min-h-[44px] bg-gray-50/50">
+              {formData.assigned_user_emails.length === 0 ? (
+                <p className="text-xs text-gray-400 self-center">No users assigned yet</p>
+              ) : (
+                formData.assigned_user_emails.map((email) => (
+                  <Badge key={email} variant="secondary" className="text-xs">
+                    {email}
+                    <button
+                      onClick={() => setFormData({ ...formData, assigned_user_emails: formData.assigned_user_emails.filter((e) => e !== email) })}
+                      className="ml-1.5 hover:text-red-600"
+                    >×</button>
+                  </Badge>
+                ))
+              )}
             </div>
-            <Button variant="outline" size="sm" onClick={() => setShowUserSelector(true)}>
-              <Users className="w-4 h-4 mr-2" /> Select Users
+            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setShowUserSelector(true)}>
+              <Users className="w-3.5 h-3.5 mr-1.5" /> Select Users
             </Button>
           </div>
         )}
 
         <div className="space-y-2">
-          <Label>Configuration (JSON)</Label>
+          <Label className="text-xs font-medium">Configuration (JSON)</Label>
           <Textarea
             value={formData.config}
             onChange={(e) => setFormData({ ...formData, config: e.target.value })}
             placeholder='{"questions": [], "scoring": {}}'
-            rows={5} className="font-mono text-sm"
+            rows={4} className="font-mono text-xs"
           />
           <p className="text-xs text-gray-500">Define questions, options, and scoring logic in JSON format</p>
         </div>
-      </CardContent></Card>
-
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSave} disabled={saving}>
-          {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />}
-          {editingSignal ? "Update" : "Create"}
-        </Button>
       </div>
+
+      {showChrome && (
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>
+          <Button size="sm" onClick={handleSave} disabled={saving} className="bg-[#0202ff] hover:bg-[#0101dd] text-white">
+            {saving ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5 mr-1.5" />}
+            {editingSignal ? "Update" : "Create"}
+          </Button>
+        </div>
+      )}
 
       {/* User selector dialog */}
       {showUserSelector && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowUserSelector(false)}>
-          <Card className="max-w-2xl w-full max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+          <Card className="max-w-2xl w-full max-h-[80vh] overflow-hidden rounded-2xl" onClick={(e) => e.stopPropagation()}>
             <CardContent className="p-4">
-              <h3 className="font-semibold mb-3">Select Users to Assign</h3>
+              <h3 className="font-semibold mb-3 text-sm">Select Users to Assign</h3>
               <ScrollArea className="h-[400px]">
                 <div className="space-y-1">
                   {users.map((u) => (
@@ -280,7 +295,7 @@ export default function SignalBuilder({ signalType, editingSignal, onClose, user
                 </div>
               </ScrollArea>
               <div className="flex justify-end mt-3">
-                <Button onClick={() => setShowUserSelector(false)}>Done</Button>
+                <Button size="sm" onClick={() => setShowUserSelector(false)}>Done</Button>
               </div>
             </CardContent>
           </Card>
@@ -288,4 +303,6 @@ export default function SignalBuilder({ signalType, editingSignal, onClose, user
       )}
     </div>
   );
-}
+});
+
+export default SignalBuilder;
