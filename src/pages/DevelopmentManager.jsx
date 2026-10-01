@@ -7,8 +7,6 @@ import { useCoachCoacheeScope } from "@/hooks/useCoachCoacheeScope";
 import ExperiencesTab from "@/components/dev-manager/ExperiencesTab";
 import CohortsTab from "@/components/dev-manager/CohortsTab";
 import SignalsTab from "@/components/dev-manager/SignalsTab";
-import ConversationalLearningTab from "@/components/dev-manager/ConversationalLearningTab";
-import PracticeHubTab from "@/components/practice/PracticeHubTab";
 import ExperienceAnalyticsTab from "@/components/experience-mgmt/ExperienceAnalyticsTab";
 import CoachAnalyticsTab from "@/components/experience-mgmt/CoachAnalyticsTab";
 
@@ -47,21 +45,18 @@ const PRIORITY_COLORS = {
   high: 'bg-orange-100 text-orange-800', urgent: 'bg-red-100 text-red-800',
 };
 
-// Admin tabs: 7 total
+// Admin tabs: 5 total (Conversational and Practice moved into Experiences sub-sections)
 const ADMIN_TABS = [
   { id: 'experiences', label: 'Experiences', icon: Star },
   { id: 'cohorts', label: 'Cohorts', icon: Users },
   { id: 'signals', label: 'Signals', icon: Radio },
-  { id: 'conversational', label: 'Conversational', icon: MessageSquare },
-  { id: 'practice', label: 'Practice', icon: Dumbbell },
   { id: 'requests', label: 'Requests', icon: Inbox },
   { id: 'analytics', label: 'Analytics', icon: BarChart2 },
 ];
 
-// Coach-scoped tabs: preserved from original
+// Coach-scoped tabs: Practice moved into Experiences sub-sections
 const COACH_TABS = (isConsultant) => [
   { id: 'experiences', label: 'Experiences', icon: Star },
-  { id: 'practice', label: 'Practice', icon: Dumbbell },
   { id: 'requests', label: 'My Requests', icon: Inbox },
   { id: 'coach_analytics', label: isConsultant ? 'Experience Analytics' : 'Coaching Analytics', icon: BarChart2 },
 ];
@@ -224,13 +219,6 @@ export default function DevelopmentManager() {
         </motion.div>
       )}
 
-      {/* ── CONVERSATIONAL LEARNING ── */}
-      {section === 'conversational' && (
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <ConversationalLearningTab user={user} />
-        </motion.div>
-      )}
-
       {/* ── ANALYTICS ── */}
       {section === 'analytics' && (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
@@ -242,13 +230,6 @@ export default function DevelopmentManager() {
       {section === 'coach_analytics' && (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <CoachAnalyticsTab user={user} coacheeEmails={coacheeEmails} />
-        </motion.div>
-      )}
-
-      {/* ── PRACTICE HUB ── */}
-      {section === 'practice' && (
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <PracticeHubTab user={user} />
         </motion.div>
       )}
 
