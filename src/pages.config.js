@@ -17,17 +17,16 @@ import BusinessManager from './pages/BusinessManager';
 import CareerPathCreator from './pages/CareerPathCreator';
 import CareerPathDetails from './pages/CareerPathDetails';
 import CareerPathExplorer from './pages/CareerPathExplorer';
-import CommandCenter from './pages/CommandCenter';
 import CompetencyManagement from './pages/CompetencyManagement';
 import ConversationalModule from './pages/ConversationalModule';
 import ConversationalModuleBuilder from './pages/ConversationalModuleBuilder';
 import ConversationalModulesLibrary from './pages/ConversationalModulesLibrary';
 import Dashboard from './pages/Dashboard';
 import Development from './pages/Development';
+import DevelopmentManager from './pages/DevelopmentManager';
 import EmailTemplates from './pages/EmailTemplates';
 import ExperienceAnalytics from './pages/ExperienceAnalytics';
 import ExperienceManagement from './pages/ExperienceManagement';
-import DevelopmentManager from './pages/ExperienceManagement';
 import FormBuilder from './pages/FormBuilder';
 import FormBuilderDashboard from './pages/FormBuilderDashboard';
 import FormSubmission from './pages/FormSubmission';
@@ -83,7 +82,6 @@ export const PAGES = {
     "CareerPathCreator": CareerPathCreator,
     "CareerPathDetails": CareerPathDetails,
     "CareerPathExplorer": CareerPathExplorer,
-    "CommandCenter": CommandCenter,
     "CompetencyManagement": CompetencyManagement,
     "ConversationalModule": ConversationalModule,
     "ConversationalModuleBuilder": ConversationalModuleBuilder,

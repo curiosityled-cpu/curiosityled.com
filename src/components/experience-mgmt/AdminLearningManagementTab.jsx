@@ -13,10 +13,9 @@ import { toast } from "sonner";
 import {
   BookOpen, Plus, Search, Pencil, Trash2, Users, CheckCircle2,
   Clock, ExternalLink, FileText, Video, Loader2, X, Upload,
-  LayoutGrid, List, BarChart2, TrendingUp, Award, AlertCircle,
-  MessageSquare
+  LayoutGrid, List, BarChart2, TrendingUp, Award, AlertCircle
 } from "lucide-react";
-import ConversationalLearningTab from "@/components/talent/ConversationalLearningTab";
+
 
 const TYPE_ICONS = {
   course: BookOpen, video: Video, document: FileText, article: FileText,
@@ -488,9 +487,6 @@ export default function AdminLearningManagementTab({ user }) {
         <TabsList className="bg-gray-100 rounded-xl p-1">
           <TabsTrigger value="library" className="rounded-lg text-xs">Content Library</TabsTrigger>
           <TabsTrigger value="enrollments" className="rounded-lg text-xs">Enrollments</TabsTrigger>
-          <TabsTrigger value="conversational" className="rounded-lg text-xs">
-            <MessageSquare className="w-3.5 h-3.5 mr-1" /> Conversational Learning
-          </TabsTrigger>
         </TabsList>
 
         {/* ── LIBRARY ── */}
@@ -710,11 +706,6 @@ export default function AdminLearningManagementTab({ user }) {
           )}
         </TabsContent>
       </Tabs>
-
-      {/* ── CONVERSATIONAL LEARNING ── */}
-      <TabsContent value="conversational" className="mt-4">
-        <ConversationalLearningTab />
-      </TabsContent>
 
       {/* Create/Edit Resource Dialog */}
       <ResourceFormDialog
