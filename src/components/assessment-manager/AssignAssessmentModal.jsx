@@ -17,7 +17,7 @@ import { toast } from "sonner";
  * Props: open, onClose, assessment (CustomAssessment or validated def),
  *   users[], cohorts[], onAssigned()
  */
-export default function AssignAssessmentModal({ open, onClose, assessment, users = [], cohorts = [], onAssigned }) {
+export default function AssignAssessmentModal({ open, onClose, assessment, entityType = "CustomAssessment", users = [], cohorts = [], onAssigned }) {
   const [assignmentType, setAssignmentType] = useState("individual");
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [selectedCohort, setSelectedCohort] = useState("");
@@ -51,30 +51,34 @@ export default function AssignAssessmentModal({ open, onClose, assessment, users
 
     setAssigning(true);
     try {
-      // If it's a CustomAssessment entity, update assigned_user_emails
-      if (assessment.id && assessment.assigned_user_emails !== undefined) {
-        const existing = assessment.assigned_user_emails || [];
-        const newAssigned = [...new Set([...existing, ...targetEmails])];
-        await base44.entities.CustomAssessment.update(assessment.id, {
-          assigned_user_emails: newAssigned,
-        });
+      const isForm = entityType === "CustomForm";
+      const assignedField = isForm ? "assigned_to_emails" : "assigned_user_emails";
+      const existingAssigned = assessment[assignedField] || [];
+
+      // Update the entity's assigned list (assessment or form)
+      if (assessment.id) {
+        const newAssigned = [...new Set([...existingAssigned, ...targetEmails])];
+        if (isForm) {
+          await base44.entities.CustomForm.update(assessment.id, { assigned_to_emails: newAssigned });
+        } else {
+          await base44.entities.CustomAssessment.update(assessment.id, { assigned_user_emails: newAssigned });
+        }
       }
 
-      // Create notifications
-      for (const email of targetEmails) {
-        await base44.entities.Notification.create({
-          user_email: email,
-          type: "assessment_due",
-          title: `New Assessment: ${assessment.title}`,
-          message: `You have been assigned: ${assessment.title}. Please complete it at your earliest convenience.`,
-          related_entity_type: "CustomAssessment",
-          related_entity_id: assessment.id || "validated",
-          priority: "medium",
-          status: "pending",
-        });
-      }
+      // Create notifications in a single bulk call
+      const notifications = targetEmails.map((email) => ({
+        user_email: email,
+        type: isForm ? "form_assigned" : "assessment_due",
+        title: `New ${isForm ? "Signal" : "Assessment"}: ${assessment.title}`,
+        message: `You have been assigned: ${assessment.title}. Please complete it at your earliest convenience.`,
+        related_entity_type: entityType,
+        related_entity_id: assessment.id || "validated",
+        priority: "medium",
+        status: "pending",
+      }));
+      await base44.entities.Notification.bulkCreate(notifications);
 
-      toast.success(`Assessment assigned to ${targetEmails.length} participant(s)`);
+      toast.success(`Assigned to ${targetEmails.length} participant(s)`);
       setSelectedUsers([]);
       setSelectedCohort("");
       setSearch("");

@@ -87,7 +87,7 @@ export const SIGNAL_TYPE_CONFIG = {
     showPassingScore: false,
     defaultData: {
       form_type: "custom",
-      form_category: "custom",
+      form_category: "operational",
       scoring_enabled: false,
     },
   },

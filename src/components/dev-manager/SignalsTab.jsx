@@ -415,7 +415,8 @@ export default function SignalsTab({ user }) {
         <AssignAssessmentModal
           open={assignModal.open}
           onClose={() => setAssignModal({ open: false, signal: null })}
-          assessment={assignModal.signal.entityType === "CustomAssessment" ? assignModal.signal.entityRef : null}
+          assessment={assignModal.signal.entityRef}
+          entityType={assignModal.signal.entityType}
           users={users}
           cohorts={cohorts}
           onAssigned={() => setRefreshKey(k => k + 1)}

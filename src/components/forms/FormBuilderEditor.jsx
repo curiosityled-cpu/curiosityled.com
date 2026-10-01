@@ -12,7 +12,7 @@ export default function FormBuilderEditor({ sections = [], onChange }) {
 
   const handleAddSection = () => {
     const newSection = {
-      id: `section_${Date.now()}`,
+      id: `section_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       title: `Section ${(sections || []).length + 1}`,
       description: "",
       questions: []
@@ -30,7 +30,7 @@ export default function FormBuilderEditor({ sections = [], onChange }) {
 
   const handleAddQuestion = (sectionId, questionType) => {
     const newQuestion = {
-      id: `q_${Date.now()}`,
+      id: `q_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       type: questionType,
       question_text: "New Question",
       required: false,
