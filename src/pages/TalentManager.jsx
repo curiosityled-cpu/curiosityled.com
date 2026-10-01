@@ -4,11 +4,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Sparkles } from "lucide-react";
 import CompetencyManagerTab from "@/components/talent/CompetencyManagerTab";
 import SuccessionWorkspaceContent from "@/components/succession/SuccessionWorkspaceContent";
+import CareerPathsTab from "@/components/performance-mgmt/CareerPathsTab";
 import { useSuccessionEnabled } from "@/components/succession/useSuccessionEnabled";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function TalentManager() {
   const [activeTab, setActiveTab] = useState("competency-manager");
   const { enabled: successionEnabled } = useSuccessionEnabled();
+  const { user } = useAuth();
 
   return (
     <MVPPageLayout
@@ -37,6 +40,12 @@ export default function TalentManager() {
               Succession
             </TabsTrigger>
           )}
+          <TabsTrigger
+            value="career-paths"
+            className="data-[state=active]:bg-[#0202ff] data-[state=active]:text-white data-[state=active]:shadow-sm"
+          >
+            Career Paths
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="competency-manager" className="mt-5 focus-visible:outline-none">
@@ -48,6 +57,9 @@ export default function TalentManager() {
             <SuccessionWorkspaceContent />
           </TabsContent>
         )}
+        <TabsContent value="career-paths" className="mt-5 focus-visible:outline-none">
+          <CareerPathsTab user={user} />
+        </TabsContent>
       </Tabs>
     </MVPPageLayout>
   );

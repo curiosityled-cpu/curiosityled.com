@@ -146,7 +146,7 @@ const AuthenticatedApp = () => {
 
       {/* Retired legacy pages — redirect to their new homes */}
       <Route path="/Development" element={<Navigate to="/DevelopmentManager" replace />} />
-      <Route path="/CareerPathCreator" element={<Navigate to="/PerformanceManager" replace />} />
+      <Route path="/CareerPathCreator" element={<Navigate to="/talent-manager" replace />} />
 
       {/* CommandCenter retired — redirect to Development Manager */}
       <Route path="/CommandCenter" element={<Navigate to="/DevelopmentManager" replace />} />
