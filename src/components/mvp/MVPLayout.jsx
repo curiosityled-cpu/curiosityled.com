@@ -70,7 +70,6 @@ const NAV_CONFIG = {
    { label: 'Practice', path: '/practice', icon: Dumbbell },
    { label: 'Administration', icon: FolderOpen, group: true, children: [
      { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
-     { label: 'Assessment Manager', path: '/assessment-manager', icon: ClipboardList },
      { label: 'Development Manager', path: '/DevelopmentManager', icon: Users },
      { label: 'Performance Manager', path: '/PerformanceManager', icon: Target },
      { label: 'Talent Manager', path: '/talent-manager', icon: Layers },

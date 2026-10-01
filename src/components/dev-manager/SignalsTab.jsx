@@ -7,13 +7,39 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import {
   Radio, MoreHorizontal, Send, Play, Pause, Trash2, Copy, Loader2,
   Search, Users, Plus, ArrowLeft, FileText, ClipboardList, Brain,
-  MessageSquare, BarChart3, HelpCircle, CheckCircle
+  MessageSquare, BarChart3, HelpCircle, CheckCircle, ArrowRight, Lock
 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import SignalTypeSelector from "./SignalTypeSelector";
 import SignalBuilder from "./SignalBuilder";
 import AssignAssessmentModal from "@/components/assessment-manager/AssignAssessmentModal";
+
+// Validated / standard signals — built-in assessments not stored as CustomAssessment records
+const VALIDATED_SIGNALS = [
+  {
+    id: "leadership-index",
+    title: "Leadership Index Assessment",
+    description: "A development compass — not a certification — evaluating your leadership capabilities across 6 core competencies.",
+    duration: "20–30 min",
+    route: "/LeadershipAssessment",
+    icon: Brain,
+    color: "#A25DDC",
+    badge: "Validated",
+  },
+  {
+    id: "situational-leadership",
+    title: "Situational Leadership Style",
+    description: "Discover your preferred leadership style and how to adapt to different situations.",
+    duration: "15–20 min",
+    route: null,
+    icon: ClipboardList,
+    color: "#0202ff",
+    comingSoon: true,
+  },
+];
 
 const STATUS_BADGES = {
   draft: { className: "bg-gray-100 text-gray-800", label: "Draft" },
@@ -60,29 +86,36 @@ export default function SignalsTab({ user }) {
   const [search, setSearch] = useState("");
   const [assignModal, setAssignModal] = useState({ open: false, signal: null });
   const [refreshKey, setRefreshKey] = useState(0);
+  const [takenLI, setTakenLI] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [assessments, forms, usersData, cohortsData] = await Promise.all([
+      const filters = [
         base44.entities.CustomAssessment.list("-created_date"),
         base44.entities.CustomForm.list("-created_date"),
         base44.entities.User.list(),
         base44.entities.Cohort.list(),
-      ]);
+      ];
+      if (user?.email) {
+        filters.push(base44.entities.Assessment.filter({ email: user.email }, "-created_date", 1));
+      }
+      const results = await Promise.all(filters);
+      const [assessments, forms, usersData, cohortsData, liResults] = results;
       // Filter forms to only signal-like types
       const signalForms = (forms || []).filter(f => SIGNAL_FORM_TYPES.includes(f.form_type));
       setCustomAssessments(assessments || []);
       setCustomForms(signalForms);
       setUsers(usersData || []);
       setCohorts(cohortsData || []);
+      setTakenLI((liResults || []).length > 0);
     } catch (error) {
       console.error("Error loading signals:", error);
       toast.error("Failed to load signals library");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.email]);
 
   useEffect(() => { loadData(); }, [loadData, refreshKey]);
 
@@ -227,6 +260,60 @@ export default function SignalsTab({ user }) {
 
       {/* Signal count */}
       <p className="text-xs text-gray-500">{filteredSignals.length} signal{filteredSignals.length !== 1 ? "s" : ""} in your library</p>
+
+      {/* Validated / Standard Signals — includes Leadership Index Assessment */}
+      <div>
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">Validated Signals</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {VALIDATED_SIGNALS.map((va, idx) => {
+            const Icon = va.icon;
+            const completed = va.id === "leadership-index" && takenLI;
+            return (
+              <motion.div key={va.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}>
+                <Card className="h-full hover:shadow-lg transition-shadow">
+                  <CardContent className="p-5 flex flex-col h-full">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="w-11 h-11 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${va.color}15` }}>
+                        <Icon className="w-5 h-5" style={{ color: va.color }} />
+                      </div>
+                      {completed ? (
+                        <Badge className="bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1" /> Completed</Badge>
+                      ) : va.comingSoon ? (
+                        <Badge variant="outline">Coming Soon</Badge>
+                      ) : (
+                        <Badge className="bg-blue-100 text-blue-800">{va.badge || "Available"}</Badge>
+                      )}
+                    </div>
+                    <h4 className="font-semibold text-sm mb-1">{va.title}</h4>
+                    <p className="text-xs text-gray-500 flex-grow line-clamp-2">{va.description}</p>
+                    <div className="flex items-center justify-between mt-4 pt-3 border-t">
+                      <span className="text-[11px] text-gray-500">{va.duration}</span>
+                      {va.route && !completed && !va.comingSoon ? (
+                        <Link to={va.route}>
+                          <Button size="sm" style={{ backgroundColor: va.color }} className="text-white hover:opacity-90">
+                            Start <ArrowRight className="w-3 h-3 ml-1" />
+                          </Button>
+                        </Link>
+                      ) : completed ? (
+                        <Link to="/practice">
+                          <Button variant="outline" size="sm">View Results</Button>
+                        </Link>
+                      ) : (
+                        <Button variant="ghost" size="sm" disabled>Coming Soon</Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Custom Signals */}
+      <div>
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">Your Signals</h3>
+      </div>
 
       {/* Unified signal grid */}
       {filteredSignals.length === 0 ? (
