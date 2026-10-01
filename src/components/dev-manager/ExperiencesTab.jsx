@@ -1,17 +1,15 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Map, GraduationCap, Star, MessageSquare, Dumbbell } from "lucide-react";
+import { Map, GraduationCap, Star, Dumbbell } from "lucide-react";
 import AdminJourneysTab from "@/components/experience-mgmt/AdminJourneysTab";
 import AdminLearningManagementTab from "@/components/experience-mgmt/AdminLearningManagementTab";
 import AdminExperiencesTab from "@/components/experience-mgmt/AdminExperiencesTab";
-import ConversationalLearningTab from "@/components/dev-manager/ConversationalLearningTab";
 import PracticeHubTab from "@/components/practice/PracticeHubTab";
 
 const SUB_SECTIONS = [
   { id: 'journeys', label: 'Journeys', icon: Map },
   { id: 'learning', label: 'Learning', icon: GraduationCap },
   { id: 'experiences', label: 'External', icon: Star },
-  { id: 'conversational', label: 'Conversational', icon: MessageSquare },
   { id: 'practice', label: 'Practice', icon: Dumbbell },
 ];
 
@@ -49,7 +47,6 @@ export default function ExperiencesTab({ user, coacheeEmails }) {
         {subSection === 'journeys' && <AdminJourneysTab user={user} coacheeEmails={coacheeEmails} />}
         {subSection === 'learning' && <AdminLearningManagementTab user={user} />}
         {subSection === 'experiences' && <AdminExperiencesTab user={user} coacheeEmails={coacheeEmails} />}
-        {subSection === 'conversational' && <ConversationalLearningTab user={user} />}
         {subSection === 'practice' && <PracticeHubTab user={user} />}
       </motion.div>
     </div>
