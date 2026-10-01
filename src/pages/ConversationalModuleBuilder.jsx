@@ -190,7 +190,7 @@ export default function ConversationalModuleBuilder() {
           is_current_version: true,
         });
         toast.success("Module created successfully");
-        window.location.href = createPageUrl("Development");
+        window.location.href = "/DevelopmentManager";
       }
     } catch (error) {
       console.error("Error saving module:", error);
@@ -216,7 +216,7 @@ export default function ConversationalModuleBuilder() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link to={createPageUrl("Development")}>
+            <Link to="/DevelopmentManager">
               <Button variant="outline" size="icon">
                 <ArrowLeft className="w-4 h-4" />
               </Button>

@@ -277,7 +277,7 @@ Respond as Atreus, providing guidance and determining if this step is complete.`
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-6">
-          <Link to={createPageUrl("Development")}>
+          <Link to="/DevelopmentManager">
             <Button variant="outline" size="sm" className="mb-4">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Learning

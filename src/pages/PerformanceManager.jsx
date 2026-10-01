@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/components/useAuth";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
-import { BarChart2, Target, Calendar, ClipboardList, Plug } from "lucide-react";
+import { BarChart2, Target, Calendar, ClipboardList, Plug, GitBranch } from "lucide-react";
 import { motion } from "framer-motion";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import PerformanceOverviewTab from "@/components/performance-mgmt/PerformanceOverviewTab";
@@ -11,12 +11,14 @@ import OneOnOnesTab from "@/components/performance-mgmt/OneOnOnesTab";
 import ReviewsTabContent from "@/components/performance-mgmt/ReviewsTabContent";
 import TeamCockpit from "@/components/performance-mgmt/TeamCockpit";
 import IntegrationTab from "@/components/performance-mgmt/IntegrationTab";
+import CareerPathsTab from "@/components/performance-mgmt/CareerPathsTab";
 import { useCoachCoacheeScope } from "@/hooks/useCoachCoacheeScope";
 
 const TABS = [
   { id: "expectations", label: "Expectations", icon: Target },
   { id: "checkins", label: "Check-ins & 1:1s", icon: Calendar },
   { id: "reviews", label: "Reviews", icon: ClipboardList },
+  { id: "career_paths", label: "Career Paths", icon: GitBranch },
   { id: "overview", label: "Overview", icon: BarChart2 },
   { id: "integration", label: "Integration", icon: Plug },
 ];
@@ -99,6 +101,7 @@ export default function PerformanceManager() {
             </div>
           </div>
         )}
+        {section === "career_paths" && <CareerPathsTab user={fullUser} />}
         {section === "integration" && <IntegrationTab user={fullUser} />}
       </motion.div>
     </MVPPageLayout>
