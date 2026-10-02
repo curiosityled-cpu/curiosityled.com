@@ -31,6 +31,7 @@ import TeamHeroHeader from "@/components/team/TeamHeroHeader";
 import ZoneCard from "@/components/density/ZoneCard";
 import TeamTalentScorecard from "@/components/team/TeamTalentScorecard";
 import TeamRosterCard from "@/components/team/TeamRosterCard";
+import TeamAdoptionRollup from "@/components/adoption/TeamAdoptionRollup";
 
 function ActionTile({ icon: Icon, iconBg, iconColor, title, description, to }) {
   const content = (
@@ -173,6 +174,9 @@ export default function ManagerTeam() {
             <div className="space-y-4 md:sticky md:top-20 md:self-start">
               {/* Combined Team Talent Scorecard (Team Health + KPIs) */}
               <TeamTalentScorecard aggregates={aggregates} kpis={kpis} teamSize={scopeSize} />
+
+              {/* Behavioral Adoption Rollup — per direct report */}
+              <TeamAdoptionRollup subordinateEmails={members.map(m => m.email).filter(Boolean)} />
 
               {/* Team Tools */}
               <div className="space-y-3">

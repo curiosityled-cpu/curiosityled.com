@@ -339,6 +339,68 @@ Deno.serve(async (req) => {
           behavioral_commitments_7d = 0;
         }
 
+        // ─── Behavioral Adoption Rate (90-day window) ──────────────────────
+        const cutoff90d = new Date(now.getTime() - 90 * 86400000);
+        let behavioral_committed_count = 0;
+        let behavioral_demonstrated_count = 0;
+        let behavioral_self_report_only_count = 0;
+        let behavioral_evidence_source_breakdown: Record<string, number> = {};
+        let behavioral_adoption_rate: number | null = null;
+
+        try {
+          const ownedBhGoals = await base44.asServiceRole.entities.Goal.filter(
+            { created_by: email, goal_type: 'behavioral_commitment', status: 'active' },
+            '-created_date', 50
+          );
+          const assignedBhGoals = await base44.asServiceRole.entities.Goal.filter(
+            { assigned_to_emails: { $in: [email] }, goal_type: 'behavioral_commitment', status: 'active' },
+            '-created_date', 50
+          );
+          const seenGoalIds = new Set();
+          const allBhGoals = [...ownedBhGoals, ...assignedBhGoals].filter(g => {
+            if (seenGoalIds.has(g.id)) return false;
+            seenGoalIds.add(g.id);
+            return true;
+          }).filter(g => {
+            const d = g.created_date ? new Date(g.created_date) : null;
+            return d && d >= cutoff90d;
+          });
+
+          behavioral_committed_count = allBhGoals.length;
+
+          for (const goal of allBhGoals) {
+            const entries = goal.evidence_entries || [];
+            const goalOwnerEmail = goal.created_by || email;
+            const hasNonSelfEvidence = entries.some(e =>
+              e.added_by_email && e.added_by_email !== goalOwnerEmail
+            );
+            const hasDeliberateConfirmation = entries.some(e =>
+              e.note_type === 'behavior_demonstration'
+            );
+            const isDemonstrated = hasNonSelfEvidence || hasDeliberateConfirmation;
+            const hasOnlySelfReport = !isDemonstrated && entries.some(e =>
+              e.added_by_email === goalOwnerEmail && e.note_type !== 'behavior_demonstration'
+            );
+
+            if (isDemonstrated) {
+              behavioral_demonstrated_count++;
+            } else if (hasOnlySelfReport) {
+              behavioral_self_report_only_count++;
+            }
+
+            for (const e of entries) {
+              const src = e.source || 'manual';
+              behavioral_evidence_source_breakdown[src] = (behavioral_evidence_source_breakdown[src] || 0) + 1;
+            }
+          }
+
+          if (behavioral_committed_count > 0) {
+            behavioral_adoption_rate = Math.round((behavioral_demonstrated_count / behavioral_committed_count) * 100);
+          }
+        } catch {
+          // adoption fields stay at defaults
+        }
+
         // Summaries
         const summary_7d = buildSummary7d(pulses7d.filter(p => p.source !== 'system'), activity7d);
         const summary_28d = buildSummary28d(pulses14d, pulses28d);
@@ -414,6 +476,11 @@ Deno.serve(async (req) => {
           avg_growth_7d,
           workload_growth_divergence_days,
           behavioral_commitments_7d,
+          behavioral_committed_count,
+          behavioral_demonstrated_count,
+          behavioral_self_report_only_count,
+          behavioral_adoption_rate,
+          behavioral_evidence_source_breakdown,
         };
 
         // Delete ALL existing records then create fresh — avoids RLS update restrictions and duplicate accumulation

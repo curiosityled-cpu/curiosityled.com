@@ -56,6 +56,7 @@ import HubStickyBar from "@/components/intelligence/HubStickyBar";
 import ConnectionModule from "@/components/intelligence/ConnectionModule";
 import HubLensToggle from "@/components/intelligence/HubLensToggle";
 import HRBPLensContent from "@/components/portfolio/HRBPLensContent";
+import OrgAdoptionMetric from "@/components/adoption/OrgAdoptionMetric";
 import { deriveLeadershipStage } from "@/lib/lifecycleStage";
 import { DEMO_TREND_DATA, DEMO_PULSE_AGGREGATES } from "./demoSnapshotData";
 
@@ -990,6 +991,11 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
           workforceMetrics={rawData.workforceMetrics}
           onScrollTo={scrollToSection}
         />
+      </motion.div>
+
+      {/* ── Behavioral Adoption Rate — platform headline outcome metric ── */}
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.07 }}>
+        <OrgAdoptionMetric clientId={clientId} />
       </motion.div>
 
       {/* Talent Care Lifecycle Bar */}

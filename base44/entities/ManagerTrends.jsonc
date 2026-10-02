@@ -144,6 +144,29 @@
       "type": "number",
       "description": "Count of behavioral_commitment Goals created in last 7 days"
     },
+    "behavioral_committed_count": {
+      "type": "number",
+      "description": "Number of active behavioral_commitment goals in the 90-day window (denominator for adoption rate)"
+    },
+    "behavioral_demonstrated_count": {
+      "type": "number",
+      "description": "Number of committed behaviors demonstrated via non-self evidence or deliberate confirmation (numerator)"
+    },
+    "behavioral_self_report_only_count": {
+      "type": "number",
+      "description": "Committed behaviors with only self-reported evidence, awaiting corroboration"
+    },
+    "behavioral_adoption_rate": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Percentage of committed behaviors demonstrated (0-100). Null when no commitments exist."
+    },
+    "behavioral_evidence_source_breakdown": {
+      "type": "object",
+      "description": "Count of evidence entries by source type across the manager's behavioral commitments",
+      "additionalProperties": true
+    },
     "visibility_level": {
       "type": "string",
       "enum": [
