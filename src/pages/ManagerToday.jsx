@@ -32,7 +32,6 @@ import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
 import TalentScorecard from "@/components/lead/TalentScoreCard";
 import DecisionJournalCard from "@/components/lead/DecisionJournalCard";
-import BehavioralAdoptionCard from "@/components/adoption/BehavioralAdoptionCard";
 
 // Patterns imports
 import LeadershipNarrativeCard from "@/components/patterns/LeadershipNarrativeCard";
@@ -539,7 +538,6 @@ export default function ManagerToday() {
 
         <div className="space-y-4">
           <TalentScorecard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
-          <BehavioralAdoptionCard userEmail={user?.email} />
           <ZoneCard
             title="Reflect"
             icon={Lightbulb}
