@@ -14,6 +14,7 @@ import {
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import LessonContentPicker from "./LessonContentPicker";
+import ThumbnailPicker from "./ThumbnailPicker";
 
 const genId = (prefix) => `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
 
@@ -187,12 +188,9 @@ const CourseBuilder = forwardRef(({ editingCourse, clientId, onClose }, ref) => 
             />
           </div>
           <div>
-            <Label className="text-xs">Thumbnail URL</Label>
-            <Input
-              placeholder="https://..."
+            <ThumbnailPicker
               value={course.thumbnail_url || ""}
-              onChange={(e) => update({ thumbnail_url: e.target.value })}
-              className="mt-1 h-9 text-sm"
+              onChange={(url) => update({ thumbnail_url: url })}
             />
           </div>
         </div>
