@@ -295,7 +295,12 @@ export default function JourneysManagement() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
             >
-              <Card className="hover:shadow-lg transition-shadow h-full">
+              <Card className="hover:shadow-lg transition-shadow h-full overflow-hidden">
+                {journey.thumbnail_url && (
+                  <div className="h-32 w-full overflow-hidden bg-gray-100">
+                    <img src={journey.thumbnail_url} alt="" className="w-full h-full object-cover" />
+                  </div>
+                )}
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">

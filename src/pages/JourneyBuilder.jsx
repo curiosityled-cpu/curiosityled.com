@@ -29,6 +29,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/components/useAuth";
 import { withAuthProtection } from "@/components/hoc/withAuthProtection";
+import ThumbnailPicker from "@/components/dev-manager/ThumbnailPicker";
 import { toast } from "sonner";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import LearningResourceSelector from "../components/journey/LearningResourceSelector";
@@ -60,7 +61,8 @@ function JourneyBuilder() {
     estimated_duration_days: 30,
     target_audiences: [],
     status: "draft",
-    tags: []
+    tags: [],
+    thumbnail_url: ""
   });
 
   const [showResourceSelector, setShowResourceSelector] = useState(false);
@@ -501,7 +503,8 @@ function JourneyBuilder() {
       estimated_duration_days: journeyToEdit.estimated_duration_days || 30,
       target_audiences: journeyToEdit.target_audiences || [],
       status: journeyToEdit.status,
-      tags: journeyToEdit.tags || []
+      tags: journeyToEdit.tags || [],
+      thumbnail_url: journeyToEdit.thumbnail_url || ""
     });
     setEditingJourneyId(journeyToEdit.id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -673,6 +676,10 @@ function JourneyBuilder() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                <ThumbnailPicker
+                  value={journey.thumbnail_url || ""}
+                  onChange={(url) => setJourney({ ...journey, thumbnail_url: url })}
+                />
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Experience Title *
@@ -976,6 +983,11 @@ function JourneyBuilder() {
                           key={savedJourney.id}
                           className="p-3 border rounded-lg hover:bg-slate-50 transition-colors"
                         >
+                          {savedJourney.thumbnail_url && (
+                            <div className="mb-2 h-24 rounded-md overflow-hidden bg-gray-100">
+                              <img src={savedJourney.thumbnail_url} alt="" className="w-full h-full object-cover" />
+                            </div>
+                          )}
                           <div className="flex justify-between items-start mb-2">
                             <div className="flex-1">
                               <h4 className="font-semibold text-sm line-clamp-1">

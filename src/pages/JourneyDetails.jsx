@@ -295,6 +295,11 @@ export default function JourneyDetails() {
           </Button>
 
           <div className="bg-white rounded-xl shadow-lg p-6">
+            {journey.thumbnail_url && (
+              <div className="h-40 w-full rounded-lg overflow-hidden bg-gray-100 mb-4">
+                <img src={journey.thumbnail_url} alt="" className="w-full h-full object-cover" />
+              </div>
+            )}
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
