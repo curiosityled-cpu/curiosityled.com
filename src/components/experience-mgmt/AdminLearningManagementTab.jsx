@@ -16,6 +16,7 @@ import {
   LayoutGrid, List, BarChart2, TrendingUp, Award, AlertCircle
 } from "lucide-react";
 import ConversationalLearningTab from "@/components/dev-manager/ConversationalLearningTab";
+import CoursesTab from "@/components/dev-manager/CoursesTab";
 
 
 const TYPE_ICONS = {
@@ -487,6 +488,7 @@ export default function AdminLearningManagementTab({ user }) {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="bg-gray-100 rounded-xl p-1">
           <TabsTrigger value="library" className="rounded-lg text-xs">Content Library</TabsTrigger>
+          <TabsTrigger value="courses" className="rounded-lg text-xs">Courses</TabsTrigger>
           <TabsTrigger value="conversational" className="rounded-lg text-xs">Conversational Learning</TabsTrigger>
           <TabsTrigger value="enrollments" className="rounded-lg text-xs">Enrollments</TabsTrigger>
         </TabsList>
@@ -667,6 +669,11 @@ export default function AdminLearningManagementTab({ user }) {
               )}
             </div>
           )}
+        </TabsContent>
+
+        {/* ── COURSES ── */}
+        <TabsContent value="courses" className="mt-4">
+          <CoursesTab user={user} />
         </TabsContent>
 
         {/* ── CONVERSATIONAL LEARNING ── */}

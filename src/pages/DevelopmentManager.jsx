@@ -7,7 +7,6 @@ import { useCoachCoacheeScope } from "@/hooks/useCoachCoacheeScope";
 import ExperiencesTab from "@/components/dev-manager/ExperiencesTab";
 import CohortsTab from "@/components/dev-manager/CohortsTab";
 import SignalsTab from "@/components/dev-manager/SignalsTab";
-import CoursesTab from "@/components/dev-manager/CoursesTab";
 import ExperienceAnalyticsTab from "@/components/experience-mgmt/ExperienceAnalyticsTab";
 import CoachAnalyticsTab from "@/components/experience-mgmt/CoachAnalyticsTab";
 
@@ -51,7 +50,6 @@ const ADMIN_TABS = [
   { id: 'experiences', label: 'Experiences', icon: Star },
   { id: 'cohorts', label: 'Cohorts', icon: Users },
   { id: 'signals', label: 'Signals', icon: Radio },
-  { id: 'courses', label: 'Courses', icon: GraduationCap },
   { id: 'requests', label: 'Requests', icon: Inbox },
   { id: 'analytics', label: 'Analytics', icon: BarChart2 },
 ];
@@ -218,13 +216,6 @@ export default function DevelopmentManager() {
       {section === 'signals' && (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <SignalsTab user={user} />
-        </motion.div>
-      )}
-
-      {/* ── COURSES ── */}
-      {section === 'courses' && (
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <CoursesTab user={user} />
         </motion.div>
       )}
 
