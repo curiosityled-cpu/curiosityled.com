@@ -56,6 +56,8 @@ import ManagerAtreus from './pages/ManagerAtreus';
 import ManagerPractice from './pages/ManagerPractice';
 import OneOnOneHub from './pages/OneOnOneHub';
 import DelegationPlanner from './pages/DelegationPlanner';
+import CourseCatalog from './pages/CourseCatalog';
+import CoursePlayer from './pages/CoursePlayer';
 import DecisionJournalPage from './pages/DecisionJournalPage';
 import DecisionQualityAnalytics from './pages/DecisionQualityAnalytics';
 import Insights from './pages/Insights';
@@ -170,6 +172,8 @@ const AuthenticatedApp = () => {
       <Route path="/delegation-planner" element={<MVPLayout><DelegationPlanner /></MVPLayout>} />
       <Route path="/decision-journal" element={<MVPLayout><DecisionJournalPage /></MVPLayout>} />
       <Route path="/decision-analytics" element={<MVPLayout><DecisionQualityAnalytics /></MVPLayout>} />
+      <Route path="/courses" element={<MVPLayout><CourseCatalog /></MVPLayout>} />
+      <Route path="/course-player" element={<MVPLayout><CoursePlayer /></MVPLayout>} />
       <Route path="/you" element={<Navigate to="/Profile" replace />} />
 
       {/* MVP-specific routes */}

@@ -9,7 +9,7 @@ import {
   Brain, Target, Home, BarChart2, Users, LogOut, Menu, X,
   ChevronRight, ChevronLeft, Bell, User, ArrowLeft,
   Settings, Shield, UserCog, Dumbbell, Sun, Moon, ChevronDown, FolderOpen,
-  ClipboardList, Layers, Network } from "lucide-react";
+  ClipboardList, Layers, Network, GraduationCap } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -62,12 +62,14 @@ const NAV_CONFIG = {
   manager: [
   { label: 'Lead', path: '/today', icon: Home },
   { label: 'Team', path: '/team', icon: Users },
-  { label: 'Practice', path: '/practice', icon: Dumbbell }],
+  { label: 'Practice', path: '/practice', icon: Dumbbell },
+  { label: 'Learning', path: '/courses', icon: GraduationCap }],
 
   buyer: [
    { label: 'Lead', path: '/today', icon: Home },
    { label: 'Team', path: '/team', icon: Users },
    { label: 'Practice', path: '/practice', icon: Dumbbell },
+   { label: 'Learning', path: '/courses', icon: GraduationCap },
    { label: 'Administration', icon: FolderOpen, group: true, children: [
      { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
      { label: 'Development Manager', path: '/DevelopmentManager', icon: Users },
@@ -80,17 +82,20 @@ const NAV_CONFIG = {
   analyst: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
   { label: 'Team', path: '/team', icon: Users },
+  { label: 'Learning', path: '/courses', icon: GraduationCap },
   { label: 'Performance Manager', path: '/PerformanceManager', icon: Target },
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }],
 
   executive: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
   { label: 'Team', path: '/team', icon: Users },
+  { label: 'Learning', path: '/courses', icon: GraduationCap },
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }],
 
   hrbp: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
   { label: 'My Portfolio', path: '/team', icon: Users },
+  { label: 'Learning', path: '/courses', icon: GraduationCap },
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }]
 
 };
