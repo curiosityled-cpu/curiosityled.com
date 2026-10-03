@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import ConversationalLearningTab from "@/components/dev-manager/ConversationalLearningTab";
 import CoursesTab from "@/components/dev-manager/CoursesTab";
+import ThumbnailPicker from "@/components/dev-manager/ThumbnailPicker";
 
 
 const TYPE_ICONS = {
@@ -43,7 +44,8 @@ const EMPTY_RESOURCE = {
   title: "", description: "", type: "course", provider: "", author: "",
   url: "", document_url: "", embed_code: "", difficulty_level: "beginner",
   duration_string: "", access: "Free", is_active: true, is_premium: false,
-  year: new Date().getFullYear(), tags: [], competencies: [], points_value: ""
+  year: new Date().getFullYear(), tags: [], competencies: [], points_value: "",
+  thumbnail_url: ""
 };
 
 // All platform competency names
@@ -165,6 +167,10 @@ function ResourceFormDialog({ open, onClose, resource, onSaved }) {
           <DialogTitle>{resource ? "Edit Resource" : "New Learning Resource"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
+          <ThumbnailPicker
+            value={form.thumbnail_url || ""}
+            onChange={(url) => set("thumbnail_url", url)}
+          />
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <label className="text-sm font-medium text-gray-700 mb-1 block">Title *</label>
@@ -545,8 +551,12 @@ export default function AdminLearningManagementTab({ user }) {
                 return (
                   <Card key={r.id} className={`border border-gray-100 shadow-sm rounded-xl transition-opacity ${!r.is_active ? "opacity-60" : ""}`}>
                     <CardContent className="p-4 flex items-center gap-4">
-                      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-                        <Icon className="w-5 h-5 text-gray-500" />
+                      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
+                        {r.thumbnail_url ? (
+                          <img src={r.thumbnail_url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <Icon className="w-5 h-5 text-gray-500" />
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -611,8 +621,12 @@ export default function AdminLearningManagementTab({ user }) {
                   <Card key={r.id} className={`border border-gray-100 shadow-sm rounded-xl transition-opacity flex flex-col ${!r.is_active ? "opacity-60" : ""}`}>
                     <CardContent className="p-4 flex flex-col gap-3 flex-1">
                       <div className="flex items-start justify-between gap-2">
-                        <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                          <Icon className="w-5 h-5 text-gray-500" />
+                        <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          {r.thumbnail_url ? (
+                            <img src={r.thumbnail_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <Icon className="w-5 h-5 text-gray-500" />
+                          )}
                         </div>
                         <div className="flex items-center gap-1">
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-[#0202ff]" title={r.is_active ? "Deactivate" : "Activate"} onClick={() => handleToggleActive(r)}>
