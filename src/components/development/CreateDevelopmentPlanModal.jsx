@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import ExperienceSelector from "@/components/journey/ExperienceSelector";
+import ThumbnailPicker from "@/components/dev-manager/ThumbnailPicker";
 
 const COMPETENCIES = [
   "Situational Intelligence", "Decision Making", "Communication",
@@ -40,6 +41,7 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
   const [form, setForm] = useState(() => ({
     title: plan?.title || "",
     description: plan?.description || "",
+    thumbnail_url: plan?.thumbnail_url || "",
     target_competencies: plan?.target_competencies || [],
     status: plan?.status || "active",
     target_date: plan?.target_date || "",
@@ -75,6 +77,7 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
     setForm({
       title: plan?.title || "",
       description: plan?.description || "",
+      thumbnail_url: plan?.thumbnail_url || "",
       target_competencies: plan?.target_competencies || [],
       status: plan?.status || "active",
       target_date: plan?.target_date || "",
@@ -231,6 +234,10 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
         <div className="space-y-5 pt-2">
           {/* Plan basics */}
           <div className="space-y-3">
+            <ThumbnailPicker
+              value={form.thumbnail_url || ""}
+              onChange={(url) => setForm(f => ({ ...f, thumbnail_url: url }))}
+            />
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Journey Title *</label>
               <input

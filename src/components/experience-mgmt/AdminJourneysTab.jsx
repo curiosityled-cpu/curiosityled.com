@@ -186,7 +186,12 @@ export default function AdminJourneysTab({ user, coacheeEmails }) {
         ) : (
           filtered.map((plan, i) => (
             <motion.div key={plan.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
-              <Card className="shadow-sm border border-gray-100 rounded-2xl hover:shadow-md transition-shadow">
+              <Card className="shadow-sm border border-gray-100 rounded-2xl hover:shadow-md transition-shadow overflow-hidden">
+                {plan.thumbnail_url && (
+                  <div className="h-28 w-full overflow-hidden bg-gray-100">
+                    <img src={plan.thumbnail_url} alt="" className="w-full h-full object-cover" />
+                  </div>
+                )}
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
