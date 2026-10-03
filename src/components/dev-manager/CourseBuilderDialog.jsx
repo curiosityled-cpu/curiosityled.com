@@ -33,7 +33,7 @@ export default function CourseBuilderDialog({ open, onClose, editingCourse, clie
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
-      <DialogContent className="max-w-7xl w-[calc(100vw-2rem)] h-[calc(100vh-2rem)] p-0 gap-0 overflow-hidden rounded-2xl">
+      <DialogContent className="max-w-7xl w-[calc(100vw-2rem)] h-[calc(100vh-2rem)] p-0 gap-0 overflow-hidden rounded-2xl flex flex-col">
         <div className="flex flex-col h-full">
           {/* Header bar */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-white flex-shrink-0">
