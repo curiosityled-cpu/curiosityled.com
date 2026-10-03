@@ -1,25 +1,26 @@
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import {
-  Upload, Sparkles, Link2, Loader2, ImageIcon, X
-} from "lucide-react";
+import { Upload, Sparkles, Link2, Loader2, ImageIcon, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
+const ACTIVE = "bg-[#11111b] text-white border-[#11111b]";
+const INACTIVE = "bg-white text-black border-gray-300 hover:bg-gray-50";
+
 /**
- * ThumbnailPicker — lets the user set a course thumbnail via:
- *   1. File upload (stored publicly so the catalog can render it)
- *   2. AI generation from a text prompt
- *   3. Pasting a URL
+ * ThumbnailPicker — reusable thumbnail/cover image selector with three modes:
+ *   Upload  — file upload (stored publicly so catalog cards can render it)
+ *   AI      — generate from a text prompt
+ *   URL     — paste an image URL
  *
  * Props:
  *   value    — current thumbnail URL string
  *   onChange — callback receiving the new URL string
+ *   label    — optional label override (default "Thumbnail")
  */
-export default function ThumbnailPicker({ value, onChange }) {
-  const [mode, setMode] = useState(value ? "preview" : "url"); // "preview" | "url" | "upload" | "ai"
+export default function ThumbnailPicker({ value, onChange, label = "Thumbnail" }) {
+  const [mode, setMode] = useState("url");
   const [busy, setBusy] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
 
@@ -33,7 +34,6 @@ export default function ThumbnailPicker({ value, onChange }) {
     try {
       const res = await base44.integrations.Core.UploadPublicFile({ file });
       onChange(res.file_url);
-      setMode("preview");
       toast.success("Thumbnail uploaded");
     } catch (err) {
       console.error(err);
@@ -54,7 +54,6 @@ export default function ThumbnailPicker({ value, onChange }) {
         prompt: `Course thumbnail image. ${aiPrompt}. Clean, professional, wide landscape composition suitable for a course card.`,
       });
       onChange(res.url);
-      setMode("preview");
       toast.success("Thumbnail generated");
     } catch (err) {
       console.error(err);
@@ -66,15 +65,16 @@ export default function ThumbnailPicker({ value, onChange }) {
 
   return (
     <div className="space-y-2">
-      <Label className="text-xs">Thumbnail</Label>
+      {/* Label */}
+      <label className="text-sm font-semibold text-black">{label}</label>
 
-      {/* Preview */}
-      {value && mode === "preview" && (
-        <div className="relative group rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+      {/* Preview (when a thumbnail is set) */}
+      {value && (
+        <div className="relative rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
           <img src={value} alt="Thumbnail preview" className="w-full h-32 object-cover" />
           <button
             type="button"
-            onClick={() => { onChange(""); setMode("url"); }}
+            onClick={() => onChange("")}
             className="absolute top-1.5 right-1.5 bg-black/60 text-white rounded-full p-1 hover:bg-black/80"
           >
             <X className="w-3.5 h-3.5" />
@@ -82,49 +82,47 @@ export default function ThumbnailPicker({ value, onChange }) {
         </div>
       )}
 
-      {/* Mode tabs */}
-      {(!value || mode !== "preview") && (
-        <div className="flex gap-1.5">
-          <Button
-            type="button"
-            variant={mode === "upload" ? "default" : "outline"}
-            size="sm"
-            className="h-8 text-xs flex-1"
-            onClick={() => setMode("upload")}
-          >
-            <Upload className="w-3.5 h-3.5 mr-1" /> Upload
-          </Button>
-          <Button
-            type="button"
-            variant={mode === "ai" ? "default" : "outline"}
-            size="sm"
-            className="h-8 text-xs flex-1"
-            onClick={() => setMode("ai")}
-          >
-            <Sparkles className="w-3.5 h-3.5 mr-1" /> AI
-          </Button>
-          <Button
-            type="button"
-            variant={mode === "url" ? "default" : "outline"}
-            size="sm"
-            className="h-8 text-xs flex-1"
-            onClick={() => setMode("url")}
-          >
-            <Link2 className="w-3.5 h-3.5 mr-1" /> URL
-          </Button>
-        </div>
-      )}
+      {/* Button group */}
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className={`flex-1 h-9 text-sm font-medium border ${mode === "upload" ? ACTIVE : INACTIVE}`}
+          onClick={() => setMode("upload")}
+        >
+          <Upload className="w-4 h-4 mr-1.5" /> Upload
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className={`flex-1 h-9 text-sm font-medium border ${mode === "ai" ? ACTIVE : INACTIVE}`}
+          onClick={() => setMode("ai")}
+        >
+          <Sparkles className="w-4 h-4 mr-1.5" /> AI
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className={`flex-1 h-9 text-sm font-medium border ${mode === "url" ? ACTIVE : INACTIVE}`}
+          onClick={() => setMode("url")}
+        >
+          <Link2 className="w-4 h-4 mr-1.5" /> URL
+        </Button>
+      </div>
 
-      {/* Upload mode */}
+      {/* Content area — always visible below buttons */}
       {mode === "upload" && (
-        <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg py-6 px-4 cursor-pointer hover:border-[#0202ff]/40 hover:bg-gray-50 transition-colors">
+        <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg py-6 px-4 cursor-pointer hover:border-[#11111b]/40 hover:bg-gray-50 transition-colors">
           {busy ? (
             <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
           ) : (
             <>
               <ImageIcon className="w-7 h-7 text-gray-300 mb-1.5" />
-              <span className="text-xs text-gray-500">Click to choose an image</span>
-              <span className="text-[10px] text-gray-400 mt-0.5">PNG, JPG, WebP</span>
+              <span className="text-sm text-gray-500">Click to choose an image</span>
+              <span className="text-xs text-gray-400 mt-0.5">PNG, JPG, WebP</span>
             </>
           )}
           <input
@@ -137,11 +135,10 @@ export default function ThumbnailPicker({ value, onChange }) {
         </label>
       )}
 
-      {/* AI mode */}
       {mode === "ai" && (
         <div className="space-y-2">
           <Input
-            placeholder="Describe the image (e.g. mountain sunrise, abstract leadership, team collaboration)"
+            placeholder="Describe the image (e.g. mountain sunrise, abstract leadership)"
             value={aiPrompt}
             onChange={(e) => setAiPrompt(e.target.value)}
             className="h-9 text-sm"
@@ -151,17 +148,16 @@ export default function ThumbnailPicker({ value, onChange }) {
           <Button
             type="button"
             size="sm"
-            className="w-full h-8 text-xs bg-[#0202ff] hover:bg-[#0101dd] text-white"
+            className="w-full h-9 text-sm bg-[#11111b] hover:bg-[#11111b]/90 text-white"
             onClick={handleGenerate}
             disabled={busy}
           >
-            {busy ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 mr-1.5" />}
+            {busy ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Sparkles className="w-4 h-4 mr-1.5" />}
             {busy ? "Generating…" : "Generate Image"}
           </Button>
         </div>
       )}
 
-      {/* URL mode */}
       {mode === "url" && (
         <Input
           placeholder="https://..."

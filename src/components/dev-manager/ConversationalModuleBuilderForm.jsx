@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MessageSquare, Plus, Save, Trash2, Play, GripVertical, Sparkles, Loader2 } from "lucide-react";
+import ThumbnailPicker from "@/components/dev-manager/ThumbnailPicker";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
@@ -41,7 +42,8 @@ const EMPTY_MODULE = {
   conversation_structure: [],
   prerequisite_resource_ids: [],
   prerequisite_module_ids: [],
-  related_resource_ids: []
+  related_resource_ids: [],
+  thumbnail_url: ""
 };
 
 /**
@@ -285,6 +287,11 @@ const ConversationalModuleBuilderForm = forwardRef(function ConversationalModule
               rows={3}
             />
           </div>
+
+          <ThumbnailPicker
+            value={module.thumbnail_url || ""}
+            onChange={(url) => setModule({ ...module, thumbnail_url: url })}
+          />
 
           <div className="grid md:grid-cols-2 gap-4">
             <div>

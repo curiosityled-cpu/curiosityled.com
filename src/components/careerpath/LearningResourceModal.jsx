@@ -9,6 +9,7 @@ import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { X, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import ThumbnailPicker from "@/components/dev-manager/ThumbnailPicker";
 
 export default function LearningResourceModal({ resource, isOpen, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -297,12 +298,9 @@ export default function LearningResourceModal({ resource, isOpen, onClose, onSav
           </div>
 
           <div>
-            <Label>Thumbnail URL</Label>
-            <Input
+            <ThumbnailPicker
               value={formData.thumbnail_url}
-              onChange={(e) => setFormData({ ...formData, thumbnail_url: e.target.value })}
-              placeholder="https://..."
-              type="url"
+              onChange={(url) => setFormData({ ...formData, thumbnail_url: url })}
             />
           </div>
 
