@@ -1,0 +1,309 @@
+{
+  "name": "Course",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client this course belongs to"
+    },
+    "title": {
+      "type": "string",
+      "description": "Course title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Course description and learning objectives"
+    },
+    "thumbnail_url": {
+      "type": "string",
+      "description": "Course thumbnail image URL"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ],
+      "default": "draft",
+      "description": "Publication status"
+    },
+    "access_mode": {
+      "type": "string",
+      "enum": [
+        "open",
+        "closed"
+      ],
+      "default": "closed",
+      "description": "Open: available to everyone in the enterprise (tenant). Closed: requires assignment via assigned_to_emails."
+    },
+    "pacing": {
+      "type": "string",
+      "enum": [
+        "self_paced",
+        "cohort"
+      ],
+      "default": "self_paced",
+      "description": "Self-paced: learners progress independently. Cohort: tied to a Cohort with scheduled lesson unlocks and shared live sessions."
+    },
+    "leadership_level": {
+      "type": "string",
+      "enum": [
+        "Individual Contributor to First-Time Manager (entry-level leaders, frontline managers, new supervisors)",
+        "Mid-Level Manager (managers of managers, experienced team leads, functional leads)",
+        "Senior Manager / Business Unit Leader (leads larger teams, cross-functional groups, or business units)",
+        "Director / Senior Director (enterprise-level strategic oversight, multiple functions, major initiatives)",
+        "Executive / C-Suite (enterprise leadership, board-level strategy, organizational transformation)"
+      ],
+      "description": "Target leadership level for this course"
+    },
+    "modules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "lessons": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "content_type": {
+                  "type": "string",
+                  "enum": [
+                    "resource",
+                    "live_class",
+                    "assessment",
+                    "form",
+                    "conversational_module"
+                  ],
+                  "description": "Type of referenced content entity"
+                },
+                "reference_id": {
+                  "type": "string",
+                  "description": "ID of the referenced entity"
+                },
+                "reference_title": {
+                  "type": "string",
+                  "description": "Cached title of the referenced entity for display"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "Optional lesson title override"
+                },
+                "gate": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "If true, the next lesson is locked until this one is complete"
+                },
+                "unlock_offset_days": {
+                  "type": "number",
+                  "description": "Days from cohort start when this lesson unlocks (cohort-paced only)"
+                }
+              },
+              "required": [
+                "id",
+                "content_type",
+                "reference_id"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ]
+      },
+      "description": "Ordered course modules (chapters), each containing ordered lessons"
+    },
+    "completion_rule": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "all_lessons",
+            "minimum_lessons"
+          ],
+          "default": "all_lessons"
+        },
+        "minimum_count": {
+          "type": "number",
+          "default": 0
+        }
+      },
+      "description": "Rule for course completion"
+    },
+    "assigned_to_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Users assigned to this course (closed mode)"
+    },
+    "cohort_id": {
+      "type": "string",
+      "description": "Cohort ID for cohort-paced course instances"
+    },
+    "certificate_template_id": {
+      "type": "string",
+      "description": "Certificate template to issue on completion"
+    },
+    "estimated_duration_minutes": {
+      "type": "number",
+      "description": "Estimated total completion time in minutes"
+    },
+    "points_value": {
+      "type": "number",
+      "description": "Gamification points awarded for completing this course"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for categorization"
+    },
+    "enrollment_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Total number of enrolled learners"
+    },
+    "completion_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of learners who completed the course"
+    }
+  },
+  "required": [
+    "title",
+    "status",
+    "access_mode",
+    "pacing"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.assigned_to_emails": {
+            "$in": [
+              "{{user.email}}"
+            ]
+          }
+        },
+        {
+          "data.access_mode": "open",
+          "data.status": "published",
+          "data.client_id": "{{user.data.client_id}}"
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            },
+            {
+              "data.client_id": {
+                "$in": "{{user.data.partner_client_ids}}"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Analyst"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "update": null,
+    "delete": null
+  }
+}

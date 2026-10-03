@@ -1,0 +1,205 @@
+{
+  "name": "CourseProgress",
+  "type": "object",
+  "properties": {
+    "course_id": {
+      "type": "string",
+      "description": "ID of the Course"
+    },
+    "course_title": {
+      "type": "string",
+      "description": "Cached course title for display"
+    },
+    "learner_email": {
+      "type": "string",
+      "description": "Email of the learner"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Client ID for tenant scoping"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "in_progress",
+        "completed"
+      ],
+      "default": "not_started",
+      "description": "Current progress status"
+    },
+    "completed_lessons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "lesson_id": {
+            "type": "string"
+          },
+          "completed_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "description": "List of completed lessons with timestamps"
+    },
+    "overall_percentage": {
+      "type": "number",
+      "default": 0,
+      "description": "Completion percentage 0-100"
+    },
+    "enrolled_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the learner was enrolled"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the learner completed the course"
+    },
+    "certificate_issued": {
+      "type": "boolean",
+      "default": false
+    },
+    "certificate_id": {
+      "type": "string",
+      "description": "ID of the issued certificate"
+    },
+    "cohort_id": {
+      "type": "string",
+      "description": "Cohort ID if cohort-paced"
+    },
+    "last_accessed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the learner last accessed the course"
+    }
+  },
+  "required": [
+    "course_id",
+    "learner_email"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "data.learner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.learner_email": "{{user.email}}"
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Analyst"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.learner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "Platform Admin"
+      }
+    }
+  }
+}
