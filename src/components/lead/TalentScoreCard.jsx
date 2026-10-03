@@ -11,7 +11,6 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { Progress } from "@/components/ui/progress";
-import BehavioralAdoptionSection from "@/components/adoption/BehavioralAdoptionSection";
 
 const DIRECTION_ICONS = {
   higher_better: { icon: TrendingUp, color: "text-emerald-600" },
@@ -228,9 +227,6 @@ export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals =
             )}
           </div>
         )}
-
-        {/* ── Behavioral Adoption sub-card ──────────────────────────── */}
-        <BehavioralAdoptionSection userEmail={user?.email} />
 
         {/* ── My Development sub-card ───────────────────────────────── */}
         {hasDevData && (

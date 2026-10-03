@@ -16,11 +16,10 @@
         "standard",
         "okr_objective",
         "coaching_goal",
-        "action_item",
-        "behavioral_commitment"
+        "action_item"
       ],
       "default": "standard",
-      "description": "Type of goal: standard goal, OKR objective, coaching goal, action item, or behavioral commitment (a specific leadership behavior the manager committed to changing)"
+      "description": "Type of goal: standard goal, OKR objective, coaching goal, or action item"
     },
     "timeframe_start": {
       "type": "string",
@@ -249,7 +248,7 @@
     },
     "evidence_entries": {
       "type": "array",
-      "description": "Performance evidence entries attached to this goal. Supports the 'defensible' layer of performance management. note_type='behavior_demonstration' is a deliberate, specificity-gated self-confirmation of a committed behavior (requires situation description + date).",
+      "description": "Performance evidence entries attached to this goal. Supports the 'defensible' layer of performance management.",
       "items": {
         "type": "object",
         "properties": {
@@ -263,14 +262,13 @@
               "accomplishment",
               "feedback",
               "context",
-              "concern",
-              "behavior_demonstration"
+              "concern"
             ],
-            "description": "Type of evidence entry. behavior_demonstration = deliberate self-confirmation that a committed behavior was demonstrated in a specific situation."
+            "description": "Type of evidence entry"
           },
           "description": {
             "type": "string",
-            "description": "Evidence description / narrative. For behavior_demonstration, this is the situation description (mandatory, min 10 chars)."
+            "description": "Evidence description / narrative"
           },
           "source": {
             "type": "string",
