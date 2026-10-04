@@ -291,6 +291,24 @@ Keep it practical and specific to the title.`,
             </select>
           </div>
 
+          {/* Type — Curriculum vs Learning Path */}
+          <div className="space-y-1.5">
+            <Label className="text-sm font-semibold">Type</Label>
+            <select
+              value={form.type || "curriculum"}
+              onChange={(e) => set("type", e.target.value)}
+              className="w-full h-9 text-sm border border-gray-200 rounded-lg px-3 bg-white focus:outline-none focus:ring-1 focus:ring-[#0202ff]/30"
+            >
+              <option value="curriculum">Curriculum (any order)</option>
+              <option value="learning_path">Learning Path (sequence)</option>
+            </select>
+            <p className="text-xs text-gray-500">
+              {form.type === "learning_path"
+                ? "Learners complete resources in the specified sequence."
+                : "Learners complete resources in any order."}
+            </p>
+          </div>
+
           {/* Content library checkbox (role-gated) */}
           {canManageLibrary && (
             <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${form.in_content_library ? "border-purple-300 bg-purple-50" : "border-gray-200 hover:bg-gray-50"}`}>
@@ -313,18 +331,9 @@ Keep it practical and specific to the title.`,
           {/* Library-specific fields (only when in library) */}
           {form.in_content_library && (
             <div className="space-y-4 p-3 rounded-lg bg-purple-50/50 border border-purple-100">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-semibold">Type</Label>
-                  <select value={form.type} onChange={(e) => set("type", e.target.value)} className="w-full h-9 text-sm border border-gray-200 rounded-lg px-3 bg-white focus:outline-none focus:ring-1 focus:ring-[#0202ff]/30">
-                    <option value="curriculum">Curriculum (any order)</option>
-                    <option value="learning_path">Learning Path (sequence)</option>
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-semibold">Est. Duration (days)</Label>
-                  <Input type="number" value={form.estimated_duration_days || ""} onChange={(e) => set("estimated_duration_days", e.target.value ? Number(e.target.value) : null)} className="h-9 text-sm" />
-                </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">Est. Duration (days)</Label>
+                <Input type="number" value={form.estimated_duration_days || ""} onChange={(e) => set("estimated_duration_days", e.target.value ? Number(e.target.value) : null)} className="h-9 text-sm" />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-sm font-semibold">Template Category</Label>
