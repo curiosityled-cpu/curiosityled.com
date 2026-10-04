@@ -5,14 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Plus, X, Briefcase, BookOpen, Loader2 } from "lucide-react";
+import { Plus, X, Briefcase, BookOpen, Loader2, Library } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import ThumbnailPicker from "@/components/dev-manager/ThumbnailPicker";
 
-const CATALOG_STATUSES = ["draft", "published", "archived", "template"];
-const ASSIGNED_STATUSES = ["active", "paused", "completed", "cancelled"];
+const STATUSES = ["active", "paused", "completed", "draft", "published", "archived", "cancelled"];
 const TEMPLATE_CATEGORIES = ["technical", "leadership", "sales", "operations", "compliance", "onboarding", "general", "custom"];
+const LIBRARY_ROLES = ["Admin Level 1", "Admin Level 2", "Super Administrator", "Platform Admin"];
 
 function TagInput({ label, tags, onChange, placeholder }) {
   const [input, setInput] = useState("");
@@ -79,9 +79,11 @@ function LearningItemRow({ item, onChange, onRemove }) {
   );
 }
 
-export default function JourneyEditor({ open, onClose, onSaved, journey, defaultMode, user, users }) {
+export default function JourneyEditor({ open, onClose, onSaved, journey, user, users }) {
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
+
+  const canManageLibrary = LIBRARY_ROLES.includes(user?.app_role);
 
   useEffect(() => {
     if (!open) return;
@@ -89,75 +91,63 @@ export default function JourneyEditor({ open, onClose, onSaved, journey, default
       setForm({ ...journey });
     } else {
       setForm({
-        mode: defaultMode || "assigned",
         title: "",
         description: "",
         thumbnail_url: "",
-        status: defaultMode === "catalog" ? "draft" : "active",
+        status: "active",
         tags: [],
-        // catalog fields
-        type: "curriculum",
         author_email: user.email,
         client_id: user.client_id,
-        is_template: false,
-        template_category: "",
-        template_tags: [],
-        content_structure: [],
-        estimated_duration_days: null,
-        target_audiences: [],
-        assigned_to_emails: [],
-        points_value: null,
-        // assigned fields
-        user_email: "",
+        in_content_library: false,
         target_competencies: [],
         target_date: "",
         experiences: [],
         learning_items: [],
+        assigned_to_emails: [],
+        // library fields
+        type: "curriculum",
+        template_category: "",
+        template_tags: [],
+        estimated_duration_days: null,
+        target_audiences: [],
+        points_value: null,
       });
     }
-  }, [open, journey, defaultMode, user]);
+  }, [open, journey, user]);
 
   if (!open || !form) return null;
 
-  const isCatalog = form.mode === "catalog";
-  const isEdit = !!journey;
-
   const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
+  const isEdit = !!journey;
 
   const handleSave = async () => {
     if (!form.title.trim()) { toast.error("Title is required"); return; }
-    if (isCatalog && !form.author_email) { toast.error("Author email is required for catalog journeys"); return; }
-    if (!isCatalog && !form.user_email) { toast.error("Participant email is required for assigned journeys"); return; }
 
     setSaving(true);
     try {
       const payload = {
-        mode: form.mode,
         title: form.title,
         description: form.description,
         thumbnail_url: form.thumbnail_url,
         status: form.status,
         tags: form.tags,
         client_id: form.client_id || user.client_id,
+        author_email: form.author_email || user.email,
         last_modified_by: user.email,
+        in_content_library: form.in_content_library || false,
+        target_competencies: form.target_competencies,
+        target_date: form.target_date || undefined,
+        experiences: form.experiences,
+        learning_items: form.learning_items,
+        assigned_to_emails: form.assigned_to_emails,
       };
-      if (isCatalog) {
-        payload.author_email = form.author_email;
+      if (form.in_content_library) {
         payload.type = form.type;
-        payload.is_template = form.is_template;
         payload.template_category = form.template_category || undefined;
         payload.template_tags = form.template_tags;
-        payload.content_structure = form.content_structure;
         payload.estimated_duration_days = form.estimated_duration_days || undefined;
         payload.target_audiences = form.target_audiences;
-        payload.assigned_to_emails = form.assigned_to_emails;
         payload.points_value = form.points_value || undefined;
-      } else {
-        payload.user_email = form.user_email;
-        payload.target_competencies = form.target_competencies;
-        payload.target_date = form.target_date || undefined;
-        payload.experiences = form.experiences;
-        payload.learning_items = form.learning_items;
       }
 
       if (isEdit) {
@@ -184,50 +174,22 @@ export default function JourneyEditor({ open, onClose, onSaved, journey, default
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
-          {/* Mode selector (only on create) */}
-          {!isEdit && (
-            <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Journey Type</Label>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => { set("mode", "catalog"); set("status", "draft"); set("author_email", user.email); }}
-                  className={`flex-1 p-3 rounded-lg border text-left transition-all ${form.mode === "catalog" ? "border-[#0202ff] bg-[#0202ff]/5" : "border-gray-200 hover:bg-gray-50"}`}
-                >
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <BookOpen className="w-4 h-4 text-[#0202ff]" />
-                    <span className="text-sm font-medium">Catalog (reusable)</span>
-                  </div>
-                  <p className="text-xs text-gray-500">Authored learning path, published and assigned to many learners.</p>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { set("mode", "assigned"); set("status", "active"); set("user_email", ""); }}
-                  className={`flex-1 p-3 rounded-lg border text-left transition-all ${form.mode === "assigned" ? "border-[#0202ff] bg-[#0202ff]/5" : "border-gray-200 hover:bg-gray-50"}`}
-                >
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <Briefcase className="w-4 h-4 text-[#0202ff]" />
-                    <span className="text-sm font-medium">Assigned (person-specific)</span>
-                  </div>
-                  <p className="text-xs text-gray-500">Individual development plan tied to one person and their competencies.</p>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Common fields */}
+          {/* Title */}
           <div className="space-y-1.5">
             <Label className="text-sm font-semibold">Title *</Label>
             <Input value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="Journey title" className="h-9 text-sm" />
           </div>
 
+          {/* Description */}
           <div className="space-y-1.5">
             <Label className="text-sm font-semibold">Description</Label>
             <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="What this journey covers" className="text-sm min-h-[70px]" />
           </div>
 
+          {/* Thumbnail */}
           <ThumbnailPicker value={form.thumbnail_url} onChange={(url) => set("thumbnail_url", url)} />
 
+          {/* Status */}
           <div className="space-y-1.5">
             <Label className="text-sm font-semibold">Status</Label>
             <select
@@ -235,13 +197,32 @@ export default function JourneyEditor({ open, onClose, onSaved, journey, default
               onChange={(e) => set("status", e.target.value)}
               className="w-full h-9 text-sm border border-gray-200 rounded-lg px-3 bg-white focus:outline-none focus:ring-1 focus:ring-[#0202ff]/30"
             >
-              {(isCatalog ? CATALOG_STATUSES : ASSIGNED_STATUSES).map((s) => <option key={s} value={s}>{s}</option>)}
+              {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
 
-          {/* Catalog-specific fields */}
-          {isCatalog && (
-            <>
+          {/* Content library checkbox (role-gated) */}
+          {canManageLibrary && (
+            <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${form.in_content_library ? "border-purple-300 bg-purple-50" : "border-gray-200 hover:bg-gray-50"}`}>
+              <input
+                type="checkbox"
+                checked={form.in_content_library || false}
+                onChange={(e) => set("in_content_library", e.target.checked)}
+                className="w-4 h-4 mt-0.5"
+              />
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <Library className="w-4 h-4 text-purple-600" />
+                  <span className="text-sm font-medium text-gray-900">Save in content library</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-0.5">Makes this journey reusable — program admins can assign it to many learners across the organization.</p>
+              </div>
+            </label>
+          )}
+
+          {/* Library-specific fields (only when in library) */}
+          {form.in_content_library && (
+            <div className="space-y-4 p-3 rounded-lg bg-purple-50/50 border border-purple-100">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-sm font-semibold">Type</Label>
@@ -262,72 +243,61 @@ export default function JourneyEditor({ open, onClose, onSaved, journey, default
                   {TEMPLATE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
-              <div className="flex items-center gap-2">
-                <input type="checkbox" id="is_template" checked={form.is_template} onChange={(e) => set("is_template", e.target.checked)} className="w-4 h-4" />
-                <Label htmlFor="is_template" className="text-sm font-medium cursor-pointer">Save as reusable template</Label>
-              </div>
               <TagInput label="Target Audiences" tags={form.target_audiences} onChange={(t) => set("target_audiences", t)} placeholder="e.g. new managers" />
-              <TagInput label="Assigned To (emails)" tags={form.assigned_to_emails} onChange={(t) => set("assigned_to_emails", t)} placeholder="email@example.com" />
-            </>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">Points Value</Label>
+                <Input type="number" value={form.points_value || ""} onChange={(e) => set("points_value", e.target.value ? Number(e.target.value) : null)} placeholder="Gamification points for completion" className="h-9 text-sm" />
+              </div>
+            </div>
           )}
 
-          {/* Assigned-specific fields */}
-          {!isCatalog && (
-            <>
-              <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Participant (email) *</Label>
-                <select
-                  value={form.user_email}
-                  onChange={(e) => set("user_email", e.target.value)}
-                  className="w-full h-9 text-sm border border-gray-200 rounded-lg px-3 bg-white focus:outline-none focus:ring-1 focus:ring-[#0202ff]/30"
-                >
-                  <option value="">Select participant...</option>
-                  {users.map((u) => <option key={u.id} value={u.email}>{u.full_name || u.email}</option>)}
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Target Date</Label>
-                <Input type="date" value={form.target_date || ""} onChange={(e) => set("target_date", e.target.value)} className="h-9 text-sm" />
-              </div>
-              <TagInput label="Target Competencies" tags={form.target_competencies} onChange={(t) => set("target_competencies", t)} placeholder="e.g. Strategic Thinking" />
+          {/* Target date */}
+          <div className="space-y-1.5">
+            <Label className="text-sm font-semibold">Target Date</Label>
+            <Input type="date" value={form.target_date || ""} onChange={(e) => set("target_date", e.target.value)} className="h-9 text-sm" />
+          </div>
 
-              {/* Experiences */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-semibold">Off-Platform Experiences</Label>
-                  <Button type="button" variant="outline" size="sm" onClick={() => set("experiences", [...form.experiences, { title: "", type: "", description: "", provider_or_sponsor: "" }])}>
-                    <Plus className="w-4 h-4 mr-1" /> Add
-                  </Button>
-                </div>
-                {form.experiences.map((exp, i) => (
-                  <ExperienceRow
-                    key={i}
-                    exp={exp}
-                    onChange={(updated) => set("experiences", form.experiences.map((x, idx) => idx === i ? updated : x))}
-                    onRemove={() => set("experiences", form.experiences.filter((_, idx) => idx !== i))}
-                  />
-                ))}
-              </div>
+          {/* Target competencies */}
+          <TagInput label="Target Competencies" tags={form.target_competencies} onChange={(t) => set("target_competencies", t)} placeholder="e.g. Strategic Thinking" />
 
-              {/* Learning items */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-semibold">Learning Resources</Label>
-                  <Button type="button" variant="outline" size="sm" onClick={() => set("learning_items", [...form.learning_items, { title: "", provider: "", url: "" }])}>
-                    <Plus className="w-4 h-4 mr-1" /> Add
-                  </Button>
-                </div>
-                {form.learning_items.map((item, i) => (
-                  <LearningItemRow
-                    key={i}
-                    item={item}
-                    onChange={(updated) => set("learning_items", form.learning_items.map((x, idx) => idx === i ? updated : x))}
-                    onRemove={() => set("learning_items", form.learning_items.filter((_, idx) => idx !== i))}
-                  />
-                ))}
-              </div>
-            </>
-          )}
+          {/* Assigned to */}
+          <TagInput label="Assigned To (emails)" tags={form.assigned_to_emails} onChange={(t) => set("assigned_to_emails", t)} placeholder="email@example.com" />
+
+          {/* Experiences */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold flex items-center gap-1.5"><Briefcase className="w-4 h-4" /> Off-Platform Experiences</Label>
+              <Button type="button" variant="outline" size="sm" onClick={() => set("experiences", [...form.experiences, { title: "", type: "", description: "", provider_or_sponsor: "" }])}>
+                <Plus className="w-4 h-4 mr-1" /> Add
+              </Button>
+            </div>
+            {form.experiences.map((exp, i) => (
+              <ExperienceRow
+                key={i}
+                exp={exp}
+                onChange={(updated) => set("experiences", form.experiences.map((x, idx) => idx === i ? updated : x))}
+                onRemove={() => set("experiences", form.experiences.filter((_, idx) => idx !== i))}
+              />
+            ))}
+          </div>
+
+          {/* Learning items */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold flex items-center gap-1.5"><BookOpen className="w-4 h-4" /> Learning Resources</Label>
+              <Button type="button" variant="outline" size="sm" onClick={() => set("learning_items", [...form.learning_items, { title: "", provider: "", url: "" }])}>
+                <Plus className="w-4 h-4 mr-1" /> Add
+              </Button>
+            </div>
+            {form.learning_items.map((item, i) => (
+              <LearningItemRow
+                key={i}
+                item={item}
+                onChange={(updated) => set("learning_items", form.learning_items.map((x, idx) => idx === i ? updated : x))}
+                onRemove={() => set("learning_items", form.learning_items.filter((_, idx) => idx !== i))}
+              />
+            ))}
+          </div>
 
           <TagInput label="Tags" tags={form.tags} onChange={(t) => set("tags", t)} placeholder="categorization tags" />
         </div>

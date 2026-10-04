@@ -8,7 +8,7 @@
         "catalog",
         "assigned"
       ],
-      "description": "catalog = reusable authored learning asset (published, templated, assigned to many). assigned = person-specific development plan tied to one user_email."
+      "description": "Legacy migration flag. New records leave this unset \u2014 the unified model uses in_content_library + assigned_to_emails instead."
     },
     "title": {
       "type": "string",
@@ -24,11 +24,7 @@
     },
     "author_email": {
       "type": "string",
-      "description": "Email of the user who created this journey (catalog mode)"
-    },
-    "user_email": {
-      "type": "string",
-      "description": "Email of the person this journey is assigned to (assigned mode)"
+      "description": "Email of the user who created this journey"
     },
     "client_id": {
       "type": "string",
@@ -38,20 +34,24 @@
       "type": "string",
       "description": "ID of the partner this journey belongs to"
     },
+    "in_content_library": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this journey is saved in the reusable content library (program admins and above only). Library items can be assigned to many learners."
+    },
     "status": {
       "type": "string",
       "enum": [
         "draft",
         "published",
         "archived",
-        "template",
         "active",
         "paused",
         "completed",
         "cancelled"
       ],
-      "default": "draft",
-      "description": "Lifecycle status. catalog mode uses draft/published/archived/template. assigned mode uses active/paused/completed/cancelled."
+      "default": "active",
+      "description": "Lifecycle status of the journey"
     },
     "type": {
       "type": "string",
@@ -59,12 +59,7 @@
         "curriculum",
         "learning_path"
       ],
-      "description": "catalog mode only: curriculum = learners complete in any order, learning_path = specific sequence required"
-    },
-    "is_template": {
-      "type": "boolean",
-      "default": false,
-      "description": "Whether this journey is a template for reuse (catalog mode)"
+      "description": "Library items: curriculum = learners complete in any order, learning_path = specific sequence required"
     },
     "template_category": {
       "type": "string",
@@ -78,24 +73,24 @@
         "general",
         "custom"
       ],
-      "description": "Category of the template for organization (catalog mode)"
+      "description": "Category for organization in the content library"
     },
     "template_tags": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Tags for filtering and searching templates (catalog mode)"
+      "description": "Tags for filtering and searching in the library"
     },
     "use_count": {
       "type": "number",
       "default": 0,
-      "description": "Number of times this template has been used"
+      "description": "Number of times this library item has been assigned"
     },
     "last_used_date": {
       "type": "string",
       "format": "date-time",
-      "description": "When this template was last used"
+      "description": "When this library item was last assigned"
     },
     "content_structure": {
       "type": "array",
@@ -112,16 +107,13 @@
           },
           "is_optional": {
             "type": "boolean",
-            "default": false,
-            "description": "Whether this resource is optional"
+            "default": false
           },
           "title": {
-            "type": "string",
-            "description": "Cached title of the resource"
+            "type": "string"
           },
           "type": {
-            "type": "string",
-            "description": "Cached type of the resource"
+            "type": "string"
           },
           "unlock_condition": {
             "type": "string",
@@ -131,25 +123,22 @@
               "score_based",
               "sequential"
             ],
-            "default": "immediate",
-            "description": "How this resource unlocks for learners"
+            "default": "immediate"
           },
           "unlock_after_days": {
             "type": "number",
-            "default": 0,
-            "description": "Days to wait before unlocking (for time_based)"
+            "default": 0
           },
           "required_score_percentage": {
             "type": "number",
-            "default": 0,
-            "description": "Score required on previous item (for score_based)"
+            "default": 0
           }
         },
         "required": [
           "learning_resource_id"
         ]
       },
-      "description": "Ordered list of learning resources in this journey with gating options (catalog mode)"
+      "description": "Ordered list of learning resources with gating options (library items)"
     },
     "experiences": {
       "type": "array",
@@ -183,7 +172,7 @@
           }
         }
       },
-      "description": "Off-platform development experiences included in this journey (assigned mode)"
+      "description": "Off-platform development experiences included in this journey"
     },
     "learning_items": {
       "type": "array",
@@ -208,44 +197,44 @@
           }
         }
       },
-      "description": "Learning resources included in this journey (assigned mode)"
+      "description": "Learning resources included in this journey"
     },
     "target_competencies": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Competencies this journey targets (assigned mode)"
+      "description": "Competencies this journey targets"
     },
     "target_date": {
       "type": "string",
       "format": "date",
-      "description": "Target completion date (assigned mode)"
+      "description": "Target completion date"
     },
     "estimated_duration_days": {
       "type": "number",
-      "description": "Estimated number of days to complete (catalog mode)"
+      "description": "Estimated number of days to complete (library items)"
     },
     "target_audiences": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Target audiences for this journey (catalog mode)"
+      "description": "Target audiences (library items)"
     },
     "assigned_to_emails": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Emails of users directly assigned to this journey (catalog mode)"
+      "description": "Emails of users assigned to this journey"
     },
     "assigned_to_cohort_ids": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "IDs of cohorts assigned to this journey (catalog mode)"
+      "description": "IDs of cohorts assigned to this journey"
     },
     "shared_admin_emails": {
       "type": "array",
@@ -270,13 +259,11 @@
       "properties": {
         "completion_percentage_required": {
           "type": "number",
-          "default": 100,
-          "description": "Percentage of content that must be completed"
+          "default": 100
         },
         "require_all_mandatory": {
           "type": "boolean",
-          "default": true,
-          "description": "Whether all non-optional resources must be completed"
+          "default": true
         }
       },
       "description": "Criteria for journey completion"
@@ -303,8 +290,7 @@
     }
   },
   "required": [
-    "title",
-    "mode"
+    "title"
   ],
   "rls": {
     "create": {
@@ -314,9 +300,6 @@
         },
         {
           "data.author_email": "{{user.email}}"
-        },
-        {
-          "data.user_email": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -346,9 +329,6 @@
           "data.author_email": "{{user.email}}"
         },
         {
-          "data.user_email": "{{user.email}}"
-        },
-        {
           "data.assigned_to_emails": {
             "$in": [
               "{{user.email}}"
@@ -363,32 +343,7 @@
           }
         },
         {
-          "data.is_template": true
-        },
-        {
-          "$and": [
-            {
-              "data.mode": "catalog"
-            },
-            {
-              "data.status": "published"
-            },
-            {
-              "data.client_id": "{{user.data.client_id}}"
-            }
-          ]
-        },
-        {
-          "$and": [
-            {
-              "user_condition": {
-                "role": "User Level 2"
-              }
-            },
-            {
-              "data.user_email": "{{user.email}}"
-            }
-          ]
+          "data.in_content_library": true
         },
         {
           "$and": [
