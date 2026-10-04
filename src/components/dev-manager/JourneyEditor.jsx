@@ -112,6 +112,7 @@ export default function JourneyEditor({ open, onClose, onSaved, journey, user, u
         experiences: [],
         learning_items: [],
         assigned_to_emails: [],
+        assigned_to_cohort_ids: [],
         // library fields
         type: "curriculum",
         template_category: "",
@@ -485,6 +486,8 @@ Keep it practical and specific to the title.`,
               onChange={(emails) => set("assigned_to_emails", emails)}
               users={users || []}
               currentUser={user}
+              selectedCohortIds={form.assigned_to_cohort_ids || []}
+              onCohortChange={(ids) => set("assigned_to_cohort_ids", ids)}
             />
           </div>
 

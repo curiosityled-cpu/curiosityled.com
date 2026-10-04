@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Users, X, ChevronDown, ChevronUp, Filter } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 
 const ADMIN_ROLES = ["Admin Level 1", "Admin Level 2", "Super Administrator", "Platform Admin", "Partner Business Administrator"];
 const LEVELS = [
@@ -15,12 +16,23 @@ const LEVELS = [
   "HiPo Individual Contributor",
 ];
 
-export default function JourneyAssigneePicker({ selected = [], onChange, users = [], currentUser }) {
+export default function JourneyAssigneePicker({ selected = [], onChange, users = [], currentUser, selectedCohortIds = [], onCohortChange }) {
   const [search, setSearch] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [dept, setDept] = useState("");
   const [managerEmail, setManagerEmail] = useState("");
   const [level, setLevel] = useState("");
+  const [cohortId, setCohortId] = useState("");
+  const [cohorts, setCohorts] = useState([]);
+
+  // Load cohorts from the Cohort entity (same source as the Cohorts tab)
+  useEffect(() => {
+    let active = true;
+    base44.entities.Cohort.list("-created_date")
+      .then((data) => { if (active) setCohorts(data || []); })
+      .catch(() => { if (active) setCohorts([]); });
+    return () => { active = false; };
+  }, []);
 
   const canSelectAnyone = ADMIN_ROLES.includes(currentUser?.app_role);
   const isUserLevel2 = currentUser?.app_role === "User Level 2";
@@ -47,6 +59,13 @@ export default function JourneyAssigneePicker({ selected = [], onChange, users =
     return Array.from(set).sort();
   }, [selectableUsers]);
 
+  // Participant emails for the selected cohort
+  const cohortParticipantEmails = useMemo(() => {
+    if (!cohortId) return null;
+    const c = cohorts.find((c) => c.id === cohortId);
+    return c?.participant_emails || [];
+  }, [cohortId, cohorts]);
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return selectableUsers.filter((u) => {
@@ -54,18 +73,20 @@ export default function JourneyAssigneePicker({ selected = [], onChange, users =
       if (dept && u.department !== dept) return false;
       if (managerEmail && u.manager_email !== managerEmail) return false;
       if (level && u.leadership_level !== level) return false;
+      if (cohortParticipantEmails && !cohortParticipantEmails.includes(u.email)) return false;
       return true;
     });
-  }, [selectableUsers, search, dept, managerEmail, level]);
+  }, [selectableUsers, search, dept, managerEmail, level, cohortParticipantEmails]);
 
   const bulkMatchCount = useMemo(() => {
     return selectableUsers.filter((u) => {
       if (dept && u.department !== dept) return false;
       if (managerEmail && u.manager_email !== managerEmail) return false;
       if (level && u.leadership_level !== level) return false;
+      if (cohortParticipantEmails && !cohortParticipantEmails.includes(u.email)) return false;
       return true;
     }).length;
-  }, [selectableUsers, dept, managerEmail, level]);
+  }, [selectableUsers, dept, managerEmail, level, cohortParticipantEmails]);
 
   const toggle = (email) => {
     if (selected.includes(email)) onChange(selected.filter((e) => e !== email));
@@ -77,13 +98,19 @@ export default function JourneyAssigneePicker({ selected = [], onChange, users =
       if (dept && u.department !== dept) return false;
       if (managerEmail && u.manager_email !== managerEmail) return false;
       if (level && u.leadership_level !== level) return false;
+      if (cohortParticipantEmails && !cohortParticipantEmails.includes(u.email)) return false;
       return true;
     });
     const merged = Array.from(new Set([...selected, ...matches.map((u) => u.email)]));
     onChange(merged);
+    // Persist the cohort assignment on the journey
+    if (cohortId && onCohortChange) {
+      const next = Array.from(new Set([...(selectedCohortIds || []), cohortId]));
+      onCohortChange(next);
+    }
   };
 
-  const hasFilters = dept || managerEmail || level;
+  const hasFilters = dept || managerEmail || level || cohortId;
 
   return (
     <div className="space-y-2">
@@ -123,13 +150,17 @@ export default function JourneyAssigneePicker({ selected = [], onChange, users =
             className="flex items-center gap-1.5 text-xs font-medium text-[#0202ff] hover:underline"
           >
             <Filter className="w-3.5 h-3.5" />
-            {showFilters ? "Hide bulk assign" : "Bulk assign by team / department / level"}
+            {showFilters ? "Hide bulk assign" : "Bulk assign by cohort / team / department / level"}
             {showFilters ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
 
           {showFilters && (
             <div className="bg-gray-50 rounded-xl border border-gray-100 p-3 space-y-2.5">
               <div className="grid grid-cols-1 gap-2">
+                <select value={cohortId} onChange={(e) => setCohortId(e.target.value)} className="h-9 text-sm border border-gray-200 rounded-lg px-3 bg-white focus:outline-none focus:ring-1 focus:ring-[#0202ff]/30">
+                  <option value="">All cohorts</option>
+                  {cohorts.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
                 <select value={dept} onChange={(e) => setDept(e.target.value)} className="h-9 text-sm border border-gray-200 rounded-lg px-3 bg-white focus:outline-none focus:ring-1 focus:ring-[#0202ff]/30">
                   <option value="">All departments</option>
                   {departments.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -155,7 +186,7 @@ export default function JourneyAssigneePicker({ selected = [], onChange, users =
                 </button>
               </div>
               {hasFilters && (
-                <button type="button" onClick={() => { setDept(""); setManagerEmail(""); setLevel(""); }} className="text-xs text-gray-500 hover:underline">
+                <button type="button" onClick={() => { setDept(""); setManagerEmail(""); setLevel(""); setCohortId(""); }} className="text-xs text-gray-500 hover:underline">
                   Clear filters
                 </button>
               )}
