@@ -1,19 +1,10 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Brain } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 const STORAGE_KEY = "atreus-fab-pos";
 const DRAG_THRESHOLD = 6;
 const EDGE_MARGIN = 8;
 const BTN_SIZE = 56;
-
-function getDefaultPos() {
-  if (typeof window === "undefined") return { x: 100, y: 100 };
-  return {
-    x: window.innerWidth - BTN_SIZE - 24,
-    y: window.innerHeight - BTN_SIZE - 120,
-  };
-}
 
 function loadSavedPos() {
   try {
@@ -26,18 +17,48 @@ function loadSavedPos() {
   return null;
 }
 
+function clamp(v, min, max) {
+  return Math.max(min, Math.min(max, v));
+}
+
 export default function DraggableAtreusButton({ onClick, visible }) {
-  const [pos, setPos] = useState(() => loadSavedPos() || getDefaultPos());
+  // null = use default bottom-right position via right/bottom CSS
+  const [pos, setPos] = useState(null);
   const dragging = useRef(false);
   const moved = useRef(false);
   const start = useRef({ x: 0, y: 0 });
   const startPos = useRef({ x: 0, y: 0 });
 
+  // Clamp saved position on mount / resize so button stays on-screen
+  useEffect(() => {
+    const clampPos = () => {
+      setPos((prev) => {
+        if (!prev) return prev;
+        return {
+          x: clamp(prev.x, EDGE_MARGIN, window.innerWidth - BTN_SIZE - EDGE_MARGIN),
+          y: clamp(prev.y, EDGE_MARGIN, window.innerHeight - BTN_SIZE - EDGE_MARGIN),
+        };
+      });
+    };
+    const saved = loadSavedPos();
+    if (saved) {
+      setPos({
+        x: clamp(saved.x, EDGE_MARGIN, window.innerWidth - BTN_SIZE - EDGE_MARGIN),
+        y: clamp(saved.y, EDGE_MARGIN, window.innerHeight - BTN_SIZE - EDGE_MARGIN),
+      });
+    }
+    window.addEventListener("resize", clampPos);
+    return () => window.removeEventListener("resize", clampPos);
+  }, []);
+
   const onPointerDown = (e) => {
+    // Capture current screen position when drag starts
+    const rect = e.currentTarget.getBoundingClientRect();
     dragging.current = true;
     moved.current = false;
     start.current = { x: e.clientX, y: e.clientY };
-    startPos.current = { ...pos };
+    startPos.current = { x: rect.left, y: rect.top };
+    setPos({ x: rect.left, y: rect.top }); // switch to left/top mode
     try { e.currentTarget.setPointerCapture(e.pointerId); } catch {}
     e.preventDefault();
   };
@@ -48,10 +69,8 @@ export default function DraggableAtreusButton({ onClick, visible }) {
     const dy = e.clientY - start.current.y;
     if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) moved.current = true;
 
-    let nx = startPos.current.x + dx;
-    let ny = startPos.current.y + dy;
-    nx = Math.max(EDGE_MARGIN, Math.min(window.innerWidth - BTN_SIZE - EDGE_MARGIN, nx));
-    ny = Math.max(EDGE_MARGIN, Math.min(window.innerHeight - BTN_SIZE - EDGE_MARGIN, ny));
+    const nx = clamp(startPos.current.x + dx, EDGE_MARGIN, window.innerWidth - BTN_SIZE - EDGE_MARGIN);
+    const ny = clamp(startPos.current.y + dy, EDGE_MARGIN, window.innerHeight - BTN_SIZE - EDGE_MARGIN);
     setPos({ x: nx, y: ny });
   };
 
@@ -71,27 +90,27 @@ export default function DraggableAtreusButton({ onClick, visible }) {
 
   if (!visible) return null;
 
+  const positionStyle = pos
+    ? { left: pos.x, top: pos.y }
+    : { right: 24, bottom: 24 };
+
   return (
     <div
-      className="fixed z-40"
-      style={{
-        left: pos.x,
-        top: pos.y,
-        touchAction: "none",
-      }}
+      className="fixed z-[200]"
+      style={{ ...positionStyle, touchAction: "none" }}
     >
-      <Button
+      <button
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
-        className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-colors select-none cursor-grab active:cursor-grabbing"
+        className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow select-none cursor-grab active:cursor-grabbing flex items-center justify-center"
         style={{ backgroundColor: "#0202ff", touchAction: "none" }}
         onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#0101dd")}
         onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#0202ff")}
-        title="Ask Atreus - Your AI Coach (drag to move, click to open)"
+        title="Ask Atreus — Your AI Coach (drag to move, click to open)"
       >
         <Brain className="w-6 h-6 text-white select-none pointer-events-none" />
-      </Button>
+      </button>
     </div>
   );
 }
