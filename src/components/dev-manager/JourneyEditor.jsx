@@ -402,17 +402,6 @@ Keep it practical and specific to the title.`,
             </DialogContent>
           </Dialog>
 
-          {/* Assigned to — user selector */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-semibold">Assigned To</Label>
-            <JourneyAssigneePicker
-              selected={form.assigned_to_emails || []}
-              onChange={(emails) => set("assigned_to_emails", emails)}
-              users={users || []}
-              currentUser={user}
-            />
-          </div>
-
           {/* Experiences */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -489,6 +478,17 @@ Keep it practical and specific to the title.`,
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Assigned to — user selector */}
+          <div className="space-y-1.5">
+            <Label className="text-sm font-semibold">Assigned To</Label>
+            <JourneyAssigneePicker
+              selected={form.assigned_to_emails || []}
+              onChange={(emails) => set("assigned_to_emails", emails)}
+              users={users || []}
+              currentUser={user}
+            />
+          </div>
 
         </div>
 
