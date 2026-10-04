@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Plus, X, Briefcase, BookOpen, Loader2, Library, Sparkles, Search } from "lucide-react";
+import { Plus, X, Briefcase, BookOpen, Loader2, Library, Sparkles, Search, Layers } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import ThumbnailPicker from "@/components/dev-manager/ThumbnailPicker";
@@ -88,6 +88,8 @@ export default function JourneyEditor({ open, onClose, onSaved, journey, user, u
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [showExperiencePicker, setShowExperiencePicker] = useState(false);
+  const [showCompetencyPicker, setShowCompetencyPicker] = useState(false);
+  const [showLearningPicker, setShowLearningPicker] = useState(false);
 
   const canManageLibrary = LIBRARY_ROLES.includes(user?.app_role);
 
@@ -362,11 +364,43 @@ Keep it practical and specific to the title.`,
           </div>
 
           {/* Target competencies — from the competency library */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-semibold">Target Competencies</Label>
-            <p className="text-xs text-gray-500 -mt-1">Select from the competency library.</p>
-            <CompetencyLibraryPicker selected={form.target_competencies} onChange={(t) => set("target_competencies", t)} />
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold flex items-center gap-1.5"><Layers className="w-4 h-4" /> Target Competencies</Label>
+              <Button type="button" variant="outline" size="sm" onClick={() => setShowCompetencyPicker(true)}>
+                <Search className="w-4 h-4 mr-1" /> From library
+              </Button>
+            </div>
+            {form.target_competencies?.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {form.target_competencies.map((name) => (
+                  <Badge key={name} variant="secondary" className="gap-1">
+                    {name}
+                    <button type="button" onClick={() => set("target_competencies", form.target_competencies.filter((c) => c !== name))}><X className="w-3 h-3" /></button>
+                  </Badge>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500">No competencies selected yet.</p>
+            )}
           </div>
+
+          {/* Competency library picker dialog */}
+          <Dialog open={showCompetencyPicker} onOpenChange={setShowCompetencyPicker}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Add from competency library</DialogTitle>
+              </DialogHeader>
+              <CompetencyLibraryPicker
+                selected={form.target_competencies}
+                onChange={(t) => set("target_competencies", t)}
+                defaultExpanded
+              />
+              <div className="flex justify-end pt-1">
+                <Button size="sm" onClick={() => setShowCompetencyPicker(false)}>Done</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {/* Assigned to — user selector */}
           <div className="space-y-1.5">
@@ -418,11 +452,43 @@ Keep it practical and specific to the title.`,
           </Dialog>
 
           {/* Learning resources — from the content library */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-semibold flex items-center gap-1.5"><BookOpen className="w-4 h-4" /> Learning Resources</Label>
-            <p className="text-xs text-gray-500 -mt-1">Pull resources from the content library.</p>
-            <LearningResourcePicker selected={form.learning_items || []} onChange={(items) => set("learning_items", items)} />
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold flex items-center gap-1.5"><BookOpen className="w-4 h-4" /> Learning Resources</Label>
+              <Button type="button" variant="outline" size="sm" onClick={() => setShowLearningPicker(true)}>
+                <Search className="w-4 h-4 mr-1" /> From library
+              </Button>
+            </div>
+            {form.learning_items?.length > 0 ? (
+              <div className="space-y-1.5">
+                {form.learning_items.map((item, i) => (
+                  <div key={item.resource_id || i} className="flex items-center gap-2 border border-gray-200 rounded-lg p-2 bg-gray-50/50">
+                    <BookOpen className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
+                      {item.provider && <p className="text-xs text-gray-500 truncate">{item.provider}</p>}
+                    </div>
+                    <button type="button" onClick={() => set("learning_items", form.learning_items.filter((_, idx) => idx !== i))} className="text-gray-400 hover:text-red-500"><X className="w-4 h-4" /></button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500">No resources selected yet.</p>
+            )}
           </div>
+
+          {/* Learning resource library picker dialog */}
+          <Dialog open={showLearningPicker} onOpenChange={setShowLearningPicker}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Add from content library</DialogTitle>
+              </DialogHeader>
+              <LearningResourcePicker selected={form.learning_items || []} onChange={(items) => set("learning_items", items)} />
+              <div className="flex justify-end pt-1">
+                <Button size="sm" onClick={() => setShowLearningPicker(false)}>Done</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
 
         </div>
 

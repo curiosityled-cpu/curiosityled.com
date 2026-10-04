@@ -16,11 +16,11 @@ const CATEGORY_COLORS = {
 
 const CATEGORY_ORDER = ["Tactical", "Self Leadership", "People Leadership", "Situational Intelligence"];
 
-export default function CompetencyLibraryPicker({ selected = [], onChange }) {
+export default function CompetencyLibraryPicker({ selected = [], onChange, defaultExpanded = false }) {
   const [competencies, setCompetencies] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(defaultExpanded);
 
   useEffect(() => {
     loadCompetencies();
