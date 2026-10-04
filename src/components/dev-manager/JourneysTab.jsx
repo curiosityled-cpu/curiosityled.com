@@ -175,7 +175,18 @@ export default function JourneysTab({ user, coacheeEmails }) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900 tracking-tight">Journeys</h2>
+          <p className="text-sm text-gray-500 mt-0.5">Build and assign development journeys from the content library.</p>
+        </div>
+        <Button className="bg-[#0202ff] hover:bg-[#0101dd] text-white" onClick={() => { setEditing(null); setShowEditor(true); }}>
+          <Plus className="w-4 h-4 mr-1.5" /> New Journey
+        </Button>
+      </div>
+
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3">
         {[
@@ -226,10 +237,6 @@ export default function JourneysTab({ user, coacheeEmails }) {
           </button>
         )}
       </div>
-
-      <Button size="sm" className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white" onClick={() => { setEditing(null); setShowEditor(true); }}>
-        <Plus className="w-4 h-4 mr-1.5" /> New Journey
-      </Button>
 
       {/* List */}
       <div className="space-y-3">

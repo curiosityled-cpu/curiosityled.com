@@ -5,11 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Plus, X, Briefcase, BookOpen, Loader2, Library, Sparkles } from "lucide-react";
+import { Plus, X, Briefcase, BookOpen, Loader2, Library, Sparkles, Search } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import ThumbnailPicker from "@/components/dev-manager/ThumbnailPicker";
 import CompetencyLibraryPicker from "@/components/learning/CompetencyLibraryPicker";
+import JourneyAssigneePicker from "@/components/dev-manager/JourneyAssigneePicker";
+import LearningResourcePicker from "@/components/dev-manager/LearningResourcePicker";
+import ExperienceLibraryPicker from "@/components/dev-manager/ExperienceLibraryPicker";
 
 const STATUSES = ["active", "paused", "completed", "draft", "published", "archived", "cancelled"];
 const TEMPLATE_CATEGORIES = ["technical", "leadership", "sales", "operations", "compliance", "onboarding", "general", "custom"];
@@ -84,6 +87,7 @@ export default function JourneyEditor({ open, onClose, onSaved, journey, user, u
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [showExperiencePicker, setShowExperiencePicker] = useState(false);
 
   const canManageLibrary = LIBRARY_ROLES.includes(user?.app_role);
 
@@ -244,9 +248,10 @@ Keep it practical and specific to the title.`,
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit Journey" : "New Journey"}</DialogTitle>
+          <DialogTitle className="text-xl font-bold tracking-tight">{isEdit ? "Edit Journey" : "New Journey"}</DialogTitle>
+          <p className="text-sm text-gray-500 mt-1">{isEdit ? "Update the details below." : "Create a development journey and assign it to learners."}</p>
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
@@ -363,16 +368,29 @@ Keep it practical and specific to the title.`,
             <CompetencyLibraryPicker selected={form.target_competencies} onChange={(t) => set("target_competencies", t)} />
           </div>
 
-          {/* Assigned to */}
-          <TagInput label="Assigned To (emails)" tags={form.assigned_to_emails} onChange={(t) => set("assigned_to_emails", t)} placeholder="email@example.com" />
+          {/* Assigned to — user selector */}
+          <div className="space-y-1.5">
+            <Label className="text-sm font-semibold">Assigned To</Label>
+            <JourneyAssigneePicker
+              selected={form.assigned_to_emails || []}
+              onChange={(emails) => set("assigned_to_emails", emails)}
+              users={users || []}
+              currentUser={user}
+            />
+          </div>
 
           {/* Experiences */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label className="text-sm font-semibold flex items-center gap-1.5"><Briefcase className="w-4 h-4" /> Off-Platform Experiences</Label>
-              <Button type="button" variant="outline" size="sm" onClick={() => set("experiences", [...form.experiences, { title: "", type: "", description: "", provider_or_sponsor: "" }])}>
-                <Plus className="w-4 h-4 mr-1" /> Add
-              </Button>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => setShowExperiencePicker(true)}>
+                  <Search className="w-4 h-4 mr-1" /> From library
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => set("experiences", [...form.experiences, { title: "", type: "", description: "", provider_or_sponsor: "" }])}>
+                  <Plus className="w-4 h-4 mr-1" /> Add custom
+                </Button>
+              </div>
             </div>
             {form.experiences.map((exp, i) => (
               <ExperienceRow
@@ -384,25 +402,28 @@ Keep it practical and specific to the title.`,
             ))}
           </div>
 
-          {/* Learning items */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm font-semibold flex items-center gap-1.5"><BookOpen className="w-4 h-4" /> Learning Resources</Label>
-              <Button type="button" variant="outline" size="sm" onClick={() => set("learning_items", [...form.learning_items, { title: "", provider: "", url: "" }])}>
-                <Plus className="w-4 h-4 mr-1" /> Add
-              </Button>
-            </div>
-            {form.learning_items.map((item, i) => (
-              <LearningItemRow
-                key={i}
-                item={item}
-                onChange={(updated) => set("learning_items", form.learning_items.map((x, idx) => idx === i ? updated : x))}
-                onRemove={() => set("learning_items", form.learning_items.filter((_, idx) => idx !== i))}
+          {/* Experience library picker dialog */}
+          <Dialog open={showExperiencePicker} onOpenChange={setShowExperiencePicker}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Add from existing experiences</DialogTitle>
+              </DialogHeader>
+              <ExperienceLibraryPicker
+                onPick={(exp) => {
+                  set("experiences", [...form.experiences, exp]);
+                  setShowExperiencePicker(false);
+                }}
               />
-            ))}
+            </DialogContent>
+          </Dialog>
+
+          {/* Learning resources — from the content library */}
+          <div className="space-y-1.5">
+            <Label className="text-sm font-semibold flex items-center gap-1.5"><BookOpen className="w-4 h-4" /> Learning Resources</Label>
+            <p className="text-xs text-gray-500 -mt-1">Pull resources from the content library.</p>
+            <LearningResourcePicker selected={form.learning_items || []} onChange={(items) => set("learning_items", items)} />
           </div>
 
-          <TagInput label="Tags" tags={form.tags} onChange={(t) => set("tags", t)} placeholder="categorization tags" />
         </div>
 
         <div className="flex gap-2 pt-2">
