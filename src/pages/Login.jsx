@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import { resetAtreusButtonPosition } from '@/components/ai/DraggableAtreusButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -49,6 +50,7 @@ export default function Login() {
     setLoading(true);
     try {
       await base44.auth.loginViaEmailPassword(email, password);
+      resetAtreusButtonPosition();
       window.location.href = resolveReturnTo();
     } catch (err) {
       setLoading(false);
@@ -57,6 +59,7 @@ export default function Login() {
   };
 
   const handleProvider = (provider) => {
+    resetAtreusButtonPosition();
     base44.auth.loginWithProvider(provider, resolveReturnTo());
   };
 

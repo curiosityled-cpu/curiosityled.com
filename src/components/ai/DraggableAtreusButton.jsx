@@ -17,12 +17,16 @@ function loadSavedPos() {
   return null;
 }
 
+export function resetAtreusButtonPosition() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch {}
+}
+
 function clamp(v, min, max) {
   return Math.max(min, Math.min(max, v));
 }
 
 export default function DraggableAtreusButton({ onClick, visible }) {
-  // null = use default bottom-right position via right/bottom CSS
+  // null = use default bottom-left position via left/bottom CSS
   const [pos, setPos] = useState(null);
   const dragging = useRef(false);
   const moved = useRef(false);
@@ -92,7 +96,7 @@ export default function DraggableAtreusButton({ onClick, visible }) {
 
   const positionStyle = pos
     ? { left: pos.x, top: pos.y }
-    : { right: 24, bottom: 24 };
+    : { left: 24, bottom: 24 };
 
   return (
     <div
