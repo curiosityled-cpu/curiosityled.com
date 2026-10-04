@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Plus, X, Briefcase, BookOpen, Loader2, Library } from "lucide-react";
+import { Plus, X, Briefcase, BookOpen, Loader2, Library, Sparkles } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import ThumbnailPicker from "@/components/dev-manager/ThumbnailPicker";
+import CompetencyLibraryPicker from "@/components/learning/CompetencyLibraryPicker";
 
 const STATUSES = ["active", "paused", "completed", "draft", "published", "archived", "cancelled"];
 const TEMPLATE_CATEGORIES = ["technical", "leadership", "sales", "operations", "compliance", "onboarding", "general", "custom"];
@@ -82,6 +83,7 @@ function LearningItemRow({ item, onChange, onRemove }) {
 export default function JourneyEditor({ open, onClose, onSaved, journey, user, users }) {
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const canManageLibrary = LIBRARY_ROLES.includes(user?.app_role);
 
@@ -119,6 +121,80 @@ export default function JourneyEditor({ open, onClose, onSaved, journey, user, u
 
   const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
   const isEdit = !!journey;
+
+  const runAiAssist = async () => {
+    if (!form.title.trim()) {
+      toast.error("Enter a title first, then use AI Assist");
+      return;
+    }
+    setAiLoading(true);
+    try {
+      const competencyNames = (await base44.entities.Competency.list("name")).map((c) => c.name);
+      const res = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are a leadership development designer. Draft a complete development journey titled "${form.title}".
+${form.description ? `Existing description: ${form.description}` : ""}
+${form.target_competencies?.length ? `Already-selected competencies: ${form.target_competencies.join(", ")}` : ""}
+Available competency library (pick from these only): ${competencyNames.join(", ")}
+
+Return JSON with:
+- description: 2-3 sentence overview of the journey
+- target_competencies: array of 3-6 competency names from the library above
+- experiences: array of 2-4 off-platform development experiences, each {title, type, description, provider_or_sponsor} — types can be leadership_coaching, workshop, stretch_project, mentorship, etc.
+- learning_items: array of 2-4 learning resources, each {title, provider, url} — use realistic providers (LinkedIn Learning, Harvard ManageMentor, Coursera, MIT Sloan, etc.)
+- estimated_duration_days: number
+- target_audiences: array of 2-3 audience labels
+Keep it practical and specific to the title.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            description: { type: "string" },
+            target_competencies: { type: "array", items: { type: "string" } },
+            experiences: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  type: { type: "string" },
+                  description: { type: "string" },
+                  provider_or_sponsor: { type: "string" },
+                },
+              },
+            },
+            learning_items: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  provider: { type: "string" },
+                  url: { type: "string" },
+                },
+              },
+            },
+            estimated_duration_days: { type: "number" },
+            target_audiences: { type: "array", items: { type: "string" } },
+          },
+        },
+      });
+      const validComps = (res.target_competencies || []).filter((c) => competencyNames.includes(c));
+      setForm((prev) => ({
+        ...prev,
+        description: res.description || prev.description,
+        target_competencies: Array.from(new Set([...(prev.target_competencies || []), ...validComps])),
+        experiences: res.experiences?.length ? res.experiences : prev.experiences,
+        learning_items: res.learning_items?.length ? res.learning_items : prev.learning_items,
+        estimated_duration_days: res.estimated_duration_days || prev.estimated_duration_days,
+        target_audiences: res.target_audiences?.length ? res.target_audiences : prev.target_audiences,
+      }));
+      toast.success("AI draft applied — review and adjust");
+    } catch (err) {
+      console.error(err);
+      toast.error("AI Assist failed — try again");
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!form.title.trim()) { toast.error("Title is required"); return; }
@@ -177,7 +253,21 @@ export default function JourneyEditor({ open, onClose, onSaved, journey, user, u
           {/* Title */}
           <div className="space-y-1.5">
             <Label className="text-sm font-semibold">Title *</Label>
-            <Input value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="Journey title" className="h-9 text-sm" />
+            <div className="flex gap-2">
+              <Input value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="Journey title" className="h-9 text-sm flex-1" />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={runAiAssist}
+                disabled={aiLoading || !form.title.trim()}
+                className="border-[#0202ff]/30 text-[#0202ff] hover:bg-[#0202ff]/5"
+              >
+                {aiLoading ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Sparkles className="w-4 h-4 mr-1.5" />}
+                {aiLoading ? "Drafting..." : "AI Assist"}
+              </Button>
+            </div>
+            <p className="text-xs text-gray-500">Enter a title, then click AI Assist to draft the description, competencies, experiences, and resources.</p>
           </div>
 
           {/* Description */}
@@ -257,8 +347,12 @@ export default function JourneyEditor({ open, onClose, onSaved, journey, user, u
             <Input type="date" value={form.target_date || ""} onChange={(e) => set("target_date", e.target.value)} className="h-9 text-sm" />
           </div>
 
-          {/* Target competencies */}
-          <TagInput label="Target Competencies" tags={form.target_competencies} onChange={(t) => set("target_competencies", t)} placeholder="e.g. Strategic Thinking" />
+          {/* Target competencies — from the competency library */}
+          <div className="space-y-1.5">
+            <Label className="text-sm font-semibold">Target Competencies</Label>
+            <p className="text-xs text-gray-500 -mt-1">Select from the competency library.</p>
+            <CompetencyLibraryPicker selected={form.target_competencies} onChange={(t) => set("target_competencies", t)} />
+          </div>
 
           {/* Assigned to */}
           <TagInput label="Assigned To (emails)" tags={form.assigned_to_emails} onChange={(t) => set("assigned_to_emails", t)} placeholder="email@example.com" />
