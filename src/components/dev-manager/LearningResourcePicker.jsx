@@ -61,7 +61,7 @@ export default function LearningResourcePicker({ selected = [], onChange }) {
   const remove = (resource_id) => onChange(selected.filter((s) => s.resource_id !== resource_id));
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 min-w-0">
       {/* Selected */}
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-1.5">

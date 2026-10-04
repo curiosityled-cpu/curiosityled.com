@@ -50,7 +50,7 @@ export default function ExperienceLibraryPicker({ onPick, onClose }) {
   }, [experiences, search]);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 min-w-0">
       <div className="relative">
         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
         <Input

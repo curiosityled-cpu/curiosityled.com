@@ -67,7 +67,7 @@ export default function CompetencyLibraryPicker({ selected = [], onChange, defau
   ];
 
   return (
-    <div className="border rounded-xl bg-white border-gray-100">
+    <div className="border rounded-xl bg-white border-gray-100 min-w-0">
       <div className="p-3 border-b border-gray-100 sticky top-0 bg-white z-10">
         <div className="flex items-center gap-2 mb-2">
           <Layers className="w-4 h-4 text-[#0202ff]" />
