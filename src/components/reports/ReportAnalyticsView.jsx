@@ -6,13 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { Loader2, Zap, FileText, Play, Pause, Clock, CheckCircle, AlertTriangle, TrendingUp, Award, Activity, Calendar as CalendarIcon } from "lucide-react";
+import { Loader2, Zap, FileText, Play, Pause, Clock, CheckCircle, AlertTriangle, TrendingUp, Award, Activity, Calendar as CalendarIcon, History } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, Legend, ResponsiveContainer } from "recharts";
-import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 
 const COLORS = ['#0202ff', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
 
-export default function ReportAnalyticsView({ user, viewTabs, activeView, setActiveView }) {
+export default function ReportAnalyticsView({ user }) {
   const [loading, setLoading] = useState(true);
   const [reports, setReports] = useState([]);
   const [filters, setFilters] = useState({ timeframe: '6months', reportType: 'all', outputFormat: 'all' });
@@ -104,35 +103,36 @@ export default function ReportAnalyticsView({ user, viewTabs, activeView, setAct
     }).slice(0, 5);
   }, [filteredReports]);
 
+  const allGenerationEvents = useMemo(() => {
+    const events = [];
+    filteredReports.forEach(r => {
+      (r.generation_history || []).forEach(h => {
+        events.push({
+          reportName: r.report_name,
+          timestamp: h.timestamp,
+          status: h.status,
+          fileUri: h.file_uri,
+          errorMessage: h.error_message,
+          recipientsCount: h.recipients_count,
+          format: r.output_format,
+          createdBy: r.created_by_email,
+        });
+      });
+    });
+    return events.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  }, [filteredReports]);
+
   if (loading) {
     return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="w-8 h-8 animate-spin text-[#0202ff]" /></div>;
   }
 
   return (
-    <MVPPageLayout
-      title="Report Analytics"
-      subtitle="Reporting trends and performance metrics across the platform"
-      action={
-        <div className="flex items-center gap-2">
-          {viewTabs.length > 1 && (
-            <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
-              {viewTabs.map(tab => {
-                const Icon = tab.icon;
-                return (
-                  <button key={tab.id} onClick={() => setActiveView(tab.id)}
-                    className={`flex items-center gap-1.5 text-xs font-medium py-2 px-3 rounded-lg transition-all whitespace-nowrap ${activeView === tab.id ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
-                    <Icon className="w-3.5 h-3.5" /> {tab.label}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-          <Button onClick={loadReports} variant="ghost" size="icon" title="Refresh data" disabled={loading} className="h-8 w-8">
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-          </Button>
-        </div>
-      }
-    >
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button onClick={loadReports} variant="ghost" size="icon" title="Refresh data" disabled={loading} className="h-8 w-8">
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+        </Button>
+      </div>
       <div className="flex flex-wrap items-center gap-2">
         <Select value={filters.timeframe} onValueChange={(v) => setFilters({ ...filters, timeframe: v })}>
           <SelectTrigger className="h-8 text-xs w-36"><SelectValue /></SelectTrigger>
@@ -249,7 +249,49 @@ export default function ReportAnalyticsView({ user, viewTabs, activeView, setAct
           </div>
         </CardContent>
       </Card>
-    </MVPPageLayout>
+
+      <Card className="border border-gray-100 shadow-sm rounded-2xl">
+        <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><History className="w-4 h-4 text-[#0202ff]" /> Generation History</CardTitle></CardHeader>
+        <CardContent>
+          {allGenerationEvents.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100 text-left text-xs text-gray-500">
+                    <th className="pb-2 pr-4 font-medium">Timestamp</th>
+                    <th className="pb-2 pr-4 font-medium">Report</th>
+                    <th className="pb-2 pr-4 font-medium">Status</th>
+                    <th className="pb-2 pr-4 font-medium">Recipients</th>
+                    <th className="pb-2 pr-4 font-medium">Format</th>
+                    <th className="pb-2 font-medium">Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allGenerationEvents.slice(0, 50).map((evt, idx) => (
+                    <tr key={idx} className="border-b border-gray-50">
+                      <td className="py-2 pr-4 text-xs text-gray-600 whitespace-nowrap">{format(new Date(evt.timestamp), 'MMM d, yyyy HH:mm')}</td>
+                      <td className="py-2 pr-4 text-xs font-medium text-gray-900">{evt.reportName}</td>
+                      <td className="py-2 pr-4">
+                        {evt.status === 'success' ? <Badge className="bg-green-100 text-green-700 text-[10px]">Success</Badge> : <Badge className="bg-red-100 text-red-700 text-[10px]">Failed</Badge>}
+                      </td>
+                      <td className="py-2 pr-4 text-xs text-gray-600">{evt.recipientsCount || '—'}</td>
+                      <td className="py-2 pr-4 text-xs text-gray-600">{evt.format?.toUpperCase()}</td>
+                      <td className="py-2 text-xs text-gray-500 max-w-xs truncate" title={evt.errorMessage || ''}>{evt.errorMessage || (evt.fileUri ? 'File generated' : '—')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {allGenerationEvents.length > 50 && <p className="text-xs text-gray-400 mt-2 text-center">Showing 50 of {allGenerationEvents.length} events</p>}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <History className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+              <p className="text-sm">No report generations yet</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 

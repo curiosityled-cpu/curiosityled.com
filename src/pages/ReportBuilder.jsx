@@ -10,9 +10,9 @@ import ReportAnalyticsView from "@/components/reports/ReportAnalyticsView";
 import CreateReportDialog from "@/components/reports/CreateReportDialog";
 
 const TABS = [
-  { id: 'library', label: 'Library', icon: Library },
   { id: 'reports', label: 'My Reports', icon: FileText },
   { id: 'delivery', label: 'Delivery', icon: Send },
+  { id: 'library', label: 'Library', icon: Library },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
 ];
 
@@ -42,13 +42,13 @@ export default function ReportBuilder() {
     return 'Create, schedule, and deliver personal development reports';
   };
 
-  // Analytics view renders its own MVPPageLayout (has its own tabs + filters)
-  if (section === 'analytics') {
-    return <ReportAnalyticsView user={user} viewTabs={TABS} activeView={section} setActiveView={setSection} />;
-  }
+  const pageTitle = section === 'analytics' ? 'Report Analytics' : 'Report Manager';
+  const pageSubtitle = section === 'analytics'
+    ? 'Reporting trends and performance metrics across the platform'
+    : getPageSubtitle();
 
   return (
-    <MVPPageLayout title="Report Manager" subtitle={getPageSubtitle()}>
+    <MVPPageLayout title={pageTitle} subtitle={pageSubtitle}>
       {/* Pill tabs */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex gap-1 bg-gray-100 rounded-xl p-1 overflow-x-auto">
@@ -80,6 +80,12 @@ export default function ReportBuilder() {
       {section === 'delivery' && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <DeliveryTab user={user} />
+        </motion.div>
+      )}
+
+      {section === 'analytics' && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <ReportAnalyticsView user={user} />
         </motion.div>
       )}
 
