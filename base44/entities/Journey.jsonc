@@ -199,6 +199,42 @@
       },
       "description": "Learning resources included in this journey"
     },
+    "signal_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "signal_id": {
+            "type": "string",
+            "description": "ID of the signal (CustomAssessment or CustomForm)"
+          },
+          "entity_type": {
+            "type": "string",
+            "enum": [
+              "CustomAssessment",
+              "CustomForm"
+            ],
+            "description": "Which entity the signal lives in"
+          },
+          "signal_type": {
+            "type": "string",
+            "description": "Signal type label (assessment, quiz, survey, pulse, feedback, custom)"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "default": "not_started"
+          }
+        },
+        "required": [
+          "signal_id",
+          "entity_type"
+        ]
+      },
+      "description": "Signals (assessments, quizzes, surveys, pulses, feedback) included in this journey"
+    },
     "target_competencies": {
       "type": "array",
       "items": {

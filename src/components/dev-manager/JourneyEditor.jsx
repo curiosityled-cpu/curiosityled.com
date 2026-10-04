@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Plus, X, Briefcase, BookOpen, Loader2, Library, Sparkles, Search, Layers } from "lucide-react";
+import { Plus, X, Briefcase, BookOpen, Loader2, Library, Sparkles, Search, Layers, Radio } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import ThumbnailPicker from "@/components/dev-manager/ThumbnailPicker";
@@ -13,6 +13,7 @@ import CompetencyLibraryPicker from "@/components/learning/CompetencyLibraryPick
 import JourneyAssigneePicker from "@/components/dev-manager/JourneyAssigneePicker";
 import LearningResourcePicker from "@/components/dev-manager/LearningResourcePicker";
 import ExperienceLibraryPicker from "@/components/dev-manager/ExperienceLibraryPicker";
+import SignalPicker from "@/components/dev-manager/SignalPicker";
 
 const STATUSES = ["active", "paused", "completed", "draft", "published", "archived", "cancelled"];
 const TEMPLATE_CATEGORIES = ["technical", "leadership", "sales", "operations", "compliance", "onboarding", "general", "custom"];
@@ -90,6 +91,7 @@ export default function JourneyEditor({ open, onClose, onSaved, journey, user, u
   const [showExperiencePicker, setShowExperiencePicker] = useState(false);
   const [showCompetencyPicker, setShowCompetencyPicker] = useState(false);
   const [showLearningPicker, setShowLearningPicker] = useState(false);
+  const [showSignalPicker, setShowSignalPicker] = useState(false);
 
   const canManageLibrary = LIBRARY_ROLES.includes(user?.app_role);
 
@@ -111,6 +113,7 @@ export default function JourneyEditor({ open, onClose, onSaved, journey, user, u
         target_date: "",
         experiences: [],
         learning_items: [],
+        signal_items: [],
         assigned_to_emails: [],
         assigned_to_cohort_ids: [],
         // library fields
@@ -222,6 +225,7 @@ Keep it practical and specific to the title.`,
         target_date: form.target_date || undefined,
         experiences: form.experiences,
         learning_items: form.learning_items,
+        signal_items: form.signal_items,
         assigned_to_emails: form.assigned_to_emails,
       };
       if (form.in_content_library) {
@@ -474,6 +478,45 @@ Keep it practical and specific to the title.`,
               <LearningResourcePicker selected={form.learning_items || []} onChange={(items) => set("learning_items", items)} />
               <div className="flex justify-end pt-1">
                 <Button size="sm" onClick={() => setShowLearningPicker(false)}>Done</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Signals — assessments, quizzes, surveys, pulses, feedback */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold flex items-center gap-1.5"><Radio className="w-4 h-4" /> Signals</Label>
+              <Button type="button" variant="outline" size="sm" onClick={() => setShowSignalPicker(true)}>
+                <Search className="w-4 h-4 mr-1" /> From library
+              </Button>
+            </div>
+            {form.signal_items?.length > 0 ? (
+              <div className="space-y-1.5">
+                {form.signal_items.map((item, i) => (
+                  <div key={`${item.entity_type}:${item.signal_id}`} className="flex items-center gap-2 border border-gray-200 rounded-lg p-2 bg-gray-50/50">
+                    <Radio className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
+                      {item.signal_type && <p className="text-xs text-gray-500 truncate capitalize">{item.signal_type.replace("_", " ")}</p>}
+                    </div>
+                    <button type="button" onClick={() => set("signal_items", form.signal_items.filter((_, idx) => idx !== i))} className="text-gray-400 hover:text-red-500"><X className="w-4 h-4" /></button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500">No signals selected yet.</p>
+            )}
+          </div>
+
+          {/* Signal picker dialog */}
+          <Dialog open={showSignalPicker} onOpenChange={setShowSignalPicker}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Add signals to journey</DialogTitle>
+              </DialogHeader>
+              <SignalPicker selected={form.signal_items || []} onChange={(items) => set("signal_items", items)} />
+              <div className="flex justify-end pt-1">
+                <Button size="sm" onClick={() => setShowSignalPicker(false)}>Done</Button>
               </div>
             </DialogContent>
           </Dialog>
