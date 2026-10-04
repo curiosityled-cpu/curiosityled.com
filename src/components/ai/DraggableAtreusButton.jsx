@@ -1,12 +1,19 @@
 import React, { useState, useRef } from "react";
 import { Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
 
 const STORAGE_KEY = "atreus-fab-pos";
-const DRAG_THRESHOLD = 6; // px of movement before it counts as a drag, not a click
+const DRAG_THRESHOLD = 6;
 const EDGE_MARGIN = 8;
 const BTN_SIZE = 56;
+
+function getDefaultPos() {
+  if (typeof window === "undefined") return { x: 100, y: 100 };
+  return {
+    x: window.innerWidth - BTN_SIZE - 24,
+    y: window.innerHeight - BTN_SIZE - 120,
+  };
+}
 
 function loadSavedPos() {
   try {
@@ -20,22 +27,19 @@ function loadSavedPos() {
 }
 
 export default function DraggableAtreusButton({ onClick, visible }) {
-  const [pos, setPos] = useState(loadSavedPos);
+  const [pos, setPos] = useState(() => loadSavedPos() || getDefaultPos());
   const dragging = useRef(false);
   const moved = useRef(false);
   const start = useRef({ x: 0, y: 0 });
-  const offset = useRef({ x: 0, y: 0 });
-  const baseRect = useRef({ left: 0, top: 0 });
+  const startPos = useRef({ x: 0, y: 0 });
 
   const onPointerDown = (e) => {
     dragging.current = true;
     moved.current = false;
     start.current = { x: e.clientX, y: e.clientY };
-    const base = pos || { x: 0, y: 0 };
-    offset.current = { x: base.x, y: base.y };
-    const rect = e.currentTarget.getBoundingClientRect();
-    baseRect.current = { left: rect.left - base.x, top: rect.top - base.y };
+    startPos.current = { ...pos };
     try { e.currentTarget.setPointerCapture(e.pointerId); } catch {}
+    e.preventDefault();
   };
 
   const onPointerMove = (e) => {
@@ -44,15 +48,10 @@ export default function DraggableAtreusButton({ onClick, visible }) {
     const dy = e.clientY - start.current.y;
     if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) moved.current = true;
 
-    let nx = offset.current.x + dx;
-    let ny = offset.current.y + dy;
-    // Clamp so the button stays within the viewport
-    const minLeft = EDGE_MARGIN - baseRect.current.left;
-    const maxLeft = window.innerWidth - EDGE_MARGIN - BTN_SIZE - baseRect.current.left;
-    const minTop = EDGE_MARGIN - baseRect.current.top;
-    const maxTop = window.innerHeight - EDGE_MARGIN - BTN_SIZE - baseRect.current.top;
-    nx = Math.max(minLeft, Math.min(maxLeft, nx));
-    ny = Math.max(minTop, Math.min(maxTop, ny));
+    let nx = startPos.current.x + dx;
+    let ny = startPos.current.y + dy;
+    nx = Math.max(EDGE_MARGIN, Math.min(window.innerWidth - BTN_SIZE - EDGE_MARGIN, nx));
+    ny = Math.max(EDGE_MARGIN, Math.min(window.innerHeight - BTN_SIZE - EDGE_MARGIN, ny));
     setPos({ x: nx, y: ny });
   };
 
@@ -72,17 +71,12 @@ export default function DraggableAtreusButton({ onClick, visible }) {
 
   if (!visible) return null;
 
-  const transform = pos ? `translate(${pos.x}px, ${pos.y}px)` : undefined;
-
   return (
-    <motion.div
-      initial={{ scale: 0 }}
-      animate={{ scale: 1 }}
-      exit={{ scale: 0 }}
-      className="fixed right-6 z-40"
+    <div
+      className="fixed z-40"
       style={{
-        bottom: "calc(env(safe-area-inset-bottom) + 5.5rem)",
-        transform,
+        left: pos.x,
+        top: pos.y,
         touchAction: "none",
       }}
     >
@@ -91,13 +85,13 @@ export default function DraggableAtreusButton({ onClick, visible }) {
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-colors select-none cursor-grab active:cursor-grabbing"
-        style={{ backgroundColor: "#0202ff" }}
+        style={{ backgroundColor: "#0202ff", touchAction: "none" }}
         onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#0101dd")}
         onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#0202ff")}
         title="Ask Atreus - Your AI Coach (drag to move, click to open)"
       >
         <Brain className="w-6 h-6 text-white select-none pointer-events-none" />
       </Button>
-    </motion.div>
+    </div>
   );
 }

@@ -63,15 +63,13 @@ const NAV_CONFIG = {
   manager: [
   { label: 'Lead', path: '/today', icon: Home },
   { label: 'Team', path: '/team', icon: Users },
-  { label: 'Practice', path: '/practice', icon: Dumbbell },
-  { label: 'Learning', path: '/my-development', icon: GraduationCap }],
+  { label: 'Practice', path: '/practice', icon: Dumbbell }],
 
   buyer: [
-    { label: 'Lead', path: '/today', icon: Home },
-    { label: 'Team', path: '/team', icon: Users },
-    { label: 'Practice', path: '/practice', icon: Dumbbell },
-    { label: 'Learning', path: '/my-development', icon: GraduationCap },
-    { label: 'Administration', icon: FolderOpen, group: true, children: [
+  { label: 'Lead', path: '/today', icon: Home },
+  { label: 'Team', path: '/team', icon: Users },
+  { label: 'Practice', path: '/practice', icon: Dumbbell },
+  { label: 'Administration', icon: FolderOpen, group: true, children: [
      { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
      { label: 'Development Manager', path: '/DevelopmentManager', icon: Users },
      { label: 'Performance Manager', path: '/PerformanceManager', icon: Target },
@@ -83,20 +81,17 @@ const NAV_CONFIG = {
   analyst: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
   { label: 'Team', path: '/team', icon: Users },
-  { label: 'Learning', path: '/my-development', icon: GraduationCap },
   { label: 'Performance Manager', path: '/PerformanceManager', icon: Target },
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }],
 
   executive: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
   { label: 'Team', path: '/team', icon: Users },
-  { label: 'Learning', path: '/my-development', icon: GraduationCap },
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }],
 
   hrbp: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
   { label: 'My Portfolio', path: '/team', icon: Users },
-  { label: 'Learning', path: '/my-development', icon: GraduationCap },
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }]
 
 };
@@ -592,7 +587,7 @@ function MVPLayoutInner({ children }) {
       }
 
       {/* Main content */}
-      <main className={`flex-1 ${collapsed ? 'sm:ml-16' : 'sm:ml-64'} pt-14 sm:pt-0 min-h-screen transition-all duration-200`}>
+      <main className={`flex-1 min-w-0 overflow-hidden ${collapsed ? 'sm:ml-16' : 'sm:ml-64'} pt-14 sm:pt-0 min-h-screen transition-all duration-200`}>
         {isSubPage && (
           <div className="hidden sm:flex items-center px-6 pt-5 pb-1">
             <button
