@@ -406,14 +406,9 @@ Keep it practical and specific to the title.`,
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label className="text-sm font-semibold flex items-center gap-1.5"><Briefcase className="w-4 h-4" /> External Experiences</Label>
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => setShowExperiencePicker(true)}>
-                  <Search className="w-4 h-4 mr-1" /> From library
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => set("experiences", [...form.experiences, { title: "", type: "", description: "", provider_or_sponsor: "" }])}>
-                  <Plus className="w-4 h-4 mr-1" /> Add custom
-                </Button>
-              </div>
+              <Button type="button" variant="outline" size="sm" onClick={() => setShowExperiencePicker(true)}>
+                <Search className="w-4 h-4 mr-1" /> From library
+              </Button>
             </div>
             {form.experiences.length === 0 && (
               <p className="text-xs text-gray-500">No external experiences selected yet.</p>
