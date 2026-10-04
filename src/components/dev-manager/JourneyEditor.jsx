@@ -227,6 +227,7 @@ Keep it practical and specific to the title.`,
         learning_items: form.learning_items,
         signal_items: form.signal_items,
         assigned_to_emails: form.assigned_to_emails,
+        assigned_to_cohort_ids: form.assigned_to_cohort_ids || [],
       };
       if (form.in_content_library) {
         payload.type = form.type;
