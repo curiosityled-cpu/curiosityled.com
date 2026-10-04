@@ -1,0 +1,345 @@
+import React, { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Plus, X, Briefcase, BookOpen, Loader2 } from "lucide-react";
+import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
+import ThumbnailPicker from "@/components/dev-manager/ThumbnailPicker";
+
+const CATALOG_STATUSES = ["draft", "published", "archived", "template"];
+const ASSIGNED_STATUSES = ["active", "paused", "completed", "cancelled"];
+const TEMPLATE_CATEGORIES = ["technical", "leadership", "sales", "operations", "compliance", "onboarding", "general", "custom"];
+
+function TagInput({ label, tags, onChange, placeholder }) {
+  const [input, setInput] = useState("");
+  const add = () => {
+    const v = input.trim();
+    if (v && !tags.includes(v)) onChange([...tags, v]);
+    setInput("");
+  };
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-sm font-semibold">{label}</Label>
+      <div className="flex flex-wrap gap-1.5 min-h-[2rem]">
+        {tags.map((t) => (
+          <Badge key={t} variant="secondary" className="gap-1">
+            {t}
+            <button type="button" onClick={() => onChange(tags.filter((x) => x !== t))}><X className="w-3 h-3" /></button>
+          </Badge>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <Input
+          placeholder={placeholder || "Type and press Enter"}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }}
+          className="h-9 text-sm"
+        />
+        <Button type="button" variant="outline" size="sm" onClick={add}><Plus className="w-4 h-4" /></Button>
+      </div>
+    </div>
+  );
+}
+
+function ExperienceRow({ exp, onChange, onRemove }) {
+  return (
+    <div className="border border-gray-200 rounded-lg p-3 space-y-2 bg-gray-50/50">
+      <div className="flex justify-between items-center">
+        <span className="text-xs font-medium text-gray-600">Experience</span>
+        <button type="button" onClick={onRemove} className="text-gray-400 hover:text-red-500"><X className="w-4 h-4" /></button>
+      </div>
+      <Input placeholder="Title" value={exp.title || ""} onChange={(e) => onChange({ ...exp, title: e.target.value })} className="h-9 text-sm" />
+      <div className="grid grid-cols-2 gap-2">
+        <Input placeholder="Type (e.g. coaching, workshop)" value={exp.type || ""} onChange={(e) => onChange({ ...exp, type: e.target.value })} className="h-9 text-sm" />
+        <Input placeholder="Provider / sponsor" value={exp.provider_or_sponsor || ""} onChange={(e) => onChange({ ...exp, provider_or_sponsor: e.target.value })} className="h-9 text-sm" />
+      </div>
+      <Textarea placeholder="Description" value={exp.description || ""} onChange={(e) => onChange({ ...exp, description: e.target.value })} className="text-sm min-h-[60px]" />
+    </div>
+  );
+}
+
+function LearningItemRow({ item, onChange, onRemove }) {
+  return (
+    <div className="border border-gray-200 rounded-lg p-3 space-y-2 bg-gray-50/50">
+      <div className="flex justify-between items-center">
+        <span className="text-xs font-medium text-gray-600">Learning Resource</span>
+        <button type="button" onClick={onRemove} className="text-gray-400 hover:text-red-500"><X className="w-4 h-4" /></button>
+      </div>
+      <Input placeholder="Title" value={item.title || ""} onChange={(e) => onChange({ ...item, title: e.target.value })} className="h-9 text-sm" />
+      <div className="grid grid-cols-2 gap-2">
+        <Input placeholder="Provider" value={item.provider || ""} onChange={(e) => onChange({ ...item, provider: e.target.value })} className="h-9 text-sm" />
+        <Input placeholder="URL" value={item.url || ""} onChange={(e) => onChange({ ...item, url: e.target.value })} className="h-9 text-sm" />
+      </div>
+    </div>
+  );
+}
+
+export default function JourneyEditor({ open, onClose, onSaved, journey, defaultMode, user, users }) {
+  const [form, setForm] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    if (journey) {
+      setForm({ ...journey });
+    } else {
+      setForm({
+        mode: defaultMode || "assigned",
+        title: "",
+        description: "",
+        thumbnail_url: "",
+        status: defaultMode === "catalog" ? "draft" : "active",
+        tags: [],
+        // catalog fields
+        type: "curriculum",
+        author_email: user.email,
+        client_id: user.client_id,
+        is_template: false,
+        template_category: "",
+        template_tags: [],
+        content_structure: [],
+        estimated_duration_days: null,
+        target_audiences: [],
+        assigned_to_emails: [],
+        points_value: null,
+        // assigned fields
+        user_email: "",
+        target_competencies: [],
+        target_date: "",
+        experiences: [],
+        learning_items: [],
+      });
+    }
+  }, [open, journey, defaultMode, user]);
+
+  if (!open || !form) return null;
+
+  const isCatalog = form.mode === "catalog";
+  const isEdit = !!journey;
+
+  const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
+
+  const handleSave = async () => {
+    if (!form.title.trim()) { toast.error("Title is required"); return; }
+    if (isCatalog && !form.author_email) { toast.error("Author email is required for catalog journeys"); return; }
+    if (!isCatalog && !form.user_email) { toast.error("Participant email is required for assigned journeys"); return; }
+
+    setSaving(true);
+    try {
+      const payload = {
+        mode: form.mode,
+        title: form.title,
+        description: form.description,
+        thumbnail_url: form.thumbnail_url,
+        status: form.status,
+        tags: form.tags,
+        client_id: form.client_id || user.client_id,
+        last_modified_by: user.email,
+      };
+      if (isCatalog) {
+        payload.author_email = form.author_email;
+        payload.type = form.type;
+        payload.is_template = form.is_template;
+        payload.template_category = form.template_category || undefined;
+        payload.template_tags = form.template_tags;
+        payload.content_structure = form.content_structure;
+        payload.estimated_duration_days = form.estimated_duration_days || undefined;
+        payload.target_audiences = form.target_audiences;
+        payload.assigned_to_emails = form.assigned_to_emails;
+        payload.points_value = form.points_value || undefined;
+      } else {
+        payload.user_email = form.user_email;
+        payload.target_competencies = form.target_competencies;
+        payload.target_date = form.target_date || undefined;
+        payload.experiences = form.experiences;
+        payload.learning_items = form.learning_items;
+      }
+
+      if (isEdit) {
+        await base44.entities.Journey.update(journey.id, payload);
+        toast.success("Journey updated");
+      } else {
+        await base44.entities.Journey.create(payload);
+        toast.success("Journey created");
+      }
+      onSaved();
+    } catch (err) {
+      console.error(err);
+      toast.error(isEdit ? "Failed to update journey" : "Failed to create journey");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{isEdit ? "Edit Journey" : "New Journey"}</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 pt-2">
+          {/* Mode selector (only on create) */}
+          {!isEdit && (
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">Journey Type</Label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => { set("mode", "catalog"); set("status", "draft"); set("author_email", user.email); }}
+                  className={`flex-1 p-3 rounded-lg border text-left transition-all ${form.mode === "catalog" ? "border-[#0202ff] bg-[#0202ff]/5" : "border-gray-200 hover:bg-gray-50"}`}
+                >
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <BookOpen className="w-4 h-4 text-[#0202ff]" />
+                    <span className="text-sm font-medium">Catalog (reusable)</span>
+                  </div>
+                  <p className="text-xs text-gray-500">Authored learning path, published and assigned to many learners.</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { set("mode", "assigned"); set("status", "active"); set("user_email", ""); }}
+                  className={`flex-1 p-3 rounded-lg border text-left transition-all ${form.mode === "assigned" ? "border-[#0202ff] bg-[#0202ff]/5" : "border-gray-200 hover:bg-gray-50"}`}
+                >
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <Briefcase className="w-4 h-4 text-[#0202ff]" />
+                    <span className="text-sm font-medium">Assigned (person-specific)</span>
+                  </div>
+                  <p className="text-xs text-gray-500">Individual development plan tied to one person and their competencies.</p>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Common fields */}
+          <div className="space-y-1.5">
+            <Label className="text-sm font-semibold">Title *</Label>
+            <Input value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="Journey title" className="h-9 text-sm" />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-sm font-semibold">Description</Label>
+            <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="What this journey covers" className="text-sm min-h-[70px]" />
+          </div>
+
+          <ThumbnailPicker value={form.thumbnail_url} onChange={(url) => set("thumbnail_url", url)} />
+
+          <div className="space-y-1.5">
+            <Label className="text-sm font-semibold">Status</Label>
+            <select
+              value={form.status}
+              onChange={(e) => set("status", e.target.value)}
+              className="w-full h-9 text-sm border border-gray-200 rounded-lg px-3 bg-white focus:outline-none focus:ring-1 focus:ring-[#0202ff]/30"
+            >
+              {(isCatalog ? CATALOG_STATUSES : ASSIGNED_STATUSES).map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+
+          {/* Catalog-specific fields */}
+          {isCatalog && (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold">Type</Label>
+                  <select value={form.type} onChange={(e) => set("type", e.target.value)} className="w-full h-9 text-sm border border-gray-200 rounded-lg px-3 bg-white focus:outline-none focus:ring-1 focus:ring-[#0202ff]/30">
+                    <option value="curriculum">Curriculum (any order)</option>
+                    <option value="learning_path">Learning Path (sequence)</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold">Est. Duration (days)</Label>
+                  <Input type="number" value={form.estimated_duration_days || ""} onChange={(e) => set("estimated_duration_days", e.target.value ? Number(e.target.value) : null)} className="h-9 text-sm" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">Template Category</Label>
+                <select value={form.template_category || ""} onChange={(e) => set("template_category", e.target.value)} className="w-full h-9 text-sm border border-gray-200 rounded-lg px-3 bg-white focus:outline-none focus:ring-1 focus:ring-[#0202ff]/30">
+                  <option value="">None</option>
+                  {TEMPLATE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <input type="checkbox" id="is_template" checked={form.is_template} onChange={(e) => set("is_template", e.target.checked)} className="w-4 h-4" />
+                <Label htmlFor="is_template" className="text-sm font-medium cursor-pointer">Save as reusable template</Label>
+              </div>
+              <TagInput label="Target Audiences" tags={form.target_audiences} onChange={(t) => set("target_audiences", t)} placeholder="e.g. new managers" />
+              <TagInput label="Assigned To (emails)" tags={form.assigned_to_emails} onChange={(t) => set("assigned_to_emails", t)} placeholder="email@example.com" />
+            </>
+          )}
+
+          {/* Assigned-specific fields */}
+          {!isCatalog && (
+            <>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">Participant (email) *</Label>
+                <select
+                  value={form.user_email}
+                  onChange={(e) => set("user_email", e.target.value)}
+                  className="w-full h-9 text-sm border border-gray-200 rounded-lg px-3 bg-white focus:outline-none focus:ring-1 focus:ring-[#0202ff]/30"
+                >
+                  <option value="">Select participant...</option>
+                  {users.map((u) => <option key={u.id} value={u.email}>{u.full_name || u.email}</option>)}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">Target Date</Label>
+                <Input type="date" value={form.target_date || ""} onChange={(e) => set("target_date", e.target.value)} className="h-9 text-sm" />
+              </div>
+              <TagInput label="Target Competencies" tags={form.target_competencies} onChange={(t) => set("target_competencies", t)} placeholder="e.g. Strategic Thinking" />
+
+              {/* Experiences */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold">Off-Platform Experiences</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={() => set("experiences", [...form.experiences, { title: "", type: "", description: "", provider_or_sponsor: "" }])}>
+                    <Plus className="w-4 h-4 mr-1" /> Add
+                  </Button>
+                </div>
+                {form.experiences.map((exp, i) => (
+                  <ExperienceRow
+                    key={i}
+                    exp={exp}
+                    onChange={(updated) => set("experiences", form.experiences.map((x, idx) => idx === i ? updated : x))}
+                    onRemove={() => set("experiences", form.experiences.filter((_, idx) => idx !== i))}
+                  />
+                ))}
+              </div>
+
+              {/* Learning items */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold">Learning Resources</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={() => set("learning_items", [...form.learning_items, { title: "", provider: "", url: "" }])}>
+                    <Plus className="w-4 h-4 mr-1" /> Add
+                  </Button>
+                </div>
+                {form.learning_items.map((item, i) => (
+                  <LearningItemRow
+                    key={i}
+                    item={item}
+                    onChange={(updated) => set("learning_items", form.learning_items.map((x, idx) => idx === i ? updated : x))}
+                    onRemove={() => set("learning_items", form.learning_items.filter((_, idx) => idx !== i))}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
+          <TagInput label="Tags" tags={form.tags} onChange={(t) => set("tags", t)} placeholder="categorization tags" />
+        </div>
+
+        <div className="flex gap-2 pt-2">
+          <Button onClick={handleSave} disabled={saving} className="bg-[#0202ff] hover:bg-[#0101dd] text-white flex-1">
+            {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : null}
+            {saving ? "Saving..." : isEdit ? "Update Journey" : "Create Journey"}
+          </Button>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

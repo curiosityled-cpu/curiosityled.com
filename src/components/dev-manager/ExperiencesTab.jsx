@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Map, GraduationCap, Star, Dumbbell } from "lucide-react";
-import AdminJourneysTab from "@/components/experience-mgmt/AdminJourneysTab";
+import JourneysTab from "@/components/dev-manager/JourneysTab";
 import AdminLearningManagementTab from "@/components/experience-mgmt/AdminLearningManagementTab";
 import AdminExperiencesTab from "@/components/experience-mgmt/AdminExperiencesTab";
 import PracticeHubTab from "@/components/practice/PracticeHubTab";
@@ -44,7 +44,7 @@ export default function ExperiencesTab({ user, coacheeEmails }) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
       >
-        {subSection === 'journeys' && <AdminJourneysTab user={user} coacheeEmails={coacheeEmails} />}
+        {subSection === 'journeys' && <JourneysTab user={user} coacheeEmails={coacheeEmails} />}
         {subSection === 'learning' && <AdminLearningManagementTab user={user} />}
         {subSection === 'experiences' && <AdminExperiencesTab user={user} coacheeEmails={coacheeEmails} />}
         {subSection === 'practice' && <PracticeHubTab user={user} />}
