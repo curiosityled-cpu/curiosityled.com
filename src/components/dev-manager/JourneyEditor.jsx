@@ -9,6 +9,7 @@ import { Plus, X, Briefcase, BookOpen, Loader2, Library } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import ThumbnailPicker from "@/components/dev-manager/ThumbnailPicker";
+import CompetencySelector from "@/components/dev-manager/CompetencySelector";
 
 const STATUSES = ["active", "paused", "completed", "draft", "published", "archived", "cancelled"];
 const TEMPLATE_CATEGORIES = ["technical", "leadership", "sales", "operations", "compliance", "onboarding", "general", "custom"];
@@ -258,7 +259,12 @@ export default function JourneyEditor({ open, onClose, onSaved, journey, user, u
           </div>
 
           {/* Target competencies */}
-          <TagInput label="Target Competencies" tags={form.target_competencies} onChange={(t) => set("target_competencies", t)} placeholder="e.g. Strategic Thinking" />
+          <CompetencySelector
+            selected={form.target_competencies}
+            onChange={(t) => set("target_competencies", t)}
+            journeyTitle={form.title}
+            journeyDescription={form.description}
+          />
 
           {/* Assigned to */}
           <TagInput label="Assigned To (emails)" tags={form.assigned_to_emails} onChange={(t) => set("assigned_to_emails", t)} placeholder="email@example.com" />
