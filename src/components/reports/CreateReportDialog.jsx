@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,7 +49,8 @@ export default function CreateReportDialog({
   editingReport,
   userEmail,
   clientId,
-  onSuccess
+  onSuccess,
+  initialTemplate
 }) {
   const [reportName, setReportName] = useState(editingReport?.report_name || '');
   const [selectedMetrics, setSelectedMetrics] = useState(editingReport?.report_config?.metrics || []);
@@ -65,6 +66,18 @@ export default function CreateReportDialog({
   const [scheduleEndDate, setScheduleEndDate] = useState(null);
   const [recipients, setRecipients] = useState(editingReport?.recipients || [userEmail || '']);
   const [saving, setSaving] = useState(false);
+
+  // Populate form when a template is passed (from Library tab)
+  useEffect(() => {
+    if (initialTemplate && open) {
+      setReportName(initialTemplate.name || '');
+      setSelectedMetrics(initialTemplate.metrics || []);
+      setFilters(initialTemplate.filters || { timeframe: '6months', division: 'all', level: 'all', tenure: 'all' });
+      setOutputFormat(initialTemplate.output_format || 'pdf');
+      setScheduleInterval(initialTemplate.default_schedule_interval || initialTemplate.schedule_interval || 'once');
+      setSelectedFields([]);
+    }
+  }, [initialTemplate, open]);
 
   // AI Assistant state
   const [showAIAssistant, setShowAIAssistant] = useState(false);
@@ -199,7 +212,7 @@ Respond with JSON only:
           <div>
             <Button
               type="button"
-              className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-semibold py-3 h-auto"
+              className="w-full bg-[#0202ff] hover:bg-[#0101dd] text-white font-semibold py-3 h-auto"
               onClick={() => setShowAIAssistant(!showAIAssistant)}
             >
               <Sparkles className="w-5 h-5 mr-2" />
@@ -215,22 +228,22 @@ Respond with JSON only:
                   exit={{ opacity: 0, height: 0 }}
                   className="overflow-hidden mt-3"
                 >
-                  <div className="bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-200 rounded-xl p-4 space-y-3">
+                  <div className="bg-[#0202ff]/5 border border-[#0202ff]/20 rounded-xl p-4 space-y-3">
                     <div className="flex items-center gap-2">
-                      <Wand2 className="w-4 h-4 text-violet-600" />
-                      <span className="text-sm font-semibold text-violet-900">Describe the report you need</span>
+                      <Wand2 className="w-4 h-4 text-[#0202ff]" />
+                      <span className="text-sm font-semibold text-gray-900">Describe the report you need</span>
                     </div>
                     <Textarea
                       placeholder="e.g., I need a monthly report showing at-risk leaders and goal completion rates for our sales division..."
                       value={aiPrompt}
                       onChange={(e) => setAIPrompt(e.target.value)}
-                      className="bg-white border-violet-200 focus:border-violet-400 min-h-[80px] text-sm"
+                      className="bg-white border-[#0202ff]/20 focus:border-[#0202ff]/40 min-h-[80px] text-sm"
                     />
                     <div className="flex gap-2">
                       <Button
                         onClick={handleAIGenerate}
                         disabled={aiGenerating || !aiPrompt.trim()}
-                        className="bg-violet-600 hover:bg-violet-700 text-white"
+                        className="bg-[#0202ff] hover:bg-[#0101dd] text-white"
                         size="sm"
                       >
                         {aiGenerating ? (
@@ -494,7 +507,7 @@ Respond with JSON only:
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave} disabled={saving} className="bg-blue-600 hover:bg-blue-700">
+          <Button onClick={handleSave} disabled={saving} className="bg-[#0202ff] hover:bg-[#0101dd] text-white">
             {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
             {editingReport ? 'Update Report' : 'Create Report'}
           </Button>

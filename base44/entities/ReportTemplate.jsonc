@@ -1,0 +1,144 @@
+{
+  "name": "ReportTemplate",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Template name"
+    },
+    "description": {
+      "type": "string",
+      "description": "What this report template covers"
+    },
+    "category": {
+      "type": "string",
+      "description": "Template category for filtering (Individual Development, Team Performance, Organizational Strategy, etc.)"
+    },
+    "audience_role": {
+      "type": "string",
+      "description": "Primary app role this template is designed for (User Level 1, Admin Level 2, etc.)"
+    },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Metric IDs included in this template"
+    },
+    "filters": {
+      "type": "object",
+      "description": "Default filter configuration (timeframe, division, level, tenure)"
+    },
+    "output_format": {
+      "type": "string",
+      "enum": [
+        "pdf",
+        "csv"
+      ],
+      "default": "pdf",
+      "description": "Default output format for reports created from this template"
+    },
+    "default_schedule_interval": {
+      "type": "string",
+      "enum": [
+        "once",
+        "daily",
+        "every_n_days",
+        "weekly",
+        "monthly",
+        "first_weekday_of_month",
+        "specific_dates"
+      ],
+      "default": "once",
+      "description": "Default scheduling cadence for reports created from this template"
+    },
+    "icon_name": {
+      "type": "string",
+      "description": "Lucide icon name for display"
+    },
+    "color": {
+      "type": "string",
+      "description": "Tailwind color class for the icon badge"
+    },
+    "is_builtin": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is a built-in system template (false for user-created custom templates)"
+    },
+    "created_by_email": {
+      "type": "string",
+      "description": "Email of the user who created this custom template"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Client ID for multi-tenant scoping"
+    }
+  },
+  "required": [
+    "title",
+    "category",
+    "metrics"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.client_id": "{{user.data.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.created_by_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.created_by_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

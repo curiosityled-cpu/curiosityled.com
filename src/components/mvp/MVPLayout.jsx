@@ -74,7 +74,7 @@ const NAV_CONFIG = {
      { label: 'Development Manager', path: '/DevelopmentManager', icon: Users },
      { label: 'Performance Manager', path: '/PerformanceManager', icon: Target },
      { label: 'Talent Manager', path: '/talent-manager', icon: Layers },
-     { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 },
+     { label: 'Report Manager', path: '/report-builder-mvp', icon: BarChart2 },
      { label: 'User Management', path: '/UserManagement', icon: UserCog },
      ]}],
 
@@ -82,17 +82,17 @@ const NAV_CONFIG = {
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
   { label: 'Team', path: '/team', icon: Users },
   { label: 'Performance Manager', path: '/PerformanceManager', icon: Target },
-  { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }],
+  { label: 'Report Manager', path: '/report-builder-mvp', icon: BarChart2 }],
 
   executive: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
   { label: 'Team', path: '/team', icon: Users },
-  { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }],
+  { label: 'Report Manager', path: '/report-builder-mvp', icon: BarChart2 }],
 
   hrbp: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
   { label: 'My Portfolio', path: '/team', icon: Users },
-  { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }]
+  { label: 'Report Manager', path: '/report-builder-mvp', icon: BarChart2 }]
 
 };
 
@@ -165,7 +165,7 @@ function MVPLayoutInner({ children }) {
   // Leadership Coaches and Consultants get a dedicated workspace nav group alongside a trimmed
   // Administration group (no Leadership Intelligence Hub or User Management),
   // and no manager-facing Lead/Practice daily-cadence tools.
-  const coachAdminLabels = ['Development Manager', 'Report Builder'];
+  const coachAdminLabels = ['Development Manager', 'Report Manager'];
   const navItems = isCoachOrConsultant && mvpRole === 'buyer'
     ? [
         { label: workspaceLabel, path: workspacePath, icon: ClipboardList },
