@@ -91,10 +91,10 @@ export default function PerformanceManager() {
         {section === "checkins" && <OneOnOnesTab user={fullUser} />}
         {section === "reviews" && <ReviewsTabContent user={fullUser} />}
         {section === "overview" && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <PerformanceOverviewTab user={fullUser} coacheeEmails={coacheeEmails} />
             <div>
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Team Cockpit</h3>
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Team Cockpit</h3>
               <TeamCockpit user={fullUser} />
             </div>
           </div>

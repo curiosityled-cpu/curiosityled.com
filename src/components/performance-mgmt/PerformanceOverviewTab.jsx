@@ -16,18 +16,18 @@ const STATUS_COLORS = {
 
 const CHART_COLORS = ["#0202ff", "#00C875", "#FFCB00", "#E2445C", "#A25DDC"];
 
-function KPICard({ label, value, sub, icon: Icon, color }) { // Icon is the destructured prop
+function KPICard({ label, value, sub, icon: Icon, color }) {
   return (
-    <Card className="border border-gray-100 shadow-sm rounded-2xl">
-      <CardContent className="p-5">
+    <Card className="border border-gray-100 shadow-sm rounded-xl">
+      <CardContent className="p-3">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-xs text-gray-500 font-medium mb-1">{label}</p>
-            <p className="text-3xl font-bold text-gray-900">{value}</p>
-            {sub && <p className="text-xs text-gray-500 mt-1">{sub}</p>}
+            <p className="text-xs text-gray-500 font-medium mb-0.5">{label}</p>
+            <p className="text-xl font-bold text-gray-900">{value}</p>
+            {sub && <p className="text-xs text-gray-500 mt-0.5">{sub}</p>}
           </div>
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${color}18` }}>
-            <Icon className="w-5 h-5" style={{ color }} />
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${color}18` }}>
+            <Icon className="w-4 h-4" style={{ color }} />
           </div>
         </div>
       </CardContent>

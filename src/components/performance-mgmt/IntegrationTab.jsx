@@ -84,14 +84,12 @@ export default function IntegrationTab({ user }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* CSV Import Section */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-          <FileSpreadsheet className="w-4 h-4 text-[#0202ff]" /> CSV Import
-        </h3>
-        <Card className="border border-gray-100 shadow-sm rounded-2xl">
-          <CardContent className="p-5 space-y-4">
+        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">CSV Import</h3>
+        <Card className="border border-gray-100 shadow-sm rounded-xl">
+          <CardContent className="p-3 space-y-3">
             <div className="flex items-center gap-3">
               <Button onClick={handleDownloadTemplate} variant="outline" className="gap-1.5">
                 <Download className="w-4 h-4" /> Download Template
@@ -185,11 +183,9 @@ export default function IntegrationTab({ user }) {
 
       {/* API Sync Section */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-          <Code className="w-4 h-4 text-[#0202ff]" /> API Sync
-        </h3>
-        <Card className="border border-gray-100 shadow-sm rounded-2xl">
-          <CardContent className="p-5 space-y-3">
+        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">API Sync</h3>
+        <Card className="border border-gray-100 shadow-sm rounded-xl">
+          <CardContent className="p-3 space-y-3">
             <p className="text-sm text-gray-600">
               Push performance data programmatically from your HRIS or scheduled job. Send a POST request with your API key.
             </p>
@@ -226,11 +222,9 @@ export default function IntegrationTab({ user }) {
 
       {/* SFTP Section */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-          <Server className="w-4 h-4 text-[#0202ff]" /> SFTP Integration
-        </h3>
-        <Card className="border border-gray-100 shadow-sm rounded-2xl">
-          <CardContent className="p-5 space-y-3">
+        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">SFTP Integration</h3>
+        <Card className="border border-gray-100 shadow-sm rounded-xl">
+          <CardContent className="p-3 space-y-3">
             <p className="text-sm text-gray-600">
               For SFTP-based sync, set up a scheduled job on your infrastructure that downloads CSV files from your SFTP server and pushes them to our endpoint.
             </p>

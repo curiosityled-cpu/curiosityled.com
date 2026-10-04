@@ -282,9 +282,9 @@ export default function OneOnOnesTab({ user }) {
   const isManager = true;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Sub-tab navigation */}
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
+      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit overflow-x-auto">
         {SUB_TABS.map(tab => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
@@ -292,12 +292,7 @@ export default function OneOnOnesTab({ user }) {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
-              style={{
-                backgroundColor: active ? "white" : "transparent",
-                color: active ? "#0202ff" : "#6b7280",
-                boxShadow: active ? "0 1px 3px rgba(0,0,0,0.1)" : "none"
-              }}
+              className={`flex items-center gap-1.5 text-xs font-medium py-2 px-3 rounded-lg transition-all whitespace-nowrap ${active ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
             >
               <Icon className="w-3.5 h-3.5" />
               {tab.label}

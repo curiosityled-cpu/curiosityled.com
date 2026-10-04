@@ -29,6 +29,13 @@ import CreateRoleModal from "../components/roles/CreateRoleModal";
 import BulkRoleActions from "../components/roles/BulkRoleActions";
 import PermissionDependencyViewer from "../components/roles/PermissionDependencyViewer";
 import ProvisionUsersCard from "../components/provisioning/ProvisionUsersCard";
+import MVPPageLayout from "@/components/mvp/MVPPageLayout";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const ROLE_COLORS = [
   '#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444',
@@ -58,12 +65,12 @@ function StatCard({ label, value, sub, onClick, accent }) {
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left bg-white rounded-xl border p-5 hover:shadow-md transition-all ${accent ? 'border-l-4' : 'border-gray-200'}`}
+      className={`w-full text-left bg-white rounded-xl border p-3 hover:shadow-md transition-all ${accent ? 'border-l-4' : 'border-gray-200'}`}
       style={accent ? { borderLeftColor: accent } : {}}
     >
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
-      <p className="text-sm font-medium text-gray-600 mt-0.5">{label}</p>
-      {sub && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
+      <p className="text-xl font-bold text-gray-900">{value}</p>
+      <p className="text-xs font-medium text-gray-600 mt-0.5">{label}</p>
+      {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
     </button>
   );
 }
@@ -376,7 +383,7 @@ function UserManagement() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-[#0202ff] mx-auto mb-3" />
           <p className="text-sm text-gray-500">Loading users...</p>
@@ -388,64 +395,70 @@ function UserManagement() {
   const activeFiltersCount = Object.entries(filters).filter(([, v]) => v !== 'all').length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="w-full px-6 py-8">
-
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-            <p className="text-sm text-gray-500 mt-1">{statistics.total} total users</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleExportCSV}>
-              <Download className="w-4 h-4 mr-2" /> Export
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setShowBulkEditCSV(true)}>
-              <Edit className="w-4 h-4 mr-2" /> Bulk Edit
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setShowBulkUpload(true)}>
-              <Upload className="w-4 h-4 mr-2" /> Upload CSV
-            </Button>
-            <Button size="sm" onClick={() => setShowInviteModal(true)} style={{ backgroundColor: '#0202ff' }} className="hover:opacity-90">
-              <UserPlus className="w-4 h-4 mr-2" /> Invite User
-            </Button>
-          </div>
+    <>
+    <MVPPageLayout
+      title="User Management"
+      subtitle={`${statistics.total} total users`}
+      action={
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <MoreVertical className="w-4 h-4 mr-2" /> More
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleExportCSV}>
+                <Download className="w-4 h-4 mr-2" /> Export CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowBulkEditCSV(true)}>
+                <Edit className="w-4 h-4 mr-2" /> Bulk Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowBulkUpload(true)}>
+                <Upload className="w-4 h-4 mr-2" /> Upload CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button size="sm" onClick={() => setShowInviteModal(true)} style={{ backgroundColor: '#0202ff' }} className="hover:opacity-90">
+            <UserPlus className="w-4 h-4 mr-2" /> Invite User
+          </Button>
         </div>
+      }
+    >
+      {/* Provision Users card */}
+      {(isSuperAdmin || isPlatformAdmin || isPartnerBusinessAdmin) && (
+        <ProvisionUsersCard currentUser={currentUser} onProvisioned={loadData} />
+      )}
 
-        {/* Provision Users card */}
-        {(isSuperAdmin || isPlatformAdmin || isPartnerBusinessAdmin) && (
-          <div className="mb-6">
-            <ProvisionUsersCard currentUser={currentUser} onProvisioned={loadData} />
-          </div>
-        )}
-
-        {/* Tabs */}
-        <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit mb-6">
-          {[{ id: 'users', label: 'Users', icon: Users }, { id: 'roles', label: 'Roles & Permissions', icon: Shield }].map(tab => (
+      {/* Tabs */}
+      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit overflow-x-auto">
+        {[{ id: 'users', label: 'Users', icon: Users }, { id: 'roles', label: 'Roles & Permissions', icon: Shield }].map(tab => {
+          const Icon = tab.icon;
+          return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex items-center gap-1.5 text-xs font-medium py-2 px-3 rounded-lg transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
             >
-              <tab.icon className="w-4 h-4" />
+              <Icon className="w-3.5 h-3.5" />
               {tab.label}
             </button>
-          ))}
-        </div>
+          );
+        })}
+      </div>
 
         {activeTab === 'users' && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <StatCard label="Total Users" value={statistics.total} onClick={resetFilters} accent="#0202ff" />
               <StatCard label="Active" value={statistics.active} onClick={() => setFilters({ ...filters, accountStatus: 'active' })} accent="#10b981" />
               <StatCard label="Pending Activation" value={statistics.pending} onClick={() => setFilters({ ...filters, accountStatus: 'pending_activation' })} accent="#f59e0b" />
               <StatCard label="Suspended / Locked" value={statistics.suspended + statistics.locked} onClick={() => setFilters({ ...filters, accountStatus: 'suspended' })} accent="#ef4444" />
             </div>
 
-            {/* Search + Filter bar */}
-            <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
+            {/* Search + Filter bar — compact toolbar */}
+            <div className="bg-white rounded-xl border border-gray-200 p-3 space-y-2">
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -453,7 +466,7 @@ function UserManagement() {
                     placeholder="Search by name, email, title, department..."
                     value={searchTerm}
                     onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                    className="pl-9"
+                    className="pl-9 h-9"
                   />
                 </div>
                 <Button
@@ -462,7 +475,7 @@ function UserManagement() {
                   onClick={() => setShowFilters(!showFilters)}
                   className={activeFiltersCount > 0 ? 'border-[#0202ff] text-[#0202ff]' : ''}
                 >
-                  <Filter className="w-4 h-4 mr-2" />
+                  <Filter className="w-4 h-4 mr-1.5" />
                   Filters {activeFiltersCount > 0 && <span className="ml-1 bg-[#0202ff] text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">{activeFiltersCount}</span>}
                 </Button>
                 {activeFiltersCount > 0 && (
@@ -473,7 +486,7 @@ function UserManagement() {
               </div>
 
               {/* Quick chips */}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 {[
                   { label: 'All', key: 'accountStatus', value: 'all' },
                   { label: 'Active', key: 'accountStatus', value: 'active' },
@@ -484,7 +497,7 @@ function UserManagement() {
                   <button
                     key={chip.label}
                     onClick={() => setFilters({ ...filters, [chip.key]: chip.value })}
-                    className={`px-3 py-1 rounded-full text-xs font-medium transition-all border ${filters[chip.key] === chip.value ? 'border-[#0202ff] bg-[#0202ff]/5 text-[#0202ff]' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all border ${filters[chip.key] === chip.value ? 'border-[#0202ff] bg-[#0202ff]/5 text-[#0202ff]' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}
                   >
                     {chip.label}
                   </button>
@@ -493,7 +506,7 @@ function UserManagement() {
 
               {/* Advanced filters */}
               {showFilters && (
-                <div className="flex flex-wrap gap-3 pt-3 border-t border-gray-100">
+                <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
                   <Select value={filters.client} onValueChange={(v) => setFilters({ ...filters, client: v })}>
                     <SelectTrigger className="h-8 text-xs w-36"><SelectValue placeholder="All Clients" /></SelectTrigger>
                     <SelectContent>
@@ -531,7 +544,7 @@ function UserManagement() {
 
             {/* Users Table */}
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Checkbox
                     checked={selectedUsers.length > 0 && selectedUsers.length === paginatedUsers.length}
@@ -547,19 +560,18 @@ function UserManagement() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-100">
-                      <th className="w-10 px-4 py-3"></th>
+                      <th className="w-10 px-4 py-2.5"></th>
                       {[
                         { label: 'Name', key: 'full_name' },
                         { label: 'Email', key: 'email' },
-                        { label: 'Organization', key: 'client_id' },
+                        { label: 'Organization / Title', key: 'client_id' },
                         { label: 'Role', key: 'app_role' },
-                        { label: 'Job Title', key: 'current_role' },
                         { label: 'Status', key: 'account_status' },
                         { label: 'Last Login', key: 'last_login' },
                       ].map(col => (
                         <th
                           key={col.key}
-                          className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide cursor-pointer hover:text-gray-900 whitespace-nowrap"
+                          className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide cursor-pointer hover:text-gray-900 whitespace-nowrap"
                           onClick={() => handleSort(col.key)}
                         >
                           <span className="flex items-center gap-1">
@@ -568,7 +580,7 @@ function UserManagement() {
                           </span>
                         </th>
                       ))}
-                      <th className="px-4 py-3 w-10"></th>
+                      <th className="px-4 py-2.5 w-10"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
@@ -576,12 +588,12 @@ function UserManagement() {
                       const statusCfg = STATUS_CONFIG[user.account_status || 'active'] || STATUS_CONFIG.active;
                       return (
                         <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-2.5">
                             <Checkbox checked={selectedUsers.includes(user.id)} onCheckedChange={(c) => handleSelectUser(user.id, c)} />
                           </td>
-                          <td className="px-4 py-3 cursor-pointer" onClick={() => setSelectedUserEmail(user.email)}>
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-[#0202ff]/10 flex items-center justify-center flex-shrink-0">
+                          <td className="px-4 py-2.5 cursor-pointer" onClick={() => setSelectedUserEmail(user.email)}>
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-7 h-7 rounded-full bg-[#0202ff]/10 flex items-center justify-center flex-shrink-0">
                                 <span className="text-xs font-bold text-[#0202ff]">{(user.full_name || user.email || '?')[0].toUpperCase()}</span>
                               </div>
                               <div>
@@ -590,17 +602,19 @@ function UserManagement() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-gray-500 text-xs">{user.email}</td>
-                          <td className="px-4 py-3">
-                            <span className="text-xs text-gray-700">{getOrganizationName(user)}</span>
+                          <td className="px-4 py-2.5 text-gray-500 text-xs">{user.email}</td>
+                          <td className="px-4 py-2.5">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-xs text-gray-700">{getOrganizationName(user)}</span>
+                              <span className="text-xs text-gray-400">{user.current_role || '—'}</span>
+                            </div>
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-2.5">
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
                               {FRIENDLY_ROLES[user.app_role] || user.app_role || 'User'}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-gray-500 text-xs">{user.current_role || '—'}</td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-2.5">
                             <div className="flex flex-col gap-1">
                               <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${statusCfg.className}`}>
                                 {statusCfg.label}
@@ -608,10 +622,10 @@ function UserManagement() {
                               <ExpirationStatusBadge user={user} />
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-xs text-gray-400">
+                          <td className="px-4 py-2.5 text-xs text-gray-400">
                             {user.last_login ? format(new Date(user.last_login), 'MMM d, yyyy') : 'Never'}
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-2.5">
                             <AccountActionsMenu
                               user={user}
                               onViewDetails={() => setSelectedUserEmail(user.email)}
@@ -632,7 +646,7 @@ function UserManagement() {
               </div>
 
               {processedUsers.length === 0 && (
-                <div className="py-16 text-center">
+                <div className="py-12 text-center">
                   <Users className="w-10 h-10 text-gray-200 mx-auto mb-3" />
                   <p className="text-gray-500 text-sm">No users match your filters</p>
                   <button onClick={resetFilters} className="mt-2 text-xs text-[#0202ff] hover:underline">Clear filters</button>
@@ -640,7 +654,7 @@ function UserManagement() {
               )}
 
               {totalPages > 1 && (
-                <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
                   <p className="text-xs text-gray-500">
                     Showing {((currentPage - 1) * usersPerPage) + 1}–{Math.min(currentPage * usersPerPage, processedUsers.length)} of {processedUsers.length}
                   </p>
@@ -656,18 +670,18 @@ function UserManagement() {
         )}
 
         {activeTab === 'roles' && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="relative w-72">
+              <div className="relative w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input placeholder="Search roles..." value={roleSearchQuery} onChange={(e) => setRoleSearchQuery(e.target.value)} className="pl-9" />
+                <Input placeholder="Search roles..." value={roleSearchQuery} onChange={(e) => setRoleSearchQuery(e.target.value)} className="pl-9 h-9" />
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => setShowBulkRoleAssignment(true)}>
-                  <Upload className="w-4 h-4 mr-2" /> Bulk Assign
+                  <Upload className="w-4 h-4 mr-1.5" /> Bulk Assign
                 </Button>
                 <Button size="sm" onClick={handleCreateRole} style={{ backgroundColor: '#0202ff' }} className="hover:opacity-90">
-                  <Plus className="w-4 h-4 mr-2" /> Create Role
+                  <Plus className="w-4 h-4 mr-1.5" /> Create Role
                 </Button>
               </div>
             </div>
@@ -679,7 +693,7 @@ function UserManagement() {
             {/* Role list — full width */}
             <div className="space-y-3">
               {filteredRoles.length > 0 && (
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-1">
                   <Checkbox
                     checked={selectedRoles.length > 0 && selectedRoles.length === filteredRoles.filter(r => !r.is_system_role).length}
                     onCheckedChange={handleSelectAllRoles}
@@ -690,18 +704,18 @@ function UserManagement() {
 
               <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
                 {filteredRoles.map(role => (
-                  <div key={role.id} className={`bg-white rounded-xl border p-5 hover:shadow-sm transition-all ${selectedRoles.some(r => r.id === role.id) ? 'border-[#0202ff] ring-1 ring-[#0202ff]/20' : 'border-gray-200'}`}>
+                  <div key={role.id} className={`bg-white rounded-xl border p-3 hover:shadow-sm transition-all ${selectedRoles.some(r => r.id === role.id) ? 'border-[#0202ff] ring-1 ring-[#0202ff]/20' : 'border-gray-200'}`}>
                     <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2.5">
                         {!role.is_system_role && (
                           <Checkbox checked={selectedRoles.some(r => r.id === role.id)} onCheckedChange={(c) => handleSelectRole(role.id, c)} />
                         )}
-                        <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: (role.color || '#6366f1') + '20' }}>
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: (role.color || '#6366f1') + '20' }}>
                           <Shield className="w-4 h-4" style={{ color: role.color || '#6366f1' }} />
                         </div>
                         <div>
                           <p className="font-semibold text-gray-900 text-sm">{role.role_name}</p>
-                          <p className="text-xs text-gray-500 mt-0.5">{role.permissions?.length || 0} permissions · {role.user_count || 0} users</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{role.permissions?.length || 0} perms · {role.user_count || 0} users</p>
                         </div>
                       </div>
                       {!role.is_system_role && (
@@ -715,14 +729,14 @@ function UserManagement() {
                         </div>
                       )}
                     </div>
-                    {role.description && <p className="text-xs text-gray-500 mt-3 ml-12">{role.description}</p>}
-                    {role.is_system_role && <span className="ml-12 mt-2 inline-block text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded">System Role</span>}
+                    {role.description && <p className="text-xs text-gray-500 mt-2 ml-10">{role.description}</p>}
+                    {role.is_system_role && <span className="ml-10 mt-1.5 inline-block text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded">System Role</span>}
                   </div>
                 ))}
               </div>
 
               {filteredRoles.length === 0 && (
-                <div className="bg-white rounded-xl border border-gray-200 py-16 text-center">
+                <div className="bg-white rounded-xl border border-gray-200 py-12 text-center">
                   <Shield className="w-10 h-10 text-gray-200 mx-auto mb-3" />
                   <p className="text-gray-500 text-sm">No roles found</p>
                   {!roleSearchQuery && <button onClick={handleCreateRole} className="mt-2 text-xs text-[#0202ff] hover:underline">Create your first role</button>}
@@ -734,7 +748,7 @@ function UserManagement() {
             <PermissionDependencyViewer selectedPermissions={selectedPermissions} allPermissions={permissions} />
           </div>
         )}
-      </div>
+    </MVPPageLayout>
 
       {/* Modals & Panels */}
       <AnimatePresence>
@@ -792,7 +806,7 @@ function UserManagement() {
       <BulkRoleAssignment open={showBulkRoleAssignment} onClose={() => setShowBulkRoleAssignment(false)} onSuccess={loadData} />
 
       {showBulkEditCSV && <BulkUserEditCSV users={users} onSuccess={loadData} onClose={() => setShowBulkEditCSV(false)} />}
-    </div>
+    </>
   );
 }
 

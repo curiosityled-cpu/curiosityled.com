@@ -367,15 +367,22 @@ function ManagerConsolidationSection({ user, cycles }) {
     setSelectedEmployee(assignment.employee_email);
   };
 
-  if (loading) return null;
-  if (assignments.length === 0) return null;
+  if (loading) return (
+    <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-[#0202ff]" /></div>
+  );
+  if (assignments.length === 0) return (
+    <div className="text-center py-8">
+      <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+      <p className="text-gray-500 text-sm">No consolidation assignments yet</p>
+      <p className="text-xs text-gray-400 mt-1">Your review assignments will appear here when cycles are active</p>
+    </div>
+  );
 
   return (
     <div>
-      <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-        <Users className="w-4 h-4 text-[#0202ff]" /> Manager Consolidation
+      <div className="flex items-center gap-2 mb-2">
         <Badge variant="outline" className="text-[10px]">{assignments.length} assigned</Badge>
-      </h3>
+      </div>
       <div className="space-y-2">
         {assignments.map((a, i) => {
           const cycle = cycles.find(c => c.id === a.review_cycle_id);
@@ -426,13 +433,15 @@ function CalibrationSection({ user, cycles }) {
   const activeCycles = cycles.filter(c => c.status === "active" || c.status === "archived");
   const selectedCycle = activeCycles.find(c => c.id === selectedCycleId);
 
-  if (activeCycles.length === 0) return null;
+  if (activeCycles.length === 0) return (
+    <div className="text-center py-8">
+      <Scale className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+      <p className="text-gray-500 text-sm">No active review cycles for calibration</p>
+    </div>
+  );
 
   return (
     <div>
-      <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-        <Scale className="w-4 h-4 text-[#0202ff]" /> Calibration
-      </h3>
       <div className="space-y-3">
         <Select value={selectedCycleId} onValueChange={setSelectedCycleId}>
           <SelectTrigger className="w-64"><SelectValue placeholder="Select a review cycle..." /></SelectTrigger>
@@ -448,6 +457,7 @@ function CalibrationSection({ user, cycles }) {
 
 export default function ReviewsTabContent({ user }) {
   const [cycles, setCycles] = useState([]);
+  const [subtab, setSubtab] = useState("cycles");
 
   const loadCycles = async () => {
     try {
@@ -463,29 +473,33 @@ export default function ReviewsTabContent({ user }) {
 
   useEffect(() => { loadCycles(); }, [user]);
 
+  const SUBTABS = [
+    { id: "cycles", label: "Cycles" },
+    { id: "consolidation", label: "Consolidation" },
+    { id: "calibration", label: "Calibration" },
+    { id: "submissions", label: "Submissions" },
+  ];
+
   return (
-    <div className="space-y-6">
-      {/* Review Cycles with Roster Management */}
-      <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-          <ClipboardList className="w-4 h-4 text-[#0202ff]" /> Review Cycles
-        </h3>
-        <ReviewCyclesTab user={user} />
+    <div className="space-y-4">
+      {/* Subtab bar */}
+      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit overflow-x-auto">
+        {SUBTABS.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setSubtab(tab.id)}
+            className={`flex items-center gap-1.5 text-xs font-medium py-2 px-3 rounded-lg transition-all whitespace-nowrap ${subtab === tab.id ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {/* Manager Consolidation */}
-      <ManagerConsolidationSection user={user} cycles={cycles} />
-
-      {/* Calibration */}
-      <CalibrationSection user={user} cycles={cycles} />
-
-      {/* Review Submissions */}
-      <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-          <Users className="w-4 h-4 text-[#0202ff]" /> Review Submissions
-        </h3>
-        <ReviewSubmissionsView user={user} cycles={cycles} />
-      </div>
+      {/* Subtab content */}
+      {subtab === "cycles" && <ReviewCyclesTab user={user} />}
+      {subtab === "consolidation" && <ManagerConsolidationSection user={user} cycles={cycles} />}
+      {subtab === "calibration" && <CalibrationSection user={user} cycles={cycles} />}
+      {subtab === "submissions" && <ReviewSubmissionsView user={user} cycles={cycles} />}
     </div>
   );
 }

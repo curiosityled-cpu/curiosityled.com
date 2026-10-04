@@ -190,7 +190,7 @@ function EvidenceListSection({ user }) {
 
 export default function ExpectationsTab({ user }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Existing Goals & OKRs tab */}
       <GoalsAndOKRsTab user={user} />
 

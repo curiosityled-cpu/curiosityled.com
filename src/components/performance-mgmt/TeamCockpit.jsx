@@ -60,21 +60,20 @@ export default function TeamCockpit({ user }) {
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Team stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {cards.map(s => {
           const Icon = s.icon;
           return (
-            <Card key={s.label} className="border border-gray-100 shadow-sm rounded-2xl">
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${s.color}18` }}>
+            <Card key={s.label} className="border border-gray-100 shadow-sm rounded-xl">
+              <CardContent className="p-3 flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${s.color}18` }}>
                   <Icon className="w-4 h-4" style={{ color: s.color }} />
                 </div>
                 <div>
-                  <p className="text-xl font-bold text-gray-900">{s.value}</p>
+                  <p className="text-lg font-bold text-gray-900">{s.value}</p>
                   <p className="text-[10px] text-gray-500">{s.label}</p>
-                  <p className="text-[10px] text-gray-400">{s.sub}</p>
                 </div>
               </CardContent>
             </Card>
@@ -84,9 +83,7 @@ export default function TeamCockpit({ user }) {
 
       {/* Action Center */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-          <Users className="w-4 h-4 text-[#0202ff]" /> Needs Attention
-        </h3>
+        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Needs Attention</h3>
         <ManagerActionCenter user={user} onActionTaken={loadStats} />
       </div>
     </div>
