@@ -14,6 +14,7 @@ import { useTheme } from "@/lib/ThemeContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import AtreusCoach from "@/components/ai/AtreusCoach";
+import DraggableAtreusButton from "@/components/ai/DraggableAtreusButton";
 import { AuthProvider as FullAuthProvider } from "@/components/useAuth";
 import { AtreusProvider, useAtreusChat } from "@/components/ai/AtreusContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -63,14 +64,14 @@ const NAV_CONFIG = {
   { label: 'Lead', path: '/today', icon: Home },
   { label: 'Team', path: '/team', icon: Users },
   { label: 'Practice', path: '/practice', icon: Dumbbell },
-  { label: 'Learning', path: '/courses', icon: GraduationCap }],
+  { label: 'Learning', path: '/my-development', icon: GraduationCap }],
 
   buyer: [
-   { label: 'Lead', path: '/today', icon: Home },
-   { label: 'Team', path: '/team', icon: Users },
-   { label: 'Practice', path: '/practice', icon: Dumbbell },
-   { label: 'Learning', path: '/courses', icon: GraduationCap },
-   { label: 'Administration', icon: FolderOpen, group: true, children: [
+    { label: 'Lead', path: '/today', icon: Home },
+    { label: 'Team', path: '/team', icon: Users },
+    { label: 'Practice', path: '/practice', icon: Dumbbell },
+    { label: 'Learning', path: '/my-development', icon: GraduationCap },
+    { label: 'Administration', icon: FolderOpen, group: true, children: [
      { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
      { label: 'Development Manager', path: '/DevelopmentManager', icon: Users },
      { label: 'Performance Manager', path: '/PerformanceManager', icon: Target },
@@ -82,20 +83,20 @@ const NAV_CONFIG = {
   analyst: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
   { label: 'Team', path: '/team', icon: Users },
-  { label: 'Learning', path: '/courses', icon: GraduationCap },
+  { label: 'Learning', path: '/my-development', icon: GraduationCap },
   { label: 'Performance Manager', path: '/PerformanceManager', icon: Target },
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }],
 
   executive: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
   { label: 'Team', path: '/team', icon: Users },
-  { label: 'Learning', path: '/courses', icon: GraduationCap },
+  { label: 'Learning', path: '/my-development', icon: GraduationCap },
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }],
 
   hrbp: [
   { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
   { label: 'My Portfolio', path: '/team', icon: Users },
-  { label: 'Learning', path: '/courses', icon: GraduationCap },
+  { label: 'Learning', path: '/my-development', icon: GraduationCap },
   { label: 'Report Builder', path: '/report-builder-mvp', icon: BarChart2 }]
 
 };
@@ -610,15 +611,12 @@ function MVPLayoutInner({ children }) {
         <FirstLoginLinker />
       </main>
 
-      {/* Floating Atreus Button — always accessible */}
+      {/* Floating Atreus Button — draggable, always accessible */}
       {!showAtreus &&
-      <button
+      <DraggableAtreusButton
+        visible={!showAtreus}
         onClick={() => { clearPending(); openAtreusDefault(); }}
-        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full transition-all flex items-center justify-center"
-        style={{ backgroundColor: '#0202ff', boxShadow: '0 4px 20px rgba(2,2,255,0.35)' }}
-        title="Ask Atreus - Your AI Coach">
-          <Brain className="w-6 h-6 text-white" />
-        </button>
+      />
       }
 
       {/* Atreus Coach Panel — wrapped in full AuthProvider so AtreusCoach's useAuth works */}
