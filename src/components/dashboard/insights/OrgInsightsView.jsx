@@ -1218,6 +1218,13 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
             dataConfidence={dataConfidencePct}
             activeLifecycleStage={activeLifecycleStage}
             onScrollTo={scrollToSection}
+            executiveBriefing={executiveBriefing}
+            generatingBriefing={generatingBriefing}
+            generatingAll={generatingAll}
+            onRefreshBriefing={generateExecutiveBriefing}
+            strategicRisks={strategicRisks}
+            strategicOpportunities={strategicOpportunities}
+            onPromptAtreus={promptAtreus}
           />
         );
 
