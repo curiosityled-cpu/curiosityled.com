@@ -36,7 +36,7 @@ export default function EnterpriseExecutiveSummary({
   // ── Derive narrative inputs ──────────────────────────────────────────────
   const assessmentCount = assessments.length;
   const hasCapabilityData = assessmentCount > 0;
-  const hasWellbeingData = pulseAggregates && !pulseAggregates.suppressed;
+  const hasWellbeingData = pulseAggregates && !pulseAggregates.suppressed && pulseAggregates.meta;
   const hasWorkforceData = workforceMetrics?.length > 0;
   const hasEngagementData = hasWorkforceData && workforceMetrics[0]?.enps_score != null;
 
@@ -104,14 +104,14 @@ export default function EnterpriseExecutiveSummary({
     icon: Shield,
     iconColor: connectedCount >= 3 ? "text-emerald-600" : connectedCount >= 1 ? "text-amber-600" : "text-red-500",
     label: "Evidence & confidence",
-    body: `${confidenceLabel} — ${connectedCount} of 4 signal domains connected: ${confidenceParts.filter((p) => p.connected).map((p) => p.label).join(", ") || "none yet"}. ${assessmentCount < 5 ? "Capability findings are directional with a small sample. " : ""}${hasWellbeingData ? `Wellbeing covers ${pulseAggregates.meta.total_managers} managers (min group size ${pulseAggregates.meta.minimum_group_size || 5}). ` : ""}Treat all findings as context for investigation, not definitive conclusions.`,
+    body: `${confidenceLabel} — ${connectedCount} of 4 signal domains connected: ${confidenceParts.filter((p) => p.connected).map((p) => p.label).join(", ") || "none yet"}. ${assessmentCount < 5 ? "Capability findings are directional with a small sample. " : ""}${hasWellbeingData ? `Wellbeing covers ${pulseAggregates?.meta?.total_managers ?? 0} managers (min group size ${pulseAggregates?.meta?.minimum_group_size || 5}). ` : ""}Treat all findings as context for investigation, not definitive conclusions.`,
   });
 
   // 3. Organizational context
   if (hasWellbeingData || hasWorkforceData) {
     const contextParts = [];
     if (wellbeingTrend) {
-      contextParts.push(`Manager wellbeing is ${wellbeingTrend.label} (energy trend, ${pulseAggregates.meta.total_managers} managers)`);
+      contextParts.push(`Manager wellbeing is ${wellbeingTrend.label} (energy trend, ${pulseAggregates?.meta?.total_managers ?? 0} managers)`);
     }
     if (hasWorkforceData) {
       const w = workforceMetrics[0];
