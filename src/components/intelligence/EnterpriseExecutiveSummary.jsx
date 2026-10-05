@@ -4,12 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   TrendingUp,
-  TrendingDown,
-  Minus,
   Shield,
   AlertTriangle,
   Info,
-  ArrowRight,
   Sparkles,
   RefreshCw,
   Loader2,
@@ -81,27 +78,7 @@ export default function EnterpriseExecutiveSummary({
       })()
     : null;
 
-  // ── Build the four narrative blocks ─────────────────────────────────────
-  const blocks = [];
-
-  // 1. What changed
-  if (hasCapabilityData) {
-    blocks.push({
-      icon: capabilityTrend.dir === "up" ? TrendingUp : capabilityTrend.dir === "down" ? TrendingDown : Minus,
-      iconColor: capabilityTrend.dir === "up" ? "text-emerald-600" : capabilityTrend.dir === "down" ? "text-red-500" : "text-amber-600",
-      label: "What changed",
-      body: `Leadership capability averages ${meIndex}% ME Index — ${capabilityTrend.label}. ${metrics.atRiskLeaders > 0 ? `${metrics.atRiskLeaders} leader${metrics.atRiskLeaders !== 1 ? "s" : ""} score below 60%, warranting coaching review. ` : ""}${metrics.highPotentialLeaders > 0 ? `${metrics.highPotentialLeaders} high-potential leader${metrics.highPotentialLeaders !== 1 ? "s" : ""} identified at 85%+. ` : ""}Based on ${assessmentCount} assessment${assessmentCount !== 1 ? "s" : ""}.`,
-    });
-  } else {
-    blocks.push({
-      icon: Info,
-      iconColor: "text-gray-400",
-      label: "What changed",
-      body: "No assessment data yet. Run leadership assessments to populate capability insights. In the meantime, manager wellbeing signals may still be available below.",
-    });
-  }
-
-  // 2. Evidence & confidence
+  // ── Evidence & confidence ───────────────────────────────────────────────
   const confidenceParts = [
     { label: "Capability", connected: hasCapabilityData, sample: assessmentCount },
     { label: "Wellbeing", connected: hasWellbeingData, sample: pulseAggregates?.meta?.total_managers || 0 },
@@ -112,45 +89,64 @@ export default function EnterpriseExecutiveSummary({
   const confidenceLabel =
     connectedCount >= 3 ? "Decision-ready" : connectedCount >= 1 ? "Directional only" : "Insufficient data";
 
-  blocks.push({
-    icon: Shield,
-    iconColor: connectedCount >= 3 ? "text-emerald-600" : connectedCount >= 1 ? "text-amber-600" : "text-red-500",
-    label: "Evidence & confidence",
-    body: `${confidenceLabel} — ${connectedCount} of 4 signal domains connected: ${confidenceParts.filter((p) => p.connected).map((p) => p.label).join(", ") || "none yet"}. ${assessmentCount < 5 ? "Capability findings are directional with a small sample. " : ""}${hasWellbeingData ? `Wellbeing covers ${pulseAggregates?.meta?.total_managers ?? 0} managers (min group size ${pulseAggregates?.meta?.minimum_group_size || 5}). ` : ""}Treat all findings as context for investigation, not definitive conclusions.`,
-  });
+  // ── TL;DR derivations ───────────────────────────────────────────────────
+  const headline = hasCapabilityData
+    ? `Leadership capability ${capabilityTrend.label} at ${meIndex}% ME Index`
+    : "No assessment data yet — run leadership assessments to populate insights";
 
-  // 3. Organizational context
-  if (hasWellbeingData || hasWorkforceData) {
-    const contextParts = [];
-    if (wellbeingTrend) {
-      contextParts.push(`Manager wellbeing is ${wellbeingTrend.label} (energy trend, ${pulseAggregates?.meta?.total_managers ?? 0} managers)`);
-    }
-    if (hasWorkforceData) {
-      const w = workforceMetrics[0];
-      contextParts.push(`Workforce: ${w.turnover_rate != null ? `${w.turnover_rate}% turnover` : "turnover data connected"}`);
-    }
-    blocks.push({
-      icon: Info,
-      iconColor: "text-blue-500",
-      label: "Organizational context",
-      body: `${contextParts.join(". ")}. These are associations, not proven causes — they suggest where to look, not what to conclude.`,
+  const callouts = [];
+  if (meIndex !== null) {
+    callouts.push({
+      label: "ME Index",
+      value: `${meIndex}%`,
+      tone: capabilityTrend.dir === "up" ? "up" : capabilityTrend.dir === "down" ? "down" : "neutral",
+      hint: capabilityTrend.label,
+    });
+  }
+  callouts.push({
+    label: "At-risk leaders",
+    value: metrics.atRiskLeaders,
+    tone: metrics.atRiskLeaders > 0 ? "down" : "neutral",
+    hint: "below 60%",
+  });
+  callouts.push({
+    label: "High-potential",
+    value: metrics.highPotentialLeaders,
+    tone: metrics.highPotentialLeaders > 0 ? "up" : "neutral",
+    hint: "85%+",
+  });
+  callouts.push({
+    label: "Assessments",
+    value: assessmentCount,
+    tone: "neutral",
+    hint: assessmentCount < 5 ? "small sample" : "sample",
+  });
+  if (hasWellbeingData) {
+    callouts.push({
+      label: "Wellbeing managers",
+      value: pulseAggregates?.meta?.total_managers ?? 0,
+      tone: "neutral",
+      hint: "energy trend",
     });
   }
 
-  // 4. What to examine next
-  const prompts = [];
-  if (metrics.atRiskLeaders > 0) prompts.push(`Review the ${metrics.atRiskLeaders} at-risk leader${metrics.atRiskLeaders !== 1 ? "s" : ""} for coaching support`);
-  if (wellbeingTrend?.dir === "down") prompts.push("Investigate workload and support conditions behind the declining wellbeing signal");
-  if (meIndex !== null && meIndex < 70) prompts.push("Prioritise Decision Making and Situational Intelligence development — primary ME drivers");
-  if (hasCapabilityData && assessmentCount < 5) prompts.push("Expand assessment coverage to strengthen confidence in these findings");
-  if (prompts.length === 0) prompts.push("Sustain current strengths and monitor for emerging pressure points");
+  const tldrBullets = [];
+  if (hasCapabilityData) {
+    tldrBullets.push(`ME Index ${meIndex}% — ${capabilityTrend.label} (DM 35% · SI 30% · Comm 20% · PM 15%).`);
+  }
+  if (metrics.atRiskLeaders > 0) tldrBullets.push(`${metrics.atRiskLeaders} at-risk leader${metrics.atRiskLeaders !== 1 ? "s" : ""} below 60% — coaching review warranted.`);
+  if (metrics.highPotentialLeaders > 0) tldrBullets.push(`${metrics.highPotentialLeaders} high-potential leader${metrics.highPotentialLeaders !== 1 ? "s" : ""} at 85%+ — ready for stretch.`);
+  if (wellbeingTrend) tldrBullets.push(`Manager wellbeing is ${wellbeingTrend.label}.`);
+  if (hasWorkforceData) {
+    const w = workforceMetrics[0];
+    tldrBullets.push(w.turnover_rate != null ? `Workforce turnover at ${w.turnover_rate}%.` : "Workforce data connected.");
+  }
+  if (hasCapabilityData && assessmentCount < 5) tldrBullets.push("Small sample — findings are directional.");
+  if (tldrBullets.length === 0) tldrBullets.push("Sustain current strengths and monitor for emerging pressure points.");
 
-  blocks.push({
-    icon: ArrowRight,
-    iconColor: "text-[#0202ff]",
-    label: "What to examine next",
-    body: prompts.join(". ") + ".",
-  });
+  const compactParagraph = hasCapabilityData
+    ? `Based on ${assessmentCount} assessment${assessmentCount !== 1 ? "s" : ""}, leadership capability averages ${meIndex}% ME Index — ${capabilityTrend.label}. ${metrics.atRiskLeaders > 0 ? `${metrics.atRiskLeaders} leader${metrics.atRiskLeaders !== 1 ? "s" : ""} score below 60%. ` : ""}${metrics.highPotentialLeaders > 0 ? `${metrics.highPotentialLeaders} high-potential leader${metrics.highPotentialLeaders !== 1 ? "s" : ""} identified at 85%+. ` : ""}${connectedCount} of 4 signal domains connected. Treat as context for investigation, not definitive conclusions.`
+    : "No assessment data yet. Run leadership assessments to populate capability insights. Manager wellbeing signals may still be available below.";
 
   // ── Risks & opportunities (from AI synthesis, with fallbacks) ────────────
   const allRisks = strategicRisks?.length > 0 ? strategicRisks : (() => {
@@ -212,7 +208,44 @@ export default function EnterpriseExecutiveSummary({
             </div>
           </div>
 
-          {/* AI Strategic Context — featured narrative */}
+          {/* TL;DR — headline + metric callouts */}
+          <div className="mb-4">
+            <div className="flex items-start gap-2 mb-3">
+              <span className="text-[10px] font-bold tracking-wider text-gray-400 bg-gray-100 rounded px-1.5 py-0.5 flex-shrink-0 mt-0.5">TL;DR</span>
+              <h3 className="text-base font-semibold text-gray-900 leading-snug">{headline}</h3>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+              {callouts.map((c, idx) => (
+                <div key={idx} className="rounded-lg border border-gray-200 bg-gray-50/60 px-3 py-2">
+                  <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">{c.label}</p>
+                  <p className={`text-lg font-bold leading-tight ${
+                    c.tone === "up" ? "text-emerald-600" : c.tone === "down" ? "text-red-500" : "text-gray-900"
+                  }`}>{c.value}</p>
+                  <p className="text-[10px] text-gray-400">{c.hint}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Compact paragraph — the bottom line */}
+          <div className="mb-4 rounded-xl border border-gray-200 bg-gray-50/60 p-3.5">
+            <p className="text-xs text-gray-700 leading-relaxed">{compactParagraph}</p>
+          </div>
+
+          {/* Bullets — what to examine next */}
+          <div className="mb-4">
+            <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">What to examine next</p>
+            <ul className="space-y-1.5">
+              {tldrBullets.map((b, idx) => (
+                <li key={idx} className="flex items-start gap-2 text-xs text-gray-700 leading-relaxed">
+                  <span className="flex-shrink-0 mt-1 w-1.5 h-1.5 rounded-full bg-[#0202ff]" />
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* AI Strategic Context — expandable synthesis */}
           <div className="mb-4 rounded-xl border border-purple-100 bg-purple-50/40 p-4">
             {generatingBriefing && !executiveBriefing ? (
               <div className="flex items-center gap-2 text-purple-600 text-xs">
@@ -221,7 +254,7 @@ export default function EnterpriseExecutiveSummary({
             ) : executiveBriefing ? (
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-purple-900 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-purple-500" />Strategic Context
+                  <Sparkles className="w-3 h-3 text-purple-500" />AI Strategic Context
                 </p>
                 <p className="text-xs text-gray-700 leading-relaxed">
                   {showFullBriefing ? executiveBriefing : briefingPreview}
@@ -245,26 +278,6 @@ export default function EnterpriseExecutiveSummary({
                 No briefing generated yet. {onRefreshBriefing ? "Click the refresh icon above to generate a strategic briefing from your data." : ""}
               </p>
             )}
-          </div>
-
-          {/* Four narrative blocks */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {blocks.map((block, idx) => {
-              const Icon = block.icon;
-              return (
-                <div key={idx} className="flex items-start gap-3">
-                  <div className="flex-shrink-0 mt-0.5">
-                    <Icon className={`w-4 h-4 ${block.iconColor}`} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
-                      {block.label}
-                    </p>
-                    <p className="text-xs text-gray-700 leading-relaxed">{block.body}</p>
-                  </div>
-                </div>
-              );
-            })}
           </div>
 
           {/* Risks & Opportunities */}
