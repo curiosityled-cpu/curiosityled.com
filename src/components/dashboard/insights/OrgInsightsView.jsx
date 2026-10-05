@@ -58,12 +58,16 @@ import HubLensToggle from "@/components/intelligence/HubLensToggle";
 import HRBPLensContent from "@/components/portfolio/HRBPLensContent";
 import { deriveLeadershipStage } from "@/lib/lifecycleStage";
 import { DEMO_TREND_DATA, DEMO_PULSE_AGGREGATES } from "./demoSnapshotData";
+import EnterpriseExecutiveSummary from "@/components/intelligence/EnterpriseExecutiveSummary";
+import WellbeingContextHeader from "@/components/intelligence/WellbeingContextHeader";
+import OrgHealthStates from "@/components/intelligence/OrgHealthStates";
+import DecisionFollowThrough from "@/components/intelligence/DecisionFollowThrough";
 
 // ── DEMO SNAPSHOT MODE ─────────────────────────────────────────────────────
-// Set to true to inject realistic dummy data into the Manager Wellbeing
-// Intelligence section and DM / SI / Manager Effectiveness Trends chart.
-// Flip back to false (or remove) after taking your screenshot.
-const DEMO_SNAPSHOT_MODE = true;
+// DISABLED — demo data was being injected into decision-facing views (the
+// trend chart and wellbeing panel), which undermined trust for executives.
+// Set to true only for staging screenshots, never in production decisions.
+const DEMO_SNAPSHOT_MODE = false;
 
 // Map AI-generated dashboard names to actual MVP routes
 const DASHBOARD_ROUTES = {
@@ -149,6 +153,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate, actionsRef }) {
   const [strategicOpportunities, setStrategicOpportunities] = useState([]);
   const [lastGeneratedFingerprint, setLastGeneratedFingerprint] = useState(null);
   const [generatingAll, setGeneratingAll] = useState(false);
+  const [pulseAggregates, setPulseAggregates] = useState(null);
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -207,6 +212,17 @@ export default function OrgInsightsView({ user, onMetricsUpdate, actionsRef }) {
         workforceMetrics: workforceMetrics || []
       });
       setLastRefreshed(new Date());
+
+      // Fetch pulse aggregates for the executive summary (wellbeing domain)
+      // OrgPulseAggregatesView fetches its own copy for its panel — this is
+      // a separate fetch so the summary can reference wellbeing signals.
+      if (!DEMO_SNAPSHOT_MODE) {
+        base44.functions.invoke('getOrgPulseAggregates', {})
+          .then((res) => setPulseAggregates(res))
+          .catch(() => setPulseAggregates(null));
+      } else {
+        setPulseAggregates(DEMO_PULSE_AGGREGATES);
+      }
     } finally {
       setLoading(false);
     }
@@ -963,10 +979,10 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
   const hasWorkforceData = rawData.workforceMetrics?.length > 0;
   const hasEngagementData = hasWorkforceData && rawData.workforceMetrics[0]?.enps_score != null;
 
-  // Trend chart sparse data check
+  // Trend chart sparse data check — no demo data injection; observed data only
   const trendDataPoints = chartData.trendData.filter(d => d.assessmentScore > 0);
-  const hasSufficientTrendData = DEMO_SNAPSHOT_MODE || trendDataPoints.length >= 3;
-  const effectiveTrendData = DEMO_SNAPSHOT_MODE ? DEMO_TREND_DATA : chartData.trendData;
+  const hasSufficientTrendData = trendDataPoints.length >= 3;
+  const effectiveTrendData = chartData.trendData;
 
   return (
     <div ref={containerRef} className="space-y-6">
@@ -1063,12 +1079,26 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
 
         const OrgHealthSection = (
           <div id="org-health" key="org-health">
-            {orgHealthLowConf ? (
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 text-center">
-                <Shield className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm font-medium text-gray-600">Organizational Leadership Health</p>
-                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 mt-3 inline-block">Insufficient data for reliable insight — fewer than 3 assessments completed.</p>
-              </div>
+            {assessmentCount === 0 ? (
+              <OrgHealthStates state="empty" onPromptAtreus={promptAtreus} />
+            ) : assessmentCount < 3 ? (
+              <>
+                <OrgHealthStates state="partial" assessmentCount={assessmentCount} />
+                <OrgHealthCard
+                  metrics={metrics}
+                  assessments={filteredData.assessments}
+                  goals={filteredData.goals}
+                  assignedLearning={filteredData.assignedLearning}
+                  strategicRisks={strategicRisks}
+                  strategicOpportunities={strategicOpportunities}
+                  onPromptAtreus={promptAtreus}
+                  executiveBriefing={executiveBriefing}
+                  generatingBriefing={generatingBriefing}
+                  generatingAll={generatingAll}
+                  onRefreshBriefing={generateExecutiveBriefing}
+                  activeLifecycleStage={activeLifecycleStage}
+                />
+              </>
             ) : (
               <OrgHealthCard
                 metrics={metrics}
@@ -1166,18 +1196,41 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
         const WellbeingSection = (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
             <div className="space-y-3">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900">Manager Wellbeing Intelligence</h3>
-                <p className="text-xs text-gray-500 mt-0.5">Aggregate, anonymised signals from Atreus check-ins — Category B data only. No individual attribution.</p>
-              </div>
+              <WellbeingContextHeader
+                pulseAggregates={DEMO_SNAPSHOT_MODE ? DEMO_PULSE_AGGREGATES : undefined}
+                suppressed={false}
+              />
               <OrgPulseAggregatesView demoData={DEMO_SNAPSHOT_MODE ? DEMO_PULSE_AGGREGATES : undefined} />
             </div>
           </motion.div>
         );
 
+        // Enterprise lens: executive decision brief order —
+        // Summary → Leadership Health → Wellbeing → (Workforce/Engagement
+        // context when available) → Decision & Follow-Through
+        const EnterpriseSummarySection = (
+          <EnterpriseExecutiveSummary
+            key="exec-summary"
+            metrics={metrics}
+            assessments={filteredData.assessments}
+            workforceMetrics={rawData.workforceMetrics}
+            pulseAggregates={pulseAggregates}
+            dataConfidence={dataConfidencePct}
+            activeLifecycleStage={activeLifecycleStage}
+            onScrollTo={scrollToSection}
+          />
+        );
+
+        const FollowThroughSection = (
+          <DecisionFollowThrough
+            key="follow-through"
+            onPromptAtreus={promptAtreus}
+          />
+        );
+
         const lensSections = {
           'hrbp': [<HRBPLensContent appRole={appRole} />],
-          'enterprise': [OrgHealthSection, WellbeingSection],
+          'enterprise': [EnterpriseSummarySection, OrgHealthSection, WellbeingSection, FollowThroughSection],
           talent: [TalentSection],
           workforce: [WorkforceEngagementSection],
         };
@@ -1209,7 +1262,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
                 <p className="text-xs text-gray-500 mt-0.5">Track primary drivers of Manager Effectiveness over time</p>
               </div>
               <Badge className={`text-[11px] border ${hasSufficientTrendData ? "bg-slate-100 text-slate-600 border-slate-200" : "bg-amber-100 text-amber-700 border-amber-200"}`}>
-                {hasSufficientTrendData ? "Directional" : "Sparse data"}
+                {hasSufficientTrendData ? "Observed data" : "Insufficient history"}
               </Badge>
             </div>
           </CardHeader>
@@ -1239,7 +1292,7 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
                   </LineChart>
                 </ResponsiveContainer>
                 <p className="text-[11px] text-gray-400 mt-3">
-                  Solid lines (DM & SI) are primary Manager Effectiveness drivers. Sample size: {DEMO_SNAPSHOT_MODE ? effectiveTrendData.length : trendDataPoints.length} active periods of {effectiveTrendData.length}.
+                  Solid lines (DM & SI) are primary Manager Effectiveness drivers. Observed data: {trendDataPoints.length} of {effectiveTrendData.length} periods have assessment activity.
                 </p>
               </>
             )}
