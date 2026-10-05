@@ -14,6 +14,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 /**
  * EnterpriseExecutiveSummary — the single consolidated executive briefing
@@ -89,64 +90,93 @@ export default function EnterpriseExecutiveSummary({
   const confidenceLabel =
     connectedCount >= 3 ? "Decision-ready" : connectedCount >= 1 ? "Directional only" : "Insufficient data";
 
-  // ── TL;DR derivations ───────────────────────────────────────────────────
-  const headline = hasCapabilityData
-    ? `Leadership capability ${capabilityTrend.label} at ${meIndex}% ME Index`
-    : "No assessment data yet — run leadership assessments to populate insights";
+  // ── Metric explainers (definition · derivation · interpretation) ────────
+  const metricExplainers = {
+    "ME Index": {
+      what: "Manager Effectiveness Index — a weighted composite of four leadership competencies.",
+      source: "Derived from assessment scores: Decision Making (35%), Situational Intelligence (30%), Communication (20%), Performance Management (15%).",
+      interpret: "75%+ is above benchmark; 65–74% is building toward benchmark; below 65% is below the benchmark threshold.",
+    },
+    "At-risk leaders": {
+      what: "Leaders scoring below 60% on the overall assessment.",
+      source: "Counted from completed leadership assessments in this tenant.",
+      interpret: "These leaders warrant a coaching review. A count of 0 is healthy.",
+    },
+    "High-potential": {
+      what: "Leaders scoring 85% or above on the overall assessment.",
+      source: "Counted from completed leadership assessments in this tenant.",
+      interpret: "Candidates for stretch assignments and advancement. A count of 0 signals a thin succession bench.",
+    },
+    "Assessments": {
+      what: "Number of completed leadership assessments in the current view.",
+      source: "Pulled from the Assessment entity for this tenant and timeframe.",
+      interpret: "Fewer than 5 is a small sample — treat findings as directional, not definitive.",
+    },
+    "Wellbeing managers": {
+      what: "Managers contributing anonymised energy and load signals.",
+      source: "Aggregated from daily check-ins (Category B data). Individual responses are never shown.",
+      interpret: "A larger group strengthens the wellbeing trend signal; small groups are suppressed for privacy.",
+    },
+  };
 
+  // ── Metric callouts ─────────────────────────────────────────────────────
   const callouts = [];
   if (meIndex !== null) {
     callouts.push({
       label: "ME Index",
       value: `${meIndex}%`,
       tone: capabilityTrend.dir === "up" ? "up" : capabilityTrend.dir === "down" ? "down" : "neutral",
-      hint: capabilityTrend.label,
     });
   }
   callouts.push({
     label: "At-risk leaders",
     value: metrics.atRiskLeaders,
     tone: metrics.atRiskLeaders > 0 ? "down" : "neutral",
-    hint: "below 60%",
   });
   callouts.push({
     label: "High-potential",
     value: metrics.highPotentialLeaders,
     tone: metrics.highPotentialLeaders > 0 ? "up" : "neutral",
-    hint: "85%+",
   });
   callouts.push({
     label: "Assessments",
     value: assessmentCount,
     tone: "neutral",
-    hint: assessmentCount < 5 ? "small sample" : "sample",
   });
   if (hasWellbeingData) {
     callouts.push({
       label: "Wellbeing managers",
       value: pulseAggregates?.meta?.total_managers ?? 0,
       tone: "neutral",
-      hint: "energy trend",
     });
   }
 
-  const tldrBullets = [];
-  if (hasCapabilityData) {
-    tldrBullets.push(`ME Index ${meIndex}% — ${capabilityTrend.label} (DM 35% · SI 30% · Comm 20% · PM 15%).`);
-  }
-  if (metrics.atRiskLeaders > 0) tldrBullets.push(`${metrics.atRiskLeaders} at-risk leader${metrics.atRiskLeaders !== 1 ? "s" : ""} below 60% — coaching review warranted.`);
-  if (metrics.highPotentialLeaders > 0) tldrBullets.push(`${metrics.highPotentialLeaders} high-potential leader${metrics.highPotentialLeaders !== 1 ? "s" : ""} at 85%+ — ready for stretch.`);
-  if (wellbeingTrend) tldrBullets.push(`Manager wellbeing is ${wellbeingTrend.label}.`);
+  // ── Narrative: short paragraphs + key-value lines ────────────────────────
+  const headline = hasCapabilityData
+    ? `Leadership capability ${capabilityTrend.label} at ${meIndex}% ME Index`
+    : "No assessment data yet — run leadership assessments to populate insights";
+
+  const kvLines = [];
+  if (hasCapabilityData) kvLines.push({ k: "ME Index", v: `${meIndex}% — ${capabilityTrend.label}` });
+  kvLines.push({ k: "At-risk leaders", v: `${metrics.atRiskLeaders} below 60%` });
+  kvLines.push({ k: "High-potential", v: `${metrics.highPotentialLeaders} at 85%+` });
+  kvLines.push({ k: "Signal coverage", v: `${connectedCount} of 4 domains connected` });
+  if (wellbeingTrend) kvLines.push({ k: "Manager wellbeing", v: wellbeingTrend.label });
   if (hasWorkforceData) {
     const w = workforceMetrics[0];
-    tldrBullets.push(w.turnover_rate != null ? `Workforce turnover at ${w.turnover_rate}%.` : "Workforce data connected.");
+    kvLines.push({ k: "Workforce turnover", v: w.turnover_rate != null ? `${w.turnover_rate}%` : "connected" });
   }
-  if (hasCapabilityData && assessmentCount < 5) tldrBullets.push("Small sample — findings are directional.");
-  if (tldrBullets.length === 0) tldrBullets.push("Sustain current strengths and monitor for emerging pressure points.");
 
-  const compactParagraph = hasCapabilityData
-    ? `Based on ${assessmentCount} assessment${assessmentCount !== 1 ? "s" : ""}, leadership capability averages ${meIndex}% ME Index — ${capabilityTrend.label}. ${metrics.atRiskLeaders > 0 ? `${metrics.atRiskLeaders} leader${metrics.atRiskLeaders !== 1 ? "s" : ""} score below 60%. ` : ""}${metrics.highPotentialLeaders > 0 ? `${metrics.highPotentialLeaders} high-potential leader${metrics.highPotentialLeaders !== 1 ? "s" : ""} identified at 85%+. ` : ""}${connectedCount} of 4 signal domains connected. Treat as context for investigation, not definitive conclusions.`
+  const introParagraph = hasCapabilityData
+    ? `Based on ${assessmentCount} assessment${assessmentCount !== 1 ? "s" : ""}, leadership capability averages ${meIndex}% ME Index. ${metrics.atRiskLeaders > 0 ? `${metrics.atRiskLeaders} leader${metrics.atRiskLeaders !== 1 ? "s" : ""} score below 60%. ` : ""}${metrics.highPotentialLeaders > 0 ? `${metrics.highPotentialLeaders} high-potential leader${metrics.highPotentialLeaders !== 1 ? "s" : ""} identified at 85%+. ` : ""}`
     : "No assessment data yet. Run leadership assessments to populate capability insights. Manager wellbeing signals may still be available below.";
+
+  const closingParagraph = hasCapabilityData
+    ? `${assessmentCount < 5 ? "Small sample — findings are directional. " : ""}Treat as context for investigation, not definitive conclusions.`
+    : "";
+
+  // Strip a leading bold title (e.g. "**Executive Briefing: …**") from the AI briefing
+  const stripBriefingTitle = (text) => (text ? text.replace(/^\s*\*\*[^*]+\*\*\s*\n?/, "").trim() : text);
 
   // ── Risks & opportunities (from AI synthesis, with fallbacks) ────────────
   const allRisks = strategicRisks?.length > 0 ? strategicRisks : (() => {
@@ -164,7 +194,8 @@ export default function EnterpriseExecutiveSummary({
   })();
 
   const hasRisksOpps = allRisks.length > 0 || allOpps.length > 0;
-  const briefingPreview = executiveBriefing ? executiveBriefing.split("\n\n")[0] : "";
+  const strippedBriefing = stripBriefingTitle(executiveBriefing);
+  const briefingPreview = strippedBriefing ? strippedBriefing.split("\n\n")[0] : "";
 
   // ── Render ──────────────────────────────────────────────────────────────
   return (
@@ -177,24 +208,12 @@ export default function EnterpriseExecutiveSummary({
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-purple-600 flex-shrink-0" />
                 <h3 className="text-sm font-semibold text-gray-900">Executive Briefing</h3>
-                <Badge className="text-[10px] border bg-purple-100 text-purple-700 border-purple-200 flex-shrink-0">AI synthesis</Badge>
               </div>
               <p className="text-xs text-gray-500 mt-0.5">
                 A concise readout for leadership — what changed, evidence, context, and next steps
               </p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
-              <Badge
-                className={`text-[11px] border ${
-                  connectedCount >= 3
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    : connectedCount >= 1
-                    ? "bg-amber-50 text-amber-700 border-amber-200"
-                    : "bg-red-50 text-red-700 border-red-200"
-                }`}
-              >
-                {confidenceLabel}
-              </Badge>
               {onRefreshBriefing && (
                 <button
                   onClick={onRefreshBriefing}
@@ -208,58 +227,79 @@ export default function EnterpriseExecutiveSummary({
             </div>
           </div>
 
-          {/* TL;DR — headline + metric callouts */}
+          {/* Headline + metric callouts (with explainers) */}
           <div className="mb-4">
-            <div className="flex items-start gap-2 mb-3">
-              <span className="text-[10px] font-bold tracking-wider text-gray-400 bg-gray-100 rounded px-1.5 py-0.5 flex-shrink-0 mt-0.5">TL;DR</span>
-              <h3 className="text-base font-semibold text-gray-900 leading-snug">{headline}</h3>
-            </div>
+            <h3 className="text-base font-semibold text-gray-900 leading-snug mb-3">{headline}</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-              {callouts.map((c, idx) => (
-                <div key={idx} className="rounded-lg border border-gray-200 bg-gray-50/60 px-3 py-2">
-                  <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">{c.label}</p>
-                  <p className={`text-lg font-bold leading-tight ${
-                    c.tone === "up" ? "text-emerald-600" : c.tone === "down" ? "text-red-500" : "text-gray-900"
-                  }`}>{c.value}</p>
-                  <p className="text-[10px] text-gray-400">{c.hint}</p>
+              {callouts.map((c, idx) => {
+                const explainer = metricExplainers[c.label];
+                return (
+                  <div key={idx} className="rounded-lg border border-gray-200 bg-gray-50/60 px-3 py-2">
+                    <div className="flex items-center gap-1">
+                      <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">{c.label}</p>
+                      {explainer && (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button
+                              className="text-gray-400 hover:text-gray-600 transition-colors"
+                              title={`What is ${c.label}?`}
+                            >
+                              <Info className="w-3 h-3" />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-72 p-3" align="start">
+                            <p className="text-xs font-semibold text-gray-900 mb-1.5">{c.label}</p>
+                            <p className="text-[11px] text-gray-700 leading-relaxed mb-1.5">{explainer.what}</p>
+                            <p className="text-[11px] text-gray-500 leading-relaxed mb-1.5">
+                              <span className="font-medium text-gray-600">Source: </span>{explainer.source}
+                            </p>
+                            <p className="text-[11px] text-gray-500 leading-relaxed">
+                              <span className="font-medium text-gray-600">How to read: </span>{explainer.interpret}
+                            </p>
+                          </PopoverContent>
+                        </Popover>
+                      )}
+                    </div>
+                    <p className={`text-lg font-bold leading-tight ${
+                      c.tone === "up" ? "text-emerald-600" : c.tone === "down" ? "text-red-500" : "text-gray-900"
+                    }`}>{c.value}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Narrative — short paragraphs + key-value lines */}
+          <div className="mb-4 rounded-xl border border-gray-200 bg-gray-50/60 p-3.5 space-y-2.5">
+            <p className="text-xs text-gray-700 leading-relaxed">{introParagraph}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 py-1">
+              {kvLines.map((line, idx) => (
+                <div key={idx} className="flex items-baseline gap-2 text-xs">
+                  <span className="font-medium text-gray-500 flex-shrink-0">{line.k}:</span>
+                  <span className="text-gray-800">{line.v}</span>
                 </div>
               ))}
             </div>
+            {closingParagraph && (
+              <p className="text-xs text-gray-600 leading-relaxed italic">{closingParagraph}</p>
+            )}
           </div>
 
-          {/* Compact paragraph — the bottom line */}
-          <div className="mb-4 rounded-xl border border-gray-200 bg-gray-50/60 p-3.5">
-            <p className="text-xs text-gray-700 leading-relaxed">{compactParagraph}</p>
-          </div>
-
-          {/* Bullets — what to examine next */}
-          <div className="mb-4">
-            <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">What to examine next</p>
-            <ul className="space-y-1.5">
-              {tldrBullets.map((b, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-xs text-gray-700 leading-relaxed">
-                  <span className="flex-shrink-0 mt-1 w-1.5 h-1.5 rounded-full bg-[#0202ff]" />
-                  <span>{b}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* AI Strategic Context — expandable synthesis */}
+          {/* Strategic Context — expandable synthesis */}
           <div className="mb-4 rounded-xl border border-purple-100 bg-purple-50/40 p-4">
             {generatingBriefing && !executiveBriefing ? (
               <div className="flex items-center gap-2 text-purple-600 text-xs">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />Generating strategic briefing…
               </div>
-            ) : executiveBriefing ? (
+            ) : strippedBriefing ? (
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-purple-900 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-purple-500" />AI Strategic Context
+                  <Sparkles className="w-3 h-3 text-purple-500" />Strategic Context
                 </p>
-                <p className="text-xs text-gray-700 leading-relaxed">
-                  {showFullBriefing ? executiveBriefing : briefingPreview}
+                <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-line">
+                  {showFullBriefing ? strippedBriefing : briefingPreview}
                 </p>
-                {executiveBriefing.length > briefingPreview.length && (
+                {strippedBriefing.length > briefingPreview.length && (
                   <button
                     onClick={() => setShowFullBriefing((v) => !v)}
                     className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800 font-medium transition-colors"
