@@ -10,7 +10,7 @@
  */
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useAuth } from "@/components/useAuth";
+import { useAuth } from "@/lib/AuthContext";
 
 export function useCustomCheckInQuestions(checkInType = "both") {
   const { user } = useAuth();
