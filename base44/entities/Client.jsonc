@@ -275,6 +275,20 @@
               "minimum": 0,
               "maximum": 90,
               "description": "How many days back a user can complete a missed check-in (0 disables retroactive check-ins)"
+            },
+            "ic_automation_enabled": {
+              "type": "boolean",
+              "default": false,
+              "description": "When true, daily check-in cards are sent automatically to frontline staff (ICRoster) on the scheduled cadence. Managed from Performance Manager > Check-In Settings."
+            },
+            "ic_automation_type": {
+              "type": "string",
+              "enum": [
+                "morning",
+                "evening"
+              ],
+              "default": "morning",
+              "description": "Which check-in type the automated IC send uses (morning or evening)"
             }
           },
           "description": "Check-in engine configuration for this organization"

@@ -31,6 +31,9 @@ Deno.serve(async (req) => {
 
     const payload = await req.json().catch(() => ({}));
     const checkInType = payload.check_in_type || 'morning';
+    // Optional: send to specific IC IDs only (individual sending). If omitted,
+    // sends to all active ICs with check_in_enabled on the roster.
+    const icIds = Array.isArray(payload.ic_ids) ? payload.ic_ids.filter(Boolean) : null;
 
     // Resolve the target client
     let clientId = payload.client_id;
@@ -44,7 +47,7 @@ Deno.serve(async (req) => {
     const serviceBase44 = base44.asServiceRole;
 
     // Fetch the client (for preset) and the active IC roster in parallel
-    const [client, icRows] = await Promise.all([
+    const [client, allIcRows] = await Promise.all([
       serviceBase44.entities.Client.get(clientId).catch(() => null),
       serviceBase44.entities.ICRoster.filter({
         client_id: clientId,
@@ -52,6 +55,11 @@ Deno.serve(async (req) => {
         check_in_enabled: true,
       }).catch(() => []),
     ]);
+
+    // Filter to specific IC IDs if individual sending was requested
+    const icRows = icIds && icIds.length > 0
+      ? (allIcRows || []).filter((ic: any) => icIds.includes(ic.id))
+      : (allIcRows || []);
 
     const measures = getMeasuresForClient(client);
     const customQuestions = await getActiveCustomQuestions(serviceBase44, clientId, '', checkInType);

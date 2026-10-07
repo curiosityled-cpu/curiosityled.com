@@ -124,12 +124,10 @@ function UserManagement() {
     removeStaff,
     toggleField: toggleStaffField,
     copyWebLink: copyStaffLink,
-    sendCards: sendStaffCards,
   } = useStaffRoster(clientId);
   const [showStaffDialog, setShowStaffDialog] = useState(false);
   const [editingStaff, setEditingStaff] = useState(null);
   const [showStaffCsvUpload, setShowStaffCsvUpload] = useState(false);
-  const [sendingCards, setSendingCards] = useState(false);
 
   const [filters, setFilters] = useState({
     role: 'all', department: 'all', status: 'all', accountStatus: 'all',
@@ -288,12 +286,6 @@ function UserManagement() {
       await removeStaff(ic);
       toast.success('Staff removed');
     } catch { toast.error('Failed to remove staff'); }
-  };
-
-  const handleSendCards = async () => {
-    setSendingCards(true);
-    try { await sendStaffCards('morning'); }
-    finally { setSendingCards(false); }
   };
 
   const getOrganizationName = (user) => {
@@ -466,9 +458,6 @@ function UserManagement() {
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setShowBulkUpload(true)}>
                 <Upload className="w-4 h-4 mr-2" /> Upload CSV
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleSendCards} disabled={sendingCards || staffRoster.length === 0}>
-                {sendingCards ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />} Send check-ins to staff
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

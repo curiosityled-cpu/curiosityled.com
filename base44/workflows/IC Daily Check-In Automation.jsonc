@@ -1,0 +1,44 @@
+{
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "ic_daily_checkin_automation",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "send_automated_ic_checkins": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "sendAutomatedICCheckIns"
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Send automated IC check-ins",
+            "description": "Delivers check-in cards to all enabled clients' frontline staff"
+          }
+        }
+      }
+    ]
+  },
+  "name": "IC Daily Check-In Automation",
+  "description": "Sends daily check-in cards to frontline staff (ICRoster) for every client with IC check-in automation enabled. Runs Monday\u2013Friday at 9am ET.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 9 * * 1-5",
+      "one_time_date": null,
+      "timezone": "America/New_York",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  }
+}

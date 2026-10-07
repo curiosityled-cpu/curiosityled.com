@@ -44,6 +44,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import CheckInLookbackSetting from "@/components/performance-mgmt/CheckInLookbackSetting";
+import SendCheckInsCard from "@/components/performance-mgmt/SendCheckInsCard";
 
 const RESPONSE_TYPES = [
   { value: "number", label: "Number", icon: Hash, hint: "Numeric entry (e.g. 42)" },
@@ -294,6 +295,7 @@ export default function CheckInSetupTab({ user }) {
   return (
     <div className="space-y-4">
       <CheckInLookbackSetting />
+      <SendCheckInsCard user={currentUser} />
       {/* Header */}
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
