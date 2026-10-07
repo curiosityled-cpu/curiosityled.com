@@ -52,7 +52,7 @@ const RESPONSE_TYPES = [
 ];
 
 const ROLE_OPTIONS = [
-  { value: "", label: "All roles" },
+  { value: "__all__", label: "All roles" },
   { value: "User Level 1", label: "User Level 1" },
   { value: "User Level 2", label: "User Level 2" },
   { value: "Admin Level 1", label: "Admin Level 1" },
@@ -494,9 +494,12 @@ export default function CheckInSetupTab({ user }) {
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">Target role</Label>
               <Select
-                value={form.target_role}
+                value={form.target_role || "__all__"}
                 onValueChange={(v) =>
-                  setForm((f) => ({ ...f, target_role: v }))
+                  setForm((f) => ({
+                    ...f,
+                    target_role: v === "__all__" ? "" : v,
+                  }))
                 }
               >
                 <SelectTrigger className="text-sm">
@@ -504,7 +507,7 @@ export default function CheckInSetupTab({ user }) {
                 </SelectTrigger>
                 <SelectContent>
                   {ROLE_OPTIONS.map((o) => (
-                    <SelectItem key={o.value || "__all"} value={o.value || ""}>
+                    <SelectItem key={o.value} value={o.value}>
                       {o.label}
                     </SelectItem>
                   ))}
