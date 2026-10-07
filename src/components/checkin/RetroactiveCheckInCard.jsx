@@ -62,7 +62,7 @@ function ScorePicker({ value, onChange }) {
   );
 }
 
-export default function RetroactiveCheckInCard() {
+export default function RetroactiveCheckInCard({ initialDate, initialType, editMode, onSaved }) {
   const { user } = useAuth();
   const userEmail = user?.email;
   const clientId = user?.data?.client_id || user?.client_id;
@@ -72,8 +72,8 @@ export default function RetroactiveCheckInCard() {
   const [measures, setMeasures] = useState(CHECK_IN_PRESETS.balance.measures);
   const [loading, setLoading] = useState(true);
 
-  const [selectedDate, setSelectedDate] = useState(shiftET(-1));
-  const [checkInType, setCheckInType] = useState("morning");
+  const [selectedDate, setSelectedDate] = useState(initialDate || shiftET(-1));
+  const [checkInType, setCheckInType] = useState(initialType || "morning");
   const [scores, setScores] = useState({
     energy: 3,
     confidence: 3,
@@ -239,6 +239,7 @@ export default function RetroactiveCheckInCard() {
       }
       toast.success(`Check-in saved for ${formatDateLabel(selectedDate)}.`);
       setExistingForDate({ ...(existingForDate || {}), ...scorePayload });
+      onSaved?.();
     } catch (e) {
       toast.error("Could not save: " + (e.message || ""));
     } finally {
@@ -252,12 +253,13 @@ export default function RetroactiveCheckInCard() {
         <div className="flex items-center gap-2">
           <CalendarClock className="w-4 h-4 text-[#0202ff]" />
           <p className="text-sm font-semibold text-foreground">
-            Complete a missed check-in
+            {editMode ? "Edit check-in" : "Complete a missed check-in"}
           </p>
         </div>
         <p className="text-xs text-muted-foreground -mt-2">
-          Backfill a check-in for a day you missed, up to {lookback} day
-          {lookback === 1 ? "" : "s"} back.
+          {editMode
+            ? "Update the scores and notes for this check-in."
+            : `Backfill a check-in for a day you missed, up to ${lookback} day${lookback === 1 ? "" : "s"} back.`}
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -269,6 +271,7 @@ export default function RetroactiveCheckInCard() {
               min={minDate}
               max={maxDate}
               onChange={(e) => setSelectedDate(e.target.value)}
+              readOnly={!!editMode}
               className="text-sm"
             />
             <p className="text-[11px] text-muted-foreground">

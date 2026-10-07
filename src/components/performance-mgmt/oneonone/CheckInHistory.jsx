@@ -24,8 +24,11 @@ import {
   Moon,
   Users,
   Filter,
+  Pencil,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import RetroactiveCheckInCard from "@/components/checkin/RetroactiveCheckInCard";
 
 const MEASURES = [
   { key: "energy_score", label: "Energy", color: "#0202ff" },
@@ -34,6 +37,17 @@ const MEASURES = [
   { key: "load_score", label: "Load", color: "#eab308" },
   { key: "growth_score", label: "Growth", color: "#8b5cf6" },
 ];
+
+function shiftET(n) {
+  const d = new Date();
+  d.setDate(d.getDate() + n);
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
+}
 
 function ScorePill({ label, score, color }) {
   return (
@@ -88,6 +102,8 @@ export default function CheckInHistory({ user }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState("all");
+  const [lookback, setLookback] = useState(7);
+  const [editing, setEditing] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -106,6 +122,18 @@ export default function CheckInHistory({ user }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Load org retroactive lookback window
+  useEffect(() => {
+    const clientId = user?.data?.client_id || user?.client_id;
+    if (!clientId) return;
+    base44.entities.Client.get(clientId)
+      .then((c) => {
+        const lb = c?.settings?.check_in_config?.retroactive_lookback_days;
+        if (typeof lb === "number") setLookback(lb);
+      })
+      .catch(() => {});
+  }, [user]);
 
   if (loading) {
     return (
@@ -135,6 +163,16 @@ export default function CheckInHistory({ user }) {
         );
 
   const grouped = groupByDate(filtered);
+
+  const todayET = shiftET(0);
+  const minEditableDate = shiftET(-Math.max(0, lookback));
+  const myEmail = (user?.email || "").toLowerCase();
+  const isEditable = (r) => {
+    const owner = (r.owner_email || r.user_email || "").toLowerCase();
+    if (!owner || owner !== myEmail) return false;
+    const d = r.check_in_date || "";
+    return d >= minEditableDate && d <= todayET;
+  };
 
   return (
     <div className="space-y-4">
@@ -207,26 +245,38 @@ export default function CheckInHistory({ user }) {
                   return (
                     <Card key={r.id} className="border border-gray-100 shadow-sm rounded-xl">
                       <CardContent className="p-3.5">
-                        <div className="flex items-center gap-2 flex-wrap mb-2">
-                          <span
-                            className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${
-                              isMorning
-                                ? "bg-amber-50 text-amber-700 border border-amber-200"
-                                : "bg-indigo-50 text-indigo-700 border border-indigo-200"
-                            }`}
-                          >
-                            {isMorning ? (
-                              <Sunrise className="w-3 h-3" />
-                            ) : (
-                              <Moon className="w-3 h-3" />
-                            )}
-                            {isMorning ? "Morning" : "Evening"}
-                          </span>
-                          {isManager && (
-                            <span className="inline-flex items-center gap-1 text-[11px] text-gray-500">
-                              <Users className="w-3 h-3" />
-                              {ownerName}
+                        <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span
+                              className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${
+                                isMorning
+                                  ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                  : "bg-indigo-50 text-indigo-700 border border-indigo-200"
+                              }`}
+                            >
+                              {isMorning ? (
+                                <Sunrise className="w-3 h-3" />
+                              ) : (
+                                <Moon className="w-3 h-3" />
+                              )}
+                              {isMorning ? "Morning" : "Evening"}
                             </span>
+                            {isManager && (
+                              <span className="inline-flex items-center gap-1 text-[11px] text-gray-500">
+                                <Users className="w-3 h-3" />
+                                {ownerName}
+                              </span>
+                            )}
+                          </div>
+                          {isEditable(r) && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs gap-1"
+                              onClick={() => setEditing(r)}
+                            >
+                              <Pencil className="w-3 h-3" /> Edit
+                            </Button>
                           )}
                         </div>
                         <div className="flex flex-wrap gap-x-4 gap-y-2">
@@ -249,6 +299,25 @@ export default function CheckInHistory({ user }) {
           ))}
         </div>
       )}
+
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Edit check-in</DialogTitle>
+          </DialogHeader>
+          {editing && (
+            <RetroactiveCheckInCard
+              initialDate={editing.check_in_date}
+              initialType={editing.check_in_type}
+              editMode
+              onSaved={() => {
+                setEditing(null);
+                load();
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
