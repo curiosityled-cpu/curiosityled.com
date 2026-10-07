@@ -8,7 +8,7 @@
     },
     "title": {
       "type": "string",
-      "description": "The question text shown to the user (e.g. 'How many loads did you complete today?')"
+      "description": "The question text shown to the user (e.g. 'How many loads did you complete today?'). When is_ai_generated is true, this is used as the setup label/fallback and the user-facing text is regenerated daily from ai_topic."
     },
     "question_key": {
       "type": "string",
@@ -56,6 +56,15 @@
       "type": "boolean",
       "default": true,
       "description": "Whether this question is currently shown in check-ins"
+    },
+    "is_ai_generated": {
+      "type": "boolean",
+      "default": false,
+      "description": "When true, the user-facing question text is regenerated daily by AI from ai_topic instead of using the static title. The title is still used as the setup label and fallback."
+    },
+    "ai_topic": {
+      "type": "string",
+      "description": "Topic/prompt the AI uses to generate a fresh question text each day (only used when is_ai_generated is true)."
     },
     "created_by_email": {
       "type": "string",

@@ -41,6 +41,7 @@ import {
   BarChart3,
   ToggleLeft,
   AlertCircle,
+  Sparkles,
 } from "lucide-react";
 import CheckInLookbackSetting from "@/components/performance-mgmt/CheckInLookbackSetting";
 
@@ -90,6 +91,8 @@ const emptyForm = {
   is_required: false,
   display_order: 0,
   is_active: true,
+  is_ai_generated: false,
+  ai_topic: "",
 };
 
 export default function CheckInSetupTab({ user }) {
@@ -103,6 +106,8 @@ export default function CheckInSetupTab({ user }) {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState(null);
+  const [aiAssistTopic, setAiAssistTopic] = useState("");
+  const [aiAssistLoading, setAiAssistLoading] = useState(false);
 
   const loadQuestions = useCallback(async () => {
     setLoading(true);
@@ -130,8 +135,39 @@ export default function CheckInSetupTab({ user }) {
       ...emptyForm,
       display_order: questions.length,
     });
+    setAiAssistTopic("");
     setFormError(null);
     setDialogOpen(true);
+  };
+
+  const handleAiAssist = async () => {
+    if (!aiAssistTopic.trim()) return;
+    setAiAssistLoading(true);
+    setFormError(null);
+    try {
+      const res = await base44.functions.invoke("aiCheckInQuestion", {
+        action: "suggest",
+        topic: aiAssistTopic.trim(),
+        response_type: form.response_type,
+      });
+      const s = res.data?.suggestion;
+      if (s?.title) {
+        setForm((f) => ({
+          ...f,
+          title: s.title,
+          response_type: s.response_type || f.response_type,
+          unit_label:
+            s.response_type === "number"
+              ? s.unit_label || f.unit_label
+              : "",
+          question_key: f.question_key || slugify(s.title),
+        }));
+      }
+    } catch (e) {
+      setFormError(e.message || "AI assist failed");
+    } finally {
+      setAiAssistLoading(false);
+    }
   };
 
   const openEdit = (q) => {
@@ -146,7 +182,10 @@ export default function CheckInSetupTab({ user }) {
       is_required: !!q.is_required,
       display_order: q.display_order ?? 0,
       is_active: q.is_active !== false,
+      is_ai_generated: !!q.is_ai_generated,
+      ai_topic: q.ai_topic || "",
     });
+    setAiAssistTopic("");
     setFormError(null);
     setDialogOpen(true);
   };
@@ -154,6 +193,10 @@ export default function CheckInSetupTab({ user }) {
   const handleSave = async () => {
     if (!form.title.trim()) {
       setFormError("Question text is required.");
+      return;
+    }
+    if (form.is_ai_generated && !form.ai_topic.trim()) {
+      setFormError("Enter a daily topic for AI-generated questions.");
       return;
     }
     const key = form.question_key.trim() || slugify(form.title);
@@ -173,6 +216,8 @@ export default function CheckInSetupTab({ user }) {
       is_required: form.is_required,
       display_order: Number(form.display_order) || 0,
       is_active: form.is_active,
+      is_ai_generated: form.is_ai_generated,
+      ai_topic: form.is_ai_generated ? form.ai_topic.trim() : "",
     };
     try {
       if (editingId) {
@@ -325,6 +370,12 @@ export default function CheckInSetupTab({ user }) {
                               Inactive
                             </span>
                           )}
+                          {q.is_ai_generated && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#0202ff] bg-[#0202ff]/10 border border-[#0202ff]/20 rounded px-1.5 py-0.5">
+                              <Sparkles className="w-2.5 h-2.5" />
+                              AI daily
+                            </span>
+                          )}
                         </div>
                         <div className="flex items-center gap-2 flex-wrap mt-1.5">
                           <span className="inline-flex items-center gap-1 text-[10px] font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded px-1.5 py-0.5">
@@ -408,8 +459,44 @@ export default function CheckInSetupTab({ user }) {
           </DialogHeader>
 
           <div className="space-y-4 py-2">
+            {/* AI Assist */}
+            <div className="rounded-lg border border-[#0202ff]/20 bg-[#0202ff]/5 p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-[#0202ff]" />
+                <p className="text-xs font-medium text-foreground">AI Assist</p>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Describe what you want to ask about, and AI will draft the question, pick a response type, and suggest a unit.
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  value={aiAssistTopic}
+                  onChange={(e) => setAiAssistTopic(e.target.value)}
+                  placeholder="e.g. warehouse loads completed per shift"
+                  className="text-sm"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAiAssist}
+                  disabled={aiAssistLoading || !aiAssistTopic.trim()}
+                  className="flex-shrink-0"
+                >
+                  {aiAssistLoading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3.5 h-3.5 mr-1" />
+                  )}
+                  Draft
+                </Button>
+              </div>
+            </div>
+
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Question text</Label>
+              <Label className="text-xs font-medium">
+                {form.is_ai_generated ? "Question label (setup)" : "Question text"}
+              </Label>
               <Textarea
                 value={form.title}
                 onChange={(e) =>
@@ -419,11 +506,56 @@ export default function CheckInSetupTab({ user }) {
                     question_key: f.question_key || slugify(e.target.value),
                   }))
                 }
-                placeholder="How many loads did you complete today?"
+                placeholder={
+                  form.is_ai_generated
+                    ? "Daily safety check (shown in setup)"
+                    : "How many loads did you complete today?"
+                }
                 rows={2}
                 className="text-sm resize-none"
               />
+              {form.is_ai_generated && (
+                <p className="text-[11px] text-muted-foreground">
+                  Users see a fresh AI-generated question each day from the topic below. This label is for the setup list and fallback.
+                </p>
+              )}
             </div>
+
+            <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
+              <div>
+                <p className="text-sm font-medium flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-[#0202ff]" />
+                  Regenerate daily with AI
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  AI writes a fresh question each day from a topic, just like the standard check-in measures.
+                </p>
+              </div>
+              <Switch
+                checked={form.is_ai_generated}
+                onCheckedChange={(v) =>
+                  setForm((f) => ({ ...f, is_ai_generated: v }))
+                }
+              />
+            </div>
+
+            {form.is_ai_generated && (
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Daily topic</Label>
+                <Textarea
+                  value={form.ai_topic}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, ai_topic: e.target.value }))
+                  }
+                  placeholder="e.g. safety near-misses observed on the warehouse floor"
+                  rows={2}
+                  className="text-sm resize-none"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  The AI generates a new question each day from this topic, varied day to day.
+                </p>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">

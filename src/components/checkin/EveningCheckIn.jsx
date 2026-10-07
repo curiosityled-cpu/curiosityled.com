@@ -248,6 +248,13 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
   const [editMode, setEditMode] = useState(false);
   const [editStep, setEditStep] = useState(1);
   const { questions: customQs } = useCustomCheckInQuestions("evening");
+  // AI-generated custom question texts (keyed by question_key) to persist in
+  // questions_used so history shows the exact text shown that day.
+  const aiQuestionTexts = Object.fromEntries(
+    (customQs || [])
+      .filter((q) => q.is_ai_generated && q.title)
+      .map((q) => [q.question_key, q.title])
+  );
   const [customAnswers, setCustomAnswers] = useState(() => todayRecord?.custom_answers || {});
   const [customPending, setCustomPending] = useState(false);
 
@@ -352,8 +359,8 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
       entityPayload.load_score = scores.load; entityPayload.load_note = notes.load;
       entityPayload.growth_score = scores.growth; entityPayload.growth_note = notes.growth;
     }
-    if (questions) {
-      entityPayload.questions_used = questions;
+    if (questions || Object.keys(aiQuestionTexts).length) {
+      entityPayload.questions_used = { ...(questions || {}), ...aiQuestionTexts };
     }
     if (customQs.length > 0) {
       entityPayload.custom_answers = customAnswers;
@@ -378,7 +385,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
         load_score: scores.load, load_note: notes.load,
         growth_score: scores.growth, growth_note: notes.growth,
         big3_priorities: big3Priorities,
-        questions_used: questions || {},
+        questions_used: { ...(questions || {}), ...aiQuestionTexts },
       };
       if (todayRecord?.id) {
         await base44.entities.DailyCheckIn.update(todayRecord.id, scorePayload);

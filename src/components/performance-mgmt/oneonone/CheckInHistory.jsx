@@ -97,6 +97,8 @@ const QUESTION_KEYS = [
 function QuestionsUsed({ questions }) {
   const entries = Object.entries(questions || {});
   if (entries.length === 0) return null;
+  const measureKeys = new Set(QUESTION_KEYS.map((m) => m.key));
+  const customEntries = entries.filter(([k]) => !measureKeys.has(k));
   return (
     <div className="mt-2 pt-2 border-t border-dashed border-gray-100">
       <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">
@@ -119,6 +121,17 @@ function QuestionsUsed({ questions }) {
             </div>
           );
         })}
+        {customEntries.map(([k, text]) => (
+          <div key={k} className="flex items-start gap-1.5 text-[11px]">
+            <span
+              className="w-2 h-2 rounded-full flex-shrink-0 mt-1"
+              style={{ backgroundColor: "#0202ff" }}
+            />
+            <span className="text-gray-600">
+              <span className="font-medium text-gray-700">Custom:</span> {text}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -120,6 +120,13 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail, mea
   const [editMode, setEditMode] = useState(false);
   const [editStep, setEditStep] = useState(1);
   const { questions: customQs } = useCustomCheckInQuestions("morning");
+  // AI-generated custom question texts (keyed by question_key) to persist in
+  // questions_used so history shows the exact text shown that day.
+  const aiQuestionTexts = Object.fromEntries(
+    (customQs || [])
+      .filter((q) => q.is_ai_generated && q.title)
+      .map((q) => [q.question_key, q.title])
+  );
   const [customAnswers, setCustomAnswers] = useState(() => todayRecord?.custom_answers || {});
   const [customPending, setCustomPending] = useState(false);
 
@@ -238,7 +245,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail, mea
       load_score: scores.load, load_note: notes.load,
       growth_score: scores.growth, growth_note: notes.growth,
       ...(customQs.length > 0 ? { custom_answers: customAnswers } : {}),
-      questions_used: questions || {},
+      questions_used: { ...(questions || {}), ...aiQuestionTexts },
     };
 
     // Primary: direct entity save (most reliable, bypasses backend function RLS issues)
@@ -272,7 +279,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail, mea
       focus_score: scores.focus, focus_note: notes.focus,
       load_score: scores.load, load_note: notes.load,
       growth_score: scores.growth, growth_note: notes.growth,
-      questions_used: questions || {},
+      questions_used: { ...(questions || {}), ...aiQuestionTexts },
     };
     try {
       if (todayRecord?.id) {
