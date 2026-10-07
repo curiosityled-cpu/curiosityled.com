@@ -1,0 +1,164 @@
+{
+  "name": "ICRoster",
+  "type": "object",
+  "description": "Roster of non-user frontline individual contributors (ICs) who submit daily check-ins via Microsoft Teams. These staff are not registered app users; their Teams identity is matched here so the bot can route their check-in submissions into DailyCheckIn.",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Full name of the frontline staff member"
+    },
+    "email": {
+      "type": "string",
+      "description": "Email used as user_email on DailyCheckIn records. Should match the Teams account email/UPN for identity matching."
+    },
+    "teams_user_id": {
+      "type": "string",
+      "description": "Azure AD object ID or UPN for the Teams account. Used as a fallback identity match if email differs."
+    },
+    "teams_conversation_id": {
+      "type": "string",
+      "description": "Teams conversation ID, captured automatically when the IC first messages the bot. Enables proactive check-in cards."
+    },
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this IC belongs to"
+    },
+    "team": {
+      "type": "string",
+      "description": "Team, department, or shift label (e.g. 'Warehouse - Shift A')"
+    },
+    "manager_email": {
+      "type": "string",
+      "description": "Email of the IC's manager (an app user who can view this IC's check-in data)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this IC is currently active and should receive check-in prompts"
+    },
+    "check_in_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this IC should receive daily check-in cards via Teams"
+    },
+    "last_check_in_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of the most recent check-in submitted by this IC"
+    },
+    "created_by_email": {
+      "type": "string",
+      "description": "Email of the admin who added this IC to the roster"
+    }
+  },
+  "required": [
+    "name",
+    "email",
+    "client_id"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.client_id": "{{user.data.client_id}}"
+        },
+        {
+          "data.manager_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.created_by_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.created_by_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

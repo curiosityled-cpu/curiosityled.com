@@ -23,6 +23,7 @@
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { processTurn, renderMenuCard, getAllFlows } from '../../shared/conversationStateMachine.ts';
+import { saveICCheckIn, getMeasuresForClient, getActiveCustomQuestions, buildICCheckInCard } from '../../shared/icCheckIn.ts';
 
 // ── Inline lightweight orchestrator (freeform fallback) ───────────────────
 // atreusOrchestrator requires auth.me() which doesn't work in service-role
@@ -254,14 +255,34 @@ Deno.serve(async (req) => {
     const matchedUsers = await serviceBase44.entities.User.filter({
       email: String(teamsUserEmail).toLowerCase()
     }).catch(() => []);
+
+    // Not a registered app user — check the IC roster (non-user frontline staff)
+    let isIC = false;
+    let icRecord: any = null;
     if (matchedUsers.length === 0) {
-      return Response.json({
-        type: 'message',
-        text: 'Unable to verify your identity. Please ensure your Teams account email matches your registered app email.'
-      });
+      let icMatches = await serviceBase44.entities.ICRoster.filter({
+        email: String(teamsUserEmail).toLowerCase(), is_active: true,
+      }).catch(() => []);
+      if (icMatches.length === 0 && body?.from?.aadObjectId) {
+        icMatches = await serviceBase44.entities.ICRoster.filter({
+          teams_user_id: body.from.aadObjectId, is_active: true,
+        }).catch(() => []);
+      }
+      if (icMatches.length === 0) {
+        return Response.json({
+          type: 'message',
+          text: 'Unable to verify your identity. Please ensure your Teams account email matches your registered app email.'
+        });
+      }
+      isIC = true;
+      icRecord = icMatches[0];
+      // Capture the conversation id so future prompts can be proactively messaged
+      if (conversationId && icRecord.teams_conversation_id !== conversationId) {
+        await serviceBase44.entities.ICRoster.update(icRecord.id, { teams_conversation_id: conversationId }).catch(() => {});
+      }
     }
 
-    const userEmail = String(teamsUserEmail).toLowerCase();
+    const userEmail = isIC ? icRecord.email : String(teamsUserEmail).toLowerCase();
     const activityType = body?.type;
     const action = body?.value?.action;
     const messageText = body?.text || body?.value?.user_message || '';
@@ -273,6 +294,29 @@ Deno.serve(async (req) => {
     });
 
     const textResponse = (text: string) => Response.json({ type: 'message', text });
+
+    // ── IC (non-user frontline staff) check-in handling ──────────────────────
+    if (isIC && icRecord) {
+      if (action === 'ic_checkin_submit') {
+        try {
+          const answers = body?.value || {};
+          const checkInType = answers.check_in_type || 'morning';
+          await saveICCheckIn(serviceBase44, icRecord, answers, checkInType);
+          return textResponse(`✅ ${checkInType === 'morning' ? 'Morning' : 'Evening'} check-in saved. Thanks, ${icRecord.name?.split(' ')[0] || ''}!`);
+        } catch (e) {
+          return textResponse('Could not save your check-in. Please try again.');
+        }
+      }
+      // Any other message from an IC — send a fresh check-in card
+      try {
+        const client = icRecord.client_id ? await serviceBase44.entities.Client.get(icRecord.client_id).catch(() => null) : null;
+        const measures = getMeasuresForClient(client);
+        const customQs = await getActiveCustomQuestions(serviceBase44, icRecord.client_id, '', 'morning');
+        return cardResponse(buildICCheckInCard(icRecord, measures, customQs, 'morning'));
+      } catch {
+        return textResponse('Send "check-in" to start your daily check-in.');
+      }
+    }
 
     // ── Freeform message (no action) ───────────────────────────────────────
     if (activityType === 'message' && !action) {
