@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Users, Search, Download, UserPlus, Loader2, Shield,
   ChevronDown, ChevronUp, Upload, Plus, Edit, Trash2,
-  Lock, Unlock, AlertTriangle, MoreVertical, Filter, X
+  Lock, Unlock, AlertTriangle, MoreVertical, Filter, X,
+  Link2, Send, Pencil, MessageSquare, UserCog
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/components/useAuth";
@@ -29,8 +30,10 @@ import CreateRoleModal from "../components/roles/CreateRoleModal";
 import BulkRoleActions from "../components/roles/BulkRoleActions";
 import PermissionDependencyViewer from "../components/roles/PermissionDependencyViewer";
 import ProvisionUsersCard from "../components/provisioning/ProvisionUsersCard";
-import ICRosterManager from "@/components/performance-mgmt/ICRosterManager";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
+import { useStaffRoster } from "@/hooks/useStaffRoster";
+import StaffEditDialog from "@/components/users/StaffEditDialog";
+import ICRosterCSVUpload from "@/components/users/ICRosterCSVUpload";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -113,6 +116,21 @@ function UserManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 50;
 
+  // Non-user frontline staff (ICRoster) — roster records, never app accounts.
+  const clientId = currentUser?.data?.client_id || currentUser?.client_id;
+  const {
+    roster: staffRoster,
+    reload: reloadStaff,
+    removeStaff,
+    toggleField: toggleStaffField,
+    copyWebLink: copyStaffLink,
+    sendCards: sendStaffCards,
+  } = useStaffRoster(clientId);
+  const [showStaffDialog, setShowStaffDialog] = useState(false);
+  const [editingStaff, setEditingStaff] = useState(null);
+  const [showStaffCsvUpload, setShowStaffCsvUpload] = useState(false);
+  const [sendingCards, setSendingCards] = useState(false);
+
   const [filters, setFilters] = useState({
     role: 'all', department: 'all', status: 'all', accountStatus: 'all',
     expirationStatus: 'all', client: 'all', partner: 'all', userType: 'all',
@@ -132,6 +150,7 @@ function UserManagement() {
     try {
       const response = await base44.functions.invoke('listAllUsers');
       if (response.data?.success) setUsers(response.data.users);
+      reloadStaff();
 
       const [clientsList, partnersList, addonRolesList, certsList, extAssessmentsList] = await Promise.all([
         base44.entities.Client.list('-created_date'),
@@ -263,6 +282,20 @@ function UserManagement() {
     } catch { toast.error('Failed to delete user'); }
   };
 
+  const handleDeleteStaff = async (ic) => {
+    if (!confirm(`Remove ${ic.name} from the staff roster?`)) return;
+    try {
+      await removeStaff(ic);
+      toast.success('Staff removed');
+    } catch { toast.error('Failed to remove staff'); }
+  };
+
+  const handleSendCards = async () => {
+    setSendingCards(true);
+    try { await sendStaffCards('morning'); }
+    finally { setSendingCards(false); }
+  };
+
   const getOrganizationName = (user) => {
     if (user.app_role === 'Platform Admin') return 'Platform';
     if (user.client_id) return clients.find(c => c.id === user.client_id)?.name || 'Unknown';
@@ -270,8 +303,22 @@ function UserManagement() {
     return '—';
   };
 
+  const staffRows = useMemo(() => staffRoster.map(ic => ({
+    __type: 'staff',
+    id: `ic_${ic.id}`,
+    _ic: ic,
+    full_name: ic.name,
+    email: ic.email,
+    app_role: 'Staff',
+    account_status: ic.is_active === false ? 'suspended' : 'active',
+    current_role: ic.team || '',
+    client_id: ic.client_id,
+    last_login: ic.last_check_in_at || null,
+    created_date: ic.created_date,
+  })), [staffRoster]);
+
   const processedUsers = useMemo(() => {
-    let filtered = users;
+    let filtered = [...users, ...staffRows];
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(u =>
@@ -281,12 +328,14 @@ function UserManagement() {
         u.department?.toLowerCase().includes(term)
       );
     }
+    if (filters.userType === 'user') filtered = filtered.filter(u => u.__type !== 'staff');
+    if (filters.userType === 'staff') filtered = filtered.filter(u => u.__type === 'staff');
     if (filters.role !== 'all') filtered = filtered.filter(u => u.app_role === filters.role);
     if (filters.accountStatus !== 'all') filtered = filtered.filter(u => (u.account_status || 'active') === filters.accountStatus);
     if (filters.client !== 'all') filtered = filtered.filter(u => u.client_id === filters.client);
     if (filters.partner !== 'all') filtered = filtered.filter(u => u.partner_id === filters.partner || clients.find(c => c.id === u.client_id)?.partner_id === filters.partner);
-    if (filters.status === 'active') { const ago = new Date(Date.now() - 30 * 864e5); filtered = filtered.filter(u => new Date(u.updated_date) > ago); }
-    if (filters.status === 'inactive') { const ago = new Date(Date.now() - 30 * 864e5); filtered = filtered.filter(u => new Date(u.updated_date) <= ago); }
+    if (filters.status === 'active') { const ago = new Date(Date.now() - 30 * 864e5); filtered = filtered.filter(u => u.__type === 'staff' || (u.updated_date && new Date(u.updated_date) > ago)); }
+    if (filters.status === 'inactive') { const ago = new Date(Date.now() - 30 * 864e5); filtered = filtered.filter(u => u.__type !== 'staff' && u.updated_date && new Date(u.updated_date) <= ago); }
 
     return [...filtered].sort((a, b) => {
       let aV = a[sortConfig.key], bV = b[sortConfig.key];
@@ -294,7 +343,7 @@ function UserManagement() {
       if (typeof aV === 'string') { aV = aV.toLowerCase(); bV = bV?.toLowerCase(); }
       return sortConfig.direction === 'asc' ? (aV > bV ? 1 : -1) : (aV < bV ? 1 : -1);
     });
-  }, [users, searchTerm, filters, sortConfig, clients, partners]);
+  }, [users, staffRows, searchTerm, filters, sortConfig, clients, partners]);
 
   const paginatedUsers = useMemo(() => {
     const start = (currentPage - 1) * usersPerPage;
@@ -313,7 +362,7 @@ function UserManagement() {
 
   const handleSort = (key) => setSortConfig(prev => ({ key, direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc' }));
 
-  const handleSelectAll = (checked) => setSelectedUsers(checked ? paginatedUsers.map(u => u.id) : []);
+  const handleSelectAll = (checked) => setSelectedUsers(checked ? paginatedUsers.filter(u => u.__type !== 'staff').map(u => u.id) : []);
   const handleSelectUser = (userId, checked) => setSelectedUsers(prev => checked ? [...prev, userId] : prev.filter(id => id !== userId));
 
   const handleExportCSV = () => {
@@ -399,7 +448,7 @@ function UserManagement() {
     <>
     <MVPPageLayout
       title="User Management"
-      subtitle={`${statistics.total} total users`}
+      subtitle={`${statistics.total} users · ${staffRoster.length} staff`}
       action={
         <div className="flex items-center gap-2">
           <DropdownMenu>
@@ -416,10 +465,19 @@ function UserManagement() {
                 <Edit className="w-4 h-4 mr-2" /> Bulk Edit
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setShowBulkUpload(true)}>
-                <Upload className="w-4 h-4 mr-2" /> Upload CSV
+                <Upload className="w-4 h-4 mr-2" /> Upload Users CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowStaffCsvUpload(true)}>
+                <Upload className="w-4 h-4 mr-2" /> Upload Staff CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSendCards} disabled={sendingCards || staffRoster.length === 0}>
+                {sendingCards ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />} Send check-ins to staff
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <Button size="sm" variant="outline" onClick={() => { setEditingStaff(null); setShowStaffDialog(true); }}>
+            <UserCog className="w-4 h-4 mr-2" /> Add Staff
+          </Button>
           <Button size="sm" onClick={() => setShowInviteModal(true)} style={{ backgroundColor: '#0202ff' }} className="hover:opacity-90">
             <UserPlus className="w-4 h-4 mr-2" /> Invite User
           </Button>
@@ -433,7 +491,7 @@ function UserManagement() {
 
       {/* Tabs */}
       <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit overflow-x-auto">
-        {[{ id: 'users', label: 'Users', icon: Users }, { id: 'frontline', label: 'Frontline Staff', icon: UserPlus }, { id: 'roles', label: 'Roles & Permissions', icon: Shield }].map(tab => {
+        {[{ id: 'users', label: 'Users', icon: Users }, { id: 'roles', label: 'Roles & Permissions', icon: Shield }].map(tab => {
           const Icon = tab.icon;
           return (
             <button
@@ -489,7 +547,9 @@ function UserManagement() {
               {/* Quick chips */}
               <div className="flex flex-wrap gap-1.5">
                 {[
-                  { label: 'All', key: 'accountStatus', value: 'all' },
+                  { label: 'All people', key: 'userType', value: 'all' },
+                  { label: 'Users', key: 'userType', value: 'user' },
+                  { label: 'Staff', key: 'userType', value: 'staff' },
                   { label: 'Active', key: 'accountStatus', value: 'active' },
                   { label: 'Pending', key: 'accountStatus', value: 'pending_activation' },
                   { label: 'Suspended', key: 'accountStatus', value: 'suspended' },
@@ -519,6 +579,7 @@ function UserManagement() {
                     <SelectTrigger className="h-8 text-xs w-36"><SelectValue placeholder="All Roles" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Roles</SelectItem>
+                      <SelectItem value="Staff">Staff</SelectItem>
                       {Object.entries(FRIENDLY_ROLES).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -548,7 +609,7 @@ function UserManagement() {
               <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Checkbox
-                    checked={selectedUsers.length > 0 && selectedUsers.length === paginatedUsers.length}
+                    checked={selectedUsers.length > 0 && selectedUsers.length === paginatedUsers.filter(u => u.__type !== 'staff').length}
                     onCheckedChange={handleSelectAll}
                   />
                   <span className="text-sm font-medium text-gray-700">
@@ -586,6 +647,68 @@ function UserManagement() {
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {paginatedUsers.map(user => {
+                      if (user.__type === 'staff') {
+                        const ic = user._ic;
+                        return (
+                          <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-4 py-2.5"></td>
+                            <td className="px-4 py-2.5">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-xs font-bold text-amber-700">{(user.full_name || '?')[0].toUpperCase()}</span>
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900">{user.full_name}</p>
+                                  <p className="text-xs text-gray-400">Non-user staff</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-2.5 text-gray-500 text-xs">{user.email}</td>
+                            <td className="px-4 py-2.5">
+                              <div className="flex flex-col gap-0.5">
+                                <span className="text-xs text-gray-700">{ic.team || '—'}</span>
+                                <span className="text-xs text-gray-400">{ic.manager_email ? `mgr: ${ic.manager_email}` : '—'}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-2.5">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#0202ff]/10 text-[#0202ff]">Staff</span>
+                            </td>
+                            <td className="px-4 py-2.5">
+                              <div className="flex flex-col gap-1">
+                                {ic.teams_conversation_id ? (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                                    <MessageSquare className="w-3 h-3" /> Teams
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] font-medium text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">Web link</span>
+                                )}
+                                {!ic.is_active && (
+                                  <span className="text-[10px] font-medium text-gray-500 bg-gray-100 border border-gray-200 rounded-full px-2 py-0.5">Inactive</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-4 py-2.5 text-xs text-gray-400">
+                              {ic.last_check_in_at ? format(new Date(ic.last_check_in_at), 'MMM d, yyyy') : 'Never'}
+                            </td>
+                            <td className="px-4 py-2.5">
+                              <div className="flex items-center gap-0.5">
+                                <button onClick={() => copyStaffLink(ic)} className="p-1.5 rounded-md hover:bg-gray-100 text-gray-500" title="Copy web check-in link">
+                                  <Link2 className="w-3.5 h-3.5" />
+                                </button>
+                                <button onClick={() => toggleStaffField(ic, 'check_in_enabled')} className="p-1.5 rounded-md hover:bg-gray-100 text-gray-500" title={ic.check_in_enabled ? 'Pause check-ins' : 'Enable check-ins'}>
+                                  <Send className={`w-3.5 h-3.5 ${ic.check_in_enabled ? 'text-[#0202ff]' : ''}`} />
+                                </button>
+                                <button onClick={() => { setEditingStaff(ic); setShowStaffDialog(true); }} className="p-1.5 rounded-md hover:bg-gray-100 text-gray-500" title="Edit">
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <button onClick={() => handleDeleteStaff(ic)} className="p-1.5 rounded-md hover:bg-red-50 text-red-500" title="Remove">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      }
                       const statusCfg = STATUS_CONFIG[user.account_status || 'active'] || STATUS_CONFIG.active;
                       return (
                         <tr key={user.id} className="hover:bg-gray-50 transition-colors">
@@ -750,23 +873,6 @@ function UserManagement() {
           </div>
         )}
 
-        {activeTab === 'frontline' && (
-          <div className="space-y-4">
-            <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <div className="flex items-start gap-2 mb-1">
-                <UserPlus className="w-4 h-4 text-[#0202ff] mt-0.5" />
-                <div>
-                <p className="text-sm font-semibold text-gray-900">Frontline staff (non-users)</p>
-                <p className="text-xs text-gray-500 mt-0.5 max-w-2xl">
-                  These staff complete daily check-ins via Microsoft Teams or a private web link — they are never invited into the platform.
-                  They may also exist in your HRIS, LMS, or Microsoft tenant; use the HRIS Employee ID to reconcile. Add them individually or upload a CSV.
-                </p>
-                </div>
-              </div>
-            </div>
-            <ICRosterManager user={currentUser} />
-          </div>
-        )}
     </MVPPageLayout>
 
       {/* Modals & Panels */}
@@ -825,6 +931,23 @@ function UserManagement() {
       <BulkRoleAssignment open={showBulkRoleAssignment} onClose={() => setShowBulkRoleAssignment(false)} onSuccess={loadData} />
 
       {showBulkEditCSV && <BulkUserEditCSV users={users} onSuccess={loadData} onClose={() => setShowBulkEditCSV(false)} />}
+
+      <StaffEditDialog
+        open={showStaffDialog}
+        onOpenChange={setShowStaffDialog}
+        editingIC={editingStaff}
+        clientId={clientId}
+        createdByEmail={currentUser?.email}
+        onSaved={() => { setEditingStaff(null); reloadStaff(); }}
+      />
+
+      <ICRosterCSVUpload
+        open={showStaffCsvUpload}
+        onClose={() => setShowStaffCsvUpload(false)}
+        onDone={() => reloadStaff()}
+        clientId={clientId}
+        createdByEmail={currentUser?.email}
+      />
     </>
   );
 }
