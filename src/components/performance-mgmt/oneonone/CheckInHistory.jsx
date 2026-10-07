@@ -86,6 +86,44 @@ function CustomAnswers({ answers }) {
   );
 }
 
+const QUESTION_KEYS = [
+  { key: "energy", label: "Energy", color: "#0202ff" },
+  { key: "confidence", label: "Confidence", color: "#22c55e" },
+  { key: "focus", label: "Focus", color: "#f97316" },
+  { key: "load", label: "Load", color: "#eab308" },
+  { key: "growth", label: "Growth", color: "#8b5cf6" },
+];
+
+function QuestionsUsed({ questions }) {
+  const entries = Object.entries(questions || {});
+  if (entries.length === 0) return null;
+  return (
+    <div className="mt-2 pt-2 border-t border-dashed border-gray-100">
+      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">
+        Questions
+      </p>
+      <div className="space-y-1">
+        {QUESTION_KEYS.map((m) => {
+          const text = questions?.[m.key];
+          if (!text) return null;
+          return (
+            <div key={m.key} className="flex items-start gap-1.5 text-[11px]">
+              <span
+                className="w-2 h-2 rounded-full flex-shrink-0 mt-1"
+                style={{ backgroundColor: m.color }}
+              />
+              <span className="text-gray-600">
+                <span className="font-medium text-gray-700">{m.label}:</span>{" "}
+                {text}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function groupByDate(records) {
   const map = new Map();
   for (const r of records) {
@@ -192,6 +230,7 @@ function PersonTimeline({ personName, records, lookback, isSelf, onAdd, onEdit }
                         {eveningDone ? "Evening done" : "Evening missed"}
                       </span>
                     </div>
+                    <QuestionsUsed questions={record.questions_used} />
                     <CustomAnswers answers={record.custom_answers} />
                   </>
                 ) : (
@@ -230,6 +269,7 @@ function PersonTimeline({ personName, records, lookback, isSelf, onAdd, onEdit }
                       />
                     ))}
                   </div>
+                  <QuestionsUsed questions={r.questions_used} />
                   <CustomAnswers answers={r.custom_answers} />
                 </CardContent>
               </Card>
@@ -459,6 +499,7 @@ export default function CheckInHistory({ user }) {
                               />
                             ))}
                           </div>
+                          <QuestionsUsed questions={r.questions_used} />
                           <CustomAnswers answers={r.custom_answers} />
                         </CardContent>
                       </Card>

@@ -352,6 +352,9 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
       entityPayload.load_score = scores.load; entityPayload.load_note = notes.load;
       entityPayload.growth_score = scores.growth; entityPayload.growth_note = notes.growth;
     }
+    if (questions) {
+      entityPayload.questions_used = questions;
+    }
     if (customQs.length > 0) {
       entityPayload.custom_answers = customAnswers;
     }
@@ -375,6 +378,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
         load_score: scores.load, load_note: notes.load,
         growth_score: scores.growth, growth_note: notes.growth,
         big3_priorities: big3Priorities,
+        questions_used: questions || {},
       };
       if (todayRecord?.id) {
         await base44.entities.DailyCheckIn.update(todayRecord.id, scorePayload);

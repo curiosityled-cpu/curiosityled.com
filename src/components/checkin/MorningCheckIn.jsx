@@ -238,6 +238,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail, mea
       load_score: scores.load, load_note: notes.load,
       growth_score: scores.growth, growth_note: notes.growth,
       ...(customQs.length > 0 ? { custom_answers: customAnswers } : {}),
+      questions_used: questions || {},
     };
 
     // Primary: direct entity save (most reliable, bypasses backend function RLS issues)
@@ -271,6 +272,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail, mea
       focus_score: scores.focus, focus_note: notes.focus,
       load_score: scores.load, load_note: notes.load,
       growth_score: scores.growth, growth_note: notes.growth,
+      questions_used: questions || {},
     };
     try {
       if (todayRecord?.id) {
