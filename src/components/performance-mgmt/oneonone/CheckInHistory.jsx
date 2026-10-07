@@ -1,10 +1,10 @@
 /**
- * CheckInHistory — daily check-in history for the current user and their team.
+ * CheckInHistory — daily check-in history for the current user and their team,
+ * shown as a per-person day-by-day timeline over the org's retroactive lookback
+ * window. Completed days show scores; missing days show an "Add check-in"
+ * button so the user can backfill for themselves or a direct report.
  *
- * Replaces the old weekly check-in form view in the Check-ins & 1:1s > Check-In
- * sub-tab. Pulls data from the getCheckInHistory backend function (service
- * role) so managers can see their direct reports' daily check-ins despite
- * owner-only RLS on DailyCheckIn.
+ * "Everyone" filter keeps the grouped completed-check-in list.
  */
 import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
@@ -25,6 +25,7 @@ import {
   Users,
   Filter,
   Pencil,
+  Plus,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -92,8 +93,151 @@ function groupByDate(records) {
     if (!map.has(d)) map.set(d, []);
     map.get(d).push(r);
   }
-  return Array.from(map.entries()).sort((a, b) =>
-    new Date(b[0]) - new Date(a[0])
+  return Array.from(map.entries()).sort((a, b) => new Date(b[0]) - new Date(a[0]));
+}
+
+// Per-person day-by-day timeline over the lookback window.
+function PersonTimeline({ personName, records, lookback, isSelf, onAdd, onEdit }) {
+  const windowDays = Math.max(1, Math.min(lookback, 90) + 1);
+  const dates = Array.from({ length: windowDays }, (_, i) => shiftET(-i));
+  const minDate = shiftET(-Math.max(0, lookback));
+
+  const byDate = new Map();
+  for (const r of records) {
+    if (r.check_in_date && !byDate.has(r.check_in_date)) byDate.set(r.check_in_date, r);
+  }
+  const older = records
+    .filter((r) => r.check_in_date && r.check_in_date < minDate)
+    .sort((a, b) => new Date(b.check_in_date) - new Date(a.check_in_date));
+
+  return (
+    <div className="space-y-5">
+      <p className="text-xs text-muted-foreground">
+        {lookback > 0
+          ? `Showing the last ${lookback} day${lookback === 1 ? "" : "s"} for ${personName}. Missing days can be backfilled.`
+          : `Retroactive check-ins are disabled for this organization.`}
+      </p>
+
+      <div className="space-y-2">
+        {dates.map((date) => {
+          const record = byDate.get(date);
+          const morningDone =
+            record?.morning_completed || record?.check_in_type === "morning";
+          const eveningDone =
+            record?.evening_completed || record?.check_in_type === "evening";
+          return (
+            <Card key={date} className="border border-gray-100 shadow-sm rounded-xl">
+              <CardContent className="p-3.5">
+                <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
+                  <div className="flex items-center gap-2">
+                    <CalendarDays className="w-3.5 h-3.5 text-gray-400" />
+                    <h4 className="text-xs font-semibold text-gray-700">
+                      {format(parseISO(date + "T00:00:00"), "EEEE, MMM d")}
+                    </h4>
+                  </div>
+                  {record ? (
+                    isSelf ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs gap-1"
+                        onClick={() => onEdit(record)}
+                      >
+                        <Pencil className="w-3 h-3" /> Edit
+                      </Button>
+                    ) : null
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs gap-1"
+                      onClick={() => onAdd(date)}
+                    >
+                      <Plus className="w-3 h-3" /> Add check-in
+                    </Button>
+                  )}
+                </div>
+
+                {record ? (
+                  <>
+                    <div className="flex flex-wrap gap-x-4 gap-y-2">
+                      {MEASURES.map((m) => (
+                        <ScorePill
+                          key={m.key}
+                          label={m.label}
+                          score={record[m.key]}
+                          color={m.color}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span
+                        className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full ${
+                          morningDone
+                            ? "bg-amber-50 text-amber-700 border border-amber-200"
+                            : "bg-gray-50 text-gray-400 border border-gray-200"
+                        }`}
+                      >
+                        <Sunrise className="w-3 h-3" />
+                        {morningDone ? "Morning done" : "Morning missed"}
+                      </span>
+                      <span
+                        className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full ${
+                          eveningDone
+                            ? "bg-indigo-50 text-indigo-700 border border-indigo-200"
+                            : "bg-gray-50 text-gray-400 border border-gray-200"
+                        }`}
+                      >
+                        <Moon className="w-3 h-3" />
+                        {eveningDone ? "Evening done" : "Evening missed"}
+                      </span>
+                    </div>
+                    <CustomAnswers answers={record.custom_answers} />
+                  </>
+                ) : (
+                  <p className="text-xs text-gray-400">
+                    No check-in recorded for this day.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {older.length > 0 && (
+        <div>
+          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+            Earlier check-ins
+          </h4>
+          <div className="space-y-2">
+            {older.map((r) => (
+              <Card key={r.id} className="border border-gray-100 shadow-sm rounded-xl">
+                <CardContent className="p-3.5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CalendarDays className="w-3.5 h-3.5 text-gray-400" />
+                    <span className="text-xs font-semibold text-gray-700">
+                      {format(parseISO(r.check_in_date + "T00:00:00"), "MMM d, yyyy")}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-2">
+                    {MEASURES.map((m) => (
+                      <ScorePill
+                        key={m.key}
+                        label={m.label}
+                        score={r[m.key]}
+                        color={m.color}
+                      />
+                    ))}
+                  </div>
+                  <CustomAnswers answers={r.custom_answers} />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -101,9 +245,9 @@ export default function CheckInHistory({ user }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState(user?.email || "all");
   const [lookback, setLookback] = useState(7);
-  const [editing, setEditing] = useState(null);
+  const [editor, setEditor] = useState(null); // { kind: 'edit'|'add', record?, date?, targetEmail?, targetName? }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -154,24 +298,57 @@ export default function CheckInHistory({ user }) {
   const checkIns = data?.check_ins || [];
   const teamMembers = data?.team_members || [];
   const isManager = data?.is_manager || teamMembers.length > 0;
-
-  const filtered =
-    filter === "all"
-      ? checkIns
-      : checkIns.filter(
-          (c) => (c.owner_email || c.user_email || "").toLowerCase() === filter.toLowerCase()
-        );
-
-  const grouped = groupByDate(filtered);
+  const myEmail = (user?.email || "").toLowerCase();
+  const myName =
+    user?.data?.display_name || user?.full_name || user?.email || "you";
 
   const todayET = shiftET(0);
   const minEditableDate = shiftET(-Math.max(0, lookback));
-  const myEmail = (user?.email || "").toLowerCase();
   const isEditable = (r) => {
     const owner = (r.owner_email || r.user_email || "").toLowerCase();
     if (!owner || owner !== myEmail) return false;
     const d = r.check_in_date || "";
     return d >= minEditableDate && d <= todayET;
+  };
+
+  const isSelfFilter = filter === "all" ? false : filter.toLowerCase() === myEmail;
+  const personName =
+    filter === "all"
+      ? ""
+      : isSelfFilter
+        ? myName
+        : teamMembers.find(
+            (m) => m.email.toLowerCase() === filter.toLowerCase()
+          )?.name || filter;
+
+  const personRecords =
+    filter === "all"
+      ? []
+      : checkIns.filter(
+          (c) =>
+            (c.owner_email || c.user_email || "").toLowerCase() ===
+            filter.toLowerCase()
+        );
+
+  const filtered =
+    filter === "all"
+      ? checkIns
+      : personRecords;
+  const grouped = groupByDate(filtered);
+
+  const openAdd = (date) => {
+    setEditor({
+      kind: "add",
+      date,
+      targetEmail: filter,
+      targetName: personName,
+    });
+  };
+  const openEdit = (record) => {
+    setEditor({
+      kind: "edit",
+      record,
+    });
   };
 
   return (
@@ -181,8 +358,8 @@ export default function CheckInHistory({ user }) {
           <h3 className="font-semibold text-gray-900">Check-In History</h3>
           <p className="text-xs text-gray-500">
             {isManager
-              ? "Daily check-ins from you and your team"
-              : "Your daily check-in history"}
+              ? "Daily check-ins for you and your team — backfill any missed day"
+              : "Your daily check-in history — backfill any missed day"}
           </p>
         </div>
         {isManager && (
@@ -206,112 +383,129 @@ export default function CheckInHistory({ user }) {
         )}
       </div>
 
-      {grouped.length === 0 ? (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
-              <CalendarDays className="w-5 h-5 text-muted-foreground" />
-            </div>
-            <p className="text-sm font-medium text-foreground">
-              No check-ins recorded yet
-            </p>
-            <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-              {isManager
-                ? "Once you and your team start daily check-ins, they'll appear here."
-                : "Complete a morning or evening check-in from My Rhythm to see it here."}
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-5">
-          {grouped.map(([date, rows]) => (
-            <div key={date}>
-              <div className="flex items-center gap-2 mb-2">
-                <CalendarDays className="w-3.5 h-3.5 text-gray-400" />
-                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  {date
-                    ? format(parseISO(date + "T00:00:00"), "EEEE, MMM d, yyyy")
-                    : "Undated"}
-                </h4>
+      {filter === "all" ? (
+        grouped.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+                <CalendarDays className="w-5 h-5 text-muted-foreground" />
               </div>
-              <div className="space-y-2">
-                {rows.map((r) => {
-                  const isMorning = r.check_in_type === "morning";
-                  const ownerName =
-                    r.owner_name ||
-                    r.user_email ||
-                    user?.email ||
-                    "";
-                  return (
-                    <Card key={r.id} className="border border-gray-100 shadow-sm rounded-xl">
-                      <CardContent className="p-3.5">
-                        <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span
-                              className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${
-                                isMorning
-                                  ? "bg-amber-50 text-amber-700 border border-amber-200"
-                                  : "bg-indigo-50 text-indigo-700 border border-indigo-200"
-                              }`}
-                            >
-                              {isMorning ? (
-                                <Sunrise className="w-3 h-3" />
-                              ) : (
-                                <Moon className="w-3 h-3" />
-                              )}
-                              {isMorning ? "Morning" : "Evening"}
-                            </span>
-                            {isManager && (
-                              <span className="inline-flex items-center gap-1 text-[11px] text-gray-500">
-                                <Users className="w-3 h-3" />
-                                {ownerName}
+              <p className="text-sm font-medium text-foreground">
+                No check-ins recorded yet
+              </p>
+              <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+                {isManager
+                  ? "Once you and your team start daily check-ins, they'll appear here."
+                  : "Complete a morning or evening check-in from My Rhythm to see it here."}
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-5">
+            {grouped.map(([date, rows]) => (
+              <div key={date}>
+                <div className="flex items-center gap-2 mb-2">
+                  <CalendarDays className="w-3.5 h-3.5 text-gray-400" />
+                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    {date
+                      ? format(parseISO(date + "T00:00:00"), "EEEE, MMM d, yyyy")
+                      : "Undated"}
+                  </h4>
+                </div>
+                <div className="space-y-2">
+                  {rows.map((r) => {
+                    const isMorning = r.check_in_type === "morning";
+                    const ownerName = r.owner_name || r.user_email || user?.email || "";
+                    return (
+                      <Card key={r.id} className="border border-gray-100 shadow-sm rounded-xl">
+                        <CardContent className="p-3.5">
+                          <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span
+                                className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${
+                                  isMorning
+                                    ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                    : "bg-indigo-50 text-indigo-700 border border-indigo-200"
+                                }`}
+                              >
+                                {isMorning ? <Sunrise className="w-3 h-3" /> : <Moon className="w-3 h-3" />}
+                                {isMorning ? "Morning" : "Evening"}
                               </span>
+                              {isManager && (
+                                <span className="inline-flex items-center gap-1 text-[11px] text-gray-500">
+                                  <Users className="w-3 h-3" />
+                                  {ownerName}
+                                </span>
+                              )}
+                            </div>
+                            {isEditable(r) && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs gap-1"
+                                onClick={() => openEdit(r)}
+                              >
+                                <Pencil className="w-3 h-3" /> Edit
+                              </Button>
                             )}
                           </div>
-                          {isEditable(r) && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 text-xs gap-1"
-                              onClick={() => setEditing(r)}
-                            >
-                              <Pencil className="w-3 h-3" /> Edit
-                            </Button>
-                          )}
-                        </div>
-                        <div className="flex flex-wrap gap-x-4 gap-y-2">
-                          {MEASURES.map((m) => (
-                            <ScorePill
-                              key={m.key}
-                              label={m.label}
-                              score={r[m.key]}
-                              color={m.color}
-                            />
-                          ))}
-                        </div>
-                        <CustomAnswers answers={r.custom_answers} />
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                          <div className="flex flex-wrap gap-x-4 gap-y-2">
+                            {MEASURES.map((m) => (
+                              <ScorePill
+                                key={m.key}
+                                label={m.label}
+                                score={r[m.key]}
+                                color={m.color}
+                              />
+                            ))}
+                          </div>
+                          <CustomAnswers answers={r.custom_answers} />
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )
+      ) : (
+        <PersonTimeline
+          personName={personName}
+          records={personRecords}
+          lookback={lookback}
+          isSelf={isSelfFilter}
+          onAdd={openAdd}
+          onEdit={openEdit}
+        />
       )}
 
-      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+      <Dialog open={!!editor} onOpenChange={(o) => !o && setEditor(null)}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sr-only">
-            <DialogTitle>Edit check-in</DialogTitle>
+            <DialogTitle>
+              {editor?.kind === "edit" ? "Edit check-in" : "Add check-in"}
+            </DialogTitle>
           </DialogHeader>
-          {editing && (
+          {editor?.kind === "edit" && (
             <RetroactiveCheckInCard
-              initialDate={editing.check_in_date}
-              initialType={editing.check_in_type}
+              initialDate={editor.record.check_in_date}
+              initialType={editor.record.check_in_type || "morning"}
               editMode
               onSaved={() => {
-                setEditing(null);
+                setEditor(null);
+                load();
+              }}
+            />
+          )}
+          {editor?.kind === "add" && (
+            <RetroactiveCheckInCard
+              initialDate={editor.date}
+              initialType="morning"
+              targetEmail={editor.targetEmail}
+              targetName={editor.targetName}
+              onSaved={() => {
+                setEditor(null);
                 load();
               }}
             />

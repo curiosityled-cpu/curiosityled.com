@@ -62,7 +62,7 @@ function ScorePicker({ value, onChange }) {
   );
 }
 
-export default function RetroactiveCheckInCard({ initialDate, initialType, editMode, onSaved }) {
+export default function RetroactiveCheckInCard({ initialDate, initialType, editMode, onSaved, targetEmail, targetName }) {
   const { user } = useAuth();
   const userEmail = user?.email;
   const clientId = user?.data?.client_id || user?.client_id;
@@ -136,10 +136,13 @@ export default function RetroactiveCheckInCard({ initialDate, initialType, editM
     if (selectedDate > maxDate) setSelectedDate(maxDate);
   }, [minDate, maxDate, selectedDate]);
 
-  // Check whether a record already exists for the selected date
+  // Check whether a record already exists for the selected date.
+  // Skipped when backfilling for a target person (self or a direct report) —
+  // the service-role function handles find-or-create, and client RLS blocks
+  // reading other users' records.
   useEffect(() => {
     let cancelled = false;
-    if (!userEmail) return;
+    if (!userEmail || targetEmail) return;
     (async () => {
       try {
         const rows = await base44.entities.DailyCheckIn.filter(
@@ -205,6 +208,25 @@ export default function RetroactiveCheckInCard({ initialDate, initialType, editM
     }
     setSaving(true);
     try {
+      // Backfilling for a specific person (self or a direct report) — route
+      // through the service-role function so managers can save on behalf of
+      // their reports (DailyCheckIn RLS is owner-only).
+      if (targetEmail) {
+        await base44.functions.invoke("saveCheckInForUser", {
+          target_email: targetEmail,
+          check_in_date: selectedDate,
+          check_in_type: checkInType,
+          scores,
+          notes,
+          custom_answers:
+            applicableCustomQs.length > 0 ? customAnswers : undefined,
+        });
+        toast.success(
+          `Check-in saved for ${targetName || formatDateLabel(selectedDate)}.`
+        );
+        onSaved?.();
+        return;
+      }
       const scorePayload = {
         energy_score: scores.energy,
         energy_note: notes.energy || "",
@@ -253,7 +275,11 @@ export default function RetroactiveCheckInCard({ initialDate, initialType, editM
         <div className="flex items-center gap-2">
           <CalendarClock className="w-4 h-4 text-[#0202ff]" />
           <p className="text-sm font-semibold text-foreground">
-            {editMode ? "Edit check-in" : "Complete a missed check-in"}
+            {editMode
+              ? "Edit check-in"
+              : targetName
+                ? `Check-in for ${targetName}`
+                : "Complete a missed check-in"}
           </p>
         </div>
         <p className="text-xs text-muted-foreground -mt-2">
@@ -425,7 +451,7 @@ export default function RetroactiveCheckInCard({ initialDate, initialType, editM
           {saving ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            `Save ${checkInType} check-in for ${formatDateLabel(selectedDate)}`
+            `Save ${checkInType} check-in for ${targetName || formatDateLabel(selectedDate)}`
           )}
         </Button>
       </CardContent>
