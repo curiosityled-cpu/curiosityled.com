@@ -163,6 +163,9 @@ export default function BulkUserEditCSV({ users, onSuccess, onClose }) {
               <p className="mt-2 text-xs text-blue-600">
                 Editable fields: <span className="font-mono">{EDITABLE_FIELDS.join(', ')}</span>
               </p>
+              <p className="mt-2 text-xs text-blue-600">
+                For registered platform users only. Frontline Staff (roster) rows are managed in the Staff tab, not here.
+              </p>
             </div>
 
             <div className="flex flex-col gap-3">
