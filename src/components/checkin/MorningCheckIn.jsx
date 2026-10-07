@@ -11,6 +11,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sun, ChevronRight, CheckCircle2, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CHECK_IN_PRESETS, SCALE_LABELS } from "@/lib/checkInPresets";
+import { useCustomCheckInQuestions } from "@/hooks/useCustomCheckInQuestions";
+import CustomQuestionsCard from "@/components/checkin/CustomQuestionsCard";
 
 const DEFAULT_MEASURES = CHECK_IN_PRESETS.balance.measures;
 
@@ -117,6 +119,9 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail, mea
   const [expanded, setExpanded] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editStep, setEditStep] = useState(1);
+  const { questions: customQs } = useCustomCheckInQuestions("morning");
+  const [customAnswers, setCustomAnswers] = useState(() => todayRecord?.custom_answers || {});
+  const [customPending, setCustomPending] = useState(false);
 
   // Guard against re-fetching questions on every re-render
   const fetchInitiatedRef = useRef(false);
@@ -205,6 +210,8 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail, mea
   const handleNext = () => {
     if (step < MEASURES.length) {
       setStep(s => s + 1);
+    } else if (customQs.length > 0 && !customPending) {
+      setCustomPending(true);
     } else {
       handleSave();
     }
@@ -230,6 +237,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail, mea
       focus_score: scores.focus, focus_note: notes.focus,
       load_score: scores.load, load_note: notes.load,
       growth_score: scores.growth, growth_note: notes.growth,
+      ...(customQs.length > 0 ? { custom_answers: customAnswers } : {}),
     };
 
     // Primary: direct entity save (most reliable, bypasses backend function RLS issues)
@@ -356,6 +364,25 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail, mea
           </motion.div>
         </AnimatePresence>
       </div>
+    );
+  }
+
+  // Custom KPI questions step (appended after the standard measures)
+  if (customPending && !editMode) {
+    const hasRequired = customQs.some(q => q.is_required);
+    return (
+      <CustomQuestionsCard
+        questions={customQs}
+        answers={customAnswers}
+        onChange={(k, v) => setCustomAnswers(a => ({ ...a, [k]: v }))}
+        onComplete={() => { setCustomPending(false); handleSave(); }}
+        onSkip={hasRequired ? null : () => { setCustomPending(false); handleSave(); }}
+        saving={saving}
+        title="Quick KPI check"
+        subtitle="A few operational questions before you finish"
+        accent="#0202ff"
+        icon={<Sun className="w-4 h-4 text-amber-400" />}
+      />
     );
   }
 

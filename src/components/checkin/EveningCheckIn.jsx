@@ -10,6 +10,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Moon, ChevronRight, CheckCircle2, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CHECK_IN_PRESETS, SCALE_LABELS } from "@/lib/checkInPresets";
+import { useCustomCheckInQuestions } from "@/hooks/useCustomCheckInQuestions";
+import CustomQuestionsCard from "@/components/checkin/CustomQuestionsCard";
 
 const DEFAULT_MEASURES = CHECK_IN_PRESETS.balance.measures;
 
@@ -245,6 +247,9 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
   const [expanded, setExpanded] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editStep, setEditStep] = useState(1);
+  const { questions: customQs } = useCustomCheckInQuestions("evening");
+  const [customAnswers, setCustomAnswers] = useState(() => todayRecord?.custom_answers || {});
+  const [customPending, setCustomPending] = useState(false);
 
   const fetchInitiatedRef = useRef(false);
   const isMountedRef = useRef(true);
@@ -315,8 +320,9 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
   }, [alreadyDone, isActiveWindow, editMode, userEmail]);
 
   const handleMeasureNext = () => {
-    if (step < MEASURES.length) setStep(s => s + 1);
-    else setStep(6); // → Big 3
+    if (step < MEASURES.length) { setStep(s => s + 1); return; }
+    if (customQs.length > 0 && !customPending) { setCustomPending(true); return; }
+    setStep(6); // → Big 3
   };
 
   const handleBig3Save = (big3Priorities) => {
@@ -345,6 +351,9 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
       entityPayload.focus_score = scores.focus; entityPayload.focus_note = notes.focus;
       entityPayload.load_score = scores.load; entityPayload.load_note = notes.load;
       entityPayload.growth_score = scores.growth; entityPayload.growth_note = notes.growth;
+    }
+    if (customQs.length > 0) {
+      entityPayload.custom_answers = customAnswers;
     }
 
     const directSave = todayRecord?.id
@@ -483,6 +492,24 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
           </motion.div>
         </AnimatePresence>
       </div>
+    );
+  }
+
+  // Custom KPI questions step (appended after the standard measures, before Big 3)
+  if (customPending && !editMode) {
+    const hasRequired = customQs.some(q => q.is_required);
+    return (
+      <CustomQuestionsCard
+        questions={customQs}
+        answers={customAnswers}
+        onChange={(k, v) => setCustomAnswers(a => ({ ...a, [k]: v }))}
+        onComplete={() => { setCustomPending(false); setStep(6); }}
+        onSkip={hasRequired ? null : () => { setCustomPending(false); setStep(6); }}
+        title="Quick KPI check"
+        subtitle="A few operational questions before planning tomorrow"
+        accent="#0202ff"
+        icon={<Moon className="w-4 h-4 text-indigo-400" />}
+      />
     );
   }
 

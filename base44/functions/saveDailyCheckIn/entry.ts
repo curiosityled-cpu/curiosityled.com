@@ -158,7 +158,7 @@ Deno.serve(async (req) => {
         'energy_score', 'energy_note', 'confidence_score', 'confidence_note',
         'focus_score', 'focus_note', 'load_score', 'load_note',
         'growth_score', 'growth_note', 'questions_used', 'big3_priorities',
-        'atreus_observation', 'atreus_flags',
+        'atreus_observation', 'atreus_flags', 'custom_answers',
       ];
       const updateData = {};
       for (const key of ALLOWED_FIELDS) {
