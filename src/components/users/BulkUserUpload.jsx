@@ -522,6 +522,20 @@ warehouse.ic@company.com,Jordan Rivera,,Staff,,Warehouse Associate,Warehouse - S
   if (uploadStep === 'upload') {
     return (
       <div className="space-y-6">
+        <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-4 space-y-2">
+          <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+            <ClipboardList className="w-4 h-4 text-[#0202ff]" />
+            How to use this template
+          </div>
+          <ol className="text-xs text-gray-600 space-y-1 list-decimal list-inside">
+            <li>Download the CSV template below.</li>
+            <li>One row per person. Keep the header row intact.</li>
+            <li>For <span className="font-semibold">platform users</span> (who log in), set <span className="font-semibold">app_role</span> to a role like <em>User Level 1</em> or <em>Analyst</em>. They'll receive a welcome email.</li>
+            <li>For <span className="font-semibold">frontline staff</span> (no login, check-ins only), set <span className="font-semibold">app_role=Staff</span>. Use <span className="font-semibold">department</span> as their team/shift and <span className="font-semibold">manager_email</span> (optional) to link them to their manager.</li>
+            <li>Save as CSV and upload it back here. We'll preview the rows before importing.</li>
+          </ol>
+        </div>
+
         <div className="text-center">
           <Button onClick={downloadTemplate} variant="outline" className="gap-2">
             <Download className="w-4 h-4" />
