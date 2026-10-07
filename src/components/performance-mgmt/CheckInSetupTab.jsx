@@ -42,6 +42,7 @@ import {
   ToggleLeft,
   AlertCircle,
 } from "lucide-react";
+import CheckInLookbackSetting from "@/components/performance-mgmt/CheckInLookbackSetting";
 
 const RESPONSE_TYPES = [
   { value: "number", label: "Number", icon: Hash, hint: "Numeric entry (e.g. 42)" },
@@ -247,6 +248,7 @@ export default function CheckInSetupTab({ user }) {
 
   return (
     <div className="space-y-4">
+      <CheckInLookbackSetting />
       {/* Header */}
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>

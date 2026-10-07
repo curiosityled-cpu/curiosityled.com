@@ -188,10 +188,10 @@
       "data.user_email": "{{user.email}}"
     },
     "update": {
-      "created_by": "{{user.email}}"
+      "data.user_email": "{{user.email}}"
     },
     "delete": {
-      "created_by": "{{user.email}}"
+      "data.user_email": "{{user.email}}"
     }
   }
 }

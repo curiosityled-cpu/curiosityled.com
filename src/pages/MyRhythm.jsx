@@ -24,6 +24,7 @@ import ResilienceRecoveryChart from "@/components/intelligence/ResilienceRecover
 import EmotionalStateIndicators from "@/components/intelligence/EmotionalStateIndicators";
 import ToneAdaptationCard from "@/components/intelligence/ToneAdaptationCard";
 import TeamInsightsPanel from "@/components/intelligence/TeamInsightsPanel";
+import RetroactiveCheckInCard from "@/components/checkin/RetroactiveCheckInCard";
 
 function TrendIndicator({ trend, label }) {
   const isImproving = trend === 'improving';
@@ -289,7 +290,8 @@ export default function MyRhythm() {
             </div>
           </TabsContent>
 
-          <TabsContent value="checkins">
+          <TabsContent value="checkins" className="space-y-6">
+            <RetroactiveCheckInCard />
             <DailyCheckInLog pulses={pulses} />
           </TabsContent>
         </Tabs>

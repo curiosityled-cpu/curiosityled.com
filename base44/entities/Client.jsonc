@@ -268,6 +268,13 @@
               },
               "default": [],
               "description": "Default Do-Not-Disturb windows applied to new users"
+            },
+            "retroactive_lookback_days": {
+              "type": "number",
+              "default": 7,
+              "minimum": 0,
+              "maximum": 90,
+              "description": "How many days back a user can complete a missed check-in (0 disables retroactive check-ins)"
             }
           },
           "description": "Check-in engine configuration for this organization"
