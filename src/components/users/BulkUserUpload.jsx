@@ -10,17 +10,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Upload, Download, CheckCircle, AlertCircle, X, FileUp, Loader2, Copy, ExternalLink, ClipboardList, ChevronDown } from "lucide-react";
+import { Upload, Download, CheckCircle, AlertCircle, X, FileUp, Loader2, Copy, ExternalLink, ClipboardList, ChevronDown, Users, UserCog } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import BulkInviteUsers from "./BulkInviteUsers";
 
-export default function BulkUserUpload({ onSuccess, onCancel }) {
+export default function BulkUserUpload({ onSuccess, onCancel, clientId, createdByEmail }) {
   const [csvData, setCsvData] = useState([]);
   const [uploadStep, setUploadStep] = useState('upload');
   const [processing, setProcessing] = useState(false);
-  const [validationResults, setValidationResults] = useState({ valid: [], invalid: [], duplicates: [] });
+  const [validationResults, setValidationResults] = useState({ validUsers: [], validStaff: [], invalid: [], duplicates: [] });
   const [updateDuplicates, setUpdateDuplicates] = useState(false);
   const [clients, setClients] = useState([]);
   const [partners, setPartners] = useState([]);
@@ -28,6 +28,7 @@ export default function BulkUserUpload({ onSuccess, onCancel }) {
   const [pendingUsers, setPendingUsers] = useState([]);
   const [copiedEmail, setCopiedEmail] = useState(null);
   const [requirementsOpen, setRequirementsOpen] = useState(false);
+  const [importResults, setImportResults] = useState(null);
 
   useEffect(() => {
     loadOrganizations();
@@ -54,7 +55,8 @@ john.doe@company.com,John Doe,John,User Level 1,,Senior Manager,Operations,Techn
 jane.smith@company.com,Jane Smith,Jane,User Level 2,Team Leader Add-on,Director of Engineering,Technology,,Level 2 (Leading Others),vp@company.com,2023-06-01,TempPass123!,TechCorp Inc,
 bob.analyst@company.com,Bob Analyst,,Analyst,Analyst Add-on,Business Analyst,Finance,,Level 1 (Leading Self),cfo@company.com,2023-03-01,,Acme Corporation,
 super.admin@healthco.com,Maria Toni,,Super Administrator,User Add-on,Talent Management Manager,HR,,Level 3 (Leading Managers),ceo@healthco.com,2023-09-18,,HealthCo,
-partner.admin@consulting.com,Pat Johnson,,Partner Business Administrator,,Senior Consultant,Consulting,,Level 2 (Leading Others),partner-lead@consulting.com,2023-01-01,,Big Consulting Firm`;
+partner.admin@consulting.com,Pat Johnson,,Partner Business Administrator,,Senior Consultant,Consulting,,Level 2 (Leading Others),partner-lead@consulting.com,2023-01-01,,Big Consulting Firm
+warehouse.ic@company.com,Jordan Rivera,,Staff,,Warehouse Associate,Warehouse - Shift A,,manager@company.com,,,Acme Corporation,`;
 
     const blob = new Blob([template], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -123,6 +125,7 @@ partner.admin@consulting.com,Pat Johnson,,Partner Business Administrator,,Senior
     }
 
     setProcessing(true);
+    setImportResults(null);
     try {
       // Read file directly in browser
       const text = await file.text();
@@ -146,9 +149,8 @@ partner.admin@consulting.com,Pat Johnson,,Partner Business Administrator,,Senior
   };
 
   const validateCsvData = async (users) => {
-    const results = { valid: [], invalid: [], duplicates: [] };
+    const results = { validUsers: [], validStaff: [], invalid: [], duplicates: [] };
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const validAppRoles = ["User Level 1", "User Level 2", "Analyst", "Admin Level 1", "Admin Level 2", "Super Administrator", "Partner Business Administrator", "Platform Admin"];
     
     // Map friendly role names to internal role values
     const roleNameMap = {
@@ -160,6 +162,7 @@ partner.admin@consulting.com,Pat Johnson,,Partner Business Administrator,,Senior
       'super admin': 'Super Administrator',
       'partner admin': 'Partner Business Administrator',
       'platform admin': 'Platform Admin',
+      'staff': 'Staff',
       // Also accept the internal names directly
       'user level 1': 'User Level 1',
       'user level 2': 'User Level 2',
@@ -185,18 +188,33 @@ partner.admin@consulting.com,Pat Johnson,,Partner Business Administrator,,Senior
       // Continue without duplicate checking - backend will catch duplicates
     }
 
+    // Fetch existing staff emails for duplicate checking
+    let existingStaffEmails = new Set();
+    try {
+      const existingStaff = await base44.entities.ICRoster.list('-created_date', 10000);
+      existingStaffEmails = new Set((existingStaff || []).map(s => s.email?.toLowerCase()).filter(Boolean));
+    } catch (staffListError) {
+      console.warn('Could not fetch existing staff for duplicate check:', staffListError.message);
+    }
+
     // Create lookup maps for clients, partners, and addon roles
     const clientMap = new Map(clients.map(c => [c.name.toLowerCase(), c.id]));
     const partnerMap = new Map(partners.map(p => [p.name.toLowerCase(), p.id]));
     const addonRoleMap = new Map(addonRoles.map(r => [r.role_name.toLowerCase(), r.id]));
 
     // Track emails within the CSV to detect duplicates in the upload itself
-    const emailsInCsv = new Set();
+    const userEmailsInCsv = new Set();
+    const staffEmailsInCsv = new Set();
 
     for (const user of users) {
       const errors = [];
 
-      // Required field validation
+      // Determine if this is a Staff row
+      const appRoleInput = user.app_role ? String(user.app_role).trim() : '';
+      const resolvedRole = resolveAppRole(appRoleInput);
+      const isStaff = resolvedRole === 'Staff';
+
+      // Common required field validation: email + full_name
       const userEmail = user.email ? String(user.email).trim() : '';
       if (!userEmail) {
         errors.push('Email is required');
@@ -209,129 +227,180 @@ partner.admin@consulting.com,Pat Johnson,,Partner Business Administrator,,Senior
         errors.push('Full name is required (min 2 characters)');
       }
 
-      const currentRoleStr = user.current_role ? String(user.current_role).trim() : '';
-      if (!currentRoleStr) {
-        errors.push('Current role is required');
-      }
-
-      const departmentStr = user.department ? String(user.department).trim() : '';
-      if (!departmentStr) {
-        errors.push('Department is required');
-      }
-
-      const managerEmailStr = user.manager_email ? String(user.manager_email).trim() : '';
-      if (!managerEmailStr) {
-        errors.push('Manager email is required');
-      } else if (!emailRegex.test(managerEmailStr)) {
-        errors.push('Invalid manager email format');
-      } else if (userEmail && managerEmailStr.toLowerCase() === userEmail.toLowerCase()) {
-        errors.push('User cannot be their own manager');
-      }
-
-      // App role validation
-      const appRoleInput = user.app_role ? String(user.app_role).trim() : '';
-      const appRoleStr = appRoleInput ? resolveAppRole(appRoleInput) : '';
-      if (appRoleInput && !appRoleStr) {
-        errors.push(`Invalid app_role "${appRoleInput}". Valid options: User, Team Leader, Analyst, Program Admin, HR Admin, Super Admin, Partner Admin, Platform Admin`);
-      }
-      // Store the resolved role back to user object for backend
-      if (appRoleStr) {
-        user.app_role = appRoleStr;
-      }
-
-      // Date validation
-      const startDateStr = user.start_date ? String(user.start_date).trim() : '';
-      if (startDateStr) {
-        const date = new Date(startDateStr);
-        if (isNaN(date.getTime())) {
-          errors.push('Invalid start_date format (use YYYY-MM-DD)');
-        } else if (date > new Date()) {
-          errors.push('Start date cannot be in the future');
+      if (isStaff) {
+        // --- Staff (ICRoster) validation: lighter requirements ---
+        // manager_email is optional but if provided must be valid
+        const managerEmailStr = user.manager_email ? String(user.manager_email).trim() : '';
+        if (managerEmailStr) {
+          if (!emailRegex.test(managerEmailStr)) {
+            errors.push('Invalid manager email format');
+          } else if (userEmail && managerEmailStr.toLowerCase() === userEmail.toLowerCase()) {
+            errors.push('Staff cannot be their own manager');
+          }
         }
-      }
 
-      // Organization validation - map names to IDs
-      let client_id = null;
-      let partner_id = null;
-
-      const clientNameStr = user.client_name ? String(user.client_name).trim() : '';
-      if (clientNameStr) {
-        client_id = clientMap.get(clientNameStr.toLowerCase());
-        if (!client_id) {
-          errors.push(`Client "${clientNameStr}" not found`);
+        // Resolve client_id: prefer client_name column, fall back to the prop
+        let staffClientId = clientId;
+        const clientNameStr = user.client_name ? String(user.client_name).trim() : '';
+        if (clientNameStr) {
+          staffClientId = clientMap.get(clientNameStr.toLowerCase());
+          if (!staffClientId) {
+            errors.push(`Client "${clientNameStr}" not found`);
+          }
         }
-      }
-
-      const partnerNameStr = user.partner_name ? String(user.partner_name).trim() : '';
-      if (partnerNameStr) {
-        partner_id = partnerMap.get(partnerNameStr.toLowerCase());
-        if (!partner_id) {
-          errors.push(`Partner "${partnerNameStr}" not found`);
+        if (!staffClientId) {
+          errors.push('No client associated — set client_name in the CSV or assign a client to your account');
         }
-      }
 
-      // Check if user has both client and partner
-      if (client_id && partner_id) {
-        errors.push('User can belong to either a Client OR a Partner, not both');
-      }
+        // Store resolved fields on the user object for import
+        user.app_role = 'Staff';
+        user.client_id = staffClientId;
+        user.team = user.department ? String(user.department).trim() : '';
+        user.manager_email = managerEmailStr;
 
-      // Addon role validation
-      let custom_role_id = null;
-      const addonRoleStr = user.addon_role ? String(user.addon_role).trim() : '';
-      if (addonRoleStr) {
-        custom_role_id = addonRoleMap.get(addonRoleStr.toLowerCase());
-        if (!custom_role_id) {
-          errors.push(`Addon role "${addonRoleStr}" not found. Available: ${addonRoles.map(r => r.role_name).join(', ')}`);
+        // Check for duplicates within the CSV file itself
+        const emailLower = userEmail.toLowerCase();
+        const isDuplicateInCsv = emailLower && staffEmailsInCsv.has(emailLower);
+        if (isDuplicateInCsv) {
+          errors.push('Duplicate email within CSV file');
         }
-      }
 
-      // Add resolved IDs to user object
-      // Use null for empty strings to allow clearing organization on updates
-      user.client_id = client_id;
-      user.partner_id = partner_id;
-      user.custom_role_id = custom_role_id;
-      
-      // Preserve display_name if provided
-      const displayNameStr = user.display_name ? String(user.display_name).trim() : '';
-      user.display_name = displayNameStr || null;
-      
-      // If user explicitly provided empty client_name or partner_name, set to null to clear
-      if (user.client_name !== undefined && !clientNameStr) {
-        user.client_id = null;
-      }
-      if (user.partner_name !== undefined && !partnerNameStr) {
-        user.partner_id = null;
-      }
+        // Track this email (only if valid email)
+        if (emailLower && !errors.some(e => e.includes('Email is required') || e.includes('Invalid email format'))) {
+          staffEmailsInCsv.add(emailLower);
+        }
 
-      // Sector validation (optional field, just needs type coercion)
-      const sectorStr = user.sector ? String(user.sector).trim() : '';
-
-      // Check for duplicates within the CSV file itself
-      const emailLower = userEmail.toLowerCase();
-      const isDuplicateInCsv = emailLower && emailsInCsv.has(emailLower);
-      if (isDuplicateInCsv) {
-        errors.push('Duplicate email within CSV file');
-      }
-      
-      // Track this email (only if valid email)
-      if (emailLower && !errors.some(e => e.includes('Email is required') || e.includes('Invalid email format'))) {
-        emailsInCsv.add(emailLower);
-      }
-
-      // Check for duplicates against existing users - but only if no other validation errors and not a CSV duplicate
-      if (userEmail && existingEmails.has(emailLower) && !isDuplicateInCsv) {
-        if (errors.length > 0) {
-          // Duplicate with other errors - mark as invalid (can't update with bad data)
-          errors.push('Email already exists in system');
+        // Check for duplicates against existing staff
+        if (emailLower && existingStaffEmails.has(emailLower) && !isDuplicateInCsv) {
+          if (errors.length > 0) {
+            errors.push('Email already exists in staff roster');
+            results.invalid.push({ user, errors });
+          } else {
+            results.duplicates.push({ user, errors: ['Email already exists in staff roster'], type: 'staff' });
+          }
+        } else if (errors.length > 0) {
           results.invalid.push({ user, errors });
         } else {
-          // Valid duplicate - can be updated
-          results.duplicates.push({ user, errors: ['Email already exists in system'] });
+          results.validStaff.push(user);
         }
-      } else if (errors.length > 0) {
-        results.invalid.push({ user, errors });
       } else {
-        results.valid.push(user);
+        // --- Registered user validation: existing flow ---
+        const currentRoleStr = user.current_role ? String(user.current_role).trim() : '';
+        if (!currentRoleStr) {
+          errors.push('Current role is required');
+        }
+
+        const departmentStr = user.department ? String(user.department).trim() : '';
+        if (!departmentStr) {
+          errors.push('Department is required');
+        }
+
+        const managerEmailStr = user.manager_email ? String(user.manager_email).trim() : '';
+        if (!managerEmailStr) {
+          errors.push('Manager email is required');
+        } else if (!emailRegex.test(managerEmailStr)) {
+          errors.push('Invalid manager email format');
+        } else if (userEmail && managerEmailStr.toLowerCase() === userEmail.toLowerCase()) {
+          errors.push('User cannot be their own manager');
+        }
+
+        // App role validation
+        if (appRoleInput && !resolvedRole) {
+          errors.push(`Invalid app_role "${appRoleInput}". Valid options: User, Team Leader, Analyst, Program Admin, HR Admin, Super Admin, Partner Admin, Platform Admin, Staff`);
+        }
+        // Store the resolved role back to user object for backend
+        if (resolvedRole) {
+          user.app_role = resolvedRole;
+        }
+
+        // Date validation
+        const startDateStr = user.start_date ? String(user.start_date).trim() : '';
+        if (startDateStr) {
+          const date = new Date(startDateStr);
+          if (isNaN(date.getTime())) {
+            errors.push('Invalid start_date format (use YYYY-MM-DD)');
+          } else if (date > new Date()) {
+            errors.push('Start date cannot be in the future');
+          }
+        }
+
+        // Organization validation - map names to IDs
+        let user_client_id = null;
+        let user_partner_id = null;
+
+        const clientNameStr = user.client_name ? String(user.client_name).trim() : '';
+        if (clientNameStr) {
+          user_client_id = clientMap.get(clientNameStr.toLowerCase());
+          if (!user_client_id) {
+            errors.push(`Client "${clientNameStr}" not found`);
+          }
+        }
+
+        const partnerNameStr = user.partner_name ? String(user.partner_name).trim() : '';
+        if (partnerNameStr) {
+          user_partner_id = partnerMap.get(partnerNameStr.toLowerCase());
+          if (!user_partner_id) {
+            errors.push(`Partner "${partnerNameStr}" not found`);
+          }
+        }
+
+        // Check if user has both client and partner
+        if (user_client_id && user_partner_id) {
+          errors.push('User can belong to either a Client OR a Partner, not both');
+        }
+
+        // Addon role validation
+        let custom_role_id = null;
+        const addonRoleStr = user.addon_role ? String(user.addon_role).trim() : '';
+        if (addonRoleStr) {
+          custom_role_id = addonRoleMap.get(addonRoleStr.toLowerCase());
+          if (!custom_role_id) {
+            errors.push(`Addon role "${addonRoleStr}" not found. Available: ${addonRoles.map(r => r.role_name).join(', ')}`);
+          }
+        }
+
+        // Add resolved IDs to user object
+        user.client_id = user_client_id;
+        user.partner_id = user_partner_id;
+        user.custom_role_id = custom_role_id;
+        
+        // Preserve display_name if provided
+        const displayNameStr = user.display_name ? String(user.display_name).trim() : '';
+        user.display_name = displayNameStr || null;
+        
+        // If user explicitly provided empty client_name or partner_name, set to null to clear
+        if (user.client_name !== undefined && !clientNameStr) {
+          user.client_id = null;
+        }
+        if (user.partner_name !== undefined && !partnerNameStr) {
+          user.partner_id = null;
+        }
+
+        // Check for duplicates within the CSV file itself
+        const emailLower = userEmail.toLowerCase();
+        const isDuplicateInCsv = emailLower && userEmailsInCsv.has(emailLower);
+        if (isDuplicateInCsv) {
+          errors.push('Duplicate email within CSV file');
+        }
+        
+        // Track this email (only if valid email)
+        if (emailLower && !errors.some(e => e.includes('Email is required') || e.includes('Invalid email format'))) {
+          userEmailsInCsv.add(emailLower);
+        }
+
+        // Check for duplicates against existing users
+        if (userEmail && existingEmails.has(emailLower) && !isDuplicateInCsv) {
+          if (errors.length > 0) {
+            errors.push('Email already exists in system');
+            results.invalid.push({ user, errors });
+          } else {
+            results.duplicates.push({ user, errors: ['Email already exists in system'], type: 'user' });
+          }
+        } else if (errors.length > 0) {
+          results.invalid.push({ user, errors });
+        } else {
+          results.validUsers.push(user);
+        }
       }
     }
 
@@ -340,53 +409,115 @@ partner.admin@consulting.com,Pat Johnson,,Partner Business Administrator,,Senior
 
   const handleConfirmImport = async () => {
     setProcessing(true);
-    toast.loading('Uploading CSV...', { id: 'bulk-upload' });
-    
+    setImportResults(null);
+    const results = { usersSuccess: 0, usersFailed: 0, staffSuccess: 0, staffFailed: 0, userErrors: [], staffErrors: [] };
+
     try {
-      // Create CSV content from valid users
-      const headers = Object.keys(validationResults.valid[0]);
-      const csvRows = [
-        headers.join(','),
-        ...validationResults.valid.map(user => 
-          headers.map(h => `"${(user[h] || '').toString().replace(/"/g, '""')}"`).join(',')
-        )
-      ];
-      const csvContent = csvRows.join('\n');
-      const csvFile = new File([csvContent], 'users.csv', { type: 'text/csv' });
-
-      // Upload CSV to Base44 storage
-      toast.loading('Uploading CSV to storage...', { id: 'bulk-upload' });
-      const uploadResponse = await base44.integrations.Core.UploadFile({ file: csvFile });
-      const fileUrl = uploadResponse.file_url;
-
-      // Call the new backend function with the file URL
-      toast.loading('Sending invitations...', { id: 'bulk-upload' });
-      const response = await base44.functions.invoke('bulkInviteUsers', { fileUrl });
-
-      const result = response?.data || response;
-      toast.dismiss('bulk-upload');
-      
-      if (result.success) {
-        toast.success(result.message);
-        
-        // Show detailed results if there were failures
-        if (result.failedCount > 0) {
-          console.log('Invitation details:', result.details);
-          toast.warning(`${result.failedCount} invitations failed. Check console for details.`);
+      // --- Part 1: Import Staff rows directly into ICRoster ---
+      if (validationResults.validStaff.length > 0) {
+        toast.loading('Importing staff...', { id: 'staff-import' });
+        try {
+          const staffRecords = validationResults.validStaff.map((user) => ({
+            name: user.full_name,
+            email: user.email.toLowerCase(),
+            team: user.team || '',
+            manager_email: user.manager_email || '',
+            client_id: user.client_id,
+            created_by_email: createdByEmail || '',
+            source_system: 'csv',
+            is_active: true,
+            check_in_enabled: true,
+            web_access_token: crypto.randomUUID(),
+          }));
+          const created = await base44.entities.ICRoster.bulkCreate(staffRecords);
+          results.staffSuccess = Array.isArray(created) ? created.length : (created ? 1 : 0);
+          toast.dismiss('staff-import');
+          toast.success(`Imported ${results.staffSuccess} staff`);
+        } catch (e) {
+          results.staffFailed = validationResults.validStaff.length;
+          results.staffErrors.push(e.message || 'Staff import failed');
+          toast.dismiss('staff-import');
+          toast.error('Staff import failed: ' + (e.message || ''));
         }
-        
+      }
+
+      // --- Part 2: Import User rows via existing bulkInviteUsers flow ---
+      if (validationResults.validUsers.length > 0) {
+        toast.loading('Uploading user CSV...', { id: 'bulk-upload' });
+        try {
+          // Create CSV content from valid users
+          const headers = Object.keys(validationResults.validUsers[0]);
+          const csvRows = [
+            headers.join(','),
+            ...validationResults.validUsers.map(user => 
+              headers.map(h => `"${(user[h] || '').toString().replace(/"/g, '""')}"`).join(',')
+            )
+          ];
+          const csvContent = csvRows.join('\n');
+          const csvFile = new File([csvContent], 'users.csv', { type: 'text/csv' });
+
+          // Upload CSV to Base44 storage
+          toast.loading('Uploading CSV to storage...', { id: 'bulk-upload' });
+          const uploadResponse = await base44.integrations.Core.UploadFile({ file: csvFile });
+          const fileUrl = uploadResponse.file_url;
+
+          // Call the backend function with the file URL
+          toast.loading('Sending invitations...', { id: 'bulk-upload' });
+          const response = await base44.functions.invoke('bulkInviteUsers', { fileUrl });
+
+          const result = response?.data || response;
+          toast.dismiss('bulk-upload');
+          
+          if (result.success) {
+            results.usersSuccess = result.successCount || validationResults.validUsers.length;
+            if (result.failedCount > 0) {
+              results.usersFailed = result.failedCount;
+              results.userErrors = result.details || [];
+              toast.warning(`${result.failedCount} user invitations failed`);
+            }
+          } else {
+            results.usersFailed = validationResults.validUsers.length;
+            results.userErrors.push(result.error || 'Bulk invitation failed');
+            toast.error(result.error || 'User import failed');
+          }
+        } catch (e) {
+          results.usersFailed = validationResults.validUsers.length;
+          results.userErrors.push(e.message || 'User import failed');
+          toast.dismiss('bulk-upload');
+          toast.error('Failed to import users: ' + (e.message || ''));
+        }
+      }
+
+      // --- Part 3: Handle duplicate updates if requested ---
+      if (updateDuplicates && validationResults.duplicates.length > 0) {
+        const userDups = validationResults.duplicates.filter(d => d.type !== 'staff');
+        // Note: existing bulkInviteUsers handles updates for user duplicates via the CSV
+        // Staff duplicates are skipped (no update path for roster via CSV)
+      }
+
+      setImportResults(results);
+
+      // Show summary
+      const totalSuccess = results.usersSuccess + results.staffSuccess;
+      const totalFailed = results.usersFailed + results.staffFailed;
+      if (totalFailed === 0 && totalSuccess > 0) {
+        toast.success(`Import complete: ${results.usersSuccess} users, ${results.staffSuccess} staff`);
         onSuccess();
+      } else if (totalSuccess > 0) {
+        toast.warning(`Import partial: ${totalSuccess} succeeded, ${totalFailed} failed`);
+        // Keep dialog open so user can see results
       } else {
-        toast.error(result.error || 'Bulk invitation failed');
+        // All failed - keep dialog open
       }
     } catch (error) {
-      console.error('Error sending invitations:', error);
-      toast.dismiss('bulk-upload');
-      toast.error('Failed to send invitations: ' + (error.message || 'Unknown error'));
+      console.error('Error during import:', error);
+      toast.error('Import failed: ' + (error.message || 'Unknown error'));
     } finally {
       setProcessing(false);
     }
   };
+
+  const totalValid = validationResults.validUsers.length + validationResults.validStaff.length;
 
   if (uploadStep === 'upload') {
     return (
@@ -463,14 +594,16 @@ partner.admin@consulting.com,Pat Johnson,,Partner Business Administrator,,Senior
           </CollapsibleTrigger>
           <CollapsibleContent className="pt-2 px-2">
             <div className="text-xs text-gray-600 space-y-1.5 border-l-2 border-gray-200 pl-3">
-              <div><span className="font-semibold">Required:</span> email, full_name, current_role, department, manager_email</div>
+              <div><span className="font-semibold">Required (users):</span> email, full_name, current_role, department, manager_email</div>
+              <div><span className="font-semibold">Required (staff):</span> email, full_name — use <span className="font-semibold">app_role=Staff</span> to import as frontline roster</div>
               <div><span className="font-semibold">Optional:</span> display_name, app_role (defaults to "User Level 1"), addon_role, sector, leadership_level, temporary_password, start_date (YYYY-MM-DD), client_name, partner_name</div>
-              <div><span className="font-semibold">App Roles:</span> User Level 1, User Level 2, Analyst, Admin Level 1, Admin Level 2, Super Administrator, Partner Business Administrator, Platform Admin</div>
+              <div><span className="font-semibold">App Roles:</span> User Level 1, User Level 2, Analyst, Admin Level 1, Admin Level 2, Super Administrator, Partner Business Administrator, Platform Admin, <span className="text-[#0202ff] font-semibold">Staff</span></div>
+              <div className="text-[#0202ff]"><span className="font-semibold">Staff rows</span> are imported into the frontline roster (ICRoster), not as platform users. The <span className="font-semibold">department</span> column maps to their team/shift. They are never invited or given login access.</div>
               <div><span className="font-semibold">Leadership Levels:</span> Level 1 (Leading Self), Level 2 (Leading Others), Level 3 (Leading Managers), Level 4 (Leading Functions), Level 5 (Leading Organizations), HiPo Individual Contributor</div>
               <div><span className="font-semibold">Addon Roles:</span> User Add-on, Team Leader Add-on, Analyst Add-on, Program Admin Add-on, HR Admin Add-on</div>
               <div><span className="font-semibold">Organizations:</span> Use exact client/partner names from your platform. User can belong to Client OR Partner (not both)</div>
               <div><span className="font-semibold">Temporary Password:</span> Optional. If not provided, one will be auto-generated. Min 8 characters with uppercase, number, and special character</div>
-              <div><span className="font-semibold">Onboarding:</span> Each user will receive a welcome email with their temporary password and be required to change it on first login</div>
+              <div><span className="font-semibold">Onboarding:</span> Each user (non-Staff) will receive a welcome email with their temporary password and be required to change it on first login</div>
             </div>
           </CollapsibleContent>
         </Collapsible>
@@ -489,16 +622,42 @@ partner.admin@consulting.com,Pat Johnson,,Partner Business Administrator,,Senior
   if (uploadStep === 'preview') {
     return (
       <div className="space-y-6">
+        {/* Import results banner */}
+        {importResults && (
+          <Alert className={importResults.usersFailed > 0 || importResults.staffFailed > 0 ? 'border-orange-200 bg-orange-50' : 'border-green-200 bg-green-50'}>
+            <CheckCircle className="h-4 w-4" />
+            <AlertDescription>
+              <div className="space-y-1">
+                <div className="font-medium">Import Results</div>
+                <div className="text-sm">
+                  {importResults.usersSuccess > 0 && <span className="text-green-700">✓ {importResults.usersSuccess} users imported</span>}
+                  {importResults.usersFailed > 0 && <span className="text-red-700 ml-2">✗ {importResults.usersFailed} users failed</span>}
+                  {importResults.staffSuccess > 0 && <span className="text-green-700 ml-2">✓ {importResults.staffSuccess} staff imported</span>}
+                  {importResults.staffFailed > 0 && <span className="text-red-700 ml-2">✗ {importResults.staffFailed} staff failed</span>}
+                </div>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold">Import Preview</h3>
             <p className="text-sm text-gray-600">Review the data before importing</p>
           </div>
-          <div className="flex gap-2">
-            <Badge className="bg-green-100 text-green-800">
-              <CheckCircle className="w-3 h-3 mr-1" />
-              {validationResults.valid.length} Valid
-            </Badge>
+          <div className="flex flex-wrap gap-2">
+            {validationResults.validUsers.length > 0 && (
+              <Badge className="bg-green-100 text-green-800">
+                <Users className="w-3 h-3 mr-1" />
+                {validationResults.validUsers.length} Users
+              </Badge>
+            )}
+            {validationResults.validStaff.length > 0 && (
+              <Badge className="bg-amber-100 text-amber-800">
+                <UserCog className="w-3 h-3 mr-1" />
+                {validationResults.validStaff.length} Staff
+              </Badge>
+            )}
             {validationResults.invalid.length > 0 && (
               <Badge className="bg-red-100 text-red-800">
                 <AlertCircle className="w-3 h-3 mr-1" />
@@ -519,16 +678,7 @@ partner.admin@consulting.com,Pat Johnson,,Partner Business Administrator,,Senior
             <AlertCircle className="h-4 w-4 text-orange-600" />
             <AlertDescription className="text-orange-900">
               <div className="flex items-center justify-between">
-                <span>{validationResults.duplicates.length} users with existing email addresses found.</span>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={updateDuplicates}
-                    onChange={(e) => setUpdateDuplicates(e.target.checked)}
-                    className="form-checkbox h-4 w-4 text-orange-600"
-                  />
-                  <span className="text-sm font-medium">Update existing user profiles</span>
-                </label>
+                <span>{validationResults.duplicates.length} rows with existing email addresses found. These will be skipped.</span>
               </div>
             </AlertDescription>
           </Alert>
@@ -558,18 +708,25 @@ partner.admin@consulting.com,Pat Johnson,,Partner Business Administrator,,Senior
             <Table>
               <TableHeader className="bg-gray-50">
                 <TableRow>
+                  <TableHead>Type</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Full Name</TableHead>
-                  <TableHead>Display Name</TableHead>
                   <TableHead>Role</TableHead>
-                  <TableHead>Department</TableHead>
+                  <TableHead>Department / Team</TableHead>
                   <TableHead>Organization</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {validationResults.valid.map((user, idx) => (
-                  <TableRow key={idx} className="bg-white">
+                {/* Valid Users */}
+                {validationResults.validUsers.map((user, idx) => (
+                  <TableRow key={`u-${idx}`} className="bg-white">
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs">
+                        <Users className="w-3 h-3 mr-1" />
+                        User
+                      </Badge>
+                    </TableCell>
                     <TableCell>
                       <Badge className="bg-green-100 text-green-800">
                         <CheckCircle className="w-3 h-3 mr-1" />
@@ -578,18 +735,17 @@ partner.admin@consulting.com,Pat Johnson,,Partner Business Administrator,,Senior
                     </TableCell>
                     <TableCell className="font-medium">{user.email}</TableCell>
                     <TableCell>{user.full_name}</TableCell>
-                    <TableCell className="text-gray-600">{user.display_name || '-'}</TableCell>
                     <TableCell>{user.app_role || 'User Level 1'}</TableCell>
                     <TableCell>{user.department}</TableCell>
                     <TableCell>
                       {user.client_name && (
                         <Badge className="bg-green-100 text-green-800 text-xs">
-                          Client: {user.client_name}
+                          {user.client_name}
                         </Badge>
                       )}
                       {user.partner_name && (
                         <Badge className="bg-orange-100 text-orange-800 text-xs">
-                          Partner: {user.partner_name}
+                          {user.partner_name}
                         </Badge>
                       )}
                       {!user.client_name && !user.partner_name && (
@@ -598,8 +754,45 @@ partner.admin@consulting.com,Pat Johnson,,Partner Business Administrator,,Senior
                     </TableCell>
                   </TableRow>
                 ))}
+                {/* Valid Staff */}
+                {validationResults.validStaff.map((user, idx) => (
+                  <TableRow key={`s-${idx}`} className="bg-amber-50/50">
+                    <TableCell>
+                      <Badge className="bg-amber-100 text-amber-800 text-xs">
+                        <UserCog className="w-3 h-3 mr-1" />
+                        Staff
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className="bg-green-100 text-green-800">
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Valid
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-medium">{user.email}</TableCell>
+                    <TableCell>{user.full_name}</TableCell>
+                    <TableCell><span className="text-[#0202ff] font-medium">Staff</span></TableCell>
+                    <TableCell>{user.team || '—'}</TableCell>
+                    <TableCell>
+                      {user.client_name && (
+                        <Badge className="bg-green-100 text-green-800 text-xs">
+                          {user.client_name}
+                        </Badge>
+                      )}
+                      {!user.client_name && (
+                        <span className="text-xs text-gray-500">Default org</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {/* Duplicates */}
                 {validationResults.duplicates.map((item, idx) => (
                   <TableRow key={`dup-${idx}`} className="bg-orange-50">
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs">
+                        {item.type === 'staff' ? <><UserCog className="w-3 h-3 mr-1" />Staff</> : <><Users className="w-3 h-3 mr-1" />User</>}
+                      </Badge>
+                    </TableCell>
                     <TableCell>
                       <Badge className="bg-orange-100 text-orange-800">
                         <AlertCircle className="w-3 h-3 mr-1" />
@@ -608,25 +801,25 @@ partner.admin@consulting.com,Pat Johnson,,Partner Business Administrator,,Senior
                     </TableCell>
                     <TableCell className="font-medium">{item.user.email}</TableCell>
                     <TableCell>{item.user.full_name}</TableCell>
-                    <TableCell className="text-gray-600">{item.user.display_name || '-'}</TableCell>
-                    <TableCell>{item.user.app_role || 'User Level 1'}</TableCell>
-                    <TableCell>{item.user.department}</TableCell>
+                    <TableCell>{item.user.app_role || '—'}</TableCell>
+                    <TableCell>{item.user.department || '—'}</TableCell>
                     <TableCell>
                       {item.user.client_name && (
                         <Badge className="bg-green-100 text-green-800 text-xs">
                           {item.user.client_name}
                         </Badge>
                       )}
-                      {item.user.partner_name && (
-                        <Badge className="bg-orange-100 text-orange-800 text-xs">
-                          {item.user.partner_name}
-                        </Badge>
-                      )}
                     </TableCell>
                   </TableRow>
                 ))}
+                {/* Invalid */}
                 {validationResults.invalid.map((item, idx) => (
                   <TableRow key={`inv-${idx}`} className="bg-red-50">
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs">
+                        {String(item.user.app_role || '').toLowerCase() === 'staff' ? <><UserCog className="w-3 h-3 mr-1" />Staff</> : <><Users className="w-3 h-3 mr-1" />User</>}
+                      </Badge>
+                    </TableCell>
                     <TableCell>
                       <Badge className="bg-red-100 text-red-800">
                         <AlertCircle className="w-3 h-3 mr-1" />
@@ -635,10 +828,8 @@ partner.admin@consulting.com,Pat Johnson,,Partner Business Administrator,,Senior
                     </TableCell>
                     <TableCell className="font-medium">{item.user.email || 'N/A'}</TableCell>
                     <TableCell>{item.user.full_name || 'N/A'}</TableCell>
-                    <TableCell className="text-gray-600">{item.user.display_name || '-'}</TableCell>
                     <TableCell>{item.user.app_role || 'N/A'}</TableCell>
-                    <TableCell>{item.user.department || 'N/A'}</TableCell>
-                    <TableCell colSpan={1}>
+                    <TableCell colSpan={2}>
                       <span className="text-xs text-red-600">{item.errors.join('; ')}</span>
                     </TableCell>
                   </TableRow>
@@ -653,42 +844,47 @@ partner.admin@consulting.com,Pat Johnson,,Partner Business Administrator,,Senior
             type="button"
             variant="outline"
             onClick={() => {
-              if (onCancel) {
+              if (importResults) {
+                // After import, close the dialog
+                onSuccess();
+              } else if (onCancel) {
                 onCancel();
               } else {
                 setUploadStep('upload');
                 setCsvData([]);
-                setValidationResults({ valid: [], invalid: [], duplicates: [] });
+                setValidationResults({ validUsers: [], validStaff: [], invalid: [], duplicates: [] });
                 setUpdateDuplicates(false);
               }
             }}
             className="flex-1"
           >
             <X className="w-4 h-4 mr-2" />
-            Cancel
+            {importResults ? 'Close' : 'Cancel'}
           </Button>
-          <Button
-            onClick={handleConfirmImport}
-            disabled={processing || (validationResults.valid.length === 0 && (!updateDuplicates || validationResults.duplicates.length === 0))}
-            className="flex-1 bg-green-600 hover:bg-green-700"
-          >
-            {processing ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Creating Users...
-              </>
-            ) : (
-              <>
-                <CheckCircle className="w-4 h-4 mr-2" />
-                {validationResults.valid.length > 0 && updateDuplicates && validationResults.duplicates.length > 0 
-                  ? `Prepare ${validationResults.valid.length} & Update ${validationResults.duplicates.length} Users`
-                  : validationResults.valid.length > 0 
-                    ? `Prepare ${validationResults.valid.length} Users for Invite`
-                    : `Update ${validationResults.duplicates.length} Users`
-                }
-              </>
-            )}
-          </Button>
+          {!importResults && (
+            <Button
+              onClick={handleConfirmImport}
+              disabled={processing || totalValid === 0}
+              className="flex-1 bg-green-600 hover:bg-green-700"
+            >
+              {processing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Importing...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  {validationResults.validUsers.length > 0 && validationResults.validStaff.length > 0
+                    ? `Import ${validationResults.validUsers.length} Users & ${validationResults.validStaff.length} Staff`
+                    : validationResults.validUsers.length > 0
+                      ? `Import ${validationResults.validUsers.length} Users`
+                      : `Import ${validationResults.validStaff.length} Staff`
+                  }
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </div>
     );
@@ -699,10 +895,9 @@ partner.admin@consulting.com,Pat Johnson,,Partner Business Administrator,,Senior
       <BulkInviteUsers
         pendingUsers={pendingUsers}
         onComplete={() => {
-          // Reset and call success
           setUploadStep('upload');
           setCsvData([]);
-          setValidationResults({ valid: [], invalid: [], duplicates: [] });
+          setValidationResults({ validUsers: [], validStaff: [], invalid: [], duplicates: [] });
           setUpdateDuplicates(false);
           setPendingUsers([]);
           onSuccess();
@@ -710,7 +905,7 @@ partner.admin@consulting.com,Pat Johnson,,Partner Business Administrator,,Senior
         onCancel={() => {
           setUploadStep('upload');
           setCsvData([]);
-          setValidationResults({ valid: [], invalid: [], duplicates: [] });
+          setValidationResults({ validUsers: [], validStaff: [], invalid: [], duplicates: [] });
           setUpdateDuplicates(false);
           setPendingUsers([]);
         }}

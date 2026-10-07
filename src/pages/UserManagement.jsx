@@ -465,10 +465,7 @@ function UserManagement() {
                 <Edit className="w-4 h-4 mr-2" /> Bulk Edit
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setShowBulkUpload(true)}>
-                <Upload className="w-4 h-4 mr-2" /> Upload Users CSV
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowStaffCsvUpload(true)}>
-                <Upload className="w-4 h-4 mr-2" /> Upload Staff CSV
+                <Upload className="w-4 h-4 mr-2" /> Upload CSV
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleSendCards} disabled={sendingCards || staffRoster.length === 0}>
                 {sendingCards ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />} Send check-ins to staff
@@ -885,7 +882,7 @@ function UserManagement() {
       <Dialog open={showBulkUpload} onOpenChange={setShowBulkUpload}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Upload CSV</DialogTitle></DialogHeader>
-          <BulkUserUpload onCancel={() => setShowBulkUpload(false)} onSuccess={() => { setShowBulkUpload(false); loadData(); }} />
+          <BulkUserUpload onCancel={() => setShowBulkUpload(false)} onSuccess={() => { setShowBulkUpload(false); loadData(); }} clientId={clientId} createdByEmail={currentUser?.email} />
         </DialogContent>
       </Dialog>
 
