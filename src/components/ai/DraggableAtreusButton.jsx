@@ -33,7 +33,8 @@ export default function DraggableAtreusButton({ onClick, visible }) {
   const start = useRef({ x: 0, y: 0 });
   const startPos = useRef({ x: 0, y: 0 });
 
-  // Clamp saved position on mount / resize so button stays on-screen
+  // Always start at the default lower-right position on mount / refresh.
+  // Only clamp an in-session drag position on resize.
   useEffect(() => {
     const clampPos = () => {
       setPos((prev) => {
@@ -44,13 +45,6 @@ export default function DraggableAtreusButton({ onClick, visible }) {
         };
       });
     };
-    const saved = loadSavedPos();
-    if (saved) {
-      setPos({
-        x: clamp(saved.x, EDGE_MARGIN, window.innerWidth - BTN_SIZE - EDGE_MARGIN),
-        y: clamp(saved.y, EDGE_MARGIN, window.innerHeight - BTN_SIZE - EDGE_MARGIN),
-      });
-    }
     window.addEventListener("resize", clampPos);
     return () => window.removeEventListener("resize", clampPos);
   }, []);
@@ -83,10 +77,7 @@ export default function DraggableAtreusButton({ onClick, visible }) {
     dragging.current = false;
     try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
     if (moved.current) {
-      setPos((p) => {
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); } catch {}
-        return p;
-      });
+      // Position is kept in-session only; refresh resets to the default corner.
     } else {
       onClick?.();
     }
@@ -96,7 +87,7 @@ export default function DraggableAtreusButton({ onClick, visible }) {
 
   const positionStyle = pos
     ? { left: pos.x, top: pos.y }
-    : { left: 24, bottom: 24 };
+    : { right: 24, bottom: 24 };
 
   return (
     <div
