@@ -56,29 +56,64 @@ Deno.serve(async (req) => {
     const measures = getMeasuresForClient(client);
     const customQuestions = await getActiveCustomQuestions(serviceBase44, clientId, '', checkInType);
 
-    const eligible = (icRows || []).filter((ic: any) => !!ic.teams_conversation_id);
-    const skipped = (icRows || []).filter((ic: any) => !ic.teams_conversation_id);
-
-    let graphToken: string | null = null;
+    const APP_URL = 'https://curiosityled.ai';
+    const all = icRows || [];
     const results: any[] = [];
+    let graphToken: string | null = null;
 
-    for (const ic of eligible) {
-      try {
-        if (!graphToken) graphToken = await getGraphToken();
-        const card = buildICCheckInCard(ic, measures, customQuestions, checkInType);
-        await sendCardToTeams(ic.teams_conversation_id, card, graphToken);
-        results.push({ ic_id: ic.id, email: ic.email, status: 'sent' });
-      } catch (e) {
-        results.push({ ic_id: ic.id, email: ic.email, status: 'failed', error: e.message });
+    for (const ic of all) {
+      const channel = ic.preferred_channel || 'both';
+      const hasTeams = !!ic.teams_conversation_id;
+      const wantsTeams = (channel === 'teams' || channel === 'both') && hasTeams;
+      const wantsEmail = channel === 'email' || channel === 'both' || !hasTeams;
+      const entry: any = { ic_id: ic.id, email: ic.email, teams: 'skipped', email: 'skipped' };
+
+      // Teams Adaptive Card
+      if (wantsTeams) {
+        try {
+          if (!graphToken) graphToken = await getGraphToken();
+          const card = buildICCheckInCard(ic, measures, customQuestions, checkInType);
+          await sendCardToTeams(ic.teams_conversation_id, card, graphToken);
+          entry.teams = 'sent';
+        } catch (e: any) {
+          entry.teams = 'failed';
+          entry.teams_error = e.message;
+        }
       }
+
+      // Email with the web fallback link (also sent when no Teams conversation yet)
+      if (wantsEmail && ic.email && ic.web_access_token) {
+        const link = `${APP_URL}/ic-checkin?token=${ic.web_access_token}`;
+        try {
+          await serviceBase44.integrations.Core.SendEmail({
+            to: ic.email,
+            subject: `Your ${checkInType === 'evening' ? 'evening' : 'daily'} check-in`,
+            text:
+              `Hi ${ic.name?.split(' ')[0] || ''},\n\n` +
+              `Here is your ${checkInType} check-in. Complete it here (takes about a minute):\n${link}\n\n` +
+              `— Curiosity Led`,
+          });
+          entry.email = 'sent';
+        } catch (e: any) {
+          entry.email = 'failed';
+          entry.email_error = e.message;
+        }
+      }
+
+      results.push(entry);
     }
+
+    const teamsSent = results.filter((r) => r.teams === 'sent').length;
+    const emailSent = results.filter((r) => r.email === 'sent').length;
+    const skippedNoConversation = all.filter((ic) => !ic.teams_conversation_id).length;
 
     return Response.json({
       success: true,
       check_in_type: checkInType,
-      sent: results.filter((r) => r.status === 'sent').length,
-      failed: results.filter((r) => r.status === 'failed').length,
-      skipped_no_conversation: skipped.length,
+      sent: teamsSent,
+      emailed: emailSent,
+      failed: results.filter((r) => r.teams === 'failed' || r.email === 'failed').length,
+      skipped_no_conversation: skippedNoConversation,
       details: results,
     });
   } catch (error) {

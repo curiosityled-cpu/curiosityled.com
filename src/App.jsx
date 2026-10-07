@@ -34,6 +34,7 @@ import RequestSubmit from './pages/RequestSubmit';
 import TalentManager from './pages/TalentManager';
 import SuccessionWorkspace from './pages/SuccessionWorkspace';
 import TestLanding from './pages/TestLanding';
+import ICWebCheckIn from './pages/ICWebCheckIn';
 
 
 import LeadershipIntelligenceHub from './pages/LeadershipIntelligenceHub';
@@ -139,6 +140,9 @@ const AuthenticatedApp = () => {
       <Route path="/bpo-diagnostic" element={<BpoOfferPage />} />
       <Route path="/radar-label-sample" element={<RadarLabelSample />} />
       <Route path="/testlanding" element={<TestLanding />} />
+
+      {/* Public IC web check-in — token-gated, not indexed, no login required */}
+      <Route path="/ic-checkin" element={<ICWebCheckIn />} />
 
       {/* Protected app routes — auth required, unauthenticated users redirect to /login */}
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>

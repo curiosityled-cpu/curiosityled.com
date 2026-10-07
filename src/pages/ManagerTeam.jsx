@@ -167,6 +167,49 @@ export default function ManagerTeam() {
                   </div>
                 </TeamRosterCard>
               ) : null}
+
+              {/* Frontline staff (non-user ICs) reporting into this team */}
+              {rollup?.frontline_members?.length > 0 && (
+                <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl">
+                  <div className="px-5 py-4 border-b border-border">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-[#0202ff]" />
+                      <p className="text-sm font-semibold text-card-foreground">
+                        Frontline staff ({rollup.frontline_members.length})
+                      </p>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Non-user staff who check in via Teams or a web link. Not invited to the platform.
+                    </p>
+                  </div>
+                  <div className="divide-y divide-border">
+                    {rollup.frontline_members.map((ic) => (
+                      <div key={ic.id} className="px-5 py-2.5 flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-card-foreground truncate">{ic.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {ic.email}{ic.team ? ` · ${ic.team}` : ""}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {ic.teams_connected ? (
+                            <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5">Teams</span>
+                          ) : (
+                            <span className="text-[10px] font-medium text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">Web link</span>
+                          )}
+                          {ic.last_check_in_at ? (
+                            <span className="text-[10px] text-muted-foreground">
+                              {new Date(ic.last_check_in_at).toLocaleDateString()}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground">No check-in</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
             </div>
 
             {/* Right — Context sidebar */}

@@ -456,6 +456,29 @@ export default async function (req) {
       }
     }
 
+    // ── Frontline ICs (non-user staff) reporting into someone in scope ──
+    let frontlineMembers: any[] = [];
+    if (detailEmails.length > 0) {
+      const detailSet = new Set(detailEmails);
+      const icFilter: any = { is_active: true };
+      if (clientId) icFilter.client_id = clientId;
+      const icRows = await base44.asServiceRole.entities.ICRoster.filter(
+        icFilter, "-created_date", 500
+      ).catch(() => []);
+      frontlineMembers = (icRows || [])
+        .filter((ic: any) => ic.manager_email && detailSet.has(ic.manager_email))
+        .map((ic: any) => ({
+          id: ic.id,
+          name: ic.name,
+          email: ic.email,
+          team: ic.team || "",
+          manager_email: ic.manager_email,
+          teams_connected: !!ic.teams_conversation_id,
+          preferred_channel: ic.preferred_channel || "both",
+          last_check_in_at: ic.last_check_in_at || null,
+        }));
+    }
+
     // ── Team Pulse synthesis (structured signals → natural-language read) ──
     const pulseSignals = {
       at_risk_count: atRisk.length,
@@ -469,6 +492,7 @@ export default async function (req) {
     return Response.json({
       ...base,
       members,
+      frontline_members: frontlineMembers,
       aggregates,
       at_risk: atRisk,
       subtree_cards: subtreeCards,

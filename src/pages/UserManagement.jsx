@@ -29,6 +29,7 @@ import CreateRoleModal from "../components/roles/CreateRoleModal";
 import BulkRoleActions from "../components/roles/BulkRoleActions";
 import PermissionDependencyViewer from "../components/roles/PermissionDependencyViewer";
 import ProvisionUsersCard from "../components/provisioning/ProvisionUsersCard";
+import ICRosterManager from "@/components/performance-mgmt/ICRosterManager";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import {
   DropdownMenu,
@@ -432,7 +433,7 @@ function UserManagement() {
 
       {/* Tabs */}
       <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit overflow-x-auto">
-        {[{ id: 'users', label: 'Users', icon: Users }, { id: 'roles', label: 'Roles & Permissions', icon: Shield }].map(tab => {
+        {[{ id: 'users', label: 'Users', icon: Users }, { id: 'frontline', label: 'Frontline Staff', icon: UserPlus }, { id: 'roles', label: 'Roles & Permissions', icon: Shield }].map(tab => {
           const Icon = tab.icon;
           return (
             <button
@@ -746,6 +747,24 @@ function UserManagement() {
 
             {/* Permission Coverage + Role Hierarchy — side by side below roles */}
             <PermissionDependencyViewer selectedPermissions={selectedPermissions} allPermissions={permissions} />
+          </div>
+        )}
+
+        {activeTab === 'frontline' && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <div className="flex items-start gap-2 mb-1">
+                <UserPlus className="w-4 h-4 text-[#0202ff] mt-0.5" />
+                <div>
+                <p className="text-sm font-semibold text-gray-900">Frontline staff (non-users)</p>
+                <p className="text-xs text-gray-500 mt-0.5 max-w-2xl">
+                  These staff complete daily check-ins via Microsoft Teams or a private web link — they are never invited into the platform.
+                  They may also exist in your HRIS, LMS, or Microsoft tenant; use the HRIS Employee ID to reconcile. Add them individually or upload a CSV.
+                </p>
+                </div>
+              </div>
+            </div>
+            <ICRosterManager user={currentUser} />
           </div>
         )}
     </MVPPageLayout>

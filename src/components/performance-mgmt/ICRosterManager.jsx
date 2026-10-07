@@ -15,6 +15,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -30,8 +37,14 @@ import {
   Users,
   AlertCircle,
   MessageSquare,
+  Upload,
+  Link2,
+  Copy,
 } from "lucide-react";
 import { toast } from "sonner";
+import ICRosterCSVUpload from "@/components/users/ICRosterCSVUpload";
+
+const APP_URL = "https://curiosityled.ai";
 
 const emptyForm = {
   name: "",
@@ -39,6 +52,8 @@ const emptyForm = {
   teams_user_id: "",
   team: "",
   manager_email: "",
+  hris_employee_id: "",
+  preferred_channel: "both",
   is_active: true,
   check_in_enabled: true,
 };
@@ -57,6 +72,7 @@ export default function ICRosterManager({ user }) {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState(null);
   const [sending, setSending] = useState(false);
+  const [showCsvUpload, setShowCsvUpload] = useState(false);
 
   const loadRoster = useCallback(async () => {
     if (!clientId) {
@@ -94,6 +110,8 @@ export default function ICRosterManager({ user }) {
       teams_user_id: ic.teams_user_id || "",
       team: ic.team || "",
       manager_email: ic.manager_email || "",
+      hris_employee_id: ic.hris_employee_id || "",
+      preferred_channel: ic.preferred_channel || "both",
       is_active: ic.is_active !== false,
       check_in_enabled: ic.check_in_enabled !== false,
     });
@@ -114,6 +132,8 @@ export default function ICRosterManager({ user }) {
       teams_user_id: form.teams_user_id.trim(),
       team: form.team.trim(),
       manager_email: form.manager_email.trim().toLowerCase(),
+      hris_employee_id: form.hris_employee_id.trim(),
+      preferred_channel: form.preferred_channel,
       is_active: form.is_active,
       check_in_enabled: form.check_in_enabled,
     };
@@ -125,6 +145,8 @@ export default function ICRosterManager({ user }) {
           ...payload,
           client_id: clientId,
           created_by_email: currentUser?.email || "",
+          source_system: "manual",
+          web_access_token: crypto.randomUUID(),
         });
       }
       setDialogOpen(false);
@@ -177,6 +199,18 @@ export default function ICRosterManager({ user }) {
     }
   };
 
+  const copyWebLink = (ic) => {
+    if (!ic.web_access_token) {
+      toast.error("No web link yet — re-save this IC to generate one.");
+      return;
+    }
+    const link = `${APP_URL}/ic-checkin?token=${ic.web_access_token}`;
+    navigator.clipboard?.writeText(link).then(
+      () => toast.success("Web check-in link copied"),
+      () => toast.error("Could not copy link")
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -222,7 +256,15 @@ export default function ICRosterManager({ user }) {
             ) : (
               <Send className="w-3.5 h-3.5 mr-1" />
             )}
-            Send today's cards
+            Send today's check-ins
+          </Button>
+          <Button
+            onClick={() => setShowCsvUpload(true)}
+            variant="outline"
+            size="sm"
+            className="text-xs"
+          >
+            <Upload className="w-3.5 h-3.5 mr-1" /> Upload CSV
           </Button>
           <Button
             onClick={openAdd}
@@ -306,6 +348,13 @@ export default function ICRosterManager({ user }) {
                     </div>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
+                    <button
+                      onClick={() => copyWebLink(ic)}
+                      className="p-1.5 rounded-md hover:bg-muted text-muted-foreground"
+                      title="Copy web check-in link"
+                    >
+                      <Link2 className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => toggleField(ic, "check_in_enabled")}
                       className="p-1.5 rounded-md hover:bg-muted text-muted-foreground"
@@ -403,6 +452,33 @@ export default function ICRosterManager({ user }) {
                 left blank.
               </p>
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">HRIS employee ID</Label>
+                <Input
+                  value={form.hris_employee_id}
+                  onChange={(e) => setForm((f) => ({ ...f, hris_employee_id: e.target.value }))}
+                  placeholder="Reconcile with HRIS"
+                  className="text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Notify via</Label>
+                <Select
+                  value={form.preferred_channel}
+                  onValueChange={(v) => setForm((f) => ({ ...f, preferred_channel: v }))}
+                >
+                  <SelectTrigger className="text-sm h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="both">Teams + Email</SelectItem>
+                    <SelectItem value="teams">Teams only</SelectItem>
+                    <SelectItem value="email">Email only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
               <div>
                 <p className="text-sm font-medium">Receives check-in cards</p>
@@ -460,6 +536,14 @@ export default function ICRosterManager({ user }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ICRosterCSVUpload
+        open={showCsvUpload}
+        onClose={() => setShowCsvUpload(false)}
+        onDone={loadRoster}
+        clientId={clientId}
+        createdByEmail={currentUser?.email}
+      />
     </div>
   );
 }

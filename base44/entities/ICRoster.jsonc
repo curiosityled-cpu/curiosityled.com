@@ -1,7 +1,7 @@
 {
   "name": "ICRoster",
   "type": "object",
-  "description": "Roster of non-user frontline individual contributors (ICs) who submit daily check-ins via Microsoft Teams. These staff are not registered app users; their Teams identity is matched here so the bot can route their check-in submissions into DailyCheckIn.",
+  "description": "Roster of non-user frontline individual contributors (ICs) who submit daily check-ins via Microsoft Teams or a token-gated web page. These staff are not registered app users and are never invited into the platform; their Teams identity or web access token is matched here so check-in submissions can be routed into DailyCheckIn. These employees typically also exist in the client's HRIS, LMS, and Microsoft tenant \u2014 hris_employee_id and source_system help reconcile the roster against those systems.",
   "properties": {
     "name": {
       "type": "string",
@@ -9,7 +9,7 @@
     },
     "email": {
       "type": "string",
-      "description": "Email used as user_email on DailyCheckIn records. Should match the Teams account email/UPN for identity matching."
+      "description": "Email used as user_email on DailyCheckIn records. Should match the Teams account email/UPN for identity matching. Also used as the email notification destination."
     },
     "teams_user_id": {
       "type": "string",
@@ -29,7 +29,7 @@
     },
     "manager_email": {
       "type": "string",
-      "description": "Email of the IC's manager (an app user who can view this IC's check-in data)"
+      "description": "Email of the IC's manager (an app user who can view this IC's check-in data and sees them in their team view)"
     },
     "is_active": {
       "type": "boolean",
@@ -40,6 +40,35 @@
       "type": "boolean",
       "default": true,
       "description": "Whether this IC should receive daily check-in cards via Teams"
+    },
+    "preferred_channel": {
+      "type": "string",
+      "enum": [
+        "teams",
+        "email",
+        "both"
+      ],
+      "default": "both",
+      "description": "Where this IC receives check-in notifications. 'teams' = Adaptive Card only; 'email' = email with web link only; 'both' = Teams card plus email. ICs without a Teams conversation automatically fall back to email."
+    },
+    "web_access_token": {
+      "type": "string",
+      "description": "Unguessable token used to build the IC's private web check-in link (https://curiosityled.ai/ic-checkin?token=...). The link is not indexed and is only usable by whoever holds the token."
+    },
+    "hris_employee_id": {
+      "type": "string",
+      "description": "Employee ID in the client's HRIS. Used to reconcile this roster entry against the HRIS and avoid duplicates when the client uploads from multiple systems."
+    },
+    "source_system": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "csv",
+        "hris_sync",
+        "teams_sync"
+      ],
+      "default": "manual",
+      "description": "Where this roster record originated. 'manual' = added by hand; 'csv' = bulk uploaded; 'hris_sync' = imported from the client's HRIS; 'teams_sync' = auto-created when an unknown Teams user messaged the bot."
     },
     "last_check_in_at": {
       "type": "string",
