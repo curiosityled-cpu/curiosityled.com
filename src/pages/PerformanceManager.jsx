@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/components/useAuth";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
-import { BarChart2, Target, Calendar, ClipboardList, Plug, ListChecks, UserPlus } from "lucide-react";
+import { BarChart2, Target, Calendar, ClipboardList, Plug, UserPlus } from "lucide-react";
 import { motion } from "framer-motion";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import PerformanceOverviewTab from "@/components/performance-mgmt/PerformanceOverviewTab";
@@ -11,14 +11,12 @@ import OneOnOnesTab from "@/components/performance-mgmt/OneOnOnesTab";
 import ReviewsTabContent from "@/components/performance-mgmt/ReviewsTabContent";
 import TeamCockpit from "@/components/performance-mgmt/TeamCockpit";
 import IntegrationTab from "@/components/performance-mgmt/IntegrationTab";
-import CheckInSetupTab from "@/components/performance-mgmt/CheckInSetupTab";
 import ICRosterManager from "@/components/performance-mgmt/ICRosterManager";
 import { useCoachCoacheeScope } from "@/hooks/useCoachCoacheeScope";
 
 const TABS = [
   { id: "expectations", label: "Expectations", icon: Target },
   { id: "checkins", label: "Check-ins & 1:1s", icon: Calendar },
-  { id: "checkin_setup", label: "Check-In Setup", icon: ListChecks },
   { id: "frontline_ics", label: "Frontline ICs", icon: UserPlus },
   { id: "reviews", label: "Reviews", icon: ClipboardList },
   { id: "overview", label: "Overview", icon: BarChart2 },
@@ -93,7 +91,6 @@ export default function PerformanceManager() {
       >
         {section === "expectations" && <ExpectationsTab user={fullUser} />}
         {section === "checkins" && <OneOnOnesTab user={fullUser} />}
-        {section === "checkin_setup" && <CheckInSetupTab user={fullUser} />}
         {section === "frontline_ics" && <ICRosterManager user={fullUser} />}
         {section === "reviews" && <ReviewsTabContent user={fullUser} />}
         {section === "overview" && (

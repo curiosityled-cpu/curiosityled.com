@@ -14,7 +14,8 @@ import MeetingRecordModal from "./oneonone/MeetingRecordModal";
 import ActionTracker from "./oneonone/ActionTracker";
 import OneOnOneInsights from "./oneonone/OneOnOneInsights";
 import ScheduleOneOnOneModal from "./oneonone/ScheduleOneOnOneModal";
-import CheckInTab from "./oneonone/CheckInTab";
+import CheckInHistory from "./oneonone/CheckInHistory";
+import CheckInSetupTab from "./CheckInSetupTab";
 
 const STATUS_STYLES = {
   scheduled: "bg-blue-50 text-blue-700 border-blue-200",
@@ -237,8 +238,13 @@ const SUB_TABS = [
   { id: "insights", label: "Insights", icon: BarChart2 },
 ];
 
+const HR_ADMIN_ROLES = ["Admin Level 1", "Admin Level 2", "Super Administrator", "Partner Business Administrator", "Platform Admin"];
+
 export default function OneOnOnesTab({ user }) {
+  const userRole = user?.app_role || user?.data?.app_role || user?.role || "";
+  const isHRAdmin = HR_ADMIN_ROLES.includes(userRole);
   const [activeTab, setActiveTab] = useState("sessions");
+  const [checkinView, setCheckinView] = useState("history");
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
@@ -306,7 +312,37 @@ export default function OneOnOnesTab({ user }) {
         <SessionsView user={user} users={users} isManager={isManager} />
       )}
       {activeTab === "checkin" && (
-        <CheckInTab user={user} isManager={isManager} teamMembers={teamMembers} />
+        <div className="space-y-4">
+          {isHRAdmin && (
+            <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
+              <button
+                onClick={() => setCheckinView("history")}
+                className={`flex items-center gap-1.5 text-xs font-medium py-1.5 px-3 rounded-lg transition-all ${
+                  checkinView === "history"
+                    ? "bg-white shadow-sm text-gray-900"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Check-In
+              </button>
+              <button
+                onClick={() => setCheckinView("setup")}
+                className={`flex items-center gap-1.5 text-xs font-medium py-1.5 px-3 rounded-lg transition-all ${
+                  checkinView === "setup"
+                    ? "bg-white shadow-sm text-gray-900"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Check-In Set Up
+              </button>
+            </div>
+          )}
+          {checkinView === "setup" && isHRAdmin ? (
+            <CheckInSetupTab user={user} />
+          ) : (
+            <CheckInHistory user={user} />
+          )}
+        </div>
       )}
       {activeTab === "actions" && isManager && (
         <ActionTracker user={user} teamMembers={teamMembers} />
