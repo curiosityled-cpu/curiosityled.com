@@ -1,0 +1,173 @@
+{
+  "name": "CheckInCustomQuestion",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this custom check-in question belongs to"
+    },
+    "title": {
+      "type": "string",
+      "description": "The question text shown to the user (e.g. 'How many loads did you complete today?')"
+    },
+    "question_key": {
+      "type": "string",
+      "description": "Stable slug used to key answers in DailyCheckIn.custom_answers"
+    },
+    "response_type": {
+      "type": "string",
+      "enum": [
+        "number",
+        "text",
+        "scale_1_5",
+        "yes_no"
+      ],
+      "description": "How the user answers this question"
+    },
+    "unit_label": {
+      "type": "string",
+      "description": "Optional unit suffix shown next to number responses (e.g. 'loads', 'calls')"
+    },
+    "target_role": {
+      "type": "string",
+      "description": "Optional app_role filter. Empty/null = all roles in the tenant see this question."
+    },
+    "applies_to": {
+      "type": "string",
+      "enum": [
+        "morning",
+        "evening",
+        "both"
+      ],
+      "default": "both",
+      "description": "Which check-in type this question appears in"
+    },
+    "is_required": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the user must answer this question to complete the check-in"
+    },
+    "display_order": {
+      "type": "number",
+      "default": 0,
+      "description": "Order in which questions appear (ascending)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this question is currently shown in check-ins"
+    },
+    "created_by_email": {
+      "type": "string",
+      "description": "Email of the admin who created this question"
+    }
+  },
+  "required": [
+    "title",
+    "question_key",
+    "response_type",
+    "applies_to"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.client_id": "{{user.data.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.created_by_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.created_by_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

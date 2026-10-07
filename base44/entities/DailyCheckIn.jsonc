@@ -168,6 +168,11 @@
         "type": "string"
       },
       "description": "Pattern Watch flags detected by Atreus"
+    },
+    "custom_answers": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Answers to tenant-configured custom KPI questions, keyed by question_key"
     }
   },
   "required": [
