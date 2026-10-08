@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { CHECK_IN_PRESETS, SCALE_LABELS } from "@/lib/checkInPresets";
 import { useCustomCheckInQuestions } from "@/hooks/useCustomCheckInQuestions";
 import CustomQuestionsCard from "@/components/checkin/CustomQuestionsCard";
+import RetroactiveCheckInCard from "@/components/checkin/RetroactiveCheckInCard";
 
 const DEFAULT_MEASURES = CHECK_IN_PRESETS.balance.measures;
 
@@ -247,6 +248,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
   const [expanded, setExpanded] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editStep, setEditStep] = useState(1);
+  const [showRetroactive, setShowRetroactive] = useState(false);
   const { questions: customQs } = useCustomCheckInQuestions("evening");
   // AI-generated custom question texts (keyed by question_key) to persist in
   // questions_used so history shows the exact text shown that day.
@@ -399,6 +401,15 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
       }
     } catch (err) { console.error(err); }
   };
+
+  if (showRetroactive) {
+    return (
+      <RetroactiveCheckInCard
+        initialType="evening"
+        onSaved={() => { setShowRetroactive(false); onComplete?.(null, 'evening', null); }}
+      />
+    );
+  }
 
   if (step === 0 && !editMode) return (
     <div className="flex items-center justify-center py-12">
@@ -592,6 +603,12 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
           <Button onClick={handleMeasureNext} className="w-full bg-[#0202ff] hover:bg-[#0101dd] flex items-center gap-1.5">
             {step < MEASURES.length ? <><span>Next</span><ChevronRight className="w-3.5 h-3.5" /></> : "Plan tomorrow →"}
           </Button>
+          <button
+            onClick={() => setShowRetroactive(true)}
+            className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+          >
+            Complete a missed check-in
+          </button>
         </motion.div>
       </AnimatePresence>
     </div>

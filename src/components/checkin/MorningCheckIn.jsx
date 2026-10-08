@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { CHECK_IN_PRESETS, SCALE_LABELS } from "@/lib/checkInPresets";
 import { useCustomCheckInQuestions } from "@/hooks/useCustomCheckInQuestions";
 import CustomQuestionsCard from "@/components/checkin/CustomQuestionsCard";
+import RetroactiveCheckInCard from "@/components/checkin/RetroactiveCheckInCard";
 
 const DEFAULT_MEASURES = CHECK_IN_PRESETS.balance.measures;
 
@@ -119,6 +120,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail, mea
   const [expanded, setExpanded] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editStep, setEditStep] = useState(1);
+  const [showRetroactive, setShowRetroactive] = useState(false);
   const { questions: customQs } = useCustomCheckInQuestions("morning");
   // AI-generated custom question texts (keyed by question_key) to persist in
   // questions_used so history shows the exact text shown that day.
@@ -261,6 +263,15 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail, mea
       console.error('Save error:', err);
     }).finally(() => setSaving(false));
   };
+
+  if (showRetroactive) {
+    return (
+      <RetroactiveCheckInCard
+        initialType="morning"
+        onSaved={() => { setShowRetroactive(false); onComplete?.(null, 'morning', null); }}
+      />
+    );
+  }
 
   // Loading
   if (step === 0) {
@@ -451,6 +462,12 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail, mea
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : step < MEASURES.length ? <><span>Next</span><ChevronRight className="w-3.5 h-3.5" /></> : "Complete check-in"}
           </Button>
+          <button
+            onClick={() => setShowRetroactive(true)}
+            className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+          >
+            Complete a missed check-in
+          </button>
         </motion.div>
       </AnimatePresence>
     </div>
