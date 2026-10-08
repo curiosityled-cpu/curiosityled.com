@@ -407,6 +407,7 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
       <RetroactiveCheckInCard
         initialType="evening"
         onSaved={() => { setShowRetroactive(false); onComplete?.(null, 'evening', null); }}
+        onCancel={() => setShowRetroactive(false)}
       />
     );
   }

@@ -62,7 +62,7 @@ function ScorePicker({ value, onChange }) {
   );
 }
 
-export default function RetroactiveCheckInCard({ initialDate, initialType, editMode, onSaved, targetEmail, targetName }) {
+export default function RetroactiveCheckInCard({ initialDate, initialType, editMode, onSaved, onCancel, targetEmail, targetName }) {
   const { user } = useAuth();
   const userEmail = user?.email;
   const clientId = user?.data?.client_id || user?.client_id;
@@ -443,17 +443,29 @@ export default function RetroactiveCheckInCard({ initialDate, initialType, editM
           </div>
         )}
 
-        <Button
-          onClick={handleSave}
-          disabled={saving}
-          className="w-full bg-[#0202ff] hover:bg-[#0101dd]"
-        >
-          {saving ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            `Save ${checkInType} check-in for ${targetName || formatDateLabel(selectedDate)}`
+        <div className="flex gap-2">
+          {onCancel && (
+            <Button
+              variant="outline"
+              onClick={onCancel}
+              disabled={saving}
+              className="flex-shrink-0"
+            >
+              Cancel
+            </Button>
           )}
-        </Button>
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex-1 bg-[#0202ff] hover:bg-[#0101dd]"
+          >
+            {saving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              `Save ${checkInType} check-in for ${targetName || formatDateLabel(selectedDate)}`
+            )}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

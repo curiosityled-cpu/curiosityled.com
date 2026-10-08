@@ -550,6 +550,7 @@ export default function CheckInHistory({ user }) {
                 setEditor(null);
                 load();
               }}
+              onCancel={() => setEditor(null)}
             />
           )}
           {editor?.kind === "add" && (
@@ -562,6 +563,7 @@ export default function CheckInHistory({ user }) {
                 setEditor(null);
                 load();
               }}
+              onCancel={() => setEditor(null)}
             />
           )}
         </DialogContent>

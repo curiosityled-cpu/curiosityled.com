@@ -269,6 +269,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail, mea
       <RetroactiveCheckInCard
         initialType="morning"
         onSaved={() => { setShowRetroactive(false); onComplete?.(null, 'morning', null); }}
+        onCancel={() => setShowRetroactive(false)}
       />
     );
   }
