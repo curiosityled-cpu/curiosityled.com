@@ -53,10 +53,8 @@ function Dashboard() {
   const [exportingCSV, setExportingCSV] = useState(false);
   const [exportingPDF, setExportingPDF] = useState(false);
   
-  // Platform Admins should see platform-wide dashboard by default
+  // Platform Admins default to the personal dashboard; platform tools now live in Settings > Platform
   const getInitialDashboardView = () => {
-    if (appRole === 'Platform Admin') return 'platform';
-    if (appRole === 'Super Administrator' || appRole === 'Partner Business Administrator') return VIEW_SCOPES.MY;
     return VIEW_SCOPES.MY;
   };
   
@@ -76,10 +74,6 @@ function Dashboard() {
     if (!user || authLoading) return [];
     
     const views = [];
-    
-    if (permissions.isPlatformAdmin) {
-      views.push({ id: 'platform', label: 'Platform Dashboard', icon: LayoutDashboard });
-    }
     
     if (permissions.canViewPersonal) {
       views.push({ id: VIEW_SCOPES.MY, label: 'Dashboard', icon: User });
@@ -220,8 +214,6 @@ function Dashboard() {
         sections.push('section-admin');
       } else if (appRole === 'Partner Business Administrator') {
         sections.push('section-admin', 'section-programs');
-      } else if (appRole === 'Platform Admin') {
-        sections.push('section-platform-admin');
       }
     }
     
@@ -439,15 +431,6 @@ function Dashboard() {
       );
     }
 
-    // Platform Dashboard
-    if (currentView === 'platform' && permissions.isPlatformAdmin) {
-      return (
-        <Suspense fallback={<LoadingFallback />}>
-          <PlatformAdminDashboard />
-        </Suspense>
-      );
-    }
-
     // Team view
     if (currentView === VIEW_SCOPES.TEAM && permissions.canViewTeam) {
       return (
@@ -515,9 +498,6 @@ function Dashboard() {
         if (currentView === VIEW_SCOPES.TEAM) {
           return 'Team Dashboard';
         }
-        if (currentView === 'platform') {
-          return 'Platform Dashboard';
-          }
           return 'Dashboard';
           };
 
@@ -529,13 +509,10 @@ function Dashboard() {
           return 'Leadership insights and succession planning for the organization';
           }
           if (currentView === 'programs') {
-          return 'Manage programs, classes, coaching, and certificates';
+            return 'Manage programs, classes, coaching, and certificates';
           }
           if (currentView === VIEW_SCOPES.TEAM) {
-          return 'Track your managers\' leadership development progress';
-          }
-          if (currentView === 'platform') {
-          return 'Platform-wide analytics and administration across all organizations';
+            return 'Track your managers\' leadership development progress';
           }
           return 'Your leadership development dashboard';
           };
@@ -550,7 +527,7 @@ function Dashboard() {
           subtitle={getHeaderSubtitle()}
           roleDisplayName={roleDisplayName}
           availableViews={availableViews}
-          currentView={currentView === 'programs' ? 'programs' : currentView === 'platform' ? 'platform' : currentView}
+          currentView={currentView === 'programs' ? 'programs' : currentView}
           onViewChange={setCurrentView}
           onRefresh={handleRefresh}
           onExportCSV={handleExportCSV}
