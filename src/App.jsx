@@ -158,7 +158,7 @@ const AuthenticatedApp = () => {
 
       {/* Legacy Dashboard — redirect manager-role users to /today */}
       <Route path="/Dashboard" element={
-        mvpRole === 'manager' 
+        (user?.app_role === 'Platform Admin' || mvpRole === 'manager')
           ? <Navigate to="/today" replace />
           : <LayoutWrapper currentPageName="Dashboard"><Pages.Dashboard /></LayoutWrapper>
       } />

@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { Link, useLocation } from "react-router-dom";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
 import OrgSettingsTab from "@/components/settings/org/OrgSettingsTab";
+import PlatformManagementHub from "@/components/settings/platform/PlatformManagementHub";
 import CalendarConsentCard from "@/components/checkin/CalendarConsentCard";
 import OrgVisibilityPanel from "@/components/privacy/OrgVisibilityPanel";
 import VisibilityShareFlags from "@/components/privacy/VisibilityShareFlags";
@@ -207,37 +208,7 @@ export default function Settings() {
           {/* ── Platform (admin only) ── */}
           {isAdmin && (
             <TabsContent value="platform">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Platform Settings</CardTitle>
-                  <p className="text-sm text-gray-600">Manage global platform configurations</p>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <Alert><Info className="w-4 h-4" /><AlertDescription>Platform-wide settings are managed in the Admin Command Center and White Label Settings pages.</AlertDescription></Alert>
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-500 mb-3">APPEARANCE & BRANDING</h3>
-                      <div className="space-y-2">
-                        <Link to={createPageUrl("WhiteLabel")}><Button variant="outline" className="w-full justify-start"><Paintbrush className="w-4 h-4 mr-2" />White Label & Branding</Button></Link>
-                        <Link to={createPageUrl("EmailTemplates")}><Button variant="outline" className="w-full justify-start"><Mail className="w-4 h-4 mr-2" />Email & Notification Templates</Button></Link>
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-500 mb-3">USER & ACCESS MANAGEMENT</h3>
-                      <div className="space-y-2">
-                        <Link to={createPageUrl("UserManagement")}><Button variant="outline" className="w-full justify-start"><Users className="w-4 h-4 mr-2" />User Management</Button></Link>
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-500 mb-3">OPERATIONS & AUTOMATION</h3>
-                      <div className="space-y-2">
-                        <Link to={createPageUrl("CommandCenter")}><Button variant="outline" className="w-full justify-start"><SettingsIcon className="w-4 h-4 mr-2" />Command Center</Button></Link>
-                        <Link to={createPageUrl("Automations")}><Button variant="outline" className="w-full justify-start"><Zap className="w-4 h-4 mr-2" />Automations</Button></Link>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <PlatformManagementHub />
             </TabsContent>
           )}
 

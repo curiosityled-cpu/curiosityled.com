@@ -55,8 +55,6 @@ function Dashboard() {
   
   // Platform Admins should see platform-wide dashboard by default
   const getInitialDashboardView = () => {
-    if (appRole === 'Platform Admin') return 'platform';
-    if (appRole === 'Super Administrator' || appRole === 'Partner Business Administrator') return VIEW_SCOPES.MY;
     return VIEW_SCOPES.MY;
   };
   
@@ -76,10 +74,6 @@ function Dashboard() {
     if (!user || authLoading) return [];
     
     const views = [];
-    
-    if (permissions.isPlatformAdmin) {
-      views.push({ id: 'platform', label: 'Platform Dashboard', icon: LayoutDashboard });
-    }
     
     if (permissions.canViewPersonal) {
       views.push({ id: VIEW_SCOPES.MY, label: 'Dashboard', icon: User });
@@ -435,15 +429,6 @@ function Dashboard() {
       return (
         <Suspense fallback={<LoadingFallback />}>
           <ProgramManagerOverview />
-        </Suspense>
-      );
-    }
-
-    // Platform Dashboard
-    if (currentView === 'platform' && permissions.isPlatformAdmin) {
-      return (
-        <Suspense fallback={<LoadingFallback />}>
-          <PlatformAdminDashboard />
         </Suspense>
       );
     }
