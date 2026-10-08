@@ -35,6 +35,7 @@ import TalentManager from './pages/TalentManager';
 import SuccessionWorkspace from './pages/SuccessionWorkspace';
 import TestLanding from './pages/TestLanding';
 import ICWebCheckIn from './pages/ICWebCheckIn';
+import StripeDiagnostic from './pages/StripeDiagnostic';
 
 
 import LeadershipIntelligenceHub from './pages/LeadershipIntelligenceHub';
@@ -144,6 +145,9 @@ const AuthenticatedApp = () => {
       {/* Public IC web check-in — token-gated, not indexed, no login required */}
       <Route path="/ic-checkin" element={<ICWebCheckIn />} />
 
+      {/* Stripe diagnostics — Platform Admin only (function enforces server-side) */}
+      <Route path="/StripeDiagnostic" element={<MVPLayout><StripeDiagnostic /></MVPLayout>} />
+
       {/* Protected app routes — auth required, unauthenticated users redirect to /login */}
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
       {/* Redirect old ExperienceManagement URL to new DevelopmentManager */}
@@ -156,11 +160,13 @@ const AuthenticatedApp = () => {
       {/* CommandCenter retired — redirect to Development Manager */}
       <Route path="/CommandCenter" element={<Navigate to="/DevelopmentManager" replace />} />
 
-      {/* Legacy Dashboard — redirect manager-role users to /today */}
+      {/* Legacy Dashboard — redirect manager-role users to /today, Platform Admins to Platform settings */}
       <Route path="/Dashboard" element={
-        mvpRole === 'manager' 
+        mvpRole === 'manager'
           ? <Navigate to="/today" replace />
-          : <LayoutWrapper currentPageName="Dashboard"><Pages.Dashboard /></LayoutWrapper>
+          : (user?.app_role || user?.data?.app_role || user?.role) === 'Platform Admin'
+            ? <Navigate to="/Settings?tab=platform" replace />
+            : <LayoutWrapper currentPageName="Dashboard"><Pages.Dashboard /></LayoutWrapper>
       } />
 
       {/* New manager nav routes (Phase 1) */}
