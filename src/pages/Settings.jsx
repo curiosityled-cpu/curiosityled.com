@@ -196,7 +196,7 @@ export default function Settings() {
             {isAdmin && (
               <TabsTrigger value="platform"><SettingsIcon className="w-4 h-4 mr-2" />Platform</TabsTrigger>
             )}
-            {isSuperAdmin && (
+            {(isSuperAdmin || isPlatformAdmin) && (
               <TabsTrigger value="organization"><Building2 className="w-4 h-4 mr-2" />Organization</TabsTrigger>
             )}
             <TabsTrigger value="notifications"><Bell className="w-4 h-4 mr-2" />Notifications</TabsTrigger>
@@ -241,8 +241,8 @@ export default function Settings() {
             </TabsContent>
           )}
 
-          {/* ── Organization (Super Admin only) ── */}
-          {isSuperAdmin && (
+          {/* ── Organization (Super Admin / Platform Admin) ── */}
+          {(isSuperAdmin || isPlatformAdmin) && (
             <TabsContent value="organization">
               <OrgSettingsTab />
             </TabsContent>
