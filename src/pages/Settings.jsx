@@ -33,7 +33,7 @@ import PrivacyComplianceDashboard from "@/components/privacy/PrivacyComplianceDa
 import { createPageUrl } from "@/utils";
 
 export default function Settings() {
-  const { user, appRole, reloadUser, isPlatformAdmin, isSuperAdmin, isOrgLeader } = useAuth();
+  const { user, appRole, reloadUser, isPlatformAdmin, isSuperAdmin, isOrgLeader, isAnyAdmin } = useAuth();
   const { updatePageContext } = usePageContext();
   const location = useLocation();
 
@@ -59,7 +59,7 @@ export default function Settings() {
   const [calendarLoading, setCalendarLoading] = useState(false);
   const [privacyData, setPrivacyData] = useState(null);
 
-  const isAdmin = appRole === 'Admin Level 2' || appRole === 'Admin Level 3';
+  const isAdmin = isAnyAdmin;
   const [activeTab, setActiveTab] = useState("notifications");
 
   useEffect(() => {
