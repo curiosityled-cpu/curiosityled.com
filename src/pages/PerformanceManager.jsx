@@ -15,7 +15,7 @@ import { useCoachCoacheeScope } from "@/hooks/useCoachCoacheeScope";
 
 const TABS = [
   { id: "expectations", label: "Expectations", icon: Target },
-  { id: "checkins", label: "Check-ins & 1:1s", icon: Calendar },
+  { id: "checkins", label: "Check-Ins", icon: Calendar },
   { id: "reviews", label: "Reviews", icon: ClipboardList },
   { id: "overview", label: "Overview", icon: BarChart2 },
   { id: "integration", label: "Integration", icon: Plug },
