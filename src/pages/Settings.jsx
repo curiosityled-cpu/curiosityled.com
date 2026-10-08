@@ -9,7 +9,6 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import DeleteAccountDialog from "@/components/mobile/DeleteAccountDialog";
 import {
   Bell, Mail, MessageSquare, Loader2, Settings as SettingsIcon,
@@ -31,7 +30,6 @@ import DataDownloadPanel from "@/components/privacy/DataDownloadPanel";
 import PrivacyTrainingTracker from "@/components/privacy/PrivacyTrainingTracker";
 import DataRetentionSettings from "@/components/privacy/DataRetentionSettings";
 import PrivacyComplianceDashboard from "@/components/privacy/PrivacyComplianceDashboard";
-import { createPageUrl } from "@/utils";
 
 export default function Settings() {
   const { user, appRole, reloadUser, isPlatformAdmin, isSuperAdmin, isOrgLeader, isAnyAdmin } = useAuth();

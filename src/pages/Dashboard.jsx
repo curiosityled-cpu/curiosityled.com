@@ -6,7 +6,7 @@ import { usePageContext } from "../Layout";
 import { useViewportTracking } from "@/components/hooks/useViewportTracking";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Loader2, User, Users, Building2, LayoutDashboard, Briefcase } from "lucide-react";
+import { Loader2, User, Users, Building2, Briefcase } from "lucide-react";
 import DashboardHeader from "@/components/common/DashboardHeader";
 import { useViewToggle } from "@/components/common/ViewToggle";
 import { VIEW_SCOPES } from "@/components/constants/permissions";
@@ -19,7 +19,6 @@ const JourneysOverview = lazy(() => import("../components/dashboard/JourneysOver
 const LearningOverview = lazy(() => import("../components/dashboard/LearningOverview"));
 const GoalsOverview = lazy(() => import("../components/dashboard/GoalsOverview"));
 const InsightsOverview = lazy(() => import("../components/dashboard/InsightsOverview"));
-const PlatformAdminDashboard = lazy(() => import("../components/dashboard/PlatformAdminDashboard"));
 const EnterpriseAnalytics = lazy(() => import("@/components/analytics/EnterpriseAnalytics"));
 const ExperienceAnalytics = lazy(() => import("./ExperienceAnalytics"));
 const AssessmentAnalytics = () => (
