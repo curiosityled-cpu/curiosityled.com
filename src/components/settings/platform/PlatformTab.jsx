@@ -1,108 +1,69 @@
-/**
- * PlatformTab — unified MVP-format card consolidating all platform
- * administration tools into Settings > Platform.
- */
 import React from "react";
-import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
-import {
-  Building2,
-  Users,
-  Palette,
-  CreditCard,
-  Zap,
-  ArrowRight,
-} from "lucide-react";
-
-const PLATFORM_TOOLS = [
-  {
-    label: "Business Manager",
-    description: "Manage clients & partners",
-    icon: Building2,
-    color: "text-purple-600",
-    to: "BusinessManager",
-  },
-  {
-    label: "User Management",
-    description: "All platform users",
-    icon: Users,
-    color: "text-blue-600",
-    to: "UserManagement",
-  },
-  {
-    label: "White Label Settings",
-    description: "Platform branding & identity",
-    icon: Palette,
-    color: "text-pink-600",
-    to: "WhiteLabel",
-  },
-  {
-    label: "Payment Portal",
-    description: "Manage all subscriptions & billing",
-    icon: CreditCard,
-    color: "text-emerald-600",
-    to: "Billing",
-  },
-  {
-    label: "Automations",
-    description: "Workflow & trigger automation rules",
-    icon: Zap,
-    color: "text-amber-600",
-    to: "Automations",
-  },
-];
+import { Building2, Users, Palette, CreditCard, Zap } from "lucide-react";
+import PlatformCollapsibleSection from "./PlatformCollapsibleSection";
+import BusinessManager from "@/pages/BusinessManager";
+import UserManagement from "@/pages/UserManagement";
+import WhiteLabel from "@/pages/WhiteLabel";
+import Billing from "@/pages/Billing";
+import Automations from "@/pages/Automations";
 
 export default function PlatformTab() {
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div>
-        <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <Zap className="w-5 h-5 text-[#0202ff]" />
           Platform Administration
         </h2>
         <p className="text-sm text-gray-500 mt-1">
-          Manage all platform-wide tools, configurations, and operations from one place.
+          Manage all platform-wide tools and configurations. Expand a section to manage it inline.
         </p>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="border-b border-gray-100 px-5 py-4">
-          <div className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-[#0202ff]" />
-            <h3 className="text-base font-semibold text-gray-900">
-              Platform Management
-            </h3>
-          </div>
-          <p className="text-xs text-gray-500 mt-1">
-            Select a tool below to manage its settings.
-          </p>
-        </div>
+      <PlatformCollapsibleSection
+        icon={Building2}
+        iconColor="text-purple-600"
+        title="Business Manager"
+        description="Manage clients, partners, and business operations"
+      >
+        <BusinessManager embedded />
+      </PlatformCollapsibleSection>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4">
-          {PLATFORM_TOOLS.map((tool) => {
-            const Icon = tool.icon;
-            return (
-              <Link
-                key={tool.to}
-                to={createPageUrl(tool.to)}
-                className="group flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3.5 transition-all hover:border-[#0202ff]/30 hover:bg-gray-50"
-              >
-                <div className="flex items-start gap-3 min-w-0">
-                  <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${tool.color}`} />
-                  <div className="min-w-0">
-                    <div className="text-sm font-semibold text-gray-900 truncate">
-                      {tool.label}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-0.5 truncate">
-                      {tool.description}
-                    </div>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 flex-shrink-0 text-gray-400 transition-colors group-hover:text-[#0202ff]" />
-              </Link>
-            );
-          })}
-        </div>
-      </div>
+      <PlatformCollapsibleSection
+        icon={Users}
+        iconColor="text-blue-600"
+        title="User Management"
+        description="All platform users, roles, and permissions"
+      >
+        <UserManagement embedded />
+      </PlatformCollapsibleSection>
+
+      <PlatformCollapsibleSection
+        icon={Palette}
+        iconColor="text-pink-600"
+        title="White Label Settings"
+        description="Platform branding, identity, and appearance"
+      >
+        <WhiteLabel embedded />
+      </PlatformCollapsibleSection>
+
+      <PlatformCollapsibleSection
+        icon={CreditCard}
+        iconColor="text-emerald-600"
+        title="Payment Portal"
+        description="Manage subscriptions, billing, and invoices"
+      >
+        <Billing embedded />
+      </PlatformCollapsibleSection>
+
+      <PlatformCollapsibleSection
+        icon={Zap}
+        iconColor="text-amber-600"
+        title="Automations"
+        description="Workflow and trigger automation rules"
+      >
+        <Automations embedded />
+      </PlatformCollapsibleSection>
     </div>
   );
 }

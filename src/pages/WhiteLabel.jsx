@@ -23,7 +23,7 @@ import EntitySelector from "@/components/whitelabel/EntitySelector";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/components/useAuth";
 
-function WhiteLabel() {
+function WhiteLabel({ embedded = false }) {
   const location = useLocation();
   const { user, isPlatformAdmin, isSuperAdmin, isPartnerBusinessAdmin } = useAuth();
   const { branding } = useBranding();
@@ -369,7 +369,7 @@ function WhiteLabel() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+      <div className="flex items-center justify-center py-20">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading branding configuration...</p>
@@ -379,16 +379,18 @@ function WhiteLabel() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className={embedded ? "" : "py-8"}>
+      <div className={embedded ? "" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"}>
         <div className="mb-8">
-          <Link 
-            to={getBackLink()} 
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to {editingMode === 'client' || editingMode === 'partner' ? 'Business Manager' : 'Settings'}
-          </Link>
+          {!embedded && (
+            <Link
+              to={getBackLink()}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to {editingMode === 'client' || editingMode === 'partner' ? 'Business Manager' : 'Settings'}
+            </Link>
+          )}
           
           {getContextBanner()}
           

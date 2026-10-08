@@ -19,7 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion, AnimatePresence } from "framer-motion";
 import ManualAutomationEditor from "@/components/automations/ManualAutomationEditor";
 
-export default function Automations() {
+export default function Automations({ embedded = false }) {
   const { user, loading, appRole, hasPermission } = useAuth();
   const [automations, setAutomations] = useState([]);
   const [loadingAutomations, setLoadingAutomations] = useState(true);
@@ -234,20 +234,21 @@ export default function Automations() {
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center py-20">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     );
   }
 
   return (
-    <div className="p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Back link */}
-        <Link to="/Settings" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4">
-          <ArrowLeft className="w-4 h-4" />
-          Back to Settings
-        </Link>
+    <div className={embedded ? "" : "p-6"}>
+      <div className={embedded ? "" : "max-w-7xl mx-auto"}>
+        {!embedded && (
+          <Link to="/Settings" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Settings
+          </Link>
+        )}
 
         {/* Header */}
         <div className="flex justify-between items-start mb-8">

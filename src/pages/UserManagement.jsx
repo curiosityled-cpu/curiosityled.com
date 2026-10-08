@@ -79,8 +79,15 @@ function StatCard({ label, value, sub, onClick, accent }) {
   );
 }
 
-function UserManagement() {
+function UserManagement({ embedded = false }) {
   const { user: currentUser, isSuperAdmin, isPlatformAdmin, isPartnerBusinessAdmin, startImpersonation, isImpersonating, hasPermission } = useAuth();
+
+  const PageWrapper = useMemo(
+    () => embedded
+      ? ({ children }) => <div className="space-y-4">{children}</div>
+      : MVPPageLayout,
+    [embedded]
+  );
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -438,7 +445,7 @@ function UserManagement() {
 
   return (
     <>
-    <MVPPageLayout
+    <PageWrapper
       title="User Management"
       subtitle={`${statistics.total} users · ${staffRoster.length} staff`}
       action={
@@ -859,7 +866,7 @@ function UserManagement() {
           </div>
         )}
 
-    </MVPPageLayout>
+    </PageWrapper>
 
       {/* Modals & Panels */}
       <AnimatePresence>

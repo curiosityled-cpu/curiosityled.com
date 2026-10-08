@@ -28,7 +28,7 @@ import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 
-export default function Billing() {
+export default function Billing({ embedded = false }) {
   const { user, isSuperAdmin, isPlatformAdmin, loading: authLoading } = useAuth();
   const { client } = useClient();
   const [loading, setLoading] = useState(true);
@@ -330,7 +330,7 @@ export default function Billing() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+      <div className="flex items-center justify-center py-20">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     );
@@ -338,7 +338,7 @@ export default function Billing() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+      <div className="flex items-center justify-center py-20">
         <Card className="max-w-md">
           <CardContent className="p-8 text-center">
             <p className="text-gray-600">Unable to load user data. Please refresh the page.</p>
@@ -353,7 +353,7 @@ export default function Billing() {
 
   if (!isSuperAdmin && !isPlatformAdmin) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-8">
+      <div className="py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link to="/Settings" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-8">
             <ArrowLeft className="w-4 h-4" />
@@ -537,13 +537,15 @@ export default function Billing() {
   const clientName = client?.name || 'Organization';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className={embedded ? "" : "py-8"}>
+      <div className={embedded ? "" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"}>
         <div className="mb-8">
-          <Link to="/Settings" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4">
-            <ArrowLeft className="w-4 h-4" />
-            Back to Settings
-          </Link>
+          {!embedded && (
+            <Link to="/Settings" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4">
+              <ArrowLeft className="w-4 h-4" />
+              Back to Settings
+            </Link>
+          )}
           
           <div className="flex items-center justify-between">
             <div>
