@@ -62,53 +62,58 @@ Deno.serve(async (req) => {
       : (allIcRows || []);
 
     const measures = getMeasuresForClient(client);
-    const customQuestions = await getActiveCustomQuestions(serviceBase44, clientId, '', checkInType);
+    // "both" sends a morning card and an evening card to each IC.
+    const types = checkInType === 'both' ? ['morning', 'evening'] : [checkInType];
 
     const APP_URL = 'https://curiosityled.ai';
     const all = icRows || [];
     const results: any[] = [];
     let graphToken: string | null = null;
 
-    for (const ic of all) {
-      const channel = ic.preferred_channel || 'both';
-      const hasTeams = !!ic.teams_conversation_id;
-      const wantsTeams = (channel === 'teams' || channel === 'both') && hasTeams;
-      const wantsEmail = channel === 'email' || channel === 'both' || !hasTeams;
-      const entry: any = { ic_id: ic.id, email: ic.email, teams: 'skipped', email: 'skipped' };
+    for (const type of types) {
+      const customQuestions = await getActiveCustomQuestions(serviceBase44, clientId, '', type);
 
-      // Teams Adaptive Card
-      if (wantsTeams) {
-        try {
-          if (!graphToken) graphToken = await getGraphToken();
-          const card = buildICCheckInCard(ic, measures, customQuestions, checkInType);
-          await sendCardToTeams(ic.teams_conversation_id, card, graphToken);
-          entry.teams = 'sent';
-        } catch (e: any) {
-          entry.teams = 'failed';
-          entry.teams_error = e.message;
+      for (const ic of all) {
+        const channel = ic.preferred_channel || 'both';
+        const hasTeams = !!ic.teams_conversation_id;
+        const wantsTeams = (channel === 'teams' || channel === 'both') && hasTeams;
+        const wantsEmail = channel === 'email' || channel === 'both' || !hasTeams;
+        const entry: any = { ic_id: ic.id, email: ic.email, check_in_type: type, teams: 'skipped', email: 'skipped' };
+
+        // Teams Adaptive Card
+        if (wantsTeams) {
+          try {
+            if (!graphToken) graphToken = await getGraphToken();
+            const card = buildICCheckInCard(ic, measures, customQuestions, type);
+            await sendCardToTeams(ic.teams_conversation_id, card, graphToken);
+            entry.teams = 'sent';
+          } catch (e: any) {
+            entry.teams = 'failed';
+            entry.teams_error = e.message;
+          }
         }
-      }
 
-      // Email with the web fallback link (also sent when no Teams conversation yet)
-      if (wantsEmail && ic.email && ic.web_access_token) {
-        const link = `${APP_URL}/ic-checkin?token=${ic.web_access_token}`;
-        try {
-          await serviceBase44.integrations.Core.SendEmail({
-            to: ic.email,
-            subject: `Your ${checkInType === 'evening' ? 'evening' : 'daily'} check-in`,
-            text:
-              `Hi ${ic.name?.split(' ')[0] || ''},\n\n` +
-              `Here is your ${checkInType} check-in. Complete it here (takes about a minute):\n${link}\n\n` +
-              `— Curiosity Led`,
-          });
-          entry.email = 'sent';
-        } catch (e: any) {
-          entry.email = 'failed';
-          entry.email_error = e.message;
+        // Email with the web fallback link (also sent when no Teams conversation yet)
+        if (wantsEmail && ic.email && ic.web_access_token) {
+          const link = `${APP_URL}/ic-checkin?token=${ic.web_access_token}`;
+          try {
+            await serviceBase44.integrations.Core.SendEmail({
+              to: ic.email,
+              subject: `Your ${type === 'evening' ? 'evening' : 'morning'} check-in`,
+              text:
+                `Hi ${ic.name?.split(' ')[0] || ''},\n\n` +
+                `Here is your ${type} check-in. Complete it here (takes about a minute):\n${link}\n\n` +
+                `— Curiosity Led`,
+            });
+            entry.email = 'sent';
+          } catch (e: any) {
+            entry.email = 'failed';
+            entry.email_error = e.message;
+          }
         }
-      }
 
-      results.push(entry);
+        results.push(entry);
+      }
     }
 
     const teamsSent = results.filter((r) => r.teams === 'sent').length;

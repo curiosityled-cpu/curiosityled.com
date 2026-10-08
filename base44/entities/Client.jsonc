@@ -285,10 +285,11 @@
               "type": "string",
               "enum": [
                 "morning",
-                "evening"
+                "evening",
+                "both"
               ],
               "default": "morning",
-              "description": "Which check-in type the automated IC send uses (morning or evening)"
+              "description": "Which check-in type the automated IC send uses (morning, evening, or both)"
             }
           },
           "description": "Check-in engine configuration for this organization"

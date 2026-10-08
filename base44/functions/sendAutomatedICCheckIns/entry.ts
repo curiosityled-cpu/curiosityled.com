@@ -56,44 +56,49 @@ Deno.serve(async (req) => {
         }).catch(() => []);
 
         const measures = getMeasuresForClient(client);
-        const customQuestions = await getActiveCustomQuestions(serviceBase44, clientId, '', checkInType);
+        // "both" sends a morning card and an evening card to each IC.
+        const types = checkInType === 'both' ? ['morning', 'evening'] : [checkInType];
 
         let graphToken: string | null = null;
         let teamsSent = 0;
         let emailSent = 0;
         let failed = 0;
 
-        for (const ic of icRows || []) {
-          const channel = ic.preferred_channel || 'both';
-          const hasTeams = !!ic.teams_conversation_id;
-          const wantsTeams = (channel === 'teams' || channel === 'both') && hasTeams;
-          const wantsEmail = channel === 'email' || channel === 'both' || !hasTeams;
+        for (const type of types) {
+          const customQuestions = await getActiveCustomQuestions(serviceBase44, clientId, '', type);
 
-          if (wantsTeams) {
-            try {
-              if (!graphToken) graphToken = await getGraphToken();
-              const card = buildICCheckInCard(ic, measures, customQuestions, checkInType);
-              await sendCardToTeams(ic.teams_conversation_id, card, graphToken);
-              teamsSent++;
-            } catch {
-              failed++;
+          for (const ic of icRows || []) {
+            const channel = ic.preferred_channel || 'both';
+            const hasTeams = !!ic.teams_conversation_id;
+            const wantsTeams = (channel === 'teams' || channel === 'both') && hasTeams;
+            const wantsEmail = channel === 'email' || channel === 'both' || !hasTeams;
+
+            if (wantsTeams) {
+              try {
+                if (!graphToken) graphToken = await getGraphToken();
+                const card = buildICCheckInCard(ic, measures, customQuestions, type);
+                await sendCardToTeams(ic.teams_conversation_id, card, graphToken);
+                teamsSent++;
+              } catch {
+                failed++;
+              }
             }
-          }
 
-          if (wantsEmail && ic.email && ic.web_access_token) {
-            const link = `${APP_URL}/ic-checkin?token=${ic.web_access_token}`;
-            try {
-              await serviceBase44.integrations.Core.SendEmail({
-                to: ic.email,
-                subject: `Your ${checkInType === 'evening' ? 'evening' : 'daily'} check-in`,
-                text:
-                  `Hi ${ic.name?.split(' ')[0] || ''},\n\n` +
-                  `Here is your ${checkInType} check-in. Complete it here (takes about a minute):\n${link}\n\n` +
-                  `— Curiosity Led`,
-              });
-              emailSent++;
-            } catch {
-              failed++;
+            if (wantsEmail && ic.email && ic.web_access_token) {
+              const link = `${APP_URL}/ic-checkin?token=${ic.web_access_token}`;
+              try {
+                await serviceBase44.integrations.Core.SendEmail({
+                  to: ic.email,
+                  subject: `Your ${type === 'evening' ? 'evening' : 'morning'} check-in`,
+                  text:
+                    `Hi ${ic.name?.split(' ')[0] || ''},\n\n` +
+                    `Here is your ${type} check-in. Complete it here (takes about a minute):\n${link}\n\n` +
+                    `— Curiosity Led`,
+                });
+                emailSent++;
+              } catch {
+                failed++;
+              }
             }
           }
         }

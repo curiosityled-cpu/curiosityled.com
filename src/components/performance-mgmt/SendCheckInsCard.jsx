@@ -42,6 +42,7 @@ export default function SendCheckInsCard({ user }) {
   const [roster, setRoster] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [sendingId, setSendingId] = useState(null);
   const [checkInType, setCheckInType] = useState("morning");
   const [selectedIds, setSelectedIds] = useState([]);
   const [client, setClient] = useState(null);
@@ -130,12 +131,16 @@ export default function SendCheckInsCard({ user }) {
     }
   };
 
-  const handleSend = async (icIds = null) => {
+  const handleSend = async (icIds = null, isIndividual = false) => {
     if (!clientId) {
       toast.error("No organization is associated with your account.");
       return;
     }
-    setSending(true);
+    if (isIndividual) {
+      setSendingId(icIds[0]);
+    } else {
+      setSending(true);
+    }
     try {
       const payload = {
         client_id: clientId,
@@ -155,11 +160,12 @@ export default function SendCheckInsCard({ user }) {
           (skipped ? ` · ${skipped} not connected to Teams` : "") +
           (failed ? ` · ${failed} failed` : "")
       );
-      if (icIds) setSelectedIds([]);
+      if (icIds && !isIndividual) setSelectedIds([]);
     } catch (e) {
       toast.error("Send failed: " + (e.message || ""));
     } finally {
       setSending(false);
+      setSendingId(null);
     }
   };
 
@@ -231,6 +237,7 @@ export default function SendCheckInsCard({ user }) {
                 <SelectContent>
                   <SelectItem value="morning">Morning</SelectItem>
                   <SelectItem value="evening">Evening</SelectItem>
+                  <SelectItem value="both">Both</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -266,26 +273,40 @@ export default function SendCheckInsCard({ user }) {
             </div>
             <div className="max-h-40 overflow-y-auto space-y-1">
               {roster.map((ic) => (
-                <label
+                <div
                   key={ic.id}
-                  className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted cursor-pointer text-xs"
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted text-xs"
                 >
                   <input
                     type="checkbox"
                     checked={selectedIds.includes(ic.id)}
                     onChange={() => toggleSelect(ic.id)}
-                    className="w-3.5 h-3.5 rounded border-gray-300"
+                    className="w-3.5 h-3.5 rounded border-gray-300 flex-shrink-0"
                   />
                   <span className="font-medium text-foreground flex-1 truncate">
                     {ic.name}
                   </span>
-                  <span className="text-muted-foreground truncate">{ic.email}</span>
+                  <span className="text-muted-foreground truncate hidden sm:inline">{ic.email}</span>
                   {ic.teams_conversation_id ? (
-                    <span className="text-[10px] text-emerald-600">Teams</span>
+                    <span className="text-[10px] text-emerald-600 flex-shrink-0">Teams</span>
                   ) : (
-                    <span className="text-[10px] text-amber-600">Email</span>
+                    <span className="text-[10px] text-amber-600 flex-shrink-0">Email</span>
                   )}
-                </label>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleSend([ic.id], true)}
+                    disabled={sending || sendingId === ic.id}
+                    className="h-6 px-2 text-[11px] flex-shrink-0"
+                  >
+                    {sendingId === ic.id ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Send className="w-3 h-3" />
+                    )}
+                    Send
+                  </Button>
+                </div>
               ))}
             </div>
             {selectedIds.length > 0 && (
@@ -344,6 +365,7 @@ export default function SendCheckInsCard({ user }) {
                 <SelectContent>
                   <SelectItem value="morning">Morning</SelectItem>
                   <SelectItem value="evening">Evening</SelectItem>
+                  <SelectItem value="both">Both</SelectItem>
                 </SelectContent>
               </Select>
               <span className="text-[11px] text-muted-foreground">
