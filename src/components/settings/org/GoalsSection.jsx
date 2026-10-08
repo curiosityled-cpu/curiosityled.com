@@ -1,32 +1,63 @@
 import React from "react";
 import { Target } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { SectionCard, SettingRow } from "./OrgControls";
 
+const FRAMEWORK_OPTIONS = [
+  { value: "goals", label: "Goals" },
+  { value: "kpis", label: "KPIs" },
+  { value: "okrs", label: "OKRs" },
+];
+
+// Normalize legacy single-string values into an array for multi-select.
+const normalizeFramework = (raw) => {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === "string" && raw) {
+    if (raw === "hybrid") return ["goals", "kpis", "okrs"];
+    return [raw];
+  }
+  return ["goals"];
+};
+
 export default function GoalsSection({ settings, update, locks, toggleLock, canLock }) {
   const goals = settings.goals || {};
   const set = (field, value) => update("goals", field, value);
+  const frameworks = normalizeFramework(goals.framework);
+
+  const toggleFramework = (value) => {
+    const next = frameworks.includes(value)
+      ? frameworks.filter((f) => f !== value)
+      : [...frameworks, value];
+    // Keep at least one framework selected.
+    set("framework", next.length > 0 ? next : frameworks);
+  };
 
   return (
     <SectionCard icon={Target} title="Performance & Goals" description="How your organization sets and reviews goals.">
       <SettingRow
         label="Goal framework"
-        description="The operating model your teams use for performance goals."
+        description="Select one or more frameworks your teams use for performance goals."
         lockKey="goals_framework"
         locked={locks.goals_framework}
         onToggleLock={toggleLock}
         canLock={canLock}
       >
-        <Select value={goals.framework || "goals"} onValueChange={(v) => set("framework", v)}>
-          <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="goals">Goals</SelectItem>
-            <SelectItem value="kpis">KPIs</SelectItem>
-            <SelectItem value="okrs">OKRs</SelectItem>
-            <SelectItem value="hybrid">Hybrid</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex flex-wrap gap-4">
+          {FRAMEWORK_OPTIONS.map((opt) => (
+            <label
+              key={opt.value}
+              className="flex items-center gap-2 cursor-pointer select-none"
+            >
+              <Checkbox
+                checked={frameworks.includes(opt.value)}
+                onCheckedChange={() => toggleFramework(opt.value)}
+              />
+              <span className="text-sm text-gray-700">{opt.label}</span>
+            </label>
+          ))}
+        </div>
       </SettingRow>
 
       <SettingRow

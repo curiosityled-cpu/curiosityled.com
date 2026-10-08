@@ -307,15 +307,19 @@
           "type": "object",
           "properties": {
             "framework": {
-              "type": "string",
-              "enum": [
-                "goals",
-                "kpis",
-                "okrs",
-                "hybrid"
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "goals",
+                  "kpis",
+                  "okrs"
+                ]
+              },
+              "default": [
+                "goals"
               ],
-              "default": "goals",
-              "description": "Goal framework this organization uses"
+              "description": "Goal frameworks this organization uses (multi-select). Organizations can combine any of Goals, KPIs, and OKRs."
             },
             "cascade_enabled": {
               "type": "boolean",
@@ -460,6 +464,11 @@
               },
               "default": [],
               "description": "External providers enabled for pattern detection and insights"
+            },
+            "performance_sync_enabled": {
+              "type": "boolean",
+              "default": false,
+              "description": "Whether performance data sync (CSV import, API, SFTP) is enabled for this organization."
             }
           },
           "description": "Integration scope configuration"
