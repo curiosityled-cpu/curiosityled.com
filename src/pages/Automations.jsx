@@ -11,6 +11,8 @@ import {
   CheckCircle2, Clock, TrendingUp, Loader2, ChevronRight, Edit2
 } from "lucide-react";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -239,8 +241,14 @@ export default function Automations() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+    <div className="p-6">
       <div className="max-w-7xl mx-auto">
+        {/* Back link */}
+        <Link to="/Settings" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4">
+          <ArrowLeft className="w-4 h-4" />
+          Back to Settings
+        </Link>
+
         {/* Header */}
         <div className="flex justify-between items-start mb-8">
           <div>

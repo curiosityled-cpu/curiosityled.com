@@ -36,7 +36,6 @@ import ClientModal from "../components/business/ClientModal";
 import PartnerModal from "../components/business/PartnerModal";
 import ClientBillingPanel from "../components/business/ClientBillingPanel";
 import ClientUsersPanel from "../components/business/ClientUsersPanel";
-import PageHeader from "@/components/common/PageHeader";
 import CommissionManagement from "../components/business/CommissionManagement"; // NEW IMPORT
 import CommissionReporting from "../components/business/CommissionReporting";
 
@@ -263,7 +262,7 @@ function BusinessManager() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+      <div className="flex items-center justify-center py-20">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading business manager...</p>
@@ -273,15 +272,21 @@ function BusinessManager() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-8">
+    <div className="py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
-        <PageHeader
-          title="Business Manager"
-          subtitle="Manage organizations, partners, and business operations"
-          icon={Building2}
-        />
+        <Link to="/Settings" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4">
+          <ArrowLeft className="w-4 h-4" />
+          Back to Settings
+        </Link>
+        <div className="mb-8">
+          <div className="flex items-center gap-3">
+            <Building2 className="w-6 h-6 text-purple-600" />
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Business Manager</h1>
+          </div>
+          <p className="text-sm text-gray-500 mt-1">Manage organizations, partners, and business operations</p>
+        </div>
 
         {/* Stats Cards */}
         <div className="grid md:grid-cols-5 gap-4 mb-8">
@@ -352,7 +357,7 @@ function BusinessManager() {
 
           {/* Clients Tab */}
           <TabsContent value="clients">
-            <Card className="border-0 shadow-lg">
+            <Card className="border border-gray-200 shadow-sm">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>Customer Clients</CardTitle>
@@ -483,7 +488,7 @@ function BusinessManager() {
 
           {/* Partners Tab */}
           <TabsContent value="partners">
-            <Card className="border-0 shadow-lg">
+            <Card className="border border-gray-200 shadow-sm">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>Partners & Resellers</CardTitle>

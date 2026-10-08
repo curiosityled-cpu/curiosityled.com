@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useBranding } from "@/components/useBranding";
 import { withAuthProtection } from "@/components/hoc/withAuthProtection";
@@ -328,7 +327,7 @@ function WhiteLabel() {
     if (editingMode === 'client' || editingMode === 'partner') {
       return createPageUrl("BusinessManager");
     }
-    return createPageUrl("Dashboard");
+    return "/Settings";
   };
 
   const getContextBanner = () => {
@@ -388,7 +387,7 @@ function WhiteLabel() {
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to {editingMode === 'client' || editingMode === 'partner' ? 'Business Manager' : 'Dashboard'}
+            Back to {editingMode === 'client' || editingMode === 'partner' ? 'Business Manager' : 'Settings'}
           </Link>
           
           {getContextBanner()}

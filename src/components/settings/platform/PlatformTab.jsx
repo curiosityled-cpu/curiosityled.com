@@ -8,12 +8,9 @@ import { createPageUrl } from "@/utils";
 import {
   Building2,
   Users,
-  Target,
   Palette,
   CreditCard,
-  Mail,
   Zap,
-  CheckCircle,
   ArrowRight,
 } from "lucide-react";
 
@@ -33,13 +30,6 @@ const PLATFORM_TOOLS = [
     to: "UserManagement",
   },
   {
-    label: "Programs & Cohorts",
-    description: "All platform programs",
-    icon: Target,
-    color: "text-orange-600",
-    to: "DevelopmentManager",
-  },
-  {
     label: "White Label Settings",
     description: "Platform branding & identity",
     icon: Palette,
@@ -54,25 +44,11 @@ const PLATFORM_TOOLS = [
     to: "Billing",
   },
   {
-    label: "Email & Notification Templates",
-    description: "Customize system email templates",
-    icon: Mail,
-    color: "text-indigo-600",
-    to: "EmailTemplates",
-  },
-  {
     label: "Automations",
     description: "Workflow & trigger automation rules",
     icon: Zap,
     color: "text-amber-600",
     to: "Automations",
-  },
-  {
-    label: "UAT Admin Dashboard",
-    description: "Manage test cases & QA",
-    icon: CheckCircle,
-    color: "text-teal-600",
-    to: "UATAdminDashboard",
   },
 ];
 

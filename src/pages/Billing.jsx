@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/components/useAuth";
 import { useClient } from "@/components/contexts/ClientContext";
@@ -26,7 +25,6 @@ import {
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 
@@ -357,9 +355,9 @@ export default function Billing() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-8">
+          <Link to="/Settings" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-8">
             <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
+            Back to Settings
           </Link>
 
           <motion.div
@@ -542,9 +540,9 @@ export default function Billing() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4">
+          <Link to="/Settings" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4">
             <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
+            Back to Settings
           </Link>
           
           <div className="flex items-center justify-between">
