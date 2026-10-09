@@ -15,10 +15,6 @@ export default function LandingNav({ hideCtas = false }) {
     base44.auth.redirectToLogin("/");
   };
 
-  const handleLogoClick = () => {
-    document.getElementById("hero")?.scrollIntoView({ behavior: "smooth" });
-  };
-
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -27,25 +23,19 @@ export default function LandingNav({ hideCtas = false }) {
     >
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
-        <button
-          onClick={handleLogoClick}
-          className="flex items-center hover:opacity-80 transition-opacity"
-        >
+        <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
           <img
             src="https://raw.githubusercontent.com/curiosityled-cpu/curiosityled.com/main/public/CuriosityLedLogoBBW%20(1).png"
             alt="Curiosity Led"
             className="h-10 object-contain"
           />
-        </button>
+        </Link>
 
         {/* Nav links */}
         <div className="hidden md:flex items-center gap-6">
-          <button
-            onClick={() => document.getElementById("product")?.scrollIntoView({ behavior: "smooth" })}
-            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-          >
+          <Link to="/" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
             Product
-          </button>
+          </Link>
           <Link to="/compare" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
             Why us
           </Link>
