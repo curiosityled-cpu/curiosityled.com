@@ -25,42 +25,76 @@ Deno.serve(async (req) => {
     const myName =
       user?.data?.display_name || user?.full_name || userEmail;
 
-    // ── Resolve direct reports ──────────────────────────────────────────────
+    // ── Resolve the full reporting tree (all descendants) ───────────────────
+    // Traverse manager_email downward from the current user to collect direct
+    // reports AND indirect reports, so "Everyone" shows check-ins from the
+    // entire team hierarchy — not just the first level.
     const teamMembers = [];
     const seenEmails = new Set([userEmail.toLowerCase()]);
 
+    // Build a manager → direct-reports lookup from all users
+    const managerToReports = new Map();
+    const userByEmail = new Map();
     try {
       const allUsers = await serviceBase44.entities.User.list(null, 500);
       for (const u of allUsers || []) {
-        const mgr =
-          u?.data?.manager_email || u?.manager_email || '';
-        if (
-          mgr &&
-          mgr.toLowerCase() === userEmail.toLowerCase() &&
-          u.email &&
-          u.email.toLowerCase() !== userEmail.toLowerCase()
-        ) {
-          if (!seenEmails.has(u.email.toLowerCase())) {
-            seenEmails.add(u.email.toLowerCase());
-            teamMembers.push({
-              email: u.email,
-              name:
-                u?.data?.display_name || u?.full_name || u.email,
-            });
-          }
+        if (!u.email) continue;
+        userByEmail.set(u.email.toLowerCase(), u);
+        const mgr = u?.data?.manager_email || u?.manager_email || '';
+        if (mgr) {
+          const key = mgr.toLowerCase();
+          if (!managerToReports.has(key)) managerToReports.set(key, []);
+          managerToReports.get(key).push(u);
         }
       }
     } catch (e) {
       console.warn('[getCheckInHistory] team resolve failed:', e.message);
     }
 
-    // Include subordinate_emails if present on the user profile
+    // BFS down the reporting tree from the current user
+    const queue = [userEmail.toLowerCase()];
+    while (queue.length > 0) {
+      const currentMgr = queue.shift();
+      const reports = managerToReports.get(currentMgr) || [];
+      for (const u of reports) {
+        const em = u.email.toLowerCase();
+        if (em === userEmail.toLowerCase()) continue;
+        if (!seenEmails.has(em)) {
+          seenEmails.add(em);
+          teamMembers.push({
+            email: u.email,
+            name: u?.data?.display_name || u?.full_name || u.email,
+          });
+          queue.push(em);
+        }
+      }
+    }
+
+    // Include subordinate_emails if present on the user profile (fallback)
     const subEmails =
       user?.data?.subordinate_emails || user?.subordinate_emails || [];
     for (const se of subEmails) {
       if (se && !seenEmails.has(se.toLowerCase())) {
         seenEmails.add(se.toLowerCase());
         teamMembers.push({ email: se, name: se });
+        // Also traverse down from this subordinate
+        const subUser = userByEmail.get(se.toLowerCase());
+        if (subUser) queue.push(se.toLowerCase());
+      }
+    }
+    // Drain any remaining queue entries from subordinate_emails expansion
+    while (queue.length > 0) {
+      const currentMgr = queue.shift();
+      const reports = managerToReports.get(currentMgr) || [];
+      for (const u of reports) {
+        const em = u.email.toLowerCase();
+        if (em === userEmail.toLowerCase() || seenEmails.has(em)) continue;
+        seenEmails.add(em);
+        teamMembers.push({
+          email: u.email,
+          name: u?.data?.display_name || u?.full_name || u.email,
+        });
+        queue.push(em);
       }
     }
 
