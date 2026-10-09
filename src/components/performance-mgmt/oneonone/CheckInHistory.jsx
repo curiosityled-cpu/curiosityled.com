@@ -9,7 +9,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -17,272 +16,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Loader2,
-  CalendarDays,
-  Sunrise,
-  Moon,
-  Users,
-  Filter,
-  Pencil,
-  Plus,
-} from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { Loader2, Filter } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import RetroactiveCheckInCard from "@/components/checkin/RetroactiveCheckInCard";
-
-const MEASURES = [
-  { key: "energy_score", label: "Energy", color: "#0202ff" },
-  { key: "confidence_score", label: "Confidence", color: "#22c55e" },
-  { key: "focus_score", label: "Focus", color: "#f97316" },
-  { key: "load_score", label: "Load", color: "#eab308" },
-  { key: "growth_score", label: "Growth", color: "#8b5cf6" },
-];
-
-function shiftET(n) {
-  const d = new Date();
-  d.setDate(d.getDate() + n);
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/New_York",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(d);
-}
-
-function ScorePill({ label, score, color }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <span
-        className="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold flex-shrink-0"
-        style={{ backgroundColor: `${color}18`, color }}
-      >
-        {score ?? "–"}
-      </span>
-      <span className="text-[11px] text-gray-500">{label}</span>
-    </div>
-  );
-}
-
-function CustomAnswers({ answers }) {
-  const entries = Object.entries(answers || {});
-  if (entries.length === 0) return null;
-  return (
-    <div className="mt-2 pt-2 border-t border-dashed border-gray-100">
-      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">
-        KPIs
-      </p>
-      <div className="flex flex-wrap gap-x-4 gap-y-1">
-        {entries.map(([k, v]) => (
-          <div key={k} className="text-[11px]">
-            <span className="text-gray-500">{k}: </span>
-            <span className="font-medium text-gray-700">
-              {typeof v === "boolean" ? (v ? "Yes" : "No") : String(v)}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-const QUESTION_KEYS = [
-  { key: "energy", label: "Energy", color: "#0202ff" },
-  { key: "confidence", label: "Confidence", color: "#22c55e" },
-  { key: "focus", label: "Focus", color: "#f97316" },
-  { key: "load", label: "Load", color: "#eab308" },
-  { key: "growth", label: "Growth", color: "#8b5cf6" },
-];
-
-function QuestionsUsed({ questions }) {
-  const entries = Object.entries(questions || {});
-  if (entries.length === 0) return null;
-  const measureKeys = new Set(QUESTION_KEYS.map((m) => m.key));
-  const customEntries = entries.filter(([k]) => !measureKeys.has(k));
-  return (
-    <div className="mt-2 pt-2 border-t border-dashed border-gray-100">
-      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">
-        Questions
-      </p>
-      <div className="space-y-1">
-        {QUESTION_KEYS.map((m) => {
-          const text = questions?.[m.key];
-          if (!text) return null;
-          return (
-            <div key={m.key} className="flex items-start gap-1.5 text-[11px]">
-              <span
-                className="w-2 h-2 rounded-full flex-shrink-0 mt-1"
-                style={{ backgroundColor: m.color }}
-              />
-              <span className="text-gray-600">
-                <span className="font-medium text-gray-700">{m.label}:</span>{" "}
-                {text}
-              </span>
-            </div>
-          );
-        })}
-        {customEntries.map(([k, text]) => (
-          <div key={k} className="flex items-start gap-1.5 text-[11px]">
-            <span
-              className="w-2 h-2 rounded-full flex-shrink-0 mt-1"
-              style={{ backgroundColor: "#0202ff" }}
-            />
-            <span className="text-gray-600">
-              <span className="font-medium text-gray-700">Custom:</span> {text}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Per-person day-by-day timeline over the lookback window.
-function PersonTimeline({ personName, records, lookback, isSelf, onAdd, onEdit }) {
-  const windowDays = Math.max(1, Math.min(lookback, 90) + 1);
-  const dates = Array.from({ length: windowDays }, (_, i) => shiftET(-i));
-  const minDate = shiftET(-Math.max(0, lookback));
-
-  const byDate = new Map();
-  for (const r of records) {
-    if (r.check_in_date && !byDate.has(r.check_in_date)) byDate.set(r.check_in_date, r);
-  }
-  const older = records
-    .filter((r) => r.check_in_date && r.check_in_date < minDate)
-    .sort((a, b) => new Date(b.check_in_date) - new Date(a.check_in_date));
-
-  return (
-    <div className="space-y-5">
-      <p className="text-xs text-muted-foreground">
-        {lookback > 0
-          ? `Showing the last ${lookback} day${lookback === 1 ? "" : "s"} for ${personName}. Missing days can be backfilled.`
-          : `Retroactive check-ins are disabled for this organization.`}
-      </p>
-
-      <div className="space-y-2">
-        {dates.map((date) => {
-          const record = byDate.get(date);
-          const morningDone =
-            record?.morning_completed || record?.check_in_type === "morning";
-          const eveningDone =
-            record?.evening_completed || record?.check_in_type === "evening";
-          return (
-            <Card key={date} className="border border-gray-100 shadow-sm rounded-xl">
-              <CardContent className="p-3.5">
-                <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
-                  <div className="flex items-center gap-2">
-                    <CalendarDays className="w-3.5 h-3.5 text-gray-400" />
-                    <h4 className="text-xs font-semibold text-gray-700">
-                      {format(parseISO(date + "T00:00:00"), "EEEE, MMM d")}
-                    </h4>
-                  </div>
-                  {record ? (
-                    isSelf ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs gap-1"
-                        onClick={() => onEdit(record)}
-                      >
-                        <Pencil className="w-3 h-3" /> Edit
-                      </Button>
-                    ) : null
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 text-xs gap-1"
-                      onClick={() => onAdd(date)}
-                    >
-                      <Plus className="w-3 h-3" /> Add check-in
-                    </Button>
-                  )}
-                </div>
-
-                {record ? (
-                  <>
-                    <div className="flex flex-wrap gap-x-4 gap-y-2">
-                      {MEASURES.map((m) => (
-                        <ScorePill
-                          key={m.key}
-                          label={m.label}
-                          score={record[m.key]}
-                          color={m.color}
-                        />
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span
-                        className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full ${
-                          morningDone
-                            ? "bg-amber-50 text-amber-700 border border-amber-200"
-                            : "bg-gray-50 text-gray-400 border border-gray-200"
-                        }`}
-                      >
-                        <Sunrise className="w-3 h-3" />
-                        {morningDone ? "Morning done" : "Morning missed"}
-                      </span>
-                      <span
-                        className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full ${
-                          eveningDone
-                            ? "bg-indigo-50 text-indigo-700 border border-indigo-200"
-                            : "bg-gray-50 text-gray-400 border border-gray-200"
-                        }`}
-                      >
-                        <Moon className="w-3 h-3" />
-                        {eveningDone ? "Evening done" : "Evening missed"}
-                      </span>
-                    </div>
-                    <QuestionsUsed questions={record.questions_used} />
-                    <CustomAnswers answers={record.custom_answers} />
-                  </>
-                ) : (
-                  <p className="text-xs text-gray-400">
-                    No check-in recorded for this day.
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {older.length > 0 && (
-        <div>
-          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-            Earlier check-ins
-          </h4>
-          <div className="space-y-2">
-            {older.map((r) => (
-              <Card key={r.id} className="border border-gray-100 shadow-sm rounded-xl">
-                <CardContent className="p-3.5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CalendarDays className="w-3.5 h-3.5 text-gray-400" />
-                    <span className="text-xs font-semibold text-gray-700">
-                      {format(parseISO(r.check_in_date + "T00:00:00"), "MMM d, yyyy")}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-x-4 gap-y-2">
-                    {MEASURES.map((m) => (
-                      <ScorePill
-                        key={m.key}
-                        label={m.label}
-                        score={r[m.key]}
-                        color={m.color}
-                      />
-                    ))}
-                  </div>
-                  <QuestionsUsed questions={r.questions_used} />
-                  <CustomAnswers answers={r.custom_answers} />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+import CheckInCalendar from "./CheckInCalendar";
 
 export default function CheckInHistory({ user }) {
   const [data, setData] = useState(null);
@@ -345,15 +82,6 @@ export default function CheckInHistory({ user }) {
   const myName =
     user?.data?.display_name || user?.full_name || user?.email || "you";
 
-  const todayET = shiftET(0);
-  const minEditableDate = shiftET(-Math.max(0, lookback));
-  const isEditable = (r) => {
-    const owner = (r.owner_email || r.user_email || "").toLowerCase();
-    if (!owner || owner !== myEmail) return false;
-    const d = r.check_in_date || "";
-    return d >= minEditableDate && d <= todayET;
-  };
-
   const isSelfFilter = filter === "all" ? false : filter.toLowerCase() === myEmail;
   const personName =
     filter === "all"
@@ -363,15 +91,6 @@ export default function CheckInHistory({ user }) {
         : teamMembers.find(
             (m) => m.email.toLowerCase() === filter.toLowerCase()
           )?.name || filter;
-
-  const personRecords =
-    filter === "all"
-      ? []
-      : checkIns.filter(
-          (c) =>
-            (c.owner_email || c.user_email || "").toLowerCase() ===
-            filter.toLowerCase()
-        );
 
   const openAdd = (date, email, name) => {
     setEditor({
@@ -420,61 +139,16 @@ export default function CheckInHistory({ user }) {
         )}
       </div>
 
-      {filter === "all" ? (
-        <div className="space-y-6">
-          {/* Self timeline */}
-          <div>
-            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
-              <Users className="w-4 h-4 text-[#0202ff]" />
-              <h4 className="text-sm font-semibold text-gray-900">{myName}</h4>
-              <span className="text-xs text-gray-400">(you)</span>
-            </div>
-            <PersonTimeline
-              personName={myName}
-              records={checkIns.filter(
-                (c) =>
-                  (c.owner_email || c.user_email || "").toLowerCase() === myEmail
-              )}
-              lookback={lookback}
-              isSelf={true}
-              onAdd={(date) => openAdd(date, user?.email, myName)}
-              onEdit={openEdit}
-            />
-          </div>
-          {/* Team member timelines */}
-          {teamMembers.map((m) => (
-            <div key={m.email}>
-              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
-                <Users className="w-4 h-4 text-gray-400" />
-                <h4 className="text-sm font-semibold text-gray-900">
-                  {m.name || m.email}
-                </h4>
-              </div>
-              <PersonTimeline
-                personName={m.name || m.email}
-                records={checkIns.filter(
-                  (c) =>
-                    (c.owner_email || c.user_email || "").toLowerCase() ===
-                    m.email.toLowerCase()
-                )}
-                lookback={lookback}
-                isSelf={false}
-                onAdd={(date) => openAdd(date, m.email, m.name || m.email)}
-                onEdit={openEdit}
-              />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <PersonTimeline
-          personName={personName}
-          records={personRecords}
-          lookback={lookback}
-          isSelf={isSelfFilter}
-          onAdd={openAdd}
-          onEdit={openEdit}
-        />
-      )}
+      <CheckInCalendar
+        filter={filter}
+        checkIns={checkIns}
+        teamMembers={teamMembers}
+        myEmail={myEmail}
+        myName={myName}
+        lookback={lookback}
+        onAdd={openAdd}
+        onEdit={openEdit}
+      />
 
       <Dialog open={!!editor} onOpenChange={(o) => !o && setEditor(null)}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
