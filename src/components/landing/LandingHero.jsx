@@ -113,6 +113,10 @@ export default function LandingHero() {
                 Book a demo
               </a>
             </motion.div>
+
+            <p className="text-xs text-gray-400 mt-4 max-w-md leading-relaxed">
+              Answer 8 minutes of real management scenarios. Get a judgment profile you can share with your team — no platform to install.
+            </p>
           </div>
 
           {/* Right: App screenshot */}
@@ -231,6 +235,9 @@ export default function LandingHero() {
         <div className="mt-16 pt-8 border-t border-gray-100">
           <p className="text-center text-xs text-gray-400 max-w-2xl mx-auto">
             $482B lost annually to bad management decisions. 40–50% of employees would leave over a bad manager. You're already paying for this — Curiosity Led makes that cost visible and reducible.
+          </p>
+          <p className="text-center text-[10px] text-gray-400 max-w-2xl mx-auto mt-2">
+            Sources: Gallup, <em>State of the American Manager</em> (2015). {/* TODO: verify the $482B figure's exact source or replace with a sourced claim */}
           </p>
         </div>
       </div>

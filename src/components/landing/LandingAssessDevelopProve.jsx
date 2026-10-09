@@ -123,7 +123,7 @@ const steps = [
 
 export default function LandingAssessDevelopProve() {
   return (
-    <section className="py-24 bg-white">
+    <section id="product" className="py-24 bg-white">
       <div className="max-w-6xl mx-auto px-6">
         <motion.div
           className="text-center mb-16"

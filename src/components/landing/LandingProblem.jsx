@@ -58,6 +58,10 @@ export default function LandingProblem({ industry }) {
           ))}
         </div>
 
+        <p className="text-[10px] text-gray-500 mb-14">
+          Sources: Gallup, <em>State of the American Manager</em> (2015). {/* TODO: verify the $482B figure's exact source or replace with a sourced claim */}
+        </p>
+
         <div>
           <div className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6">{quotesLabel}</div>
           <div className="rounded-3xl border border-white/20 p-8 md:p-10" style={{ backgroundColor: "rgba(60,55,90,0.5)" }}>

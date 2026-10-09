@@ -38,6 +38,28 @@ export default function LandingNav({ hideCtas = false }) {
           />
         </button>
 
+        {/* Nav links */}
+        <div className="hidden md:flex items-center gap-6">
+          <button
+            onClick={() => document.getElementById("product")?.scrollIntoView({ behavior: "smooth" })}
+            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            Product
+          </button>
+          <Link to="/healthcare" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+            Healthcare
+          </Link>
+          <Link to="/bpo" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+            BPO &amp; Operations
+          </Link>
+          <button
+            onClick={() => document.getElementById("faq")?.scrollIntoView({ behavior: "smooth" })}
+            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            FAQ
+          </button>
+        </div>
+
         {/* CTAs */}
         {!hideCtas && (
           <div className="flex items-center gap-3">

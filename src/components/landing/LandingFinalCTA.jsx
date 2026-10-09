@@ -9,7 +9,7 @@ export default function LandingFinalCTA() {
           See where your managers' judgment needs work.
         </h2>
         <p className="text-blue-200 text-lg leading-relaxed mb-10 max-w-2xl mx-auto">
-          8 minutes. No commitment, no platform to install. The diagnostic shows you exactly where your managers' judgment is strong and where it needs development — the question every HR team should be able to answer.
+          Answer 8 minutes of real management scenarios. Get a judgment profile you can share with your team — no platform to install, no email required. The question every HR team should be able to answer.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <a

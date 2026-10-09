@@ -13,6 +13,7 @@ import Landing90Days from "@/components/landing/Landing90Days";
 import LandingBeyond from "@/components/landing/LandingBeyond";
 import LandingFinalCTA from "@/components/landing/LandingFinalCTA";
 import LandingFAQ from "@/components/landing/LandingFAQ";
+import LandingPilotStatus from "@/components/landing/LandingPilotStatus";
 import LandingFooter from "@/components/landing/LandingFooter";
 
 export default function LandingPage() {
@@ -36,6 +37,7 @@ export default function LandingPage() {
       <Landing90Days />
       <LandingBeyond />
       <LandingFinalCTA />
+      <LandingPilotStatus />
       <LandingFAQ />
       <LandingFooter />
     </div>

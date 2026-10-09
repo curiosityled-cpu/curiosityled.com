@@ -56,7 +56,7 @@ export default function LandingFAQ({ industry }) {
   const faq = cfg || DEFAULT_FAQ;
 
   return (
-    <section className="py-24 bg-white">
+    <section id="faq" className="py-24 bg-white">
       <div className="max-w-3xl mx-auto px-6">
         <div className="text-center mb-14">
           <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full border border-blue-100 bg-blue-50">
@@ -85,11 +85,9 @@ export default function LandingFAQ({ industry }) {
                   }`}
                 />
               </button>
-              {open === i && (
-                <div className="px-6 pb-5">
-                  <p className="text-gray-500 text-sm leading-relaxed">{item.a}</p>
-                </div>
-              )}
+              <div className={`px-6 pb-5 ${open === i ? "block" : "hidden"}`}>
+                <p className="text-gray-500 text-sm leading-relaxed">{item.a}</p>
+              </div>
             </div>
           ))}
         </div>
