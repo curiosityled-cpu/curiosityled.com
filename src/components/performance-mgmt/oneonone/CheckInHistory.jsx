@@ -137,16 +137,6 @@ function QuestionsUsed({ questions }) {
   );
 }
 
-function groupByDate(records) {
-  const map = new Map();
-  for (const r of records) {
-    const d = r.check_in_date || "";
-    if (!map.has(d)) map.set(d, []);
-    map.get(d).push(r);
-  }
-  return Array.from(map.entries()).sort((a, b) => new Date(b[0]) - new Date(a[0]));
-}
-
 // Per-person day-by-day timeline over the lookback window.
 function PersonTimeline({ personName, records, lookback, isSelf, onAdd, onEdit }) {
   const windowDays = Math.max(1, Math.min(lookback, 90) + 1);
@@ -383,18 +373,12 @@ export default function CheckInHistory({ user }) {
             filter.toLowerCase()
         );
 
-  const filtered =
-    filter === "all"
-      ? checkIns
-      : personRecords;
-  const grouped = groupByDate(filtered);
-
-  const openAdd = (date) => {
+  const openAdd = (date, email, name) => {
     setEditor({
       kind: "add",
       date,
-      targetEmail: filter,
-      targetName: personName,
+      targetEmail: email || filter,
+      targetName: name || personName,
     });
   };
   const openEdit = (record) => {
@@ -437,92 +421,50 @@ export default function CheckInHistory({ user }) {
       </div>
 
       {filter === "all" ? (
-        grouped.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
-                <CalendarDays className="w-5 h-5 text-muted-foreground" />
-              </div>
-              <p className="text-sm font-medium text-foreground">
-                No check-ins recorded yet
-              </p>
-              <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-                {isManager
-                  ? "Once you and your team start daily check-ins, they'll appear here."
-                  : "Complete a morning or evening check-in from My Rhythm to see it here."}
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-5">
-            {grouped.map(([date, rows]) => (
-              <div key={date}>
-                <div className="flex items-center gap-2 mb-2">
-                  <CalendarDays className="w-3.5 h-3.5 text-gray-400" />
-                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    {date
-                      ? format(parseISO(date + "T00:00:00"), "EEEE, MMM d, yyyy")
-                      : "Undated"}
-                  </h4>
-                </div>
-                <div className="space-y-2">
-                  {rows.map((r) => {
-                    const isMorning = r.check_in_type === "morning";
-                    const ownerName = r.owner_name || r.user_email || user?.email || "";
-                    return (
-                      <Card key={r.id} className="border border-gray-100 shadow-sm rounded-xl">
-                        <CardContent className="p-3.5">
-                          <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span
-                                className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${
-                                  isMorning
-                                    ? "bg-amber-50 text-amber-700 border border-amber-200"
-                                    : "bg-indigo-50 text-indigo-700 border border-indigo-200"
-                                }`}
-                              >
-                                {isMorning ? <Sunrise className="w-3 h-3" /> : <Moon className="w-3 h-3" />}
-                                {isMorning ? "Morning" : "Evening"}
-                              </span>
-                              {isManager && (
-                                <span className="inline-flex items-center gap-1 text-[11px] text-gray-500">
-                                  <Users className="w-3 h-3" />
-                                  {ownerName}
-                                </span>
-                              )}
-                            </div>
-                            {isEditable(r) && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-7 text-xs gap-1"
-                                onClick={() => openEdit(r)}
-                              >
-                                <Pencil className="w-3 h-3" /> Edit
-                              </Button>
-                            )}
-                          </div>
-                          <div className="flex flex-wrap gap-x-4 gap-y-2">
-                            {MEASURES.map((m) => (
-                              <ScorePill
-                                key={m.key}
-                                label={m.label}
-                                score={r[m.key]}
-                                color={m.color}
-                              />
-                            ))}
-                          </div>
-                          <QuestionsUsed questions={r.questions_used} />
-                          <CustomAnswers answers={r.custom_answers} />
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+        <div className="space-y-6">
+          {/* Self timeline */}
+          <div>
+            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
+              <Users className="w-4 h-4 text-[#0202ff]" />
+              <h4 className="text-sm font-semibold text-gray-900">{myName}</h4>
+              <span className="text-xs text-gray-400">(you)</span>
+            </div>
+            <PersonTimeline
+              personName={myName}
+              records={checkIns.filter(
+                (c) =>
+                  (c.owner_email || c.user_email || "").toLowerCase() === myEmail
+              )}
+              lookback={lookback}
+              isSelf={true}
+              onAdd={(date) => openAdd(date, user?.email, myName)}
+              onEdit={openEdit}
+            />
           </div>
-        )
+          {/* Team member timelines */}
+          {teamMembers.map((m) => (
+            <div key={m.email}>
+              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
+                <Users className="w-4 h-4 text-gray-400" />
+                <h4 className="text-sm font-semibold text-gray-900">
+                  {m.name || m.email}
+                </h4>
+              </div>
+              <PersonTimeline
+                personName={m.name || m.email}
+                records={checkIns.filter(
+                  (c) =>
+                    (c.owner_email || c.user_email || "").toLowerCase() ===
+                    m.email.toLowerCase()
+                )}
+                lookback={lookback}
+                isSelf={false}
+                onAdd={(date) => openAdd(date, m.email, m.name || m.email)}
+                onEdit={openEdit}
+              />
+            </div>
+          ))}
+        </div>
       ) : (
         <PersonTimeline
           personName={personName}
