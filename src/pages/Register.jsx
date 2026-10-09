@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import { analytics } from '@heycatch/sdk';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -71,6 +72,7 @@ export default function Register() {
     try {
       const res = await base44.auth.verifyOtp({ email, otpCode: otp });
       if (res?.access_token) base44.auth.setToken(res.access_token);
+      analytics.trackEvent('signup_completed');
       window.location.href = resolveReturnTo();
     } catch (err) {
       setError(err?.data?.message || err?.response?.data?.message || err?.message || 'Invalid verification code.');

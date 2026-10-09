@@ -1,6 +1,7 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
+import { analytics } from '@heycatch/sdk';
 import { createAxiosClient } from '@base44/sdk/dist/utils/axios-client';
 
 const AuthContext = createContext();
@@ -13,10 +14,24 @@ export const AuthProvider = ({ children }) => {
   const [authError, setAuthError] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [appPublicSettings, setAppPublicSettings] = useState(null); // Contains only { id, public_settings }
+  const prevUserIdRef = useRef(null);
 
   useEffect(() => {
     checkAppState();
   }, []);
+
+  useEffect(() => {
+    if (user && user.id) {
+      analytics.setIdentity(user.id, {
+        email: user.email,
+        name: user?.display_name || user?.data?.display_name || user?.full_name || '',
+      });
+      prevUserIdRef.current = user.id;
+    } else if (prevUserIdRef.current && !user) {
+      analytics.resetIdentity();
+      prevUserIdRef.current = null;
+    }
+  }, [user]);
 
   const checkAppState = async () => {
     try {
