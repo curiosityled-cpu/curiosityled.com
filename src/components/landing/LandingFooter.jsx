@@ -22,15 +22,17 @@ export default function LandingFooter() {
             <Link to="/LandingPage" className="text-gray-400 text-xs hover:text-white transition-colors mt-3">
               → Visit main site
             </Link>
-            {/* Founder identity — TODO: replace bracketed placeholders with real name, photo URL, and LinkedIn */}
+            {/* Founder identity */}
             <div className="mt-5 pt-5 border-t border-white/10">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-gray-500 text-[10px]">
-                  [photo]
-                </div>
+                <img
+                  src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/f336eb700_g6u1oy.jpg"
+                  alt="Emilio Osoria, Founder of Curiosity Led"
+                  className="w-9 h-9 rounded-full object-cover border border-white/15"
+                />
                 <div>
-                  <p className="text-white text-xs font-semibold">[Founder Name]</p>
-                  <a href="[LINKEDIN_URL]" target="_blank" rel="noopener noreferrer" className="text-gray-400 text-[11px] hover:text-white transition-colors">
+                  <p className="text-white text-xs font-semibold">Emilio Osoria</p>
+                  <a href="https://www.linkedin.com/in/emilioosoria" target="_blank" rel="noopener noreferrer" className="text-gray-400 text-[11px] hover:text-white transition-colors">
                     Founder · LinkedIn →
                   </a>
                 </div>

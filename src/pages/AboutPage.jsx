@@ -27,18 +27,20 @@ export default function AboutPage() {
             Why I built Curiosity Led
           </h1>
 
-          {/* Founder block — TODO: replace bracketed placeholders with real details */}
+          {/* Founder block */}
           <div className="flex flex-col sm:flex-row gap-8 mb-12">
             <div className="flex-shrink-0">
-              <div className="w-32 h-32 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400 text-sm">
-                [Founder photo]
-              </div>
+              <img
+                src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/f336eb700_g6u1oy.jpg"
+                alt="Emilio Osoria, Founder of Curiosity Led"
+                className="w-32 h-32 rounded-2xl object-cover border border-gray-200"
+              />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-[#0a0a0a] mb-1">[Founder Name]</h2>
+              <h2 className="text-xl font-bold text-[#0a0a0a] mb-1">Emilio Osoria</h2>
               <p className="text-sm text-gray-500 mb-4">Founder, Curiosity Led</p>
               <a
-                href="[LINKEDIN_URL]"
+                href="https://www.linkedin.com/in/emilioosoria"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm font-medium text-[#0202ff] hover:underline"
@@ -48,13 +50,13 @@ export default function AboutPage() {
             </div>
           </div>
 
-          {/* Founder voice — TODO: replace with real founder narrative */}
+          {/* Founder voice */}
           <div className="prose prose-gray max-w-none">
             <p className="text-gray-600 text-lg leading-relaxed mb-6">
-              [One to two paragraphs in the founder's own voice: why you started Curiosity Led, what you saw in the market that was broken, and what you believe about how manager development should work.]
+              I started Curiosity Led because manager development is broken. Organizations spend billions on training, coaching, and assessments every year. Almost none of it produces evidence that anything actually changed. Managers sit through workshops, get assessed, and return to the same habits. The tools meant to help produce activity metrics — courses completed, sessions attended, hours logged — not proof of better judgment. I kept seeing the same gap in every organization I worked with: investment without evidence, activity without outcomes, and managers who needed support in the moment but got it weeks too late.
             </p>
             <p className="text-gray-600 text-lg leading-relaxed mb-6">
-              [Second paragraph: what you're building, who it's for, and what success looks like — in plain language, not marketing copy.]
+              Curiosity Led is what I wish I had when I was building and leading teams. It is a manager intelligence platform that develops better judgment and proves it changed. It works inside the tools managers already use — Teams, Slack, email — so support arrives in the flow of work, not in a separate portal nobody opens. It is built for HR, Talent, and L&D leaders who are tired of defending programs with anecdotes. Success looks simple: a manager makes a better decision this week than last week, and you can see it in the data.
             </p>
           </div>
 
