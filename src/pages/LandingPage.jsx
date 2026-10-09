@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { setPageSEO } from "@/lib/seo";
 import LandingNav from "@/components/landing/LandingNav";
 import LandingHero from "@/components/landing/LandingHero";
 import LandingProblem from "@/components/landing/LandingProblem";
@@ -18,7 +19,10 @@ import LandingFooter from "@/components/landing/LandingFooter";
 
 export default function LandingPage() {
   useEffect(() => {
-    document.title = "Curiosity Led — Manager Intelligence That Proves Change";
+    setPageSEO(
+      "Curiosity Led — Manager Intelligence That Proves Change",
+      "Curiosity Led is the manager intelligence platform that develops manager judgment and proves it changed — inside Teams, Slack, and email."
+    );
     return () => { document.title = "Curiosity Led"; };
   }, []);
 

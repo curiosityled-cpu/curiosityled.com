@@ -55,7 +55,7 @@ export default function LandingHero() {
              transition={{ duration: 0.7, delay: 0.4 }}
              className="text-lg text-gray-600 leading-relaxed mb-8 font-medium"
             >
-             Curiosity Led is the manager intelligence platform that develops better judgment and proves it changed — through conversational learning, coaching flows, and a manager development companion, right inside Teams, Slack, and email.
+             Curiosity Led is the manager intelligence platform that develops better judgment and proves it changed. Conversational learning, coaching flows, and a manager development companion — right inside Teams, Slack, and email.
             </motion.p>
 
             {/* Bullets */}

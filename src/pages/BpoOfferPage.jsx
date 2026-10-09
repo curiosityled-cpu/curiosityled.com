@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { setPageSEO } from "@/lib/seo";
 import { motion } from "framer-motion";
 import { ArrowRight, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -16,7 +17,10 @@ export default function BpoOfferPage() {
   const [started, setStarted] = useState(false);
 
   useEffect(() => {
-    document.title = "BPO Leadership Diagnostic · Curiosity Led";
+    setPageSEO(
+      "BPO Leadership Diagnostic · Curiosity Led",
+      "Take the BPO leadership diagnostic. Identify which leadership pattern is hurting team performance and get a 90-day action plan tied to your KPIs."
+    );
     return () => { document.title = "Curiosity Led"; };
   }, []);
 
@@ -63,7 +67,7 @@ export default function BpoOfferPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-base sm:text-lg text-gray-600 leading-relaxed mb-7"
           >
-            Answer a short set of questions to identify where manager execution, coaching, follow-through, or team support may be breaking down. Get a practical BPO leadership diagnostic and a 90-day action plan tied to the outcomes you care about most.
+            The BPO leadership diagnostic is an 8-minute assessment of which leadership pattern is hurting your team's performance. Answer real scenarios, get a 90-day action plan tied to your KPIs.
           </motion.p>
 
           <motion.button

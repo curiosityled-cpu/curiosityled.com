@@ -33,7 +33,7 @@ export const industryContent = {
     hero: {
       headline: ["Spot leadership risk", "before it hits your SLA."],
       subheadline:
-        "Curiosity Led maps leadership behaviour patterns directly to your BPO operational metrics — AHT, FCR, QA drift, escalation rates, and attrition — so you can coach faster and react earlier.",
+        "Curiosity Led is a manager intelligence platform for BPO and operations teams. It maps leadership patterns to your operational metrics — AHT, FCR, QA, and attrition — so you can coach faster and react earlier.",
       bullets: [
         "Replace subjective scorecards with objective leadership signals.",
         "See the seven BPO leadership risk patterns before they compound.",
@@ -196,11 +196,11 @@ export const industryContent = {
     badge: "Healthcare",
     badgeColor: "#10b981",
     accent: "#10b981",
-    pageTitle: "Healthcare — Curiosity Led",
+    pageTitle: "Healthcare Manager Development — Curiosity Led",
     hero: {
       headline: ["Earlier leadership signals.", "Clearer intervention paths."],
       subheadline:
-        "Curiosity Led helps HR and operations leaders spot where manager support is needed, understand what patterns are emerging, and intervene before instability, turnover, or performance loss compounds.",
+        "Curiosity Led is a manager intelligence platform for healthcare organizations. It helps HR leaders spot where manager support is needed and intervene before turnover or performance loss compounds.",
       bullets: [
         "Spot overload and burnout risk early — before it affects patient care.",
         "Build psychological safety through low-burden, private check-ins.",

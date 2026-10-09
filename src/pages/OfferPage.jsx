@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { setPageSEO } from "@/lib/seo";
 import { motion } from "framer-motion";
 import { ArrowRight, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -16,7 +17,10 @@ export default function OfferPage() {
   const [started, setStarted] = useState(false);
 
   useEffect(() => {
-    document.title = "90-Day Leadership Development Reboot Blueprint · Curiosity Led";
+    setPageSEO(
+      "Leadership Development Diagnostic · Curiosity Led",
+      "Take the 8-minute leadership diagnostic. Answer real management scenarios and get a judgment profile you can share with your team. No platform to install."
+    );
     return () => { document.title = "Curiosity Led"; };
   }, []);
 
@@ -64,7 +68,7 @@ export default function OfferPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-base sm:text-lg text-gray-600 leading-relaxed mb-7"
           >
-            Answer a short set of questions. See where leadership support is getting stuck, get a clear readiness score, and download a 90-Day Leadership Development Reboot Blueprint built from your answers.
+            The Curiosity Led diagnostic is an 8-minute assessment of where your managers' judgment needs work. Answer real scenarios, get a readiness score, and download a 90-day blueprint you can share with your team.
           </motion.p>
 
           <motion.button

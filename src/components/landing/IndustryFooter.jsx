@@ -31,6 +31,9 @@ export default function IndustryFooter() {
               <li><Link to="/bpo" className="text-gray-400 text-xs hover:text-white transition-colors">BPO &amp; Operations</Link></li>
               <li><Link to="/healthcare" className="text-gray-400 text-xs hover:text-white transition-colors">Healthcare</Link></li>
               <li><Link to="/coaching" className="text-gray-400 text-xs hover:text-white transition-colors">Coaching &amp; Consulting</Link></li>
+              <li><Link to="/diagnostic" className="text-gray-400 text-xs hover:text-white transition-colors">Leadership Diagnostic</Link></li>
+              <li><Link to="/bpo-diagnostic" className="text-gray-400 text-xs hover:text-white transition-colors">BPO Leadership Diagnostic</Link></li>
+              <li><Link to="/about" className="text-gray-400 text-xs hover:text-white transition-colors">About</Link></li>
             </ul>
           </div>
 

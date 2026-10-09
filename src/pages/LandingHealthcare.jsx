@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { setPageSEO } from "@/lib/seo";
 import LandingNav from "@/components/landing/LandingNav";
 import IndustryHero from "@/components/landing/IndustryHero";
 import LandingProblem from "@/components/landing/LandingProblem";
@@ -18,7 +19,10 @@ export default function LandingHealthcare() {
   const cfg = getIndustryConfig("healthcare");
 
   useEffect(() => {
-    document.title = cfg.pageTitle;
+    setPageSEO(
+      cfg.pageTitle,
+      "Curiosity Led helps healthcare HR leaders spot manager overload and burnout risk early, strengthen readiness, and intervene before turnover compounds."
+    );
     window.scrollTo(0, 0);
   }, [cfg.pageTitle]);
 

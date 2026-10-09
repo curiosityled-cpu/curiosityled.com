@@ -1,10 +1,19 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { setPageSEO } from "@/lib/seo";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
 const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689807051dd69c2529ceabd9/2e32ade86_CuriosityLedLogoBBW.png";
 
 export default function TermsOfService() {
+  useEffect(() => {
+    setPageSEO(
+      "Terms of Service — Curiosity Led",
+      "Terms of Service for Curiosity Led, the manager intelligence platform that develops manager judgment and proves it changed inside Teams, Slack, and email."
+    );
+    return () => { document.title = "Curiosity Led"; };
+  }, []);
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}

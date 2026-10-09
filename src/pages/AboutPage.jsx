@@ -1,8 +1,17 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { setPageSEO } from "@/lib/seo";
 import LandingNav from "@/components/landing/LandingNav";
 import LandingFooter from "@/components/landing/LandingFooter";
 
 export default function AboutPage() {
+  useEffect(() => {
+    setPageSEO(
+      "About Curiosity Led — Founder & Mission",
+      "Meet the founder of Curiosity Led — why we built a manager intelligence platform that develops judgment and proves it changed, inside the flow of work."
+    );
+    return () => { document.title = "Curiosity Led"; };
+  }, []);
+
   return (
     <div className="min-h-screen bg-white font-sans">
       <LandingNav />

@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { setPageSEO } from "@/lib/seo";
 import LandingNav from "@/components/landing/LandingNav";
 import IndustryHero from "@/components/landing/IndustryHero";
 import LandingProblem from "@/components/landing/LandingProblem";
@@ -18,7 +19,10 @@ export default function LandingBPO() {
   const cfg = getIndustryConfig("bpo");
 
   useEffect(() => {
-    document.title = cfg.pageTitle;
+    setPageSEO(
+      cfg.pageTitle,
+      "Curiosity Led maps BPO leadership patterns to your operational metrics — AHT, FCR, QA, and attrition — so you coach faster and react earlier."
+    );
     window.scrollTo(0, 0);
   }, [cfg.pageTitle]);
 

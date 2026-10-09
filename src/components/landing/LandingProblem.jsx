@@ -8,7 +8,7 @@ const defaultProofPoints = [
 ];
 
 const defaultHeading = "The most expensive thing in your org is the one you can't measure.";
-const defaultIntro = "Every organization invests in manager development. Almost none can prove it's working. The cost of bad management is hidden in turnover, disengagement, and failed initiatives — and the tools meant to fix it produce activity metrics, not evidence of change.";
+const defaultIntro = "Every organization invests in manager development. Almost none can prove it's working. The cost of bad management is hidden in turnover, disengagement, and failed initiatives. The tools meant to fix it produce activity metrics, not evidence of change.";
 const defaultImage = "/web_overworked_CREDIT-PeopleImages_iStock-654187068.png";
 const defaultQuotesLabel = "What we hear from healthcare teams";
 const defaultQuotes = [

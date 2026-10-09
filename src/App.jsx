@@ -183,7 +183,7 @@ const AuthenticatedApp = () => {
       {/* MVP-specific routes */}
       <Route path="/my-leadership" element={<MVPLayout><ManagerToday /></MVPLayout>} />
       <Route path="/coaching-workspace" element={<MVPLayout><CoachingWorkspace /></MVPLayout>} />
-      <Route path="/experience-workspace" element={<MVPLayout><CoachingWorkspace /></MVPLayout>} />
+      <Route path="/experience-workspace" element={<Navigate to="/coaching-workspace" replace />} />
       <Route path="/coach-workspace" element={<MVPLayout><CoachWorkspace /></MVPLayout>} />
       <Route path="/consultant-workspace" element={<MVPLayout><ConsultantWorkspace /></MVPLayout>} />
       <Route path="/request-submit" element={<MVPLayout><RequestSubmit /></MVPLayout>} />
