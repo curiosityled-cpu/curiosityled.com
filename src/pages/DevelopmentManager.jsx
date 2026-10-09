@@ -50,14 +50,12 @@ const ADMIN_TABS = [
   { id: 'experiences', label: 'Experiences', icon: Star },
   { id: 'cohorts', label: 'Cohorts', icon: Users },
   { id: 'signals', label: 'Signals', icon: Radio },
-  { id: 'requests', label: 'Requests', icon: Inbox },
   { id: 'analytics', label: 'Analytics', icon: BarChart2 },
 ];
 
 // Coach-scoped tabs: Practice moved into Experiences sub-sections
 const COACH_TABS = (isConsultant) => [
   { id: 'experiences', label: 'Experiences', icon: Star },
-  { id: 'requests', label: 'My Requests', icon: Inbox },
   { id: 'coach_analytics', label: isConsultant ? 'Experience Analytics' : 'Coaching Analytics', icon: BarChart2 },
 ];
 

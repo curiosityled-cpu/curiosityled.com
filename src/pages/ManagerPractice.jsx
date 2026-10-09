@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import PracticeFlow from "@/components/practice/PracticeFlow";
 import CoachingFlowsCard from "@/components/practice/CoachingFlowsCard";
-import RequestCoachingCard from "@/components/practice/RequestCoachingCard";
 import WorkoutsSection from "@/components/practice/WorkoutsSection";
 import PracticeHeroHeader from "@/components/practice/PracticeHeroHeader";
 import PrescribedPracticeCard from "@/components/practice/PrescribedPracticeCard";
@@ -288,9 +287,6 @@ export default function ManagerPractice() {
                 </div>
               </div>
             </div>
-
-            {/* Request Support */}
-            <RequestCoachingCard />
           </div>
 
           {/* Right — Context sidebar */}
