@@ -16,8 +16,13 @@ import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
-  Brain, Users, Layers, ChevronRight, SlidersHorizontal, X,
+  Brain, Users, Layers, ChevronRight, SlidersHorizontal, X, ChevronDown,
 } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "@/components/ui/collapsible";
 import PracticeFlow from "@/components/practice/PracticeFlow";
 import CoachingFlowsCard from "@/components/practice/CoachingFlowsCard";
 import WorkoutsSection from "@/components/practice/WorkoutsSection";
@@ -253,40 +258,47 @@ export default function ManagerPractice() {
             <CoachingFlowsCard onStartFlow={handleStartFlow} />
 
             {/* Leadership Tools */}
-            <div className="space-y-3">
-              <div className="px-1 pt-1">
-                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Leadership Tools</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Jump to a structured tool to capture, plan, or review.</p>
-              </div>
-              <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-                <div className="divide-y divide-border">
-                  <ActionTile
-                    icon={Brain}
-                    iconBg="bg-rose-50 dark:bg-rose-950/40"
-                    iconColor="text-rose-600"
-                    title="Leadership Support Tool"
-                    description="Think through a high-stakes moment and review outcomes later."
-                    to="/decision-journal"
-                  />
-                  <ActionTile
-                    icon={Users}
-                    iconBg="bg-sky-50 dark:bg-sky-950/40"
-                    iconColor="text-sky-600"
-                    title="1:1 prep & notes"
-                    description="Prepare questions, review commitments, track notes."
-                    to="/one-on-ones"
-                  />
-                  <ActionTile
-                    icon={Layers}
-                    iconBg="bg-orange-50 dark:bg-orange-950/40"
-                    iconColor="text-orange-600"
-                    title="Delegation planner"
-                    description="Identify what to hand off and set your team up to win."
-                    to="/delegation-planner"
-                  />
+            <Collapsible defaultOpen className="space-y-3">
+              <CollapsibleTrigger asChild>
+                <button className="w-full flex items-center justify-between px-1 pt-1 group text-left">
+                  <div>
+                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Leadership Tools</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Jump to a structured tool to capture, plan, or review.</p>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-muted-foreground group-data-[state=open]:rotate-180 transition-transform flex-shrink-0 ml-2" />
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                  <div className="divide-y divide-border">
+                    <ActionTile
+                      icon={Brain}
+                      iconBg="bg-rose-50 dark:bg-rose-950/40"
+                      iconColor="text-rose-600"
+                      title="Leadership Support Tool"
+                      description="Think through a high-stakes moment and review outcomes later."
+                      to="/decision-journal"
+                    />
+                    <ActionTile
+                      icon={Users}
+                      iconBg="bg-sky-50 dark:bg-sky-950/40"
+                      iconColor="text-sky-600"
+                      title="1:1 prep & notes"
+                      description="Prepare questions, review commitments, track notes."
+                      to="/one-on-ones"
+                    />
+                    <ActionTile
+                      icon={Layers}
+                      iconBg="bg-orange-50 dark:bg-orange-950/40"
+                      iconColor="text-orange-600"
+                      title="Delegation planner"
+                      description="Identify what to hand off and set your team up to win."
+                      to="/delegation-planner"
+                    />
+                  </div>
                 </div>
-              </div>
-            </div>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
 
           {/* Right — Context sidebar */}

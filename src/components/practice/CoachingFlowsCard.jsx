@@ -6,7 +6,12 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { MessageSquare, CheckCircle2, Lightbulb, FileText, ChevronRight, Play } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "@/components/ui/collapsible";
+import { MessageSquare, CheckCircle2, Lightbulb, FileText, ChevronRight, ChevronDown, Play } from "lucide-react";
 
 const FLOWS = [
   {
@@ -64,37 +69,45 @@ export default function CoachingFlowsCard({ onStartFlow }) {
 
   return (
     <div className="space-y-3">
-      <div className="px-1 pt-1">
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Coaching Flows</p>
-        <p className="text-xs text-muted-foreground mt-0.5">Structured sessions to prepare, debrief, and reflect. Tap any flow to preview it.</p>
-      </div>
-
-      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-        <div className="max-h-[320px] overflow-y-auto divide-y divide-border">
-          {FLOWS.map((flow) => {
-            const Icon = flow.icon;
-            return (
-              <button
-                key={flow.key}
-                onClick={() => setSelected(flow)}
-                className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-muted/40 transition-colors active:bg-muted/60 group"
-              >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${flow.iconBg}`}>
-                  <Icon className={`w-4.5 h-4.5 ${flow.iconColor}`} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-semibold text-card-foreground">{flow.title}</p>
-                    <span className="text-[10px] font-medium text-muted-foreground">{flow.subtitle}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{flow.description}</p>
-                </div>
-                <ChevronRight className="w-4 h-4 flex-shrink-0 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <Collapsible defaultOpen>
+        <CollapsibleTrigger asChild>
+          <button className="w-full flex items-center justify-between px-1 pt-1 group text-left">
+            <div>
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Coaching Flows</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Structured sessions to prepare, debrief, and reflect. Tap any flow to preview it.</p>
+            </div>
+            <ChevronDown className="w-4 h-4 text-muted-foreground group-data-[state=open]:rotate-180 transition-transform flex-shrink-0 ml-2" />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="max-h-[320px] overflow-y-auto divide-y divide-border">
+              {FLOWS.map((flow) => {
+                const Icon = flow.icon;
+                return (
+                  <button
+                    key={flow.key}
+                    onClick={() => setSelected(flow)}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-muted/40 transition-colors active:bg-muted/60 group"
+                  >
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${flow.iconBg}`}>
+                      <Icon className={`w-4.5 h-4.5 ${flow.iconColor}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-semibold text-card-foreground">{flow.title}</p>
+                        <span className="text-[10px] font-medium text-muted-foreground">{flow.subtitle}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{flow.description}</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 flex-shrink-0 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       <Dialog open={!!selected} onOpenChange={(open) => { if (!open) setSelected(null); }}>
         <DialogContent className="sm:max-w-lg">
