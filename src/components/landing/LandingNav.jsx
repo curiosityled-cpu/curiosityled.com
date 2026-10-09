@@ -46,6 +46,9 @@ export default function LandingNav({ hideCtas = false }) {
           >
             Product
           </button>
+          <Link to="/compare" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+            Why us
+          </Link>
           <Link to="/healthcare" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
             Healthcare
           </Link>

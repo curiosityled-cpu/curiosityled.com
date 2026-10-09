@@ -50,6 +50,7 @@ export default function LandingFooter() {
               <li><Link to="/diagnostic" className="text-gray-400 text-xs hover:text-white transition-colors">Leadership Diagnostic</Link></li>
               <li><Link to="/bpo-diagnostic" className="text-gray-400 text-xs hover:text-white transition-colors">BPO Leadership Diagnostic</Link></li>
               <li><Link to="/about" className="text-gray-400 text-xs hover:text-white transition-colors">About</Link></li>
+              <li><Link to="/compare" className="text-gray-400 text-xs hover:text-white transition-colors">Why we're different</Link></li>
             </ul>
           </div>
 

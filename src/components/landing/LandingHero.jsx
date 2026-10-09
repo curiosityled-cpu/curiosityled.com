@@ -234,10 +234,10 @@ export default function LandingHero() {
         {/* Proof strip */}
         <div className="mt-16 pt-8 border-t border-gray-100">
           <p className="text-center text-xs text-gray-400 max-w-2xl mx-auto">
-            $482B lost annually to bad management decisions. 40–50% of employees would leave over a bad manager. You're already paying for this — Curiosity Led makes that cost visible and reducible.
+            $319B–$398B lost annually to disengaged managers. 50% of employees have left a job to get away from their manager. You're already paying for this — Curiosity Led makes that cost visible and reducible.
           </p>
           <p className="text-center text-[10px] text-gray-400 max-w-2xl mx-auto mt-2">
-            Sources: Gallup, <em>State of the American Manager</em> (2015). {/* TODO: verify the $482B figure's exact source or replace with a sourced claim */}
+            Sources: Gallup, <em>State of the American Manager</em> (2015).
           </p>
         </div>
       </div>

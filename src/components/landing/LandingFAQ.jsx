@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { ChevronDown } from "lucide-react";
 import { getIndustryConfig } from "@/components/landing/industryConfig";
 
@@ -51,7 +51,6 @@ const DEFAULT_FAQ = {
 };
 
 export default function LandingFAQ({ industry }) {
-  const [open, setOpen] = useState(null);
   const cfg = industry ? getIndustryConfig(industry)?.faq : null;
   const faq = cfg || DEFAULT_FAQ;
 
@@ -73,22 +72,15 @@ export default function LandingFAQ({ industry }) {
 
         <div className="divide-y divide-gray-100 border border-gray-100 rounded-2xl overflow-hidden">
           {faq.items.map((item, i) => (
-            <div key={i}>
-              <button
-                className="w-full text-left px-6 py-5 flex items-center justify-between gap-4 hover:bg-gray-50 transition-colors"
-                onClick={() => setOpen(open === i ? null : i)}
-              >
+            <details key={i} className="group">
+              <summary className="w-full text-left px-6 py-5 flex items-center justify-between gap-4 hover:bg-gray-50 transition-colors cursor-pointer list-none">
                 <span className="font-semibold text-gray-900 text-sm">{item.q}</span>
-                <ChevronDown
-                  className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform duration-200 ${
-                    open === i ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-              <div className={`px-6 pb-5 ${open === i ? "block" : "hidden"}`}>
+                <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0 transition-transform duration-200 group-open:rotate-180" />
+              </summary>
+              <div className="px-6 pb-5">
                 <p className="text-gray-500 text-sm leading-relaxed">{item.a}</p>
               </div>
-            </div>
+            </details>
           ))}
         </div>
       </div>

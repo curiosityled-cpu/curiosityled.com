@@ -21,6 +21,7 @@ import TermsOfService from './pages/TermsOfService';
 import OfferPage from './pages/OfferPage';
 import BpoOfferPage from './pages/BpoOfferPage';
 import AboutPage from './pages/AboutPage';
+import ComparePage from './pages/ComparePage';
 import RadarLabelSample from './pages/RadarLabelSample';
 import DiagnosticAnalytics from './pages/DiagnosticAnalytics';
 import MyLeadership from './pages/MyLeadership';
@@ -141,6 +142,7 @@ const AuthenticatedApp = () => {
       <Route path="/bpo-diagnostic" element={<BpoOfferPage />} />
       <Route path="/radar-label-sample" element={<RadarLabelSample />} />
       <Route path="/about" element={<AboutPage />} />
+      <Route path="/compare" element={<ComparePage />} />
       <Route path="/testlanding" element={<TestLanding />} />
 
       {/* Public IC web check-in — token-gated, not indexed, no login required */}
