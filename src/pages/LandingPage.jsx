@@ -15,6 +15,7 @@ import LandingBeyond from "@/components/landing/LandingBeyond";
 import LandingFinalCTA from "@/components/landing/LandingFinalCTA";
 import LandingFAQ from "@/components/landing/LandingFAQ";
 import LandingPilotStatus from "@/components/landing/LandingPilotStatus";
+import LandingFounderBlock from "@/components/landing/LandingFounderBlock";
 import LandingFooter from "@/components/landing/LandingFooter";
 
 export default function LandingPage() {
@@ -42,6 +43,7 @@ export default function LandingPage() {
       <LandingBeyond />
       <LandingFinalCTA />
       <LandingPilotStatus />
+      <LandingFounderBlock />
       <LandingFAQ />
       <LandingFooter />
     </div>

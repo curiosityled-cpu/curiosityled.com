@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { getIndustryConfig } from "./industryConfig";
 
 const defaultProofPoints = [
@@ -28,6 +29,12 @@ export default function LandingProblem({ industry }) {
   const proofPoints = ps?.proofPoints || defaultProofPoints;
   const quotesLabel = ps?.quotesLabel || defaultQuotesLabel;
   const quotes = ps?.quotes || defaultQuotes;
+  const quoteLinkPath = industry === "bpo" ? "/bpo" : industry === "coaching" ? "/coaching" : "/healthcare";
+  const quoteLinkText = industry === "bpo"
+    ? "See how BPO teams use Curiosity Led →"
+    : industry === "coaching"
+      ? "See how coaching firms use Curiosity Led →"
+      : "See how healthcare teams use Curiosity Led →";
 
   return (
     <section className="py-24 bg-[#1a1a2e]">
@@ -73,6 +80,11 @@ export default function LandingProblem({ industry }) {
                 </div>
               ))}
             </div>
+          </div>
+          <div className="mt-6">
+            <Link to={quoteLinkPath} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">
+              {quoteLinkText}
+            </Link>
           </div>
         </div>
       </div>
