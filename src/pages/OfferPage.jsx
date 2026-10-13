@@ -5,6 +5,7 @@ import { ArrowRight, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import ReportPreviewCard from "@/components/landing/ReportPreviewCard";
+import LandingNav from "@/components/landing/LandingNav";
 import DiagnosticFlow from "@/components/diagnostic/DiagnosticFlow";
 
 const STEPS = [
@@ -43,6 +44,10 @@ export default function OfferPage() {
     <section className="relative px-5 pt-28 pb-12 lg:pt-32 lg:pb-16">
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
         <div className="max-w-xl">
+          <div className="inline-flex items-center gap-1.5 mb-4 px-3 py-1 rounded-full border border-blue-100 bg-blue-50" style={{ color: "#0202ff" }}>
+            <Shield className="w-3.5 h-3.5" />
+            <span className="text-xs font-medium">Private Assessment</span>
+          </div>
           <motion.p
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -143,20 +148,8 @@ export default function OfferPage() {
         style={{ background: "#0202ff" }}
       />
 
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-sm border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <img
-            src="https://raw.githubusercontent.com/curiosityled-cpu/curiosityled.com/main/public/CuriosityLedLogoBBW%20(1).png"
-            alt="Curiosity Led"
-            className="h-10 object-contain"
-          />
-          <div className="flex items-center gap-1.5" style={{ color: "#0202ff" }}>
-            <Shield className="w-4 h-4" />
-            <span className="text-xs font-medium">Private Assessment</span>
-          </div>
-        </div>
-      </header>
+      {/* Standard landing nav */}
+      <LandingNav />
 
       {/* Landing hero or Diagnostic flow */}
       {started ? (
