@@ -45,6 +45,7 @@ import { useNavigate } from "react-router-dom";
 import LeaderInsightProfilesCard from "./LeaderInsightProfilesCard";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import OrgPulseAggregatesView from "@/components/privacy/OrgPulseAggregatesView";
+import CheckInInsightsExplorer from "@/components/checkin/CheckInInsightsExplorer";
 import TalentCareLifecycleBar from "@/components/intelligence/TalentCareLifecycleBar";
 import LifecycleNarrativeHeader from "./LifecycleNarrativeHeader";
 import OrgHealthCard from "@/components/intelligence/OrgHealthCard";
@@ -1201,6 +1202,11 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
                 suppressed={false}
               />
               <OrgPulseAggregatesView demoData={DEMO_SNAPSHOT_MODE ? DEMO_PULSE_AGGREGATES : undefined} />
+              <CheckInInsightsExplorer
+                scope="org"
+                title="Question-level Check-in Trends"
+                subtitle="Drill into any measure or custom check-in question — including historical questions no longer active. Filter by date range and export for reporting."
+              />
             </div>
           </motion.div>
         );
