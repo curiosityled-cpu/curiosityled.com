@@ -20,9 +20,18 @@
         "number",
         "text",
         "scale_1_5",
-        "yes_no"
+        "yes_no",
+        "anchored_choices"
       ],
-      "description": "How the user answers this question"
+      "description": "How the user answers this question. anchored_choices uses a fixed list of labeled options (anchored_choices_options)."
+    },
+    "anchored_choices_options": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Ordered choice labels for the anchored_choices response type (e.g. ['None', 'Less than half', 'About half', 'Most, but not all', 'All', 'More than planned', 'Work was unavailable or blocked']). Ignored for other response types."
     },
     "unit_label": {
       "type": "string",
@@ -65,6 +74,11 @@
     "ai_topic": {
       "type": "string",
       "description": "Topic/prompt the AI uses to generate a fresh question text each day (only used when is_ai_generated is true)."
+    },
+    "is_ic_fixed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Marks this as one of the fixed operational questions in an IC (frontline) check-in (as opposed to an AI-generated wellbeing question or a manager KPI question). Used to distinguish the 3 fixed operational questions from the 2 AI-generated wellbeing questions in the IC check-in model."
     },
     "created_by_email": {
       "type": "string",

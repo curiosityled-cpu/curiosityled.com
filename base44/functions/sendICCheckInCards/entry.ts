@@ -12,9 +12,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { isInternalCall } from '../../shared/urlValidation.ts';
 import {
-  getMeasuresForClient,
-  getActiveCustomQuestions,
+  getICQuestions,
   buildICCheckInCard,
+  buildICCheckInEmailHTML,
   getGraphToken,
   sendCardToTeams,
 } from '../../shared/icCheckIn.ts';
@@ -31,8 +31,6 @@ Deno.serve(async (req) => {
 
     const payload = await req.json().catch(() => ({}));
     const checkInType = payload.check_in_type || 'morning';
-    // Optional: send to specific IC IDs only (individual sending). If omitted,
-    // sends to all active ICs with check_in_enabled on the roster.
     const icIds = Array.isArray(payload.ic_ids) ? payload.ic_ids.filter(Boolean) : null;
 
     // Resolve the target client
@@ -46,7 +44,7 @@ Deno.serve(async (req) => {
 
     const serviceBase44 = base44.asServiceRole;
 
-    // Fetch the client (for preset) and the active IC roster in parallel
+    // Fetch the client (for questions) and the active IC roster in parallel
     const [client, allIcRows] = await Promise.all([
       serviceBase44.entities.Client.get(clientId).catch(() => null),
       serviceBase44.entities.ICRoster.filter({
@@ -61,7 +59,6 @@ Deno.serve(async (req) => {
       ? (allIcRows || []).filter((ic: any) => icIds.includes(ic.id))
       : (allIcRows || []);
 
-    const measures = getMeasuresForClient(client);
     // "both" sends a morning card and an evening card to each IC.
     const types = checkInType === 'both' ? ['morning', 'evening'] : [checkInType];
 
@@ -71,20 +68,25 @@ Deno.serve(async (req) => {
     let graphToken: string | null = null;
 
     for (const type of types) {
-      const customQuestions = await getActiveCustomQuestions(serviceBase44, clientId, '', type);
+      // Resolve questions (measures + custom, with AI text generated server-side)
+      const { measures, customQuestions, questionsUsed } = await getICQuestions(
+        serviceBase44,
+        client,
+        type
+      );
 
       for (const ic of all) {
         const channel = ic.preferred_channel || 'both';
         const hasTeams = !!ic.teams_conversation_id;
         const wantsTeams = (channel === 'teams' || channel === 'both') && hasTeams;
         const wantsEmail = channel === 'email' || channel === 'both' || !hasTeams;
-        const entry: any = { ic_id: ic.id, email: ic.email, check_in_type: type, teams: 'skipped', email: 'skipped' };
+        const entry: any = { ic_id: ic.id, ic_email: ic.email, check_in_type: type, teams: 'skipped', email_status: 'skipped' };
 
         // Teams Adaptive Card
         if (wantsTeams) {
           try {
             if (!graphToken) graphToken = await getGraphToken();
-            const card = buildICCheckInCard(ic, measures, customQuestions, type);
+            const card = buildICCheckInCard(ic, measures, customQuestions, type, questionsUsed);
             await sendCardToTeams(ic.teams_conversation_id, card, graphToken);
             entry.teams = 'sent';
           } catch (e: any) {
@@ -93,21 +95,23 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Email with the web fallback link (also sent when no Teams conversation yet)
+        // Email with question context + web fallback link
         if (wantsEmail && ic.email && ic.web_access_token) {
           const link = `${APP_URL}/ic-checkin?token=${ic.web_access_token}`;
           try {
+            const html = buildICCheckInEmailHTML(ic, measures, customQuestions, type, link);
             await serviceBase44.integrations.Core.SendEmail({
               to: ic.email,
-              subject: `Your ${type === 'evening' ? 'evening' : 'morning'} check-in`,
+              subject: `Your daily check-in`,
+              html,
               text:
                 `Hi ${ic.name?.split(' ')[0] || ''},\n\n` +
                 `Here is your ${type} check-in. Complete it here (takes about a minute):\n${link}\n\n` +
                 `— Curiosity Led`,
             });
-            entry.email = 'sent';
+            entry.email_status = 'sent';
           } catch (e: any) {
-            entry.email = 'failed';
+            entry.email_status = 'failed';
             entry.email_error = e.message;
           }
         }
@@ -117,15 +121,15 @@ Deno.serve(async (req) => {
     }
 
     const teamsSent = results.filter((r) => r.teams === 'sent').length;
-    const emailSent = results.filter((r) => r.email === 'sent').length;
-    const skippedNoConversation = all.filter((ic) => !ic.teams_conversation_id).length;
+    const emailSent = results.filter((r) => r.email_status === 'sent').length;
+    const skippedNoConversation = all.filter((ic: any) => !ic.teams_conversation_id).length;
 
     return Response.json({
       success: true,
       check_in_type: checkInType,
       sent: teamsSent,
       emailed: emailSent,
-      failed: results.filter((r) => r.teams === 'failed' || r.email === 'failed').length,
+      failed: results.filter((r) => r.teams === 'failed' || r.email_status === 'failed').length,
       skipped_no_conversation: skippedNoConversation,
       details: results,
     });

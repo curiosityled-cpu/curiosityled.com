@@ -1,0 +1,184 @@
+{
+  "name": "ManagerPortfolio",
+  "type": "object",
+  "description": "Effective-dated assignment of a manager to a customer account for portfolio visibility. Defines which customer accounts a manager can see workforce and check-in data for. Supports many-to-many: one manager can manage multiple accounts, and one account can have multiple managers. This is separate from EmployeeAssignment (who works on an account) and from the reporting hierarchy (who reports to whom).",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the BPO tenant (Client) this portfolio entry belongs to. Canonical tenant partition key."
+    },
+    "manager_email": {
+      "type": "string",
+      "description": "Email of the manager who has portfolio visibility for this account"
+    },
+    "manager_name": {
+      "type": "string",
+      "description": "Full name of the manager (denormalized for display)"
+    },
+    "customer_account_id": {
+      "type": "string",
+      "description": "ID of the CustomerAccount this manager has visibility into"
+    },
+    "customer_account_name": {
+      "type": "string",
+      "description": "Name of the customer account (denormalized for display)"
+    },
+    "portfolio_role": {
+      "type": "string",
+      "enum": [
+        "account_manager",
+        "operations_manager",
+        "team_lead",
+        "viewer"
+      ],
+      "default": "account_manager",
+      "description": "The manager's role on this account portfolio"
+    },
+    "effective_from": {
+      "type": "string",
+      "format": "date",
+      "description": "Date this portfolio assignment becomes effective"
+    },
+    "effective_to": {
+      "type": "string",
+      "format": "date",
+      "description": "Date this portfolio assignment ends (null/blank = open-ended)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this portfolio assignment is currently active"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal notes about this portfolio assignment"
+    }
+  },
+  "required": [
+    "client_id",
+    "manager_email",
+    "customer_account_id"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.manager_email": "{{user.email}}"
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

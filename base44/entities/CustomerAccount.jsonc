@@ -1,0 +1,166 @@
+{
+  "name": "CustomerAccount",
+  "type": "object",
+  "description": "A customer account served by a BPO tenant (e.g. Flat Bridge LTD). Each BPO tenant (Client) can serve multiple customer accounts. Staff are assigned to accounts via EmployeeAssignment, and managers are assigned portfolio visibility via ManagerPortfolio. This entity sits beneath the Client (tenant) level and is distinct from the Client entity itself.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the BPO tenant (Client) this customer account belongs to. Canonical tenant partition key."
+    },
+    "name": {
+      "type": "string",
+      "description": "Customer account name (e.g. 'Acme Logistics', 'Northwind Freight')"
+    },
+    "slug": {
+      "type": "string",
+      "description": "URL-safe identifier \u2014 auto-generated from name if not provided"
+    },
+    "industry": {
+      "type": "string",
+      "description": "Industry or vertical (e.g. 'freight', 'warehousing', 'last-mile delivery')"
+    },
+    "account_type": {
+      "type": "string",
+      "enum": [
+        "logistics",
+        "warehousing",
+        "transport",
+        "customer_service",
+        "other"
+      ],
+      "default": "logistics",
+      "description": "Type of work this account involves"
+    },
+    "contact_name": {
+      "type": "string",
+      "description": "Primary contact at the customer account"
+    },
+    "contact_email": {
+      "type": "string",
+      "description": "Primary contact email"
+    },
+    "contact_phone": {
+      "type": "string",
+      "description": "Primary contact phone"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "on_hold",
+        "ended"
+      ],
+      "default": "active",
+      "description": "Account status"
+    },
+    "contract_start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When the account engagement started"
+    },
+    "contract_end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When the account engagement ends (if known)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal notes about this customer account"
+    }
+  },
+  "required": [
+    "client_id",
+    "name"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.client_id": "{{user.data.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

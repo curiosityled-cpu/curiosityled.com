@@ -7,14 +7,17 @@
  * matched exactly. Only the fields needed to render and save the form are
  * returned.
  *
- * POST body: { action: "get_context" | "submit", token, answers?, check_in_type?, date? }
- *   - get_context → { ic_name, team, check_in_type, measures, custom_questions }
+ * POST body: { action: "get_context" | "submit", token, answers?, check_in_type?, date?, questions_used? }
+ *   - get_context → { ic_name, team, check_in_type, measures, custom_questions, questions_used }
  *   - submit     → { success, record_id, check_in_date }
+ *
+ * questions_used (on submit): the AI-generated question texts returned by
+ * get_context, passed back by the frontend so the exact wording shown to the
+ * IC is preserved on the DailyCheckIn record.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import {
-  getMeasuresForClient,
-  getActiveCustomQuestions,
+  getICQuestions,
   saveICCheckIn,
 } from '../../shared/icCheckIn.ts';
 
@@ -23,7 +26,7 @@ export default async function (req: Request): Promise<Response> {
     const base44 = createClientFromRequest(req);
     const serviceBase44 = base44.asServiceRole;
     const payload = await req.json().catch(() => ({}));
-    const { action, token, answers, check_in_type, date } = payload;
+    const { action, token, answers, check_in_type, date, questions_used } = payload;
 
     if (!token || typeof token !== 'string' || token.trim() === '') {
       return Response.json({ error: 'Missing access token' }, { status: 400 });
@@ -41,19 +44,17 @@ export default async function (req: Request): Promise<Response> {
     }
     const ic = icRows[0];
 
-    // Resolve the client (for the active check-in preset).
+    // Resolve the client (for the active check-in preset and timezone).
     const client = ic.client_id
       ? await serviceBase44.entities.Client.get(ic.client_id).catch(() => null)
       : null;
 
-    const type = check_in_type || 'morning';
+    const type = check_in_type || 'evening';
 
     if (action === 'get_context') {
-      const measures = getMeasuresForClient(client);
-      const customQuestions = await getActiveCustomQuestions(
+      const { measures, customQuestions, questionsUsed } = await getICQuestions(
         serviceBase44,
-        ic.client_id,
-        '',
+        client,
         type
       );
       return Response.json({
@@ -62,6 +63,7 @@ export default async function (req: Request): Promise<Response> {
         check_in_type: type,
         measures,
         custom_questions: customQuestions,
+        questions_used: questionsUsed,
       });
     }
 
@@ -69,7 +71,15 @@ export default async function (req: Request): Promise<Response> {
       if (!answers || typeof answers !== 'object') {
         return Response.json({ error: 'answers object is required' }, { status: 400 });
       }
-      const record = await saveICCheckIn(serviceBase44, ic, answers, type, date);
+      const record = await saveICCheckIn(
+        serviceBase44,
+        ic,
+        answers,
+        type,
+        date,
+        client?.business_timezone,
+        questions_used
+      );
       return Response.json({
         success: true,
         record_id: record?.id,

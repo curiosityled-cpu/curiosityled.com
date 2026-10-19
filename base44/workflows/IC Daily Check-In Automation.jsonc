@@ -3,7 +3,7 @@
     "document": {
       "dsl": "1.0.0",
       "name": "ic_daily_checkin_automation",
-      "version": "1.0",
+      "version": "1.1",
       "namespace": "base44"
     },
     "do": [
@@ -16,21 +16,21 @@
           "then": "end",
           "x-base44": {
             "title": "Send automated IC check-ins",
-            "description": "Delivers check-in cards to all enabled clients' frontline staff"
+            "description": "Delivers check-in cards to all enabled clients' frontline staff at 3pm local time"
           }
         }
       }
     ]
   },
   "name": "IC Daily Check-In Automation",
-  "description": "Sends daily check-in cards to frontline staff (ICRoster) for every client with IC check-in automation enabled. Runs Monday\u2013Friday at 9am ET.",
+  "description": "Sends daily check-in cards to frontline staff (ICRoster) for every client with IC check-in automation enabled and a business timezone set. Runs Monday\u2013Friday at 3:00 PM ET. Clients without business_timezone are skipped until it is configured.",
   "trigger": {
     "condition": null,
     "config": {
       "trigger_type": "scheduled",
       "events": [],
       "schedule_mode": "recurring",
-      "cron_expression": "0 9 * * 1-5",
+      "cron_expression": "0 15 * * 1-5",
       "one_time_date": null,
       "timezone": "America/New_York",
       "interval_value": null,

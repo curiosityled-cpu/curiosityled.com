@@ -290,6 +290,15 @@
               ],
               "default": "morning",
               "description": "Which check-in type the automated IC send uses (morning, evening, or both)"
+            },
+            "ic_skip_measures": {
+              "type": "boolean",
+              "default": false,
+              "description": "When true, IC check-ins show only custom questions (no Likert preset measures). Used for operational IC check-ins like BPO logistics where the 3 fixed operational + 2 AI wellbeing questions replace the standard 5-measure preset."
+            },
+            "ic_send_time": {
+              "type": "string",
+              "description": "Local send time for IC check-ins in 24h HH:MM format (e.g. '15:00' for 3:00 PM). Interpreted in the tenant's business_timezone. When set, the automated send function skips clients whose local time has not yet reached this time."
             }
           },
           "description": "Check-in engine configuration for this organization"

@@ -6,6 +6,9 @@
  * ICs are not app users. The token in the URL identifies the IC and gates access.
  * Renders the org's preset measures + custom KPI questions and submits via the
  * icWebCheckIn backend function.
+ *
+ * Supports all response types: number, text, scale_1_5, yes_no, anchored_choices.
+ * Preserves AI-generated question wording by passing questions_used back on submit.
  */
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
@@ -105,6 +108,24 @@ function QuestionControl({ q, value, onChange }) {
           ))}
         </div>
       )}
+      {q.response_type === "anchored_choices" && (
+        <div className="space-y-2">
+          {(q.anchored_choices_options || []).map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => onChange(key, opt)}
+              className={`w-full text-left px-4 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+                value === opt
+                  ? "bg-[#0202ff] text-white border-[#0202ff]"
+                  : "bg-white text-gray-700 border-gray-200 hover:border-gray-300"
+              }`}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -173,7 +194,8 @@ export default function ICWebCheckIn() {
         action: "submit",
         token,
         answers,
-        check_in_type: ctx?.check_in_type || "morning",
+        check_in_type: ctx?.check_in_type || "evening",
+        questions_used: ctx?.questions_used || {},
       });
       const data = res?.data || res;
       if (data?.error) throw new Error(data.error);
@@ -225,7 +247,7 @@ export default function ICWebCheckIn() {
         <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
           <div>
             <h1 className="text-lg font-semibold text-gray-900">
-              {ctx?.check_in_type === "evening" ? "Evening" : "Daily"} Check-in
+              {ctx?.check_in_type === "evening" ? "End-of-Day" : "Daily"} Check-in
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
               Hi{ctx?.ic_name ? ` ${ctx.ic_name.split(" ")[0]}` : ""} — a quick check-in.

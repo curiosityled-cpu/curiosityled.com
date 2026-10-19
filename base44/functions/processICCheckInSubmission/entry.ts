@@ -6,7 +6,11 @@
  * or by an admin/manual flow. Accepts the IC roster ID plus the raw card
  * answers (m_<measure> and c_<question_key> keys) and a check-in type.
  *
- * POST body: { ic_id, answers, check_in_type?, date? }
+ * POST body: { ic_id, answers, check_in_type?, date?, questions_used? }
+ *
+ * questions_used: optional map of question_key → AI-generated text, passed
+ * through from the Adaptive Card's submit data so the exact wording shown
+ * to the IC is preserved on the DailyCheckIn record.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { isInternalCall } from '../../shared/urlValidation.ts';
@@ -23,7 +27,7 @@ Deno.serve(async (req) => {
     }
 
     const payload = await req.json().catch(() => ({}));
-    const { ic_id, answers, check_in_type, date } = payload;
+    const { ic_id, answers, check_in_type, date, questions_used } = payload;
 
     if (!ic_id) {
       return Response.json({ error: 'ic_id is required' }, { status: 400 });
@@ -39,7 +43,22 @@ Deno.serve(async (req) => {
     }
     const ic = icRows[0];
 
-    const record = await saveICCheckIn(serviceBase44, ic, answers, check_in_type || 'morning', date);
+    // Fetch the client to get the tenant business timezone for date computation
+    let timezone: string | undefined;
+    if (ic.client_id) {
+      const client = await serviceBase44.entities.Client.get(ic.client_id).catch(() => null);
+      timezone = client?.business_timezone;
+    }
+
+    const record = await saveICCheckIn(
+      serviceBase44,
+      ic,
+      answers,
+      check_in_type || 'morning',
+      date,
+      timezone,
+      questions_used
+    );
 
     return Response.json({
       success: true,

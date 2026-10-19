@@ -1,0 +1,163 @@
+{
+  "name": "EmployeeAssignment",
+  "type": "object",
+  "description": "Effective-dated assignment of a staff member (employee) to a customer account. Supports many-to-many: one employee can be assigned to multiple accounts, and one account can have multiple employees. The reporting hierarchy is preserved independently via the User entity and ICRoster.manager_email. This entity records who works on which account, not who reports to whom.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the BPO tenant (Client) this assignment belongs to. Canonical tenant partition key."
+    },
+    "employee_email": {
+      "type": "string",
+      "description": "Email of the assigned employee. For roster-only ICs, this should match the ICRoster.email. For app users, this should match their user email."
+    },
+    "employee_name": {
+      "type": "string",
+      "description": "Full name of the assigned employee (denormalized for display)"
+    },
+    "employee_type": {
+      "type": "string",
+      "enum": [
+        "ic_roster",
+        "app_user"
+      ],
+      "default": "ic_roster",
+      "description": "Whether this employee is a roster-only IC (ICRoster) or a registered app user"
+    },
+    "ic_roster_id": {
+      "type": "string",
+      "description": "ID of the ICRoster entry if employee_type is ic_roster. Null for app users."
+    },
+    "customer_account_id": {
+      "type": "string",
+      "description": "ID of the CustomerAccount this employee is assigned to"
+    },
+    "customer_account_name": {
+      "type": "string",
+      "description": "Name of the customer account (denormalized for display)"
+    },
+    "role_on_account": {
+      "type": "string",
+      "description": "The employee's role on this account (e.g. 'driver', 'loader', 'warehouse associate', 'team lead')"
+    },
+    "effective_from": {
+      "type": "string",
+      "format": "date",
+      "description": "Date this assignment becomes effective"
+    },
+    "effective_to": {
+      "type": "string",
+      "format": "date",
+      "description": "Date this assignment ends (null/blank = open-ended)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this assignment is currently active. An assignment is active when is_active is true and today's date is within effective_from/effective_to."
+    },
+    "shift_pattern": {
+      "type": "string",
+      "description": "Optional shift or schedule pattern (e.g. 'Mon-Fri 7am-3pm', 'Weekend rotation')"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal notes about this assignment"
+    }
+  },
+  "required": [
+    "client_id",
+    "employee_email",
+    "customer_account_id"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.client_id": "{{user.data.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}
