@@ -31,6 +31,7 @@ import {
   AlertCircle,
   Clock,
   Zap,
+  ClipboardList,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -83,6 +84,31 @@ export default function SendCheckInsCard({ user }) {
     client?.settings?.check_in_config?.ic_automation_enabled === true;
   const automationType =
     client?.settings?.check_in_config?.ic_automation_type || "morning";
+  const skipMeasures =
+    client?.settings?.check_in_config?.ic_skip_measures === true;
+
+  const toggleSkipMeasures = async (enabled) => {
+    if (!client) return;
+    setSavingAutomation(true);
+    try {
+      const currentSettings = client.settings || {};
+      const currentCheckInConfig = currentSettings.check_in_config || {};
+      const updatedSettings = {
+        ...currentSettings,
+        check_in_config: {
+          ...currentCheckInConfig,
+          ic_skip_measures: enabled,
+        },
+      };
+      await base44.entities.Client.update(client.id, { settings: updatedSettings });
+      setClient({ ...client, settings: updatedSettings });
+      toast.success(enabled ? "Custom-questions-only mode enabled" : "Standard measures restored");
+    } catch (e) {
+      toast.error("Could not update: " + (e.message || ""));
+    } finally {
+      setSavingAutomation(false);
+    }
+  };
 
   const toggleAutomation = async (enabled) => {
     if (!client) return;
@@ -340,7 +366,7 @@ export default function SendCheckInsCard({ user }) {
                 </p>
                 <p className="text-[11px] text-muted-foreground mt-0.5 max-w-md">
                   When enabled, check-in cards are sent automatically every
-                  weekday at 9am ET to all eligible staff.
+                  weekday at 3pm ET to all eligible staff.
                 </p>
               </div>
             </div>
@@ -369,10 +395,37 @@ export default function SendCheckInsCard({ user }) {
                 </SelectContent>
               </Select>
               <span className="text-[11px] text-muted-foreground">
-                · Mon–Fri, 9am ET
+                · Mon–Fri, 3pm ET
               </span>
             </div>
           )}
+        </div>
+
+        {/* Skip standard measures — custom questions only (e.g. BPO operational check-ins) */}
+        <div className="rounded-lg border border-border p-3 space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-start gap-2">
+              <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                <ClipboardList className="w-4 h-4 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  Custom-questions-only mode
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-0.5 max-w-md">
+                  When enabled, staff check-ins show only your custom questions
+                  below — no standard wellbeing measures. Use this for
+                  operational check-ins (e.g. BPO logistics) where the 5-measure
+                  preset does not apply.
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={skipMeasures}
+              onCheckedChange={toggleSkipMeasures}
+              disabled={savingAutomation}
+            />
+          </div>
         </div>
       </CardContent>
     </Card>

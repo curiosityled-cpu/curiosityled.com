@@ -42,6 +42,7 @@ import {
   ToggleLeft,
   AlertCircle,
   Sparkles,
+  ListChecks,
 } from "lucide-react";
 import CheckInLookbackSetting from "@/components/performance-mgmt/CheckInLookbackSetting";
 import SendCheckInsCard from "@/components/performance-mgmt/SendCheckInsCard";
@@ -51,6 +52,7 @@ const RESPONSE_TYPES = [
   { value: "text", label: "Short text", icon: Type, hint: "Free-text answer" },
   { value: "scale_1_5", label: "Scale 1–5", icon: BarChart3, hint: "Same 1–5 picker as the measures" },
   { value: "yes_no", label: "Yes / No", icon: ToggleLeft, hint: "Binary toggle" },
+  { value: "anchored_choices", label: "Anchored choices", icon: ListChecks, hint: "Fixed list of labeled options" },
 ];
 
 const ROLE_OPTIONS = [
@@ -87,6 +89,7 @@ const emptyForm = {
   question_key: "",
   response_type: "number",
   unit_label: "",
+  anchored_choices_options: "",
   target_role: "",
   applies_to: "both",
   is_required: false,
@@ -94,6 +97,7 @@ const emptyForm = {
   is_active: true,
   is_ai_generated: false,
   ai_topic: "",
+  is_ic_fixed: false,
 };
 
 export default function CheckInSetupTab({ user }) {
@@ -178,6 +182,7 @@ export default function CheckInSetupTab({ user }) {
       question_key: q.question_key || "",
       response_type: q.response_type || "number",
       unit_label: q.unit_label || "",
+      anchored_choices_options: (q.anchored_choices_options || []).join("\n"),
       target_role: q.target_role || "",
       applies_to: q.applies_to || "both",
       is_required: !!q.is_required,
@@ -185,6 +190,7 @@ export default function CheckInSetupTab({ user }) {
       is_active: q.is_active !== false,
       is_ai_generated: !!q.is_ai_generated,
       ai_topic: q.ai_topic || "",
+      is_ic_fixed: !!q.is_ic_fixed,
     });
     setAiAssistTopic("");
     setFormError(null);
@@ -212,6 +218,13 @@ export default function CheckInSetupTab({ user }) {
       question_key: key,
       response_type: form.response_type,
       unit_label: form.response_type === "number" ? (form.unit_label || "").trim() : "",
+      anchored_choices_options:
+        form.response_type === "anchored_choices"
+          ? (form.anchored_choices_options || "")
+              .split("\n")
+              .map((s) => s.trim())
+              .filter(Boolean)
+          : [],
       target_role: form.target_role || "",
       applies_to: form.applies_to,
       is_required: form.is_required,
@@ -219,6 +232,7 @@ export default function CheckInSetupTab({ user }) {
       is_active: form.is_active,
       is_ai_generated: form.is_ai_generated,
       ai_topic: form.is_ai_generated ? form.ai_topic.trim() : "",
+      is_ic_fixed: form.is_ic_fixed,
     };
     try {
       if (editingId) {
@@ -226,6 +240,7 @@ export default function CheckInSetupTab({ user }) {
       } else {
         await base44.entities.CheckInCustomQuestion.create({
           ...payload,
+          client_id: currentUser?.data?.client_id || currentUser?.client_id || "",
           created_by_email: currentUser?.email || "",
         });
       }
@@ -376,6 +391,12 @@ export default function CheckInSetupTab({ user }) {
                             <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#0202ff] bg-[#0202ff]/10 border border-[#0202ff]/20 rounded px-1.5 py-0.5">
                               <Sparkles className="w-2.5 h-2.5" />
                               AI daily
+                            </span>
+                          )}
+                          {q.is_ic_fixed && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
+                              <ListChecks className="w-2.5 h-2.5" />
+                              Fixed
                             </span>
                           )}
                         </div>
@@ -625,6 +646,30 @@ export default function CheckInSetupTab({ user }) {
               </div>
             )}
 
+            {form.response_type === "anchored_choices" && (
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">
+                  Choice options (one per line)
+                </Label>
+                <Textarea
+                  value={form.anchored_choices_options}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      anchored_choices_options: e.target.value,
+                    }))
+                  }
+                  placeholder={"None\nLess than half\nAbout half\nMost, but not all\nAll\nMore than planned\nWork was unavailable or blocked"}
+                  rows={6}
+                  className="text-sm resize-none font-mono"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Users pick one option from this list. Order matters — options
+                  appear in the order listed above.
+                </p>
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">Target role</Label>
               <Select
@@ -679,6 +724,27 @@ export default function CheckInSetupTab({ user }) {
                 checked={form.is_active}
                 onCheckedChange={(v) =>
                   setForm((f) => ({ ...f, is_active: v }))
+                }
+              />
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
+              <div>
+                <p className="text-sm font-medium flex items-center gap-1.5">
+                  <ListChecks className="w-3.5 h-3.5 text-amber-600" />
+                  Fixed operational question
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  Marks this as one of the fixed operational questions in a
+                  frontline (IC) check-in, distinguishing it from AI-generated
+                  wellbeing questions. Informational only — does not change
+                  which check-ins it appears in.
+                </p>
+              </div>
+              <Switch
+                checked={form.is_ic_fixed}
+                onCheckedChange={(v) =>
+                  setForm((f) => ({ ...f, is_ic_fixed: v }))
                 }
               />
             </div>

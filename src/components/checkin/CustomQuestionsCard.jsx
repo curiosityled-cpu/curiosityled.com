@@ -90,6 +90,30 @@ function YesNo({ value, onChange, accent }) {
   );
 }
 
+function AnchoredChoices({ options, value, onChange, accent }) {
+  return (
+    <div className="space-y-1.5">
+      {(options || []).map((opt) => {
+        const selected = value === opt;
+        return (
+          <button
+            key={opt}
+            onClick={() => onChange(opt)}
+            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              selected
+                ? "text-white shadow-sm"
+                : "bg-muted text-muted-foreground hover:bg-muted/70"
+            }`}
+            style={selected ? { backgroundColor: accent } : undefined}
+          >
+            {opt}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function CustomQuestionsCard({
   questions,
   answers,
@@ -163,6 +187,14 @@ export default function CustomQuestionsCard({
             )}
             {q.response_type === "yes_no" && (
               <YesNo
+                value={answers[q.question_key]}
+                onChange={(v) => onChange(q.question_key, v)}
+                accent={accent}
+              />
+            )}
+            {q.response_type === "anchored_choices" && (
+              <AnchoredChoices
+                options={q.anchored_choices_options}
                 value={answers[q.question_key]}
                 onChange={(v) => onChange(q.question_key, v)}
                 accent={accent}

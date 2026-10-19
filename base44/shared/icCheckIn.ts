@@ -55,7 +55,7 @@ export async function getActiveCustomQuestions(
 ): Promise<any[]> {
   try {
     const all = await serviceBase44.entities.CheckInCustomQuestion.filter(
-      { is_active: true },
+      { is_active: true, client_id: clientId },
       'display_order',
       100
     );
