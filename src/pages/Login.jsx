@@ -5,16 +5,10 @@ import { resetAtreusButtonPosition } from '@/components/ai/DraggableAtreusButton
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { safeReturnTo } from '@/lib/authReturnTo';
 
 const LOGO_URL = 'https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5761758bf_CuriosityLegLogo.png';
 const BRAND_BLUE = '#0202ff';
-
-function resolveReturnTo() {
-  const params = new URLSearchParams(window.location.search);
-  const returnTo = params.get('returnTo');
-  if (returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//')) return returnTo;
-  return '/';
-}
 
 function GoogleIcon() {
   return (
@@ -51,7 +45,7 @@ export default function Login() {
     try {
       await base44.auth.loginViaEmailPassword(email, password);
       resetAtreusButtonPosition();
-      window.location.href = resolveReturnTo();
+      window.location.href = safeReturnTo();
     } catch (err) {
       setLoading(false);
       setError(err?.data?.message || err?.response?.data?.message || err?.message || 'Invalid email or password.');
@@ -60,7 +54,7 @@ export default function Login() {
 
   const handleProvider = (provider) => {
     resetAtreusButtonPosition();
-    base44.auth.loginWithProvider(provider, resolveReturnTo());
+    base44.auth.loginWithProvider(provider, safeReturnTo());
   };
 
   return (

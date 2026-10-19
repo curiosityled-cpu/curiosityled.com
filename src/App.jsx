@@ -70,6 +70,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import OAuthConsent from './pages/OAuthConsent';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -110,6 +111,7 @@ const AuthenticatedApp = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/oauth/consent" element={<OAuthConsent />} />
 
       {/* Public landing pages — no auth required */}
       <Route path="/" element={

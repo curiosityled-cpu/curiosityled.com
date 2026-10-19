@@ -6,16 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ShieldCheck } from 'lucide-react';
+import { safeReturnTo } from '@/lib/authReturnTo';
 
 const LOGO_URL = 'https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5761758bf_CuriosityLegLogo.png';
 const BRAND_BLUE = '#0202ff';
-
-function resolveReturnTo() {
-  const params = new URLSearchParams(window.location.search);
-  const returnTo = params.get('returnTo');
-  if (returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//')) return returnTo;
-  return '/';
-}
 
 function GoogleIcon() {
   return (
@@ -73,7 +67,7 @@ export default function Register() {
       const res = await base44.auth.verifyOtp({ email, otpCode: otp });
       if (res?.access_token) base44.auth.setToken(res.access_token);
       analytics.trackEvent('signup_completed');
-      window.location.href = resolveReturnTo();
+      window.location.href = safeReturnTo();
     } catch (err) {
       setError(err?.data?.message || err?.response?.data?.message || err?.message || 'Invalid verification code.');
     } finally {
@@ -87,7 +81,7 @@ export default function Register() {
   };
 
   const handleProvider = (provider) => {
-    base44.auth.loginWithProvider(provider, resolveReturnTo());
+    base44.auth.loginWithProvider(provider, safeReturnTo());
   };
 
   if (step === 'otp') {
