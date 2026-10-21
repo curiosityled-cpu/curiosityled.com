@@ -36,7 +36,7 @@ export default function CourseBuilderDialog({ open, onClose, editingCourse, clie
       <DialogContent className="max-w-7xl w-[calc(100vw-2rem)] h-[calc(100vh-2rem)] p-0 gap-0 overflow-hidden rounded-2xl flex flex-col">
         <div className="flex flex-col h-full">
           {/* Header bar */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-white flex-shrink-0">
+          <div className="flex items-center justify-between pl-4 pr-12 py-3 border-b border-gray-100 bg-white flex-shrink-0">
             <DialogTitle className="text-base font-semibold truncate">
               {editingCourse ? "Edit Course" : "New Course"}
             </DialogTitle>
