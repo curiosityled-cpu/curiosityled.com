@@ -31,6 +31,7 @@ const SIGNAL_FORM_TYPES = ["feedback_survey", "satisfaction_survey", "poll", "qu
  */
 export default function LessonContentPicker({ lesson, pacing, onChange }) {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [browsingCard, setBrowsingCard] = useState(null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -40,6 +41,10 @@ export default function LessonContentPicker({ lesson, pacing, onChange }) {
   const activeCard = lesson?.content_type === "assessment" || lesson?.content_type === "form"
     ? "signal"
     : lesson?.content_type || null;
+
+  // The card the admin is browsing now wins, so the chosen content type is
+  // recorded on the lesson when an item is picked (it is required to save).
+  const displayCard = browsingCard || activeCard;
 
   const loadItems = async (cardId) => {
     setLoading(true);
@@ -72,6 +77,7 @@ export default function LessonContentPicker({ lesson, pacing, onChange }) {
   };
 
   const handleCardSelect = (cardId) => {
+    setBrowsingCard(cardId);
     setPickerOpen(true);
     setItems([]);
     setSearch("");
@@ -79,11 +85,8 @@ export default function LessonContentPicker({ lesson, pacing, onChange }) {
   };
 
   const handleItemSelect = (item) => {
-    const cardId = activeCard || (lesson?.content_type === "assessment" || lesson?.content_type === "form" ? "signal" : lesson?.content_type);
-    let contentType = cardId;
-    if (cardId === "signal") {
-      contentType = item._signalEntity || "assessment";
-    }
+    const cardId = browsingCard || activeCard;
+    const contentType = cardId === "signal" ? (item._signalEntity || "assessment") : cardId;
     onChange({
       ...lesson,
       content_type: contentType,
@@ -173,7 +176,7 @@ export default function LessonContentPicker({ lesson, pacing, onChange }) {
         <div className="grid grid-cols-2 gap-3">
           {CONTENT_TYPES.map((type) => {
             const Icon = type.icon;
-            const isActive = activeCard === type.id;
+            const isActive = displayCard === type.id;
             return (
               <Card
                 key={type.id}
@@ -203,7 +206,7 @@ export default function LessonContentPicker({ lesson, pacing, onChange }) {
           <ArrowLeft className="w-4 h-4 mr-1" /> Back
         </Button>
         <span className="text-sm font-medium text-gray-700">
-          {activeCard === "signal" ? "Select a Signal" : `Select a ${CONTENT_TYPES.find(c => c.id === activeCard)?.label || "Resource"}`}
+          {displayCard === "signal" ? "Select a Signal" : `Select a ${CONTENT_TYPES.find(c => c.id === displayCard)?.label || "Resource"}`}
         </span>
       </div>
       <div className="relative">
