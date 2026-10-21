@@ -42,6 +42,38 @@
       "type": "string",
       "description": "URL to an uploaded document file"
     },
+    "uploaded_file_uri": {
+      "type": "string",
+      "description": "Reference to the uploaded file: a private storage URI when storage_visibility is 'private', or a permanent public URL when it is 'public'"
+    },
+    "uploaded_file_name": {
+      "type": "string",
+      "description": "Original filename of the uploaded file"
+    },
+    "uploaded_file_type": {
+      "type": "string",
+      "description": "MIME type of the uploaded file (e.g. video/mp4, application/pdf)"
+    },
+    "uploaded_file_size": {
+      "type": "number",
+      "description": "Size of the uploaded file in bytes"
+    },
+    "media_kind": {
+      "type": "string",
+      "enum": [
+        "video",
+        "document"
+      ],
+      "description": "Whether the uploaded file is a video (played inline) or a document (opened or downloaded)"
+    },
+    "storage_visibility": {
+      "type": "string",
+      "enum": [
+        "private",
+        "public"
+      ],
+      "description": "How the uploaded file is stored. 'private' files are reachable only through short-lived signed URLs; 'public' files have a permanent open URL"
+    },
     "embed_code": {
       "type": "string",
       "description": "HTML embed code for external content (e.g. videos, interactive tools)"

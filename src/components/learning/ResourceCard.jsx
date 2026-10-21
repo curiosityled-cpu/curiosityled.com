@@ -7,6 +7,7 @@ import { ExternalLink, Plus, Sparkles, Award, Lock, CheckCircle2, Layers, UserPl
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/components/useAuth";
 import { toast } from "sonner";
+import ResourceFileViewer from "@/components/learning/ResourceFileViewer";
 
 export default function ResourceCard({ 
     resource, 
@@ -185,6 +186,8 @@ export default function ResourceCard({
                 <p className="text-sm text-gray-600 mb-4 line-clamp-3">
                     {resource.description}
                 </p>
+
+                <ResourceFileViewer resource={resource} />
 
                 {/* Progress Bar */}
                 {progress && !isLocked && (

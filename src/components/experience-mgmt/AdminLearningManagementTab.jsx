@@ -12,12 +12,13 @@ import {
 import { toast } from "sonner";
 import {
   BookOpen, Plus, Search, Pencil, Trash2, Users, CheckCircle2,
-  Clock, ExternalLink, FileText, Video, Loader2, X, Upload,
+  Clock, ExternalLink, FileText, Video, Loader2, X,
   LayoutGrid, List, BarChart2, TrendingUp, Award, AlertCircle
 } from "lucide-react";
 import ConversationalLearningTab from "@/components/dev-manager/ConversationalLearningTab";
 import CoursesTab from "@/components/dev-manager/CoursesTab";
 import ThumbnailPicker from "@/components/dev-manager/ThumbnailPicker";
+import LearningResourceFileUpload from "@/components/learning/LearningResourceFileUpload";
 
 
 const TYPE_ICONS = {
@@ -45,7 +46,9 @@ const EMPTY_RESOURCE = {
   url: "", document_url: "", embed_code: "", difficulty_level: "beginner",
   duration_string: "", access: "Free", is_active: true, is_premium: false,
   year: new Date().getFullYear(), tags: [], competencies: [], points_value: "",
-  thumbnail_url: ""
+  thumbnail_url: "", uploaded_file_uri: "", uploaded_file_name: "",
+  uploaded_file_type: "", uploaded_file_size: 0, media_kind: "",
+  storage_visibility: "private"
 };
 
 // All platform competency names
@@ -112,7 +115,6 @@ function CompetencyMultiSelect({ value = [], onChange }) {
 function ResourceFormDialog({ open, onClose, resource, onSaved }) {
   const [form, setForm] = useState(EMPTY_RESOURCE);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (resource) {
@@ -123,21 +125,6 @@ function ResourceFormDialog({ open, onClose, resource, onSaved }) {
   }, [resource, open]);
 
   const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
-
-  const handleDocumentUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      set("document_url", file_url);
-      toast.success("Document uploaded");
-    } catch {
-      toast.error("Upload failed");
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const handleSave = async () => {
     if (!form.title || !form.type) { toast.error("Title and type are required"); return; }
@@ -234,21 +221,19 @@ function ResourceFormDialog({ open, onClose, resource, onSaved }) {
               <label className="text-sm font-medium text-gray-700 mb-1 block">External URL</label>
               <Input value={form.url} onChange={e => set("url", e.target.value)} placeholder="https://..." />
             </div>
-            {["document"].includes(form.type) && (
+            {["video", "document"].includes(form.type) && (
               <div className="col-span-2">
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Upload Document</label>
-                {form.document_url ? (
-                  <div className="flex items-center gap-2">
-                    <a href={form.document_url} target="_blank" rel="noreferrer" className="text-sm text-[#0202ff] underline truncate flex-1">View uploaded file</a>
-                    <Button variant="ghost" size="icon" onClick={() => set("document_url", "")}><X className="w-4 h-4" /></Button>
-                  </div>
-                ) : (
-                  <label className="flex items-center gap-2 border-2 border-dashed border-gray-200 rounded-lg p-4 cursor-pointer hover:border-[#0202ff] transition-colors">
-                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4 text-gray-400" />}
-                    <span className="text-sm text-gray-500">{uploading ? "Uploading..." : "Click to upload a document"}</span>
-                    <input type="file" className="hidden" onChange={handleDocumentUpload} disabled={uploading} accept=".pdf,.doc,.docx,.ppt,.pptx" />
-                  </label>
-                )}
+                <LearningResourceFileUpload
+                  resourceType={form.type}
+                  value={{
+                    uri: form.uploaded_file_uri,
+                    name: form.uploaded_file_name,
+                    size: form.uploaded_file_size,
+                    visibility: form.storage_visibility,
+                    mediaKind: form.media_kind,
+                  }}
+                  onChange={(patch) => setForm(prev => ({ ...prev, ...patch }))}
+                />
               </div>
             )}
             <div className="col-span-2">
