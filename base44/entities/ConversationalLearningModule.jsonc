@@ -219,115 +219,34 @@
   ],
   "rls": {
     "create": {
-      "$or": [
-        {
-          "user_condition": {
-            "role": "Admin Level 1"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Admin Level 2"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Super Administrator"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Platform Admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     },
     "read": {
       "$or": [
         {
-          "$and": [
-            {
-              "data.status": "published"
-            },
-            {
-              "created_by": "{{user.email}}"
-            }
-          ]
+          "data.status": "published"
+        },
+        {
+          "created_by_id": "{{user.id}}"
         },
         {
           "user_condition": {
-            "role": "Analyst"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Admin Level 1"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Admin Level 2"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Super Administrator"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Partner Business Administrator"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Platform Admin"
+            "role": "admin"
           }
         }
       ]
     },
     "update": {
-      "$or": [
-        {
-          "user_condition": {
-            "role": "Admin Level 1"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Admin Level 2"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Super Administrator"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Platform Admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     },
     "delete": {
-      "$or": [
-        {
-          "user_condition": {
-            "role": "Admin Level 2"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Super Administrator"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Platform Admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }
