@@ -9,7 +9,7 @@ import { getResourceFileUri, getResourceMediaKind, resolveResourceFileUrl } from
  * Learner-facing access to a resource's attached file: plays videos inline
  * and opens documents in a new tab. Private files are fetched through a signed URL.
  */
-export default function ResourceFileViewer({ resource }) {
+export default function ResourceFileViewer({ resource, onEnded }) {
   const [open, setOpen] = useState(false);
   const [url, setUrl] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -76,7 +76,15 @@ export default function ResourceFileViewer({ resource }) {
           <DialogHeader>
             <DialogTitle>{resource.title}</DialogTitle>
           </DialogHeader>
-          {url && <video src={url} controls autoPlay className="w-full rounded-lg bg-black" />}
+          {url && (
+            <video
+              src={url}
+              controls
+              autoPlay
+              onEnded={onEnded}
+              className="w-full rounded-lg bg-black"
+            />
+          )}
         </DialogContent>
       </Dialog>
     </>

@@ -620,6 +620,8 @@ function MVPLayoutInner({ children }) {
           <AtreusCoach
           context={{ ...atreusContext, ...(pendingContext || {}) }}
           isMinimized={false}
+          learningModuleMode={!!pendingContext?.learning_module_mode}
+          moduleData={pendingContext?.module_data || null}
           onMinimize={closeAtreus}
           onClose={closeAtreus}
           draftMessage={draftMessage} />

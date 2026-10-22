@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Check, ExternalLink, MessageSquare, ClipboardList, CalendarDays } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
+import { useAtreusChat } from "@/components/ai/AtreusContext";
 import ResourceFileViewer from "@/components/learning/ResourceFileViewer";
 import { LESSON_TYPE_LABEL, formatMinutes, lessonTitle } from "@/lib/learning";
 
@@ -11,6 +12,7 @@ import { LESSON_TYPE_LABEL, formatMinutes, lessonTitle } from "@/lib/learning";
 export default function LessonViewer({ lesson, complete, onComplete, onAdvance }) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { openWithContext } = useAtreusChat();
   const [state, setState] = useState({ loading: true });
 
   useEffect(() => {
@@ -57,6 +59,19 @@ export default function LessonViewer({ lesson, complete, onComplete, onAdvance }
     };
   }, [lesson?.id, user?.email]);
 
+  // The conversational module runs in the Atreus panel. When it finishes there,
+  // this lesson is ticked off so the learner never has to mark it by hand.
+  useEffect(() => {
+    if (lesson?.content_type !== "conversational_module") return undefined;
+    const handler = (event) => {
+      if (event.detail?.moduleId !== lesson.reference_id) return;
+      setState((prev) => ({ ...prev, progress: { ...(prev.progress || {}), status: "completed" } }));
+      if (!complete) onComplete?.(lesson);
+    };
+    window.addEventListener("learning-module-completed", handler);
+    return () => window.removeEventListener("learning-module-completed", handler);
+  }, [lesson?.id, lesson?.content_type, lesson?.reference_id, complete, onComplete]);
+
   if (!lesson) return null;
 
   const title = lessonTitle(lesson);
@@ -89,7 +104,14 @@ export default function LessonViewer({ lesson, complete, onComplete, onAdvance }
                 .filter(Boolean)
                 .join(" · ")}
             </p>
-            {state.resource && <ResourceFileViewer resource={state.resource} />}
+            {state.resource && (
+              <ResourceFileViewer
+                resource={state.resource}
+                onEnded={() => {
+                  if (!complete) onComplete?.(lesson);
+                }}
+              />
+            )}
             {state.resource?.url && (
               <Button
                 type="button"
@@ -128,11 +150,20 @@ export default function LessonViewer({ lesson, complete, onComplete, onAdvance }
             <Button
               type="button"
               disabled={!state.module}
-              onClick={() => navigate(`/ConversationalModule?moduleId=${lesson.reference_id}`)}
+              onClick={() =>
+                openWithContext({
+                  context: {
+                    pageType: "conversational_module",
+                    module_id: lesson.reference_id,
+                    learning_module_mode: true,
+                    module_data: state.module,
+                  },
+                })
+              }
               className="bg-[#0202ff] hover:bg-[#0101dd] text-white"
             >
               <MessageSquare className="w-4 h-4 mr-2" />
-              {state.progress?.status === "completed" ? "Revisit conversation" : "Open conversation"}
+              {state.progress?.status === "completed" ? "Revisit with Atreus" : "Start with Atreus"}
             </Button>
           </div>
         )}

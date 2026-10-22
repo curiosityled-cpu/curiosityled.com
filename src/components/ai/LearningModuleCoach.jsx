@@ -43,9 +43,11 @@ export default function LearningModuleCoach({ moduleData, onClose, user }) {
 
       setProgress(progressRecord);
 
+      // 'assigned_learning' is the conversation type this data model accepts for
+      // module conversations; an unknown type is rejected by the database.
       const existingConv = await base44.entities.Conversation.filter({
         status: 'active',
-        type: 'conversational_learning',
+        type: 'assigned_learning',
         'context.module_id': moduleData.id
       });
 
@@ -57,7 +59,7 @@ export default function LearningModuleCoach({ moduleData, onClose, user }) {
         const firstStep = moduleData.conversation_structure[0];
         const conv = await base44.entities.Conversation.create({
           title: `Learning: ${moduleData.title}`,
-          type: 'conversational_learning',
+          type: 'assigned_learning',
           status: 'active',
           messages: [{ role: "assistant", content: firstStep.content, timestamp: new Date().toISOString() }],
           context: { module_id: moduleData.id, current_step_index: 0, total_steps: moduleData.conversation_structure.length },
@@ -73,6 +75,59 @@ export default function LearningModuleCoach({ moduleData, onClose, user }) {
     }
   };
 
+  const persistStep = async (index, allMessages) => {
+    if (!conversationId) return;
+    await base44.entities.Conversation.update(conversationId, {
+      messages: allMessages,
+      context: {
+        module_id: moduleData.id,
+        current_step_index: index,
+        total_steps: moduleData.conversation_structure.length,
+      },
+      last_activity: new Date().toISOString(),
+    });
+  };
+
+  const finishModule = async () => {
+    if (!progress?.id) return;
+    try {
+      const updated = await base44.entities.LearnerProgress.update(progress.id, {
+        status: "completed",
+        progress_percentage: 100,
+        completed_date: new Date().toISOString(),
+        last_accessed_date: new Date().toISOString(),
+      });
+      setProgress({
+        ...(progress || {}),
+        ...(updated || {}),
+        status: "completed",
+        progress_percentage: 100,
+      });
+      if (conversationId) {
+        await base44.entities.Conversation.update(conversationId, {
+          status: "completed",
+          last_activity: new Date().toISOString(),
+        });
+      }
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: `That completes "${moduleData.title}". This lesson is now marked complete in your course.`,
+          timestamp: new Date().toISOString(),
+        },
+      ]);
+      // The course player listens for this so the lesson ticks off on its own.
+      window.dispatchEvent(
+        new CustomEvent("learning-module-completed", { detail: { moduleId: moduleData.id } })
+      );
+      toast.success("Module complete");
+    } catch (error) {
+      console.error("Could not complete module:", error);
+      toast.error("Could not save your completion");
+    }
+  };
+
   const handleSend = async () => {
     if (!inputValue.trim() || isTyping) return;
     const text = inputValue.trim();
@@ -84,30 +139,55 @@ export default function LearningModuleCoach({ moduleData, onClose, user }) {
     setMessages(updated);
 
     try {
+      const step = moduleData.conversation_structure[currentStep];
       const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `Module step: ${moduleData.conversation_structure[currentStep].step_type}\nUser: ${text}\n\nRespond thoughtfully as a coach.`
+        prompt: `You are Atreus, coaching a learner through the module "${moduleData.title}".
+Step ${currentStep + 1} of ${moduleData.conversation_structure.length} (${step.step_type}).
+Objective: ${step.learning_objective || "Guide the learner through this step."}
+Coaching notes: ${step.coaching_notes || "Respond thoughtfully as a coach."}
+Conversation so far:
+${updated.map((m) => `${m.role === "user" ? "Learner" : "Atreus"}: ${m.content}`).join("\n")}
+
+Reply as Atreus in a short, specific coaching message.`,
       });
 
       const assistantMsg = { role: "assistant", content: response, timestamp: new Date().toISOString() };
       const final = [...updated, assistantMsg];
       setMessages(final);
 
-      await base44.entities.Conversation.update(conversationId, { messages: final, last_activity: new Date().toISOString() });
-
-      // Check advancement
-      if (text.length > 20 && currentStep < moduleData.conversation_structure.length - 1) {
+      const isLastStep = currentStep >= moduleData.conversation_structure.length - 1;
+      if (isLastStep) {
+        await persistStep(currentStep, final);
+        setTimeout(finishModule, 1200);
+      } else if (text.length >= 12) {
+        const nextStep = currentStep + 1;
+        const withNext = [
+          ...final,
+          {
+            role: "assistant",
+            content: moduleData.conversation_structure[nextStep].content,
+            timestamp: new Date().toISOString(),
+          },
+        ];
         setTimeout(() => {
-          const nextStep = currentStep + 1;
+          const pct = Math.round(
+            ((nextStep + 1) / moduleData.conversation_structure.length) * 100
+          );
           setCurrentStep(nextStep);
-          const nextMsg = { role: "assistant", content: moduleData.conversation_structure[nextStep].content, timestamp: new Date().toISOString() };
-          setMessages(prev => [...prev, nextMsg]);
-          const pct = Math.round(((nextStep + 1) / moduleData.conversation_structure.length) * 100);
-          setProgress(prev => ({ ...prev, progress_percentage: pct }));
-          base44.entities.LearnerProgress.update(progress.id, { progress_percentage: pct });
-        }, 2000);
+          setMessages(withNext);
+          setProgress((prev) => ({ ...(prev || {}), progress_percentage: pct }));
+          base44.entities.LearnerProgress.update(progress.id, {
+            progress_percentage: pct,
+            last_accessed_date: new Date().toISOString(),
+          });
+          persistStep(nextStep, withNext);
+        }, 1500);
+      } else {
+        await persistStep(currentStep, final);
       }
     } catch (error) {
-      toast.error('Failed to send message');
+      console.error("Module message failed:", error);
+      toast.error("Failed to send message");
     } finally {
       setIsTyping(false);
     }
