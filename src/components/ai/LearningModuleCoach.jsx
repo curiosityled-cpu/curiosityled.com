@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { base44 } from "@/api/base44Client";
 import CoachMessage from "./CoachMessage";
 import TypingIndicator from "./TypingIndicator";
+import ModuleActionCard from "./ModuleActionCard";
+import { requestModuleTurn, executeModuleAction } from "@/lib/moduleActions";
 import { toast } from "sonner";
 
 export default function LearningModuleCoach({ moduleData, onClose, user }) {
@@ -18,6 +20,9 @@ export default function LearningModuleCoach({ moduleData, onClose, user }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [pendingAction, setPendingAction] = useState(null);
+  const [pendingAdvance, setPendingAdvance] = useState(false);
+  const [isExecuting, setIsExecuting] = useState(false);
   const scrollRef = useRef(null);
   const isMountedRef = useRef(true);
 
@@ -49,18 +54,21 @@ export default function LearningModuleCoach({ moduleData, onClose, user }) {
 
       // 'assigned_learning' is the conversation type this data model accepts for
       // module conversations; an unknown type is rejected by the database.
-      const openConversations = await base44.entities.Conversation.filter({
-        status: 'active',
-        type: 'assigned_learning'
-      });
-      const existingConv = (openConversations || []).filter(
+      // Look for this module's conversation whether it is still open or already
+      // finished, so the learner's history survives closing the panel.
+      const page = await base44.entities.Conversation.filter(
+        { type: 'assigned_learning' },
+        { sort: '-updated_date', limit: 20 }
+      );
+      const existingConv = (page?.items || []).filter(
         (conv) => conv.context?.module_id === moduleData.id
       );
 
       if (existingConv.length > 0) {
-        setConversationId(existingConv[0].id);
-        setMessages(existingConv[0].messages || []);
-        setCurrentStep(existingConv[0].context?.current_step_index || 0);
+        const restored = existingConv[0];
+        setConversationId(restored.id);
+        setMessages(restored.messages || []);
+        setCurrentStep(restored.context?.current_step_index || 0);
       } else {
         const firstStep = moduleData.conversation_structure[0];
         const conv = await base44.entities.Conversation.create({
@@ -94,9 +102,19 @@ export default function LearningModuleCoach({ moduleData, onClose, user }) {
     });
   };
 
-  const finishModule = async () => {
+  const finishModule = async (finalMessages) => {
     if (!progress?.id) return;
     try {
+      const withClosing = [
+        ...(finalMessages || messages),
+        {
+          role: "assistant",
+          content: `That completes "${moduleData.title}". This lesson is now marked complete in your course.`,
+          timestamp: new Date().toISOString(),
+        },
+      ];
+      setMessages(withClosing);
+
       const updated = await base44.entities.LearnerProgress.update(progress.id, {
         status: "completed",
         progress_percentage: 100,
@@ -109,20 +127,20 @@ export default function LearningModuleCoach({ moduleData, onClose, user }) {
         status: "completed",
         progress_percentage: 100,
       });
+
       if (conversationId) {
         await base44.entities.Conversation.update(conversationId, {
+          messages: withClosing,
+          context: {
+            module_id: moduleData.id,
+            current_step_index: moduleData.conversation_structure.length - 1,
+            total_steps: moduleData.conversation_structure.length,
+          },
           status: "completed",
           last_activity: new Date().toISOString(),
         });
       }
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: `That completes "${moduleData.title}". This lesson is now marked complete in your course.`,
-          timestamp: new Date().toISOString(),
-        },
-      ]);
+
       // The course player listens for this so the lesson ticks off on its own.
       window.dispatchEvent(
         new CustomEvent("learning-module-completed", { detail: { moduleId: moduleData.id } })
@@ -134,64 +152,119 @@ export default function LearningModuleCoach({ moduleData, onClose, user }) {
     }
   };
 
+  // Moves the module on: posts the next step's prompt, or closes the module when
+  // the learner has finished the last step.
+  const advanceFrom = async (fromIndex, msgs) => {
+    const steps = moduleData.conversation_structure || [];
+    const nextIndex = fromIndex + 1;
+
+    if (nextIndex >= steps.length) {
+      await finishModule(msgs);
+      return;
+    }
+
+    const withNext = [
+      ...msgs,
+      { role: "assistant", content: steps[nextIndex].content, timestamp: new Date().toISOString() },
+    ];
+    const pct = Math.round(((nextIndex + 1) / steps.length) * 100);
+
+    setCurrentStep(nextIndex);
+    setMessages(withNext);
+    setProgress((prev) => ({ ...(prev || {}), progress_percentage: pct }));
+
+    if (progress?.id) {
+      await base44.entities.LearnerProgress.update(progress.id, {
+        progress_percentage: pct,
+        last_accessed_date: new Date().toISOString(),
+      });
+    }
+    await persistStep(nextIndex, withNext);
+  };
+
+  // The learner answered the coach's proposed action: carry it out, or drop it,
+  // then continue the module exactly where it left off.
+  const resolveAction = async (approved) => {
+    const action = pendingAction;
+    if (!action) return;
+    setPendingAction(null);
+    const shouldAdvance = pendingAdvance;
+    setPendingAdvance(false);
+
+    let withOutcome = messages;
+    try {
+      if (approved) {
+        setIsExecuting(true);
+        const outcome = await executeModuleAction(action, user);
+        withOutcome = [
+          ...messages,
+          { role: "assistant", content: outcome.message, timestamp: new Date().toISOString() },
+        ];
+      } else {
+        withOutcome = [
+          ...messages,
+          {
+            role: "assistant",
+            content: "No problem — we'll leave that one.",
+            timestamp: new Date().toISOString(),
+          },
+        ];
+      }
+    } finally {
+      setIsExecuting(false);
+    }
+    setMessages(withOutcome);
+
+    try {
+      if (shouldAdvance) {
+        await advanceFrom(currentStep, withOutcome);
+      } else {
+        await persistStep(currentStep, withOutcome);
+      }
+    } catch (error) {
+      console.error("Could not save the conversation:", error);
+    }
+  };
+
   const handleSend = async () => {
     if (!inputValue.trim() || isTyping) return;
     const text = inputValue.trim();
     setInputValue("");
     setIsTyping(true);
 
-    const userMsg = { role: "user", content: text, timestamp: new Date().toISOString() };
-    const updated = [...messages, userMsg];
-    setMessages(updated);
+    const withUser = [
+      ...messages,
+      { role: "user", content: text, timestamp: new Date().toISOString() },
+    ];
+    setMessages(withUser);
+    // Save the learner's own words straight away, so nothing is lost if the reply fails.
+    persistStep(currentStep, withUser).catch(() => {});
 
     try {
-      const step = moduleData.conversation_structure[currentStep];
-      const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are Atreus, coaching a learner through the module "${moduleData.title}".
-Step ${currentStep + 1} of ${moduleData.conversation_structure.length} (${step.step_type}).
-Objective: ${step.learning_objective || "Guide the learner through this step."}
-Coaching notes: ${step.coaching_notes || "Respond thoughtfully as a coach."}
-Conversation so far:
-${updated.map((m) => `${m.role === "user" ? "Learner" : "Atreus"}: ${m.content}`).join("\n")}
-
-Reply as Atreus in a short, specific coaching message.`,
+      const result = await requestModuleTurn({
+        moduleData,
+        stepIndex: currentStep,
+        messages: withUser,
+        actionPending: !!pendingAction,
       });
 
-      const assistantMsg = { role: "assistant", content: response, timestamp: new Date().toISOString() };
-      const final = [...updated, assistantMsg];
-      setMessages(final);
+      const withReply = result.reply
+        ? [
+            ...withUser,
+            { role: "assistant", content: result.reply, timestamp: new Date().toISOString() },
+          ]
+        : withUser;
+      setMessages(withReply);
 
-      const isLastStep = currentStep >= moduleData.conversation_structure.length - 1;
-      if (isLastStep) {
-        await persistStep(currentStep, final);
-        setTimeout(finishModule, 1200);
-      } else if (text.length >= 12) {
-        const nextStep = currentStep + 1;
-        const withNext = [
-          ...final,
-          {
-            role: "assistant",
-            content: moduleData.conversation_structure[nextStep].content,
-            timestamp: new Date().toISOString(),
-          },
-        ];
-        setTimeout(() => {
-          const pct = Math.round(
-            ((nextStep + 1) / moduleData.conversation_structure.length) * 100
-          );
-          setCurrentStep(nextStep);
-          setMessages(withNext);
-          setProgress((prev) => ({ ...(prev || {}), progress_percentage: pct }));
-          if (progress?.id) {
-            base44.entities.LearnerProgress.update(progress.id, {
-              progress_percentage: pct,
-              last_accessed_date: new Date().toISOString(),
-            });
-          }
-          persistStep(nextStep, withNext);
-        }, 1500);
+      if (result.action) {
+        // Hold the module here until the learner approves or declines.
+        setPendingAction(result.action);
+        setPendingAdvance(result.stepComplete);
+        await persistStep(currentStep, withReply);
+      } else if (result.stepComplete) {
+        await advanceFrom(currentStep, withReply);
       } else {
-        await persistStep(currentStep, final);
+        await persistStep(currentStep, withReply);
       }
     } catch (error) {
       console.error("Module message failed:", error);
@@ -234,6 +307,13 @@ Reply as Atreus in a short, specific coaching message.`,
                 <p className="font-medium mb-2">Module Completed!</p>
                 <Button onClick={onClose} className="bg-green-600">Return to Learning</Button>
               </div>
+            ) : pendingAction ? (
+              <ModuleActionCard
+                action={pendingAction}
+                busy={isExecuting}
+                onApprove={() => resolveAction(true)}
+                onDecline={() => resolveAction(false)}
+              />
             ) : (
               <div className="flex gap-2">
                 <Textarea value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={(e) => {
