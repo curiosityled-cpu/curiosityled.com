@@ -208,7 +208,8 @@ export default function MyLearning() {
         {/* Certificates */}
         {activeTab === "certificates" && (
           <Card className="shadow-sm border border-gray-100 rounded-2xl">
-            <CardContent className="p-4">
+            <CardContent className="p-4 space-y-3">
+              <h3 className="text-xl font-bold text-gray-900">My Certificates</h3>
               <CertificateViewer />
             </CardContent>
           </Card>

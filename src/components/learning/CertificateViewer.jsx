@@ -84,8 +84,7 @@ export default function CertificateViewer() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-bold text-gray-900">My Certificates</h3>
+      <div className="flex items-center justify-end mb-4">
         <Badge variant="outline">{certificates.length} Earned</Badge>
       </div>
 

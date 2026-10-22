@@ -9,6 +9,7 @@ import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import LearningInbox from "@/components/learning/LearningInbox";
 import JourneyInbox from "@/components/learning/JourneyInbox";
 import CertificateViewer from "@/components/learning/CertificateViewer";
+import CollapsibleSection from "@/components/learning/CollapsibleSection";
 import ExperienceCard from "@/components/development/ExperienceCard";
 import useMyLearning from "@/hooks/useMyLearning";
 import ExperienceFormModal from "@/components/development/ExperienceFormModal";
@@ -162,8 +163,18 @@ export default function MyDevelopment() {
 
         {section === "learning" && (
           <>
-            <LearningInbox status={activeTab} />
-            {activeTab === "completed" && <CertificateViewer />}
+            {activeTab === "completed" ? (
+              <>
+                <CollapsibleSection title="Courses">
+                  <LearningInbox status={activeTab} />
+                </CollapsibleSection>
+                <CollapsibleSection title="My Certificates">
+                  <CertificateViewer />
+                </CollapsibleSection>
+              </>
+            ) : (
+              <LearningInbox status={activeTab} />
+            )}
           </>
         )}
 
