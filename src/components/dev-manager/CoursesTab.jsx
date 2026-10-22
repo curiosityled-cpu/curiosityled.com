@@ -12,6 +12,7 @@ import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import CourseBuilderDialog from "./CourseBuilderDialog";
 import AssignCourseModal from "./AssignCourseModal";
+import CourseRosterDrawer from "@/components/learning/CourseRosterDrawer";
 
 const STATUS_BADGES = {
   draft: { className: "bg-gray-100 text-gray-700", label: "Draft" },
@@ -35,6 +36,7 @@ export default function CoursesTab({ user }) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [assignModal, setAssignModal] = useState({ open: false, course: null });
+  const [rosterCourse, setRosterCourse] = useState(null);
   const [builderOpen, setBuilderOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -211,6 +213,9 @@ export default function CoursesTab({ user }) {
                           <DropdownMenuItem onClick={() => setAssignModal({ open: true, course })}>
                             <Send className="w-3.5 h-3.5 mr-2" /> Assign
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setRosterCourse(course)}>
+                            <Users className="w-3.5 h-3.5 mr-2" /> Enrolment &amp; progress
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleDuplicate(course)}>
                             <Copy className="w-3.5 h-3.5 mr-2" /> Duplicate
                           </DropdownMenuItem>
@@ -269,6 +274,14 @@ export default function CoursesTab({ user }) {
         editingCourse={editingCourse}
         clientId={user?.client_id}
         onSaved={handleBuilderClose}
+      />
+
+      {/* Roster drawer */}
+      <CourseRosterDrawer
+        open={!!rosterCourse}
+        onClose={() => setRosterCourse(null)}
+        course={rosterCourse}
+        onChanged={() => setRefreshKey((k) => k + 1)}
       />
 
       {/* Assign modal */}

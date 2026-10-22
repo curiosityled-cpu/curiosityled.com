@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -22,6 +22,18 @@ export default function AssignCourseModal({ open, onClose, course, users = [], c
   const [selectedCohort, setSelectedCohort] = useState("");
   const [assigning, setAssigning] = useState(false);
   const [search, setSearch] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [enrolledCount, setEnrolledCount] = useState(null);
+
+  // Existing enrolments drive the due-date backfill and the roster hint.
+  useEffect(() => {
+    if (!open || !course?.id) return;
+    setDueDate("");
+    base44.entities.CourseProgress
+      .filter({ course_id: course.id }, "-created_date", 500)
+      .then((rows) => setEnrolledCount((rows || []).length))
+      .catch(() => setEnrolledCount(null));
+  }, [open, course?.id]);
 
   const filteredUsers = users.filter(
     (u) =>
@@ -79,6 +91,19 @@ export default function AssignCourseModal({ open, onClose, course, users = [], c
       const existingProgress = await base44.entities.CourseProgress.filter({ course_id: course.id });
       const existingEmails = new Set((existingProgress || []).map(p => p.learner_email));
       const newEmails = targetEmails.filter(e => !existingEmails.has(e));
+      const me = await base44.auth.me().catch(() => null);
+
+      // A due date chosen here also applies to learners who were already enrolled,
+      // and re-arms their reminder so it can fire again for the new date.
+      if (dueDate) {
+        const alreadyEnrolled = targetEmails.filter(e => existingEmails.has(e));
+        if (alreadyEnrolled.length > 0) {
+          await base44.entities.CourseProgress.updateMany(
+            { course_id: course.id, learner_email: { $in: alreadyEnrolled } },
+            { $set: { due_date: dueDate, reminder_sent_at: null } }
+          );
+        }
+      }
 
       if (newEmails.length > 0) {
         const progressRecords = newEmails.map(email => ({
@@ -92,6 +117,8 @@ export default function AssignCourseModal({ open, onClose, course, users = [], c
           enrolled_at: new Date().toISOString(),
           certificate_issued: false,
           cohort_id: cohortId || course.cohort_id || null,
+          due_date: dueDate || null,
+          assigned_by: me?.email || null,
         }));
         await base44.entities.CourseProgress.bulkCreate(progressRecords);
 
@@ -100,7 +127,10 @@ export default function AssignCourseModal({ open, onClose, course, users = [], c
           user_email: email,
           type: "learning_assigned",
           title: `New Course: ${course.title}`,
-          message: `You have been assigned the course "${course.title}". You can find it in your learning library.`,
+          message: dueDate
+            ? `You have been assigned the course "${course.title}", due ${dueDate}. Open it under My Development.`
+            : `You have been assigned the course "${course.title}". Open it under My Development.`,
+          action_url: "/my-development",
           related_entity_type: "Course",
           related_entity_id: course.id,
           priority: "medium",
@@ -203,6 +233,15 @@ export default function AssignCourseModal({ open, onClose, course, users = [], c
               </ScrollArea>
             </div>
           )}
+
+          <div>
+            <label className="text-sm font-medium mb-2 block">Due date (optional)</label>
+            <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+            <p className="text-xs text-muted-foreground mt-1.5">
+              Learners get a reminder email and in-app notice once the date is three days away.
+              {enrolledCount > 0 && ` ${enrolledCount} learner(s) are already enrolled — manage them in "Enrolment & progress".`}
+            </p>
+          </div>
 
           {assignmentType === "cohort" && (
             <div>

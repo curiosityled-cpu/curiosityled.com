@@ -37,6 +37,11 @@ export default function CoursePlayer() {
         course_progress_id: recordId,
       });
       setCertificate(response?.data?.certificate || null);
+      const rewards = response?.data?.rewards;
+      if (rewards?.points) toast.success(`+${rewards.points} points earned`);
+      if (rewards?.badges_awarded?.length) {
+        toast.success(`New badge unlocked: ${rewards.badges_awarded.join(", ")}`);
+      }
     } catch (error) {
       console.error("Certificate issuance failed:", error);
     } finally {
