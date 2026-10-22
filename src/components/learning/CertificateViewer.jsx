@@ -7,6 +7,7 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { downloadCertificate } from "@/components/learning/certificate/downloadCertificate";
 
 export default function CertificateViewer() {
   const { user } = useAuth();
@@ -35,8 +36,19 @@ export default function CertificateViewer() {
     }
   };
 
-  const handleDownload = (cert) => {
-    toast.info("Certificate download coming soon!");
+  const [downloadingId, setDownloadingId] = useState(null);
+
+  const handleDownload = async (cert) => {
+    setDownloadingId(cert.id);
+    try {
+      const learnerName = cert.metadata?.learner_name || user?.full_name || user?.data?.full_name || email;
+      await downloadCertificate(cert, learnerName);
+    } catch (error) {
+      console.error("Certificate download failed:", error);
+      toast.error("Could not download the certificate. Please try again.");
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
   const handleShare = (cert) => {
@@ -129,10 +141,11 @@ export default function CertificateViewer() {
                     <Button 
                       size="sm" 
                       onClick={() => handleDownload(cert)}
+                      disabled={downloadingId === cert.id}
                       className="flex-1"
                     >
                       <Download className="w-4 h-4 mr-1" />
-                      Download
+                      {downloadingId === cert.id ? "Preparing..." : "Download"}
                     </Button>
                     <Button 
                       size="sm" 

@@ -162,8 +162,8 @@ export default function MyDevelopment() {
 
         {section === "learning" && (
           <>
-            {activeTab === "completed" && <CertificateViewer />}
             <LearningInbox status={activeTab} />
+            {activeTab === "completed" && <CertificateViewer />}
           </>
         )}
 
