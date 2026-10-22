@@ -21,10 +21,14 @@ export default function LearningModuleCoach({ moduleData, onClose, user }) {
   const scrollRef = useRef(null);
   const isMountedRef = useRef(true);
 
+  // The panel is wrapped in its own auth provider, which resolves the signed-in
+  // account asynchronously — wait for it, and load as soon as it arrives.
   useEffect(() => {
+    if (!user?.email) return undefined;
+    isMountedRef.current = true;
     loadModule();
     return () => { isMountedRef.current = false; };
-  }, []);
+  }, [user?.email]);
 
   const loadModule = async () => {
     try {
@@ -45,11 +49,13 @@ export default function LearningModuleCoach({ moduleData, onClose, user }) {
 
       // 'assigned_learning' is the conversation type this data model accepts for
       // module conversations; an unknown type is rejected by the database.
-      const existingConv = await base44.entities.Conversation.filter({
+      const openConversations = await base44.entities.Conversation.filter({
         status: 'active',
-        type: 'assigned_learning',
-        'context.module_id': moduleData.id
+        type: 'assigned_learning'
       });
+      const existingConv = (openConversations || []).filter(
+        (conv) => conv.context?.module_id === moduleData.id
+      );
 
       if (existingConv.length > 0) {
         setConversationId(existingConv[0].id);
@@ -176,10 +182,12 @@ Reply as Atreus in a short, specific coaching message.`,
           setCurrentStep(nextStep);
           setMessages(withNext);
           setProgress((prev) => ({ ...(prev || {}), progress_percentage: pct }));
-          base44.entities.LearnerProgress.update(progress.id, {
-            progress_percentage: pct,
-            last_accessed_date: new Date().toISOString(),
-          });
+          if (progress?.id) {
+            base44.entities.LearnerProgress.update(progress.id, {
+              progress_percentage: pct,
+              last_accessed_date: new Date().toISOString(),
+            });
+          }
           persistStep(nextStep, withNext);
         }, 1500);
       } else {
