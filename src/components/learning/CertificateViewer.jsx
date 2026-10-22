@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Award, Download, Share2, ExternalLink } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { useAuth } from "@/components/useAuth";
+import { useAuth } from "@/lib/AuthContext";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
@@ -13,19 +13,21 @@ export default function CertificateViewer() {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const email = user?.email || user?.data?.email;
+
   useEffect(() => {
     loadCertificates();
-  }, [user]);
+  }, [email]);
 
   const loadCertificates = async () => {
-    if (!user) return;
+    if (!email) return;
 
     try {
       const certs = await base44.entities.LearningCertificate.filter({
-        user_email: user.email
+        user_email: email
       }, "-issued_date");
-      
-      setCertificates(certs);
+
+      setCertificates(Array.isArray(certs) ? certs : certs?.items || []);
     } catch (error) {
       console.error("Error loading certificates:", error);
     } finally {
@@ -88,7 +90,7 @@ export default function CertificateViewer() {
                 <div className="flex items-start justify-between">
                   <Award className="w-12 h-12 text-amber-600" />
                   <Badge className="bg-amber-600 text-white">
-                    {cert.certificate_type.replace("_", " ")}
+                    {(cert.certificate_type || "certificate").replace(/_/g, " ")}
                   </Badge>
                 </div>
                 <CardTitle className="text-lg mt-3">{cert.title}</CardTitle>
