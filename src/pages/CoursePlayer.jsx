@@ -49,10 +49,12 @@ export default function CoursePlayer() {
     }
   }, []);
 
+  // Lessons and course definition arrive as arguments, never read from render state:
+  // a captured value here changes identity on every load, which would change load()
+  // itself and re-trigger the load effect in a loop.
   const applyCompletion = useCallback(
-    async (ids, record) => {
-      const lessons = computed.lessons;
-      const rule = course?.completion_rule || { type: "all_lessons" };
+    async (ids, record, lessons, courseDef) => {
+      const rule = courseDef?.completion_rule || { type: "all_lessons" };
       const percent = lessons.length ? Math.round((ids.length / lessons.length) * 100) : 0;
       const isComplete =
         lessons.length > 0 &&
@@ -84,7 +86,7 @@ export default function CoursePlayer() {
       }
       return updated;
     },
-    [computed.lessons, course, issueCertificate]
+    [issueCertificate]
   );
 
   const load = useCallback(async () => {
@@ -154,7 +156,7 @@ export default function CoursePlayer() {
           )
           .map((lesson) => lesson.id);
         if (autoIds.length) {
-          await applyCompletion([...done, ...autoIds], record);
+          await applyCompletion([...done, ...autoIds], record, lessons, found);
         }
       }
     } catch (error) {
@@ -176,7 +178,7 @@ export default function CoursePlayer() {
     const next = computed.lessons.find((item) => !ids.has(item.id));
     if (next) setCurrentId(next.id);
     try {
-      await applyCompletion([...ids], progress);
+      await applyCompletion([...ids], progress, computed.lessons, course);
     } catch (error) {
       console.error(error);
       toast.error("Could not save your progress. Please try again.");
