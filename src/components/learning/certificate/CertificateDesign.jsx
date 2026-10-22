@@ -30,7 +30,7 @@ const CertificateDesign = forwardRef(function CertificateDesign({ cert, learnerN
             src={CERTIFICATE_LOGO_URL}
             alt={CERTIFICATE_BRAND_NAME}
             crossOrigin="anonymous"
-            className="h-[54px] w-[54px] object-contain"
+            className="h-[90px] w-[240px] -ml-5 object-contain object-left"
           />
           <span className="mr-[10px] h-[38px] w-[38px] rotate-45 border border-[#c9cdf3]" />
         </div>
