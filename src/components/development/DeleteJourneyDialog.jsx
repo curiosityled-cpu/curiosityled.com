@@ -19,13 +19,14 @@ export default function DeleteJourneyDialog({ open, onClose, plan, onDeleted }) 
       // Unassign learning resources linked in this journey if requested
       if (unassignLearning && plan.learning_items?.length > 0) {
         const resourceIds = plan.learning_items
-          .map(item => item.resource_id)
+          .map(item => item.learning_resource_id || item.resource_id)
           .filter(Boolean);
 
         if (resourceIds.length > 0) {
           // Find and delete AssignedLearning records for these resources
+          const me = await base44.auth.me();
           const assignments = await base44.entities.AssignedLearning.filter({
-            user_email: plan.user_email,
+            user_email: me?.email,
           });
           const toDelete = assignments.filter(a => resourceIds.includes(a.learning_resource_id));
           await Promise.all(toDelete.map(a => base44.entities.AssignedLearning.delete(a.id)));
@@ -41,7 +42,7 @@ export default function DeleteJourneyDialog({ open, onClose, plan, onDeleted }) 
       }
 
       // Delete the journey itself
-      await base44.entities.DevelopmentPlan.delete(plan.id);
+      await base44.entities.Journey.delete(plan.id);
       toast.success("Journey deleted");
       onDeleted();
     } catch (err) {

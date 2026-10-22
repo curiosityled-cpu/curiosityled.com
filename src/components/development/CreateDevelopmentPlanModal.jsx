@@ -195,12 +195,20 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
         email = me?.email;
       }
       if (!email) throw new Error("No user email available. Please refresh and try again.");
-      const data = { ...form, user_email: email };
-      console.log("Saving data:", JSON.stringify(data));
+      // Journeys live in the unified Journey entity: the owner is the author and
+      // the learner, so personal journeys show up in My Development.
+      const data = {
+        ...form,
+        author_email: email,
+        last_modified_by: email,
+        assigned_to_emails: editing
+          ? Array.from(new Set([...(plan.assigned_to_emails || []), email]))
+          : [email],
+      };
       if (editing) {
-        await base44.entities.DevelopmentPlan.update(plan.id, data);
+        await base44.entities.Journey.update(plan.id, data);
       } else {
-        await base44.entities.DevelopmentPlan.create(data);
+        await base44.entities.Journey.create(data);
       }
       toast.success(editing ? "Journey saved!" : "Journey created!");
       onSaved();
