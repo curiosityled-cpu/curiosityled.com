@@ -14,7 +14,7 @@
     "test": "node base44/tests/successionArchitectureGuard.test.mjs"
   },
   "dependencies": {
-    "@base44/sdk": "^0.8.57",
+    "@base44/sdk": "^0.8.56",
     "@base44/vite-plugin": "^1.0.47",
     "@hello-pangea/dnd": "^17.0.0",
     "@heycatch/sdk": "^0.8.3",
