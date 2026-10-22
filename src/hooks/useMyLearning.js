@@ -173,7 +173,11 @@ export default function useMyLearning() {
             percent: status === "completed" ? 100 : 0,
             due_date: row.due_date || null,
             assignedBy: row.assigned_by || null,
-            launch: { moduleId: module.id, to: `/ConversationalModule?moduleId=${module.id}` },
+            launch: {
+              moduleId: module.id,
+              module,
+              to: `/ConversationalModule?moduleId=${module.id}`,
+            },
             raw: row,
           };
         });

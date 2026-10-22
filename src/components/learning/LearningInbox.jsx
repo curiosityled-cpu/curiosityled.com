@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { base44 } from "@/api/base44Client";
 import useMyLearning from "@/hooks/useMyLearning";
 import LearnerItemCard from "@/components/learning/LearnerItemCard";
+import { useAtreusChat } from "@/components/ai/AtreusContext";
 import { openResource } from "@/lib/openResource";
 
 const FILTERS = [
@@ -21,6 +22,7 @@ const statusRank = (item) =>
 /** The learner's assigned work: courses, resources and conversational modules. */
 export default function LearningInbox({ status = "active" }) {
   const navigate = useNavigate();
+  const { openWithContext } = useAtreusChat();
   const { items, loading, reload } = useMyLearning();
   const [filter, setFilter] = useState("all");
   const [busyId, setBusyId] = useState(null);
@@ -46,6 +48,23 @@ export default function LearningInbox({ status = "active" }) {
   }, [learningItems, filter]);
 
   const open = async (item) => {
+    // Conversational modules run in the Atreus panel, same as a course lesson.
+    if (item.launch?.module) {
+      openWithContext({
+        context: {
+          pageType: "conversational_module",
+          module_id: item.launch.module.id,
+          learning_module_mode: true,
+          module_data: item.launch.module,
+        },
+      });
+      if (item.status !== "completed" && item.refId) {
+        base44.entities.AssignedLearning.update(item.refId, { status: "in_progress" })
+          .then(reload)
+          .catch(() => {});
+      }
+      return;
+    }
     if (item.launch?.to) {
       navigate(item.launch.to);
       return;

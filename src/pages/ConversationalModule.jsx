@@ -30,14 +30,20 @@ export default function ConversationalModule() {
 
   useEffect(() => {
     loadModule();
-  }, [moduleId]);
+  }, [moduleId, user?.email]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const loadModule = async () => {
-    if (!moduleId || !user) return;
+    if (!moduleId) {
+      setLoading(false);
+      return;
+    }
+    // The signed-in user often arrives after the first render. The effect re-runs
+    // on user?.email, so wait for it instead of stranding the loading state.
+    if (!user) return;
 
     setLoading(true);
     try {
@@ -158,8 +164,8 @@ ${userInput}
 
 Respond as Atreus, providing guidance and determining if this step is complete.`;
 
-      const response = await base44.integrations.invoke("Core", "InvokeLLM", {
-        prompt: systemPrompt
+      const response = await base44.integrations.Core.InvokeLLM({
+        prompt: systemPrompt,
       });
 
       const atreusMessage = {
@@ -241,6 +247,10 @@ Respond as Atreus, providing guidance and determining if this step is complete.`
         isCompletion: true
       }]);
 
+      // Lets an open course lesson tick this module off straight away.
+      window.dispatchEvent(
+        new CustomEvent("learning-module-completed", { detail: { moduleId: module.id } })
+      );
       toast.success(`Module completed! +${points} points`);
     } catch (error) {
       console.error("Error completing module:", error);
