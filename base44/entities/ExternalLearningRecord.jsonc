@@ -1,0 +1,252 @@
+{
+  "name": "ExternalLearningRecord",
+  "type": "object",
+  "description": "A learning completion recorded in another system (a client's LMS, HRIS, or training provider) and brought into Curiosity Led by API or SFTP, so external learning counts toward adoption, transcripts, and reporting alongside in-platform completions.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this record belongs to. Canonical tenant partition key."
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of the learner the completion belongs to. Matched against app users where possible."
+    },
+    "learner_name": {
+      "type": "string",
+      "description": "Learner name as supplied by the source system (denormalized for display)"
+    },
+    "course_title": {
+      "type": "string",
+      "description": "Title of the completed course, programme, or activity in the source system"
+    },
+    "provider": {
+      "type": "string",
+      "description": "Source LMS or training provider (e.g. 'Workday Learning', 'Cornerstone')"
+    },
+    "source_system": {
+      "type": "string",
+      "enum": [
+        "api",
+        "sftp",
+        "manual"
+      ],
+      "default": "api",
+      "description": "How this record arrived: API push, SFTP file push, or manual entry"
+    },
+    "external_id": {
+      "type": "string",
+      "description": "Stable identifier of the completion in the source system. Used to de-duplicate repeat imports."
+    },
+    "external_url": {
+      "type": "string",
+      "description": "Link back to the record in the source system, when available"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the learning was completed in the source system"
+    },
+    "score": {
+      "type": "number",
+      "description": "Assessment score or grade, if the source system reports one"
+    },
+    "passed": {
+      "type": "boolean",
+      "description": "Whether the completion counts as a pass, where the source system reports it"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "description": "Time spent on the learning, in minutes, when reported"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "recorded",
+        "verified",
+        "excluded"
+      ],
+      "default": "recorded",
+      "description": "Review state of this imported record. 'excluded' records are retained for audit but left out of adoption metrics."
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal notes, e.g. why a record was excluded or corrected"
+    },
+    "imported_by": {
+      "type": "string",
+      "description": "Email of the admin who imported the record, or 'system' for scheduled API/SFTP syncs"
+    },
+    "imported_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the record was brought into Curiosity Led"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of this record"
+    }
+  },
+  "required": [
+    "client_id",
+    "user_email",
+    "course_title"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Analyst"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "User Level 2"
+              }
+            },
+            {
+              "data.user_email": {
+                "$in": "{{user.data.subordinate_emails}}"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            },
+            {
+              "data.client_id": {
+                "$in": "{{user.data.partner_client_ids}}"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

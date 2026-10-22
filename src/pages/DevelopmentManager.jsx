@@ -9,6 +9,7 @@ import CohortsTab from "@/components/dev-manager/CohortsTab";
 import SignalsTab from "@/components/dev-manager/SignalsTab";
 import ExperienceAnalyticsTab from "@/components/experience-mgmt/ExperienceAnalyticsTab";
 import CoachAnalyticsTab from "@/components/experience-mgmt/CoachAnalyticsTab";
+import LearningAnalyticsTab from "@/components/dev-manager/LearningAnalyticsTab";
 
 // Lazy load request components
 const RequestDetailPanel = lazy(() => import("@/components/requests/RequestDetailPanel"));
@@ -50,6 +51,7 @@ const ADMIN_TABS = [
   { id: 'experiences', label: 'Experiences', icon: Star },
   { id: 'cohorts', label: 'Cohorts', icon: Users },
   { id: 'signals', label: 'Signals', icon: Radio },
+  { id: 'learning', label: 'Learning', icon: GraduationCap },
   { id: 'analytics', label: 'Analytics', icon: BarChart2 },
 ];
 
@@ -214,6 +216,13 @@ export default function DevelopmentManager() {
       {section === 'signals' && (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <SignalsTab user={user} />
+        </motion.div>
+      )}
+
+      {/* ── LEARNING ANALYTICS ── */}
+      {section === 'learning' && (
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <LearningAnalyticsTab />
         </motion.div>
       )}
 

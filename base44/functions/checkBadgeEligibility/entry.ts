@@ -72,17 +72,42 @@ Deno.serve(async (req) => {
       });
     }
 
+    const config = badge.criteria_config || {};
+    const targetValue = Number(config.target_value) || 1;
+
+    // Completed-item counts for the learning metrics the engine can observe today.
+    const countOf = async (entity, query) => {
+      const rows = await base44.asServiceRole.entities[entity].filter(query);
+      return Array.isArray(rows) ? rows.length : rows?.items?.length || 0;
+    };
+
+    const countCompleted = async (metric) => {
+      if (metric === 'courses_completed') {
+        return countOf('CourseProgress', { learner_email: user_email, status: 'completed' });
+      }
+      if (metric === 'resources_completed') {
+        return countOf('AssignedLearning', { user_email, status: 'completed' });
+      }
+      if (metric === 'journeys_completed') {
+        return countOf('JourneyEnrollment', { user_email, status: 'completed' });
+      }
+      return null;
+    };
+
     if (badge.criteria_type === 'single_event') {
-      // Check if specific event has occurred
-      const config = badge.criteria_config || {};
-      
-      if (config.entity_type === 'Program' && config.entity_id) {
-        // Check program completion
-        // Implementation depends on your Program completion tracking
+      if (config.entity_type === 'Course') {
+        // A specific course (entity_id) or any completed course.
+        const query = { learner_email: user_email, status: 'completed' };
+        if (config.entity_id) query.course_id = config.entity_id;
+        const completedCourses = await base44.asServiceRole.entities.CourseProgress.filter(query);
+        eligible =
+          (Array.isArray(completedCourses)
+            ? completedCourses.length
+            : completedCourses?.items?.length || 0) > 0;
+        progressPercentage = eligible ? 100 : 0;
       } else if (config.entity_type === 'Assessment') {
         const assessments = await base44.asServiceRole.entities.Assessment.filter({
-          email: user_email,
-          // Add specific criteria
+          email: user_email
         });
         eligible = assessments.length > 0;
         progressPercentage = eligible ? 100 : 0;
@@ -90,16 +115,18 @@ Deno.serve(async (req) => {
     }
 
     if (badge.criteria_type === 'cumulative') {
-      // Check cumulative progress
-      const config = badge.criteria_config || {};
-      
       if (config.metric === 'total_points') {
         const users = await base44.asServiceRole.entities.User.filter({ email: user_email });
         if (users.length > 0) {
           const currentPoints = users[0].total_points || 0;
-          const targetPoints = config.target_value || 1000;
-          progressPercentage = Math.min(100, (currentPoints / targetPoints) * 100);
-          eligible = currentPoints >= targetPoints;
+          progressPercentage = Math.min(100, (currentPoints / targetValue) * 100);
+          eligible = currentPoints >= targetValue;
+        }
+      } else {
+        const completed = await countCompleted(config.metric);
+        if (completed !== null) {
+          progressPercentage = Math.min(100, (completed / targetValue) * 100);
+          eligible = completed >= targetValue;
         }
       }
     }
