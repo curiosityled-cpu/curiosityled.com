@@ -75,6 +75,24 @@
       "type": "string",
       "format": "date-time",
       "description": "When the learner last accessed the course"
+    },
+    "last_lesson_id": {
+      "type": "string",
+      "description": "Lesson the learner was last working on, used to resume at the right place"
+    },
+    "assigned_by": {
+      "type": "string",
+      "description": "Email of the person who assigned the course (empty for self-enrolment)"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Optional due date for completing the course"
+    },
+    "reminder_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the last due-date reminder was sent, so reminders are not repeated"
     }
   },
   "required": [
@@ -86,6 +104,11 @@
       "$or": [
         {
           "data.learner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
         },
         {
           "user_condition": {
@@ -113,6 +136,11 @@
       "$or": [
         {
           "data.learner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
         },
         {
           "$and": [
@@ -176,6 +204,11 @@
         },
         {
           "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
             "role": "Admin Level 1"
           }
         },
@@ -197,9 +230,23 @@
       ]
     },
     "delete": {
-      "user_condition": {
-        "role": "Platform Admin"
-      }
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        }
+      ]
     }
   }
 }

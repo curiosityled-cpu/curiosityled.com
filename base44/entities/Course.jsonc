@@ -197,6 +197,11 @@
         },
         {
           "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
             "role": "Admin Level 1"
           }
         },
@@ -223,6 +228,9 @@
           "created_by": "{{user.email}}"
         },
         {
+          "created_by_id": "{{user.id}}"
+        },
+        {
           "data.assigned_to_emails": {
             "$in": [
               "{{user.email}}"
@@ -233,6 +241,11 @@
           "data.access_mode": "open",
           "data.status": "published",
           "data.client_id": "{{user.data.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
         },
         {
           "$and": [
@@ -303,7 +316,64 @@
         }
       ]
     },
-    "update": null,
-    "delete": null
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
   }
 }
