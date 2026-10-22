@@ -7,8 +7,17 @@ const asArray = (result) => (Array.isArray(result) ? result : result?.items || [
 const indexById = (result) =>
   Object.fromEntries(asArray(result).map((record) => [record.id, record]));
 
-const byIds = (entity, ids) =>
-  ids.length ? base44.entities[entity].filter({ id: { $in: ids } }) : Promise.resolve([]);
+// Record IDs are 24-char hex. An assignment can carry a stale or placeholder
+// reference, and the API rejects the whole query if any ID is malformed — so
+// unusable references are dropped instead of being passed through.
+const RECORD_ID = /^[0-9a-f]{24}$/i;
+
+const byIds = (entity, ids) => {
+  const usable = ids.filter((id) => typeof id === "string" && RECORD_ID.test(id));
+  return usable.length
+    ? base44.entities[entity].filter({ id: { $in: usable } })
+    : Promise.resolve([]);
+};
 
 /**
  * The learner's unified work list: assigned courses, learning resources,
