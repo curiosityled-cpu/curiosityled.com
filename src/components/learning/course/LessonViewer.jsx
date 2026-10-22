@@ -6,6 +6,9 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import ResourceFileViewer from "@/components/learning/ResourceFileViewer";
+import LessonVideoPlayer from "@/components/learning/course/LessonVideoPlayer";
+import { getResourceFileUri, getResourceMediaKind } from "@/lib/resourceFile";
+import { getResourceVideoEmbed } from "@/lib/videoEmbed";
 import { LESSON_TYPE_LABEL, formatMinutes, lessonTitle } from "@/lib/learning";
 
 /** Renders one lesson of a course and offers the single next action for it. */
@@ -76,6 +79,13 @@ export default function LessonViewer({ lesson, complete, onComplete, onAdvance }
 
   const title = lessonTitle(lesson);
 
+  // Videos play inside the lesson: an uploaded file plays in the app's own
+  // player (full controls), a linked video plays in an embedded frame.
+  const hasVideoFile =
+    getResourceMediaKind(state.resource) === "video" && !!getResourceFileUri(state.resource);
+  const embedUrl = hasVideoFile ? null : getResourceVideoEmbed(state.resource);
+  const playsVideo = hasVideoFile || !!embedUrl;
+
   return (
     <div className="rounded-2xl border border-border bg-card shadow-sm">
       <div className="border-b border-border px-5 py-4">
@@ -104,15 +114,29 @@ export default function LessonViewer({ lesson, complete, onComplete, onAdvance }
                 .filter(Boolean)
                 .join(" · ")}
             </p>
-            {state.resource && (
-              <ResourceFileViewer
+            {playsVideo ? (
+              <LessonVideoPlayer
                 resource={state.resource}
+                embedUrl={embedUrl}
+                captionsUrl={lesson.captions_url}
+                allowSeeking={lesson.allow_seeking !== false}
+                allowSpeed={lesson.allow_speed_adjust !== false}
+                title={title}
                 onEnded={() => {
                   if (!complete) onComplete?.(lesson);
                 }}
               />
+            ) : (
+              state.resource && (
+                <ResourceFileViewer
+                  resource={state.resource}
+                  onEnded={() => {
+                    if (!complete) onComplete?.(lesson);
+                  }}
+                />
+              )
             )}
-            {state.resource?.url && (
+            {!playsVideo && state.resource?.url && (
               <Button
                 type="button"
                 variant="outline"

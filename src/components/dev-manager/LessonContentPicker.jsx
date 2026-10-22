@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -7,9 +7,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
   BookOpen, Video, Radio, MessageSquare, Search, Loader2,
-  FileText, Calendar, CheckCircle, ArrowLeft
+  FileText, Calendar, CheckCircle, ArrowLeft, Upload
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
+import { getResourceFileUri, getResourceMediaKind } from "@/lib/resourceFile";
 
 const CONTENT_TYPES = [
   { id: "resource", label: "Resource", description: "Video, article, PDF, or embed from your library.", icon: BookOpen, color: "#0202ff" },
@@ -35,6 +37,49 @@ export default function LessonContentPicker({ lesson, pacing, onChange }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [videoResource, setVideoResource] = useState(null);
+  const [uploadingCaptions, setUploadingCaptions] = useState(false);
+  const captionsInputRef = useRef(null);
+
+  // Video options apply only to lessons that play an uploaded video file.
+  useEffect(() => {
+    let cancelled = false;
+    if (lesson?.content_type !== "resource" || !lesson?.reference_id) {
+      setVideoResource(null);
+      return undefined;
+    }
+    base44.entities.LearningResource
+      .get(lesson.reference_id)
+      .then((row) => {
+        if (!cancelled) setVideoResource(row || null);
+      })
+      .catch(() => {
+        if (!cancelled) setVideoResource(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [lesson?.content_type, lesson?.reference_id]);
+
+  const playsUploadedVideo =
+    getResourceMediaKind(videoResource) === "video" && !!getResourceFileUri(videoResource);
+
+  const handleCaptionsUpload = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setUploadingCaptions(true);
+    try {
+      const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
+      onChange({ ...lesson, captions_url: file_uri, captions_name: file.name });
+      toast.success("Captions attached");
+    } catch (error) {
+      console.error("Captions upload failed:", error);
+      toast.error("Could not upload the captions file");
+    } finally {
+      setUploadingCaptions(false);
+    }
+  };
 
   // Determine which content type card is active.
   // "signal" is a UI concept — stored as "assessment" or "form" depending on entity.
@@ -148,6 +193,94 @@ export default function LessonContentPicker({ lesson, pacing, onChange }) {
               Gate next lesson until this is complete
             </Label>
           </div>
+
+          {playsUploadedVideo && (
+            <div className="space-y-3 rounded-xl border border-gray-100 bg-gray-50 p-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Video playback
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">Applies to this lesson's video.</p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="lesson-no-skip"
+                  checked={lesson.allow_seeking === false}
+                  onCheckedChange={(checked) => onChange({ ...lesson, allow_seeking: !checked })}
+                />
+                <Label htmlFor="lesson-no-skip" className="text-sm cursor-pointer">
+                  Prevent skipping ahead (rewinding stays allowed)
+                </Label>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="lesson-fixed-speed"
+                  checked={lesson.allow_speed_adjust === false}
+                  onCheckedChange={(checked) =>
+                    onChange({ ...lesson, allow_speed_adjust: !checked })
+                  }
+                />
+                <Label htmlFor="lesson-fixed-speed" className="text-sm cursor-pointer">
+                  Lock playback to normal speed (no fast-forward)
+                </Label>
+              </div>
+
+              <div>
+                <Label className="text-xs">Closed captions (WebVTT)</Label>
+                <div className="mt-1 flex items-center gap-2">
+                  <input
+                    ref={captionsInputRef}
+                    type="file"
+                    accept=".vtt,text/vtt"
+                    className="hidden"
+                    onChange={handleCaptionsUpload}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8"
+                    disabled={uploadingCaptions}
+                    onClick={() => captionsInputRef.current?.click()}
+                  >
+                    {uploadingCaptions ? (
+                      <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                    ) : (
+                      <Upload className="w-3.5 h-3.5 mr-1" />
+                    )}
+                    Upload .vtt
+                  </Button>
+                  <Input
+                    placeholder="or paste a captions URL"
+                    value={/^https?:/i.test(lesson.captions_url || "") ? lesson.captions_url : ""}
+                    onChange={(e) =>
+                      onChange({ ...lesson, captions_url: e.target.value, captions_name: "" })
+                    }
+                    className="h-8 text-xs"
+                  />
+                </div>
+                {lesson.captions_url ? (
+                  <p className="mt-1 flex items-center gap-1 text-xs text-gray-500">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                    {lesson.captions_name || "Captions attached"}
+                    <button
+                      type="button"
+                      className="ml-1 text-xs text-gray-400 hover:text-red-600"
+                      onClick={() => onChange({ ...lesson, captions_url: "", captions_name: "" })}
+                    >
+                      Remove
+                    </button>
+                  </p>
+                ) : (
+                  <p className="mt-1 text-xs text-gray-400">
+                    Learners get a CC toggle to show or hide captions.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           {pacing === "cohort" && (
             <div>

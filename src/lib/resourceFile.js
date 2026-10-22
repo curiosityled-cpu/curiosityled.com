@@ -52,6 +52,26 @@ export function getResourceMediaKind(resource) {
 }
 
 /**
+ * Resolves any stored file reference to a usable URL: a plain https URL is
+ * returned as-is, a private storage URI gets a short-lived signed URL.
+ */
+export async function resolveFileUri(uri) {
+  if (!uri) return null;
+  if (/^https?:\/\//i.test(uri)) return uri;
+
+  try {
+    const { signed_url } = await base44.integrations.Core.CreateFileSignedUrl({
+      file_uri: uri,
+      expires_in: 3600,
+    });
+    return signed_url || null;
+  } catch (error) {
+    console.error("Failed to create signed URL:", error);
+    return null;
+  }
+}
+
+/**
  * Resolves a usable URL for a resource's attached file.
  * Public files already have a permanent URL; private files get a short-lived signed URL.
  */
@@ -64,14 +84,5 @@ export async function resolveResourceFileUrl(resource) {
     (!resource?.storage_visibility && /^https?:\/\//i.test(uri));
   if (isPublic) return uri;
 
-  try {
-    const { signed_url } = await base44.integrations.Core.CreateFileSignedUrl({
-      file_uri: uri,
-      expires_in: 3600,
-    });
-    return signed_url || null;
-  } catch (error) {
-    console.error("Failed to create signed URL for resource file:", error);
-    return null;
-  }
+  return resolveFileUri(uri);
 }

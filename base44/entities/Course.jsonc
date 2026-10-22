@@ -107,6 +107,24 @@
                 "unlock_offset_days": {
                   "type": "number",
                   "description": "Days from cohort start when this lesson unlocks (cohort-paced only)"
+                },
+                "allow_seeking": {
+                  "type": "boolean",
+                  "default": true,
+                  "description": "Whether the learner may skip ahead in this video lesson. When false the playhead cannot move past what has already been watched; rewinding stays allowed."
+                },
+                "allow_speed_adjust": {
+                  "type": "boolean",
+                  "default": true,
+                  "description": "Whether the learner may change playback speed on this video lesson. When false the video stays at normal speed."
+                },
+                "captions_url": {
+                  "type": "string",
+                  "description": "Closed-caption file for this video lesson (WebVTT): a private storage URI or a plain https URL. When set, learners get a CC toggle."
+                },
+                "captions_name": {
+                  "type": "string",
+                  "description": "Original filename of the attached captions file, shown in the course builder"
                 }
               },
               "required": [
