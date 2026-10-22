@@ -588,20 +588,6 @@ function MVPLayoutInner({ children }) {
 
       {/* Main content */}
       <main className={`flex-1 min-w-0 overflow-hidden ${collapsed ? 'sm:ml-16' : 'sm:ml-64'} pt-14 sm:pt-0 min-h-screen transition-all duration-200`}>
-        {isSubPage && (
-          <div className="hidden sm:flex items-center px-6 pt-5 pb-1">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-1.5 text-sm font-medium transition-colors rounded-lg px-2 py-1.5 -ml-2"
-              style={{ color: 'hsl(var(--muted-foreground))' }}
-              onMouseEnter={e => { e.currentTarget.style.color = 'hsl(var(--foreground))'; e.currentTarget.style.background = 'hsl(var(--muted))'; }}
-              onMouseLeave={e => { e.currentTarget.style.color = 'hsl(var(--muted-foreground))'; e.currentTarget.style.background = ''; }}
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back
-            </button>
-          </div>
-        )}
         <ErrorBoundary>{children}</ErrorBoundary>
         <FirstLoginLinker />
       </main>
