@@ -84,7 +84,6 @@ export default function CheckInHistory({ user }) {
     user?.data?.display_name || user?.full_name || user?.email || "you";
 
   const isSelfFilter = filter === "all" ? false : filter.toLowerCase() === myEmail;
-  const viewingSelf = !isManager || isSelfFilter;
   const personName =
     filter === "all"
       ? ""
@@ -152,7 +151,7 @@ export default function CheckInHistory({ user }) {
         onEdit={openEdit}
       />
 
-      {viewingSelf && <SharedLeaderNotes userEmail={user?.email} />}
+      <SharedLeaderNotes userEmail={user?.email} />
 
       <Dialog open={!!editor} onOpenChange={(o) => !o && setEditor(null)}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
