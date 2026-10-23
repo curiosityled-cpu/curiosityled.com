@@ -9,12 +9,14 @@ import QuestionPills from "@/components/checkin/insights/QuestionPills";
 import QuestionInsightPanel from "@/components/checkin/insights/QuestionInsightPanel";
 import InsightsExportBar from "@/components/checkin/insights/InsightsExportBar";
 import IndividualCheckIns from "@/components/checkin/insights/IndividualCheckIns";
-import { DATE_RANGES, rangeLabel, formatDateShort } from "@/lib/insightsShared";
+import { DATE_RANGES, rangeLabel, formatRangeLabel, formatDateShort, defaultCustomRange } from "@/lib/insightsShared";
+import { Input } from "@/components/ui/input";
 import { buildInsightsCsv } from "@/lib/insightsCsv";
 import { downloadInsightsPdf } from "@/lib/insightsPdf";
 
 export default function CheckInInsightsExplorer({ scope = "team", title, subtitle }) {
   const [days, setDays] = useState(90);
+  const [customRange, setCustomRange] = useState(null); // { start, end } once both dates are chosen
   const [selectedKeys, setSelectedKeys] = useState([]);
   const [showHistorical, setShowHistorical] = useState(false);
   const [leaderEmail, setLeaderEmail] = useState("");
@@ -22,12 +24,22 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
   const [busy, setBusy] = useState("");
   const initialised = useRef(false);
 
+  // Rolling window in days, or the custom start/end the user picked
+  const hasCustomRange = !!(customRange?.start && customRange?.end);
+  const requestRange = hasCustomRange
+    ? { start_date: customRange.start, end_date: customRange.end }
+    : { days };
+  const rangeKey = hasCustomRange ? `${customRange.start}|${customRange.end}` : `${days}`;
+  const periodLabel = hasCustomRange
+    ? formatRangeLabel(customRange.start, customRange.end)
+    : rangeLabel(days);
+
   const { data, isLoading, error } = useQuery({
-    queryKey: ["check-in-insights", scope, days, leaderEmail],
+    queryKey: ["check-in-insights", scope, rangeKey, leaderEmail],
     queryFn: async () => {
       const res = await base44.functions.invoke("getCheckInInsights", {
         scope,
-        days,
+        ...requestRange,
         leader_email: leaderEmail || "",
       });
       return res?.data || res;
@@ -68,7 +80,6 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
   const toggleKey = (key) =>
     setSelectedKeys((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
 
-  const periodLabel = rangeLabel(days);
   const heading = title || (scope === "org" ? "Organisation-wide Check-in Intelligence" : "Team Check-in Insights");
   const viewing = data?.viewing_leader;
   const scopeLabel = viewing
@@ -79,12 +90,12 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
 
   const exportName = `${scope === "org" ? "organisation" : "team"}-check-in-insights${
     leaderEmail ? `-${leaderEmail.split("@")[0]}` : ""
-  }-${days}d`;
+  }-${hasCustomRange ? `${customRange.start}_to_${customRange.end}` : `${days}d`}`;
 
   const fetchSessions = async () => {
     const res = await base44.functions.invoke("getCheckInInsights", {
       scope,
-      days,
+      ...requestRange,
       leader_email: leaderEmail || "",
       include_raw: true,
       selected_keys: selectedKeys,
@@ -211,15 +222,45 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
           {DATE_RANGES.map((range) => (
             <button
               key={range.days}
-              onClick={() => setDays(range.days)}
+              onClick={() => {
+                setDays(range.days);
+                setCustomRange(null);
+              }}
               className={`text-xs font-medium py-1.5 px-3 rounded-md transition-all ${
-                days === range.days ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
+                !hasCustomRange && days === range.days ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
               }`}
             >
               {range.label}
             </button>
           ))}
+          <button
+            onClick={() => setCustomRange(customRange || defaultCustomRange(days))}
+            className={`text-xs font-medium py-1.5 px-3 rounded-md transition-all ${
+              hasCustomRange ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Custom
+          </button>
         </div>
+        {customRange && (
+          <div className="flex items-center gap-2">
+            <Input
+              type="date"
+              value={customRange.start}
+              max={customRange.end}
+              onChange={(e) => setCustomRange({ ...customRange, start: e.target.value })}
+              className="h-8 text-xs w-[150px]"
+            />
+            <span className="text-xs text-gray-400">to</span>
+            <Input
+              type="date"
+              value={customRange.end}
+              min={customRange.start}
+              onChange={(e) => setCustomRange({ ...customRange, end: e.target.value })}
+              className="h-8 text-xs w-[150px]"
+            />
+          </div>
+        )}
         <LeaderDrilldown
           leaders={leaders}
           value={leaderEmail}
@@ -289,7 +330,7 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
 
       {/* Individual check-ins for the drill-down scope */}
       {data?.team_members?.length > 0 && (
-        <IndividualCheckIns members={data.team_members} days={days} />
+        <IndividualCheckIns members={data.team_members} range={requestRange} />
       )}
 
       {/* Footer metadata */}

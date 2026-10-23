@@ -14,6 +14,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { getPreset, DEFAULT_PRESET_ID } from "../../shared/checkInPresets.ts";
 import { createReportingTree, normalizeEmail, subordinateSeeds } from "../../shared/checkInScope.ts";
+import { resolveDateRange, recordInRange } from "../../shared/checkInRange.ts";
 
 export default async function(req: Request): Promise<Response> {
   try {
@@ -24,7 +25,6 @@ export default async function(req: Request): Promise<Response> {
     const body = await req.json().catch(() => ({}));
     const subjectEmail = normalizeEmail(body.user_email);
     if (!subjectEmail) return Response.json({ error: "user_email is required" }, { status: 400 });
-    const days: number = Math.min(Math.max(parseInt(body.days) || 90, 7), 365);
 
     const svc = base44.asServiceRole;
     const callerEmail = normalizeEmail(user.email);
@@ -53,18 +53,16 @@ export default async function(req: Request): Promise<Response> {
     const personEmail = person?.email || subjectEmail;
 
     // ── Individual check-ins in range ────────────────────────────
-    const sinceDate = new Date();
-    sinceDate.setDate(sinceDate.getDate() - days);
+    const range = resolveDateRange(body);
 
     const raw = await svc.entities.DailyCheckIn.filter(
       { user_email: personEmail },
       "-check_in_date",
       200
     ).catch(() => []);
-    const records = (Array.isArray(raw) ? raw : raw?.items || []).filter((r: any) => {
-      const d = r.check_in_date || r.created_date;
-      return d && new Date(d) >= sinceDate;
-    });
+    const records = (Array.isArray(raw) ? raw : raw?.items || []).filter((r: any) =>
+      recordInRange(r, range)
+    );
 
     // ── Custom question labels for this tenant ───────────────────
     const tenantId = clientId || person?.data?.client_id || person?.client_id || "";

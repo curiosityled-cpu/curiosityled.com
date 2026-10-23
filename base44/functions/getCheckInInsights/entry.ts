@@ -25,6 +25,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { getPreset, DEFAULT_PRESET_ID } from "../../shared/checkInPresets.ts";
 import { createReportingTree } from "../../shared/checkInScope.ts";
+import { resolveDateRange, recordInRange } from "../../shared/checkInRange.ts";
 
 const MAX_LEADERS = 200;
 const MAX_SESSION_ROWS = 4000;
@@ -38,7 +39,6 @@ export default async function(req: Request): Promise<Response> {
 
     const body = await req.json().catch(() => ({}));
     const scope: string = body.scope === "org" ? "org" : "team";
-    const days: number = Math.min(Math.max(parseInt(body.days) || 90, 7), 365);
     const anchorEmail: string = String(body.leader_email || "").trim().toLowerCase();
     const includeRaw: boolean = body.include_raw === true;
     const selectedKeys: string[] = Array.isArray(body.selected_keys)
@@ -167,8 +167,7 @@ export default async function(req: Request): Promise<Response> {
     }
 
     // ── Fetch DailyCheckIn records (batched) ──────────────────────
-    const sinceDate = new Date();
-    sinceDate.setDate(sinceDate.getDate() - days);
+    const range = resolveDateRange(body);
 
     const fetchOne = async (em: string) => {
       const rows = await svc.entities.DailyCheckIn.filter(
@@ -177,10 +176,7 @@ export default async function(req: Request): Promise<Response> {
         200
       ).catch(() => []);
       const arr = Array.isArray(rows) ? rows : rows?.items || [];
-      return (arr || []).filter((r) => {
-        const d = r.check_in_date || r.created_date;
-        return d && new Date(d) >= sinceDate;
-      });
+      return (arr || []).filter((r) => recordInRange(r, range));
     };
 
     const allCheckIns: any[] = [];
@@ -369,7 +365,7 @@ export default async function(req: Request): Promise<Response> {
       sessions,
       scope,
       suppressed: false,
-      days,
+      days: range.days,
     });
   } catch (error) {
     console.error("[getCheckInInsights] error:", error.message);

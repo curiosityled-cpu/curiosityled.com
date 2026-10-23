@@ -11,7 +11,7 @@ import CheckInSessionCard from "./CheckInSessionCard";
  * Individual check-ins for the people in the current drill-down scope
  * (a leader's directs and roll-ups), with the leader's own notes.
  */
-export default function IndividualCheckIns({ members = [], days = 90 }) {
+export default function IndividualCheckIns({ members = [], range = { days: 90 } }) {
   const [selectedEmail, setSelectedEmail] = useState("");
 
   const { data: viewer } = useQuery({
@@ -30,12 +30,12 @@ export default function IndividualCheckIns({ members = [], days = 90 }) {
   }, [members, viewer, selectedEmail]);
 
   const { data: personData, isLoading, error } = useQuery({
-    queryKey: ["person-check-ins", selectedEmail, days],
+    queryKey: ["person-check-ins", selectedEmail, JSON.stringify(range)],
     enabled: !!selectedEmail,
     queryFn: async () => {
       const res = await base44.functions.invoke("getPersonCheckIns", {
         user_email: selectedEmail,
-        days,
+        ...range,
       });
       return res?.data || res;
     },

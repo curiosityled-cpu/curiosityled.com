@@ -15,6 +15,30 @@ export function formatDateShort(dateStr) {
   return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+/** YYYY-MM-DD for a date input, in the viewer's local time. */
+export function toDateInput(date) {
+  const shifted = new Date(new Date(date).getTime() - new Date(date).getTimezoneOffset() * 60000);
+  return shifted.toISOString().slice(0, 10);
+}
+
+/** Prefills the custom picker with the window currently on screen. */
+export function defaultCustomRange(days) {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate() - (days - 1));
+  return { start: toDateInput(start), end: toDateInput(end) };
+}
+
+export function formatRangeLabel(start, end) {
+  const format = (value) =>
+    new Date(`${value}T00:00:00`).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  return `${format(start)} — ${format(end)}`;
+}
+
 export const isNumericType = (responseType) =>
   responseType === "measure" || responseType === "number" || responseType === "scale_1_5";
 
