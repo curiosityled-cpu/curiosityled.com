@@ -24,6 +24,7 @@
  */
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { getPreset, DEFAULT_PRESET_ID } from "../../shared/checkInPresets.ts";
+import { createReportingTree } from "../../shared/checkInScope.ts";
 
 const MAX_LEADERS = 200;
 const MAX_SESSION_ROWS = 4000;
@@ -56,61 +57,11 @@ export default async function(req: Request): Promise<Response> {
     }
     const nameOf = (email: string) => nameByEmail.get((email || "").toLowerCase()) || email;
 
-    // ── Reporting tree ───────────────────────────────────────────
-    const managerToReports = new Map<string, any[]>();
-    for (const u of allUsers || []) {
-      if (!u.email) continue;
-      const mgr = u?.data?.manager_email || u?.manager_email || "";
-      if (!mgr) continue;
-      const key = mgr.toLowerCase();
-      if (!managerToReports.has(key)) managerToReports.set(key, []);
-      managerToReports.get(key).push(u);
-    }
-
-    const sizeCache = new Map<string, number>();
-    const subtreeSize = (email: string): number => {
-      const key = (email || "").toLowerCase();
-      if (sizeCache.has(key)) return sizeCache.get(key);
-      sizeCache.set(key, 0); // guards against reporting cycles
-      let total = 0;
-      for (const r of managerToReports.get(key) || []) total += 1 + subtreeSize(r.email);
-      sizeCache.set(key, total);
-      return total;
-    };
-
-    /** Everyone below `email` (a leader's vertical). Seeds are extra known reports. */
-    const subtreeOf = (email: string, extraSeeds: string[] = []) => {
-      const root = (email || "").toLowerCase();
-      const seen = new Set<string>([root]);
-      const queue: string[] = [root];
-      const members: { email: string; name: string }[] = [];
-      for (const s of extraSeeds) {
-        const seed = String(s || "").toLowerCase();
-        if (!seed || seen.has(seed)) continue;
-        seen.add(seed);
-        members.push({ email: seed, name: nameOf(seed) });
-        queue.push(seed);
-      }
-      while (queue.length > 0) {
-        const cur = queue.shift();
-        for (const u of managerToReports.get(cur) || []) {
-          const em = String(u.email).toLowerCase();
-          if (seen.has(em)) continue;
-          seen.add(em);
-          members.push({ email: u.email, name: nameOf(u.email) });
-          queue.push(em);
-        }
-      }
-      return members;
-    };
-
-    const leaderEntry = (email: string) => ({
-      email,
-      name: nameOf(email),
-      is_self: email.toLowerCase() === userEmail.toLowerCase(),
-      direct_reports: (managerToReports.get(email.toLowerCase()) || []).length,
-      subtree_size: subtreeSize(email),
-    });
+    // ── Reporting tree (shared helpers, also used by getPersonCheckIns) ──
+    const tree = createReportingTree(allUsers || [], nameOf);
+    const subtreeOf = tree.resolveSubtree;
+    const leaderEntry = (email: string) => tree.leaderEntry(email, userEmail);
+    const directReportCount = (email: string) => tree.directReports(email).length;
 
     // ── Resolve users in scope (optionally anchored to one leader) ──
     let emailsInScope: string[] = [];
@@ -152,7 +103,7 @@ export default async function(req: Request): Promise<Response> {
       }
 
       leaders = orgEmails
-        .filter((e) => (managerToReports.get(e.toLowerCase()) || []).length > 0)
+        .filter((e) => directReportCount(e) > 0)
         .map((e) => leaderEntry(e))
         .sort((a, b) => b.subtree_size - a.subtree_size || a.name.localeCompare(b.name))
         .slice(0, MAX_LEADERS);
@@ -196,7 +147,7 @@ export default async function(req: Request): Promise<Response> {
       }
 
       leaders = ownEmails
-        .filter((e) => (managerToReports.get(e.toLowerCase()) || []).length > 0)
+        .filter((e) => directReportCount(e) > 0)
         .map((e) => leaderEntry(e))
         .sort((a, b) => b.subtree_size - a.subtree_size || a.name.localeCompare(b.name));
     }

@@ -1,0 +1,98 @@
+{
+  "name": "CheckInLeaderNote",
+  "type": "object",
+  "description": "A note a leader keeps about someone's daily check-ins, written from the check-in insights drill-down. scope 'person' is a running note about the person; scope 'check_in' is attached to one check-in session on check_in_date/check_in_type. Notes are private to the leader who wrote them until they share one with the person.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this note belongs to"
+    },
+    "leader_email": {
+      "type": "string",
+      "description": "Email of the leader the note belongs to (stamped from the creator)"
+    },
+    "leader_name": {
+      "type": "string",
+      "description": "Name of the leader the note belongs to"
+    },
+    "subject_email": {
+      "type": "string",
+      "description": "Email of the person the note is about"
+    },
+    "subject_name": {
+      "type": "string",
+      "description": "Name of the person the note is about"
+    },
+    "scope": {
+      "type": "string",
+      "enum": [
+        "person",
+        "check_in"
+      ],
+      "default": "person",
+      "description": "person = a running note about this person; check_in = attached to one check-in session"
+    },
+    "check_in_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the check-in this note is attached to (scope 'check_in' only)"
+    },
+    "check_in_type": {
+      "type": "string",
+      "enum": [
+        "morning",
+        "evening"
+      ],
+      "description": "Which check-in of that day the note is attached to (scope 'check_in' only)"
+    },
+    "note": {
+      "type": "string",
+      "maxLength": 4000,
+      "description": "The note itself"
+    },
+    "shared_with_subject": {
+      "type": "boolean",
+      "default": false,
+      "description": "When true, the person the note is about can read it"
+    },
+    "shared_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the note was shared with the person"
+    }
+  },
+  "required": [
+    "leader_email",
+    "subject_email",
+    "scope",
+    "note"
+  ],
+  "rls": {
+    "create": {
+      "data.leader_email": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "$and": [
+            {
+              "data.shared_with_subject": true
+            },
+            {
+              "data.subject_email": "{{user.email}}"
+            }
+          ]
+        }
+      ]
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

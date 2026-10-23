@@ -8,6 +8,7 @@ import LeaderDrilldown from "@/components/checkin/insights/LeaderDrilldown";
 import QuestionPills from "@/components/checkin/insights/QuestionPills";
 import QuestionInsightPanel from "@/components/checkin/insights/QuestionInsightPanel";
 import InsightsExportBar from "@/components/checkin/insights/InsightsExportBar";
+import IndividualCheckIns from "@/components/checkin/insights/IndividualCheckIns";
 import { DATE_RANGES, rangeLabel, formatDateShort } from "@/lib/insightsShared";
 import { buildInsightsCsv } from "@/lib/insightsCsv";
 import { downloadInsightsPdf } from "@/lib/insightsPdf";
@@ -284,6 +285,11 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
             </motion.div>
           ))}
         </div>
+      )}
+
+      {/* Individual check-ins for the drill-down scope */}
+      {data?.team_members?.length > 0 && (
+        <IndividualCheckIns members={data.team_members} days={days} />
       )}
 
       {/* Footer metadata */}
