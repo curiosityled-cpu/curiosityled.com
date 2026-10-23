@@ -25,6 +25,7 @@ import EmotionalStateIndicators from "@/components/intelligence/EmotionalStateIn
 import ToneAdaptationCard from "@/components/intelligence/ToneAdaptationCard";
 import TeamInsightsPanel from "@/components/intelligence/TeamInsightsPanel";
 import RetroactiveCheckInCard from "@/components/checkin/RetroactiveCheckInCard";
+import SharedLeaderNotes from "@/components/checkin/SharedLeaderNotes";
 
 function TrendIndicator({ trend, label }) {
   const isImproving = trend === 'improving';
@@ -292,6 +293,7 @@ export default function MyRhythm() {
 
           <TabsContent value="checkins" className="space-y-6">
             <RetroactiveCheckInCard />
+            <SharedLeaderNotes userEmail={user?.email} />
             <DailyCheckInLog pulses={pulses} />
           </TabsContent>
         </Tabs>
