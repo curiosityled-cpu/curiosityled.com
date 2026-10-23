@@ -22,7 +22,12 @@ const TABS = [
 export default function PerformanceManager() {
   const { user, loading: authLoading } = useAuth();
   const { coacheeEmails } = useCoachCoacheeScope(user);
-  const [section, setSection] = useState("expectations");
+  const urlParams = new URLSearchParams(window.location.search);
+  const requestedSection = urlParams.get("section");
+  const [section, setSection] = useState(() =>
+    TABS.some(t => t.id === requestedSection) ? requestedSection : "expectations"
+  );
+  const requestedView = urlParams.get("view");
   const [fullUser, setFullUser] = useState(null);
 
   useEffect(() => {
@@ -86,7 +91,7 @@ export default function PerformanceManager() {
         transition={{ delay: 0.05 }}
       >
         {section === "expectations" && <ExpectationsTab user={fullUser} />}
-        {section === "checkins" && <OneOnOnesTab user={fullUser} />}
+        {section === "checkins" && <OneOnOnesTab user={fullUser} initialTab={requestedView} />}
         {section === "reviews" && <ReviewsTabContent user={fullUser} />}
         {section === "overview" && (
           <div className="space-y-4">

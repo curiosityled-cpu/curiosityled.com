@@ -129,7 +129,7 @@ export default function TeamTalentScorecard({ aggregates, kpis = [], teamSize })
             >
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Team Health</p>
               <div className="flex items-center gap-2">
-                <SectionLink to="/Insights" label="All" />
+                <SectionLink to="/PerformanceManager?section=checkins&view=insights" label="All" />
                 {healthExpanded
                   ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                   : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}

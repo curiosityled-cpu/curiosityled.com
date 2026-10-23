@@ -9,10 +9,13 @@ import CheckInSetupTab from "./CheckInSetupTab";
 
 const HR_ADMIN_ROLES = ["Admin Level 1", "Admin Level 2", "Super Administrator", "Partner Business Administrator", "Platform Admin"];
 
-export default function OneOnOnesTab({ user }) {
+export default function OneOnOnesTab({ user, initialTab }) {
   const userRole = user?.app_role || user?.data?.app_role || user?.role || "";
   const isHRAdmin = HR_ADMIN_ROLES.includes(userRole);
-  const [activeTab, setActiveTab] = useState("checkin");
+  const SUB_TAB_IDS = ["checkin", "setup", "insights"];
+  const [activeTab, setActiveTab] = useState(
+    SUB_TAB_IDS.includes(initialTab) ? initialTab : "checkin"
+  );
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
