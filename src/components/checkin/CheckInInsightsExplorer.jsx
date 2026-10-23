@@ -1,71 +1,34 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Loader2, TrendingUp, TrendingDown, Minus, BarChart3, Download,
-  Sparkles, ListChecks, AlertCircle, ChevronDown, ChevronUp,
-} from "lucide-react";
-import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
-} from "recharts";
+import { Loader2, AlertCircle, BarChart3, ChevronDown, ChevronUp } from "lucide-react";
 import { motion } from "framer-motion";
-
-const DATE_RANGES = [
-  { days: 7, label: "7 days" },
-  { days: 30, label: "30 days" },
-  { days: 90, label: "90 days" },
-  { days: 365, label: "All time" },
-];
-
-const TREND_META = {
-  improving: { label: "Improving", icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200" },
-  stable: { label: "Stable", icon: Minus, color: "text-gray-600", bg: "bg-gray-50", border: "border-gray-200" },
-  declining: { label: "Declining", icon: TrendingDown, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200" },
-  insufficient_data: { label: "Insufficient data", icon: AlertCircle, color: "text-gray-400", bg: "bg-gray-50", border: "border-gray-200" },
-};
-
-function formatDateShort(dateStr) {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
-function TrendBadge({ direction }) {
-  const meta = TREND_META[direction] || TREND_META.insufficient_data;
-  const Icon = meta.icon;
-  return (
-    <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${meta.bg} ${meta.color} border ${meta.border}`}>
-      <Icon className="w-3 h-3" />
-      {meta.label}
-    </span>
-  );
-}
-
-function DistributionRow({ label, count, total, color }) {
-  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-  return (
-    <div className="flex items-center gap-3">
-      <span className="text-xs font-medium w-28 flex-shrink-0 truncate">{label}</span>
-      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
-      </div>
-      <span className="text-xs text-gray-500 w-16 text-right flex-shrink-0">{count} ({pct}%)</span>
-    </div>
-  );
-}
+import LeaderDrilldown from "@/components/checkin/insights/LeaderDrilldown";
+import QuestionPills from "@/components/checkin/insights/QuestionPills";
+import QuestionInsightPanel from "@/components/checkin/insights/QuestionInsightPanel";
+import InsightsExportBar from "@/components/checkin/insights/InsightsExportBar";
+import { DATE_RANGES, rangeLabel, formatDateShort } from "@/lib/insightsShared";
+import { buildInsightsCsv } from "@/lib/insightsCsv";
+import { downloadInsightsPdf } from "@/lib/insightsPdf";
 
 export default function CheckInInsightsExplorer({ scope = "team", title, subtitle }) {
   const [days, setDays] = useState(90);
-  const [selectedKey, setSelectedKey] = useState(null);
+  const [selectedKeys, setSelectedKeys] = useState([]);
   const [showHistorical, setShowHistorical] = useState(false);
+  const [leaderEmail, setLeaderEmail] = useState("");
+  const [exportOptions, setExportOptions] = useState({ sessions: true, summary: true });
+  const [busy, setBusy] = useState("");
+  const initialised = useRef(false);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["check-in-insights", scope, days],
+    queryKey: ["check-in-insights", scope, days, leaderEmail],
     queryFn: async () => {
-      const res = await base44.functions.invoke("getCheckInInsights", { scope, days });
+      const res = await base44.functions.invoke("getCheckInInsights", {
+        scope,
+        days,
+        leader_email: leaderEmail || "",
+      });
       return res?.data || res;
     },
     staleTime: 2 * 60 * 1000,
@@ -73,6 +36,7 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
 
   const catalog = data?.question_catalog || [];
   const insights = data?.insights_by_key || {};
+  const leaders = (data?.leaders || []).filter((leader) => !leader.is_self);
 
   // Group catalog
   const grouped = useMemo(() => {
@@ -82,32 +46,103 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
     return { measures, activeCustom, historical };
   }, [catalog]);
 
-  // Auto-select first active question
-  React.useEffect(() => {
-    if (!selectedKey && catalog.length > 0) {
-      const first = grouped.measures[0] || grouped.activeCustom[0];
-      if (first) setSelectedKey(first.key);
-    }
-  }, [catalog, selectedKey, grouped]);
+  // Default selection: the first question only
+  useEffect(() => {
+    if (initialised.current || catalog.length === 0) return;
+    const first = grouped.measures[0] || grouped.activeCustom[0];
+    initialised.current = true;
+    if (first) setSelectedKeys([first.key]);
+  }, [catalog, grouped]);
 
-  const selectedEntry = catalog.find((q) => q.key === selectedKey);
-  const selectedInsights = selectedKey ? insights[selectedKey] : null;
+  const visibleQuestions = [
+    ...grouped.measures,
+    ...grouped.activeCustom,
+    ...(showHistorical ? grouped.historical : []),
+  ];
 
-  const handleExport = () => {
-    if (!selectedEntry || !selectedInsights) return;
-    const rows = [["date", "value", "count"]];
-    for (const t of selectedInsights.trend || []) {
-      rows.push([t.date, t.value, t.count]);
-    }
-    const csv = rows.map((r) => r.join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
+  const selectedEntries = selectedKeys
+    .map((key) => catalog.find((q) => q.key === key))
+    .filter(Boolean);
+
+  const toggleKey = (key) =>
+    setSelectedKeys((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
+
+  const periodLabel = rangeLabel(days);
+  const heading = title || (scope === "org" ? "Organisation-wide Check-in Intelligence" : "Team Check-in Insights");
+  const viewing = data?.viewing_leader;
+  const scopeLabel = viewing
+    ? viewing.is_self
+      ? scope === "org" ? "Whole organisation" : "My team"
+      : `${viewing.name} — ${viewing.direct_reports} team · ${viewing.subtree_size} vertical`
+    : scope === "org" ? "Whole organisation" : "My team";
+
+  const exportName = `${scope === "org" ? "organisation" : "team"}-check-in-insights${
+    leaderEmail ? `-${leaderEmail.split("@")[0]}` : ""
+  }-${days}d`;
+
+  const fetchSessions = async () => {
+    const res = await base44.functions.invoke("getCheckInInsights", {
+      scope,
+      days,
+      leader_email: leaderEmail || "",
+      include_raw: true,
+      selected_keys: selectedKeys,
+    });
+    return (res?.data || res)?.sessions || [];
+  };
+
+  const saveFile = (content, mimeType, filename) => {
+    const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `check-in-insights-${selectedEntry.key}-${days}d.csv`;
-    a.click();
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
     URL.revokeObjectURL(url);
   };
+
+  const handleExportCsv = async () => {
+    if (selectedEntries.length === 0) return;
+    setBusy("csv");
+    try {
+      const sessions = exportOptions.sessions || exportOptions.summary ? await fetchSessions() : [];
+      const csv = buildInsightsCsv({
+        entries: selectedEntries,
+        insightsByKey: insights,
+        sessions,
+        includeSessions: exportOptions.sessions,
+        includeSummary: exportOptions.summary,
+        periodLabel,
+      });
+      saveFile(csv, "text/csv", `${exportName}.csv`);
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const handleExportPdf = async () => {
+    if (selectedEntries.length === 0) return;
+    setBusy("pdf");
+    try {
+      const sessions = exportOptions.summary ? await fetchSessions() : [];
+      downloadInsightsPdf({
+        title: heading,
+        scopeLabel,
+        periodLabel,
+        entries: selectedEntries,
+        insightsByKey: insights,
+        sessions,
+        includeSummary: exportOptions.summary,
+        dateRange: data?.date_range,
+        filename: `${exportName}.pdf`,
+      });
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const handleOptionChange = (key, value) =>
+    setExportOptions((prev) => ({ ...prev, [key]: value }));
 
   if (isLoading) {
     return (
@@ -157,19 +192,11 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
     );
   }
 
-  const visibleQuestions = [
-    ...grouped.measures,
-    ...grouped.activeCustom,
-    ...(showHistorical ? grouped.historical : []),
-  ];
-
   return (
     <div className="space-y-4">
       {/* Header */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-900">
-          {title || (scope === "org" ? "Organisation-wide Check-in Intelligence" : "Team Check-in Insights")}
-        </h3>
+        <h3 className="text-sm font-semibold text-gray-900">{heading}</h3>
         <p className="text-xs text-gray-500 mt-0.5">
           {subtitle || (scope === "org"
             ? "Aggregate signals from daily check-ins across all managers. Privacy-safe — no individual attribution."
@@ -177,25 +204,38 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
         </p>
       </div>
 
-      {/* Date range pills */}
-      <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-fit">
-        {DATE_RANGES.map((r) => (
-          <button
-            key={r.days}
-            onClick={() => setDays(r.days)}
-            className={`text-xs font-medium py-1.5 px-3 rounded-md transition-all ${
-              days === r.days ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            {r.label}
-          </button>
-        ))}
+      {/* Date range + drill down */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+          {DATE_RANGES.map((range) => (
+            <button
+              key={range.days}
+              onClick={() => setDays(range.days)}
+              className={`text-xs font-medium py-1.5 px-3 rounded-md transition-all ${
+                days === range.days ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              {range.label}
+            </button>
+          ))}
+        </div>
+        <LeaderDrilldown
+          leaders={leaders}
+          value={leaderEmail}
+          onChange={setLeaderEmail}
+          selfLabel={scope === "org" ? "Whole organisation (all)" : "My team (all)"}
+        />
       </div>
 
       {/* Question selector */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Select a question or measure</p>
+          <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+            Select questions or measures
+            {selectedEntries.length > 0 && (
+              <span className="ml-1.5 font-normal normal-case text-gray-400">· {selectedEntries.length} selected</span>
+            )}
+          </p>
           {grouped.historical.length > 0 && (
             <button
               onClick={() => setShowHistorical(!showHistorical)}
@@ -206,221 +246,44 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
             </button>
           )}
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          {visibleQuestions.map((q) => {
-            const selected = selectedKey === q.key;
-            const hasData = q.response_count > 0;
-            return (
-              <button
-                key={q.key}
-                onClick={() => setSelectedKey(q.key)}
-                disabled={!hasData && q.type === "custom" && !q.is_active}
-                className={`text-xs font-medium py-1.5 px-3 rounded-lg border transition-all flex items-center gap-1.5 ${
-                  selected
-                    ? "bg-[#0202ff] text-white border-[#0202ff]"
-                    : hasData
-                    ? "bg-white text-gray-700 border-gray-200 hover:border-gray-300"
-                    : "bg-gray-50 text-gray-400 border-gray-100 cursor-not-allowed"
-                }`}
-              >
-                {q.emoji && <span>{q.emoji}</span>}
-                {!q.is_active && q.type === "custom" && <ListChecks className="w-3 h-3" />}
-                {q.is_ai_generated && <Sparkles className="w-3 h-3" />}
-                <span className="max-w-[160px] truncate">{q.label}</span>
-                {hasData && (
-                  <span className={`text-[10px] ${selected ? "text-white/70" : "text-gray-400"}`}>
-                    {q.response_count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+        <QuestionPills
+          questions={visibleQuestions}
+          selectedKeys={selectedKeys}
+          onToggle={toggleKey}
+        />
       </div>
 
-      {/* Selected question insights */}
-      {selectedEntry && selectedInsights && (
-        <motion.div key={selectedKey} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }}>
-          <Card className="border border-gray-100 shadow-sm rounded-xl">
-            <CardContent className="p-5 space-y-4">
-              {/* Question header */}
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold text-gray-900">
-                      {selectedEntry.emoji ? `${selectedEntry.emoji} ` : ""}{selectedEntry.label}
-                    </p>
-                    {selectedEntry.type === "measure" && (
-                      <Badge variant="outline" className="text-[10px]">Measure</Badge>
-                    )}
-                    {selectedEntry.is_ic_fixed && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
-                        <ListChecks className="w-2.5 h-2.5" /> Fixed
-                      </span>
-                    )}
-                    {selectedEntry.is_ai_generated && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#0202ff] bg-[#0202ff]/10 border border-[#0202ff]/20 rounded px-1.5 py-0.5">
-                        <Sparkles className="w-2.5 h-2.5" /> AI daily
-                      </span>
-                    )}
-                    {!selectedEntry.is_active && selectedEntry.type === "custom" && (
-                      <Badge variant="outline" className="text-[10px] text-gray-400">Historical</Badge>
-                    )}
-                  </div>
-                  {selectedEntry.description && (
-                    <p className="text-xs text-gray-500 mt-0.5">{selectedEntry.description}</p>
-                  )}
-                </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-xs text-gray-500 hover:bg-gray-100 h-7 flex-shrink-0"
-                  onClick={handleExport}
-                  disabled={!selectedInsights.trend || selectedInsights.trend.length === 0}
-                >
-                  <Download className="w-3 h-3 mr-1" /> Export CSV
-                </Button>
-              </div>
+      {/* Export */}
+      <InsightsExportBar
+        selectedCount={selectedEntries.length}
+        options={exportOptions}
+        onOptionChange={handleOptionChange}
+        onExportCsv={handleExportCsv}
+        onExportPdf={handleExportPdf}
+        busy={busy}
+      />
 
-              {/* Summary stats */}
-              <div className="flex flex-wrap items-center gap-4">
-                {selectedInsights.avg != null && (
-                  <div>
-                    <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">
-                      {selectedInsights.avg_label || (selectedEntry.response_type === "yes_no" ? "Yes rate" : "Average")}
-                    </p>
-                    <p className="text-xl font-bold text-gray-900">
-                      {selectedInsights.avg}{selectedEntry.response_type === "scale_1_5" || selectedEntry.response_type === "measure" ? "/5" : ""}
-                    </p>
-                  </div>
-                )}
-                <div>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">Responses</p>
-                  <p className="text-xl font-bold text-gray-900">{selectedInsights.response_count}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">Trend</p>
-                  <div className="mt-0.5">
-                    <TrendBadge direction={selectedInsights.trend_direction} />
-                  </div>
-                </div>
-                {selectedEntry.first_seen_date && (
-                  <div>
-                    <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">Active period</p>
-                    <p className="text-xs text-gray-600 mt-0.5">
-                      {formatDateShort(selectedEntry.first_seen_date)} — {formatDateShort(selectedEntry.last_seen_date)}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Trend chart */}
-              {selectedInsights.trend && selectedInsights.trend.length > 0 ? (
-                <div>
-                  <p className="text-[11px] font-semibold text-gray-500 mb-2">
-                    {selectedEntry.response_type === "yes_no" ? "Daily % yes" : selectedEntry.response_type === "anchored_choices" ? "Daily response count" : "Daily average"}
-                  </p>
-                  <ResponsiveContainer width="100%" height={180}>
-                    <LineChart data={selectedInsights.trend} margin={{ top: 5, right: 10, bottom: 5, left: -20 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                      <XAxis
-                        dataKey="date"
-                        tickFormatter={formatDateShort}
-                        tick={{ fontSize: 10, fill: "#9ca3af" }}
-                        axisLine={false}
-                        tickLine={false}
-                        minTickGap={30}
-                      />
-                      <YAxis
-                        tick={{ fontSize: 10, fill: "#9ca3af" }}
-                        axisLine={false}
-                        tickLine={false}
-                        domain={selectedEntry.response_type === "yes_no" ? [0, 1] : selectedEntry.response_type === "anchored_choices" ? [0, "auto"] : [0, 5]}
-                        tickFormatter={(v) => selectedEntry.response_type === "yes_no" ? `${Math.round(v * 100)}%` : v}
-                      />
-                      <Tooltip
-                        contentStyle={{ border: "none", borderRadius: "10px", fontSize: "12px", boxShadow: "0 4px 12px rgb(0 0 0 / 0.08)" }}
-                        labelFormatter={formatDateShort}
-                        formatter={(v) => [
-                          selectedEntry.response_type === "yes_no" ? `${Math.round(v * 100)}%` : v,
-                          selectedEntry.response_type === "anchored_choices" ? "Responses" : "Average",
-                        ]}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="value"
-                        stroke="#0202ff"
-                        strokeWidth={2}
-                        dot={{ fill: "#0202ff", r: 3 }}
-                        activeDot={{ r: 5 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              ) : (
-                <p className="text-xs text-gray-400 italic">No trend data in this period.</p>
-              )}
-
-              {/* Distribution */}
-              {selectedInsights.distribution && Object.keys(selectedInsights.distribution).length > 0 && (
-                <div>
-                  <p className="text-[11px] font-semibold text-gray-500 mb-2">Distribution</p>
-                  <div className="space-y-1.5">
-                    {selectedEntry.response_type === "scale_1_5" || selectedEntry.type === "measure" ? (
-                      Object.entries(selectedInsights.distribution).map(([k, count]) => {
-                        const colors = ["#ef4444", "#f59e0b", "#eab308", "#22c55e", "#10b981"];
-                        const idx = parseInt(k) - 1;
-                        return (
-                          <DistributionRow
-                            key={k}
-                            label={["Low", "Below avg", "Okay", "Good", "Strong"][idx] || k}
-                            count={count}
-                            total={selectedInsights.response_count}
-                            color={colors[idx] || "#9ca3af"}
-                          />
-                        );
-                      })
-                    ) : selectedEntry.response_type === "yes_no" ? (
-                      Object.entries(selectedInsights.distribution).map(([k, count]) => (
-                        <DistributionRow
-                          key={k}
-                          label={k === "yes" ? "Yes" : "No"}
-                          count={count}
-                          total={selectedInsights.response_count}
-                          color={k === "yes" ? "#22c55e" : "#9ca3af"}
-                        />
-                      ))
-                    ) : (
-                      Object.entries(selectedInsights.distribution).map(([k, count]) => (
-                        <DistributionRow
-                          key={k}
-                          label={k}
-                          count={count}
-                          total={selectedInsights.response_count}
-                          color="#0202ff"
-                        />
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Recent text answers */}
-              {selectedInsights.recent_answers && selectedInsights.recent_answers.length > 0 && (
-                <div>
-                  <p className="text-[11px] font-semibold text-gray-500 mb-2">Recent responses</p>
-                  <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                    {selectedInsights.recent_answers.map((ans, i) => (
-                      <div key={i} className="text-xs text-gray-700 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
-                        {String(ans)}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
+      {/* Selected questions */}
+      {selectedEntries.length === 0 ? (
+        <Card className="border border-dashed border-gray-200 rounded-xl">
+          <CardContent className="py-10 text-center">
+            <p className="text-sm font-medium text-gray-700">No questions selected</p>
+            <p className="text-xs text-gray-500 mt-1">Pick one or more measures or questions above to see their insights.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {selectedEntries.map((entry) => (
+            <motion.div
+              key={entry.key}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              <QuestionInsightPanel entry={entry} insight={insights[entry.key]} />
+            </motion.div>
+          ))}
+        </div>
       )}
 
       {/* Footer metadata */}
@@ -435,6 +298,8 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
               <span>{formatDateShort(data.date_range.earliest)} — {formatDateShort(data.date_range.latest)}</span>
             </>
           )}
+          <span>·</span>
+          <span>{scopeLabel}</span>
         </div>
       )}
     </div>

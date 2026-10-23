@@ -8,13 +8,26 @@
  * filter by and report on past questions even after they change.
  *
  * Scopes:
- *   "team" — caller + full reporting tree (manager view)
+ *   "team" — caller's full reporting tree (a leader's vertical), manager view
  *   "org"  — all users in the tenant (privacy-safe, min group 5)
+ *
+ * Drill-down:
+ *   leader_email anchors the scope to one leader inside the allowed set — the
+ *   caller's vertical (team scope) or a tenant member (org scope). A leader
+ *   outside that set is rejected, so drill-down can never widen visibility.
+ *
+ * Export:
+ *   include_raw + selected_keys return one row per check-in session in range
+ *   (the raw data behind the aggregates) for CSV/PDF export.
  *
  * DailyCheckIn RLS is owner-only, so this runs as the service role.
  */
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { getPreset, DEFAULT_PRESET_ID } from "../../shared/checkInPresets.ts";
+
+const MAX_LEADERS = 200;
+const MAX_SESSION_ROWS = 4000;
+const MAX_SELECTED_KEYS = 20;
 
 export default async function(req: Request): Promise<Response> {
   try {
@@ -25,16 +38,95 @@ export default async function(req: Request): Promise<Response> {
     const body = await req.json().catch(() => ({}));
     const scope: string = body.scope === "org" ? "org" : "team";
     const days: number = Math.min(Math.max(parseInt(body.days) || 90, 7), 365);
+    const anchorEmail: string = String(body.leader_email || "").trim().toLowerCase();
+    const includeRaw: boolean = body.include_raw === true;
+    const selectedKeys: string[] = Array.isArray(body.selected_keys)
+      ? body.selected_keys.filter((k: any) => typeof k === "string").slice(0, MAX_SELECTED_KEYS)
+      : [];
 
     const svc = base44.asServiceRole;
     const userEmail = user.email;
     const clientId = user?.data?.client_id || user?.client_id || "";
 
-    // ── Resolve users in scope ───────────────────────────────────
+    const allUsers = await svc.entities.User.list(null, 2000).catch(() => []);
+
+    const nameByEmail = new Map<string, string>();
+    for (const u of allUsers || []) {
+      if (u?.email) nameByEmail.set(u.email.toLowerCase(), u?.data?.display_name || u?.full_name || u.email);
+    }
+    const nameOf = (email: string) => nameByEmail.get((email || "").toLowerCase()) || email;
+
+    // ── Reporting tree ───────────────────────────────────────────
+    const managerToReports = new Map<string, any[]>();
+    for (const u of allUsers || []) {
+      if (!u.email) continue;
+      const mgr = u?.data?.manager_email || u?.manager_email || "";
+      if (!mgr) continue;
+      const key = mgr.toLowerCase();
+      if (!managerToReports.has(key)) managerToReports.set(key, []);
+      managerToReports.get(key).push(u);
+    }
+
+    const sizeCache = new Map<string, number>();
+    const subtreeSize = (email: string): number => {
+      const key = (email || "").toLowerCase();
+      if (sizeCache.has(key)) return sizeCache.get(key);
+      sizeCache.set(key, 0); // guards against reporting cycles
+      let total = 0;
+      for (const r of managerToReports.get(key) || []) total += 1 + subtreeSize(r.email);
+      sizeCache.set(key, total);
+      return total;
+    };
+
+    /** Everyone below `email` (a leader's vertical). Seeds are extra known reports. */
+    const subtreeOf = (email: string, extraSeeds: string[] = []) => {
+      const root = (email || "").toLowerCase();
+      const seen = new Set<string>([root]);
+      const queue: string[] = [root];
+      const members: { email: string; name: string }[] = [];
+      for (const s of extraSeeds) {
+        const seed = String(s || "").toLowerCase();
+        if (!seed || seen.has(seed)) continue;
+        seen.add(seed);
+        members.push({ email: seed, name: nameOf(seed) });
+        queue.push(seed);
+      }
+      while (queue.length > 0) {
+        const cur = queue.shift();
+        for (const u of managerToReports.get(cur) || []) {
+          const em = String(u.email).toLowerCase();
+          if (seen.has(em)) continue;
+          seen.add(em);
+          members.push({ email: u.email, name: nameOf(u.email) });
+          queue.push(em);
+        }
+      }
+      return members;
+    };
+
+    const leaderEntry = (email: string) => ({
+      email,
+      name: nameOf(email),
+      is_self: email.toLowerCase() === userEmail.toLowerCase(),
+      direct_reports: (managerToReports.get(email.toLowerCase()) || []).length,
+      subtree_size: subtreeSize(email),
+    });
+
+    // ── Resolve users in scope (optionally anchored to one leader) ──
     let emailsInScope: string[] = [];
     let teamMembers: { email: string; name: string }[] = [];
+    let leaders: any[] = [];
+    let viewingLeader: any = null;
 
-    const allUsers = await svc.entities.User.list(null, 2000).catch(() => []);
+    const dedupe = (emails: string[]) => {
+      const map = new Map<string, string>();
+      for (const e of emails) {
+        if (!e) continue;
+        const key = e.toLowerCase();
+        if (!map.has(key)) map.set(key, e);
+      }
+      return [...map.values()];
+    };
 
     if (scope === "org") {
       if (!clientId) {
@@ -43,11 +135,27 @@ export default async function(req: Request): Promise<Response> {
       const orgUsers = (allUsers || []).filter(
         (u) => (u?.data?.client_id || u?.client_id) === clientId && u.email
       );
-      emailsInScope = orgUsers.map((u) => u.email);
-      teamMembers = orgUsers.map((u) => ({
-        email: u.email,
-        name: u?.data?.display_name || u?.full_name || u.email,
-      }));
+      const orgEmails = orgUsers.map((u) => u.email);
+      const orgSet = new Set(orgEmails.map((e) => e.toLowerCase()));
+
+      if (anchorEmail) {
+        if (!orgSet.has(anchorEmail)) {
+          return Response.json({ error: "Leader is outside your organisation" }, { status: 403 });
+        }
+        const sub = subtreeOf(anchorEmail);
+        emailsInScope = dedupe([anchorEmail, ...sub.map((m) => m.email)]);
+        teamMembers = [{ email: anchorEmail, name: nameOf(anchorEmail) }, ...sub];
+        viewingLeader = leaderEntry(anchorEmail);
+      } else {
+        emailsInScope = dedupe(orgEmails);
+        teamMembers = orgUsers.map((u) => ({ email: u.email, name: nameOf(u.email) }));
+      }
+
+      leaders = orgEmails
+        .filter((e) => (managerToReports.get(e.toLowerCase()) || []).length > 0)
+        .map((e) => leaderEntry(e))
+        .sort((a, b) => b.subtree_size - a.subtree_size || a.name.localeCompare(b.name))
+        .slice(0, MAX_LEADERS);
 
       const MIN_GROUP = 5;
       if (emailsInScope.length < MIN_GROUP) {
@@ -60,62 +168,37 @@ export default async function(req: Request): Promise<Response> {
           insights_by_key: {},
           date_range: null,
           team_members: [],
+          leaders: [],
+          viewing_leader: viewingLeader,
+          sessions: [],
           scope,
         });
       }
     } else {
-      // Team scope: resolve reporting tree (BFS down manager_email)
-      const managerToReports = new Map();
-      for (const u of allUsers || []) {
-        if (!u.email) continue;
-        const mgr = u?.data?.manager_email || u?.manager_email || "";
-        if (mgr) {
-          const key = mgr.toLowerCase();
-          if (!managerToReports.has(key)) managerToReports.set(key, []);
-          managerToReports.get(key).push(u);
+      // Team scope: caller's full reporting tree (their vertical)
+      const subEmails: string[] = user?.data?.subordinate_emails || user?.subordinate_emails || [];
+      const ownTree = subtreeOf(userEmail, subEmails);
+      const ownEmails = dedupe([userEmail, ...ownTree.map((m) => m.email)]);
+      const ownSet = new Set(ownEmails.map((e) => e.toLowerCase()));
+
+      if (anchorEmail) {
+        if (!ownSet.has(anchorEmail)) {
+          return Response.json({ error: "Leader is outside your reporting tree" }, { status: 403 });
         }
+        const sub = subtreeOf(anchorEmail, anchorEmail === userEmail.toLowerCase() ? subEmails : []);
+        emailsInScope = dedupe([anchorEmail, ...sub.map((m) => m.email)]);
+        teamMembers = [{ email: anchorEmail, name: nameOf(anchorEmail) }, ...sub];
+        viewingLeader = leaderEntry(anchorEmail);
+      } else {
+        emailsInScope = ownEmails;
+        teamMembers = [{ email: userEmail, name: nameOf(userEmail) }, ...ownTree];
+        viewingLeader = leaderEntry(userEmail);
       }
 
-      const seen = new Set([userEmail.toLowerCase()]);
-      const queue = [userEmail.toLowerCase()];
-      while (queue.length > 0) {
-        const cur = queue.shift();
-        const reports = managerToReports.get(cur) || [];
-        for (const u of reports) {
-          const em = u.email.toLowerCase();
-          if (em === userEmail.toLowerCase() || seen.has(em)) continue;
-          seen.add(em);
-          teamMembers.push({
-            email: u.email,
-            name: u?.data?.display_name || u?.full_name || u.email,
-          });
-          queue.push(em);
-        }
-      }
-      // Include subordinate_emails fallback
-      const subEmails = user?.data?.subordinate_emails || user?.subordinate_emails || [];
-      for (const se of subEmails) {
-        if (se && !seen.has(se.toLowerCase())) {
-          seen.add(se.toLowerCase());
-          teamMembers.push({ email: se, name: se });
-          queue.push(se.toLowerCase());
-        }
-      }
-      while (queue.length > 0) {
-        const cur = queue.shift();
-        const reports = managerToReports.get(cur) || [];
-        for (const u of reports) {
-          const em = u.email.toLowerCase();
-          if (em === userEmail.toLowerCase() || seen.has(em)) continue;
-          seen.add(em);
-          teamMembers.push({
-            email: u.email,
-            name: u?.data?.display_name || u?.full_name || u.email,
-          });
-          queue.push(em);
-        }
-      }
-      emailsInScope = [userEmail, ...teamMembers.map((t) => t.email)];
+      leaders = ownEmails
+        .filter((e) => (managerToReports.get(e.toLowerCase()) || []).length > 0)
+        .map((e) => leaderEntry(e))
+        .sort((a, b) => b.subtree_size - a.subtree_size || a.name.localeCompare(b.name));
     }
 
     if (emailsInScope.length === 0) {
@@ -124,6 +207,9 @@ export default async function(req: Request): Promise<Response> {
         insights_by_key: {},
         date_range: null,
         team_members: [],
+        leaders,
+        viewing_leader: viewingLeader,
+        sessions: [],
         scope,
         suppressed: false,
       });
@@ -293,11 +379,43 @@ export default async function(req: Request): Promise<Response> {
       unique_respondents: new Set(allCheckIns.map((r) => r.user_email)).size,
     };
 
+    // ── Raw session rows (export only) ───────────────────────────
+    let sessions: any[] = [];
+    if (includeRaw && selectedKeys.length > 0) {
+      const keySource = new Map<string, string>();
+      for (const entry of catalog) keySource.set(entry.key, entry.type);
+
+      const sorted = allCheckIns
+        .slice()
+        .sort((a, b) => String(a.check_in_date || "").localeCompare(String(b.check_in_date || "")));
+      const recent = sorted.slice(-MAX_SESSION_ROWS);
+
+      sessions = recent.map((r) => {
+        const answers: Record<string, any> = {};
+        for (const k of selectedKeys) {
+          const v = keySource.get(k) === "measure"
+            ? r[`${k}_score`]
+            : (r.custom_answers ? r.custom_answers[k] : undefined);
+          answers[k] = v == null ? "" : v;
+        }
+        return {
+          date: r.check_in_date || "",
+          session: r.check_in_type || "",
+          email: r.user_email || "",
+          name: nameOf(r.user_email || ""),
+          answers,
+        };
+      });
+    }
+
     return Response.json({
       question_catalog: catalog,
       insights_by_key: insightsByKey,
       date_range: dateRange,
       team_members: teamMembers,
+      leaders,
+      viewing_leader: viewingLeader,
+      sessions,
       scope,
       suppressed: false,
       days,
@@ -384,8 +502,8 @@ function computeCustomInsights(records: any[], key: string, responseType: string
     const distribution: Record<string, number> = {};
     for (const opt of anchoredOptions || []) distribution[opt] = 0;
     for (const a of answers) {
-      const key = String(a);
-      distribution[key] = (distribution[key] || 0) + 1;
+      const optKey = String(a);
+      distribution[optKey] = (distribution[optKey] || 0) + 1;
     }
     const trend = buildDailyTrendCount(records);
     return { avg: null, distribution, trend, response_count: answers.length, trend_direction: "stable", recent_answers: [] };
