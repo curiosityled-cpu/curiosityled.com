@@ -9,9 +9,7 @@ import CheckInSessionCard from "./CheckInSessionCard";
 
 /**
  * Individual check-ins for the people in the current drill-down scope
- * (a leader's directs and roll-ups), with the leader's own notes. Only the
- * viewer's own notes appear here; a note shared with the person it is about
- * surfaces on that person's Check-Ins tab, not in this explorer.
+ * (a leader's directs and roll-ups), with the leader's own notes.
  */
 export default function IndividualCheckIns({ members = [], range = { days: 90 } }) {
   const [selectedEmail, setSelectedEmail] = useState("");
@@ -44,11 +42,11 @@ export default function IndividualCheckIns({ members = [], range = { days: 90 } 
   });
 
   const { data: notes = [], refetch: refetchNotes } = useQuery({
-    queryKey: ["leader-notes", selectedEmail, viewer?.email],
-    enabled: !!selectedEmail && !!viewer?.email,
+    queryKey: ["leader-notes", selectedEmail],
+    enabled: !!selectedEmail,
     queryFn: async () => {
       const res = await base44.entities.CheckInLeaderNote.filter(
-        { subject_email: selectedEmail, leader_email: viewer.email },
+        { subject_email: selectedEmail },
         "-created_date",
         100
       );
@@ -75,7 +73,7 @@ export default function IndividualCheckIns({ members = [], range = { days: 90 } 
         <div>
           <h3 className="text-sm font-semibold text-gray-900">Individual check-ins</h3>
           <p className="text-xs text-gray-500 mt-0.5">
-            Directs and roll-ups in this view. Notes stay private to you until you share them — a shared note appears on that person's Check-Ins tab.
+            Directs and roll-ups in this view. Notes stay private to you until you share them.
           </p>
         </div>
         <div className="flex items-center gap-2">
