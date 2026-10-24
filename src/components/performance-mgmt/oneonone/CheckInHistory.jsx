@@ -19,7 +19,7 @@ import {
 import { Loader2, Filter } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import RetroactiveCheckInCard from "@/components/checkin/RetroactiveCheckInCard";
-import CheckInNotesPanel from "@/components/checkin/CheckInNotesPanel";
+import IndividualCheckIns from "@/components/checkin/insights/IndividualCheckIns";
 import CheckInCalendar from "./CheckInCalendar";
 
 export default function CheckInHistory({ user }) {
@@ -189,7 +189,7 @@ export default function CheckInHistory({ user }) {
         </DialogContent>
       </Dialog>
 
-      {notesSubject && <CheckInNotesPanel viewer={user} subject={notesSubject} />}
+      {notesSubject && <IndividualCheckIns viewer={user} subject={notesSubject} />}
     </div>
   );
 }

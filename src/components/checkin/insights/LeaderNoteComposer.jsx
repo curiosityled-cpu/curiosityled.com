@@ -26,6 +26,10 @@ export default function LeaderNoteComposer({
   const [saving, setSaving] = useState(false);
 
   const firstName = (subject?.name || subject?.email || "them").split(" ")[0].split("@")[0];
+  // A note written by someone else was shared with this viewer — they cannot edit it
+  const isOwnNote =
+    !note ||
+    (note.leader_email || "").toLowerCase() === (viewer?.email || "").toLowerCase();
 
   const handleSave = async () => {
     if (!text.trim()) return;
@@ -83,20 +87,24 @@ export default function LeaderNoteComposer({
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold text-purple-700 flex items-center gap-1.5 mb-1">
-              {note.shared_with_subject
-                ? <><Users className="w-3 h-3" /> Shared with {firstName}</>
-                : <><Lock className="w-3 h-3" /> Your private note</>}
+              {!isOwnNote
+                ? <><Users className="w-3 h-3" /> Shared with you</>
+                : note.shared_with_subject
+                  ? <><Users className="w-3 h-3" /> Shared with {firstName}</>
+                  : <><Lock className="w-3 h-3" /> Your private note</>}
             </p>
             <p className="text-sm text-purple-900 whitespace-pre-wrap">{note.note}</p>
           </div>
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setEditing(true)} title="Edit note">
-              <Pencil className="w-3.5 h-3.5 text-purple-600" />
-            </Button>
-            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={handleDelete} disabled={saving} title="Delete note">
-              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5 text-purple-600" />}
-            </Button>
-          </div>
+          {isOwnNote && (
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setEditing(true)} title="Edit note">
+                <Pencil className="w-3.5 h-3.5 text-purple-600" />
+              </Button>
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={handleDelete} disabled={saving} title="Delete note">
+                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5 text-purple-600" />}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     );

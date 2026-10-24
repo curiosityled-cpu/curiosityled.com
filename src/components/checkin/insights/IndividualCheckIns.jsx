@@ -1,40 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, AlertCircle, User } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import LeaderNoteComposer from "./LeaderNoteComposer";
 import CheckInSessionCard from "./CheckInSessionCard";
 
 /**
- * Individual check-ins for the people in the current drill-down scope
- * (a leader's directs and roll-ups), with the leader's own notes.
+ * One person's daily check-ins and the viewer's notes about them: the running
+ * note plus a note on each check-in. Shown at the bottom of the Check-In tab
+ * for whoever is selected there.
  */
-export default function IndividualCheckIns({ members = [], range = { days: 90 } }) {
-  const [selectedEmail, setSelectedEmail] = useState("");
-
-  const { data: viewer } = useQuery({
-    queryKey: ["current-user"],
-    queryFn: () => base44.auth.me(),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  // Default to the first person who isn't the viewer
-  useEffect(() => {
-    if (members.length === 0) return;
-    if (selectedEmail && members.some((m) => m.email === selectedEmail)) return;
-    const viewerEmail = (viewer?.email || "").toLowerCase();
-    const first = members.find((m) => (m.email || "").toLowerCase() !== viewerEmail) || members[0];
-    if (first) setSelectedEmail(first.email);
-  }, [members, viewer, selectedEmail]);
+export default function IndividualCheckIns({ subject, viewer, range = { days: 90 } }) {
+  const email = subject?.email;
 
   const { data: personData, isLoading, error } = useQuery({
-    queryKey: ["person-check-ins", selectedEmail, JSON.stringify(range)],
-    enabled: !!selectedEmail,
+    queryKey: ["person-check-ins", email, JSON.stringify(range)],
+    enabled: !!email,
     queryFn: async () => {
       const res = await base44.functions.invoke("getPersonCheckIns", {
-        user_email: selectedEmail,
+        user_email: email,
         ...range,
       });
       return res?.data || res;
@@ -42,11 +27,11 @@ export default function IndividualCheckIns({ members = [], range = { days: 90 } 
   });
 
   const { data: notes = [], refetch: refetchNotes } = useQuery({
-    queryKey: ["leader-notes", selectedEmail],
-    enabled: !!selectedEmail,
+    queryKey: ["leader-notes", email],
+    enabled: !!email,
     queryFn: async () => {
       const res = await base44.entities.CheckInLeaderNote.filter(
-        { subject_email: selectedEmail },
+        { subject_email: email },
         "-created_date",
         100
       );
@@ -54,11 +39,12 @@ export default function IndividualCheckIns({ members = [], range = { days: 90 } 
     },
   });
 
-  if (members.length === 0) return null;
+  if (!email) return null;
 
-  const person = personData?.person;
-  const subject = person || { email: selectedEmail, name: selectedEmail };
+  const person = personData?.person || subject;
+  const personName = person?.name || email;
   const personNote = notes.find((n) => n.scope === "person");
+  const firstName = (personName || "").split(" ")[0] || "this person";
   const noteForSession = (session) =>
     notes.find(
       (n) =>
@@ -69,29 +55,11 @@ export default function IndividualCheckIns({ members = [], range = { days: 90 } 
 
   return (
     <div className="space-y-3">
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-sm font-semibold text-gray-900">Individual check-ins</h3>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Directs and roll-ups in this view. Notes stay private to you until you share them.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <User className="w-3.5 h-3.5 text-gray-400" />
-          <Select value={selectedEmail} onValueChange={setSelectedEmail}>
-            <SelectTrigger className="h-8 w-[240px] text-xs">
-              <SelectValue placeholder="Choose a person…" />
-            </SelectTrigger>
-            <SelectContent>
-              {members.map((m) => (
-                <SelectItem key={m.email} value={m.email} className="text-xs">
-                  {m.name || m.email}
-                  {(m.email || "").toLowerCase() === (viewer?.email || "").toLowerCase() ? " (you)" : ""}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900">Individual check-ins</h3>
+        <p className="text-xs text-gray-500 mt-0.5">
+          {personName} — notes stay private to you until you share them.
+        </p>
       </div>
 
       {isLoading ? (
@@ -102,7 +70,9 @@ export default function IndividualCheckIns({ members = [], range = { days: 90 } 
         <Card className="border border-amber-100 bg-amber-50 rounded-xl">
           <CardContent className="p-4 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-amber-600" />
-            <p className="text-sm text-amber-800">{error.message || "Could not load these check-ins."}</p>
+            <p className="text-sm text-amber-800">
+              {error.message || "Could not load these check-ins."}
+            </p>
           </CardContent>
         </Card>
       ) : (
@@ -110,16 +80,18 @@ export default function IndividualCheckIns({ members = [], range = { days: 90 } 
           <LeaderNoteComposer
             note={personNote}
             scope="person"
-            subject={subject}
+            subject={person}
             viewer={viewer}
             onSaved={refetchNotes}
-            placeholder={`Running note about ${(subject.name || "").split(" ")[0] || "this person"}…`}
+            placeholder={`Running note about ${firstName}…`}
           />
 
           {(personData?.sessions || []).length === 0 ? (
             <Card className="border border-dashed border-gray-200 rounded-xl">
               <CardContent className="py-8 text-center">
-                <p className="text-sm text-gray-600">No check-ins from {subject.name || "this person"} in this period.</p>
+                <p className="text-sm text-gray-600">
+                  No check-ins from {personName} in this period.
+                </p>
               </CardContent>
             </Card>
           ) : (
@@ -130,7 +102,7 @@ export default function IndividualCheckIns({ members = [], range = { days: 90 } 
                   session={session}
                   measures={personData?.measures || []}
                   note={noteForSession(session)}
-                  subject={subject}
+                  subject={person}
                   viewer={viewer}
                   onSaved={refetchNotes}
                 />
