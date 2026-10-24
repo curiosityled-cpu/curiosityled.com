@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, Minus, AlertCircle, Sparkles, ListChecks } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, AlertCircle, Sparkles, ListChecks, Users } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
@@ -79,6 +79,13 @@ export default function QuestionInsightPanel({ entry, insight }) {
           {entry.description && (
             <p className="text-xs text-gray-500 mt-0.5">{entry.description}</p>
           )}
+          <p className="text-[11px] text-gray-500 mt-1 flex items-center gap-1">
+            <Users className="w-3 h-3 flex-shrink-0" />
+            <span className="truncate">
+              Asked of: {entry.audience || "Everyone in the organisation"}
+            </span>
+            {entry.target_role && <span className="text-gray-400">· {entry.target_role}</span>}
+          </p>
         </div>
 
         {responseCount === 0 ? (

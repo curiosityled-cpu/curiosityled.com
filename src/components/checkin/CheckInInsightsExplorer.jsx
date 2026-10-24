@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, AlertCircle, BarChart3, ChevronDown, ChevronUp } from "lucide-react";
 import { motion } from "framer-motion";
 import LeaderDrilldown from "@/components/checkin/insights/LeaderDrilldown";
+import AudienceFilterBar from "@/components/checkin/insights/AudienceFilterBar";
 import QuestionPills from "@/components/checkin/insights/QuestionPills";
 import QuestionInsightPanel from "@/components/checkin/insights/QuestionInsightPanel";
 import InsightsExportBar from "@/components/checkin/insights/InsightsExportBar";
@@ -19,6 +20,7 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
   const [selectedKeys, setSelectedKeys] = useState([]);
   const [showHistorical, setShowHistorical] = useState(false);
   const [leaderEmail, setLeaderEmail] = useState("");
+  const [audienceFilter, setAudienceFilter] = useState({ title: "", tier: "", track: "" });
   const [exportOptions, setExportOptions] = useState({ sessions: true, summary: true });
   const [busy, setBusy] = useState("");
   const initialised = useRef(false);
@@ -34,12 +36,23 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
     : rangeLabel(days);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["check-in-insights", scope, rangeKey, leaderEmail],
+    queryKey: [
+      "check-in-insights",
+      scope,
+      rangeKey,
+      leaderEmail,
+      audienceFilter.title,
+      audienceFilter.tier,
+      audienceFilter.track,
+    ],
     queryFn: async () => {
       const res = await base44.functions.invoke("getCheckInInsights", {
         scope,
         ...requestRange,
         leader_email: leaderEmail || "",
+        audience_title: audienceFilter.title || "",
+        audience_tier: audienceFilter.tier || "",
+        audience_track: audienceFilter.track || "",
       });
       return res?.data || res;
     },
@@ -96,6 +109,9 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
       scope,
       ...requestRange,
       leader_email: leaderEmail || "",
+      audience_title: audienceFilter.title || "",
+      audience_tier: audienceFilter.tier || "",
+      audience_track: audienceFilter.track || "",
       include_raw: true,
       selected_keys: selectedKeys,
     });
@@ -267,6 +283,14 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
           selfLabel={scope === "org" ? "Whole organisation (all)" : "My team (all)"}
         />
       </div>
+
+      {/* Role-audience filter — compare one title/tier/track group at a time */}
+      <AudienceFilterBar
+        facets={data?.audience_facets}
+        filter={audienceFilter}
+        onChange={setAudienceFilter}
+        coverage={data?.audience_coverage}
+      />
 
       {/* Question selector */}
       <div className="space-y-2">

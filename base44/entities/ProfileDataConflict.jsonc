@@ -1,0 +1,190 @@
+{
+  "name": "ProfileDataConflict",
+  "type": "object",
+  "description": "A disagreement between an employee's stored profile field (job title, tier, or track) and a value arriving from another source. HRIS is authoritative when present; otherwise the latest roster import wins. When a lower-precedence source disagrees with an authoritative one, the authoritative value is kept and the disagreement is recorded here for admin review \u2014 never silently applied.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this conflict belongs to. Canonical tenant partition key."
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of the person whose profile is in disagreement"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Display name of the person (denormalized for the review list)"
+    },
+    "field": {
+      "type": "string",
+      "enum": [
+        "job_title",
+        "tier",
+        "track"
+      ],
+      "description": "Which profile field is in disagreement"
+    },
+    "current_value": {
+      "type": "string",
+      "description": "Value currently stored on the profile (and kept, because its source outranks the incoming one)"
+    },
+    "current_source": {
+      "type": "string",
+      "enum": [
+        "hris",
+        "roster",
+        "manual"
+      ],
+      "description": "Source the kept value came from"
+    },
+    "incoming_value": {
+      "type": "string",
+      "description": "Value the lower-precedence source proposed"
+    },
+    "incoming_source": {
+      "type": "string",
+      "enum": [
+        "hris",
+        "roster",
+        "manual"
+      ],
+      "description": "Source that proposed the incoming value"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "resolved",
+        "dismissed"
+      ],
+      "default": "open",
+      "description": "Review state. 'open' items still need an admin decision."
+    },
+    "resolution": {
+      "type": "string",
+      "enum": [
+        "kept_current",
+        "took_incoming"
+      ],
+      "description": "How the conflict was resolved, once resolved"
+    },
+    "resolved_value": {
+      "type": "string",
+      "description": "The value left on the profile after resolution"
+    },
+    "resolved_by_email": {
+      "type": "string",
+      "description": "Email of the admin who resolved the conflict"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the conflict was resolved"
+    },
+    "detected_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the disagreement was detected"
+    },
+    "note": {
+      "type": "string",
+      "description": "Optional admin note recorded with the resolution"
+    }
+  },
+  "required": [
+    "client_id",
+    "user_email",
+    "field"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.client_id": "{{user.data.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -8,7 +8,29 @@
     },
     "current_role": {
       "type": "string",
-      "description": "User's current job title"
+      "description": "User's current job title \u2014 the source of truth for role-based check-in targeting"
+    },
+    "role_tier": {
+      "type": "string",
+      "description": "ID of the client-defined tier this person sits in (RoleTaxonomy.tiers). Populated from HRIS or roster import, or derived from their job title mapping."
+    },
+    "role_track": {
+      "type": "string",
+      "description": "ID of the client-defined track this person sits in (RoleTaxonomy.tracks), e.g. client-facing vs internal. Empty when their tier has no track split."
+    },
+    "profile_source": {
+      "type": "string",
+      "enum": [
+        "hris",
+        "roster",
+        "manual"
+      ],
+      "description": "Which source last wrote this person's title/tier/track. HRIS outranks roster, which outranks manual."
+    },
+    "profile_synced_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the role profile fields were last written from a source feed"
     },
     "department": {
       "type": "string",

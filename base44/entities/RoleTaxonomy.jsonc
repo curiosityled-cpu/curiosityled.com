@@ -1,0 +1,191 @@
+{
+  "name": "RoleTaxonomy",
+  "type": "object",
+  "description": "Client-defined role taxonomy for role-aware check-in targeting. Holds the structured tiers and tracks an organisation uses (e.g. 5 tiers, with a client-facing and an internal track), plus the mapping of employee job titles onto those values. One record per client.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this taxonomy belongs to. Canonical tenant partition key."
+    },
+    "tiers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stable slug used as the stored value on user profiles and question targets"
+          },
+          "label": {
+            "type": "string",
+            "description": "Human-readable tier name shown to admins (e.g. 'Tier 3 \u2014 Team Lead')"
+          },
+          "order": {
+            "type": "number",
+            "default": 0,
+            "description": "Display order (ascending)"
+          }
+        },
+        "required": [
+          "id",
+          "label"
+        ]
+      },
+      "default": [],
+      "description": "Ordered, client-defined seniority tiers"
+    },
+    "tracks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string",
+            "description": "Human-readable track name (e.g. 'Client-Facing', 'Internal')"
+          },
+          "order": {
+            "type": "number",
+            "default": 0
+          }
+        },
+        "required": [
+          "id",
+          "label"
+        ]
+      },
+      "default": [],
+      "description": "Ordered, client-defined functional tracks (only some tiers may have more than one track)"
+    },
+    "title_mappings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Employee job title as it arrives from HRIS or roster import"
+          },
+          "tier_id": {
+            "type": "string",
+            "description": "Tier id this title maps to"
+          },
+          "track_id": {
+            "type": "string",
+            "description": "Track id this title maps to (empty when the tier has no track split)"
+          }
+        },
+        "required": [
+          "title"
+        ]
+      },
+      "default": [],
+      "description": "Mapping of job titles onto tiers and tracks"
+    },
+    "updated_by_email": {
+      "type": "string",
+      "description": "Email of the admin who last saved the taxonomy"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the taxonomy was last saved"
+    }
+  },
+  "required": [
+    "client_id"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.client_id": "{{user.data.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

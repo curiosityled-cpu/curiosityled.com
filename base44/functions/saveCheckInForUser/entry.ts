@@ -16,6 +16,7 @@
  *   - custom_answers: { [question_key]: value }
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { buildAudienceSnapshot } from '../../shared/roleTargeting.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -113,6 +114,14 @@ Deno.serve(async (req) => {
     };
     if (custom_answers && Object.keys(custom_answers).length > 0) {
       scorePayload.custom_answers = custom_answers;
+      // Snapshot the person's role profile with their answers so role-scoped
+      // analytics keep their audience context over time.
+      const audienceSnapshot = await buildAudienceSnapshot(
+        serviceBase44,
+        target_email,
+        user?.data?.client_id || user.client_id || ''
+      ).catch(() => null);
+      if (audienceSnapshot) scorePayload.audience_snapshot = audienceSnapshot;
     }
     const now = new Date().toISOString();
     if (check_in_type === 'morning') {

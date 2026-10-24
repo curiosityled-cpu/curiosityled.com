@@ -1,14 +1,15 @@
 /**
- * useCustomCheckInQuestions — fetches the active custom KPI questions
- * that apply to the current user for a given check-in type, and, for any
- * question flagged is_ai_generated, replaces its title with a fresh
- * AI-generated question text for today (cached per day).
+ * useCustomCheckInQuestions — fetches the check-in questions that apply to the
+ * current user for a given check-in type, and, for any question flagged
+ * is_ai_generated, replaces its title with a fresh AI-generated question text
+ * for today (cached per day).
  *
- * Used by the check-in forms (morning/evening) to render tenant-configured
- * questions alongside the standard Likert measures.
+ * Which questions apply is decided server-side against the person's role
+ * profile (tier, track, exact title, app role) so audience targeting is
+ * enforced in one place rather than in the browser.
  *
  * @param {string} checkInType - "morning" | "evening" | "both"
- * @returns {{ questions: Array, loading: boolean }}
+ * @returns {{ questions: Array, profile: Object|null, loading: boolean }}
  */
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
@@ -42,6 +43,7 @@ function setCachedGen(date, checkInType, obj) {
 export function useCustomCheckInQuestions(checkInType = "both") {
   const { user } = useAuth();
   const [questions, setQuestions] = useState([]);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -52,37 +54,23 @@ export function useCustomCheckInQuestions(checkInType = "both") {
         return;
       }
       try {
-        const all = await base44.entities.CheckInCustomQuestion.filter(
-          { is_active: true },
-          "display_order",
-          100
-        );
-        if (cancelled) return;
-        const userRole =
-          user?.app_role || user?.data?.app_role || user?.role || "";
-        let applicable = (all || []).filter((q) => {
-          if (q.target_role && q.target_role !== userRole) return false;
-          if (
-            checkInType !== "both" &&
-            q.applies_to !== "both" &&
-            q.applies_to !== checkInType
-          ) {
-            return false;
-          }
-          return true;
+        const res = await base44.functions.invoke("resolveCheckInQuestions", {
+          check_in_type: checkInType === "both" ? "both" : checkInType,
         });
+        const data = res?.data || res;
+        if (cancelled) return;
+        setProfile(data?.profile || null);
+        let applicable = data?.questions || [];
 
         // For AI-generated questions, fetch today's generated text (cached per day)
-        const aiQuestions = applicable.filter(
-          (q) => q.is_ai_generated && q.ai_topic
-        );
+        const aiQuestions = applicable.filter((q) => q.is_ai_generated && q.ai_topic);
         if (aiQuestions.length > 0) {
           const date = todayKey();
           const effectiveType = checkInType === "both" ? "morning" : checkInType;
           let generated = getCachedGen(date, effectiveType);
           if (!generated) {
             try {
-              const res = await base44.functions.invoke("aiCheckInQuestion", {
+              const genRes = await base44.functions.invoke("aiCheckInQuestion", {
                 action: "generate",
                 check_in_type: effectiveType,
                 items: aiQuestions.map((q) => ({
@@ -92,13 +80,10 @@ export function useCustomCheckInQuestions(checkInType = "both") {
                   applies_to: q.applies_to,
                 })),
               });
-              generated = res.data?.generated || {};
+              generated = (genRes?.data || genRes)?.generated || {};
               setCachedGen(date, effectiveType, generated);
             } catch (e) {
-              console.warn(
-                "AI custom question generation failed:",
-                e.message
-              );
+              console.warn("AI custom question generation failed:", e.message);
               generated = {};
             }
           }
@@ -120,15 +105,9 @@ export function useCustomCheckInQuestions(checkInType = "both") {
     return () => {
       cancelled = true;
     };
-  }, [
-    user?.email,
-    user?.app_role,
-    user?.data?.app_role,
-    user?.role,
-    checkInType,
-  ]);
+  }, [user?.email, checkInType]);
 
-  return { questions, loading };
+  return { questions, profile, loading };
 }
 
 export default useCustomCheckInQuestions;

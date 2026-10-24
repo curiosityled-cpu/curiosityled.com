@@ -41,6 +41,30 @@
       "type": "string",
       "description": "Optional app_role filter. Empty/null = all roles in the tenant see this question."
     },
+    "target_tiers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "RoleTaxonomy tier IDs this question is for. Empty = any tier. Combined with target_tracks using AND, so ['tier-3'] + ['client-facing'] targets that exact audience."
+    },
+    "target_tracks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "RoleTaxonomy track IDs this question is for. Empty = any track."
+    },
+    "target_titles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Exact job titles this question is for, in addition to any tier/track targeting. Keeps questions reachable for people whose title is not yet mapped to a tier/track."
+    },
     "applies_to": {
       "type": "string",
       "enum": [

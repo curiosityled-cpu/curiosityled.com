@@ -26,6 +26,11 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { getPreset, DEFAULT_PRESET_ID } from "../../shared/checkInPresets.ts";
 import { createReportingTree } from "../../shared/checkInScope.ts";
 import { resolveDateRange, recordInRange } from "../../shared/checkInRange.ts";
+import {
+  loadTaxonomy,
+  questionAudienceLabel,
+  snapshotAudienceLabel,
+} from "../../shared/roleTargeting.ts";
 
 const MAX_LEADERS = 200;
 const MAX_SESSION_ROWS = 4000;
@@ -44,6 +49,16 @@ export default async function(req: Request): Promise<Response> {
     const selectedKeys: string[] = Array.isArray(body.selected_keys)
       ? body.selected_keys.filter((k: any) => typeof k === "string").slice(0, MAX_SELECTED_KEYS)
       : [];
+
+    // Role-audience filter: narrow the whole view to one group so results can be
+    // compared across titles, tiers, and tracks. Matched against the role profile
+    // snapshot stored with each check-in, so it stays meaningful historically.
+    const audienceFilter = {
+      title: String(body.audience_title || "").trim(),
+      tier: String(body.audience_tier || "").trim(),
+      track: String(body.audience_track || "").trim(),
+    };
+    const hasAudienceFilter = !!(audienceFilter.title || audienceFilter.tier || audienceFilter.track);
 
     const svc = base44.asServiceRole;
     const userEmail = user.email;
@@ -189,6 +204,20 @@ export default async function(req: Request): Promise<Response> {
       }
     }
 
+    // Audience facets come from the unfiltered set, so the picker always offers
+    // every group present in the period. Applying a filter then narrows the same
+    // array in place, which keeps every aggregate below group-scoped.
+    const audienceFacets = buildAudienceFacets(allCheckIns);
+    const audienceCoverage = {
+      with_profile: allCheckIns.filter((r) => r.audience_snapshot).length,
+      without_profile: allCheckIns.filter((r) => !r.audience_snapshot).length,
+    };
+    if (hasAudienceFilter) {
+      const kept = allCheckIns.filter((r) => snapshotMatchesFilter(r.audience_snapshot, audienceFilter));
+      allCheckIns.length = 0;
+      allCheckIns.push(...kept);
+    }
+
     // ── Fetch CheckInCustomQuestion definitions (active + inactive) ──
     let customQs: any[] = [];
     if (clientId) {
@@ -210,6 +239,9 @@ export default async function(req: Request): Promise<Response> {
         console.warn("[getCheckInInsights] custom questions fetch failed:", e.message);
       }
     }
+
+    // ── Role taxonomy, for question audience labels ──────────────
+    const taxonomy = await loadTaxonomy(svc, clientId);
 
     // ── Build question catalog ───────────────────────────────────
     const preset = getPreset(user?.data?.check_in_preset || DEFAULT_PRESET_ID);
@@ -234,6 +266,8 @@ export default async function(req: Request): Promise<Response> {
         anchored_choices_options: null,
         is_ic_fixed: false,
         is_ai_generated: false,
+        audience: "Everyone in the organisation",
+        target_role: "",
         first_seen_date: dates[0] || null,
         last_seen_date: dates[dates.length - 1] || null,
         response_count: records.length,
@@ -263,6 +297,8 @@ export default async function(req: Request): Promise<Response> {
         anchored_choices_options: q.anchored_choices_options || [],
         is_ic_fixed: q.is_ic_fixed || false,
         is_ai_generated: q.is_ai_generated || false,
+        audience: questionAudienceLabel(q, taxonomy),
+        target_role: q.target_role || "",
         first_seen_date: dates[0] || null,
         last_seen_date: dates[dates.length - 1] || null,
         response_count: records.length,
@@ -294,6 +330,8 @@ export default async function(req: Request): Promise<Response> {
           anchored_choices_options: [],
           is_ic_fixed: false,
           is_ai_generated: false,
+          audience: "Historical question",
+          target_role: "",
           first_seen_date: dates[0] || null,
           last_seen_date: dates[dates.length - 1] || null,
           response_count: records.length,
@@ -350,6 +388,7 @@ export default async function(req: Request): Promise<Response> {
           session: r.check_in_type || "",
           email: r.user_email || "",
           name: nameOf(r.user_email || ""),
+          audience: snapshotAudienceLabel(r.audience_snapshot),
           answers,
         };
       });
@@ -366,6 +405,9 @@ export default async function(req: Request): Promise<Response> {
       scope,
       suppressed: false,
       days: range.days,
+      audience_facets: audienceFacets,
+      audience_coverage: audienceCoverage,
+      audience_filter: hasAudienceFilter ? audienceFilter : null,
     });
   } catch (error) {
     console.error("[getCheckInInsights] error:", error.message);
@@ -374,6 +416,34 @@ export default async function(req: Request): Promise<Response> {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────
+
+/** Distinct audience values present in the period, for the filter picker. */
+function buildAudienceFacets(records: any[]) {
+  const titles = new Map<string, number>();
+  const tiers = new Map<string, number>();
+  const tracks = new Map<string, number>();
+  for (const r of records) {
+    const snap = r.audience_snapshot;
+    if (!snap) continue;
+    if (snap.job_title) titles.set(snap.job_title, (titles.get(snap.job_title) || 0) + 1);
+    if (snap.tier_label) tiers.set(snap.tier_label, (tiers.get(snap.tier_label) || 0) + 1);
+    if (snap.track_label) tracks.set(snap.track_label, (tracks.get(snap.track_label) || 0) + 1);
+  }
+  const toList = (map: Map<string, number>) =>
+    [...map.entries()]
+      .map(([value, count]) => ({ value, count }))
+      .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
+  return { titles: toList(titles), tiers: toList(tiers), tracks: toList(tracks) };
+}
+
+/** A check-in belongs to the filtered group when every chosen facet matches. */
+function snapshotMatchesFilter(snapshot: any, filter: { title: string; tier: string; track: string }) {
+  if (!snapshot) return false;
+  if (filter.title && String(snapshot.job_title || "") !== filter.title) return false;
+  if (filter.tier && String(snapshot.tier_label || "") !== filter.tier) return false;
+  if (filter.track && String(snapshot.track_label || "") !== filter.track) return false;
+  return true;
+}
 
 function detectResponseType(values: any[]): string {
   if (values.length === 0) return "text";

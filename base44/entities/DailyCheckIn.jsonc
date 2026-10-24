@@ -74,6 +74,31 @@
       "additionalProperties": true,
       "description": "The exact question phrasings used in this check-in, keyed by measure name"
     },
+    "audience_snapshot": {
+      "type": "object",
+      "properties": {
+        "job_title": {
+          "type": "string"
+        },
+        "tier_id": {
+          "type": "string"
+        },
+        "tier_label": {
+          "type": "string"
+        },
+        "track_id": {
+          "type": "string"
+        },
+        "track_label": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true,
+      "description": "The person's role profile at the time of the check-in (title, tier, track, and the source it came from), captured so historical analytics keep their audience context even after profiles or mappings change."
+    },
     "big3_priorities": {
       "type": "array",
       "items": {

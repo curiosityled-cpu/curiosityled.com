@@ -43,9 +43,11 @@ import {
   AlertCircle,
   Sparkles,
   ListChecks,
+  Users,
 } from "lucide-react";
 import CheckInLookbackSetting from "@/components/performance-mgmt/CheckInLookbackSetting";
 import SendCheckInsCard from "@/components/performance-mgmt/SendCheckInsCard";
+import AudienceSelector from "@/components/checkin/AudienceSelector";
 
 const RESPONSE_TYPES = [
   { value: "number", label: "Number", icon: Hash, hint: "Numeric entry (e.g. 42)" },
@@ -91,6 +93,9 @@ const emptyForm = {
   unit_label: "",
   anchored_choices_options: "",
   target_role: "",
+  target_tiers: [],
+  target_tracks: [],
+  target_titles: [],
   applies_to: "both",
   is_required: false,
   display_order: 0,
@@ -113,16 +118,28 @@ export default function CheckInSetupTab({ user }) {
   const [formError, setFormError] = useState(null);
   const [aiAssistTopic, setAiAssistTopic] = useState("");
   const [aiAssistLoading, setAiAssistLoading] = useState(false);
+  // Client-defined tiers/tracks and the titles present on tenant profiles, used
+  // by the audience picker.
+  const [taxonomy, setTaxonomy] = useState({ tiers: [], tracks: [] });
+  const [rosterTitles, setRosterTitles] = useState([]);
 
   const loadQuestions = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const all = await base44.entities.CheckInCustomQuestion.list(
-        "display_order",
-        200
-      );
+      const [all, overviewRes] = await Promise.all([
+        base44.entities.CheckInCustomQuestion.list("display_order", 200),
+        base44.functions.invoke("getRoleTargetingOverview", {}).catch(() => null),
+      ]);
       setQuestions(all || []);
+      const overview = overviewRes?.data || overviewRes;
+      if (overview?.taxonomy) {
+        setTaxonomy({
+          tiers: overview.taxonomy.tiers || [],
+          tracks: overview.taxonomy.tracks || [],
+        });
+      }
+      setRosterTitles(overview?.roster_titles || []);
     } catch (e) {
       setError(e.message || "Could not load questions");
     } finally {
@@ -184,6 +201,9 @@ export default function CheckInSetupTab({ user }) {
       unit_label: q.unit_label || "",
       anchored_choices_options: (q.anchored_choices_options || []).join("\n"),
       target_role: q.target_role || "",
+      target_tiers: q.target_tiers || [],
+      target_tracks: q.target_tracks || [],
+      target_titles: q.target_titles || [],
       applies_to: q.applies_to || "both",
       is_required: !!q.is_required,
       display_order: q.display_order ?? 0,
@@ -226,6 +246,9 @@ export default function CheckInSetupTab({ user }) {
               .filter(Boolean)
           : [],
       target_role: form.target_role || "",
+      target_tiers: form.target_tiers || [],
+      target_tracks: form.target_tracks || [],
+      target_titles: form.target_titles || [],
       applies_to: form.applies_to,
       is_required: form.is_required,
       display_order: Number(form.display_order) || 0,
@@ -420,6 +443,24 @@ export default function CheckInSetupTab({ user }) {
                           <span className="text-[10px] text-gray-500">
                             · {q.target_role || "All roles"}
                           </span>
+                          {(q.target_tiers?.length > 0 ||
+                            q.target_tracks?.length > 0 ||
+                            q.target_titles?.length > 0) && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#0202ff] bg-[#0202ff]/10 border border-[#0202ff]/20 rounded px-1.5 py-0.5">
+                              <Users className="w-2.5 h-2.5" />
+                              {[
+                                ...(q.target_tiers || []).map(
+                                  (id) =>
+                                    taxonomy.tiers.find((t) => t.id === id)?.label || id
+                                ),
+                                ...(q.target_tracks || []).map(
+                                  (id) =>
+                                    taxonomy.tracks.find((t) => t.id === id)?.label || id
+                                ),
+                                ...(q.target_titles || []),
+                              ].join(" · ")}
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -669,6 +710,25 @@ export default function CheckInSetupTab({ user }) {
                 </p>
               </div>
             )}
+
+            <AudienceSelector
+              tiers={taxonomy.tiers}
+              tracks={taxonomy.tracks}
+              titles={rosterTitles}
+              value={{
+                target_tiers: form.target_tiers,
+                target_tracks: form.target_tracks,
+                target_titles: form.target_titles,
+              }}
+              onChange={(audience) =>
+                setForm((f) => ({
+                  ...f,
+                  target_tiers: audience.target_tiers,
+                  target_tracks: audience.target_tracks,
+                  target_titles: audience.target_titles,
+                }))
+              }
+            />
 
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">Target role</Label>

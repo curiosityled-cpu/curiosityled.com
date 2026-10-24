@@ -13,6 +13,7 @@
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { CHECK_IN_PRESETS, getPreset } from '../../shared/checkInPresets.ts';
+import { buildAudienceSnapshot } from '../../shared/roleTargeting.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -163,6 +164,18 @@ Deno.serve(async (req) => {
       const updateData = {};
       for (const key of ALLOWED_FIELDS) {
         if (fields[key] !== undefined) updateData[key] = fields[key];
+      }
+
+      // Capture the person's role profile alongside their answers, so role-scoped
+      // analytics keep their audience context even after profiles or mappings
+      // change. Computed server-side — never taken from the client.
+      if (updateData.custom_answers && Object.keys(updateData.custom_answers).length > 0) {
+        const audienceSnapshot = await buildAudienceSnapshot(
+          base44.asServiceRole,
+          user.email,
+          user?.data?.client_id || user.client_id || ''
+        ).catch(() => null);
+        if (audienceSnapshot) updateData.audience_snapshot = audienceSnapshot;
       }
 
       if (check_in_type === 'morning') {
