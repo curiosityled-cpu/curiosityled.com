@@ -19,7 +19,7 @@ import {
 import { Loader2, Filter } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import RetroactiveCheckInCard from "@/components/checkin/RetroactiveCheckInCard";
-import SharedLeaderNotes from "@/components/checkin/SharedLeaderNotes";
+import CheckInNotesPanel from "@/components/checkin/CheckInNotesPanel";
 import CheckInCalendar from "./CheckInCalendar";
 
 export default function CheckInHistory({ user }) {
@@ -84,7 +84,6 @@ export default function CheckInHistory({ user }) {
     user?.data?.display_name || user?.full_name || user?.email || "you";
 
   const isSelfFilter = filter === "all" ? false : filter.toLowerCase() === myEmail;
-  const viewingSelf = !isManager || isSelfFilter;
   const personName =
     filter === "all"
       ? ""
@@ -93,6 +92,9 @@ export default function CheckInHistory({ user }) {
         : teamMembers.find(
             (m) => m.email.toLowerCase() === filter.toLowerCase()
           )?.name || filter;
+
+  const notesSubject =
+    filter && filter !== "all" ? { email: filter, name: personName } : null;
 
   const openAdd = (date, email, name) => {
     setEditor({
@@ -152,8 +154,6 @@ export default function CheckInHistory({ user }) {
         onEdit={openEdit}
       />
 
-      {viewingSelf && <SharedLeaderNotes userEmail={user?.email} />}
-
       <Dialog open={!!editor} onOpenChange={(o) => !o && setEditor(null)}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sr-only">
@@ -188,6 +188,8 @@ export default function CheckInHistory({ user }) {
           )}
         </DialogContent>
       </Dialog>
+
+      {notesSubject && <CheckInNotesPanel viewer={user} subject={notesSubject} />}
     </div>
   );
 }
