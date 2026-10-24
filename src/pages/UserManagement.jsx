@@ -8,7 +8,7 @@ import {
   Users, Search, Download, UserPlus, Loader2, Shield,
   ChevronDown, ChevronUp, Upload, Plus, Edit, Trash2,
   Lock, Unlock, AlertTriangle, MoreVertical, Filter, X,
-  Link2, Send, Pencil, MessageSquare, UserCog
+  Link2, Send, Pencil, MessageSquare, UserCog, Layers
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/components/useAuth";
@@ -34,6 +34,7 @@ import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import { useStaffRoster } from "@/hooks/useStaffRoster";
 import StaffEditDialog from "@/components/users/StaffEditDialog";
 import ICRosterCSVUpload from "@/components/users/ICRosterCSVUpload";
+import RoleTargetingTab from "@/components/performance-mgmt/role-targeting/RoleTargetingTab";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -484,7 +485,11 @@ function UserManagement({ embedded = false }) {
 
       {/* Tabs */}
       <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit overflow-x-auto">
-        {[{ id: 'users', label: 'Users', icon: Users }, { id: 'roles', label: 'Roles & Permissions', icon: Shield }].map(tab => {
+        {[
+          { id: 'users', label: 'Users', icon: Users },
+          { id: 'roles', label: 'Roles & Permissions', icon: Shield },
+          { id: 'role_profiles', label: 'Role Profiles', icon: Layers },
+        ].map(tab => {
           const Icon = tab.icon;
           return (
             <button
@@ -498,6 +503,8 @@ function UserManagement({ embedded = false }) {
           );
         })}
       </div>
+
+        {activeTab === 'role_profiles' && <RoleTargetingTab user={currentUser} />}
 
         {activeTab === 'users' && (
           <div className="space-y-4">

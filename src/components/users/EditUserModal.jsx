@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import RoleProfileFields from "@/components/users/RoleProfileFields";
 
 export default function EditUserModal({ open, onOpenChange, editingUser, setEditingUser, onSave, clients, partners, addonRoles, isPlatformAdmin, allUsers = [] }) {
   if (!editingUser) return null;
@@ -91,6 +92,8 @@ export default function EditUserModal({ open, onOpenChange, editingUser, setEdit
               <Label>Department</Label>
               <Input value={editingUser.department || ''} onChange={(e) => setEditingUser({ ...editingUser, department: e.target.value })} />
             </div>
+
+            <RoleProfileFields user={editingUser} onChange={setEditingUser} />
 
             <div>
               <Label>Industry Sector</Label>

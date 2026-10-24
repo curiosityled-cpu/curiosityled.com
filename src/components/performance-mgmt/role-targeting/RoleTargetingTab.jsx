@@ -108,9 +108,9 @@ export default function RoleTargetingTab({ user }) {
         <div>
           <h2 className="text-sm font-semibold text-foreground">Role targeting</h2>
           <p className="text-xs text-muted-foreground mt-0.5 max-w-2xl">
-            Define the tiers and tracks your organisation uses, map job titles onto them, and aim
-            check-in questions at the audiences that matter. People whose title is not mapped yet
-            still receive baseline questions and anything targeted at their exact title.
+            Define the tiers and tracks your organisation uses and map job titles onto them, so
+            check-ins, learning and assignments can be aimed at the audiences that matter. People
+            whose title is not mapped yet still receive everything targeted at their exact title.
           </p>
         </div>
         <div className="flex items-center gap-2">

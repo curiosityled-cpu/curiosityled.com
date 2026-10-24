@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Send, Search } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+import RoleAudiencePicker, { EMPTY_AUDIENCE } from "@/components/learning/RoleAudiencePicker";
 
 /**
  * AssignCourseModal — assigns a course to individual users or a cohort.
@@ -24,6 +25,8 @@ export default function AssignCourseModal({ open, onClose, course, users = [], c
   const [search, setSearch] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [enrolledCount, setEnrolledCount] = useState(null);
+  const [audience, setAudience] = useState(EMPTY_AUDIENCE);
+  const [audienceEmails, setAudienceEmails] = useState([]);
 
   // Existing enrolments drive the due-date backfill and the roster hint.
   useEffect(() => {
@@ -66,13 +69,19 @@ export default function AssignCourseModal({ open, onClose, course, users = [], c
     let cohortId = null;
     if (assignmentType === "individual") {
       targetEmails = selectedUsers;
+    } else if (assignmentType === "role") {
+      targetEmails = audienceEmails;
     } else if (assignmentType === "cohort" && selectedCohort) {
       const cohort = cohorts.find((c) => c.id === selectedCohort);
       targetEmails = cohort?.participant_emails || [];
       cohortId = selectedCohort;
     }
     if (targetEmails.length === 0) {
-      toast.error("Please select at least one recipient");
+      toast.error(
+        assignmentType === "role"
+          ? "No one currently matches that audience"
+          : "Please select at least one recipient"
+      );
       return;
     }
 
@@ -165,6 +174,8 @@ export default function AssignCourseModal({ open, onClose, course, users = [], c
       setSelectedUsers([]);
       setSelectedCohort("");
       setSearch("");
+      setAudience(EMPTY_AUDIENCE);
+      setAudienceEmails([]);
       onClose();
       onAssigned?.();
     } catch (error) {
@@ -192,6 +203,7 @@ export default function AssignCourseModal({ open, onClose, course, users = [], c
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="individual">Individual Users</SelectItem>
+                <SelectItem value="role">By Role or Title</SelectItem>
                 <SelectItem value="cohort">Cohort</SelectItem>
               </SelectContent>
             </Select>
@@ -232,6 +244,15 @@ export default function AssignCourseModal({ open, onClose, course, users = [], c
                 </div>
               </ScrollArea>
             </div>
+          )}
+
+          {assignmentType === "role" && (
+            <RoleAudiencePicker
+              clientId={course?.client_id || clientId}
+              value={audience}
+              onChange={setAudience}
+              onResolved={setAudienceEmails}
+            />
           )}
 
           <div>

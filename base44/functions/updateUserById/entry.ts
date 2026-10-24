@@ -68,6 +68,7 @@ Deno.serve(async (req) => {
       'display_name', 'current_role', 'department', 'manager_email',
       'start_date', 'leadership_start_date', 'leadership_lifecycle_stage',
       'sector', 'leadership_level', 'onboarding_completed',
+      'role_tier', 'role_track', 'profile_source',
       'two_factor_enabled', 'two_factor_enabled_at',
       'account_status', 'account_suspended_at', 'account_suspended_by',
       'account_suspended_reason', 'account_expires_at', 'account_type',

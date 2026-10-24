@@ -39,8 +39,9 @@ function PillGroup({ label, icon: Icon, hint, options, selected, onToggle, empty
 }
 
 /**
- * AudienceSelector — picks who a check-in question is for: one or more
- * structured tiers and tracks, and optionally exact job titles.
+ * AudienceSelector — picks who something is for (a check-in question, a piece
+ * of learning, an assignment): one or more structured tiers and tracks, and
+ * optionally exact job titles.
  */
 export default function AudienceSelector({ tiers = [], tracks = [], titles = [], value, onChange }) {
   const [newTitle, setNewTitle] = useState("");
@@ -79,7 +80,7 @@ export default function AudienceSelector({ tiers = [], tracks = [], titles = [],
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
           <Users className="w-3.5 h-3.5 text-[#0202ff]" />
-          Who sees this question
+          Who is this for
         </p>
         <span
           className={`text-[10px] font-semibold rounded-full px-2 py-0.5 border ${
@@ -99,7 +100,7 @@ export default function AudienceSelector({ tiers = [], tracks = [], titles = [],
         options={tiers.map((t) => ({ value: t.id, label: t.label }))}
         selected={current.target_tiers}
         onToggle={(id) => toggle("target_tiers", id)}
-        emptyText="No tiers defined yet — add them in Role targeting."
+        emptyText="No tiers defined yet — add them under Role profiles."
       />
 
       <PillGroup
@@ -109,7 +110,7 @@ export default function AudienceSelector({ tiers = [], tracks = [], titles = [],
         options={tracks.map((t) => ({ value: t.id, label: t.label }))}
         selected={current.target_tracks}
         onToggle={(id) => toggle("target_tracks", id)}
-        emptyText="No tracks defined yet — add them in Role targeting."
+        emptyText="No tracks defined yet — add them under Role profiles."
       />
 
       <div>
