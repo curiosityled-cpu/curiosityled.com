@@ -52,6 +52,7 @@ import PendingRole from './pages/PendingRole';
 import SeedLinkedInCourses from './pages/SeedLinkedInCourses';
 import OrgBusinessGoals from './pages/OrgBusinessGoals';
 import PerformanceManager from './pages/PerformanceManager';
+import Reviews from './pages/Reviews';
 import MyPerformance from './pages/MyPerformance';
 import MyRhythm from './pages/MyRhythm';
 import ManagerToday from './pages/ManagerToday';
@@ -234,6 +235,7 @@ const AuthenticatedApp = () => {
             ? <Navigate to="/coaching-workspace" replace />
             : mvpRole ? <MVPPage><PerformanceManager /></MVPPage> : <LayoutWrapper currentPageName="PerformanceManager"><PerformanceManager /></LayoutWrapper>
       } />
+      <Route path="/reviews" element={<MVPLayout><Reviews /></MVPLayout>} />
       <Route path="/my-performance" element={<MVPPage><MyPerformance /></MVPPage>} />
       <Route path="/my-goals" element={<Navigate to="/my-performance" replace />} />
       <Route path="/my-rhythm" element={<MVPPage><MyRhythm /></MVPPage>} />

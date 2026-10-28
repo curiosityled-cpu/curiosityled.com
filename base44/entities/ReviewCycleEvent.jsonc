@@ -1,0 +1,159 @@
+{
+  "name": "ReviewCycleEvent",
+  "type": "object",
+  "description": "Append-only history for a performance review cycle. Every consequential action (configuration, launch, roster change, reviewer reassignment, submission, amendment, calibration, conversation, release, acknowledgment, retention hold, export) is written here as an immutable record, so the process can be reconstructed later even if views or configuration change. Records are never updated or deleted by app code.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this event belongs to. Canonical tenant partition key."
+    },
+    "review_cycle_id": {
+      "type": "string",
+      "description": "ID of the review cycle (CustomForm with form_type='review_cycle') this event belongs to"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "cycle_created",
+        "cycle_configured",
+        "cycle_launched",
+        "cycle_closed",
+        "participant_added",
+        "participant_removed",
+        "reviewer_reassigned",
+        "task_draft_saved",
+        "task_submitted",
+        "task_amended",
+        "calibration_started",
+        "calibration_adjusted",
+        "calibration_finalized",
+        "conversation_recorded",
+        "review_released",
+        "review_acknowledged",
+        "employee_responded",
+        "legal_hold_set",
+        "legal_hold_cleared",
+        "export_generated"
+      ],
+      "description": "What happened"
+    },
+    "actor_email": {
+      "type": "string",
+      "description": "Email of the person who performed the action"
+    },
+    "actor_name": {
+      "type": "string",
+      "description": "Display name of the actor at the time of the action"
+    },
+    "actor_role": {
+      "type": "string",
+      "description": "Review role the actor acted in (self, manager, peer, hr, calibrator, admin)"
+    },
+    "subject_email": {
+      "type": "string",
+      "description": "Email of the employee the action concerns"
+    },
+    "participant_id": {
+      "type": "string",
+      "description": "ReviewParticipant record this event concerns, when applicable"
+    },
+    "source_entity": {
+      "type": "string",
+      "description": "Entity type of the record this event describes (e.g. CustomFormSubmission)"
+    },
+    "source_id": {
+      "type": "string",
+      "description": "ID of the record this event describes"
+    },
+    "before": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Values before the change, where relevant"
+    },
+    "after": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Values after the change, where relevant"
+    },
+    "reason": {
+      "type": "string",
+      "maxLength": 4000,
+      "description": "Recorded rationale supplied by the actor, where the action requires one"
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Server timestamp of the event"
+    }
+  },
+  "required": [
+    "client_id",
+    "review_cycle_id",
+    "event_type",
+    "occurred_at"
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            },
+            {
+              "data.client_id": {
+                "$in": "{{user.data.partner_client_ids}}"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "update": null,
+    "delete": null
+  }
+}

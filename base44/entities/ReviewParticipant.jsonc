@@ -1,7 +1,7 @@
 {
   "name": "ReviewParticipant",
   "type": "object",
-  "description": "Participant roster entry for a review cycle. Maps an employee to their self-assessment, manager reviewer, and optional peer reviewers. Stored per tenant.",
+  "description": "Participant roster entry for a review cycle. Maps an employee to their self-assessment, manager reviewer, and optional peer reviewers, and carries the employee-level workflow state (conversation, release, acknowledgment, response). Stored per tenant.",
   "properties": {
     "client_id": {
       "type": "string",
@@ -47,11 +47,88 @@
         "assigned",
         "self_submitted",
         "manager_submitted",
+        "conversation_done",
         "completed",
+        "released",
         "acknowledged"
       ],
       "default": "assigned",
       "description": "Roster status tracking submission progress for this employee"
+    },
+    "conversation_completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the manager recorded that the review conversation took place"
+    },
+    "conversation_completed_by": {
+      "type": "string",
+      "description": "Email of the person who recorded the conversation"
+    },
+    "conversation_notes": {
+      "type": "string",
+      "maxLength": 4000,
+      "description": "Optional manager notes about the conversation (not released to the employee)"
+    },
+    "release_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "released",
+        "acknowledged",
+        "responded"
+      ],
+      "default": "pending",
+      "description": "Whether the final review outcome has been released to the employee, and how the employee responded"
+    },
+    "final_rating": {
+      "type": "number",
+      "description": "Rating released to the employee (calibrated rating where calibration concluded, otherwise the manager rating)"
+    },
+    "final_rating_source": {
+      "type": "string",
+      "enum": [
+        "manager",
+        "calibrated"
+      ],
+      "description": "Where the released rating came from"
+    },
+    "final_released_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the final outcome was released to the employee"
+    },
+    "final_released_by": {
+      "type": "string",
+      "description": "Email of the person who released the outcome"
+    },
+    "acknowledged_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the employee acknowledged receipt of the review (not agreement)"
+    },
+    "acknowledged_by": {
+      "type": "string",
+      "description": "Email of the employee who acknowledged"
+    },
+    "acknowledgment_comments": {
+      "type": "string",
+      "maxLength": 4000,
+      "description": "Employee comments recorded with the acknowledgment"
+    },
+    "acknowledgment_disagreement": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the employee noted disagreement with the assessment"
+    },
+    "employee_response": {
+      "type": "string",
+      "maxLength": 4000,
+      "description": "Written employee response kept alongside the review"
+    },
+    "responded_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the employee submitted a written response"
     }
   },
   "required": [
@@ -91,9 +168,6 @@
         },
         {
           "data.manager_email": "{{user.email}}"
-        },
-        {
-          "data.peer_emails": "{{user.email}}"
         },
         {
           "$and": [
