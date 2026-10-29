@@ -114,6 +114,9 @@ export default async function (req: Request): Promise<Response> {
           });
         }
         if (role === "manager") {
+          // Peer text reaches the manager only when the cycle explicitly allows it.
+          const peerList = peerSubmissions(rowSubs, row.employee_email);
+          const peerShared = cfg.peer_feedback_visibility === "manager_included";
           myTasks.push({
             task_id: `${row.id}:manager`,
             participant_id: row.id,
@@ -123,6 +126,16 @@ export default async function (req: Request): Promise<Response> {
             due_date: row.manager_review_due || cfg.manager_review_due || null,
             submitted: !!latestSubmission(rowSubs, "manager", row.employee_email),
             anonymous: false,
+            peer_feedback: peerShared
+              ? peerList.map((p: any) => ({
+                  submitter_email:
+                    cfg.peer_attribution === "named" ? normEmail(p.submitter_email) : null,
+                  overall_rating: p.responses?.overall_rating ?? null,
+                  strengths: p.responses?.strengths || "",
+                  improvements: p.responses?.improvements || "",
+                }))
+              : [],
+            peer_feedback_withheld: !peerShared && peerList.length > 0,
           });
         }
         if (role === "peer") {
@@ -231,9 +244,15 @@ export default async function (req: Request): Promise<Response> {
           const rowSubs = cycleSubs.filter(
             (s: any) => normEmail(s.linked_employee_email) === normEmail(row.employee_email)
           );
+          const progress = deriveProgress(row, rowSubs, calibration, cfg);
+          const withheld = !admin && cfg.peer_feedback_visibility !== "manager_included";
           return {
             participant_id: row.id,
-            ...deriveProgress(row, rowSubs, calibration, cfg),
+            // Managers still see that peer feedback exists (a count) but not
+            // what it rated or said, unless the cycle shares it with them.
+            ...progress,
+            peer_avg_rating: withheld ? null : progress.peer_avg_rating,
+            peer_feedback_withheld: withheld && progress.peer_submitted > 0,
           };
         });
       }

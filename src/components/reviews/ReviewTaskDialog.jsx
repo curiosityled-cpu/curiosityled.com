@@ -102,6 +102,43 @@ export default function ReviewTaskDialog({ open, onClose, cycle, task, formConfi
             </Badge>
           )}
 
+          {task.role === "manager" &&
+            (task.peer_feedback?.length > 0 || task.peer_feedback_withheld) && (
+              <div className="rounded-xl border border-gray-200 p-3 space-y-2">
+                <p className="text-xs font-medium text-gray-700">Peer input</p>
+                {task.peer_feedback_withheld ? (
+                  <p className="text-[11px] text-gray-500 leading-relaxed">
+                    Peer feedback for this person is withheld from manager reviews in this cycle. It
+                    goes to the employee when the outcome is released, and to administrators and
+                    calibrators.
+                  </p>
+                ) : (
+                  task.peer_feedback.map((p, i) => (
+                    <div key={i} className="rounded-lg bg-gray-50 p-2.5 space-y-1">
+                      <div className="flex items-center justify-between text-[10px] text-gray-500">
+                        <span>{p.submitter_email || "Anonymous peer"}</span>
+                        {p.overall_rating != null && (
+                          <span className="font-semibold text-gray-700">{p.overall_rating}/5</span>
+                        )}
+                      </div>
+                      {p.strengths && (
+                        <p className="text-[11px] text-gray-700">
+                          <span className="text-gray-500">Strengths: </span>
+                          {p.strengths}
+                        </p>
+                      )}
+                      {p.improvements && (
+                        <p className="text-[11px] text-gray-700">
+                          <span className="text-gray-500">Improvements: </span>
+                          {p.improvements}
+                        </p>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
           <GuidedReviewFlow
             role={task.role}
             employeeEmail={task.employee_email}

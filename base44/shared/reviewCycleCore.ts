@@ -73,6 +73,10 @@ export function cycleConfig(cycle: any) {
         ? s.peer_enabled
         : reviewType === "peer_review" || reviewType === "360",
     peer_attribution: s.peer_attribution || "named",
+    // Whether peer text reaches the employee's manager at all. Defaults to
+    // employee-at-release only, so peer candour is never shown to the person
+    // whose rating it informs unless the tenant explicitly opts in.
+    peer_feedback_visibility: s.peer_feedback_visibility || "employee_only",
     release_policy: s.release_policy || "after_calibration",
     require_conversation: s.require_conversation !== false,
     skip_level_review_enabled: !!s.skip_level_review_enabled,

@@ -45,6 +45,7 @@ const EMPTY = {
   self_assessment_due: "",
   manager_review_due: "",
   peer_attribution: "named",
+  peer_feedback_visibility: "employee_only",
   release_policy: "after_calibration",
   require_conversation: true,
   skip_level_review_enabled: false,
@@ -74,6 +75,7 @@ export default function CycleSettingsDialog({ open, onClose, cycle, clientId, on
       self_assessment_due: s.self_assessment_due || "",
       manager_review_due: s.manager_review_due || "",
       peer_attribution: s.peer_attribution || "named",
+      peer_feedback_visibility: s.peer_feedback_visibility || "employee_only",
       release_policy: s.release_policy || "after_calibration",
       require_conversation: s.require_conversation !== false,
       skip_level_review_enabled: !!s.skip_level_review_enabled,
@@ -130,6 +132,7 @@ export default function CycleSettingsDialog({ open, onClose, cycle, clientId, on
       manager_review_due: form.manager_review_due || null,
       peer_enabled: form.review_type !== "self_review",
       peer_attribution: form.peer_attribution,
+      peer_feedback_visibility: form.peer_feedback_visibility,
       release_policy: form.release_policy,
       require_conversation: form.require_conversation,
       skip_level_review_enabled: form.skip_level_review_enabled,
@@ -277,6 +280,28 @@ export default function CycleSettingsDialog({ open, onClose, cycle, clientId, on
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs">Manager can read peer feedback</Label>
+            <Select
+              value={form.peer_feedback_visibility}
+              onValueChange={set("peer_feedback_visibility")}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="employee_only">
+                  No — employee at release, admins and calibrators only
+                </SelectItem>
+                <SelectItem value="manager_included">
+                  Yes — manager sees it while writing their review
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-[10px] text-gray-400 leading-relaxed">
+              Applies to peer text and peer ratings. Attribution above still decides whether names
+              are attached; administrators always keep access for calibration.
+            </p>
           </div>
 
           <div className="space-y-2">

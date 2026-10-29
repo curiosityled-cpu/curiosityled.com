@@ -209,6 +209,11 @@
                   }
                 }
               ]
+            },
+            {
+              "data.submitter_role": {
+                "$ne": "peer"
+              }
             }
           ]
         },
