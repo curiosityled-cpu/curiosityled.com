@@ -7,6 +7,7 @@ import { Loader2, Lock, Save, Send, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import GuidedReviewFlow from "@/components/performance-mgmt/GuidedReviewFlow";
 import { DEFAULT_REVIEW_FORM_CONFIG } from "@/components/performance-mgmt/ReviewFormRenderer";
+import RatingRubricPanel from "./RatingRubricPanel";
 
 const ROLE_TITLES = {
   self: "Self review",
@@ -77,12 +78,11 @@ export default function ReviewTaskDialog({ open, onClose, cycle, task, formConfi
               How this review is handled
             </div>
             <p className="text-[11px] text-gray-600 leading-relaxed">{privacyNote(task, cycle)}</p>
-            {cycle.config?.rubric && (
-              <p className="text-[11px] text-gray-600 leading-relaxed">
-                <span className="font-medium text-gray-700">Rating guide: </span>
-                {cycle.config.rubric}
-              </p>
-            )}
+            <RatingRubricPanel
+              anchors={cycle.config?.rating_anchors}
+              criteria={cycle.config?.criteria}
+              rubric={cycle.config?.rubric}
+            />
             {task.due_date && (
               <p className="text-[11px] text-gray-500">
                 Due {new Date(task.due_date).toLocaleDateString()}

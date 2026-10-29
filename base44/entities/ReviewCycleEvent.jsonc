@@ -1,7 +1,7 @@
 {
   "name": "ReviewCycleEvent",
   "type": "object",
-  "description": "Append-only history for a performance review cycle. Every consequential action (configuration, launch, roster change, reviewer reassignment, submission, amendment, calibration, conversation, release, acknowledgment, retention hold, export) is written here as an immutable record, so the process can be reconstructed later even if views or configuration change. Records are never updated or deleted by app code.",
+  "description": "Append-only history for a performance review cycle. Every consequential action (configuration, launch, roster change, reviewer reassignment, submission, amendment, calibration, conversation, release, acknowledgment, retention hold, export, restricted context, viewing of review material) is written here as an immutable record, so the process can be reconstructed later even if views or configuration change. Records are never updated or deleted by app code.",
   "properties": {
     "client_id": {
       "type": "string",
@@ -31,6 +31,8 @@
         "review_released",
         "review_acknowledged",
         "employee_responded",
+        "context_recorded",
+        "review_viewed",
         "legal_hold_set",
         "legal_hold_cleared",
         "export_generated"

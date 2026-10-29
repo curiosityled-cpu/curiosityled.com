@@ -78,6 +78,7 @@ export function cycleConfig(cycle: any) {
     skip_level_review_enabled: !!s.skip_level_review_enabled,
     rubric: s.rubric || "",
     criteria: s.criteria || "",
+    rating_anchors: Array.isArray(s.rating_anchors) ? s.rating_anchors : [],
     legal_hold: !!s.legal_hold,
     retention_months: s.retention_months ?? null,
     launched_at: s.launched_at || null,

@@ -7,6 +7,7 @@ import {
   isReviewAdmin,
   isSubmitted,
   latestSubmission,
+  logReviewEvent,
   normEmail,
   peerSubmissions,
   roleOnParticipant,
@@ -288,6 +289,37 @@ export default async function (req: Request): Promise<Response> {
           { sort: "-occurred_at", limit: 200 }
         )
       );
+    }
+
+    // Record that review material was opened. Deduped per viewer per hour so the
+    // history reads as "who looked at what, when" rather than a page-view log.
+    if (focusCycleId) {
+      const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const alreadyLogged = asList(
+        await base44.asServiceRole.entities.ReviewCycleEvent
+          .filter(
+            {
+              review_cycle_id: focusCycleId,
+              client_id: clientId,
+              event_type: "review_viewed",
+              actor_email: email,
+              occurred_at: { $gte: hourAgo },
+            },
+            { limit: 1 }
+          )
+          .catch(() => [])
+      );
+      if (alreadyLogged.length === 0) {
+        await logReviewEvent(base44, {
+          client_id: clientId,
+          review_cycle_id: focusCycleId,
+          event_type: "review_viewed",
+          actor_email: email,
+          actor_name: user.full_name || "",
+          actor_role: admin ? "admin" : "reviewer",
+          after: { scope: admin ? "cycle_wide" : "own_material" },
+        });
+      }
     }
 
     return Response.json({

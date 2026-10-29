@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, Star, Target, TrendingUp, FileText, ClipboardList } from "lucide-react";
+import { Loader2, Star, Target, TrendingUp, FileText, ClipboardList, Plus, Quote, Trash2 } from "lucide-react";
 import EvidenceSection from "./EvidenceSection";
 
 const RATING_OPTIONS = [
@@ -162,6 +164,79 @@ function TextSectionsSection({ section, responses, onChange }) {
   );
 }
 
+function ObservableExamplesSection({ responses, onChange }) {
+  const rows = Array.isArray(responses.observable_examples) ? responses.observable_examples : [];
+
+  const update = (index, patch) =>
+    onChange({ observable_examples: rows.map((r, i) => (i === index ? { ...r, ...patch } : r)) });
+
+  const add = () =>
+    onChange({
+      observable_examples: [
+        ...rows,
+        { id: `ex-${Date.now()}`, example: "", date: "", context: "" },
+      ],
+    });
+
+  const remove = (index) =>
+    onChange({ observable_examples: rows.filter((_, i) => i !== index) });
+
+  return (
+    <div className="space-y-2.5">
+      <p className="text-[10px] text-gray-400 leading-relaxed">
+        Describe what you actually observed. Add a date if you remember it — it is optional, and a
+        rough month or quarter in the context is enough.
+      </p>
+
+      {rows.map((row, i) => (
+        <div key={row.id || i} className="border border-gray-100 rounded-lg p-2.5 space-y-2">
+          <div className="flex items-start gap-2">
+            <Textarea
+              rows={2}
+              className="text-xs"
+              placeholder="What happened, and what was the effect?"
+              value={row.example || ""}
+              onChange={(e) => update(i, { example: e.target.value })}
+            />
+            <button
+              type="button"
+              onClick={() => remove(i)}
+              className="text-gray-300 hover:text-red-500 flex-shrink-0 mt-1"
+              aria-label="Remove example"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-[10px] text-gray-500">Date (optional)</Label>
+              <Input
+                type="date"
+                className="h-8 text-xs"
+                value={row.date || ""}
+                onChange={(e) => update(i, { date: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] text-gray-500">Context (optional)</Label>
+              <Input
+                className="h-8 text-xs"
+                placeholder="Who was involved, what setting"
+                value={row.context || ""}
+                onChange={(e) => update(i, { context: e.target.value })}
+              />
+            </div>
+          </div>
+        </div>
+      ))}
+
+      <Button type="button" size="sm" variant="outline" onClick={add} className="h-8 text-xs gap-1">
+        <Plus className="w-3.5 h-3.5" /> Add example
+      </Button>
+    </div>
+  );
+}
+
 function OverallSection({ section, responses, onChange }) {
   const questions = section.questions || [];
   const ratingQ = questions.find(q => q.type === "rating");
@@ -209,6 +284,7 @@ export default function ReviewFormRenderer({ formConfig, employeeEmail, response
         const Icon = section.type === "competency_ratings" ? Star :
                      section.type === "goal_achievement" ? Target :
                      section.type === "evidence" ? ClipboardList :
+                     section.type === "observable_examples" ? Quote :
                      section.type === "overall" ? TrendingUp : FileText;
         return (
           <Card key={section.id} className="border border-gray-100 shadow-sm rounded-xl">
@@ -248,6 +324,13 @@ export default function ReviewFormRenderer({ formConfig, employeeEmail, response
               {section.type === "evidence" && (
                 <EvidenceSection employeeEmail={employeeEmail} />
               )}
+              {section.type === "observable_examples" && (
+                <ObservableExamplesSection
+                  section={section}
+                  responses={responses}
+                  onChange={(newResponses) => handleSectionChange(section.id, newResponses)}
+                />
+              )}
               {section.type === "overall" && (
                 <OverallSection
                   section={section}
@@ -282,6 +365,12 @@ export const DEFAULT_REVIEW_FORM_CONFIG = {
       title: "Performance Evidence",
       type: "evidence",
       description: "Documented evidence from goals — review before rating",
+    },
+    {
+      id: "observable_examples",
+      title: "Examples You Observed",
+      type: "observable_examples",
+      description: "Specific, observable examples from the period. Dates are optional",
     },
     {
       id: "development_plan",

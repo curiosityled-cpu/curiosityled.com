@@ -12,6 +12,7 @@ import RosterManager from "@/components/performance-mgmt/RosterManager";
 import CycleSettingsDialog from "./CycleSettingsDialog";
 import RecordConversationDialog from "./RecordConversationDialog";
 import ReviewWorkflowTimeline from "./ReviewWorkflowTimeline";
+import RestrictedContextCard from "./RestrictedContextCard";
 
 const STATUS_STYLES = {
   assigned: "bg-gray-50 text-gray-600 border-gray-200",
@@ -133,6 +134,10 @@ export default function CycleProgressBoard({ cycle, isAdmin, audit, user, onRefr
           )}
         </CardContent>
       </Card>
+
+      {isAdmin && (
+        <RestrictedContextCard cycle={cycle} audit={audit} onRefresh={onRefresh} />
+      )}
 
       {cycle.status === "draft" && isAdmin && (
         <Card className="border border-gray-100 shadow-sm rounded-2xl">

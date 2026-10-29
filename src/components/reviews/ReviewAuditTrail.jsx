@@ -22,6 +22,8 @@ const LABELS = {
   review_released: "Review released",
   review_acknowledged: "Review acknowledged",
   employee_responded: "Employee responded",
+  context_recorded: "Restricted context recorded",
+  review_viewed: "Review material viewed",
   legal_hold_set: "Retention hold set",
   legal_hold_cleared: "Retention hold cleared",
   export_generated: "Export generated",

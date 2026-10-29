@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Loader2, Lock } from "lucide-react";
 import { toast } from "sonner";
+import { DEFAULT_RATING_ANCHORS, normalizeAnchors, rubricToText } from "@/lib/reviewRubric";
 
 const PHASES = [
   { value: "self_review", label: "Self + manager review" },
@@ -31,6 +32,8 @@ const LENGTHS = [
   { value: "semi_annual", label: "Mid-year (6 months)", months: 6 },
   { value: "quarterly", label: "Quarterly (3 months)", months: 3 },
 ];
+
+const freshAnchors = () => DEFAULT_RATING_ANCHORS.map((a) => ({ ...a }));
 
 const EMPTY = {
   name: "",
@@ -45,8 +48,8 @@ const EMPTY = {
   release_policy: "after_calibration",
   require_conversation: true,
   skip_level_review_enabled: false,
-  rubric: "",
   criteria: "",
+  rating_anchors: [],
 };
 
 export default function CycleSettingsDialog({ open, onClose, cycle, clientId, onSaved }) {
@@ -57,7 +60,7 @@ export default function CycleSettingsDialog({ open, onClose, cycle, clientId, on
   useEffect(() => {
     if (!open) return;
     if (!cycle) {
-      setForm(EMPTY);
+      setForm({ ...EMPTY, rating_anchors: freshAnchors() });
       return;
     }
     const s = cycle.settings || {};
@@ -74,8 +77,11 @@ export default function CycleSettingsDialog({ open, onClose, cycle, clientId, on
       release_policy: s.release_policy || "after_calibration",
       require_conversation: s.require_conversation !== false,
       skip_level_review_enabled: !!s.skip_level_review_enabled,
-      rubric: s.rubric || "",
       criteria: s.criteria || "",
+      rating_anchors:
+        Array.isArray(s.rating_anchors) && s.rating_anchors.length
+          ? normalizeAnchors(s.rating_anchors)
+          : freshAnchors(),
     });
   }, [open, cycle?.id]);
 
@@ -101,6 +107,14 @@ export default function CycleSettingsDialog({ open, onClose, cycle, clientId, on
 
   const set = (key) => (value) => setForm((prev) => ({ ...prev, [key]: value }));
 
+  const setAnchor = (index, key, value) =>
+    setForm((prev) => ({
+      ...prev,
+      rating_anchors: prev.rating_anchors.map((a, i) =>
+        i === index ? { ...a, [key]: value } : a
+      ),
+    }));
+
   const handleSave = async () => {
     if (!form.name.trim() || !form.period_start || !form.period_end) {
       toast.error("Name and review period are required");
@@ -119,8 +133,9 @@ export default function CycleSettingsDialog({ open, onClose, cycle, clientId, on
       release_policy: form.release_policy,
       require_conversation: form.require_conversation,
       skip_level_review_enabled: form.skip_level_review_enabled,
-      rubric: form.rubric,
+      rubric: rubricToText(form.rating_anchors),
       criteria: form.criteria,
+      rating_anchors: form.rating_anchors,
     };
     try {
       if (cycle) {
@@ -264,15 +279,39 @@ export default function CycleSettingsDialog({ open, onClose, cycle, clientId, on
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs">Rating guide shown to reviewers</Label>
-            <Textarea
-              rows={2}
-              value={form.rubric}
-              onChange={(e) => set("rubric")(e.target.value)}
-              placeholder="5 exceeds, 4 meets, 3 partially meets, 2 below, 1 far below — with what each means for this role."
-              className="text-xs"
-            />
+          <div className="space-y-2">
+            <Label className="text-xs">Rating scale and definitions</Label>
+            <p className="text-[10px] text-gray-400 leading-relaxed">
+              Reviewers see these definitions next to the rating controls. Edit a definition so each
+              level describes what it means for this role.
+            </p>
+            <div className="space-y-1.5">
+              {form.rating_anchors.map((anchor, i) => (
+                <div
+                  key={anchor.value}
+                  className="flex items-start gap-2 rounded-lg border border-gray-100 p-2"
+                >
+                  <span className="w-6 h-6 rounded-md bg-gray-100 text-[11px] font-semibold text-gray-600 flex items-center justify-center flex-shrink-0 mt-1">
+                    {anchor.value}
+                  </span>
+                  <div className="flex-1 space-y-1">
+                    <Input
+                      value={anchor.label}
+                      onChange={(e) => setAnchor(i, "label", e.target.value)}
+                      placeholder="Label"
+                      className="h-8 text-xs"
+                    />
+                    <Textarea
+                      rows={2}
+                      value={anchor.definition}
+                      onChange={(e) => setAnchor(i, "definition", e.target.value)}
+                      placeholder="What this rating means for this role"
+                      className="text-xs"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-1.5">

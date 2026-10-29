@@ -357,6 +357,47 @@ export default async function (req: Request): Promise<Response> {
       return Response.json({ submission: amendment, amended_submission_id: original.id });
     }
 
+    // ── Restricted context (missing evidence, changed role, leave) ───────────
+    // Recorded by administrators only, and stored as an immutable event so the
+    // context sits beside the review without altering any submitted rating.
+    if (action === "record_context") {
+      if (!admin) return Response.json({ error: "Forbidden" }, { status: 403 });
+
+      const allowed = [
+        "missing_evidence",
+        "changed_responsibilities",
+        "leave_accommodation",
+        "other",
+      ];
+      const contextType = String(body.context_type || "").trim();
+      if (!allowed.includes(contextType)) {
+        return Response.json({ error: "A valid context_type is required" }, { status: 400 });
+      }
+      const summary = String(body.summary || "").trim();
+      if (!summary) {
+        return Response.json({ error: "A written summary is required" }, { status: 400 });
+      }
+
+      const event = await logReviewEvent(base44, {
+        client_id: clientId,
+        review_cycle_id,
+        event_type: "context_recorded",
+        actor_email: email,
+        actor_name: user.full_name || "",
+        actor_role: "admin",
+        subject_email: normEmail(body.subject_email),
+        after: {
+          context_type: contextType,
+          summary,
+          effective_from: body.effective_from || null,
+          effective_to: body.effective_to || null,
+        },
+        reason: summary,
+      });
+
+      return Response.json({ context: event });
+    }
+
     // ── Retention hold ───────────────────────────────────────────────────────
     if (action === "set_legal_hold") {
       if (!admin) return Response.json({ error: "Forbidden" }, { status: 403 });
