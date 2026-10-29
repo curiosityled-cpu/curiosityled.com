@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import {
   asList,
   calibratorFor,
+  canConfigureCycles,
   clientIdOf,
   cycleConfig,
   isReviewAdmin,
@@ -30,10 +31,51 @@ export default async function (req: Request): Promise<Response> {
     const body = await req.json().catch(() => ({}));
     const { action, review_cycle_id } = body;
     if (!action) return Response.json({ error: "action is required" }, { status: 400 });
-    if (!review_cycle_id) return Response.json({ error: "review_cycle_id is required" }, { status: 400 });
+    if (!review_cycle_id && action !== "create_cycle") {
+      return Response.json({ error: "review_cycle_id is required" }, { status: 400 });
+    }
 
     const email = normEmail(user.email);
     const admin = isReviewAdmin(user);
+
+    // ── Create a cycle (HR Admins and above only) ────────────────────────────
+    if (action === "create_cycle") {
+      if (!canConfigureCycles(user)) {
+        return Response.json(
+          { error: "Only HR Admins and above can create a review cycle" },
+          { status: 403 }
+        );
+      }
+      const settings = body.settings || {};
+      if (!body.title || !settings.period_start || !settings.period_end) {
+        return Response.json(
+          { error: "A cycle name and review period are required" },
+          { status: 400 }
+        );
+      }
+
+      const created = await base44.asServiceRole.entities.CustomForm.create({
+        title: body.title,
+        description: body.description || "",
+        form_type: "review_cycle",
+        form_category: "operational",
+        client_id: clientId,
+        status: "draft",
+        settings,
+      });
+
+      await logReviewEvent(base44, {
+        client_id: clientId,
+        review_cycle_id: created.id,
+        event_type: "cycle_created",
+        actor_email: email,
+        actor_name: user.full_name || "",
+        actor_role: "admin",
+        after: { title: created.title, settings },
+      });
+
+      return Response.json({ cycle: created });
+    }
 
     const cycle = await base44.asServiceRole.entities.CustomForm
       .get(review_cycle_id)
@@ -58,7 +100,12 @@ export default async function (req: Request): Promise<Response> {
 
     // ── Configure a cycle ────────────────────────────────────────────────────
     if (action === "update_cycle") {
-      if (!admin) return Response.json({ error: "Forbidden" }, { status: 403 });
+      if (!canConfigureCycles(user)) {
+        return Response.json(
+          { error: "Only HR Admins and above can change a review cycle" },
+          { status: 403 }
+        );
+      }
       const settings = body.settings || {};
       const launched = cycle.status !== "draft";
 

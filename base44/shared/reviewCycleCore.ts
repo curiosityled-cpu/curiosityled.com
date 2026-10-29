@@ -18,6 +18,19 @@ export const ADMIN_ROLES = [
 /** Submission states that count as "a review was actually submitted". */
 export const SUBMITTED_STATES = ["submitted", "approved", "acknowledged"];
 
+/**
+ * Who may create or change a review cycle's configuration: HR Admins (Admin
+ * Level 2) and every role above them. Program Admins (Admin Level 1) run
+ * reviews but do not set the rules of a cycle.
+ */
+export const CYCLE_EDITOR_ROLES = [
+  "admin",
+  "Admin Level 2",
+  "Super Administrator",
+  "Partner Business Administrator",
+  "Platform Admin",
+];
+
 export const CALIBRATOR_ROLES = [
   "Admin Level 1",
   "Admin Level 2",
@@ -37,6 +50,11 @@ export function userRoles(user: any): string[] {
 
 export function isReviewAdmin(user: any): boolean {
   return userRoles(user).some((r) => ADMIN_ROLES.includes(r));
+}
+
+/** HR Admins and above — the only roles allowed to create or edit a cycle. */
+export function canConfigureCycles(user: any): boolean {
+  return userRoles(user).some((r) => CYCLE_EDITOR_ROLES.includes(r));
 }
 
 export function clientIdOf(user: any): string {

@@ -13,6 +13,7 @@ import CycleSettingsDialog from "./CycleSettingsDialog";
 import RecordConversationDialog from "./RecordConversationDialog";
 import ReviewWorkflowTimeline from "./ReviewWorkflowTimeline";
 import RestrictedContextCard from "./RestrictedContextCard";
+import { STAGE_META, rowsAtStage } from "@/lib/reviewStages";
 
 const STATUS_STYLES = {
   assigned: "bg-gray-50 text-gray-600 border-gray-200",
@@ -32,13 +33,27 @@ function Stat({ label, value, tone = "text-gray-900" }) {
   );
 }
 
-export default function CycleProgressBoard({ cycle, isAdmin, audit, user, onRefresh }) {
+export default function CycleProgressBoard({
+  cycle,
+  isAdmin,
+  audit,
+  user,
+  onRefresh,
+  focusStage = null,
+  onClearFocus,
+  canConfigure = true,
+}) {
   const [showSettings, setShowSettings] = useState(false);
   const [conversationRow, setConversationRow] = useState(null);
   const [busyId, setBusyId] = useState(null);
 
   const rows = cycle.progress_rows || [];
   const counts = cycle.counts || {};
+  const stageMeta = STAGE_META.find((s) => s.id === focusStage);
+  const stageRows =
+    focusStage && focusStage !== "roster"
+      ? rowsAtStage(rows, focusStage, cycle.config)
+      : rows;
 
   const runCommand = async (action, payload, successMessage) => {
     setBusyId(payload.participant_id || action);
@@ -118,9 +133,11 @@ export default function CycleProgressBoard({ cycle, isAdmin, audit, user, onRefr
 
           {isAdmin && (
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={() => setShowSettings(true)}>
-                <Settings2 className="w-3.5 h-3.5" /> Cycle settings
-              </Button>
+              {canConfigure && (
+                <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={() => setShowSettings(true)}>
+                  <Settings2 className="w-3.5 h-3.5" /> Cycle settings
+                </Button>
+              )}
               <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={handleLegalHold}>
                 {cycle.config?.legal_hold ? <Unlock className="w-3.5 h-3.5" /> : <ShieldCheck className="w-3.5 h-3.5" />}
                 {cycle.config?.legal_hold ? "Clear retention hold" : "Set retention hold"}
@@ -139,7 +156,7 @@ export default function CycleProgressBoard({ cycle, isAdmin, audit, user, onRefr
         <RestrictedContextCard cycle={cycle} audit={audit} onRefresh={onRefresh} />
       )}
 
-      {cycle.status === "draft" && isAdmin && (
+      {isAdmin && (cycle.status === "draft" || focusStage === "roster") && (
         <Card className="border border-gray-100 shadow-sm rounded-2xl">
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2">
@@ -147,41 +164,66 @@ export default function CycleProgressBoard({ cycle, isAdmin, audit, user, onRefr
               <p className="text-sm font-semibold text-gray-900">Participants</p>
             </div>
             <p className="text-[11px] text-gray-500">
-              Assign who is reviewed and by whom, then launch. The roster locks at launch.
+              {cycle.status === "draft"
+                ? "Assign who is reviewed and by whom, then launch. The roster locks at launch."
+                : "The roster locked at launch. Changes here are reassignments and stay in the history."}
             </p>
             <RosterManager cycle={cycle} user={user} onRosterUpdated={onRefresh} />
-            <div className="flex justify-end">
-              <Button
-                size="sm"
-                onClick={async () => {
-                  try {
-                    const res = await base44.functions.invoke("launchReviewCycle", { review_cycle_id: cycle.id });
-                    toast.success(`Launched — ${res.data.participants_notified} participants notified`);
-                    onRefresh?.();
-                  } catch (err) {
-                    toast.error(err.response?.data?.error || "Launch failed");
-                  }
-                }}
-                className="bg-green-600 hover:bg-green-700 text-white gap-1 text-xs"
-              >
-                <Rocket className="w-3.5 h-3.5" /> Launch cycle
-              </Button>
-            </div>
+            {cycle.status === "draft" && (
+              <div className="flex justify-end">
+                <Button
+                  size="sm"
+                  onClick={async () => {
+                    try {
+                      const res = await base44.functions.invoke("launchReviewCycle", { review_cycle_id: cycle.id });
+                      toast.success(`Launched — ${res.data.participants_notified} participants notified`);
+                      onRefresh?.();
+                    } catch (err) {
+                      toast.error(err.response?.data?.error || "Launch failed");
+                    }
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white gap-1 text-xs"
+                >
+                  <Rocket className="w-3.5 h-3.5" /> Launch cycle
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
 
+      {focusStage && focusStage !== "roster" && stageMeta && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#0202ff]/15 bg-[#0202ff]/5 px-3 py-2">
+          <p className="text-[11px] text-gray-700">
+            <span className="font-semibold">{stageMeta.label}</span>
+            <span className="text-gray-500"> · {stageMeta.hint} — </span>
+            {stageRows.length === 0
+              ? "nobody is waiting here"
+              : `${stageRows.length} of ${rows.length} still to finish`}
+          </p>
+          <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={onClearFocus}>
+            Show everyone
+          </Button>
+        </div>
+      )}
+
       <div className="space-y-2">
-        {rows.length === 0 ? (
+        {stageRows.length === 0 ? (
           <div className="text-center py-10 border border-dashed border-gray-200 rounded-xl">
             <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">No participants yet</p>
+            <p className="text-sm text-gray-500">
+              {rows.length > 0 && focusStage ? "Nobody is waiting at this stage" : "No participants yet"}
+            </p>
             <p className="text-xs text-gray-400 mt-1">
-              {isAdmin ? "Add the roster above to get started." : "Your team's reviews will appear here once the cycle launches."}
+              {rows.length > 0 && focusStage
+                ? "Everyone has moved past it."
+                : isAdmin
+                ? "Add the roster above to get started."
+                : "Your team's reviews will appear here once the cycle launches."}
             </p>
           </div>
         ) : (
-          rows.map((row) => (
+          stageRows.map((row) => (
             <Card key={row.participant_id} className="border border-gray-100 shadow-sm rounded-xl">
               <CardContent className="p-3">
                 <div className="flex flex-wrap items-start justify-between gap-3">

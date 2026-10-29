@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import {
   asList,
+  canConfigureCycles,
   clientIdOf,
   cycleConfig,
   deriveProgress,
@@ -346,6 +347,7 @@ export default async function (req: Request): Promise<Response> {
         email,
         name: user.full_name || user.email,
         is_admin: admin,
+        can_configure_cycles: canConfigureCycles(user),
         roles: userRoles(user),
       },
       review_form_config: reviewForms[0]?.config || null,

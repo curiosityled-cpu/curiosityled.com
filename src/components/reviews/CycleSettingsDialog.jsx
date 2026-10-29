@@ -151,13 +151,10 @@ export default function CycleSettingsDialog({ open, onClose, cycle, clientId, on
         });
         toast.success(locked ? "Saved — the launch snapshot still governs this cycle" : "Cycle updated");
       } else {
-        await base44.entities.CustomForm.create({
+        await base44.functions.invoke("reviewCycleCommand", {
+          action: "create_cycle",
           title: form.name,
           description: form.description,
-          form_type: "review_cycle",
-          form_category: "operational",
-          client_id: clientId,
-          status: "draft",
           settings,
         });
         toast.success("Cycle created as draft");

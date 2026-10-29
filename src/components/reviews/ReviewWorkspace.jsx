@@ -14,7 +14,10 @@ import MyReviewSummary from "./MyReviewSummary";
 import CycleProgressBoard from "./CycleProgressBoard";
 import CycleSettingsDialog from "./CycleSettingsDialog";
 import ReviewAuditTrail from "./ReviewAuditTrail";
+import CycleStageRail from "./CycleStageRail";
+import { buildCycleStages, stageDestination } from "@/lib/reviewStages";
 import CalibrationView from "@/components/performance-mgmt/CalibrationView";
+import { toast } from "sonner";
 
 const ROLE_LABEL = { self: "Self review", manager: "Manager review", peer: "Peer feedback" };
 
@@ -41,6 +44,8 @@ export default function ReviewWorkspace({ embedded = false }) {
   const [tab, setTab] = useState("mine");
   const [activeTask, setActiveTask] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [stageFocus, setStageFocus] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -82,6 +87,32 @@ export default function ReviewWorkspace({ embedded = false }) {
   const hasTeam = !!cycle && !isAdmin && cycle.can_manage && (cycle.progress_rows || []).length > 0;
   const myTasks = cycle?.my_tasks || [];
   const openTasks = myTasks.filter((t) => !t.submitted);
+  // Creating and editing cycles is restricted to HR Admins and above (also enforced server-side).
+  const canConfigure = data?.viewer?.can_configure_cycles ?? isAdmin;
+  const stages = useMemo(
+    () => buildCycleStages(cycle, { canConfigure }),
+    [cycle, canConfigure]
+  );
+
+  const handleStageSelect = (stage) => {
+    if (stage.id === "setup") {
+      if (!canConfigure) {
+        toast.error("Only HR Admins and above can change review cycle settings");
+        return;
+      }
+      setStageFocus(null);
+      setShowSettings(true);
+      return;
+    }
+    const dest = stageDestination(stage.id);
+    if (!isAdmin && dest.tab === "calibration") {
+      setTab("team");
+      setStageFocus("calibration");
+      return;
+    }
+    setTab(!isAdmin && dest.tab === "progress" ? "team" : dest.tab);
+    setStageFocus(dest.focus);
+  };
 
   const tabs = useMemo(() => {
     const list = [{ id: "mine", label: "My review", icon: ClipboardCheck }];
@@ -140,7 +171,7 @@ export default function ReviewWorkspace({ embedded = false }) {
               ? "Create a cycle to set the period, reviewers, and how outcomes are released."
               : "Your next review will appear here when it opens."}
           </p>
-          {isAdmin && (
+          {canConfigure && (
             <Button
               onClick={() => setShowCreate(true)}
               className="bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5 text-xs"
@@ -152,7 +183,7 @@ export default function ReviewWorkspace({ embedded = false }) {
       ) : (
         <>
           <div className="flex flex-wrap items-center gap-2">
-            <Select value={cycle?.id || ""} onValueChange={setSelectedCycleId}>
+            <Select value={cycle?.id || ""} onValueChange={(v) => { setSelectedCycleId(v); setStageFocus(null); }}>
               <SelectTrigger className="w-full sm:w-72 h-9 text-xs">
                 <SelectValue placeholder="Select a cycle" />
               </SelectTrigger>
@@ -175,7 +206,7 @@ export default function ReviewWorkspace({ embedded = false }) {
                 {openTasks.length} task{openTasks.length > 1 ? "s" : ""} to complete
               </Badge>
             )}
-            {isAdmin && (
+            {canConfigure && (
               <Button
                 size="sm"
                 variant="outline"
@@ -187,9 +218,25 @@ export default function ReviewWorkspace({ embedded = false }) {
             )}
           </div>
 
+          {cycle && (isAdmin || hasTeam) && (
+            <CycleStageRail
+              stages={stages}
+              activeStage={stageFocus}
+              onSelect={handleStageSelect}
+            />
+          )}
+
           <div className="flex gap-1 bg-gray-100 rounded-xl p-1 overflow-x-auto">
             {tabs.map((t) => (
-              <TabButton key={t.id} active={tab === t.id} onClick={() => setTab(t.id)} icon={t.icon}>
+              <TabButton
+                key={t.id}
+                active={tab === t.id}
+                onClick={() => {
+                  setTab(t.id);
+                  setStageFocus(null);
+                }}
+                icon={t.icon}
+              >
                 {t.label}
               </TabButton>
             ))}
@@ -281,6 +328,9 @@ export default function ReviewWorkspace({ embedded = false }) {
               isAdmin={tab === "progress"}
               audit={data?.audit}
               user={user}
+              focusStage={stageFocus}
+              onClearFocus={() => setStageFocus(null)}
+              canConfigure={canConfigure}
               onRefresh={() => load(cycle.id)}
             />
           )}
@@ -300,6 +350,16 @@ export default function ReviewWorkspace({ embedded = false }) {
         clientId={user?.client_id || user?.data?.client_id}
         onSaved={() => load()}
       />
+
+      {cycle && showSettings && (
+        <CycleSettingsDialog
+          open={showSettings}
+          onClose={() => setShowSettings(false)}
+          cycle={cycle}
+          clientId={user?.client_id || user?.data?.client_id}
+          onSaved={() => load(cycle.id)}
+        />
+      )}
 
       {activeTask && cycle && (
         <ReviewTaskDialog
