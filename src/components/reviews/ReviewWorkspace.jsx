@@ -15,7 +15,7 @@ import CycleProgressBoard from "./CycleProgressBoard";
 import CycleSettingsDialog from "./CycleSettingsDialog";
 import ReviewAuditTrail from "./ReviewAuditTrail";
 import CycleStageRail from "./CycleStageRail";
-import { buildCycleStages, stageDestination } from "@/lib/reviewStages";
+import { buildCycleStages, buildPreviewStages, stageDestination } from "@/lib/reviewStages";
 import CalibrationView from "@/components/performance-mgmt/CalibrationView";
 import { toast } from "sonner";
 
@@ -163,22 +163,28 @@ export default function ReviewWorkspace({ embedded = false }) {
       )}
 
       {cycles.length === 0 ? (
-        <div className="text-center py-16 border border-dashed border-gray-200 rounded-2xl">
-          <ClipboardCheck className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-sm font-medium text-gray-700">No review cycles yet</p>
-          <p className="text-xs text-gray-500 mt-1 mb-4">
-            {isAdmin
-              ? "Create a cycle to set the period, reviewers, and how outcomes are released."
-              : "Your next review will appear here when it opens."}
-          </p>
-          {canConfigure && (
-            <Button
-              onClick={() => setShowCreate(true)}
-              className="bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5 text-xs"
-            >
-              <Plus className="w-3.5 h-3.5" /> Create review cycle
-            </Button>
-          )}
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-gray-500">How a review cycle runs</p>
+            <CycleStageRail stages={buildPreviewStages()} />
+          </div>
+          <div className="text-center py-14 border border-dashed border-gray-200 rounded-2xl">
+            <ClipboardCheck className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+            <p className="text-sm font-medium text-gray-700">No review cycles yet</p>
+            <p className="text-xs text-gray-500 mt-1 mb-4">
+              {isAdmin
+                ? "Create a cycle to set the period, reviewers, and how outcomes are released."
+                : "Your next review will appear here when it opens."}
+            </p>
+            {canConfigure && (
+              <Button
+                onClick={() => setShowCreate(true)}
+                className="bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5 text-xs"
+              >
+                <Plus className="w-3.5 h-3.5" /> Create review cycle
+              </Button>
+            )}
+          </div>
         </div>
       ) : (
         <>

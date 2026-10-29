@@ -107,6 +107,18 @@ export function buildCycleStages(cycle, { canConfigure = false } = {}) {
   }));
 }
 
+/**
+ * The full process, shown before any cycle exists so people can see the path a
+ * review takes. Nothing is done yet, so the first stage reads as the start.
+ */
+export function buildPreviewStages() {
+  return STAGE_META.map((s, i) => ({
+    ...s,
+    detail: s.hint,
+    state: i === 0 ? "current" : "upcoming",
+  }));
+}
+
 /** Rows still sitting at a given stage, used to focus the progress board. */
 export function rowsAtStage(rows, stage, config = {}) {
   const list = rows || [];
