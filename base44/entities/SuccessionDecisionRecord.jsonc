@@ -1,0 +1,290 @@
+{
+  "name": "SuccessionDecisionRecord",
+  "type": "object",
+  "description": "The single ratifiable artefact for a succession decision. One record states, for one critical role in one cycle: which candidates were considered, which was selected (or why none was), the reason recorded for every candidate, the panel involved, the blueprint snapshot the judgement was made against, who recorded it and who ratified it. Written only by the succession server function; never edited in place. A correction is a new version that supersedes the prior record, so the decision that was actually taken remains readable exactly as it was taken.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side."
+    },
+    "cycle_id": {
+      "type": "string",
+      "description": "ID of the SuccessionCycle this decision was taken in"
+    },
+    "cycle_name": {
+      "type": "string",
+      "description": "Cycle name at the time of the decision, denormalized so the record survives a rename"
+    },
+    "role_id": {
+      "type": "string",
+      "description": "ID of the CriticalRole the decision concerns, when linked to a designated role"
+    },
+    "role_title": {
+      "type": "string",
+      "description": "Title of the role as stated at the time of the decision"
+    },
+    "blueprint_snapshot_id": {
+      "type": "string",
+      "description": "Effective blueprint snapshot the candidates were assessed against, so the standard applied is provable"
+    },
+    "blueprint_version": {
+      "type": "number",
+      "description": "Version number of the blueprint that was in force"
+    },
+    "decision_type": {
+      "type": "string",
+      "enum": [
+        "select_successor",
+        "no_viable_successor",
+        "develop_and_revisit",
+        "defer"
+      ],
+      "description": "select_successor = a named candidate was chosen; no_viable_successor = the bench does not support a decision; develop_and_revisit = a named candidate is being developed toward readiness; defer = the decision was postponed with a reason"
+    },
+    "selected_candidate_email": {
+      "type": "string",
+      "description": "Email of the selected candidate (required for select_successor, empty otherwise)"
+    },
+    "selected_candidate_name": {
+      "type": "string",
+      "description": "Name of the selected candidate as recorded at decision time"
+    },
+    "selected_candidacy_id": {
+      "type": "string",
+      "description": "ID of the SuccessorCandidacy for the selected candidate, when linked"
+    },
+    "selected_readiness_value": {
+      "type": "string",
+      "enum": [
+        "ready_now",
+        "ready_with_conditions",
+        "emerging",
+        "insufficient_evidence",
+        "not_aligned_now"
+      ],
+      "description": "Ratified readiness value in force for the selected candidate at decision time"
+    },
+    "considered": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "candidate_email": {
+            "type": "string"
+          },
+          "candidate_name": {
+            "type": "string"
+          },
+          "candidacy_id": {
+            "type": "string"
+          },
+          "readiness_value": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "selected",
+              "alternate",
+              "not_selected",
+              "withdrawn",
+              "declined"
+            ],
+            "description": "How this candidate was disposed of by the decision"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000,
+            "description": "Why this outcome applied to this candidate. Required for every candidate, including the selected one."
+          }
+        },
+        "required": [
+          "candidate_email",
+          "outcome",
+          "reason"
+        ]
+      },
+      "description": "Every candidate considered, with the recorded reason for the outcome applied to them"
+    },
+    "panel": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "description": "Seat held on the panel (e.g. 'chair', 'HR', 'function leader')"
+          }
+        }
+      },
+      "description": "People who took part in the deliberation, so the human accountability for the decision is on the record"
+    },
+    "evidence_reference_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Evidence records relied on when reaching this decision"
+    },
+    "rationale": {
+      "type": "string",
+      "maxLength": 4000,
+      "description": "The decision rationale, written against the role criteria \u2014 not against the person"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "awaiting_ratification",
+        "ratified",
+        "returned",
+        "superseded"
+      ],
+      "default": "awaiting_ratification",
+      "description": "awaiting_ratification = recorded and queued; ratified = countersigned by a second authority; returned = sent back for further work; superseded = replaced by a later version that is kept alongside this one"
+    },
+    "version": {
+      "type": "number",
+      "default": 1,
+      "description": "Version of this decision for the role and cycle"
+    },
+    "supersedes_id": {
+      "type": "string",
+      "description": "ID of the decision record this version replaces"
+    },
+    "recorded_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the person who recorded the decision"
+    },
+    "recorded_by_email": {
+      "type": "string",
+      "description": "Email of the person who recorded the decision"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the decision was recorded"
+    },
+    "ratified_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the approver who ratified the decision. Never the recorder."
+    },
+    "ratified_by_email": {
+      "type": "string",
+      "description": "Email of the approver who ratified the decision"
+    },
+    "ratified_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the decision was ratified"
+    },
+    "ratification_note": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Note recorded by the approver on ratification"
+    },
+    "returned_by_email": {
+      "type": "string",
+      "description": "Email of the approver who returned the decision"
+    },
+    "returned_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the decision was returned"
+    },
+    "return_note": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "What must change before the decision can be ratified"
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "description": "Confidentiality classification of this record"
+    },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "quarantined"
+      ],
+      "default": "active",
+      "description": "Integrity state. Quarantined records are excluded from reporting pending resolution."
+    }
+  },
+  "required": [
+    "client_id",
+    "cycle_id",
+    "decision_type",
+    "rationale",
+    "status"
+  ],
+  "rls": {
+    "create": null,
+    "update": null,
+    "delete": null,
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            },
+            {
+              "data.client_id": {
+                "$in": "{{user.data.partner_client_ids}}"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

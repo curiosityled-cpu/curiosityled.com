@@ -17,6 +17,8 @@ import {
   UserCheck,
   ShieldCheck,
   LayoutDashboard,
+  Gavel,
+  BarChart3,
 } from "lucide-react";
 
 /**
@@ -81,8 +83,8 @@ export const STAGES = [
     icon: Scale,
     short: "Calibrate and ratify readiness",
     description:
-      "Calibrate ratings, review readiness proposals, and ratify readiness conclusions.",
-    views: ["calibration", "ratification", "readiness-proposals"],
+      "Calibrate ratings, review readiness proposals, ratify readiness conclusions, and record the final decision.",
+    views: ["calibration", "ratification", "readiness-proposals", "decision-records"],
     roles: ["admin", "calibrator"],
   },
   {
@@ -122,6 +124,45 @@ export const STAGE_MAP = Object.fromEntries(STAGES.map((s) => [s.key, s]));
 export const STAGE_ORDER = STAGES.map((s) => s.key);
 
 /**
+ * Legacy and imported stage labels. A cycle written with any of these keys
+ * (older imports, API callers, test fixtures) is mapped onto the canonical
+ * nine stages instead of silently falling off the rail.
+ */
+export const STAGE_ALIASES = {
+  framing: "frame",
+  scope: "frame",
+  focusing: "focus",
+  identification: "focus",
+  blueprinting: "blueprint",
+  criteria: "blueprint",
+  discovery: "discover",
+  identification_of_candidates: "discover",
+  evidence_review: "evidence",
+  assessment: "evidence",
+  deliberation: "deliberate",
+  calibrate: "deliberate",
+  calibration: "deliberate",
+  acceleration: "accelerate",
+  development: "accelerate",
+  transition_planning: "transition",
+  handover: "transition",
+  monitoring: "monitor",
+  review: "monitor",
+};
+
+/**
+ * normalizeStage — always returns a valid stage key. Unknown values resolve to
+ * "frame" so the workspace still renders its guidance rather than a blank area.
+ */
+export function normalizeStage(rawStage) {
+  if (!rawStage) return "frame";
+  const key = String(rawStage).trim().toLowerCase();
+  if (STAGE_MAP[key]) return key;
+  const aliased = STAGE_ALIASES[key];
+  return aliased && STAGE_MAP[aliased] ? aliased : "frame";
+}
+
+/**
  * All views for the "All views" escape-hatch drawer, grouped by stage.
  * `stage: null` means it's a standalone view (Overview, Governance).
  */
@@ -144,6 +185,8 @@ export const ALL_VIEWS = [
   { key: "transitions", label: "Transitions", icon: ArrowRightCircle, stage: "transition" },
   { key: "operational-monitor", label: "Operational Monitor", icon: Activity, stage: "monitor" },
   { key: "review-queue", label: "Review Queue", icon: ClipboardCheck, stage: "monitor" },
+  { key: "decision-records", label: "Decision Records", icon: Gavel, stage: "deliberate" },
+  { key: "bench-strength", label: "Bench Strength", icon: BarChart3, stage: null },
   { key: "governance", label: "Governance", icon: ShieldCheck, stage: null },
 ];
 

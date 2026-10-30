@@ -86,7 +86,10 @@ export async function writeSuccessionAuditEvent(input: AuditEventInput): Promise
     event_key: input.event_key
       ? (typeof input.event_key === "string" ? input.event_key : JSON.stringify(input.event_key))
       : null,
-    event_type: input.event_type || null,
+    // Every audit record must carry a type. Callers that pass event_type keep it;
+    // callers that only pass action_type (e.g. cross-tenant denials) get the
+    // action_type as the type, so a log query never has to guess.
+    event_type: input.event_type || action_type,
     target_record_id: input.target_record_id || null,
     attempt_number: input.attempt_number ?? 1,
   };

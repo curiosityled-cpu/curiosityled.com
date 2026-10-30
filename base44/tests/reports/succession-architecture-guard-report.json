@@ -1,12 +1,12 @@
 {
   "guard_version": "3.0-hardened",
-  "checked_at": "2026-10-30T02:36:03.554Z",
+  "checked_at": "2026-10-30T18:22:44.616Z",
   "exception_list_reviewed": "2026-09-25",
   "passed": true,
-  "total_functions": 124,
-  "total_backend_functions_scanned": 532,
+  "total_functions": 127,
+  "total_backend_functions_scanned": 535,
   "coverage": {
-    "operational": 111,
+    "operational": 114,
     "control_plane": 6,
     "infrastructure": 3,
     "test_harness": 4,
@@ -411,6 +411,16 @@
       "issues": []
     },
     {
+      "name": "successionGetBenchStrength",
+      "classification": "operational",
+      "bootstrap_offset": 271,
+      "authorize_offset": 404,
+      "domain_access_offset": 728,
+      "domain_access_entity": "CriticalRole",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
       "name": "successionGetBlueprint",
       "classification": "operational",
       "bootstrap_offset": 407,
@@ -627,6 +637,16 @@
       "authorize_offset": 492,
       "domain_access_offset": 724,
       "domain_access_entity": "SuccessionCycle",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionListDecisionRecords",
+      "classification": "operational",
+      "bootstrap_offset": 368,
+      "authorize_offset": 501,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
       "ordering_ok": true,
       "issues": []
     },
@@ -867,6 +887,16 @@
       "authorize_offset": 889,
       "domain_access_offset": 2982,
       "domain_access_entity": "CalibrationJudgment",
+      "ordering_ok": true,
+      "issues": []
+    },
+    {
+      "name": "successionRecordDecision",
+      "classification": "operational",
+      "bootstrap_offset": 772,
+      "authorize_offset": 915,
+      "domain_access_offset": -1,
+      "domain_access_entity": "",
       "ordering_ok": true,
       "issues": []
     },

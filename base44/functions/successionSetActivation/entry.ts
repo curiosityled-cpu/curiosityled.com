@@ -114,7 +114,7 @@ export default async function (req: Request): Promise<Response> {
       previous_value: currentValue,
       reason: reason.trim(),
       actor_role: role,
-      actor_email: user.email,
+      actor_email: auth.user.email,
     },
     client_id_override: canonicalId,
   });

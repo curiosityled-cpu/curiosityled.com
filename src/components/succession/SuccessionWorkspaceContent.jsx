@@ -24,11 +24,13 @@ import TransitionsView from "@/components/succession/TransitionsView";
 import TransitionDetailView from "@/components/succession/TransitionDetailView";
 import OperationalMonitorView from "@/components/succession/OperationalMonitorView";
 import ReviewQueueView from "@/components/succession/ReviewQueueView";
+import DecisionRecordsView from "@/components/succession/DecisionRecordsView";
+import BenchStrengthView from "@/components/succession/BenchStrengthView";
 import DemoDataButton from "@/components/succession/DemoDataButton";
 import { useClient } from "@/components/contexts/ClientContext";
 
 // Guided shell components
-import { STAGES, STAGE_MAP } from "@/components/succession/guided/stageConfig";
+import { STAGES, STAGE_MAP, normalizeStage } from "@/components/succession/guided/stageConfig";
 import StageRail from "@/components/succession/guided/StageRail";
 import WhatToDoNext from "@/components/succession/guided/WhatToDoNext";
 import AllViewsDrawer from "@/components/succession/guided/AllViewsDrawer";
@@ -75,6 +77,10 @@ function renderView(viewKey) {
       return <OperationalMonitorView />;
     case "review-queue":
       return <ReviewQueueView />;
+    case "decision-records":
+      return <DecisionRecordsView />;
+    case "bench-strength":
+      return <BenchStrengthView />;
     case "governance":
       return <GovernanceView />;
     default:
@@ -147,8 +153,9 @@ export default function SuccessionWorkspaceContent() {
           null;
         setActiveCycle(active);
         if (active?.process_stage) {
-          setActiveStage(active.process_stage);
-          const stage = STAGE_MAP[active.process_stage];
+          const normalized = normalizeStage(active.process_stage);
+          setActiveStage(normalized);
+          const stage = STAGE_MAP[normalized];
           if (stage?.views?.length) {
             setActiveView(stage.views[0]);
           }
@@ -185,7 +192,7 @@ export default function SuccessionWorkspaceContent() {
     }
   };
 
-  const stage = STAGE_MAP[activeStage];
+  const stage = STAGE_MAP[activeStage] || STAGE_MAP.frame;
   const isReadOnly =
     role !== "admin" && stage && !stage.roles.includes(role);
 
@@ -217,7 +224,7 @@ export default function SuccessionWorkspaceContent() {
           <aside className="hidden lg:block w-56 flex-shrink-0 space-y-3">
             <StageRail
               stages={STAGES}
-              currentStage={activeCycle?.process_stage || activeStage}
+              currentStage={normalizeStage(activeCycle?.process_stage) || activeStage}
               activeStage={activeStage}
               onSelect={(key) => handleStageSelect(key)}
               role={role}
@@ -231,7 +238,7 @@ export default function SuccessionWorkspaceContent() {
             <div className="lg:hidden">
               <StageRail
                 stages={STAGES}
-                currentStage={activeCycle?.process_stage || activeStage}
+                currentStage={normalizeStage(activeCycle?.process_stage) || activeStage}
                 activeStage={activeStage}
                 onSelect={(key) => handleStageSelect(key)}
                 role={role}
