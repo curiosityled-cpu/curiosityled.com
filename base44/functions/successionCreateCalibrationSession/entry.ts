@@ -4,6 +4,7 @@ import { authorizeSuccessionAction } from "../../shared/authorizeSuccessionActio
 import { writeSuccessionAuditEvent } from "../../shared/successionAuditWriter.ts";
 import { createOrAttachOperation, beginOperationExecution, completeOperation, failOperation } from "../../shared/successionOperationHelper.ts";
 import { validateSameTenantReference, writeDeniedReferenceEvent } from "../../shared/successionCrossTenantValidation.ts";
+import { evaluateDeliberationReadiness } from "../../shared/successionDataQualityGate.ts";
 
 /**
  * POST /successionCreateCalibrationSession
@@ -50,6 +51,38 @@ export default async function(req: Request): Promise<Response> {
       await writeDeniedReferenceEvent(base44, auth, "SuccessionCycle", cycle_id, "cross_tenant_or_not_found", opResult.operation.id);
       await failOperation(base44, opResult.operation.id, "cycle_not_found");
       return Response.json({ error: "Cycle not found" }, { status: 404 });
+    }
+
+    // ── Pre-deliberation data-quality gate ──
+    // A deliberation may not open on material that cannot support a decision.
+    const gate = await evaluateDeliberationReadiness({
+      base44,
+      client_id: auth.client_id,
+      cycle_id,
+      conclusion_ids: cases.map((c: any) => c.readiness_conclusion_id).filter(Boolean),
+    });
+    if (!gate.ok) {
+      await writeSuccessionAuditEvent({
+        base44, action_type: "deliberation_gate_blocked",
+        target_entity_type: "SuccessionCycle", target_entity_id: cycle_id,
+        metadata: {
+          blocking_codes: gate.blocking.map((f) => f.code),
+          conclusion_ids: cases.map((c: any) => c.readiness_conclusion_id).filter(Boolean),
+        },
+        operation_id, event_key: { action: "deliberation_gate_blocked", cycle_id },
+        event_type: "domain_action_denied", target_record_id: cycle_id, attempt_number: 1,
+      });
+      await failOperation(base44, opResult.operation.id, "deliberation_gate_blocked");
+      return Response.json(
+        {
+          error:
+            "This deliberation cannot open yet. " +
+            (gate.blocking[0]?.detail || "The material does not meet the pre-deliberation standard."),
+          blocking: gate.blocking,
+          warnings: gate.warnings,
+        },
+        { status: 409 }
+      );
     }
 
     const effectiveQuorum = quorum_required || 3;
