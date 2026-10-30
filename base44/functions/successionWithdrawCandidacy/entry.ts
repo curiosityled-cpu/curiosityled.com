@@ -2,6 +2,7 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.49";
 import { bootstrapSuccessionAuth } from "../../shared/successionAuthBootstrap.ts";
 import { authorizeSuccessionAction } from "../../shared/authorizeSuccessionAction.ts";
 import { writeSuccessionAuditEvent } from "../../shared/successionAuditWriter.ts";
+import { checkHolds } from "../../shared/successionLegalHold.ts";
 import { createOrAttachOperation, beginOperationExecution, completeOperation, failOperation } from "../../shared/successionOperationHelper.ts";
 import { validateSameTenantReference, writeDeniedReferenceEvent } from "../../shared/successionCrossTenantValidation.ts";
 
@@ -48,6 +49,35 @@ export default async function(req: Request): Promise<Response> {
       await writeDeniedReferenceEvent(base44, auth, "SuccessorCandidacy", candidacy_id, "cross_tenant_or_not_found", opResult.operation.id);
       await failOperation(base44, opResult.operation.id, "candidacy_not_found");
       return Response.json({ error: "Candidacy not found" }, { status: 404 });
+    }
+
+    // ── Legal hold: a frozen record may not be withdrawn ──
+    const holdStatus = await checkHolds({
+      base44,
+      client_id: auth.client_id,
+      entity_type: "SuccessorCandidacy",
+      record_id: candidacy_id,
+      subject_profile_id: candidacy.user_profile_id,
+      cycle_id: candidacy.cycle_id,
+    });
+    if (holdStatus.held) {
+      await writeSuccessionAuditEvent({
+        base44,
+        action_type: "denied_action",
+        target_entity_type: "SuccessorCandidacy",
+        target_entity_id: candidacy_id,
+        metadata: {
+          action: "successionWithdrawCandidacy",
+          denied_reason: "legal_hold_active",
+          hold_ids: holdStatus.hold_ids,
+        },
+        operation_id,
+      });
+      await failOperation(base44, opResult.operation.id, "legal_hold_active");
+      return Response.json(
+        { error: `This record is under legal hold and cannot be withdrawn. ${holdStatus.reason_summary}` },
+        { status: 409 }
+      );
     }
 
     if (candidacy.status === "withdrawn") {

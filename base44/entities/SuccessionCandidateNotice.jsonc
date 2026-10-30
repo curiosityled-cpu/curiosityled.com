@@ -1,0 +1,184 @@
+{
+  "name": "SuccessionCandidateNotice",
+  "type": "object",
+  "description": "A notice owed to a candidate about their own succession record: that they are being considered, that evidence is being used, what readiness was concluded, what decision was taken, or that their record is under legal hold or approaching retention. Drafted and sent only by the succession server function, and versioned rather than edited, so what the candidate was actually told is always readable exactly as it was sent. A notice never carries another candidate's information.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side, never accepted from frontend input."
+    },
+    "candidacy_id": {
+      "type": "string",
+      "description": "SuccessorCandidacy ID this notice concerns."
+    },
+    "cycle_id": {
+      "type": "string",
+      "description": "SuccessionCycle ID the notice belongs to, denormalized so the notice stays meaningful if the candidacy is later withdrawn."
+    },
+    "critical_role_id": {
+      "type": "string",
+      "description": "CriticalRole ID the candidacy was for."
+    },
+    "role_title": {
+      "type": "string",
+      "description": "Title of the role as stated when the notice was drafted."
+    },
+    "subject_profile_id": {
+      "type": "string",
+      "description": "UserProfile ID of the candidate. Derived from the candidacy, never from request input."
+    },
+    "subject_email": {
+      "type": "string",
+      "description": "Email of the candidate. Derived from the candidacy."
+    },
+    "notice_type": {
+      "type": "string",
+      "enum": [
+        "candidacy_inclusion",
+        "evidence_use",
+        "readiness_outcome",
+        "decision_outcome",
+        "legal_hold",
+        "retention"
+      ],
+      "description": "What the candidate is being told."
+    },
+    "summary": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "One line stating the notice's point, shown in the notice list."
+    },
+    "body": {
+      "type": "string",
+      "maxLength": 6000,
+      "description": "The full text the candidate reads. Written against the role criteria, never against the person, and never carrying another candidate's information."
+    },
+    "legal_basis": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Why this notice is owed (policy, regulation or works-council agreement), kept so the obligation can be shown later."
+    },
+    "version": {
+      "type": "number",
+      "default": 1,
+      "description": "Version of this notice for the candidacy and notice type. A correction is a new version, not an edit."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "sent",
+        "acknowledged",
+        "withdrawn"
+      ],
+      "default": "draft",
+      "description": "draft = written but not delivered; sent = delivered to the candidate; acknowledged = the candidate has confirmed receipt; withdrawn = superseded before delivery."
+    },
+    "delivered_channel": {
+      "type": "string",
+      "enum": [
+        "in_app",
+        "email"
+      ],
+      "description": "How the notice reached the candidate."
+    },
+    "notification_id": {
+      "type": "string",
+      "description": "ID of the in-app notification created for this notice."
+    },
+    "drafted_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the administrator who drafted the notice. Derived server-side."
+    },
+    "drafted_by_email": {
+      "type": "string",
+      "description": "Email of the administrator who drafted the notice."
+    },
+    "drafted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the notice was drafted."
+    },
+    "sent_by_email": {
+      "type": "string",
+      "description": "Email of the administrator who sent the notice."
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the notice was delivered."
+    },
+    "acknowledged_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the candidate confirmed receipt."
+    },
+    "acknowledged_by_email": {
+      "type": "string",
+      "description": "Email of the candidate who acknowledged."
+    },
+    "acknowledgement_note": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Optional note recorded with the acknowledgement."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "highly_confidential",
+      "description": "Confidentiality classification of this notice."
+    }
+  },
+  "required": [
+    "client_id",
+    "candidacy_id",
+    "notice_type",
+    "status"
+  ],
+  "rls": {
+    "create": null,
+    "update": null,
+    "delete": null,
+    "read": {
+      "$or": [
+        {
+          "data.subject_email": "{{user.email}}"
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

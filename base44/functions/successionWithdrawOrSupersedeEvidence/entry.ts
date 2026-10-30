@@ -5,6 +5,7 @@ import { writeSuccessionAuditEvent } from "../../shared/successionAuditWriter.ts
 import { createOrAttachOperation, beginOperationExecution, completeOperation, failOperation } from "../../shared/successionOperationHelper.ts";
 import { validateSameTenantReference, writeDeniedReferenceEvent } from "../../shared/successionCrossTenantValidation.ts";
 import { validateEvidenceChain } from "../../shared/successionEvidenceValidator.ts";
+import { checkHolds } from "../../shared/successionLegalHold.ts";
 
 /**
  * POST /successionWithdrawOrSupersedeEvidence
@@ -79,6 +80,35 @@ export default async function(req: Request): Promise<Response> {
       await writeDeniedReferenceEvent(base44, auth, "EvidenceRecord", evidence_id, "cross_tenant_or_not_found", opResult.operation.id);
       await failOperation(base44, opResult.operation.id, "evidence_not_found");
       return Response.json({ error: "Evidence not found" }, { status: 404 });
+    }
+
+    // ── Legal hold: a frozen record may not be withdrawn or superseded ──
+    const holdStatus = await checkHolds({
+      base44,
+      client_id: auth.client_id,
+      entity_type: "EvidenceRecord",
+      record_id: evidence_id,
+      subject_profile_id: evidence.user_profile_id,
+    });
+    if (holdStatus.held) {
+      await writeSuccessionAuditEvent({
+        base44,
+        action_type: "denied_action",
+        target_entity_type: "EvidenceRecord",
+        target_entity_id: evidence_id,
+        metadata: {
+          action: "successionWithdrawOrSupersedeEvidence",
+          denied_reason: "legal_hold_active",
+          mode,
+          hold_ids: holdStatus.hold_ids,
+        },
+        operation_id: opResult.operation.id,
+      });
+      await failOperation(base44, opResult.operation.id, "legal_hold_active");
+      return Response.json(
+        { error: `This record is under legal hold and cannot be ${mode === "withdraw" ? "withdrawn" : "superseded"}. ${holdStatus.reason_summary}` },
+        { status: 409 }
+      );
     }
 
     // ── Only the submitter may withdraw or supersede ──

@@ -1,0 +1,146 @@
+{
+  "name": "SuccessionLegalHold",
+  "type": "object",
+  "description": "A legal hold on succession records. While a hold is active the covered records are preserved and must not be purged, archived, withdrawn or superseded, regardless of retention windows. A hold is placed and released only by the succession server function, always with a recorded reason and an append-only audit event, so the freeze on a record can be reconstructed. Records are never deleted: a released hold stays readable as history.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side, never accepted from frontend input."
+    },
+    "scope_type": {
+      "type": "string",
+      "enum": [
+        "record",
+        "subject",
+        "cycle"
+      ],
+      "description": "record = one named record; subject = everything held about one person (their candidacies, evidence, disclosures, notices); cycle = every record belonging to one succession cycle."
+    },
+    "target_entity_type": {
+      "type": "string",
+      "description": "Entity type of the held record (scope_type=record only). Restricted to a server-side allowlist."
+    },
+    "target_entity_id": {
+      "type": "string",
+      "description": "ID of the held record (scope_type=record only)."
+    },
+    "subject_profile_id": {
+      "type": "string",
+      "description": "UserProfile ID of the person whose file is frozen (scope_type=subject)."
+    },
+    "subject_email": {
+      "type": "string",
+      "description": "Email of the person whose file is frozen, kept for readability in the hold register."
+    },
+    "cycle_id": {
+      "type": "string",
+      "description": "SuccessionCycle ID whose records are frozen (scope_type=cycle)."
+    },
+    "matter_reference": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "Optional reference of the legal matter, investigation or dispute this hold answers to."
+    },
+    "reason": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Why the hold applies. Required, and required to be substantive: a hold with no stated reason cannot be defended later."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "released"
+      ],
+      "default": "active",
+      "description": "active = records are frozen; released = the freeze has been lifted and the hold is kept as history."
+    },
+    "placed_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the administrator who placed the hold. Derived server-side."
+    },
+    "placed_by_email": {
+      "type": "string",
+      "description": "Email of the administrator who placed the hold."
+    },
+    "placed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the hold was placed."
+    },
+    "released_by_profile_id": {
+      "type": "string",
+      "description": "Profile ID of the administrator who released the hold. Derived server-side."
+    },
+    "released_by_email": {
+      "type": "string",
+      "description": "Email of the administrator who released the hold."
+    },
+    "released_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the hold was released."
+    },
+    "release_reason": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Why the hold was lifted. Recorded on release and never overwritten."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "legally_restricted",
+      "description": "Confidentiality classification of this hold record."
+    }
+  },
+  "required": [
+    "client_id",
+    "scope_type",
+    "reason",
+    "status",
+    "placed_at"
+  ],
+  "rls": {
+    "create": null,
+    "update": null,
+    "delete": null,
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

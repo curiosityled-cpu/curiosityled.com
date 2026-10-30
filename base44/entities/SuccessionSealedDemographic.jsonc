@@ -1,0 +1,139 @@
+{
+  "name": "SuccessionSealedDemographic",
+  "type": "object",
+  "description": "A sealed demographic attribute set for one person, held only so adverse-impact analysis can be run on succession outcomes. Sealed means deliberately separated: no succession screen, candidate view, readiness opinion or decision record may read these values, and only the adverse-impact analysis function may join them to outcomes, in aggregate. Individual rows are readable only by compliance-designated administrators. Values are purged on request and never used to score, rank or select anyone.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Canonical tenant ID (sole partition key). Derived server-side, never accepted from frontend input."
+    },
+    "subject_profile_id": {
+      "type": "string",
+      "description": "UserProfile ID of the person these attributes belong to. The join key used by the adverse-impact analysis; never returned to a succession screen."
+    },
+    "subject_email": {
+      "type": "string",
+      "description": "Lower-cased email of the person, used to match outcomes recorded by email."
+    },
+    "subject_ref_hash": {
+      "type": "string",
+      "description": "Stable salted hash of the subject reference, kept so records can be matched and purged without exposing the underlying identifier in exports."
+    },
+    "collection_source": {
+      "type": "string",
+      "enum": [
+        "hris",
+        "file",
+        "manual"
+      ],
+      "description": "How the attributes arrived: from the HR system of record, a supplied file, or manual entry."
+    },
+    "collection_reference": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Optional reference for the source of the values (HRIS export name, file name, entry note) so the provenance can be shown."
+    },
+    "consent_basis": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Why the organisation may hold these attributes (legal or policy basis). Required at ingestion."
+    },
+    "attributes": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "The sealed attribute values themselves, keyed by a fixed set of dimensions (gender, race_ethnicity, age_band, disability_status, veteran_status, other). Never displayed beside a name."
+    },
+    "sealed": {
+      "type": "boolean",
+      "default": true,
+      "description": "Always true in normal operation. A row is only unsealed by an explicit compliance action, and that action is audited."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "sealed",
+        "purged"
+      ],
+      "default": "sealed",
+      "description": "purged = the attribute values have been erased at the subject's request or at the end of the retention window; the row remains as proof the purge happened."
+    },
+    "collected_by_email": {
+      "type": "string",
+      "description": "Email of the administrator who ingested the attributes. Derived server-side."
+    },
+    "collected_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the attributes were ingested."
+    },
+    "purge_after": {
+      "type": "string",
+      "format": "date",
+      "description": "Date after which the attribute values should be purged if they have not been already."
+    },
+    "purged_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the attribute values were erased."
+    },
+    "purged_by_email": {
+      "type": "string",
+      "description": "Email of the administrator who erased the attribute values."
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "confidential",
+        "highly_confidential",
+        "legally_restricted"
+      ],
+      "default": "legally_restricted",
+      "description": "Confidentiality classification of this record."
+    }
+  },
+  "required": [
+    "client_id",
+    "consent_basis",
+    "attributes",
+    "status"
+  ],
+  "rls": {
+    "create": null,
+    "update": null,
+    "delete": null,
+    "read": {
+      "$or": [
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}
