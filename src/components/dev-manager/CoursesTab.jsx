@@ -10,6 +10,7 @@ import {
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+import { format } from "date-fns";
 import CourseBuilderDialog from "./CourseBuilderDialog";
 import AssignCourseModal from "./AssignCourseModal";
 import CourseRosterDrawer from "@/components/learning/CourseRosterDrawer";
@@ -40,18 +41,27 @@ export default function CoursesTab({ user }) {
   const [builderOpen, setBuilderOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [versions, setVersions] = useState({});
 
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [coursesData, usersData, cohortsData] = await Promise.all([
+      const [coursesData, usersData, cohortsData, versionRows] = await Promise.all([
         base44.entities.Course.list("-created_date"),
         base44.entities.User.list(),
         base44.entities.Cohort.list(),
+        base44.entities.CourseVersion.list("-version").catch(() => []),
       ]);
       setCourses(coursesData || []);
       setUsers(usersData || []);
       setCohorts(cohortsData || []);
+
+      // The newest published version per course — what people actually completed.
+      const latest = {};
+      (versionRows || []).forEach((row) => {
+        if (!latest[row.course_id] || latest[row.course_id].version < row.version) latest[row.course_id] = row;
+      });
+      setVersions(latest);
     } catch (error) {
       console.error("Error loading courses:", error);
       toast.error("Failed to load courses");
@@ -73,12 +83,21 @@ export default function CoursesTab({ user }) {
 
   const handleStatusChange = async (course, newStatus) => {
     try {
-      await base44.entities.Course.update(course.id, { status: newStatus });
-      toast.success(`Course ${newStatus === "published" ? "published" : newStatus === "archived" ? "archived" : "updated"}`);
+      if (newStatus === "published") {
+        // Publishing snapshots the course, so completions always point at real content.
+        const response = await base44.functions.invoke("learningRecordCommand", {
+          action: "publish_course",
+          course_id: course.id,
+        });
+        toast.success(`Published as version ${response?.data?.version?.version ?? 1}`);
+      } else {
+        await base44.entities.Course.update(course.id, { status: newStatus });
+        toast.success(`Course ${newStatus === "archived" ? "archived" : "updated"}`);
+      }
       setRefreshKey(k => k + 1);
     } catch (error) {
       console.error("Error updating status:", error);
-      toast.error("Failed to update status");
+      toast.error(error?.response?.data?.error || "Failed to update status");
     }
   };
 
@@ -226,6 +245,11 @@ export default function CoursesTab({ user }) {
                             </DropdownMenuItem>
                           )}
                           {course.status === "published" && (
+                            <DropdownMenuItem onClick={() => handleStatusChange(course, "published")}>
+                              <Play className="w-3.5 h-3.5 mr-2" /> Publish new version
+                            </DropdownMenuItem>
+                          )}
+                          {course.status === "published" && (
                             <DropdownMenuItem onClick={() => handleStatusChange(course, "archived")}>
                               <Pause className="w-3.5 h-3.5 mr-2" /> Archive
                             </DropdownMenuItem>
@@ -245,6 +269,14 @@ export default function CoursesTab({ user }) {
                     {course.description && <p className="text-xs text-gray-500 line-clamp-2">{course.description}</p>}
                     <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-gray-100">
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badge.className}`}>{badge.label}</span>
+                      {versions[course.id] && (
+                        <span
+                          className="text-[10px] px-1.5 py-0.5 rounded bg-gray-900 text-white font-mono"
+                          title={`Published ${format(new Date(versions[course.id].published_at), "MMM d, yyyy")} by ${versions[course.id].published_by || "an admin"}`}
+                        >
+                          v{versions[course.id].version}
+                        </span>
+                      )}
                       <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-600 flex items-center gap-1">
                         <PacingIcon className="w-3 h-3" />{pacingMeta.label}
                       </span>

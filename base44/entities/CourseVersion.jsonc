@@ -1,0 +1,85 @@
+{
+  "name": "CourseVersion",
+  "type": "object",
+  "description": "An immutable snapshot of a course at the moment it was published. Completions are recorded against a version, so editing a course afterwards never changes what a past completion meant. Records are written only by the learning server function and are never updated or deleted by app code.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this version belongs to"
+    },
+    "course_id": {
+      "type": "string",
+      "description": "ID of the Course this snapshot was taken from"
+    },
+    "course_title": {
+      "type": "string",
+      "description": "Course title at the moment of publishing"
+    },
+    "version": {
+      "type": "number",
+      "description": "Version number, starting at 1 and incrementing on each publish"
+    },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "The published body of the course: modules, lessons, and the completion rule in force at publish time"
+    },
+    "lesson_count": {
+      "type": "number",
+      "description": "Number of lessons in this published version"
+    },
+    "published_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this version was published"
+    },
+    "published_by": {
+      "type": "string",
+      "description": "Email of the administrator who published this version"
+    },
+    "superseded_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When a later version replaced this one. Superseded versions are kept, never removed."
+    },
+    "change_note": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional note from the publisher describing what changed"
+    }
+  },
+  "required": [
+    "client_id",
+    "course_id",
+    "version",
+    "snapshot",
+    "published_at"
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "$or": [
+        {
+          "data.client_id": "{{user.data.client_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "User Level 2"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Analyst"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "update": null,
+    "delete": null
+  }
+}

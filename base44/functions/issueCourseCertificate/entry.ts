@@ -61,6 +61,22 @@ export default async function (req: Request): Promise<Response> {
       certificate_id: certificate.id,
     });
 
+    // Part of the learner's record: the certificate is evidence, so it is timestamped
+    // alongside the completion it belongs to.
+    await service.entities.LearningRecordEvent.create({
+      client_id: progress.client_id || course?.client_id || null,
+      event_type: 'certificate_issued',
+      learner_email: user.email,
+      learner_name: user.full_name || null,
+      actor_email: user.email,
+      actor_role: 'learner',
+      source: 'system',
+      course_id: progress.course_id,
+      course_title: course?.title || progress.course_title || null,
+      occurred_at: new Date().toISOString(),
+      metadata: { certificate_id: certificate.id, verification_code: certificate.verification_code },
+    }).catch((error) => console.warn('Learning record event failed:', error.message));
+
     // Rewards are best effort: they must never block the certificate itself.
     const rewards = await awardCourseRewards(req, base44, service, {
       user,

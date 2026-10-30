@@ -1,6 +1,7 @@
 {
   "name": "CourseProgress",
   "type": "object",
+  "description": "A learner's progress through one course. Completion state is owned by the learning record server, not the browser: learners can read their own row, but only administrators (and trusted server functions) can create or change one, so a completion cannot be fabricated or quietly edited.",
   "properties": {
     "course_id": {
       "type": "string",
@@ -103,9 +104,6 @@
     "create": {
       "$or": [
         {
-          "data.learner_email": "{{user.email}}"
-        },
-        {
           "user_condition": {
             "role": "admin"
           }
@@ -123,6 +121,11 @@
         {
           "user_condition": {
             "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
           }
         },
         {
@@ -191,6 +194,20 @@
           ]
         },
         {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "User Level 2"
+              }
+            },
+            {
+              "data.learner_email": {
+                "$in": "{{user.data.subordinate_emails}}"
+              }
+            }
+          ]
+        },
+        {
           "user_condition": {
             "role": "Platform Admin"
           }
@@ -199,9 +216,6 @@
     },
     "update": {
       "$or": [
-        {
-          "data.learner_email": "{{user.email}}"
-        },
         {
           "user_condition": {
             "role": "admin"
@@ -220,6 +234,11 @@
         {
           "user_condition": {
             "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Partner Business Administrator"
           }
         },
         {

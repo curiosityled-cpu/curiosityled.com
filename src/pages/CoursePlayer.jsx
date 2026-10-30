@@ -49,44 +49,26 @@ export default function CoursePlayer() {
     }
   }, []);
 
-  // Lessons and course definition arrive as arguments, never read from render state:
-  // a captured value here changes identity on every load, which would change load()
-  // itself and re-trigger the load effect in a loop.
-  const applyCompletion = useCallback(
-    async (ids, record, lessons, courseDef) => {
-      const rule = courseDef?.completion_rule || { type: "all_lessons" };
-      const percent = lessons.length ? Math.round((ids.length / lessons.length) * 100) : 0;
-      const isComplete =
-        lessons.length > 0 &&
-        (rule.type === "minimum_lessons"
-          ? ids.length >= Math.max(1, rule.minimum_count || 1)
-          : ids.length === lessons.length);
-
-      const existing = new Map(
-        (record?.completed_lessons || []).map((entry) => [entry.lesson_id, entry.completed_at])
-      );
-      const wasComplete = record?.status === "completed";
-
-      const updated = await base44.entities.CourseProgress.update(record.id, {
-        completed_lessons: ids.map((id) => ({
-          lesson_id: id,
-          completed_at: existing.get(id) || new Date().toISOString(),
-        })),
-        overall_percentage: percent,
-        status: isComplete ? "completed" : "in_progress",
-        last_lesson_id: ids.includes(record.last_lesson_id) ? record.last_lesson_id : ids[ids.length - 1],
-        ...(isComplete ? { completed_at: record.completed_at || new Date().toISOString() } : {}),
+  // Completion is decided by the learning server, never written from the browser: the
+  // learner reports the lesson they finished and the server derives the result against
+  // the course's published version, then records it in the learner's permanent record.
+  const command = useCallback(
+    async (action, lessonId) => {
+      const response = await base44.functions.invoke("learningRecordCommand", {
+        action,
+        course_id: courseId,
+        ...(lessonId ? { lesson_id: lessonId } : {}),
       });
-      setProgress(updated);
-
-      if (isComplete && !wasComplete) {
+      const updated = response?.data?.progress;
+      if (updated) setProgress(updated);
+      if (response?.data?.completed_now && updated) {
         confetti({ particleCount: 120, spread: 75, origin: { y: 0.7 } });
         toast.success("Course complete");
         await issueCertificate(updated.id);
       }
       return updated;
     },
-    [issueCertificate]
+    [courseId, issueCertificate]
   );
 
   const load = useCallback(async () => {
@@ -100,21 +82,12 @@ export default function CoursePlayer() {
       const found = courses?.[0] || null;
       setCourse(found);
 
-      let record = rows?.[0] || null;
-      if (!record && found) {
-        record = await base44.entities.CourseProgress.create({
-          course_id: courseId,
-          course_title: found.title,
-          learner_email: email,
-          client_id: found.client_id,
-          status: "not_started",
-          overall_percentage: 0,
-          enrolled_at: new Date().toISOString(),
-          last_accessed_at: new Date().toISOString(),
-        });
-      }
-      setProgress(record);
-      if (!record || !found) return;
+      if (!found) return;
+
+      // Opening a course enrols the learner and resumes where they left off — done by the
+      // server so the record is never a browser claim.
+      const record = (await command("ensure_enrollment")) || rows?.[0] || null;
+      if (!record) return;
 
       const { lessons, done } = computeCourseProgress(found, record);
       const resume =
@@ -123,41 +96,13 @@ export default function CoursePlayer() {
 
       if (record.status === "completed") {
         await issueCertificate(record.id);
-      } else if (record.status === "not_started") {
-        const touched = await base44.entities.CourseProgress.update(record.id, {
-          status: "in_progress",
-          last_accessed_at: new Date().toISOString(),
-          last_lesson_id: resume?.id,
-        });
-        setProgress(touched);
-      } else {
-        base44.entities.CourseProgress.update(record.id, {
-          last_accessed_at: new Date().toISOString(),
-          last_lesson_id: resume?.id,
-        });
       }
 
-      // Sync lessons backed by conversational modules the learner already finished.
+      // Lessons backed by conversational modules the learner already finished are
+      // completed by the server from that module's own progress record.
       if (!syncedRef.current && lessons.some((lesson) => lesson.content_type === "conversational_module")) {
         syncedRef.current = true;
-        const moduleProgress = await base44.entities.LearnerProgress.filter({
-          user_email: email,
-          status: "completed",
-        });
-        const completedModuleIds = new Set(
-          (moduleProgress || []).map((row) => row.conversational_learning_module_id)
-        );
-        const autoIds = lessons
-          .filter(
-            (lesson) =>
-              lesson.content_type === "conversational_module" &&
-              completedModuleIds.has(lesson.reference_id) &&
-              !done.has(lesson.id)
-          )
-          .map((lesson) => lesson.id);
-        if (autoIds.length) {
-          await applyCompletion([...done, ...autoIds], record, lessons, found);
-        }
+        await command("sync_modules");
       }
     } catch (error) {
       console.error("Course load error:", error);
@@ -165,7 +110,7 @@ export default function CoursePlayer() {
     } finally {
       setLoading(false);
     }
-  }, [courseId, email, applyCompletion, issueCertificate]);
+  }, [courseId, email, command, issueCertificate]);
 
   useEffect(() => {
     load();
@@ -178,7 +123,7 @@ export default function CoursePlayer() {
     const next = computed.lessons.find((item) => !ids.has(item.id));
     if (next) setCurrentId(next.id);
     try {
-      await applyCompletion([...ids], progress, computed.lessons, course);
+      await command("complete_lesson", lesson.id);
     } catch (error) {
       console.error(error);
       toast.error("Could not save your progress. Please try again.");

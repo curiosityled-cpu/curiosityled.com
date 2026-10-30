@@ -9,7 +9,7 @@ import CohortsTab from "@/components/dev-manager/CohortsTab";
 import SignalsTab from "@/components/dev-manager/SignalsTab";
 import ExperienceAnalyticsTab from "@/components/experience-mgmt/ExperienceAnalyticsTab";
 import CoachAnalyticsTab from "@/components/experience-mgmt/CoachAnalyticsTab";
-import LearningAnalyticsTab from "@/components/dev-manager/LearningAnalyticsTab";
+import LearningWorkspace from "@/components/dev-manager/learning/LearningWorkspace";
 
 // Lazy load request components
 const RequestDetailPanel = lazy(() => import("@/components/requests/RequestDetailPanel"));
@@ -219,10 +219,10 @@ export default function DevelopmentManager() {
         </motion.div>
       )}
 
-      {/* ── LEARNING ANALYTICS ── */}
+      {/* ── LEARNING (catalog / assignments / records / insights) ── */}
       {section === 'learning' && (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <LearningAnalyticsTab />
+          <LearningWorkspace user={user} />
         </motion.div>
       )}
 

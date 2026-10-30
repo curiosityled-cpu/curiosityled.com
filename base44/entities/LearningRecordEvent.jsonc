@@ -1,0 +1,177 @@
+{
+  "name": "LearningRecordEvent",
+  "type": "object",
+  "description": "Append-only history of a learner's record for one item of learning. Every consequential learning action (publishing content, enrolling, completing a lesson, completing a course, issuing a certificate) is written here as an immutable, timestamped record so a transcript can be reconstructed later and shown to be unaltered. App code never updates or deletes these records: they are created only by trusted server functions.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this record belongs to. Canonical tenant partition key."
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "course_published",
+        "course_enrolled",
+        "lesson_completed",
+        "course_completed",
+        "certificate_issued"
+      ],
+      "description": "What happened"
+    },
+    "learner_email": {
+      "type": "string",
+      "description": "Email of the person the record is about (the learner). For content events such as publishing, this is the acting administrator."
+    },
+    "learner_name": {
+      "type": "string",
+      "description": "Name of the learner at the time of the event, kept so the record still reads sensibly after a name change"
+    },
+    "actor_email": {
+      "type": "string",
+      "description": "Email of the person who performed the action"
+    },
+    "actor_role": {
+      "type": "string",
+      "description": "Role the actor acted in (learner, manager, admin, system)"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "learner",
+        "admin",
+        "system"
+      ],
+      "default": "learner",
+      "description": "Where the action came from"
+    },
+    "course_id": {
+      "type": "string",
+      "description": "ID of the course this record concerns"
+    },
+    "course_title": {
+      "type": "string",
+      "description": "Course title at the time of the event, denormalized so the record survives the course being renamed or archived"
+    },
+    "course_version": {
+      "type": "number",
+      "description": "Published version of the course the event was recorded against. This is what makes 'completed the course' provably mean a specific body of content."
+    },
+    "lesson_id": {
+      "type": "string",
+      "description": "ID of the lesson, when the event concerns one"
+    },
+    "lesson_title": {
+      "type": "string",
+      "description": "Lesson title at the time of the event"
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Server timestamp of the event"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Supporting detail for the event (completion rule applied, certificate id, change note, etc.)"
+    }
+  },
+  "required": [
+    "client_id",
+    "event_type",
+    "learner_email",
+    "occurred_at"
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "$or": [
+        {
+          "data.learner_email": "{{user.email}}"
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Analyst"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "User Level 2"
+              }
+            },
+            {
+              "data.learner_email": {
+                "$in": "{{user.data.subordinate_emails}}"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            },
+            {
+              "data.client_id": {
+                "$in": "{{user.data.partner_client_ids}}"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "update": null,
+    "delete": null
+  }
+}

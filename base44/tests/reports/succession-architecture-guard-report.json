@@ -1,10 +1,10 @@
 {
   "guard_version": "3.0-hardened",
-  "checked_at": "2026-10-29T03:09:32.426Z",
+  "checked_at": "2026-10-30T01:28:35.323Z",
   "exception_list_reviewed": "2026-09-25",
   "passed": true,
   "total_functions": 124,
-  "total_backend_functions_scanned": 529,
+  "total_backend_functions_scanned": 530,
   "coverage": {
     "operational": 111,
     "control_plane": 6,
