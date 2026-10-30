@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
 export default function MyCustomAssessmentsView() {
@@ -166,6 +166,7 @@ export default function MyCustomAssessmentsView() {
 }
 
 function AssessmentCard({ assessment, submission, index, showResults = false }) {
+  const navigate = useNavigate();
   const isInProgress = submission?.status === 'in_progress';
   const isCompleted = submission?.status === 'completed' || submission?.status === 'graded';
 
@@ -234,7 +235,10 @@ function AssessmentCard({ assessment, submission, index, showResults = false }) 
             )}
 
             {!showResults && (
-              <Button className="w-full mt-2 bg-blue-600 hover:bg-blue-700">
+              <Button
+                className="w-full mt-2 bg-blue-600 hover:bg-blue-700"
+                onClick={() => navigate(`/signal/${assessment.id}`)}
+              >
                 {isInProgress ? (
                   <>
                     <Clock className="w-4 h-4 mr-2" />
@@ -250,7 +254,11 @@ function AssessmentCard({ assessment, submission, index, showResults = false }) 
             )}
 
             {showResults && (
-              <Button variant="outline" className="w-full mt-2">
+              <Button
+                variant="outline"
+                className="w-full mt-2"
+                onClick={() => navigate(`/signal/${assessment.id}`)}
+              >
                 <ArrowRight className="w-4 h-4 mr-2" />
                 View Details
               </Button>

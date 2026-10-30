@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -6,6 +7,16 @@ import { useQuery } from '@tanstack/react-query';
 export default function PageNotFound({}) {
     const location = useLocation();
     const pageName = location.pathname.substring(1);
+
+    // Tell crawlers this URL is genuinely a 404 rather than an app route that happened
+    // to answer 200 — otherwise unknown URLs get indexed as real pages.
+    useEffect(() => {
+        const meta = document.createElement('meta');
+        meta.setAttribute('name', 'prerender-status-code');
+        meta.setAttribute('content', '404');
+        document.head.appendChild(meta);
+        return () => meta.remove();
+    }, [location.pathname]);
 
     const { data: authData, isFetched } = useQuery({
         queryKey: ['user'],

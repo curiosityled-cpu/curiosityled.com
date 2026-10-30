@@ -14,6 +14,10 @@
       "type": "string",
       "description": "ID of the client this submission belongs to"
     },
+    "assessment_title": {
+      "type": "string",
+      "description": "Title of the signal at the time it was taken, kept so the record still reads correctly after a rename"
+    },
     "leadership_level": {
       "type": "string",
       "enum": [
@@ -117,6 +121,39 @@
         }
       },
       "description": "Array of user responses"
+    },
+    "responses": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Raw answers to a scored signal, keyed by question id. Stored as submitted so a score can be re-derived and explained."
+    },
+    "score": {
+      "type": "number",
+      "description": "Points earned on a scored signal, computed on the server from the answer key"
+    },
+    "max_score": {
+      "type": "number",
+      "description": "Total points available on the scored questions"
+    },
+    "percentage": {
+      "type": "number",
+      "description": "Score as a percentage of the points available"
+    },
+    "passed": {
+      "type": "boolean",
+      "description": "Whether the percentage met the signal's passing threshold"
+    },
+    "passing_score_percentage": {
+      "type": "number",
+      "description": "Passing threshold in force when the attempt was scored, kept so a past result keeps its meaning if the threshold later changes"
+    },
+    "question_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "description": "Per-question outcome of a scored attempt: the answer given, whether it was correct, the points earned and the correct answers, so the result can be explained to the learner and to an auditor"
     },
     "proficiency_scores": {
       "type": "object",

@@ -44,7 +44,11 @@ export default function LessonViewer({ lesson, complete, onComplete, onAdvance }
           return;
         }
         if (lesson.content_type === "form" || lesson.content_type === "assessment") {
-          const rows = await base44.entities.CustomForm
+          const entity =
+            lesson.content_type === "assessment"
+              ? base44.entities.CustomAssessment
+              : base44.entities.CustomForm;
+          const rows = await entity
             .filter({ id: lesson.reference_id })
             .catch(() => []);
           if (!cancelled) setState({ loading: false, form: rows?.[0] || null });
@@ -199,7 +203,13 @@ export default function LessonViewer({ lesson, complete, onComplete, onAdvance }
             </p>
             <Button
               type="button"
-              onClick={() => navigate(`/FormSubmission?formId=${lesson.reference_id}`)}
+              onClick={() =>
+                navigate(
+                  lesson.content_type === "assessment"
+                    ? `/signal/${lesson.reference_id}`
+                    : `/FormSubmission?formId=${lesson.reference_id}`
+                )
+              }
               className="bg-[#0202ff] hover:bg-[#0101dd] text-white"
             >
               <ClipboardList className="w-4 h-4 mr-2" />

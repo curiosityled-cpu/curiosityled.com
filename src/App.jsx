@@ -28,6 +28,7 @@ import DiagnosticAnalytics from './pages/DiagnosticAnalytics';
 import MyLeadership from './pages/MyLeadership';
 import MyDevelopment from './pages/MyDevelopment';
 import CoursePlayer from './pages/CoursePlayer';
+import SignalPlayer from './pages/SignalPlayer';
 import MyGoalsMVP from './pages/MyGoalsMVP';
 import ReportBuilderMVP from './pages/ReportBuilderMVP';
 import ExperienceOverview from './pages/ExperienceOverview';
@@ -216,6 +217,7 @@ const AuthenticatedApp = () => {
       <Route path="/CustomAssessmentBuilder" element={<Navigate to="/DevelopmentManager?tab=signals" replace />} />
       <Route path="/my-development" element={<MVPLayout><MyDevelopment /></MVPLayout>} />
       <Route path="/course/:courseId" element={<MVPLayout><CoursePlayer /></MVPLayout>} />
+      <Route path="/signal/:id" element={<MVPLayout><SignalPlayer /></MVPLayout>} />
       <Route path="/experience-overview" element={<MVPLayout><ExperienceOverview /></MVPLayout>} />
       <Route path="/report-builder-mvp" element={<MVPLayout><ReportBuilderMVP /></MVPLayout>} />
       <Route path="/manager-detail/:id" element={<MVPLayout><ManagerDetail /></MVPLayout>} />

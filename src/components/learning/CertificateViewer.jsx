@@ -39,6 +39,10 @@ export default function CertificateViewer() {
   const [downloadingId, setDownloadingId] = useState(null);
 
   const handleDownload = async (cert) => {
+    if (cert.status === "revoked") {
+      toast.error("A revoked certificate cannot be downloaded.");
+      return;
+    }
     setDownloadingId(cert.id);
     try {
       const learnerName = cert.metadata?.learner_name || user?.full_name || user?.data?.full_name || email;
@@ -103,9 +107,13 @@ export default function CertificateViewer() {
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <Award className="w-12 h-12 text-amber-600" />
-                  <Badge className="bg-amber-600 text-white">
-                    {(cert.certificate_type || "certificate").replace(/_/g, " ")}
-                  </Badge>
+                  {cert.status === "revoked" ? (
+                    <Badge className="bg-red-600 text-white">revoked</Badge>
+                  ) : (
+                    <Badge className="bg-amber-600 text-white">
+                      {(cert.certificate_type || "certificate").replace(/_/g, " ")}
+                    </Badge>
+                  )}
                 </div>
                 <CardTitle className="text-lg mt-3">{cert.title}</CardTitle>
                 <p className="text-sm text-gray-600">{cert.description}</p>
@@ -143,11 +151,20 @@ export default function CertificateViewer() {
                     <Button 
                       size="sm" 
                       onClick={() => handleDownload(cert)}
-                      disabled={downloadingId === cert.id}
+                      disabled={downloadingId === cert.id || cert.status === "revoked"}
                       className="flex-1"
+                      title={
+                        cert.status === "revoked"
+                          ? "A revoked certificate cannot be downloaded"
+                          : "Download certificate"
+                      }
                     >
                       <Download className="w-4 h-4 mr-1" />
-                      {downloadingId === cert.id ? "Preparing..." : "Download"}
+                      {cert.status === "revoked"
+                        ? "Revoked"
+                        : downloadingId === cert.id
+                        ? "Preparing..."
+                        : "Download"}
                     </Button>
                     <Button 
                       size="sm" 

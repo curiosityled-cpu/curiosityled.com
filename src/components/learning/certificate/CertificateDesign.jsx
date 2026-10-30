@@ -1,8 +1,9 @@
 import React, { forwardRef } from "react";
 import { CERTIFICATE_BRAND_NAME, CERTIFICATE_LOGO_URL } from "./certificateConfig";
 
-const cornerShape = { clipPath: "polygon(100% 0,100% 100%,0 0)" };
-const baseShape = { clipPath: "polygon(0 0,100% 0,90% 100%,0 100%)" };
+// Corner blocks are drawn with transforms, not clip-path: the PDF renderer used for
+// downloads ignores clip-path and flattened these shapes into plain rectangles.
+const baseShape = { transform: "skewX(-8deg)", transformOrigin: "left bottom" };
 
 /** Modern Geometric certificate layout. Fixed 1000px width; rendered to PDF. */
 const CertificateDesign = forwardRef(function CertificateDesign({ cert, learnerName }, ref) {
@@ -19,7 +20,7 @@ const CertificateDesign = forwardRef(function CertificateDesign({ cert, learnerN
       className="relative isolate box-border w-[1000px] overflow-hidden border border-[#d9ddf4] bg-white px-[58px] pb-[38px] pt-[46px] text-[#111747]"
       style={{ fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif' }}
     >
-      <div className="absolute right-0 top-0 -z-10 h-[190px] w-[230px] bg-[#0202ff]" style={cornerShape} />
+      <div className="absolute -right-[70px] -top-[70px] -z-10 h-[260px] w-[260px] rotate-45 bg-[#0202ff]" />
       <div className="absolute bottom-0 left-0 -z-10 h-[34px] w-[360px] bg-[#e6e8ff]" style={baseShape} />
 
       <div className="relative border border-[#dfe2f7] px-8 pb-6 pt-[26px]">

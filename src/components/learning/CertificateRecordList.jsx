@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Award, BadgeCheck, Loader2, ShieldX } from "lucide-react";
+import { Award, BadgeCheck, Download, Loader2, ShieldX } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { downloadCertificate } from "@/components/learning/certificate/downloadCertificate";
 
 const ADMIN_ROLES = [
   "Admin Level 1",
@@ -26,9 +27,25 @@ export default function CertificateRecordList({ certificates, onChanged }) {
   const [target, setTarget] = useState(null);
   const [reason, setReason] = useState("");
   const [saving, setSaving] = useState(false);
+  const [downloadingId, setDownloadingId] = useState(null);
 
   const role = user?.app_role || user?.data?.app_role || user?.role;
   const canRevoke = ADMIN_ROLES.includes(role);
+
+  // A staff member can retrieve a copy on the learner's behalf.
+  const download = async (certificate) => {
+    setDownloadingId(certificate.id);
+    try {
+      const learnerName =
+        certificate.metadata?.learner_name || certificate.user_email || "Learner";
+      await downloadCertificate(certificate, learnerName);
+    } catch (error) {
+      console.error("Certificate download failed:", error);
+      toast.error("Could not download the certificate. Please try again.");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const revoke = async () => {
     if (!reason.trim()) {
@@ -88,19 +105,37 @@ export default function CertificateRecordList({ certificates, onChanged }) {
                 <BadgeCheck className="w-3 h-3" /> valid
               </span>
             )}
-            {!revoked && canRevoke && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="ml-auto h-7 text-[11px] text-gray-600"
-                onClick={() => {
-                  setTarget(certificate);
-                  setReason("");
-                }}
-              >
-                Revoke
-              </Button>
-            )}
+            <div className="ml-auto flex items-center gap-1">
+              {!revoked && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-[11px] text-gray-600"
+                  disabled={downloadingId === certificate.id}
+                  onClick={() => download(certificate)}
+                >
+                  {downloadingId === certificate.id ? (
+                    <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                  ) : (
+                    <Download className="w-3.5 h-3.5 mr-1" />
+                  )}
+                  Download
+                </Button>
+              )}
+              {!revoked && canRevoke && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-[11px] text-gray-600"
+                  onClick={() => {
+                    setTarget(certificate);
+                    setReason("");
+                  }}
+                >
+                  Revoke
+                </Button>
+              )}
+            </div>
           </div>
         );
       })}
