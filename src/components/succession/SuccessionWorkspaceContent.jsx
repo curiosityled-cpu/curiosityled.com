@@ -28,6 +28,8 @@ import DecisionRecordsView from "@/components/succession/DecisionRecordsView";
 import BenchStrengthView from "@/components/succession/BenchStrengthView";
 import ComplianceView from "@/components/succession/ComplianceView";
 import CycleReportView from "@/components/succession/CycleReportView";
+import EnablementKitView from "@/components/succession/EnablementKitView";
+import MethodologyView from "@/components/succession/MethodologyView";
 import DemoDataButton from "@/components/succession/DemoDataButton";
 import { useClient } from "@/components/contexts/ClientContext";
 
@@ -87,6 +89,10 @@ function renderView(viewKey) {
       return <ComplianceView />;
     case "cycle-report":
       return <CycleReportView />;
+    case "enablement":
+      return <EnablementKitView />;
+    case "methodology":
+      return <MethodologyView />;
     case "governance":
       return <GovernanceView />;
     default:

@@ -20,6 +20,8 @@ import {
   Gavel,
   BarChart3,
   FileSpreadsheet,
+  GraduationCap,
+  BookOpen,
 } from "lucide-react";
 
 /**
@@ -191,6 +193,8 @@ export const ALL_VIEWS = [
   { key: "cycle-report", label: "Cycle Report", icon: FileSpreadsheet, stage: null },
   { key: "governance", label: "Governance", icon: ShieldCheck, stage: null },
   { key: "compliance", label: "Legal & Compliance", icon: Scale, stage: null },
+  { key: "enablement", label: "Manager Enablement Kit", icon: GraduationCap, stage: null },
+  { key: "methodology", label: "Methodology", icon: BookOpen, stage: null },
 ];
 
 /**
