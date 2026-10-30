@@ -35,10 +35,10 @@ export default async function (req: Request): Promise<Response> {
 
   try {
     const [roles, conclusions, candidacies, positions] = await Promise.all([
-      base44.asServiceRole.entities.CriticalRole.filter({ client_id: auth.client_id }, { limit: 500 }),
-      base44.asServiceRole.entities.ReadinessConclusion.filter({ client_id: auth.client_id }, { limit: 1000 }),
-      base44.asServiceRole.entities.SuccessorCandidacy.filter({ client_id: auth.client_id }, { limit: 1000 }),
-      base44.asServiceRole.entities.OrgPosition.filter({ client_id: auth.client_id }, { limit: 1000 }),
+      base44.asServiceRole.entities.CriticalRole.filter({ client_id: auth.client_id }, "-created_date", 500),
+      base44.asServiceRole.entities.ReadinessConclusion.filter({ client_id: auth.client_id }, "-created_date", 1000),
+      base44.asServiceRole.entities.SuccessorCandidacy.filter({ client_id: auth.client_id }, "-created_date", 1000),
+      base44.asServiceRole.entities.OrgPosition.filter({ client_id: auth.client_id }, "-created_date", 1000),
     ]);
 
     const positionTitle = new Map<string, string>();

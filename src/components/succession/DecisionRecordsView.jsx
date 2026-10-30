@@ -83,30 +83,38 @@ export default function DecisionRecordsView() {
   const load = useCallback(async () => {
     setLoadError(null);
     try {
-      const [decisionRes, roleRes, cycleRes] = await Promise.all([
-        base44.functions.invoke("successionListDecisionRecords", {
-          operation_id: `list-decisions-${Date.now()}`,
-        }),
-        base44.functions.invoke("successionListCriticalRoles", {
-          operation_id: `list-roles-${Date.now()}`,
-        }),
-        base44.functions.invoke("successionListCycles", {
-          operation_id: `list-cycles-${Date.now()}`,
-        }),
-      ]);
-
+      const decisionRes = await base44.functions.invoke("successionListDecisionRecords", {
+        operation_id: `list-decisions-${Date.now()}`,
+      });
       setRecords(decisionRes?.data?.decision_records || []);
 
-      const roles = roleRes?.data?.critical_roles || [];
-      setRoleOptions(
-        roles.map((role) => ({
-          id: role.id,
-          label: role.role_title || role.position_title || "Critical role",
-        }))
-      );
+      // Supporting lookups must not block the register from rendering.
+      try {
+        const roleRes = await base44.functions.invoke("successionListCriticalRoles", {
+          operation_id: `list-roles-${Date.now()}`,
+        });
+        const roles = roleRes?.data?.critical_roles || [];
+        setRoleOptions(
+          roles.map((role) => ({
+            id: role.id,
+            label: role.role_title || role.position_title || "Critical role",
+          }))
+        );
+      } catch {
+        setRoleOptions([]);
+      }
 
-      const cycles = cycleRes?.data?.cycles || [];
-      setCycle(cycles.find((c) => c.status !== "closed" && c.status !== "archived") || cycles[0] || null);
+      try {
+        const cycleRes = await base44.functions.invoke("successionListCycles", {
+          operation_id: `list-cycles-${Date.now()}`,
+        });
+        const cycles = cycleRes?.data?.cycles || [];
+        setCycle(
+          cycles.find((c) => c.status !== "closed" && c.status !== "archived") || cycles[0] || null
+        );
+      } catch {
+        setCycle(null);
+      }
     } catch {
       setLoadError("Decision records could not be loaded.");
     } finally {

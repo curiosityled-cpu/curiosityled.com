@@ -31,10 +31,11 @@ export default async function (req: Request): Promise<Response> {
   if (status && status !== "all") query.status = status;
 
   try {
-    const records = await base44.asServiceRole.entities.SuccessionDecisionRecord.filter(query, {
-      sort: "-created_date",
-      limit: 200,
-    });
+    const records = await base44.asServiceRole.entities.SuccessionDecisionRecord.filter(
+      query,
+      "-created_date",
+      200
+    );
 
     return Response.json({ decision_records: records || [] });
   } catch (error) {

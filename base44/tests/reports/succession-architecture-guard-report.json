@@ -1,6 +1,6 @@
 {
   "guard_version": "3.0-hardened",
-  "checked_at": "2026-10-30T18:22:44.616Z",
+  "checked_at": "2026-10-30T18:25:23.154Z",
   "exception_list_reviewed": "2026-09-25",
   "passed": true,
   "total_functions": 127,

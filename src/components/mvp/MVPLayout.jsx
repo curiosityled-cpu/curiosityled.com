@@ -74,6 +74,7 @@ const NAV_CONFIG = {
      { label: 'Development Manager', path: '/DevelopmentManager', icon: Users },
      { label: 'Performance Manager', path: '/PerformanceManager', icon: Target },
      { label: 'Talent Manager', path: '/talent-manager', icon: Layers },
+     { label: 'Succession', path: '/succession', icon: Network },
      { label: 'Report Manager', path: '/report-builder-mvp', icon: BarChart2 },
      { label: 'User Management', path: '/UserManagement', icon: UserCog },
      ]}],
