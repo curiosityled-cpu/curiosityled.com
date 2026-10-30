@@ -107,9 +107,30 @@ export default async function(req: Request): Promise<Response> {
     };
     areas[area_index] = updatedArea;
 
-    await base44.asServiceRole.entities.KnowledgeTransferPlan.update(plan_id, {
-      knowledge_areas: areas,
-    });
+    // ── Compare-and-swap on the plan's areas version ──
+    // Two people marking two different areas at the same moment must not
+    // overwrite each other. The write only lands if the version is unchanged,
+    // and the outcome is verified afterwards, so a lost update is reported
+    // rather than silently accepted.
+    const expectedVersion = Number(plan.areas_version || 0);
+    const versionMatch = plan.areas_version === undefined || plan.areas_version === null
+      ? { $or: [{ areas_version: 0 }, { areas_version: { $exists: false } }] }
+      : { areas_version: expectedVersion };
+
+    await base44.asServiceRole.entities.KnowledgeTransferPlan.updateMany(
+      { id: plan_id, client_id: auth.client_id, ...versionMatch },
+      { $set: { knowledge_areas: areas, areas_version: expectedVersion + 1 } },
+    );
+
+    const confirmedPlan = (await base44.asServiceRole.entities.KnowledgeTransferPlan.filter({ id: plan_id }))?.[0];
+    const confirmedArea = (confirmedPlan?.knowledge_areas || [])[area_index];
+    if (!confirmedArea || confirmedArea.status_updated_at !== now) {
+      await failOperation(base44, opResult.operation.id, "concurrent_area_update");
+      return Response.json({
+        error: "Someone else updated this plan at the same time — reload and try again",
+        code: "areas_conflict",
+      }, { status: 409 });
+    }
 
     const done = areas.filter((a: any) => a.status === "completed" || a.status === "waived").length;
     const progress = {

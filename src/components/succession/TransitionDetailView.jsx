@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useSuccessionApi } from "@/components/succession/useSuccessionApi";
+import KnowledgeTransferProgress from "@/components/succession/KnowledgeTransferProgress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -219,22 +220,9 @@ export default function TransitionDetailView({ initiationId, onBack }) {
           {/* Knowledge areas */}
           <div>
             <Label className="text-xs font-medium">Knowledge Areas</Label>
-            {ktForm.knowledge_areas.length > 0 && (
-              <div className="mt-2 space-y-2">
-                {ktForm.knowledge_areas.map((area, idx) => (
-                  <div key={idx} className="p-3 rounded-lg border border-gray-200 bg-gray-50">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">{area.title}</span>
-                      <Badge variant="outline">{area.status}</Badge>
-                    </div>
-                    <p className="text-xs text-gray-600 mt-1">{area.description}</p>
-                    {area.status === "waived" && area.waiver_reason && (
-                      <p className="text-xs text-amber-700 mt-1"><strong>Waiver:</strong> {area.waiver_reason}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="mt-2">
+              <KnowledgeTransferProgress plan={ktPlan} canEdit={canEdit} onChange={loadData} />
+            </div>
             {canEdit && (
               <div className="mt-2 p-3 rounded-lg border border-dashed border-gray-300 space-y-2">
                 <div className="grid grid-cols-2 gap-2">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useSuccessionApi } from "@/components/succession/useSuccessionApi";
+import DevelopmentFollowThroughStrip from "@/components/succession/DevelopmentFollowThroughStrip";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -143,6 +144,13 @@ export default function DevelopmentActionsView() {
           {showForm ? "Cancel" : "Add Action"}
         </Button>
       </div>
+
+      <Card>
+        <CardHeader><CardTitle className="text-base">Follow-through</CardTitle></CardHeader>
+        <CardContent>
+          <DevelopmentFollowThroughStrip />
+        </CardContent>
+      </Card>
 
       {error && (
         <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">

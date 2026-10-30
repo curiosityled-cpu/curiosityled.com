@@ -77,6 +77,15 @@
           "waiver_reason": {
             "type": "string",
             "description": "Required when status is waived."
+          },
+          "status_updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When this area's execution status last changed. Set server-side."
+          },
+          "status_updated_by_profile_id": {
+            "type": "string",
+            "description": "Profile ID of the person who last changed this area's status. Set server-side."
           }
         },
         "required": [
@@ -89,6 +98,11 @@
         ]
       },
       "description": "Array of knowledge transfer areas."
+    },
+    "areas_version": {
+      "type": "number",
+      "default": 0,
+      "description": "Incremented on every change to knowledge_areas. Used for compare-and-swap so two people marking different areas at the same moment cannot silently overwrite each other's work."
     },
     "access_handoffs": {
       "type": "string",

@@ -132,6 +132,7 @@ export default function TransitionsView() {
 
   const [completeTarget, setCompleteTarget] = useState(null);
   const [completeSummary, setCompleteSummary] = useState("");
+  const [completeRiskNote, setCompleteRiskNote] = useState("");
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelReason, setCancelReason] = useState("");
 
@@ -140,10 +141,12 @@ export default function TransitionsView() {
       operation_id: `complete-${Date.now()}`,
       initiation_id: initiationId,
       completion_summary: completeSummary || null,
+      risk_acknowledgement_note: completeRiskNote.trim() || null,
     });
     if (result) {
       setCompleteTarget(null);
       setCompleteSummary("");
+      setCompleteRiskNote("");
       loadData();
     }
   };
@@ -393,11 +396,19 @@ export default function TransitionsView() {
              <Textarea id="complete-summary" value={completeSummary} onChange={(e) => setCompleteSummary(e.target.value)}
                placeholder="Summarize the transition outcome..." />
            </div>
+           <div>
+             <Label htmlFor="complete-risk-note" className="text-xs">Risk acknowledgement (required if a high-severity risk is still open)</Label>
+             <Textarea id="complete-risk-note" value={completeRiskNote} onChange={(e) => setCompleteRiskNote(e.target.value)}
+               placeholder="State why the transition can proceed with this risk open, and who owns it..." />
+             <p className="text-xs text-gray-500 mt-1">
+               Every knowledge area must be completed or waived before a transition can be closed.
+             </p>
+           </div>
            <div className="flex gap-2">
              <Button onClick={() => handleComplete(completeTarget)} disabled={loading} className="bg-green-600 hover:bg-green-700">
                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-1" />} Confirm Complete
              </Button>
-             <Button variant="outline" onClick={() => { setCompleteTarget(null); setCompleteSummary(""); }}>Cancel</Button>
+             <Button variant="outline" onClick={() => { setCompleteTarget(null); setCompleteSummary(""); setCompleteRiskNote(""); }}>Cancel</Button>
            </div>
           </CardContent>
           </Card>
