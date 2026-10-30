@@ -19,6 +19,7 @@ import ConversationalLearningTab from "@/components/dev-manager/ConversationalLe
 import CoursesTab from "@/components/dev-manager/CoursesTab";
 import ThumbnailPicker from "@/components/dev-manager/ThumbnailPicker";
 import LearningResourceFileUpload from "@/components/learning/LearningResourceFileUpload";
+import ContentGapReport from "@/components/dev-manager/learning/ContentGapReport";
 
 
 const TYPE_ICONS = {
@@ -286,43 +287,6 @@ function ResourceFormDialog({ open, onClose, resource, onSaved }) {
   );
 }
 
-function EnrollmentRow({ assignment, users, onStatusChange, onDelete }) {
-  const user = users.find(u => u.email === assignment.user_email);
-  const STATUS_COLORS = {
-    assigned: "bg-gray-100 text-gray-700", started: "bg-blue-100 text-blue-700",
-    in_progress: "bg-yellow-100 text-yellow-700", completed: "bg-green-100 text-green-700",
-    overdue: "bg-red-100 text-red-700"
-  };
-  return (
-    <div className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-[#0202ff]/10 flex items-center justify-center text-[#0202ff] text-xs font-bold">
-          {(user?.full_name || assignment.user_email || "?")[0].toUpperCase()}
-        </div>
-        <div>
-          <p className="text-sm font-medium text-gray-900">{user?.full_name || assignment.user_email}</p>
-          <p className="text-xs text-gray-500">{assignment.user_email}</p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <Select value={assignment.status} onValueChange={val => onStatusChange(assignment.id, val)}>
-          <SelectTrigger className="h-7 text-xs w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {["assigned","started","in_progress","completed","overdue"].map(s => (
-              <SelectItem key={s} value={s}>{s.replace(/_/g," ").replace(/\b\w/g,c=>c.toUpperCase())}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button variant="ghost" size="icon" className="h-7 w-7 text-red-400 hover:text-red-600" onClick={() => onDelete(assignment.id)}>
-          <X className="w-3.5 h-3.5" />
-        </Button>
-      </div>
-    </div>
-  );
-}
-
 export default function AdminLearningManagementTab({ user }) {
   const [tab, setTab] = useState("library");
   const [resources, setResources] = useState([]);
@@ -405,18 +369,6 @@ export default function AdminLearningManagementTab({ user }) {
     } catch { toast.error("Failed to enroll user"); }
   };
 
-  const handleStatusChange = async (id, status) => {
-    await base44.entities.AssignedLearning.update(id, { status });
-    loadData();
-  };
-
-  const handleDeleteAssignment = async (id) => {
-    if (!confirm("Remove this enrollment?")) return;
-    await base44.entities.AssignedLearning.delete(id);
-    toast.success("Enrollment removed");
-    loadData();
-  };
-
   if (loading) {
     return <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-[#0202ff]" /></div>;
   }
@@ -476,12 +428,13 @@ export default function AdminLearningManagementTab({ user }) {
         </Card>
       </div>
 
+      <ContentGapReport />
+
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="bg-gray-100 rounded-xl p-1">
-          <TabsTrigger value="library" className="rounded-lg text-xs">Content Library</TabsTrigger>
+          <TabsTrigger value="library" className="rounded-lg text-xs">Catalog</TabsTrigger>
           <TabsTrigger value="courses" className="rounded-lg text-xs">Courses</TabsTrigger>
           <TabsTrigger value="conversational" className="rounded-lg text-xs">Conversational Learning</TabsTrigger>
-          <TabsTrigger value="enrollments" className="rounded-lg text-xs">Resource Assignments</TabsTrigger>
         </TabsList>
 
         {/* ── LIBRARY ── */}
@@ -680,44 +633,6 @@ export default function AdminLearningManagementTab({ user }) {
           <ConversationalLearningTab user={user} />
         </TabsContent>
 
-        {/* ── ENROLLMENTS ── */}
-        <TabsContent value="enrollments" className="space-y-4 mt-4">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500">{assignments.length} enrollment{assignments.length !== 1 ? "s" : ""} across your organization</p>
-          </div>
-          {assignments.length === 0 ? (
-            <div className="text-center py-16 text-gray-400">
-              <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">No enrollments yet</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {/* Group by resource */}
-              {Object.entries(
-                assignments.reduce((acc, a) => {
-                  const key = a.learning_resource_id || "unknown";
-                  if (!acc[key]) acc[key] = { title: a.title || "Unknown Resource", items: [] };
-                  acc[key].items.push(a);
-                  return acc;
-                }, {})
-              ).map(([resourceId, group]) => (
-                <Card key={resourceId} className="border border-gray-100 shadow-sm rounded-xl">
-                  <CardHeader className="pb-2 pt-4 px-4">
-                    <CardTitle className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-                      <BookOpen className="w-4 h-4 text-[#0202ff]" /> {group.title}
-                      <Badge className="bg-gray-100 text-gray-600 text-[10px] ml-auto">{group.items.length} enrolled</Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="px-4 pb-4">
-                    {group.items.map(a => (
-                      <EnrollmentRow key={a.id} assignment={a} users={users} onStatusChange={handleStatusChange} onDelete={handleDeleteAssignment} />
-                    ))}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
       </Tabs>
 
       {/* Create/Edit Resource Dialog */}

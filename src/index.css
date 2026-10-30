@@ -378,6 +378,13 @@
 .dark .cl-dark .text-red-600     { color: hsl(0 58% 60%) !important; }
 .dark .cl-dark .text-red-700     { color: hsl(0 54% 55%) !important; }
 
+/* ── Larger closed captions — the learner's own accessibility preference ─── */
+.cl-large-captions video::cue {
+  font-size: 1.15rem;
+  line-height: 1.4;
+  background-color: rgba(0, 0, 0, 0.78);
+}
+
 /* ── Hero header animations ─────────────────────────────────────────────── */
 @keyframes hero-breathe {
   0%, 100% { transform: scale(1); }

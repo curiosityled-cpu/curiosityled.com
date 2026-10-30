@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
-import { GraduationCap, Sparkles } from "lucide-react";
+import { AlertTriangle, Clock, GraduationCap, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { base44 } from "@/api/base44Client";
 import useMyLearning from "@/hooks/useMyLearning";
@@ -19,12 +19,16 @@ const FILTERS = [
 const statusRank = (item) =>
   item.status === "completed" ? 3 : item.status === "in_progress" ? 1 : 2;
 
+const todayStamp = () => new Date().toISOString().slice(0, 10);
+const weekStamp = () => new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+
 /** The learner's assigned work: courses, resources and conversational modules. */
 export default function LearningInbox({ status = "active" }) {
   const navigate = useNavigate();
   const { openWithContext } = useAtreusChat();
   const { items, loading, reload } = useMyLearning();
   const [filter, setFilter] = useState("all");
+  const [overdueOnly, setOverdueOnly] = useState(false);
   const [busyId, setBusyId] = useState(null);
 
   const learningItems = useMemo(
@@ -37,15 +41,33 @@ export default function LearningInbox({ status = "active" }) {
     [items, status]
   );
 
+  // "What do I owe, and what is late" — answered before any list is read.
+  const dueStats = useMemo(() => {
+    const today = todayStamp();
+    const week = weekStamp();
+    const outstanding = learningItems.filter((item) => item.status !== "completed");
+    return {
+      outstanding: outstanding.length,
+      overdue: outstanding.filter((item) => item.due_date && item.due_date < today).length,
+      dueSoon: outstanding.filter(
+        (item) => item.due_date && item.due_date >= today && item.due_date <= week
+      ).length,
+    };
+  }, [learningItems]);
+
   const sorted = useMemo(() => {
-    const list = filter === "all" ? learningItems : learningItems.filter((item) => item.kind === filter);
+    const scoped = filter === "all" ? learningItems : learningItems.filter((item) => item.kind === filter);
+    const today = todayStamp();
+    const list = overdueOnly
+      ? scoped.filter((item) => item.due_date && item.due_date < today)
+      : scoped;
     return [...list].sort((a, b) => {
       const aDue = a.due_date ? new Date(a.due_date).getTime() : Infinity;
       const bDue = b.due_date ? new Date(b.due_date).getTime() : Infinity;
       if (aDue !== bDue) return aDue - bDue;
       return statusRank(a) - statusRank(b);
     });
-  }, [learningItems, filter]);
+  }, [learningItems, filter, overdueOnly]);
 
   const open = async (item) => {
     // Conversational modules run in the Atreus panel, same as a course lesson.
@@ -105,6 +127,41 @@ export default function LearningInbox({ status = "active" }) {
 
   return (
     <div className="space-y-4">
+      {status === "active" && !loading && dueStats.outstanding > 0 && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-border bg-card px-4 py-3">
+          <span className="text-sm font-medium text-foreground">
+            {dueStats.outstanding} to do
+          </span>
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 text-xs",
+              dueStats.overdue > 0 ? "font-medium text-red-600" : "text-muted-foreground"
+            )}
+          >
+            <AlertTriangle className="w-3.5 h-3.5" />
+            {dueStats.overdue} overdue
+          </span>
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <Clock className="w-3.5 h-3.5" />
+            {dueStats.dueSoon} due in the next 7 days
+          </span>
+          {dueStats.overdue > 0 && (
+            <button
+              type="button"
+              onClick={() => setOverdueOnly((prev) => !prev)}
+              className={cn(
+                "ml-auto rounded-lg border px-2.5 py-1 text-[11px] font-medium transition-colors",
+                overdueOnly
+                  ? "border-red-200 bg-red-50 text-red-700"
+                  : "border-border bg-card text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {overdueOnly ? "Show everything" : "Show overdue only"}
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-2">
         {FILTERS.map((entry) => (
           <button

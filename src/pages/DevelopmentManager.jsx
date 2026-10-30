@@ -49,7 +49,7 @@ const PRIORITY_COLORS = {
 // Admin tabs follow one journey: author the content, deliver it through experiences,
 // then evidence what was consumed. Cohorts live inside Experiences; Practice too.
 const ADMIN_TABS = [
-  { id: 'content', label: 'Content', icon: GraduationCap },
+  { id: 'content', label: 'Catalog', icon: GraduationCap },
   { id: 'experiences', label: 'Experiences', icon: Star },
   { id: 'signals', label: 'Signals', icon: Radio },
   { id: 'progress', label: 'Progress', icon: CheckCircle2 },

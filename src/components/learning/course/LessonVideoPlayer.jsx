@@ -6,8 +6,10 @@ import {
   Maximize,
   Minimize,
   Captions,
+  FileText,
   Gauge,
   Lock,
+  Settings2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +19,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getResourceFileUri, resolveFileUri, resolveResourceFileUrl } from "@/lib/resourceFile";
+import { getA11yPrefs, setA11yPref } from "@/lib/accessibilityPrefs";
+import { parseVtt } from "@/lib/vtt";
+import LessonTranscript from "@/components/learning/course/LessonTranscript";
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
@@ -59,6 +64,9 @@ export default function LessonVideoPlayer({
   const [speed, setSpeed] = useState(1);
   const [captionsOn, setCaptionsOn] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  const [prefs, setPrefs] = useState(getA11yPrefs);
+  const [showTranscript, setShowTranscript] = useState(false);
+  const [cues, setCues] = useState(null);
 
   const fileUri = getResourceFileUri(resource);
 
@@ -97,6 +105,28 @@ export default function LessonVideoPlayer({
     if (!track) return;
     track.mode = captionsOn ? "showing" : "hidden";
   }, [captionsOn, captionsSrc, videoUrl]);
+
+  // Captions can be on from the start for someone who needs them; the choice stays on the device.
+  useEffect(() => {
+    if (captionsSrc) setCaptionsOn(getA11yPrefs().captionsDefault);
+  }, [captionsSrc]);
+
+  // The transcript is the same captions file, read as text.
+  useEffect(() => {
+    if (!showTranscript || !captionsSrc || cues) return undefined;
+    let cancelled = false;
+    fetch(captionsSrc)
+      .then((response) => response.text())
+      .then((text) => {
+        if (!cancelled) setCues(parseVtt(text));
+      })
+      .catch(() => {
+        if (!cancelled) setCues([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [showTranscript, captionsSrc, cues]);
 
   useEffect(() => {
     const onChange = () => setFullscreen(!!document.fullscreenElement);
@@ -171,6 +201,42 @@ export default function LessonVideoPlayer({
     }
   };
 
+  const applyPref = (key) => {
+    const next = setA11yPref(key, !getA11yPrefs()[key]);
+    setPrefs(next);
+    if (key === "captionsDefault" && captionsSrc) setCaptionsOn(next.captionsDefault);
+  };
+
+  // A transcript line is a place in the video, so selecting one goes there.
+  const seekTo = (seconds) => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (!allowSeeking && seconds > watchedRef.current) return;
+    video.currentTime = seconds;
+    video.play().catch(() => {});
+  };
+
+  const handleBarKeyDown = (event) => {
+    const video = videoRef.current;
+    if (!video || !duration) return;
+    // The bar sits inside the player, which also listens for these keys — handle them once.
+    event.stopPropagation();
+    const step = event.shiftKey ? 30 : 5;
+    if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
+      event.preventDefault();
+      video.currentTime = Math.max(0, video.currentTime - step);
+    } else if (event.key === "ArrowRight" || event.key === "ArrowUp") {
+      event.preventDefault();
+      if (allowSeeking) video.currentTime = Math.min(duration, video.currentTime + step);
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      video.currentTime = 0;
+    } else if (event.key === "End") {
+      event.preventDefault();
+      if (allowSeeking) video.currentTime = duration;
+    }
+  };
+
   const fullscreenButton = (
     <Button
       type="button"
@@ -213,7 +279,9 @@ export default function LessonVideoPlayer({
       ref={frameRef}
       tabIndex={0}
       onKeyDown={handleKeyDown}
-      className="relative w-full overflow-hidden rounded-xl border border-border bg-black focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0202ff]/40"
+      className={`relative w-full overflow-hidden rounded-xl border border-border bg-black focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0202ff]/40 ${
+        prefs.largeCaptions ? "cl-large-captions" : ""
+      }`}
     >
       <div className="relative aspect-video w-full">
         {loading && (
@@ -274,10 +342,19 @@ export default function LessonVideoPlayer({
         </span>
 
         <div
-          className={`h-1.5 flex-1 rounded-full bg-white/25 ${
+          role="slider"
+          tabIndex={0}
+          aria-label="Playback position"
+          aria-valuemin={0}
+          aria-valuemax={Math.round(duration || 0)}
+          aria-valuenow={Math.round(time || 0)}
+          aria-valuetext={`${clock(time)} of ${clock(duration)}`}
+          aria-disabled={!allowSeeking}
+          className={`h-1.5 flex-1 rounded-full bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 ${
             allowSeeking ? "cursor-pointer" : "cursor-not-allowed"
           }`}
           onClick={scrub}
+          onKeyDown={handleBarKeyDown}
           title={allowSeeking ? "Seek" : "Skipping ahead is turned off for this lesson"}
         >
           <div className="h-full rounded-full bg-white" style={{ width: `${progress}%` }} />
@@ -337,8 +414,63 @@ export default function LessonVideoPlayer({
           <span className="text-[11px] font-medium">CC</span>
         </Button>
 
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={!captionsSrc}
+          onClick={() => setShowTranscript((prev) => !prev)}
+          title={captionsSrc ? "Read the transcript" : "No transcript was attached to this video"}
+          className={`h-8 gap-1 px-2 text-white hover:bg-white/15 hover:text-white ${
+            showTranscript ? "bg-white/20" : ""
+          }`}
+        >
+          <FileText className="w-4 h-4" />
+          <span className="hidden text-[11px] font-medium sm:inline">Transcript</span>
+        </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              title="Accessibility options"
+              className="h-8 w-8 text-white hover:bg-white/15 hover:text-white"
+            >
+              <Settings2 className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-[224px]">
+            <DropdownMenuItem onClick={() => applyPref("captionsDefault")} disabled={!captionsSrc}>
+              <span className="flex-1">Captions on by default</span>
+              <span className="text-[11px] text-muted-foreground">
+                {prefs.captionsDefault ? "On" : "Off"}
+              </span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => applyPref("largeCaptions")}>
+              <span className="flex-1">Larger captions</span>
+              <span className="text-[11px] text-muted-foreground">
+                {prefs.largeCaptions ? "On" : "Off"}
+              </span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         {fullscreenButton}
       </div>
+
+      {showTranscript && (
+        <div className="border-t border-border bg-card px-3 py-3">
+          {cues === null ? (
+            <div className="flex justify-center py-4">
+              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <LessonTranscript cues={cues} onSeek={seekTo} />
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import LearningAnalyticsTab from "@/components/dev-manager/LearningAnalyticsTab";
 import AssignmentsBoard from "@/components/dev-manager/learning/AssignmentsBoard";
 import RecordsPanel from "@/components/dev-manager/learning/RecordsPanel";
+import ResourceAssignmentsPanel from "@/components/dev-manager/learning/ResourceAssignmentsPanel";
 import RetentionPanel from "@/components/dev-manager/learning/RetentionPanel";
 
 /**
@@ -58,7 +59,12 @@ export default function ProgressWorkspace({ user }) {
         })}
       </div>
 
-      {segment === "assignments" && <AssignmentsBoard user={user} />}
+      {segment === "assignments" && (
+        <div className="space-y-4">
+          <AssignmentsBoard user={user} />
+          <ResourceAssignmentsPanel user={user} />
+        </div>
+      )}
       {segment === "records" && (
         <div className="space-y-3">
           <RecordsPanel />
