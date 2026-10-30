@@ -44,6 +44,10 @@ export function useSuccessionApi() {
         friendly = "This record is currently locked by another operation. Please try again shortly.";
       } else if (/payload mismatch|409/i.test(rawMsg)) {
         friendly = "A conflict occurred. The record may have been modified. Please refresh and try again.";
+      } else if (/^Cannot complete transition/i.test(rawMsg)) {
+        // Server-written blocker message: it names what is still open and
+        // nothing else, so it is safe and necessary to show verbatim.
+        friendly = rawMsg;
       } else if (/validation|400/i.test(rawMsg)) {
         friendly = "Some required information is missing or invalid. Please check your inputs.";
       } else {

@@ -4,6 +4,7 @@ import { authorizeSuccessionAction } from "../../shared/authorizeSuccessionActio
 import { writeSuccessionAuditEvent } from "../../shared/successionAuditWriter.ts";
 import { createOrAttachOperation, beginOperationExecution, completeOperation, failOperation } from "../../shared/successionOperationHelper.ts";
 import { validateSameTenantReference, writeDeniedReferenceEvent } from "../../shared/successionCrossTenantValidation.ts";
+import { computeTransitionBlockers } from "../../shared/successionTransitionReadiness.ts";
 
 /**
  * POST /successionCompleteTransition
@@ -20,7 +21,7 @@ import { validateSameTenantReference, writeDeniedReferenceEvent } from "../../sh
 export default async function(req: Request): Promise<Response> {
   const base44 = createClientFromRequest(req);
   const body = await req.json().catch(() => ({}));
-  const { operation_id, initiation_id, completion_summary } = body;
+  const { operation_id, initiation_id, completion_summary, risk_acknowledgement_note } = body;
 
   if (!operation_id || !initiation_id) {
     return Response.json({ error: "operation_id, initiation_id required" }, { status: 400 });
@@ -67,6 +68,35 @@ export default async function(req: Request): Promise<Response> {
 
     const now = new Date().toISOString();
 
+    // ── Execution gate ──
+    // A transition is finished when the knowledge has actually been handed over,
+    // not when the calendar says so. Every knowledge area must be completed or
+    // waived, and high-severity risks must either be closed or explicitly
+    // acknowledged with a recorded note.
+    const blockers = await computeTransitionBlockers(base44, auth.client_id, initiation_id);
+
+    if (blockers.open_areas.length > 0) {
+      await failOperation(base44, opResult.operation.id, "knowledge_transfer_incomplete");
+      const listed = blockers.open_areas.slice(0, 5).join("; ");
+      const more = blockers.open_areas.length > 5 ? ` and ${blockers.open_areas.length - 5} more` : "";
+      return Response.json({
+        error: `Cannot complete transition: ${blockers.open_areas.length} knowledge area(s) still open — ${listed}${more}`,
+        code: "knowledge_transfer_incomplete",
+        open_areas: blockers.open_areas,
+        plan_progress: blockers.plan_progress,
+      }, { status: 409 });
+    }
+
+    const acknowledgement = (risk_acknowledgement_note || "").trim();
+    if (blockers.open_high_risks.length > 0 && !acknowledgement) {
+      await failOperation(base44, opResult.operation.id, "open_high_risks_unacknowledged");
+      return Response.json({
+        error: `Cannot complete transition: ${blockers.open_high_risks.length} high-severity risk(s) still open — record an acknowledgement note to proceed`,
+        code: "open_high_risks",
+        open_risks: blockers.open_high_risks,
+      }, { status: 409 });
+    }
+
     // ── Complete the initiation ──
     await base44.asServiceRole.entities.TransitionInitiation.update(initiation_id, {
       status: "completed",
@@ -74,12 +104,8 @@ export default async function(req: Request): Promise<Response> {
       completion_summary: completion_summary || null,
     });
 
-    // ── Optionally mark KT plan and transition plan as completed ──
-    const ktPlans = await base44.asServiceRole.entities.KnowledgeTransferPlan.filter({
-      client_id: auth.client_id, transition_initiation_id: initiation_id,
-      integrity_status: "active",
-    });
-    for (const kt of ktPlans) {
+    // ── Close the plans that were just delivered ──
+    for (const kt of blockers.kt_plans) {
       if (kt.status === "active") {
         await base44.asServiceRole.entities.KnowledgeTransferPlan.update(kt.id, {
           status: "completed", completed_at: now,
@@ -87,11 +113,7 @@ export default async function(req: Request): Promise<Response> {
       }
     }
 
-    const transitionPlans = await base44.asServiceRole.entities.TransitionPlan.filter({
-      client_id: auth.client_id, transition_initiation_id: initiation_id,
-      integrity_status: "active",
-    });
-    for (const tp of transitionPlans) {
+    for (const tp of blockers.transition_plans) {
       if (tp.status === "active") {
         await base44.asServiceRole.entities.TransitionPlan.update(tp.id, {
           status: "completed", completed_at: now,
@@ -104,6 +126,9 @@ export default async function(req: Request): Promise<Response> {
       target_entity_type: "TransitionInitiation", target_entity_id: initiation_id,
       metadata: {
         initiation_id, completion_summary: completion_summary ? true : false,
+        risk_acknowledgement: acknowledgement || null,
+        risks_acknowledged: blockers.open_high_risks,
+        knowledge_areas_closed: blockers.plan_progress,
         user_profile_unchanged: true,
         position_assignment_unchanged: true,
         readiness_unchanged: true,
