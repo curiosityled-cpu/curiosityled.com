@@ -140,7 +140,9 @@ export default async function (req: Request): Promise<Response> {
 
     const roster = rows.map((row) => {
       const doneIds = (row.completed_lessons || []).map((entry) => entry.lesson_id);
-      const overdue = !!(row.due_date && row.status !== 'completed' && row.due_date < today);
+      // A granted waiver lifts the obligation, so a due date can no longer make this row overdue.
+      const waived = row.waiver_status === 'granted' && row.status !== 'completed';
+      const overdue = !!(row.due_date && row.status !== 'completed' && row.due_date < today && !waived);
       return {
         id: row.id,
         email: row.learner_email,
@@ -152,9 +154,16 @@ export default async function (req: Request): Promise<Response> {
         enrolled_at: row.enrolled_at || row.created_date || null,
         last_accessed_at: row.last_accessed_at || null,
         due_date: row.due_date || null,
+        due_date_original: row.due_date_original || null,
+        extension_granted_days: row.extension_granted_days || 0,
         completed_at: row.completed_at || null,
         certificate_issued: !!row.certificate_issued,
         assigned_by: row.assigned_by || null,
+        assignment_basis: row.assignment_basis || null,
+        assignment_basis_label: row.assignment_basis_label || null,
+        assignment_reason: row.assignment_reason || null,
+        waiver_status: row.waiver_status || 'none',
+        waived,
       };
     });
 

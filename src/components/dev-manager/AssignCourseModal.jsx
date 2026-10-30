@@ -27,6 +27,7 @@ export default function AssignCourseModal({ open, onClose, course, users = [], c
   const [enrolledCount, setEnrolledCount] = useState(null);
   const [audience, setAudience] = useState(EMPTY_AUDIENCE);
   const [audienceEmails, setAudienceEmails] = useState([]);
+  const [assignReason, setAssignReason] = useState("");
 
   // Existing enrolments drive the due-date backfill and the roster hint.
   useEffect(() => {
@@ -61,6 +62,31 @@ export default function AssignCourseModal({ open, onClose, course, users = [], c
       });
     });
     return [...new Set(ids)];
+  };
+
+  // Why this assignment exists, recorded on every row at assign time. Never inferred later.
+  const basisFor = () => {
+    if (assignmentType === "cohort") {
+      const cohort = cohorts.find((c) => c.id === selectedCohort);
+      return {
+        basis: "cohort",
+        label: `Cohort: ${cohort?.name || "selected cohort"}`,
+        detail: { cohort_id: selectedCohort || null, cohort_name: cohort?.name || null },
+      };
+    }
+    if (assignmentType === "role") {
+      return {
+        basis: "audience",
+        label: `Role audience — ${audienceEmails.length} matched`,
+        detail: {
+          target_tiers: audience.target_tiers || [],
+          target_tracks: audience.target_tracks || [],
+          target_titles: audience.target_titles || [],
+          matched: audienceEmails.length,
+        },
+      };
+    }
+    return { basis: "manual", label: "Selected individually", detail: null };
   };
 
   const handleAssign = async () => {
@@ -115,10 +141,13 @@ export default function AssignCourseModal({ open, onClose, course, users = [], c
       }
 
       if (newEmails.length > 0) {
+        const basis = basisFor();
+        const nameByEmail = Object.fromEntries(users.map(u => [u.email, u.full_name || null]));
         const progressRecords = newEmails.map(email => ({
           course_id: course.id,
           course_title: course.title,
           learner_email: email,
+          learner_name: nameByEmail[email] || null,
           client_id: course.client_id || clientId,
           status: "not_started",
           completed_lessons: [],
@@ -128,6 +157,10 @@ export default function AssignCourseModal({ open, onClose, course, users = [], c
           cohort_id: cohortId || course.cohort_id || null,
           due_date: dueDate || null,
           assigned_by: me?.email || null,
+          assignment_basis: basis.basis,
+          assignment_basis_label: basis.label,
+          assignment_basis_detail: basis.detail,
+          assignment_reason: assignReason.trim() || null,
         }));
         await base44.entities.CourseProgress.bulkCreate(progressRecords);
 
@@ -176,6 +209,7 @@ export default function AssignCourseModal({ open, onClose, course, users = [], c
       setSearch("");
       setAudience(EMPTY_AUDIENCE);
       setAudienceEmails([]);
+      setAssignReason("");
       onClose();
       onAssigned?.();
     } catch (error) {
@@ -261,6 +295,18 @@ export default function AssignCourseModal({ open, onClose, course, users = [], c
             <p className="text-xs text-muted-foreground mt-1.5">
               Learners get a reminder email and in-app notice once the date is three days away.
               {enrolledCount > 0 && ` ${enrolledCount} learner(s) are already enrolled — manage them in "Enrolment & progress".`}
+            </p>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-2 block">Why is this being assigned? (optional)</label>
+            <Input
+              value={assignReason}
+              onChange={(e) => setAssignReason(e.target.value)}
+              placeholder="e.g. Required for all new team leads"
+            />
+            <p className="text-xs text-muted-foreground mt-1.5">
+              Kept with the assignment so anyone can see later why this person has this course.
             </p>
           </div>
 

@@ -9,6 +9,7 @@ import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import LearningInbox from "@/components/learning/LearningInbox";
 import JourneyInbox from "@/components/learning/JourneyInbox";
 import CertificateViewer from "@/components/learning/CertificateViewer";
+import MyLearningRecord from "@/components/learning/MyLearningRecord";
 import CollapsibleSection from "@/components/learning/CollapsibleSection";
 import ExperienceCard from "@/components/development/ExperienceCard";
 import useMyLearning from "@/hooks/useMyLearning";
@@ -175,6 +176,9 @@ export default function MyDevelopment() {
             ) : (
               <LearningInbox status={activeTab} />
             )}
+            <CollapsibleSection title="My learning record">
+              <MyLearningRecord email={email} />
+            </CollapsibleSection>
           </>
         )}
 

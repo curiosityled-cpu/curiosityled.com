@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { base44 } from "@/api/base44Client";
 import CourseRosterSummary from "@/components/learning/CourseRosterSummary";
 import CourseRosterTable from "@/components/learning/CourseRosterTable";
+import WaiverExtensionDialog from "@/components/learning/WaiverExtensionDialog";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All learners" },
@@ -31,6 +32,7 @@ export default function CourseRosterDrawer({ open, onClose, course, onChanged })
   const [sort, setSort] = useState({ key: "name", dir: "asc" });
   const [selected, setSelected] = useState(new Set());
   const [dueDialog, setDueDialog] = useState(null);
+  const [waiverRow, setWaiverRow] = useState(null);
 
   const load = useCallback(async () => {
     if (!course?.id) return;
@@ -116,7 +118,7 @@ export default function CourseRosterDrawer({ open, onClose, course, onChanged })
   };
 
   const exportCsv = () => {
-    const header = ["Learner", "Email", "Status", "Percent", "Lessons done", "Lessons total", "Enrolled", "Last activity", "Due date", "Completed", "Certificate"];
+    const header = ["Learner", "Email", "Status", "Percent", "Lessons done", "Lessons total", "Enrolled", "Last activity", "Due date", "Completed", "Certificate", "Assigned because", "Waiver", "Extension days"];
     const lines = rows.map((row) => [
       row.name,
       row.email,
@@ -129,6 +131,9 @@ export default function CourseRosterDrawer({ open, onClose, course, onChanged })
       row.due_date,
       row.completed_at?.slice(0, 10),
       row.certificate_issued ? "yes" : "no",
+      row.assignment_basis_label || "",
+      row.waiver_status || "none",
+      row.extension_granted_days || 0,
     ]);
     const csv = [header, ...lines].map((cells) => cells.map(csvCell).join(",")).join("\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
@@ -239,7 +244,13 @@ export default function CourseRosterDrawer({ open, onClose, course, onChanged })
                 sort={sort}
                 onSort={toggleSort}
                 busy={busy}
-                onRowAction={(action, ids) => (action === "set_due_date" ? setDueDialog(ids) : runAction(action, ids))}
+                onRowAction={(action, ids) => {
+                  if (action === "set_due_date") return setDueDialog(ids);
+                  if (action === "waiver") {
+                    return setWaiverRow((data?.rows || []).find((entry) => entry.id === ids[0]) || null);
+                  }
+                  return runAction(action, ids);
+                }}
               />
             </>
           )}
@@ -252,6 +263,17 @@ export default function CourseRosterDrawer({ open, onClose, course, onChanged })
           onSubmit={async (date) => {
             await runAction("set_due_date", dueDialog, { due_date: date });
             setDueDialog(null);
+          }}
+        />
+
+        <WaiverExtensionDialog
+          open={!!waiverRow}
+          row={waiverRow}
+          courseId={course?.id}
+          onClose={() => setWaiverRow(null)}
+          onDone={() => {
+            load();
+            onChanged?.();
           }}
         />
       </SheetContent>

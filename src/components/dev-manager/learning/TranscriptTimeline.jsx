@@ -1,6 +1,15 @@
 import React from "react";
 import { format } from "date-fns";
-import { Award, BookOpen, CheckCircle2, CircleDot, UserPlus } from "lucide-react";
+import {
+  Award,
+  BookOpen,
+  CalendarClock,
+  CheckCircle2,
+  CircleDot,
+  ShieldCheck,
+  UserPlus,
+  XCircle,
+} from "lucide-react";
 
 const KIND = {
   course_enrolled: { icon: UserPlus, label: "Enrolled", tone: "text-gray-400", ring: "ring-gray-100" },
@@ -8,7 +17,13 @@ const KIND = {
   course_completed: { icon: CheckCircle2, label: "Course completed", tone: "text-emerald-500", ring: "ring-emerald-50" },
   certificate_issued: { icon: Award, label: "Certificate issued", tone: "text-amber-500", ring: "ring-amber-50" },
   course_published: { icon: BookOpen, label: "Course published", tone: "text-gray-400", ring: "ring-gray-100" },
+  waiver_requested: { icon: CalendarClock, label: "Waiver requested", tone: "text-violet-500", ring: "ring-violet-50" },
+  assignment_waived: { icon: ShieldCheck, label: "Requirement waived", tone: "text-violet-500", ring: "ring-violet-50" },
+  waiver_declined: { icon: XCircle, label: "Waiver declined", tone: "text-red-500", ring: "ring-red-50" },
+  due_date_extended: { icon: CalendarClock, label: "Due date extended", tone: "text-blue-500", ring: "ring-blue-50" },
 };
+
+const DECISION_EVENTS = ["waiver_requested", "assignment_waived", "waiver_declined", "due_date_extended"];
 
 /**
  * The learner's record, oldest to newest top-down: a hairline spine of timestamped
@@ -70,6 +85,21 @@ export default function TranscriptTimeline({ events = [] }) {
               <p className="font-mono text-[10px] text-gray-400 mt-0.5">
                 {String(event.metadata.verification_code).slice(0, 18)}
               </p>
+            )}
+            {DECISION_EVENTS.includes(event.event_type) && (
+              <div className="mt-0.5 space-y-0.5">
+                {event.metadata?.reason && (
+                  <p className="text-[11px] leading-snug text-gray-600">{event.metadata.reason}</p>
+                )}
+                {event.event_type === "due_date_extended" && event.metadata?.new_due_date && (
+                  <p className="text-[11px] text-gray-500">
+                    Due {event.metadata.previous_due_date || "—"} → {event.metadata.new_due_date}
+                  </p>
+                )}
+                {event.actor_email && (
+                  <p className="text-[11px] text-gray-400">Recorded by {event.actor_email}</p>
+                )}
+              </div>
             )}
           </li>
         );

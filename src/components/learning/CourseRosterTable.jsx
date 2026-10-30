@@ -85,9 +85,21 @@ export default function CourseRosterTable({ rows, selected, onToggle, onToggleAl
                       </button>
                     </td>
                     <td className="px-3 py-2.5">
-                      <span className={cn("text-[11px] font-medium px-2 py-0.5 rounded-full", status.className)}>
-                        {status.label}
-                      </span>
+                      <div className="flex flex-wrap items-center gap-1">
+                        <span className={cn("text-[11px] font-medium px-2 py-0.5 rounded-full", status.className)}>
+                          {status.label}
+                        </span>
+                        {row.waived && (
+                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-violet-100 text-violet-700">
+                            Waived
+                          </span>
+                        )}
+                        {row.waiver_status === "requested" && (
+                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                            Waiver asked
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-3 py-2.5">
                       <div className="flex items-center gap-2">
@@ -124,6 +136,9 @@ export default function CourseRosterTable({ rows, selected, onToggle, onToggleAl
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => onRowAction("remind", [row.id])}>Send reminder</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onRowAction("set_due_date", [row.id])}>Set due date</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onRowAction("waiver", [row.id])}>
+                            Waiver or extension
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => setExpandedId(expanded ? null : row.id)}>
                             {expanded ? "Hide learner detail" : "View learner detail"}
                           </DropdownMenuItem>
@@ -167,6 +182,35 @@ export default function CourseRosterTable({ rows, selected, onToggle, onToggleAl
                                 "Not issued"
                               )}
                             </p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Why assigned</p>
+                            <p className="text-foreground">
+                              {row.assignment_basis_label || "Not recorded"}
+                            </p>
+                            {row.assignment_reason && (
+                              <p className="text-muted-foreground mt-0.5">{row.assignment_reason}</p>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Waiver / extension</p>
+                            <p className="text-foreground">
+                              {row.waiver_status === "granted"
+                                ? "Waived"
+                                : row.waiver_status === "requested"
+                                ? "Waiver requested"
+                                : row.waiver_status === "declined"
+                                ? "Waiver declined"
+                                : "None"}
+                              {row.extension_granted_days > 0
+                                ? ` · +${row.extension_granted_days} days`
+                                : ""}
+                            </p>
+                            {row.due_date_original && row.due_date && row.due_date_original !== row.due_date && (
+                              <p className="text-muted-foreground mt-0.5">
+                                Due {row.due_date_original} → {row.due_date}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </td>

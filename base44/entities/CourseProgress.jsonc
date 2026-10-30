@@ -1,7 +1,7 @@
 {
   "name": "CourseProgress",
   "type": "object",
-  "description": "A learner's progress through one course. Completion state is owned by the learning record server, not the browser: learners can read their own row, but only administrators (and trusted server functions) can create or change one, so a completion cannot be fabricated or quietly edited.",
+  "description": "A learner's progress through one course, and the assignment that put it there. Completion state is owned by the learning record server, not the browser: learners can read their own row, but only administrators (and trusted server functions) can create or change one, so a completion cannot be fabricated or quietly edited. The assignment half of the row records why the learner has this course (basis), and any waiver or extension granted on it, with the reason and the approver kept so the decision can be reconstructed.",
   "properties": {
     "course_id": {
       "type": "string",
@@ -14,6 +14,10 @@
     "learner_email": {
       "type": "string",
       "description": "Email of the learner"
+    },
+    "learner_name": {
+      "type": "string",
+      "description": "Name of the learner at the time of assignment, kept so the roster still reads sensibly after a name change"
     },
     "client_id": {
       "type": "string",
@@ -85,10 +89,98 @@
       "type": "string",
       "description": "Email of the person who assigned the course (empty for self-enrolment)"
     },
+    "assignment_basis": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "audience",
+        "cohort",
+        "self_enrolled",
+        "open_access",
+        "import"
+      ],
+      "default": "manual",
+      "description": "Why this learner has this course: picked by name, matched a role audience, came in with a cohort, enrolled themselves, took an open course, or arrived by import. Recorded at assignment time and never inferred later."
+    },
+    "assignment_basis_label": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Human-readable statement of the basis, shown on the roster (e.g. 'Role audience \u2014 24 matched', 'Cohort: Q4 Managers')."
+    },
+    "assignment_basis_detail": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Structured detail behind the basis (audience criteria, cohort id and name, import source), kept so the assignment can be explained precisely later."
+    },
+    "assignment_reason": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional note from the assigner on why this assignment was made"
+    },
     "due_date": {
       "type": "string",
       "format": "date",
-      "description": "Optional due date for completing the course"
+      "description": "Current due date for completing the course (moved when an extension is granted)"
+    },
+    "due_date_original": {
+      "type": "string",
+      "format": "date",
+      "description": "The due date as first set, kept when an extension moves it, so the change is visible"
+    },
+    "extension_granted_days": {
+      "type": "number",
+      "default": 0,
+      "description": "Total days of extension granted on this assignment, accumulated across grants"
+    },
+    "extension_reason": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Reason recorded when a due-date extension was last granted"
+    },
+    "extension_granted_by": {
+      "type": "string",
+      "description": "Email of the approver who granted the extension"
+    },
+    "extension_granted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the extension was granted"
+    },
+    "waiver_status": {
+      "type": "string",
+      "enum": [
+        "none",
+        "requested",
+        "granted",
+        "declined"
+      ],
+      "default": "none",
+      "description": "State of a waiver on this assignment. 'granted' means the requirement no longer makes the learner overdue; the course itself stays available."
+    },
+    "waiver_reason": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Reason given for the waiver, by the learner when requesting or by the approver when granting"
+    },
+    "waiver_requested_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "waiver_requested_by": {
+      "type": "string"
+    },
+    "waiver_decided_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "waiver_decided_by": {
+      "type": "string",
+      "description": "Email of the approver who granted or declined the waiver"
+    },
+    "waiver_decision_note": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Note recorded with the waiver decision"
     },
     "reminder_sent_at": {
       "type": "string",

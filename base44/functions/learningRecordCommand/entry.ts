@@ -69,11 +69,15 @@ async function getOrCreateProgress(service, user, course) {
     course_id: course.id,
     course_title: course.title,
     learner_email: user.email,
+    learner_name: user.full_name || null,
     client_id: course.client_id || user.client_id || null,
     status: 'not_started',
     overall_percentage: 0,
     enrolled_at: new Date().toISOString(),
     last_accessed_at: new Date().toISOString(),
+    assignment_basis: 'self_enrolled',
+    assignment_basis_label: 'Self-enrolled from the course catalogue',
+    assignment_basis_detail: { via: 'self_enrolment' },
   });
 
   await logEvent(service, {
@@ -219,6 +223,98 @@ export default async function (req) {
       });
 
       return Response.json({ version: record, course_status: 'published' });
+    }
+
+    // ── Waivers and extensions: administrative acts, kept with reason and approver ──
+    const ADMIN_ACTIONS = ['grant_waiver', 'decline_waiver', 'grant_extension'];
+
+    if (ADMIN_ACTIONS.includes(action) || action === 'request_waiver') {
+      const isAdminAction = ADMIN_ACTIONS.includes(action);
+      if (isAdminAction && !ADMIN_ROLES.includes(user.app_role)) {
+        return Response.json({ error: 'Forbidden - admin access required' }, { status: 403 });
+      }
+
+      const learnerEmail = isAdminAction ? body?.learner_email : user.email;
+      if (!learnerEmail) return Response.json({ error: 'learner_email is required' }, { status: 400 });
+
+      const rows = onePage(
+        await service.entities.CourseProgress.filter({ course_id: courseId, learner_email: learnerEmail })
+      );
+      const progress = rows[0];
+      if (!progress) {
+        return Response.json({ error: 'That learner is not assigned to this course.' }, { status: 404 });
+      }
+
+      const now = new Date().toISOString();
+      const reason = String(body?.reason || '').trim();
+      if (!reason) return Response.json({ error: 'A reason is required.' }, { status: 400 });
+
+      const record = (event_type, metadata) =>
+        logEvent(service, {
+          event_type,
+          client_id: course.client_id || progress.client_id || user.client_id || null,
+          learner_email: learnerEmail,
+          learner_name: progress.learner_name || null,
+          actor_email: user.email,
+          actor_role: isAdminAction ? user.app_role || 'admin' : 'learner',
+          source: isAdminAction ? 'admin' : 'learner',
+          course_id: courseId,
+          course_title: course.title,
+          metadata,
+        });
+
+      if (action === 'request_waiver') {
+        const updated = await service.entities.CourseProgress.update(progress.id, {
+          waiver_status: 'requested',
+          waiver_reason: reason,
+          waiver_requested_at: now,
+          waiver_requested_by: user.email,
+        });
+        await record('waiver_requested', { reason });
+        return Response.json({ progress: updated });
+      }
+
+      if (action === 'grant_waiver' || action === 'decline_waiver') {
+        const granted = action === 'grant_waiver';
+        const updated = await service.entities.CourseProgress.update(progress.id, {
+          waiver_status: granted ? 'granted' : 'declined',
+          waiver_reason: reason,
+          waiver_decided_by: user.email,
+          waiver_decided_at: now,
+          waiver_decision_note: body?.note || null,
+        });
+        await record(granted ? 'assignment_waived' : 'waiver_declined', {
+          reason,
+          note: body?.note || null,
+          previous_status: progress.waiver_status || 'none',
+        });
+        return Response.json({ progress: updated });
+      }
+
+      // grant_extension — moves the due date and keeps the original for comparison
+      const days = Number(body?.days);
+      if (!Number.isFinite(days) || days === 0) {
+        return Response.json({ error: 'Choose a number of days to extend by.' }, { status: 400 });
+      }
+      const baseline = progress.due_date ? new Date(`${progress.due_date}T00:00:00Z`) : new Date();
+      const nextDue = new Date(baseline.getTime() + days * 86400000).toISOString().slice(0, 10);
+
+      const updated = await service.entities.CourseProgress.update(progress.id, {
+        due_date: nextDue,
+        due_date_original: progress.due_date_original || progress.due_date || null,
+        extension_granted_days: (progress.extension_granted_days || 0) + days,
+        extension_reason: reason,
+        extension_granted_by: user.email,
+        extension_granted_at: now,
+        reminder_sent_at: null,
+      });
+      await record('due_date_extended', {
+        reason,
+        days,
+        previous_due_date: progress.due_date || null,
+        new_due_date: nextDue,
+      });
+      return Response.json({ progress: updated });
     }
 
     // ── Everything below is the learner's own record ──

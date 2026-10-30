@@ -6,35 +6,12 @@ import { Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import TranscriptTimeline from "./TranscriptTimeline";
+import { downloadRecordCsv } from "@/lib/learningRecordExport";
 
 const asArray = (result) => (Array.isArray(result) ? result : result?.items || []);
 const safe = (promise, fallback) => promise.catch(() => fallback);
 
 const DATALIST_ID = "learning-record-learners";
-
-const csvCell = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
-
-function downloadCsv(learner, events) {
-  const header = ["Occurred at", "Event", "Learner", "Actor", "Course", "Version", "Lesson", "Detail"];
-  const lines = events.map((event) => [
-    event.occurred_at || event.created_date,
-    event.event_type,
-    event.learner_email,
-    event.actor_email || "",
-    event.course_title || "",
-    event.course_version ?? "",
-    event.lesson_title || "",
-    event.metadata ? JSON.stringify(event.metadata) : "",
-  ]);
-  const csv = [header, ...lines].map((row) => row.map(csvCell).join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `learning-record-${learner.replace(/[^a-z0-9@._-]/gi, "_")}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
-}
 
 /**
  * Records — one learner at a time, showing what actually happened and offering the
@@ -118,7 +95,7 @@ export default function RecordsPanel() {
           size="sm"
           className="ml-auto h-8 text-xs gap-1.5"
           disabled={!learner || events.length === 0}
-          onClick={() => downloadCsv(learner, events)}
+          onClick={() => downloadRecordCsv(learner, events)}
         >
           <Download className="w-3.5 h-3.5" /> Download record (CSV)
         </Button>
