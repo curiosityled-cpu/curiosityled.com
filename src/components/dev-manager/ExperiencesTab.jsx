@@ -1,14 +1,18 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Map, GraduationCap, Star, Dumbbell } from "lucide-react";
+import { Map, Users, Star, Dumbbell } from "lucide-react";
 import JourneysTab from "@/components/dev-manager/JourneysTab";
-import AdminLearningManagementTab from "@/components/experience-mgmt/AdminLearningManagementTab";
+import CohortsTab from "@/components/dev-manager/CohortsTab";
 import AdminExperiencesTab from "@/components/experience-mgmt/AdminExperiencesTab";
 import PracticeHubTab from "@/components/practice/PracticeHubTab";
 
+/**
+ * Experiences own delivery: what is sequenced for whom, and on what timetable.
+ * Content itself is authored in the Content tab and only referenced from here.
+ */
 const SUB_SECTIONS = [
   { id: 'journeys', label: 'Journeys', icon: Map },
-  { id: 'learning', label: 'Learning', icon: GraduationCap },
+  { id: 'cohorts', label: 'Cohorts', icon: Users },
   { id: 'experiences', label: 'External', icon: Star },
   { id: 'practice', label: 'Practice', icon: Dumbbell },
 ];
@@ -45,7 +49,7 @@ export default function ExperiencesTab({ user, coacheeEmails }) {
         transition={{ duration: 0.2 }}
       >
         {subSection === 'journeys' && <JourneysTab user={user} coacheeEmails={coacheeEmails} />}
-        {subSection === 'learning' && <AdminLearningManagementTab user={user} />}
+        {subSection === 'cohorts' && <CohortsTab user={user} />}
         {subSection === 'experiences' && <AdminExperiencesTab user={user} coacheeEmails={coacheeEmails} />}
         {subSection === 'practice' && <PracticeHubTab user={user} />}
       </motion.div>

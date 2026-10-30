@@ -481,7 +481,7 @@ export default function AdminLearningManagementTab({ user }) {
           <TabsTrigger value="library" className="rounded-lg text-xs">Content Library</TabsTrigger>
           <TabsTrigger value="courses" className="rounded-lg text-xs">Courses</TabsTrigger>
           <TabsTrigger value="conversational" className="rounded-lg text-xs">Conversational Learning</TabsTrigger>
-          <TabsTrigger value="enrollments" className="rounded-lg text-xs">Enrollments</TabsTrigger>
+          <TabsTrigger value="enrollments" className="rounded-lg text-xs">Resource Assignments</TabsTrigger>
         </TabsList>
 
         {/* ── LIBRARY ── */}

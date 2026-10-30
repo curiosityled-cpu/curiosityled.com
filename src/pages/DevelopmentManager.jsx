@@ -5,11 +5,11 @@ import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import { useAuth } from "@/components/useAuth";
 import { useCoachCoacheeScope } from "@/hooks/useCoachCoacheeScope";
 import ExperiencesTab from "@/components/dev-manager/ExperiencesTab";
-import CohortsTab from "@/components/dev-manager/CohortsTab";
 import SignalsTab from "@/components/dev-manager/SignalsTab";
 import ExperienceAnalyticsTab from "@/components/experience-mgmt/ExperienceAnalyticsTab";
 import CoachAnalyticsTab from "@/components/experience-mgmt/CoachAnalyticsTab";
-import LearningWorkspace from "@/components/dev-manager/learning/LearningWorkspace";
+import AdminLearningManagementTab from "@/components/experience-mgmt/AdminLearningManagementTab";
+import ProgressWorkspace from "@/components/dev-manager/ProgressWorkspace";
 
 // Lazy load request components
 const RequestDetailPanel = lazy(() => import("@/components/requests/RequestDetailPanel"));
@@ -46,14 +46,18 @@ const PRIORITY_COLORS = {
   high: 'bg-orange-100 text-orange-800', urgent: 'bg-red-100 text-red-800',
 };
 
-// Admin tabs: 5 total (Conversational and Practice moved into Experiences sub-sections)
+// Admin tabs follow one journey: author the content, deliver it through experiences,
+// then evidence what was consumed. Cohorts live inside Experiences; Practice too.
 const ADMIN_TABS = [
+  { id: 'content', label: 'Content', icon: GraduationCap },
   { id: 'experiences', label: 'Experiences', icon: Star },
-  { id: 'cohorts', label: 'Cohorts', icon: Users },
   { id: 'signals', label: 'Signals', icon: Radio },
-  { id: 'learning', label: 'Learning', icon: GraduationCap },
+  { id: 'progress', label: 'Progress', icon: CheckCircle2 },
   { id: 'analytics', label: 'Analytics', icon: BarChart2 },
 ];
+
+// Old deep links keep working after the rename.
+const TAB_ALIASES = { learning: 'content', cohorts: 'experiences' };
 
 // Coach-scoped tabs: Practice moved into Experiences sub-sections
 const COACH_TABS = (isConsultant) => [
@@ -72,10 +76,11 @@ export default function DevelopmentManager() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
+    const resolved = TAB_ALIASES[tab] || tab;
     if (tab) {
       const allTabIds = [...ADMIN_TABS, ...COACH_TABS(isConsultant)].map(t => t.id);
-      if (allTabIds.includes(tab)) {
-        setSection(tab);
+      if (allTabIds.includes(resolved)) {
+        setSection(resolved);
       }
     }
   }, [isConsultant]);
@@ -205,13 +210,6 @@ export default function DevelopmentManager() {
         </motion.div>
       )}
 
-      {/* ── COHORTS ── */}
-      {section === 'cohorts' && (
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <CohortsTab user={user} />
-        </motion.div>
-      )}
-
       {/* ── SIGNALS ── */}
       {section === 'signals' && (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
@@ -219,10 +217,17 @@ export default function DevelopmentManager() {
         </motion.div>
       )}
 
-      {/* ── LEARNING (catalog / assignments / records / insights) ── */}
-      {section === 'learning' && (
+      {/* ── CONTENT (the authoring home: library, courses, conversational) ── */}
+      {section === 'content' && (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <LearningWorkspace user={user} />
+          <AdminLearningManagementTab user={user} />
+        </motion.div>
+      )}
+
+      {/* ── PROGRESS (assignments / records / insights — consumption only) ── */}
+      {section === 'progress' && (
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <ProgressWorkspace user={user} />
         </motion.div>
       )}
 

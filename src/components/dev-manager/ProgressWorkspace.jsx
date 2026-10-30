@@ -1,42 +1,30 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import AdminLearningManagementTab from "@/components/experience-mgmt/AdminLearningManagementTab";
 import LearningAnalyticsTab from "@/components/dev-manager/LearningAnalyticsTab";
-import AssignmentsBoard from "./AssignmentsBoard";
-import RecordsPanel from "./RecordsPanel";
+import AssignmentsBoard from "@/components/dev-manager/learning/AssignmentsBoard";
+import RecordsPanel from "@/components/dev-manager/learning/RecordsPanel";
 
 /**
- * Learning has three jobs and they are not the same job: build the content, chase what is
- * owed, and prove what happened. Each gets its own surface rather than one long tab.
+ * Progress is the consumption side of the house: it never creates or edits content.
+ * It answers three questions — what is owed, what happened, and is it being used.
  */
 const SEGMENTS = [
-  { id: "catalog", label: "Catalog", hint: "Build and publish" },
   { id: "assignments", label: "Assignments", hint: "Who owes what" },
   { id: "records", label: "Records", hint: "The evidence" },
   { id: "insights", label: "Insights", hint: "Adoption" },
 ];
 
-export default function LearningWorkspace({ user }) {
-  const [segment, setSegment] = useState("catalog");
+export default function ProgressWorkspace({ user }) {
+  const [segment, setSegment] = useState("assignments");
   const [overdue, setOverdue] = useState(0);
-  const opened = useRef(false);
 
-  // Land where the work is: if anything is overdue, start there; otherwise start in the catalog.
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
     base44.entities.CourseProgress
       .count({ due_date: { $lt: today }, status: { $ne: "completed" } })
-      .then((count) => {
-        setOverdue(count);
-        if (count > 0 && !opened.current) setSegment("assignments");
-      })
+      .then(setOverdue)
       .catch(() => setOverdue(0));
   }, []);
-
-  const choose = (id) => {
-    opened.current = true;
-    setSegment(id);
-  };
 
   return (
     <div className="space-y-4">
@@ -46,7 +34,7 @@ export default function LearningWorkspace({ user }) {
           return (
             <button
               key={item.id}
-              onClick={() => choose(item.id)}
+              onClick={() => setSegment(item.id)}
               className={`-mb-px pb-2 border-b-2 text-left transition-colors whitespace-nowrap ${
                 active ? "border-[#0202ff]" : "border-transparent hover:border-gray-300"
               }`}
@@ -69,7 +57,6 @@ export default function LearningWorkspace({ user }) {
         })}
       </div>
 
-      {segment === "catalog" && <AdminLearningManagementTab user={user} />}
       {segment === "assignments" && <AssignmentsBoard user={user} />}
       {segment === "records" && <RecordsPanel />}
       {segment === "insights" && <LearningAnalyticsTab />}
