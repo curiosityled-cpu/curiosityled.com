@@ -6,6 +6,7 @@ import { Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import TranscriptTimeline from "./TranscriptTimeline";
+import CertificateRecordList from "@/components/learning/CertificateRecordList";
 import { downloadRecordCsv } from "@/lib/learningRecordExport";
 
 const asArray = (result) => (Array.isArray(result) ? result : result?.items || []);
@@ -147,6 +148,10 @@ export default function RecordsPanel() {
             </div>
           </div>
         </div>
+      )}
+
+      {learner && certificates.length > 0 && (
+        <CertificateRecordList certificates={certificates} onChanged={() => load(learner)} />
       )}
     </div>
   );

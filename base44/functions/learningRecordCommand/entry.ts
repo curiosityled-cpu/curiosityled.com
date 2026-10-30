@@ -18,6 +18,9 @@ const ADMIN_ROLES = [
   'Platform Admin',
 ];
 
+/** How long a training record stays in its current state before it is archived. */
+const RETENTION_YEARS = 7;
+
 const flattenLessons = (modules) =>
   (modules || []).flatMap((module) =>
     (module.lessons || []).map((lesson) => ({ ...lesson, module_id: module.id, module_title: module.title }))
@@ -147,10 +150,85 @@ export default async function (req) {
 
     const body = await req.json().catch(() => ({}));
     const action = body?.action;
+    const service = base44.asServiceRole;
+
+    // ── Retention: a tenant-wide maintenance act, not tied to one course ──
+    // Reaching the end of the window archives a record; it never deletes one, so the
+    // transcript and its history stay readable and a hold can still be placed later.
+    if (action === 'apply_retention') {
+      if (!ADMIN_ROLES.includes(user.app_role)) {
+        return Response.json({ error: 'Forbidden - admin access required' }, { status: 403 });
+      }
+
+      const clientId = user.client_id || body?.client_id;
+      if (!clientId) {
+        return Response.json(
+          { error: 'A client is required to apply a retention schedule.' },
+          { status: 400 }
+        );
+      }
+
+      const cutoff = new Date();
+      cutoff.setFullYear(cutoff.getFullYear() - RETENTION_YEARS);
+      const cutoffIso = cutoff.toISOString();
+      const cutoffDate = cutoffIso.slice(0, 10);
+
+      const completed = onePage(
+        await service.entities.CourseProgress.filter({ client_id: clientId, status: 'completed' })
+      );
+      const eligible = completed.filter(
+        (row) =>
+          row.completed_at &&
+          row.completed_at < cutoffIso &&
+          !row.legal_hold &&
+          row.retention_state !== 'archived'
+      );
+
+      const now = new Date().toISOString();
+      let archivedCount = 0;
+
+      for (const row of eligible) {
+        try {
+          await service.entities.CourseProgress.update(row.id, {
+            retention_state: 'archived',
+            retention_archived_at: now,
+            retention_reason: `Retention window of ${RETENTION_YEARS} years reached (cutoff ${cutoffDate}).`,
+          });
+          await logEvent(service, {
+            event_type: 'record_archived',
+            client_id: row.client_id || clientId,
+            learner_email: row.learner_email,
+            learner_name: row.learner_name || null,
+            actor_email: user.email,
+            actor_role: user.app_role || 'admin',
+            source: 'admin',
+            course_id: row.course_id,
+            course_title: row.course_title || null,
+            metadata: {
+              retention_years: RETENTION_YEARS,
+              cutoff: cutoffIso,
+              completed_at: row.completed_at,
+            },
+          });
+          archivedCount += 1;
+        } catch (error) {
+          console.warn('Retention archiving failed for', row.id, error.message);
+        }
+      }
+
+      return Response.json({
+        retention_years: RETENTION_YEARS,
+        cutoff: cutoffIso,
+        evaluated: completed.length,
+        on_hold: completed.filter((row) => row.legal_hold).length,
+        archived: archivedCount,
+        previously_archived: completed.filter((row) => row.retention_state === 'archived').length,
+      });
+    }
+
     const courseId = body?.course_id;
     if (!courseId) return Response.json({ error: 'course_id is required' }, { status: 400 });
 
-    const service = base44.asServiceRole;
     const course = await service.entities.Course.get(courseId).catch((e) =>
       e.status === 404 ? null : Promise.reject(e)
     );
@@ -223,6 +301,107 @@ export default async function (req) {
       });
 
       return Response.json({ version: record, course_status: 'published' });
+    }
+
+    // ── Certificate revocation: a certificate that cannot be withdrawn is not evidence ──
+    if (action === 'revoke_certificate') {
+      if (!ADMIN_ROLES.includes(user.app_role)) {
+        return Response.json({ error: 'Forbidden - admin access required' }, { status: 403 });
+      }
+
+      const certificateId = body?.certificate_id;
+      const reason = String(body?.reason || '').trim();
+      if (!certificateId) return Response.json({ error: 'certificate_id is required' }, { status: 400 });
+      if (!reason) {
+        return Response.json({ error: 'A reason is required to revoke a certificate.' }, { status: 400 });
+      }
+
+      const certificate = await service.entities.LearningCertificate
+        .get(certificateId)
+        .catch((e) => (e.status === 404 ? null : Promise.reject(e)));
+      if (!certificate) return Response.json({ error: 'Certificate not found' }, { status: 404 });
+      if (certificate.status === 'revoked') return Response.json({ certificate, already_revoked: true });
+
+      const now = new Date().toISOString();
+      const updated = await service.entities.LearningCertificate.update(certificateId, {
+        status: 'revoked',
+        revoked_at: now,
+        revoked_by: user.email,
+        revocation_reason: reason,
+      });
+
+      await logEvent(service, {
+        event_type: 'certificate_revoked',
+        client_id: course.client_id || certificate.client_id || user.client_id || null,
+        learner_email: certificate.user_email,
+        learner_name: certificate.metadata?.learner_name || null,
+        actor_email: user.email,
+        actor_role: user.app_role || 'admin',
+        source: 'admin',
+        course_id: courseId,
+        course_title: course.title,
+        metadata: {
+          certificate_id: certificateId,
+          reason,
+          verification_code: certificate.verification_code || null,
+        },
+      });
+
+      return Response.json({ certificate: updated });
+    }
+
+    // ── Legal hold: preserves a record whatever the retention schedule says ──
+    if (action === 'set_legal_hold' || action === 'clear_legal_hold') {
+      if (!ADMIN_ROLES.includes(user.app_role)) {
+        return Response.json({ error: 'Forbidden - admin access required' }, { status: 403 });
+      }
+
+      const learnerEmail = body?.learner_email;
+      const reason = String(body?.reason || '').trim();
+      if (!learnerEmail) return Response.json({ error: 'learner_email is required' }, { status: 400 });
+      if (!reason) {
+        return Response.json(
+          { error: 'A reason is required to place or release a legal hold.' },
+          { status: 400 }
+        );
+      }
+
+      const rows = onePage(
+        await service.entities.CourseProgress.filter({ course_id: courseId, learner_email: learnerEmail })
+      );
+      const progress = rows[0];
+      if (!progress) {
+        return Response.json({ error: 'That learner is not assigned to this course.' }, { status: 404 });
+      }
+
+      const held = action === 'set_legal_hold';
+      const now = new Date().toISOString();
+
+      const updated = await service.entities.CourseProgress.update(progress.id, {
+        legal_hold: held,
+        legal_hold_reason: reason,
+        legal_hold_set_by: held ? user.email : null,
+        legal_hold_set_at: held ? now : null,
+      });
+
+      await logEvent(service, {
+        event_type: held ? 'legal_hold_set' : 'legal_hold_cleared',
+        client_id: course.client_id || progress.client_id || user.client_id || null,
+        learner_email: learnerEmail,
+        learner_name: progress.learner_name || null,
+        actor_email: user.email,
+        actor_role: user.app_role || 'admin',
+        source: 'admin',
+        course_id: courseId,
+        course_title: course.title,
+        metadata: {
+          reason,
+          previous_hold_reason: held ? null : progress.legal_hold_reason || null,
+          held_since: held ? now : progress.legal_hold_set_at || null,
+        },
+      });
+
+      return Response.json({ progress: updated });
     }
 
     // ── Waivers and extensions: administrative acts, kept with reason and approver ──

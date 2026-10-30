@@ -1,7 +1,7 @@
 {
   "name": "CourseProgress",
   "type": "object",
-  "description": "A learner's progress through one course, and the assignment that put it there. Completion state is owned by the learning record server, not the browser: learners can read their own row, but only administrators (and trusted server functions) can create or change one, so a completion cannot be fabricated or quietly edited. The assignment half of the row records why the learner has this course (basis), and any waiver or extension granted on it, with the reason and the approver kept so the decision can be reconstructed.",
+  "description": "A learner's progress through one course, and the assignment that put it there. Completion state is owned by the learning record server, not the browser: learners can read their own row, but only administrators (and trusted server functions) can create or change one, so a completion cannot be fabricated or quietly edited. The assignment half of the row records why the learner has this course (basis), and any waiver or extension granted on it, with the reason and the approver kept so the decision can be reconstructed. The record itself is never deleted: when its retention window passes it is archived (retention_state) and stays readable, unless a legal hold is in place.",
   "properties": {
     "course_id": {
       "type": "string",
@@ -87,7 +87,7 @@
     },
     "assigned_by": {
       "type": "string",
-      "description": "Email of the person who assigned the course (empty for self-enrolment)"
+      "description": "Email of the person who assigned the course (empty for self-enrolment, 'system' for the recurring training refresh)"
     },
     "assignment_basis": {
       "type": "string",
@@ -97,20 +97,21 @@
         "cohort",
         "self_enrolled",
         "open_access",
-        "import"
+        "import",
+        "recurring"
       ],
       "default": "manual",
-      "description": "Why this learner has this course: picked by name, matched a role audience, came in with a cohort, enrolled themselves, took an open course, or arrived by import. Recorded at assignment time and never inferred later."
+      "description": "Why this learner has this course: picked by name, matched a role audience, came in with a cohort, enrolled themselves, took an open course, arrived by import, or is due a scheduled refresh. Recorded at assignment time and never inferred later."
     },
     "assignment_basis_label": {
       "type": "string",
       "maxLength": 500,
-      "description": "Human-readable statement of the basis, shown on the roster (e.g. 'Role audience \u2014 24 matched', 'Cohort: Q4 Managers')."
+      "description": "Human-readable statement of the basis, shown on the roster (e.g. 'Role audience - 24 matched', 'Cohort: Q4 Managers')."
     },
     "assignment_basis_detail": {
       "type": "object",
       "additionalProperties": true,
-      "description": "Structured detail behind the basis (audience criteria, cohort id and name, import source), kept so the assignment can be explained precisely later."
+      "description": "Structured detail behind the basis (audience criteria, cohort id and name, import source, refresh cycle), kept so the assignment can be explained precisely later."
     },
     "assignment_reason": {
       "type": "string",
@@ -186,6 +187,43 @@
       "type": "string",
       "format": "date-time",
       "description": "When the last due-date reminder was sent, so reminders are not repeated"
+    },
+    "legal_hold": {
+      "type": "boolean",
+      "default": false,
+      "description": "When true this record is under legal hold: it is preserved and excluded from any retention archiving until the hold is released. Placing or releasing a hold requires a reason and is written to the append-only record."
+    },
+    "legal_hold_reason": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Reason recorded when the hold was placed or released"
+    },
+    "legal_hold_set_by": {
+      "type": "string",
+      "description": "Email of the administrator who placed the hold"
+    },
+    "legal_hold_set_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "retention_state": {
+      "type": "string",
+      "enum": [
+        "active",
+        "archived"
+      ],
+      "default": "active",
+      "description": "Whether the record is inside its retention window (active) or past it (archived). Archiving never deletes: the record and its history stay readable."
+    },
+    "retention_archived_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the record passed its retention window and was archived"
+    },
+    "retention_reason": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "The retention rule applied when the record was archived"
     }
   },
   "required": [

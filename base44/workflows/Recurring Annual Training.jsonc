@@ -1,0 +1,45 @@
+{
+  "name": "Recurring Annual Training",
+  "description": "Each morning, opens a fresh cycle for anyone whose completion of a course with a recertification interval has lapsed",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 6 * * *",
+      "one_time_date": null,
+      "timezone": "America/New_York",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "recurring_annual_training",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "open_refresh_cycles": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "assignRecurringTraining",
+            "args": {}
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Open refresh cycles",
+            "description": "Courses past their recertification interval"
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,12 +1,16 @@
 import React from "react";
 import { format } from "date-fns";
 import {
+  Archive,
   Award,
   BookOpen,
   CalendarClock,
   CheckCircle2,
   CircleDot,
+  Lock,
   ShieldCheck,
+  ShieldX,
+  Unlock,
   UserPlus,
   XCircle,
 } from "lucide-react";
@@ -21,9 +25,24 @@ const KIND = {
   assignment_waived: { icon: ShieldCheck, label: "Requirement waived", tone: "text-violet-500", ring: "ring-violet-50" },
   waiver_declined: { icon: XCircle, label: "Waiver declined", tone: "text-red-500", ring: "ring-red-50" },
   due_date_extended: { icon: CalendarClock, label: "Due date extended", tone: "text-blue-500", ring: "ring-blue-50" },
+  certificate_revoked: { icon: ShieldX, label: "Certificate revoked", tone: "text-red-500", ring: "ring-red-50" },
+  legal_hold_set: { icon: Lock, label: "Legal hold placed", tone: "text-amber-500", ring: "ring-amber-50" },
+  legal_hold_cleared: { icon: Unlock, label: "Legal hold released", tone: "text-gray-500", ring: "ring-gray-100" },
+  record_archived: { icon: Archive, label: "Record archived (retention)", tone: "text-gray-400", ring: "ring-gray-100" },
 };
 
-const DECISION_EVENTS = ["waiver_requested", "assignment_waived", "waiver_declined", "due_date_extended"];
+const DEFAULT_KIND = { icon: CircleDot, label: "Record event", tone: "text-gray-400", ring: "ring-gray-100" };
+
+const DECISION_EVENTS = [
+  "waiver_requested",
+  "assignment_waived",
+  "waiver_declined",
+  "due_date_extended",
+  "certificate_revoked",
+  "legal_hold_set",
+  "legal_hold_cleared",
+  "record_archived",
+];
 
 /**
  * The learner's record, oldest to newest top-down: a hairline spine of timestamped
@@ -37,7 +56,7 @@ export default function TranscriptTimeline({ events = [] }) {
   return (
     <ol className="relative ml-1.5 border-l border-gray-200 pl-5 space-y-4 py-2">
       {events.map((event) => {
-        const kind = KIND[event.event_type] || KIND.lesson_completed;
+        const kind = KIND[event.event_type] || DEFAULT_KIND;
         const Icon = kind.icon;
         const isCompletion = event.event_type === "course_completed" || event.event_type === "certificate_issued";
 

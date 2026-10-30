@@ -35,6 +35,7 @@ const emptyCourse = () => ({
   pacing: "self_paced",
   leadership_level: "",
   completion_rule: { type: "all_lessons", minimum_count: 0 },
+  recertification_interval_months: 0,
   modules: [],
   assigned_to_emails: [],
   tags: [],
@@ -259,6 +260,21 @@ const CourseBuilder = forwardRef(({ editingCourse, clientId, onClose }, ref) => 
             />
           </div>
         )}
+        <div className="flex items-center gap-2">
+          <Label className="text-xs whitespace-nowrap">Renewal interval (months):</Label>
+          <Input
+            type="number"
+            min="0"
+            value={course.recertification_interval_months ?? 0}
+            onChange={(e) => update({ recertification_interval_months: Number(e.target.value) })}
+            className="h-8 w-24 text-sm"
+          />
+          <span className="text-[11px] text-gray-400">
+            {Number(course.recertification_interval_months) > 0
+              ? `A fresh cycle opens ${course.recertification_interval_months} months after a completion, and stays open until it is completed again.`
+              : "0 = completed once and it stays complete. Set 12 for annual refresher training."}
+          </span>
+        </div>
       </div>
 
       {/* ── Two-panel: module tree | lesson editor ── */}

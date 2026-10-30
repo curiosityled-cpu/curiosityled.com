@@ -6,6 +6,10 @@
       "type": "string",
       "description": "Email of the learner who earned the certificate"
     },
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this certificate belongs to, kept so verification and reporting can stay tenant-scoped"
+    },
     "certificate_type": {
       "type": "string",
       "enum": [
@@ -53,6 +57,29 @@
     "verification_code": {
       "type": "string",
       "description": "Unique code for certificate verification"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "valid",
+        "revoked"
+      ],
+      "default": "valid",
+      "description": "Whether the certificate still stands. A revoked certificate remains on record (never deleted) but verification reports it as revoked."
+    },
+    "revoked_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the certificate was revoked"
+    },
+    "revoked_by": {
+      "type": "string",
+      "description": "Email of the administrator who revoked the certificate"
+    },
+    "revocation_reason": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Reason recorded with the revocation"
     },
     "competencies_demonstrated": {
       "type": "array",

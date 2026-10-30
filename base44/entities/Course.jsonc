@@ -160,6 +160,10 @@
       },
       "description": "Rule for course completion"
     },
+    "recertification_interval_months": {
+      "type": "number",
+      "description": "How many months a completion of this course stays current. When set (12 = annual), the learner is automatically re-assigned a fresh cycle once that period has passed, and the new cycle is recorded with its basis and due date. Leave at 0 or blank for a course that is completed once and stays complete."
+    },
     "assigned_to_emails": {
       "type": "array",
       "items": {

@@ -1,7 +1,7 @@
 {
   "name": "LearningRecordEvent",
   "type": "object",
-  "description": "Append-only history of a learner's record for one item of learning. Every consequential learning action (publishing content, enrolling, completing a lesson, completing a course, issuing a certificate, requesting a waiver, granting or declining one, extending a due date) is written here as an immutable, timestamped record so a transcript can be reconstructed later and shown to be unaltered. App code never updates or deletes these records: they are created only by trusted server functions.",
+  "description": "Append-only history of a learner's record for one item of learning. Every consequential learning action (publishing content, enrolling, completing a lesson, completing a course, issuing or revoking a certificate, requesting a waiver, granting or declining one, extending a due date, placing or releasing a legal hold, archiving a record at the end of its retention window) is written here as an immutable, timestamped record so a transcript can be reconstructed later and shown to be unaltered. App code never updates or deletes these records: they are created only by trusted server functions.",
   "properties": {
     "client_id": {
       "type": "string",
@@ -15,10 +15,14 @@
         "lesson_completed",
         "course_completed",
         "certificate_issued",
+        "certificate_revoked",
         "waiver_requested",
         "assignment_waived",
         "waiver_declined",
-        "due_date_extended"
+        "due_date_extended",
+        "legal_hold_set",
+        "legal_hold_cleared",
+        "record_archived"
       ],
       "description": "What happened"
     },
@@ -76,7 +80,7 @@
     "metadata": {
       "type": "object",
       "additionalProperties": true,
-      "description": "Supporting detail for the event (completion rule applied, certificate id, waiver reason, previous and new due date, change note, etc.)"
+      "description": "Supporting detail for the event (completion rule applied, certificate id, waiver reason, previous and new due date, change note, hold reason, retention cutoff, etc.)"
     }
   },
   "required": [

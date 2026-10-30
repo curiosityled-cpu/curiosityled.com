@@ -51,11 +51,14 @@ export default function CertificateViewer() {
     }
   };
 
+  const verifyUrl = (cert) =>
+    `${window.location.origin}/verify-certificate?code=${encodeURIComponent(cert.verification_code || "")}`;
+
   const handleShare = (cert) => {
     navigator.clipboard.writeText(
-      `I earned a certificate in ${cert.title}! Verification code: ${cert.verification_code}`
+      `I earned a certificate in ${cert.title}. Verify it here: ${verifyUrl(cert)}`
     );
-    toast.success("Certificate details copied to clipboard!");
+    toast.success("Certificate verification link copied to clipboard!");
   };
 
   if (loading) {
@@ -150,8 +153,17 @@ export default function CertificateViewer() {
                       size="sm" 
                       variant="outline"
                       onClick={() => handleShare(cert)}
+                      title="Copy verification link"
                     >
                       <Share2 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => window.open(verifyUrl(cert), "_blank")}
+                      title="Open verification page"
+                    >
+                      <ExternalLink className="w-4 h-4" />
                     </Button>
                   </div>
 
