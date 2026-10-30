@@ -26,7 +26,6 @@ import OperationalMonitorView from "@/components/succession/OperationalMonitorVi
 import ReviewQueueView from "@/components/succession/ReviewQueueView";
 import DecisionRecordsView from "@/components/succession/DecisionRecordsView";
 import BenchStrengthView from "@/components/succession/BenchStrengthView";
-import CycleReportView from "@/components/succession/CycleReportView";
 import ComplianceView from "@/components/succession/ComplianceView";
 import DemoDataButton from "@/components/succession/DemoDataButton";
 import { useClient } from "@/components/contexts/ClientContext";
@@ -83,8 +82,6 @@ function renderView(viewKey) {
       return <DecisionRecordsView />;
     case "bench-strength":
       return <BenchStrengthView />;
-    case "cycle-report":
-      return <CycleReportView />;
     case "compliance":
       return <ComplianceView />;
     case "governance":

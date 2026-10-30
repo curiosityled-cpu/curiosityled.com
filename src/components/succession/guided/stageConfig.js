@@ -187,7 +187,6 @@ export const ALL_VIEWS = [
   { key: "review-queue", label: "Review Queue", icon: ClipboardCheck, stage: "monitor" },
   { key: "decision-records", label: "Decision Records", icon: Gavel, stage: "deliberate" },
   { key: "bench-strength", label: "Bench Strength", icon: BarChart3, stage: null },
-  { key: "cycle-report", label: "Cycle Report", icon: FileText, stage: null },
   { key: "governance", label: "Governance", icon: ShieldCheck, stage: null },
   { key: "compliance", label: "Legal & Compliance", icon: Scale, stage: null },
 ];
