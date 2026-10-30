@@ -64,7 +64,11 @@ export const GRANT_DISABLED_MESSAGE =
 // The frontend cannot override this. Toggled via the Secrets dashboard.
 export function isPlatformAdminFullAccessEnabled(): boolean {
   try {
-    return secrets.get("PLATFORM_ADMIN_FULL_ACCESS") === "true";
+    // Tolerate how the value was typed in the Secrets dashboard ("True",
+    // " true "), while still requiring an explicit affirmative value.
+    const raw = secrets.get("PLATFORM_ADMIN_FULL_ACCESS");
+    const value = String(raw ?? "").trim().toLowerCase();
+    return value === "true" || value === "1" || value === "yes";
   } catch {
     return false;
   }
