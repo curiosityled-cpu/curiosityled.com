@@ -37,12 +37,13 @@ export default function OverviewView() {
 
   const fetchOverview = useCallback(async () => {
     try {
-      const [cyclesRes, rolesRes, positionsRes, blueprintsRes, snapshotsRes] =
+      const [cyclesRes, rolesRes, positionsRes, blueprintsRes, criticalRolesRes, snapshotsRes] =
         await Promise.all([
           invoke("successionListCycles", {}),
           invoke("successionListOrgRoles", {}),
           invoke("successionListOrgPositions", {}),
           invoke("successionListBlueprints", {}),
+          invoke("successionListCriticalRoles", {}),
           invoke("successionListSnapshotIntegrityIncidents", {}),
         ]);
 
@@ -50,13 +51,14 @@ export default function OverviewView() {
       const roleCount = rolesRes?.org_roles?.length || 0;
       const positionCount = positionsRes?.positions?.length || 0;
       const blueprintCount = blueprintsRes?.blueprints?.length || 0;
+      const criticalRoleCount = criticalRolesRes?.critical_roles?.length || 0;
       const incidentCount = snapshotsRes?.incidents?.length || 0;
 
       setCounts({
         cycles: cycleCount,
         roles: roleCount,
         positions: positionCount,
-        criticalRoles: 0,
+        criticalRoles: criticalRoleCount,
         blueprints: blueprintCount,
         snapshots: incidentCount,
       });
@@ -65,7 +67,7 @@ export default function OverviewView() {
         { label: "Create a succession cycle", done: cycleCount > 0 },
         { label: "Define organizational roles", done: roleCount > 0 },
         { label: "Create positions", done: positionCount > 0 },
-        { label: "Designate critical roles", done: false },
+        { label: "Designate critical roles", done: criticalRoleCount > 0 },
         { label: "Draft and approve blueprints", done: blueprintCount > 0 },
         { label: "No open integrity incidents", done: incidentCount === 0 && blueprintCount > 0 },
       ];

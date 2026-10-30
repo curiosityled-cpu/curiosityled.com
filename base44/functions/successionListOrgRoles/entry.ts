@@ -7,11 +7,12 @@ import { filterActiveRecords } from "../../shared/successionIntegrityHelper.ts";
 export default async function(req: Request): Promise<Response> {
   const base44 = createClientFromRequest(req);
   const { cycle_id } = await req.json().catch(() => ({}));
-  if (!cycle_id) return Response.json({ error: "cycle_id required" }, { status: 400 });
   const auth = await bootstrapSuccessionAuth(base44);
   if (!auth.client_id) return Response.json({ error: "Tenant resolution failed" }, { status: 403 });
   const authz = await authorizeSuccessionAction({ base44, auth, action: "successionListOrgRoles", target_client_id: auth.client_id, required_permission: "succession.roles.view" });
   if (!authz.allowed) return Response.json({ error: authz.denied_reason }, { status: 403 });
-  const roles = await base44.asServiceRole.entities.OrgRole.filter({ client_id: auth.client_id, cycle_id }, '-created_date', 200);
+  const filter: any = { client_id: auth.client_id };
+  if (cycle_id) filter.cycle_id = cycle_id;
+  const roles = await base44.asServiceRole.entities.OrgRole.filter(filter, '-created_date', 200);
   return Response.json({ org_roles: filterActiveRecords(roles) });
 }
