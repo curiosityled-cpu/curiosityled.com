@@ -284,19 +284,19 @@ function MVPLayoutInner({ children }) {
       >
         {/* Logo + Collapse Toggle */}
         <div
-          className={`relative flex items-center justify-center h-16 px-3 ${collapsed ? '' : 'h-[88px]'}`}
+          className={`flex items-center h-16 px-3 ${collapsed ? 'justify-center' : 'justify-between px-4'}`}
           style={{ borderBottom: sidebarBorder }}
         >
           {!collapsed &&
           <button
             onClick={() => navigate('/')}
-            className="flex items-center justify-center w-full min-w-0 rounded-lg transition-opacity hover:opacity-80"
+            className="flex items-center min-w-0 rounded-lg transition-opacity hover:opacity-80"
             title="Curiosity Led — Home"
           >
               <img
               src={isDark ? WORDMARK_DARK : WORDMARK_LIGHT}
               alt="Curiosity Led"
-              className="w-full max-w-[170px] h-auto object-contain" />
+              className="h-9 w-auto max-w-[170px] object-contain object-left flex-shrink-0" />
             </button>
           }
           {collapsed &&
@@ -308,12 +308,12 @@ function MVPLayoutInner({ children }) {
             <img
               src={isDark ? "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/329f40d48_Untitleddesign.png" : "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5761758bf_CuriosityLegLogo.png"}
               alt="Curiosity Led"
-              className="w-10 h-10 object-contain" />
+              className="w-7 h-7 object-contain" />
           </button>
           }
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className={`p-1.5 rounded-lg flex-shrink-0 transition-colors ${collapsed ? '' : 'absolute right-1 top-1/2 -translate-y-1/2'}`}
+            className="p-1.5 rounded-lg flex-shrink-0 transition-colors"
             style={collapsed
               ? { position: 'absolute', right: 0, transform: 'translateX(50%)', background: sidebarBg, border: sidebarBorder, color: 'hsl(220 8% 48%)' }
               : { color: 'hsl(220 8% 48%)' }
