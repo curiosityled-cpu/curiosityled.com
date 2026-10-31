@@ -29,8 +29,8 @@ export default function DashboardHeader({
     >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex-1">
-          <h1 className="text-2xl sm:text-3xl font-bold">{title}</h1>
-          <p className="mt-1 sm:mt-2 text-blue-100 text-sm sm:text-base">{subtitle}</p>
+          <h1 className="text-[1.875rem] sm:text-[2.125rem] font-extrabold tracking-tight leading-[1.15]">{title}</h1>
+          <p className="mt-1 sm:mt-2 text-blue-100 text-sm sm:text-base font-medium">{subtitle}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {availableViews.length > 1 && (

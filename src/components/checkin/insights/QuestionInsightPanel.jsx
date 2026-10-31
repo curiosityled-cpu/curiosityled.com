@@ -56,9 +56,9 @@ export default function QuestionInsightPanel({ entry, insight }) {
       <CardContent className="p-5 space-y-4">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-sm font-semibold text-gray-900">
+            <h3 className="text-[1.0625rem] font-bold text-gray-900 tracking-tight leading-snug">
               {entry.emoji ? `${entry.emoji} ` : ""}{entry.label}
-            </p>
+            </h3>
             {entry.type === "measure" && (
               <Badge variant="outline" className="text-[10px]">Measure</Badge>
             )}
@@ -77,7 +77,7 @@ export default function QuestionInsightPanel({ entry, insight }) {
             )}
           </div>
           {entry.description && (
-            <p className="text-xs text-gray-500 mt-0.5">{entry.description}</p>
+            <p className="text-[0.8125rem] text-gray-600 mt-1 leading-relaxed">{entry.description}</p>
           )}
           <p className="text-[11px] text-gray-500 mt-1 flex items-center gap-1">
             <Users className="w-3 h-3 flex-shrink-0" />
@@ -95,28 +95,28 @@ export default function QuestionInsightPanel({ entry, insight }) {
             <div className="flex flex-wrap items-center gap-4">
               {data.avg != null && (
                 <div>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">
+                  <p className="text-[11px] text-gray-500 uppercase tracking-[0.07em] font-bold">
                     {data.avg_label || (entry.response_type === "yes_no" ? "Yes rate" : "Average")}
                   </p>
-                  <p className="text-xl font-bold text-gray-900">
+                  <p className="text-[1.5rem] leading-tight font-bold text-gray-900 tracking-tight">
                     {data.avg}{numeric ? "/5" : ""}
                   </p>
                 </div>
               )}
               <div>
-                <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">Responses</p>
-                <p className="text-xl font-bold text-gray-900">{responseCount}</p>
+                <p className="text-[11px] text-gray-500 uppercase tracking-[0.07em] font-bold">Responses</p>
+                <p className="text-[1.5rem] leading-tight font-bold text-gray-900 tracking-tight">{responseCount}</p>
               </div>
               <div>
-                <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">Trend</p>
+                <p className="text-[11px] text-gray-500 uppercase tracking-[0.07em] font-bold">Trend</p>
                 <div className="mt-0.5">
                   <TrendBadge direction={data.trend_direction} />
                 </div>
               </div>
               {entry.first_seen_date && (
                 <div>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">Active period</p>
-                  <p className="text-xs text-gray-600 mt-0.5">
+                  <p className="text-[11px] text-gray-500 uppercase tracking-[0.07em] font-bold">Active period</p>
+                  <p className="text-[0.8125rem] text-gray-600 mt-0.5">
                     {formatDateShort(entry.first_seen_date)} — {formatDateShort(entry.last_seen_date)}
                   </p>
                 </div>

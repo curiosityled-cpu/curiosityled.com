@@ -223,8 +223,8 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
     <div className="space-y-4">
       {/* Header */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-900">{heading}</h3>
-        <p className="text-xs text-gray-500 mt-0.5">
+        <h2 className="text-xl font-bold text-gray-900 tracking-tight">{heading}</h2>
+        <p className="text-[0.8125rem] text-gray-600 mt-1 leading-relaxed max-w-3xl">
           {subtitle || (scope === "org"
             ? "Aggregate signals from daily check-ins across all managers. Privacy-safe — no individual attribution."
             : "Insights derived from the actual questions asked in daily check-ins. As questions change, insights update — but historical data is always preserved.")}
@@ -295,7 +295,7 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
       {/* Question selector */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+          <p className="text-[11px] font-bold text-gray-600 uppercase tracking-[0.08em]">
             Select questions or measures
             {selectedEntries.length > 0 && (
               <span className="ml-1.5 font-normal normal-case text-gray-400">· {selectedEntries.length} selected</span>

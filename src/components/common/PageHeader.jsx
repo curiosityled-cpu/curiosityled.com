@@ -29,8 +29,8 @@ export default function PageHeader({
         <CardContent className="p-4 sm:p-6 md:p-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex-1">
-              <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">{title}</h1>
-              <p className="opacity-90 text-sm sm:text-base">{subtitle}</p>
+              <h1 className="text-[1.875rem] sm:text-[2.125rem] font-extrabold tracking-tight leading-[1.15] mb-1 sm:mb-2">{title}</h1>
+              <p className="opacity-95 text-sm sm:text-base font-medium">{subtitle}</p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               {additionalHeaderContent}

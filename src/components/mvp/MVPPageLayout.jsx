@@ -16,12 +16,12 @@ export default function MVPPageLayout({ title, subtitle, action, children }) {
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               {title && (
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight leading-tight">
+                <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight leading-[1.15]">
                   {title}
                 </h1>
               )}
               {subtitle && (
-                <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
+                <p className="text-[0.9375rem] text-gray-600 mt-1.5 leading-relaxed">{subtitle}</p>
               )}
             </div>
             {action && (

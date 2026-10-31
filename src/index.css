@@ -111,6 +111,69 @@
   }
 }
 
+/* ── Heading readability scale ──────────────────────────────────────────────
+   One hierarchy for every heading on the platform, expressed as floors on the
+   heading elements themselves. A heading that was authored at body-text size is
+   lifted to the level its tag declares, so pages scan cleanly everywhere at
+   once; body copy, labels and controls are untouched.
+
+     h1          page title
+     h2          section title
+     h3          card / sub-section title
+     h4          minor heading
+     *.text-xs   eyebrow label (stays small, gains weight and tracking)
+
+   Treat these as a floor, not a ceiling: a heading's size class is where it
+   starts, never where it has to stay.
+─────────────────────────────────────────────────────────────────────────── */
+h1.text-sm,
+h1.text-base,
+h1.text-lg,
+h1.text-xl,
+h1.text-2xl {
+  font-size: 1.875rem; /* 30px */
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: -0.021em;
+  text-wrap: balance;
+}
+
+h2.text-sm,
+h2.text-base,
+h2.text-lg {
+  font-size: 1.3125rem; /* 21px */
+  line-height: 1.3;
+  font-weight: 700;
+  letter-spacing: -0.014em;
+  text-wrap: balance;
+}
+
+h3.text-sm,
+h3.text-base {
+  font-size: 1.0625rem; /* 17px */
+  line-height: 1.35;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+h4.text-sm,
+h4.text-base {
+  font-size: 0.9375rem; /* 15px */
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+/* Eyebrow labels: small by design, but no longer washed out next to body text */
+h1.text-xs,
+h2.text-xs,
+h3.text-xs,
+h4.text-xs {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
 /* ── Manager surface overrides (dark mode only) ──────────────────────────────
    Applied inside the MVP manager shell (.cl-dark) when dark mode is active.
    Overrides hardcoded Tailwind color classes used in legacy components.
