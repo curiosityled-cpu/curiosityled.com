@@ -46,6 +46,7 @@ import LeaderInsightProfilesCard from "./LeaderInsightProfilesCard";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import OrgPulseAggregatesView from "@/components/privacy/OrgPulseAggregatesView";
 import CheckInInsightsExplorer from "@/components/checkin/CheckInInsightsExplorer";
+import { drawReportHeader, drawReportFooters } from "@/lib/pdf/reportHeader";
 import TalentCareLifecycleBar from "@/components/intelligence/TalentCareLifecycleBar";
 import LifecycleNarrativeHeader from "./LifecycleNarrativeHeader";
 import OrgHealthCard from "@/components/intelligence/OrgHealthCard";
@@ -913,7 +914,39 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
           const pageHeight = pdf.internal.pageSize.getHeight();
           const imgWidth = pageWidth;
           const imgHeight = (canvas.height * imgWidth) / canvas.width;
+          const margin = 16;
 
+          // Cover page: what this snapshot covers, before the capture itself.
+          drawReportHeader(pdf, {
+            eyebrow: "Curiosity Led · Leadership Intelligence Hub",
+            title: "Organisation Snapshot",
+            subtitle: "A point-in-time capture of the hub as displayed on screen, kept for reading offline and sharing with people who are not in the platform.",
+            units: "mm",
+            margin,
+            scopeRows: [
+              {
+                label: "Data scope",
+                value: "Whole organisation — every manager's vertical in this workspace, aggregated. No individual is identified anywhere in this snapshot.",
+              },
+              {
+                label: "Includes",
+                value: "The leadership health, wellbeing, workforce stability, engagement and talent pipeline measures currently on the hub, in the order they appear.",
+              },
+              {
+                label: "Privacy",
+                value: "Groups smaller than the minimum size are suppressed, so no person can be inferred from a figure.",
+              },
+              { label: "Generated", value: format(new Date(), "d MMM yyyy, HH:mm") },
+            ],
+          });
+          drawReportFooters(pdf, {
+            reportName: "Organisation snapshot",
+            scopeLine: "Organisation-wide · aggregates only",
+            units: "mm",
+            margin,
+          });
+
+          pdf.addPage();
           let heightLeft = imgHeight;
           let position = 0;
 

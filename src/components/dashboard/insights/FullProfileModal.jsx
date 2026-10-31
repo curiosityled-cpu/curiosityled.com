@@ -3,6 +3,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { drawScopePanel } from "@/lib/pdf/reportHeader";
 import {
   X, Download, Mail, Lightbulb, CheckCircle,
   Zap, Brain, Users, BarChart3, Loader2, Send, AlertTriangle,
@@ -630,7 +631,23 @@ export default function FullProfileModal({ open, onClose, user, assessment, insi
         doc.text(`Archetype: ${report?.archetype || assessment?.archetype_label}`, W - margin, 35, { align: "right" });
       }
 
-      let y = 50;
+      // What this report covers: one individual's own results, nothing pooled.
+      let y = drawScopePanel(doc, {
+        title: "What this report covers",
+        x: margin,
+        y: 46,
+        width: W - margin * 2,
+        units: "mm",
+        rows: [
+          { label: "Data scope", value: `Individual — ${name} only. No other person's results are included or averaged in.` },
+          {
+            label: "Source",
+            value: `Leadership Index self-assessment${assessment?.created_date ? ` completed ${new Date(assessment.created_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : ""}, scored against the Curiosity Led benchmark set.`,
+          },
+          { label: "Perspective", value: "The leader's own answers. Manager and peer views are not part of this report." },
+          { label: "Generated", value: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) },
+        ],
+      }) + 12;
       doc.setTextColor(30, 30, 30);
 
       // Section helper
