@@ -118,6 +118,8 @@ function MVPLayoutInner({ children }) {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  // While the sidebar is collapsed, a section (Administration) shows as one icon that opens its own flyout
+  const [collapsedGroup, setCollapsedGroup] = useState(null);
   const [openGroups, setOpenGroups] = useState(() => {
     try {
       const saved = sessionStorage.getItem('mvp_openGroups');
@@ -213,11 +215,21 @@ function MVPLayoutInner({ children }) {
       const isGroupOpen = openGroups[item.label] ?? false;
       const anyChildActive = item.children?.some(child => location.pathname === child.path.split('?')[0]);
       if (!showLabel) {
-        // Collapsed sidebar: show children directly as icons
+        // Collapsed sidebar: the section collapses to a single icon that opens its flyout
+        const isFlyoutOpen = collapsedGroup === item.label;
+        const childActive = item.children?.some(child => location.pathname === child.path.split('?')[0]);
+        const highlighted = isFlyoutOpen || childActive;
         return (
-          <>
-            {item.children?.map(child => <NavItem key={child.path} item={child} showLabel={false} />)}
-          </>
+          <button
+            onClick={() => setCollapsedGroup(prev => prev === item.label ? null : item.label)}
+            title={item.label}
+            className={`w-full flex items-center justify-center px-3 py-2.5 rounded-lg transition-all ${highlighted ? 'bg-[#0202ff] text-white shadow-sm' : ''}`}
+            style={!highlighted ? { color: 'hsl(var(--muted-foreground))' } : {}}
+            onMouseEnter={e => { if (!highlighted) { e.currentTarget.style.background = 'hsl(var(--muted))'; e.currentTarget.style.color = 'hsl(var(--foreground))'; } }}
+            onMouseLeave={e => { if (!highlighted) { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'hsl(var(--muted-foreground))'; } }}
+          >
+            <Icon className="w-4 h-4 flex-shrink-0" />
+          </button>
         );
       }
       return (
@@ -312,7 +324,7 @@ function MVPLayoutInner({ children }) {
           </button>
           }
           <button
-            onClick={() => setCollapsed(!collapsed)}
+            onClick={() => { setCollapsed(!collapsed); setCollapsedGroup(null); }}
             className="p-1.5 rounded-lg flex-shrink-0 transition-colors"
             style={collapsed
               ? { position: 'absolute', right: 0, transform: 'translateX(50%)', background: sidebarBg, border: sidebarBorder, color: 'hsl(220 8% 48%)' }
@@ -519,6 +531,33 @@ function MVPLayoutInner({ children }) {
           }
         </div>
       </aside>
+
+      {/* Collapsed-sidebar section flyout (Administration) */}
+      {collapsed && (() => {
+        const group = navItems.find(i => i.group);
+        if (!group) return null;
+        const isOpen = collapsedGroup === group.label;
+        return (
+          <>
+            {isOpen &&
+            <div className="hidden sm:block fixed inset-0 z-30 bg-black/10" onClick={() => setCollapsedGroup(null)} />
+            }
+            <aside
+              className={`hidden sm:flex fixed left-16 top-0 bottom-0 z-40 w-64 flex-col transition-all duration-200 ${isOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none'}`}
+              style={{ background: sidebarBg, borderRight: sidebarBorder }}
+            >
+              <div className="flex items-center h-14 px-4 flex-shrink-0" style={{ borderBottom: sidebarBorder }}>
+                <p className="text-xs font-semibold uppercase tracking-wider truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  {group.label}
+                </p>
+              </div>
+              <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
+                {group.children?.map(child => <NavItem key={child.path} item={child} showLabel />)}
+              </nav>
+            </aside>
+          </>
+        );
+      })()}
 
       {/* Mobile Header */}
       <header
