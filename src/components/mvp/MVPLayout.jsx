@@ -116,7 +116,16 @@ function MVPLayoutInner({ children }) {
   const { user } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
+  // Collapse state survives page changes and reloads; only the arrow next to the logo changes it
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return localStorage.getItem('cl-nav-collapsed') === 'true'; } catch { return false; }
+  });
+  const toggleCollapsed = () => {
+    const next = !collapsed;
+    setCollapsed(next);
+    setCollapsedGroup(null);
+    try { localStorage.setItem('cl-nav-collapsed', String(next)); } catch { /* ignore */ }
+  };
   const [mobileOpen, setMobileOpen] = useState(false);
   // While the sidebar is collapsed, a section (Administration) shows as one icon that opens its own flyout
   const [collapsedGroup, setCollapsedGroup] = useState(null);
@@ -335,7 +344,7 @@ function MVPLayoutInner({ children }) {
           </button>
           }
           <button
-            onClick={() => { setCollapsed(!collapsed); setCollapsedGroup(null); }}
+            onClick={toggleCollapsed}
             className="p-1.5 rounded-lg flex-shrink-0 transition-colors"
             style={collapsed
               ? { position: 'absolute', right: 0, transform: 'translateX(50%)', background: sidebarBg, border: sidebarBorder, color: 'hsl(220 8% 48%)' }
