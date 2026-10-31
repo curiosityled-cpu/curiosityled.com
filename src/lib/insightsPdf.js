@@ -1,5 +1,11 @@
 import { jsPDF } from "jspdf";
 import { formatDateShort, isNumericType, summariseByPerson } from "./insightsShared";
+import {
+  buildReportContext,
+  drawReportHeader,
+  drawReportFooter,
+  drawSectionHeading,
+} from "./pdf/reportContext";
 
 const INK = [17, 23, 71];
 const BLUE = [2, 2, 255];
@@ -43,8 +49,15 @@ const distColor = (entry, key) => {
 /** Renders the selected questions into a printable PDF report. */
 export function downloadInsightsPdf({
   title,
+  reportType = "Check-in insights",
+  view,
+  subject,
   scopeLabel,
   periodLabel,
+  filters = [],
+  selection,
+  preparedBy,
+  note,
   entries = [],
   insightsByKey = {},
   sessions = [],
@@ -58,36 +71,43 @@ export function downloadInsightsPdf({
   const M = 42;
   const contentW = pageW - M * 2;
 
+  // Coverage of the report: how many check-ins and people the numbers rest on.
+  const coverage = [
+    dateRange && dateRange.total_checkins != null ? `${dateRange.total_checkins} check-ins` : "",
+    dateRange && dateRange.unique_respondents != null ? `${dateRange.unique_respondents} people` : "",
+    dateRange && dateRange.earliest
+      ? `${formatDateShort(dateRange.earliest)} - ${formatDateShort(dateRange.latest)}`
+      : "",
+  ].filter(Boolean).join(" · ");
+
+  const context = buildReportContext({
+    title: title || "Team Check-in Insights",
+    reportType,
+    view: view || scopeLabel,
+    subject,
+    timeframe: periodLabel,
+    filters: coverage ? [...filters, { label: "Coverage", value: coverage }] : filters,
+    selection,
+    preparedBy,
+    note,
+  });
+
+  let y = M;
+
   const ensureSpace = (needed) => {
-    if (y + needed > pageH - M) {
+    if (y + needed > pageH - M - 14) {
       doc.addPage();
       y = M;
     }
   };
 
-  let y = M;
+  y = drawReportHeader(doc, context, { margin: M });
 
-  doc.setFillColor(...BLUE);
-  doc.rect(0, 0, pageW, 6, "F");
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(17);
-  doc.setTextColor(...INK);
-  doc.text(title || "Team Check-in Insights", M, y);
-  y += 18;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(...MUTED);
-  const meta = [
-    scopeLabel,
-    periodLabel,
-    dateRange && dateRange.total_checkins != null ? `${dateRange.total_checkins} check-ins` : "",
-    dateRange && dateRange.earliest ? `${formatDateShort(dateRange.earliest)} - ${formatDateShort(dateRange.latest)}` : "",
-    `Generated ${new Date().toLocaleDateString("en-US")}`,
-  ].filter(Boolean);
-  doc.text(meta.join("   |   "), M, y, { maxWidth: contentW });
-  y += 22;
+  y = drawSectionHeading(doc, "Questions in this report", y, {
+    margin: M,
+    note:
+      "Each section below is one measure or question: its average, how many answers it rests on, its trend across the period and how answers were distributed.",
+  });
 
   for (const entry of entries) {
     const insight = insightsByKey[entry.key] || {};
@@ -178,16 +198,10 @@ export function downloadInsightsPdf({
     const people = summariseByPerson(sessions, entries);
     ensureSpace(70);
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11.5);
-    doc.setTextColor(...INK);
-    doc.text("Team summary", M, y);
-    y += 13;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(...MUTED);
-    doc.text("Average for numeric questions, number of responses for other questions.", M, y);
-    y += 12;
+    y = drawSectionHeading(doc, "Team summary", y, {
+      margin: M,
+      note: "Average for numeric questions, number of responses for other questions, per person in scope.",
+    });
 
     const personW = 118;
     const checkinsW = 52;
@@ -221,14 +235,7 @@ export function downloadInsightsPdf({
     }
   }
 
-  const pages = doc.internal.getNumberOfPages();
-  for (let page = 1; page <= pages; page++) {
-    doc.setPage(page);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(...MUTED);
-    doc.text(`${page} / ${pages}`, pageW - M, pageH - 18, { align: "right" });
-  }
+  drawReportFooter(doc, context, { margin: M });
 
   doc.save(filename);
 }

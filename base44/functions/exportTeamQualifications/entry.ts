@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { jsPDF } from 'npm:jspdf@2.5.1';
+import { buildReportContext, drawReportHeader, drawReportFooter, drawSectionHeading } from '../../shared/reportContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -99,15 +100,17 @@ Deno.serve(async (req) => {
       // Generate PDF
       const doc = new jsPDF();
       
-      doc.setFontSize(18);
-      doc.text('Team Qualifications Report', 20, 20);
-      
-      doc.setFontSize(10);
-      doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 30);
-      doc.text(`Team Leader: ${user.full_name || user.email}`, 20, 36);
-      doc.text(`Total Team Members: ${subordinate_emails.length}`, 20, 42);
+      const context = buildReportContext({
+        title: 'Team Qualifications Report',
+        reportType: 'Qualifications and external assessments',
+        view: 'Direct reports',
+        subject: `Team of ${user.full_name || user.email}`,
+        selection: `${subordinate_emails.length} team members`,
+        preparedBy: user.full_name || user.email,
+        note: 'Every certification and external assessment below belongs to a member of this leader\u2019s team.',
+      });
 
-      let y = 55;
+      let y = drawReportHeader(doc, context, { margin: 20 });
       
       // Certifications Section
       if (certifications.length > 0) {
@@ -162,6 +165,7 @@ Deno.serve(async (req) => {
         });
       }
 
+      drawReportFooter(doc, context, { margin: 20 });
       const pdfBytes = doc.output('arraybuffer');
       
       return new Response(pdfBytes, {

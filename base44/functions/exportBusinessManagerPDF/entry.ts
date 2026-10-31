@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
 import { jsPDF } from 'npm:jspdf@2.5.1';
+import { buildReportContext, drawReportHeader, drawReportFooter, drawSectionHeading } from '../../shared/reportContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -13,17 +14,19 @@ Deno.serve(async (req) => {
     const { clients, partners } = await req.json();
 
     const doc = new jsPDF();
-    
-    doc.setFontSize(20);
-    doc.text('Business Manager Report', 20, 20);
-    
-    doc.setFontSize(10);
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 30);
 
-    let y = 45;
-    doc.setFontSize(14);
-    doc.text(`Clients (${clients.length})`, 20, y);
-    y += 10;
+    const context = buildReportContext({
+      title: 'Business Manager Report',
+      reportType: 'Commercial overview',
+      view: 'Platform',
+      subject: 'All clients and partners on the platform',
+      selection: `${clients.length} clients · ${partners.length} partners`,
+      preparedBy: user.full_name || user.email,
+      note: 'Seat usage compares seats in use against licensed seats for each client.',
+    });
+
+    let y = drawReportHeader(doc, context, { margin: 20 });
+    y = drawSectionHeading(doc, `Clients (${clients.length})`, y, { margin: 20 });
     
     doc.setFontSize(8);
     clients.forEach(c => {
@@ -50,6 +53,7 @@ Deno.serve(async (req) => {
       y += 5;
     });
 
+    drawReportFooter(doc, context, { margin: 20 });
     const pdfBytes = doc.output('arraybuffer');
 
     return new Response(pdfBytes, {

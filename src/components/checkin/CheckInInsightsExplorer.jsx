@@ -100,6 +100,23 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
       : `${viewing.name} — ${viewing.direct_reports} team · ${viewing.subtree_size} vertical`
     : scope === "org" ? "Whole organisation" : "My team";
 
+  // What the export covers: an individual leader (with their vertical), the
+  // caller's own reporting line, or the whole organisation.
+  const oneLeader = viewing && !viewing.is_self;
+  const viewLabel = oneLeader ? "Individual" : scope === "org" ? "Organisation" : "Direct reports";
+  const subjectLabel = oneLeader
+    ? `${viewing.name} — ${viewing.direct_reports} direct reports · ${viewing.subtree_size} people in the vertical`
+    : scope === "org"
+      ? "Whole organisation"
+      : "My team — you and everyone in your reporting line";
+
+  const exportFilters = [
+    audienceFilter.title && { label: "Job title", value: audienceFilter.title },
+    audienceFilter.tier && { label: "Tier", value: audienceFilter.tier },
+    audienceFilter.track && { label: "Track", value: audienceFilter.track },
+    leaderEmail && { label: "Leader anchored", value: leaderEmail },
+  ].filter(Boolean);
+
   const exportName = `${scope === "org" ? "organisation" : "team"}-check-in-insights${
     leaderEmail ? `-${leaderEmail.split("@")[0]}` : ""
   }-${hasCustomRange ? `${customRange.start}_to_${customRange.end}` : `${days}d`}`;
@@ -152,10 +169,22 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
     setBusy("pdf");
     try {
       const sessions = exportOptions.summary ? await fetchSessions() : [];
+      const me = await base44.auth.me().catch(() => null);
+      const selectionLabel = `${selectedEntries.length} ${
+        selectedEntries.length === 1 ? "question" : "questions"
+      } — ${selectedEntries.slice(0, 5).map((entry) => entry.label).join(", ")}${
+        selectedEntries.length > 5 ? ` +${selectedEntries.length - 5} more` : ""
+      }`;
       downloadInsightsPdf({
         title: heading,
+        reportType: "Check-in insights",
+        view: viewLabel,
+        subject: subjectLabel,
         scopeLabel,
         periodLabel,
+        filters: exportFilters,
+        selection: selectionLabel,
+        preparedBy: me?.email || "",
         entries: selectedEntries,
         insightsByKey: insights,
         sessions,

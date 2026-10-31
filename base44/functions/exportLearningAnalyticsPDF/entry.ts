@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
 import { jsPDF } from 'npm:jspdf@2.5.1';
+import { buildReportContext, drawReportHeader, drawReportFooter, drawSectionHeading } from '../../shared/reportContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -13,18 +14,19 @@ Deno.serve(async (req) => {
     const { analytics, filters } = await req.json();
 
     const doc = new jsPDF();
-    
-    doc.setFontSize(20);
-    doc.text('Learning Analytics Report', 20, 20);
-    
-    doc.setFontSize(10);
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 30);
-    doc.text(`Time Range: ${filters.timeRange}`, 20, 35);
 
-    let y = 50;
-    doc.setFontSize(14);
-    doc.text('Summary Metrics', 20, y);
-    y += 10;
+    const context = buildReportContext({
+      title: 'Learning Analytics Report',
+      reportType: 'Learning analytics',
+      view: 'Learning',
+      subject: 'Resources, assignments and completions in scope for this client',
+      timeframe: filters?.timeRange ? `Last ${filters.timeRange}` : '',
+      preparedBy: user.full_name || user.email,
+      note: 'Assignment and completion figures rest on the resources and assignments active in the timeframe above.',
+    });
+
+    let y = drawReportHeader(doc, context, { margin: 20 });
+    y = drawSectionHeading(doc, 'Summary metrics', y, { margin: 20 });
     
     doc.setFontSize(10);
     doc.text(`Total Resources: ${analytics.totalResources}`, 20, y);
@@ -52,6 +54,7 @@ Deno.serve(async (req) => {
       y += 5;
     });
 
+    drawReportFooter(doc, context, { margin: 20 });
     const pdfBytes = doc.output('arraybuffer');
 
     return new Response(pdfBytes, {

@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 import { jsPDF } from 'npm:jspdf@2.5.1';
+import { buildReportContext, drawReportHeader, drawReportFooter, drawSectionHeading } from '../../shared/reportContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -13,29 +14,24 @@ Deno.serve(async (req) => {
     const { scope, filters, metrics } = await req.json();
 
     const doc = new jsPDF();
-    
-    // Header
-    doc.setFontSize(22);
-    doc.setTextColor(2, 2, 255);
-    doc.text('Journey Analytics Report', 20, 25);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Generated: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`, 20, 35);
-    doc.text(`User: ${user.full_name || user.email}`, 20, 42);
-    doc.text(`Scope: ${scope || 'Personal'}`, 20, 49);
 
-    // Divider line
-    doc.setDrawColor(200, 200, 200);
-    doc.line(20, 55, 190, 55);
+    const scopeName = String(scope || 'Personal');
+    const context = buildReportContext({
+      title: 'Journey Analytics Report',
+      reportType: 'Journey analytics',
+      view: scopeName.charAt(0).toUpperCase() + scopeName.slice(1),
+      subject:
+        scopeName.toLowerCase() === 'personal'
+          ? 'Your own journey enrolments'
+          : 'Journeys and learners in this scope',
+      timeframe: filters?.timeRange ? `Last ${filters.timeRange}` : '',
+      filters: filters?.track ? [{ label: 'Track', value: filters.track }] : [],
+      preparedBy: user.full_name || user.email,
+      note: 'Enrolment and completion figures rest on the journeys listed in this report.',
+    });
 
-    let y = 65;
-
-    // Key Metrics Section
-    doc.setFontSize(16);
-    doc.setTextColor(0, 0, 0);
-    doc.text('Key Metrics', 20, y);
-    y += 12;
+    let y = drawReportHeader(doc, context, { margin: 20 });
+    y = drawSectionHeading(doc, 'Key metrics', y, { margin: 20 });
     
     doc.setFontSize(11);
     doc.setTextColor(60, 60, 60);
@@ -90,6 +86,7 @@ Deno.serve(async (req) => {
     doc.text('Curiosity Led - Leadership Development Platform', 20, 285);
     doc.text(`Page 1`, 180, 285);
 
+    drawReportFooter(doc, context, { margin: 20 });
     const pdfBytes = doc.output('arraybuffer');
 
     return new Response(pdfBytes, {

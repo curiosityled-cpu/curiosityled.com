@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
 import { jsPDF } from 'npm:jspdf@2.5.1';
+import { buildReportContext, drawReportHeader, drawReportFooter, drawSectionHeading } from '../../shared/reportContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -13,17 +14,19 @@ Deno.serve(async (req) => {
     const { assessments, metrics } = await req.json();
 
     const doc = new jsPDF();
-    
-    doc.setFontSize(20);
-    doc.text('Assessment Analytics Report', 20, 20);
-    
-    doc.setFontSize(10);
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 30);
 
-    let y = 45;
-    doc.setFontSize(14);
-    doc.text('Summary Metrics', 20, y);
-    y += 10;
+    const context = buildReportContext({
+      title: 'Assessment Analytics Report',
+      reportType: 'Assessment analytics',
+      view: 'Assessments',
+      subject: 'Completed leadership assessments in scope',
+      selection: `${assessments?.length || 0} assessments`,
+      preparedBy: user.full_name || user.email,
+      note: 'Completion rate and average scores are calculated across the assessments listed in this report.',
+    });
+
+    let y = drawReportHeader(doc, context, { margin: 20 });
+    y = drawSectionHeading(doc, 'Summary metrics', y, { margin: 20 });
     
     doc.setFontSize(10);
     doc.text(`Total Assessments: ${metrics.totalAssessments}`, 20, y);
@@ -49,6 +52,7 @@ Deno.serve(async (req) => {
       y += 5;
     });
 
+    drawReportFooter(doc, context, { margin: 20 });
     const pdfBytes = doc.output('arraybuffer');
 
     return new Response(pdfBytes, {
