@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
  * Shows: draft blueprint, canonical RoleRequirement editor, submit/return/approve
  * workflow, version comparison, approved versions read-only.
  */
-export default function BlueprintsView() {
+export default function BlueprintsView({ autoOpen = 0 }) {
   const { invoke, loading, error, clearError } = useSuccessionApi();
   const { hasPermission, user } = useAuth();
   const userId = user?.id;
@@ -42,6 +42,11 @@ export default function BlueprintsView() {
   const [compareVersions, setCompareVersions] = useState(false);
 
   const canManage = hasPermission("succession.roles.manage");
+
+  // Opened from the stage's own action button.
+  useEffect(() => {
+    if (autoOpen && canManage) setShowCreateReq(true);
+  }, [autoOpen, canManage]);
   const canView = hasPermission("succession.roles.view");
   const canApprove = hasPermission("succession.blueprints.approve");
 

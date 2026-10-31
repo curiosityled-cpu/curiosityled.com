@@ -34,13 +34,19 @@ const TYPE_LABELS = {
   other: "Other",
 };
 
-export default function TransitionsView() {
+export default function TransitionsView({ autoOpen = 0 }) {
   const { invoke, loading, error } = useSuccessionApi();
   const [transitions, setTransitions] = useState([]);
   const [candidacies, setCandidacies] = useState([]);
   const [criticalRoles, setCriticalRoles] = useState([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+
+  // Opened from the stage's own action button.
+  useEffect(() => {
+    if (autoOpen) setShowForm(true);
+  }, [autoOpen]);
+
   const [statusFilter, setStatusFilter] = useState("");
   const [formData, setFormData] = useState({
     cycle_id: "",

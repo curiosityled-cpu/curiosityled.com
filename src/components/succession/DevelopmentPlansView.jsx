@@ -17,13 +17,18 @@ const STATUS_COLORS = {
   cancelled: "bg-red-100 text-red-700",
 };
 
-export default function DevelopmentPlansView() {
+export default function DevelopmentPlansView({ autoOpen = 0 }) {
   const { invoke, loading, error } = useSuccessionApi();
   const [planLinks, setPlanLinks] = useState([]);
   const [candidacies, setCandidacies] = useState([]);
   const [conclusions, setConclusions] = useState([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+
+  // Opened from the stage's own action button.
+  useEffect(() => {
+    if (autoOpen) setShowForm(true);
+  }, [autoOpen]);
   const [formData, setFormData] = useState({
     candidacy_id: "",
     readiness_conclusion_id: "",

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronDown, ListChecks } from "lucide-react";
+import { ChevronDown, ListChecks, Plus, ArrowLeft } from "lucide-react";
 import { STAGE_PREP } from "./stagePrep";
 
 /**
@@ -9,7 +9,7 @@ import { STAGE_PREP } from "./stagePrep";
  * (where it is the whole point), collapsed for stages already behind the
  * cycle so it does not crowd the work in progress.
  */
-export default function StagePrep({ stageKey, defaultOpen = true }) {
+export default function StagePrep({ stageKey, defaultOpen = true, action, onAction, backLabel, onBack }) {
   const prep = STAGE_PREP[stageKey];
   const [open, setOpen] = useState(defaultOpen);
   if (!prep) return null;
@@ -46,6 +46,33 @@ export default function StagePrep({ stageKey, defaultOpen = true }) {
           <p className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500 leading-relaxed">
             {prep.note}
           </p>
+        </div>
+      )}
+
+      {/* The step's own action, kept outside the collapsible body so it is
+          always reachable — plus the way back to the previous stage. */}
+      {(action || onBack) && (
+        <div className="px-4 py-3 border-t border-gray-200 bg-gray-50 flex items-center gap-3 flex-wrap">
+          {action && (
+            <button
+              type="button"
+              onClick={onAction}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-900 text-white text-xs font-medium hover:bg-gray-800 transition-colors"
+            >
+              {action.create && <Plus className="w-3.5 h-3.5" />}
+              {action.label}
+            </button>
+          )}
+          {onBack && backLabel && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="w-3 h-3" />
+              Back to {backLabel.toLowerCase()}
+            </button>
+          )}
         </div>
       )}
     </div>

@@ -38,7 +38,7 @@ const STAGE_LABELS = {
   closed: "Closed",
 };
 
-export default function CyclesView() {
+export default function CyclesView({ autoOpen = 0 }) {
   const { invoke, loading, error, clearError } = useSuccessionApi();
   const { hasPermission } = useAuth();
   const [cycles, setCycles] = useState([]);
@@ -46,6 +46,11 @@ export default function CyclesView() {
   const [showCreate, setShowCreate] = useState(false);
 
   const canManage = hasPermission("succession.cycles.manage");
+
+  // Opened from the stage's own action button.
+  useEffect(() => {
+    if (autoOpen && canManage) setShowCreate(true);
+  }, [autoOpen, canManage]);
 
   const fetchCycles = useCallback(async () => {
     try {
