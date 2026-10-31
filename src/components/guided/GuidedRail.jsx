@@ -1,19 +1,20 @@
 import React from "react";
 import { Check, Lock } from "lucide-react";
-import { REVIEW_STAGE_MAP, canActOnStage } from "./reviewStageConfig";
 
 /**
- * ReviewStageRail — the cycle stepper, in the same shape as the Succession
- * stage rail: vertical on desktop, a horizontal scroller on mobile.
+ * GuidedRail — the shared stage stepper used by both the Succession and the
+ * Reviews workspaces. Vertical on desktop, a horizontal scroller on mobile.
  *
- * Stages arrive from buildCycleStages() with a `state` of done / current /
- * upcoming, a short detail line, and whether the stage is admin-only.
+ * Every stage arrives already normalised by the caller:
+ *   { key, label, short, icon, state: "done" | "current" | "upcoming",
+ *     locked, canAct }
+ * so the rail itself holds no process knowledge — only the look and feel.
  */
-export default function ReviewStageRail({
+export default function GuidedRail({
   stages = [],
   activeStage = null,
   onSelect,
-  role,
+  ariaLabel = "Stages",
   horizontal = false,
 }) {
   if (!stages.length) return null;
@@ -22,15 +23,13 @@ export default function ReviewStageRail({
     return (
       <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 lg:hidden">
         {stages.map((stage) => {
-          const conf = REVIEW_STAGE_MAP[stage.id];
-          const Icon = conf?.icon;
-          const isActive = activeStage === stage.id;
-          const canAct = canActOnStage(stage.id, role);
+          const Icon = stage.icon;
+          const isActive = activeStage === stage.key;
 
           return (
             <button
-              key={stage.id}
-              onClick={() => onSelect?.(stage.id)}
+              key={stage.key}
+              onClick={() => onSelect?.(stage.key)}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border whitespace-nowrap transition-colors flex-shrink-0 ${
                 isActive
                   ? "bg-[#0202ff] text-white border-[#0202ff]"
@@ -39,7 +38,7 @@ export default function ReviewStageRail({
                   : stage.state === "done"
                   ? "bg-green-50 text-green-700 border-green-200"
                   : "bg-white text-gray-500 border-gray-200"
-              } ${canAct ? "" : "opacity-60"}`}
+              } ${stage.canAct === false ? "opacity-60" : ""}`}
             >
               {stage.state === "done" ? (
                 <Check className="w-3 h-3 flex-shrink-0" />
@@ -55,20 +54,19 @@ export default function ReviewStageRail({
   }
 
   return (
-    <nav aria-label="Review cycle stages" className="space-y-1">
+    <nav aria-label={ariaLabel} className="space-y-1">
       {stages.map((stage) => {
-        const conf = REVIEW_STAGE_MAP[stage.id];
-        const Icon = conf?.icon;
-        const isActive = activeStage === stage.id;
+        const Icon = stage.icon;
+        const isActive = activeStage === stage.key;
         const isComplete = stage.state === "done";
         const isCurrent = stage.state === "current";
-        const canAct = canActOnStage(stage.id, role);
+        const noAccess = stage.canAct === false;
 
         return (
           <button
-            key={stage.id}
-            onClick={() => onSelect?.(stage.id)}
-            className={`w-full flex items-start gap-2.5 px-3 py-2.5 rounded-lg text-left transition-colors ${
+            key={stage.key}
+            onClick={() => onSelect?.(stage.key)}
+            className={`w-full flex items-start gap-2.5 px-3 py-2.5 rounded-lg text-left transition-colors group ${
               isActive
                 ? "bg-[#0202ff]/5 border border-[#0202ff]/20"
                 : "border border-transparent hover:bg-gray-50"
@@ -80,12 +78,14 @@ export default function ReviewStageRail({
                   ? "bg-green-100 text-green-600"
                   : isCurrent
                   ? "bg-[#0202ff] text-white"
+                  : stage.locked || noAccess
+                  ? "bg-gray-100 text-gray-400"
                   : "bg-gray-50 text-gray-400 border border-gray-200"
               }`}
             >
               {isComplete ? (
                 <Check className="w-4 h-4" />
-              ) : !canAct ? (
+              ) : stage.locked || noAccess ? (
                 <Lock className="w-3 h-3" />
               ) : (
                 Icon && <Icon className="w-3.5 h-3.5" />
@@ -100,9 +100,11 @@ export default function ReviewStageRail({
                       ? "text-[#0202ff]"
                       : isCurrent
                       ? "text-gray-900"
-                      : canAct
-                      ? "text-gray-600"
-                      : "text-gray-400"
+                      : noAccess
+                      ? "text-gray-400"
+                      : stage.locked
+                      ? "text-gray-400"
+                      : "text-gray-600"
                   }`}
                 >
                   {stage.label}
@@ -112,10 +114,13 @@ export default function ReviewStageRail({
                     Current
                   </span>
                 )}
+                {noAccess && stage.locked !== true && (
+                  <Lock className="w-3 h-3 text-gray-300" />
+                )}
               </div>
-              <p className="text-[11px] text-gray-400 mt-0.5 leading-tight">
-                {stage.detail || conf?.short}
-              </p>
+              {stage.short && (
+                <p className="text-[11px] text-gray-400 mt-0.5 leading-tight">{stage.short}</p>
+              )}
             </div>
           </button>
         );

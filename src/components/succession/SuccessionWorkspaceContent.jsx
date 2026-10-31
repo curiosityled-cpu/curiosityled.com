@@ -35,11 +35,11 @@ import { useClient } from "@/components/contexts/ClientContext";
 import { useAuth } from "@/components/useAuth";
 
 // Guided shell components
-import { STAGES, STAGE_MAP, normalizeStage } from "@/components/succession/guided/stageConfig";
-import StageRail from "@/components/succession/guided/StageRail";
+import { STAGES, STAGE_MAP, ALL_VIEWS, normalizeStage } from "@/components/succession/guided/stageConfig";
+import GuidedShell from "@/components/guided/GuidedShell";
+import GuidedHeader from "@/components/guided/GuidedHeader";
+import StageAssist from "@/components/succession/guided/StageAssist";
 import WhatToDoNext from "@/components/succession/guided/WhatToDoNext";
-import AllViewsDrawer from "@/components/succession/guided/AllViewsDrawer";
-import StageHeader from "@/components/succession/guided/StageHeader";
 import { useCycleRole } from "@/components/succession/guided/useCycleRole";
 
 function renderView(viewKey) {
@@ -220,6 +220,20 @@ export default function SuccessionWorkspaceContent() {
     cycleKey: activeCycle?.cycle_key,
   };
 
+  // Normalised for the shared guided shell, which knows nothing about succession.
+  const currentStageKey = normalizeStage(activeCycle?.process_stage) || activeStage;
+  const currentIdx = STAGES.findIndex((s) => s.key === currentStageKey);
+  const guidedStages = STAGES.map((s, i) => ({
+    key: s.key,
+    label: s.label,
+    short: s.short,
+    icon: s.icon,
+    state:
+      currentIdx < 0 ? "upcoming" : i < currentIdx ? "done" : i === currentIdx ? "current" : "upcoming",
+    locked: currentIdx >= 0 && i > currentIdx,
+    canAct: !role || s.roles.includes(role) || role === "admin",
+  }));
+
   return (
     <>
       {/* Status badges row — demo controls are Platform Admin only */}
@@ -240,50 +254,33 @@ export default function SuccessionWorkspaceContent() {
           <Loader2 className="w-6 h-6 text-gray-300 animate-spin" />
         </div>
       ) : (
-        <div className="flex gap-5">
-          {/* Left rail — desktop */}
-          <aside className="hidden lg:block w-56 flex-shrink-0 space-y-3">
-            <StageRail
-              stages={STAGES}
-              currentStage={normalizeStage(activeCycle?.process_stage) || activeStage}
-              activeStage={activeStage}
-              onSelect={(key) => handleStageSelect(key)}
-              role={role}
-            />
-            <AllViewsDrawer activeView={activeView} onSelect={handleViewSelect} />
-          </aside>
-
-          {/* Main content */}
-          <div className="flex-1 min-w-0 space-y-4">
-            {/* Mobile stage scroller */}
-            <div className="lg:hidden">
-              <StageRail
-                stages={STAGES}
-                currentStage={normalizeStage(activeCycle?.process_stage) || activeStage}
-                activeStage={activeStage}
-                onSelect={(key) => handleStageSelect(key)}
-                role={role}
-                horizontal
-              />
-            </div>
-
-            {/* Mobile all-views drawer */}
-            <div className="lg:hidden">
-              <AllViewsDrawer activeView={activeView} onSelect={handleViewSelect} />
-            </div>
-
-            {/* What to do next */}
+        <GuidedShell
+          ariaLabel="Succession stages"
+          stages={guidedStages}
+          currentStage={currentStageKey}
+          activeStage={activeStage}
+          onStageSelect={(key) => handleStageSelect(key)}
+          views={ALL_VIEWS}
+          activeView={activeView}
+          onViewSelect={handleViewSelect}
+          nextSteps={
             <WhatToDoNext
               activeCycle={activeCycle}
               role={role}
               onNavigate={(stageKey, viewKey) => handleStageSelect(stageKey, viewKey)}
             />
-
-            {/* Stage header with AI assist */}
-            <StageHeader stage={stage} readOnly={isReadOnly} context={assistContext} />
-
-            {/* Stage sub-view tabs */}
-            {stage && stage.views.length > 1 && (
+          }
+          header={
+            <GuidedHeader
+              icon={stage?.icon}
+              label={stage?.label}
+              description={stage?.description}
+              readOnly={isReadOnly}
+              footer={stage ? <StageAssist stageKey={stage.key} context={assistContext} /> : null}
+            />
+          }
+          tabs={
+            stage && stage.views.length > 1 ? (
               <div className="flex gap-1.5 flex-wrap">
                 {stage.views.map((viewKey) => {
                   const displayLabel = viewKey
@@ -306,14 +303,11 @@ export default function SuccessionWorkspaceContent() {
                   );
                 })}
               </div>
-            )}
-
-            {/* Active view content */}
-            <section aria-label="Succession workspace content">
-              {renderView(activeView)}
-            </section>
-          </div>
-        </div>
+            ) : null
+          }
+        >
+          <section aria-label="Succession workspace content">{renderView(activeView)}</section>
+        </GuidedShell>
       )}
     </>
   );
