@@ -35,11 +35,12 @@ import { useClient } from "@/components/contexts/ClientContext";
 import { useAuth } from "@/components/useAuth";
 
 // Guided shell components
-import { STAGES, STAGE_MAP, normalizeStage } from "@/components/succession/guided/stageConfig";
+import { STAGES, STAGE_MAP, STAGE_ORDER, normalizeStage } from "@/components/succession/guided/stageConfig";
 import StageRail from "@/components/succession/guided/StageRail";
 import WhatToDoNext from "@/components/succession/guided/WhatToDoNext";
 import AllViewsDrawer from "@/components/succession/guided/AllViewsDrawer";
 import StageHeader from "@/components/succession/guided/StageHeader";
+import StagePrep from "@/components/succession/guided/StagePrep";
 import { useCycleRole } from "@/components/succession/guided/useCycleRole";
 
 function renderView(viewKey) {
@@ -220,6 +221,13 @@ export default function SuccessionWorkspaceContent() {
     cycleKey: activeCycle?.cycle_key,
   };
 
+  // Preparation guidance is open for the stage the cycle is on and for anything
+  // still ahead of it; stages already behind the cycle keep it collapsed.
+  const currentStageKey = normalizeStage(activeCycle?.process_stage);
+  const prepOpen =
+    !activeCycle ||
+    STAGE_ORDER.indexOf(activeStage) >= STAGE_ORDER.indexOf(currentStageKey);
+
   return (
     <>
       {/* Status badges row — demo controls are Platform Admin only */}
@@ -281,6 +289,9 @@ export default function SuccessionWorkspaceContent() {
 
             {/* Stage header with AI assist */}
             <StageHeader stage={stage} readOnly={isReadOnly} context={assistContext} />
+
+            {/* What this stage needs before it can be worked */}
+            <StagePrep key={activeStage} stageKey={activeStage} defaultOpen={prepOpen} />
 
             {/* Stage sub-view tabs */}
             {stage && stage.views.length > 1 && (
