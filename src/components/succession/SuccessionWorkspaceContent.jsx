@@ -43,26 +43,26 @@ import StageHeader from "@/components/succession/guided/StageHeader";
 import StagePrep from "@/components/succession/guided/StagePrep";
 import { useCycleRole } from "@/components/succession/guided/useCycleRole";
 
-function renderView(viewKey, autoOpen = 0) {
+function renderView(viewKey) {
   switch (viewKey) {
     case "overview":
       return <OverviewView />;
     case "cycles":
-      return <CyclesView autoOpen={autoOpen} />;
+      return <CyclesView />;
     case "roles":
       return <RolesView />;
     case "positions":
       return <PositionsView />;
     case "critical-roles":
-      return <CriticalRolesView autoOpen={autoOpen} />;
+      return <CriticalRolesView />;
     case "blueprints":
-      return <BlueprintsView autoOpen={autoOpen} />;
+      return <BlueprintsView />;
     case "snapshots":
       return <SnapshotsView />;
     case "talent-pools":
       return <TalentPoolsView />;
     case "candidates":
-      return <CandidatesView autoOpen={autoOpen} />;
+      return <CandidatesView />;
     case "evidence-queue":
       return <EvidenceReviewQueueView />;
     case "readiness-proposals":
@@ -72,11 +72,11 @@ function renderView(viewKey, autoOpen = 0) {
     case "ratification":
       return <RatificationQueueView />;
     case "development-plans":
-      return <DevelopmentPlansView autoOpen={autoOpen} />;
+      return <DevelopmentPlansView />;
     case "development-actions":
       return <DevelopmentActionsView />;
     case "transitions":
-      return <TransitionsView autoOpen={autoOpen} />;
+      return <TransitionsView />;
     case "transition-detail":
       return <TransitionDetailView />;
     case "operational-monitor":
@@ -151,16 +151,6 @@ export default function SuccessionWorkspaceContent() {
   const [activeView, setActiveView] = useState("cycles");
   const [activeCycle, setActiveCycle] = useState(null);
   const [loadingCycle, setLoadingCycle] = useState(true);
-  const [createIntent, setCreateIntent] = useState({ view: null, seq: 0 });
-
-  // Hand the create intent to the view once, then drop it.
-  useEffect(() => {
-    if (!createIntent.view) return;
-    const timer = setTimeout(() => {
-      setCreateIntent((prev) => ({ view: null, seq: prev.seq }));
-    }, 600);
-    return () => clearTimeout(timer);
-  }, [createIntent]);
   const { client } = useClient();
   const isDemoTenant = Boolean(client?.settings?.succession_demo);
   const { role, loading: roleLoading } = useCycleRole();
@@ -238,24 +228,6 @@ export default function SuccessionWorkspaceContent() {
     !activeCycle ||
     STAGE_ORDER.indexOf(activeStage) >= STAGE_ORDER.indexOf(currentStageKey);
 
-  /**
-   * The stage's own action: open the view where that work is done, and — for the
-   * stages that create a record — ask that view to open its create form. The
-   * intent carries a sequence number so repeated clicks reopen it, and it is
-   * cleared shortly after so returning to the stage later starts clean.
-   */
-  const handleStageAction = () => {
-    const action = stage.action;
-    if (!action) return;
-    setActiveView(action.view);
-    if (action.create) {
-      setCreateIntent((prev) => ({ view: action.view, seq: prev.seq + 1 }));
-    }
-  };
-
-  const stageIndex = STAGE_ORDER.indexOf(activeStage);
-  const previousStage = stageIndex > 0 ? STAGE_MAP[STAGE_ORDER[stageIndex - 1]] : null;
-
   return (
     <>
       {/* Status badges row — demo controls are Platform Admin only */}
@@ -318,16 +290,8 @@ export default function SuccessionWorkspaceContent() {
             {/* Stage header with AI assist */}
             <StageHeader stage={stage} readOnly={isReadOnly} context={assistContext} />
 
-            {/* What this stage needs before it can be worked, plus its own action */}
-            <StagePrep
-              key={activeStage}
-              stageKey={activeStage}
-              defaultOpen={prepOpen}
-              action={stage.action}
-              onAction={handleStageAction}
-              backLabel={previousStage?.label}
-              onBack={previousStage ? () => handleStageSelect(previousStage.key) : null}
-            />
+            {/* What this stage needs before it can be worked */}
+            <StagePrep key={activeStage} stageKey={activeStage} defaultOpen={prepOpen} />
 
             {/* Stage sub-view tabs */}
             {stage && stage.views.length > 1 && (
@@ -357,10 +321,7 @@ export default function SuccessionWorkspaceContent() {
 
             {/* Active view content */}
             <section aria-label="Succession workspace content">
-              {renderView(
-                activeView,
-                createIntent.view === activeView ? createIntent.seq : 0
-              )}
+              {renderView(activeView)}
             </section>
           </div>
         </div>

@@ -22,7 +22,7 @@ const DISCOVERY_SOURCES = [
   { value: "hr_nomination", label: "HR Nomination" },
 ];
 
-export default function CandidatesView({ autoOpen = 0 }) {
+export default function CandidatesView() {
   const { invoke, loading, error, clearError } = useSuccessionApi();
   const { hasPermission, user } = useAuth();
   const [cycles, setCycles] = useState([]);
@@ -38,11 +38,6 @@ export default function CandidatesView({ autoOpen = 0 }) {
   const [withdrawReason, setWithdrawReason] = useState("");
 
   const canManage = hasPermission("succession.discovery.manage");
-
-  // Opened from the stage's own action button.
-  useEffect(() => {
-    if (autoOpen && canManage) setShowCreate(true);
-  }, [autoOpen, canManage]);
   const canView = hasPermission("succession.discovery.view") || canManage;
   const isCandidateView = !canView;
 

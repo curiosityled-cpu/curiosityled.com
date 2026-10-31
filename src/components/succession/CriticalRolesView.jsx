@@ -30,7 +30,7 @@ import { Button } from "@/components/ui/button";
  * Shows: criticality, governance tier and continuity urgency shown separately.
  * Position-specific requirements. No composite score or automatic ranking.
  */
-export default function CriticalRolesView({ autoOpen = 0 }) {
+export default function CriticalRolesView() {
   const { invoke, loading, error, clearError } = useSuccessionApi();
   const { hasPermission, user } = useAuth();
   const userId = user?.id;
@@ -45,11 +45,6 @@ export default function CriticalRolesView({ autoOpen = 0 }) {
   const [showDesignateForm, setShowDesignateForm] = useState(false);
 
   const canManage = hasPermission("succession.roles.manage");
-
-  // Opened from the stage's own action button.
-  useEffect(() => {
-    if (autoOpen && canManage) setShowDesignateForm(true);
-  }, [autoOpen, canManage]);
   const canView = hasPermission("succession.roles.view");
   const canApprove = hasPermission("succession.critical_role_requirements.approve");
 

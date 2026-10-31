@@ -39,7 +39,6 @@ export const STAGES = [
       "Establish the succession cycle — its timeframe, scope, and the business drivers behind it.",
     views: ["cycles"],
     roles: ["admin"],
-    action: { label: "Create succession cycle", view: "cycles", create: true },
   },
   {
     key: "focus",
@@ -50,7 +49,6 @@ export const STAGES = [
       "Define organizational roles and designate which are critical enough to require succession planning.",
     views: ["roles", "critical-roles"],
     roles: ["admin"],
-    action: { label: "Designate a critical role", view: "critical-roles", create: true },
   },
   {
     key: "blueprint",
@@ -61,7 +59,6 @@ export const STAGES = [
       "Draft role requirements, approve blueprints, and publish effective snapshots for each critical role.",
     views: ["roles", "critical-roles", "blueprints", "snapshots"],
     roles: ["admin"],
-    action: { label: "Draft a role blueprint", view: "blueprints", create: true },
   },
   {
     key: "discover",
@@ -72,7 +69,6 @@ export const STAGES = [
       "Build talent pools and identify candidates for each critical role.",
     views: ["talent-pools", "candidates"],
     roles: ["admin", "successor"],
-    action: { label: "Add a candidate", view: "candidates", create: true },
   },
   {
     key: "evidence",
@@ -83,7 +79,6 @@ export const STAGES = [
       "Gather performance evidence, competency behaviors, and critical experiences for each candidate.",
     views: ["evidence-queue", "candidates"],
     roles: ["admin", "successor", "manager"],
-    action: { label: "Open candidate evidence", view: "candidates" },
   },
   {
     key: "deliberate",
@@ -94,7 +89,6 @@ export const STAGES = [
       "Calibrate ratings, review readiness proposals, ratify readiness conclusions, and record the final decision.",
     views: ["calibration", "ratification", "readiness-proposals", "decision-records"],
     roles: ["admin", "calibrator"],
-    action: { label: "Review readiness proposals", view: "readiness-proposals" },
   },
   {
     key: "accelerate",
@@ -105,7 +99,6 @@ export const STAGES = [
       "Create development plans and track development actions to close readiness gaps.",
     views: ["development-plans", "development-actions"],
     roles: ["admin", "successor", "manager"],
-    action: { label: "Create a development plan", view: "development-plans", create: true },
   },
   {
     key: "transition",
@@ -116,7 +109,6 @@ export const STAGES = [
       "Initiate transitions, plan knowledge transfer, and manage the move into the new role.",
     views: ["transitions"],
     roles: ["admin", "successor"],
-    action: { label: "Start a transition", view: "transitions", create: true },
   },
   {
     key: "monitor",
@@ -127,7 +119,6 @@ export const STAGES = [
       "Track operational alerts, review progress, and keep the succession pipeline healthy.",
     views: ["operational-monitor", "review-queue"],
     roles: ["admin"],
-    action: { label: "Open review queue", view: "review-queue" },
   },
 ];
 
