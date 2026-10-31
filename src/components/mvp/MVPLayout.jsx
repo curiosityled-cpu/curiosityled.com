@@ -96,6 +96,13 @@ const NAV_CONFIG = {
 
 };
 
+// Full wordmark lockups used in the expanded sidebar header.
+// BBW = dark lettering (drawn for light surfaces), WBB = light lettering (dark surfaces).
+const WORDMARK_LIGHT =
+"https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/a426953be_CuriosityLedLogoBBW.png";
+const WORDMARK_DARK =
+"https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5b84a7869_CuriosityLedLogoWBB.png";
+
 const ROLE_LABELS = { manager: 'Manager', buyer: 'Administrator', analyst: 'Analyst', executive: 'Enterprise', hrbp: 'HR Business Partner' };
 const ROLE_COLORS = {
   manager: 'bg-[#0202ff]/10 border-[#0202ff]/20 text-[#6699ff]',
@@ -283,16 +290,13 @@ function MVPLayoutInner({ children }) {
           {!collapsed &&
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 min-w-0 rounded-lg transition-opacity hover:opacity-80"
-            title="Home"
+            className="flex items-center min-w-0 rounded-lg transition-opacity hover:opacity-80"
+            title="Curiosity Led — Home"
           >
               <img
-              src={isDark ? "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/329f40d48_Untitleddesign.png" : "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5761758bf_CuriosityLegLogo.png"}
+              src={isDark ? WORDMARK_DARK : WORDMARK_LIGHT}
               alt="Curiosity Led"
-              className="w-7 h-7 object-contain flex-shrink-0" />
-              <div className="min-w-0">
-                <p className="text-sm font-bold truncate text-foreground">Curiosity Led</p>
-              </div>
+              className="h-9 w-auto max-w-[170px] object-contain object-left flex-shrink-0" />
             </button>
           }
           {collapsed &&
