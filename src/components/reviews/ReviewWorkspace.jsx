@@ -1,50 +1,51 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Loader2, Plus, Settings2, Lock, ClipboardCheck } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  Loader2, ClipboardCheck, Plus, Users, Scale, History, ChevronRight, Calendar, CheckCircle2,
-} from "lucide-react";
 import ReviewTaskDialog from "./ReviewTaskDialog";
-import MyReviewSummary from "./MyReviewSummary";
 import CycleProgressBoard from "./CycleProgressBoard";
 import CycleSettingsDialog from "./CycleSettingsDialog";
 import ReviewAuditTrail from "./ReviewAuditTrail";
-import CycleStageRail from "./CycleStageRail";
-import { buildCycleStages, buildPreviewStages, stageDestination } from "@/lib/reviewStages";
 import CalibrationView from "@/components/performance-mgmt/CalibrationView";
-import { toast } from "sonner";
+import ReviewStageRail from "./guided/ReviewStageRail";
+import ReviewAllViews from "./guided/ReviewAllViews";
+import ReviewNextSteps from "./guided/ReviewNextSteps";
+import ReviewStageHeader from "./guided/ReviewStageHeader";
+import ReviewMyWorkView from "./guided/ReviewMyWorkView";
+import ReviewSetupView from "./guided/ReviewSetupView";
+import {
+  REVIEW_STAGE_MAP,
+  canActOnStage,
+  viewForStage,
+  stageForView,
+  viewDef,
+  viewsForRole,
+} from "./guided/reviewStageConfig";
+import { buildCycleStages, buildPreviewStages } from "@/lib/reviewStages";
 
-const ROLE_LABEL = { self: "Self review", manager: "Manager review", peer: "Peer feedback" };
-
-function TabButton({ active, onClick, icon: Icon, children }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-1.5 text-xs font-medium py-2 px-3 rounded-lg transition-all whitespace-nowrap ${
-        active ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
-      }`}
-    >
-      {Icon && <Icon className="w-3.5 h-3.5" />}
-      {children}
-    </button>
-  );
-}
-
+/**
+ * ReviewWorkspace — the guided review cycle workspace.
+ *
+ * Same shell as the Succession workspace: a stage rail, a "what to do next"
+ * panel, a stage header, an all-views drawer, and a stage-scoped content
+ * area. Cycle selection, role permissions, stage filtering and every dialog
+ * (cycle settings, review tasks, roster, conversation, calibration) stay
+ * exactly as they were.
+ */
 export default function ReviewWorkspace({ embedded = false }) {
   const [user, setUser] = useState(null);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCycleId, setSelectedCycleId] = useState("");
-  const [tab, setTab] = useState("mine");
+  const [activeStage, setActiveStage] = useState("setup");
+  const [activeView, setActiveView] = useState(null);
   const [activeTask, setActiveTask] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
-  const [stageFocus, setStageFocus] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
@@ -61,9 +62,9 @@ export default function ReviewWorkspace({ embedded = false }) {
       setData(res.data);
       setSelectedCycleId((prev) => {
         if (prev) return prev;
-        const cycles = res.data?.cycles || [];
-        const withWork = cycles.find((c) => (c.my_tasks || []).some((t) => !t.submitted));
-        return (withWork || cycles[0])?.id || "";
+        const list = res.data?.cycles || [];
+        const withWork = list.find((c) => (c.my_tasks || []).some((t) => !t.submitted));
+        return (withWork || list[0])?.id || "";
       });
     } catch (err) {
       setError(err.response?.data?.error || "Could not load reviews");
@@ -82,58 +83,138 @@ export default function ReviewWorkspace({ embedded = false }) {
 
   const cycles = data?.cycles || [];
   const isAdmin = !!data?.viewer?.is_admin;
+  const canConfigure = data?.viewer?.can_configure_cycles ?? isAdmin;
   const cycle = cycles.find((c) => c.id === selectedCycleId) || cycles[0] || null;
 
-  const hasTeam = !!cycle && !isAdmin && cycle.can_manage && (cycle.progress_rows || []).length > 0;
+  const rows = cycle?.progress_rows || [];
+  const hasTeam = !isAdmin && !!cycle?.can_manage && rows.length > 0;
+  const role = isAdmin ? "admin" : cycle?.can_manage ? "manager" : "employee";
+
   const myTasks = cycle?.my_tasks || [];
   const openTasks = myTasks.filter((t) => !t.submitted);
-  // Creating and editing cycles is restricted to HR Admins and above (also enforced server-side).
-  const canConfigure = data?.viewer?.can_configure_cycles ?? isAdmin;
+
   const stages = useMemo(
-    () => buildCycleStages(cycle, { canConfigure }),
+    () => (cycle ? buildCycleStages(cycle, { canConfigure }) : buildPreviewStages()),
     [cycle, canConfigure]
   );
 
-  const handleStageSelect = (stage) => {
-    if (stage.id === "setup") {
-      if (!canConfigure) {
-        toast.error("Only HR Admins and above can change review cycle settings");
-        return;
-      }
-      setStageFocus(null);
-      setShowSettings(true);
+  const views = useMemo(() => viewsForRole(role, { hasTeam }), [role, hasTeam]);
+
+  // Land people where their work actually is: admins on the cycle's current
+  // stage, managers on manager reviews, employees on their own tasks.
+  useEffect(() => {
+    if (!cycle) {
+      setActiveStage("setup");
+      setActiveView(role === "admin" ? "settings" : null);
       return;
     }
-    const dest = stageDestination(stage.id);
-    if (!isAdmin && dest.tab === "calibration") {
-      setTab("team");
-      setStageFocus("calibration");
+    const actionable = stages.filter((s) => canActOnStage(s.id, role));
+    const primaryId = role === "manager" ? "manager" : role === "employee" ? "self" : null;
+    const target =
+      (primaryId && actionable.find((s) => s.id === primaryId)) ||
+      actionable.find((s) => s.state === "current") ||
+      actionable.find((s) => !s.done) ||
+      actionable[0] ||
+      null;
+
+    if (!target) {
+      setActiveView(null);
       return;
     }
-    setTab(!isAdmin && dest.tab === "progress" ? "team" : dest.tab);
-    setStageFocus(dest.focus);
+    setActiveStage(target.id);
+    setActiveView(viewForStage(target.id, role));
+    // Re-run only when the cycle or the person's role changes — a data refresh
+    // must not yank someone out of the view they are working in.
+  }, [cycle?.id, role]);
+
+  const handleStageSelect = (stageKey) => {
+    setActiveStage(stageKey);
+    setActiveView(viewForStage(stageKey, role));
   };
 
-  const tabs = useMemo(() => {
-    const list = [{ id: "mine", label: "My review", icon: ClipboardCheck }];
-    if (hasTeam) list.push({ id: "team", label: "My team", icon: Users });
-    if (isAdmin) {
-      list.push({ id: "progress", label: "Cycle progress", icon: Users });
-      list.push({ id: "calibration", label: "Calibration", icon: Scale });
-      list.push({ id: "history", label: "History", icon: History });
+  const handleViewSelect = (viewKey) => {
+    setActiveView(viewKey);
+    const stageKey = stageForView(viewKey);
+    if (stageKey) setActiveStage(stageKey);
+  };
+
+  const stageConf = REVIEW_STAGE_MAP[activeStage] || null;
+  const viewConf = activeView ? viewDef(activeView) : null;
+  // Without a cycle the only real step is setting one up, so the header says so
+  // even if someone browses the rest of the process from the rail.
+  const headerConf = !cycle
+    ? REVIEW_STAGE_MAP.setup
+    : viewConf && !viewConf.stage
+    ? { label: viewConf.label, icon: viewConf.icon, description: viewConf.description }
+    : stageConf;
+  const stageState = stages.find((s) => s.id === activeStage) || null;
+  const locked = !activeView;
+
+  const clearFocus = () => setActiveView(isAdmin ? "cycle-progress" : "my-team");
+
+  const boardProps = {
+    cycle,
+    user,
+    audit: data?.audit,
+    onRefresh: () => cycle && load(cycle.id),
+    canConfigure,
+    onClearFocus: clearFocus,
+  };
+
+  const renderView = () => {
+    if (!cycle) {
+      return (
+        <ReviewSetupView
+          cycle={null}
+          canConfigure={canConfigure}
+          onCreate={() => setShowCreate(true)}
+        />
+      );
     }
-    return list;
-  }, [hasTeam, isAdmin]);
 
-  useEffect(() => {
-    if (!tabs.some((t) => t.id === tab)) setTab(tabs[0].id);
-  }, [tabs.map((t) => t.id).join("|")]);
-
-  useEffect(() => {
-    if (myTasks.length > 0 || cycle?.my_summary) return;
-    if (isAdmin) setTab((prev) => (prev === "mine" ? "progress" : prev));
-    else if (hasTeam) setTab((prev) => (prev === "mine" ? "team" : prev));
-  }, [cycle?.id, myTasks.length, isAdmin, hasTeam]);
+    switch (activeView) {
+      case "my-review":
+        return (
+          <ReviewMyWorkView
+            cycle={cycle}
+            myTasks={myTasks}
+            onOpenTask={setActiveTask}
+            onUpdated={() => load(cycle.id)}
+          />
+        );
+      case "my-team":
+        return <CycleProgressBoard {...boardProps} isAdmin={false} />;
+      case "cycle-progress":
+        return <CycleProgressBoard {...boardProps} isAdmin />;
+      case "roster":
+        return <CycleProgressBoard {...boardProps} isAdmin focusStage="roster" />;
+      case "self-progress":
+        return <CycleProgressBoard {...boardProps} isAdmin={isAdmin} focusStage="self" />;
+      case "manager-progress":
+        return <CycleProgressBoard {...boardProps} isAdmin={isAdmin} focusStage="manager" />;
+      case "conversation-progress":
+        return (
+          <CycleProgressBoard {...boardProps} isAdmin={isAdmin} focusStage="conversation" />
+        );
+      case "release-progress":
+        return <CycleProgressBoard {...boardProps} isAdmin focusStage="release" />;
+      case "calibration":
+        return user ? <CalibrationView cycle={cycle} user={user} /> : null;
+      case "history":
+        return <ReviewAuditTrail events={data?.audit || []} />;
+      case "settings":
+        return (
+          <ReviewSetupView
+            cycle={cycle}
+            canConfigure={canConfigure}
+            onEdit={() => setShowSettings(true)}
+            onCreate={() => setShowCreate(true)}
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
   if (loading && !data) {
     return (
@@ -145,9 +226,9 @@ export default function ReviewWorkspace({ embedded = false }) {
 
   if (error && !data) {
     return (
-      <Card className="border border-red-100 bg-red-50/50 rounded-2xl">
-        <CardContent className="p-4 text-sm text-red-700">{error}</CardContent>
-      </Card>
+      <div className="rounded-2xl border border-red-100 bg-red-50/50 p-4 text-sm text-red-700">
+        {error}
+      </div>
     );
   }
 
@@ -162,34 +243,17 @@ export default function ReviewWorkspace({ embedded = false }) {
         </div>
       )}
 
-      {cycles.length === 0 ? (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-gray-500">How a review cycle runs</p>
-            <CycleStageRail stages={buildPreviewStages()} />
-          </div>
-          <div className="text-center py-14 border border-dashed border-gray-200 rounded-2xl">
-            <ClipboardCheck className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-sm font-medium text-gray-700">No review cycles yet</p>
-            <p className="text-xs text-gray-500 mt-1 mb-4">
-              {isAdmin
-                ? "Create a cycle to set the period, reviewers, and how outcomes are released."
-                : "Your next review will appear here when it opens."}
-            </p>
-            {canConfigure && (
-              <Button
-                onClick={() => setShowCreate(true)}
-                className="bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5 text-xs"
-              >
-                <Plus className="w-3.5 h-3.5" /> Create review cycle
-              </Button>
-            )}
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="flex flex-wrap items-center gap-2">
-            <Select value={cycle?.id || ""} onValueChange={(v) => { setSelectedCycleId(v); setStageFocus(null); }}>
+      {/* Cycle selection + cycle-level actions */}
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
+        {cycle ? (
+          <>
+            <Select
+              value={cycle.id}
+              onValueChange={(v) => {
+                setSelectedCycleId(v);
+                setActiveView(null);
+              }}
+            >
               <SelectTrigger className="w-full sm:w-72 h-9 text-xs">
                 <SelectValue placeholder="Select a cycle" />
               </SelectTrigger>
@@ -202,152 +266,103 @@ export default function ReviewWorkspace({ embedded = false }) {
                 ))}
               </SelectContent>
             </Select>
-            {cycle && (
-              <Badge variant="outline" className="text-[10px]">
-                {cycle.status}
-              </Badge>
-            )}
+            <Badge variant="outline" className="text-[10px]">
+              {cycle.status}
+            </Badge>
             {openTasks.length > 0 && (
-              <Badge variant="outline" className="text-[10px] border-amber-200 bg-amber-50 text-amber-700">
+              <Badge
+                variant="outline"
+                className="text-[10px] border-amber-200 bg-amber-50 text-amber-700"
+              >
                 {openTasks.length} task{openTasks.length > 1 ? "s" : ""} to complete
               </Badge>
             )}
-            {canConfigure && (
+          </>
+        ) : (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200">
+            <ClipboardCheck className="w-3.5 h-3.5 text-gray-500" />
+            <span className="text-xs font-medium text-gray-600">No review cycle yet</span>
+          </div>
+        )}
+
+        {canConfigure && (
+          <div className="flex items-center gap-2 ml-auto">
+            {cycle && (
               <Button
                 size="sm"
                 variant="outline"
-                className="h-8 text-xs gap-1 ml-auto"
-                onClick={() => setShowCreate(true)}
+                className="h-8 text-xs gap-1"
+                onClick={() => setShowSettings(true)}
               >
-                <Plus className="w-3.5 h-3.5" /> New cycle
+                <Settings2 className="w-3.5 h-3.5" /> Cycle settings
               </Button>
             )}
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs gap-1"
+              onClick={() => setShowCreate(true)}
+            >
+              <Plus className="w-3.5 h-3.5" /> New cycle
+            </Button>
           </div>
+        )}
+      </div>
 
-          {cycle && (isAdmin || hasTeam) && (
-            <CycleStageRail
+      <div className="flex gap-5">
+        {/* Left rail — desktop */}
+        <aside className="hidden lg:block w-56 flex-shrink-0 space-y-3">
+          <ReviewStageRail
+            stages={stages}
+            activeStage={activeStage}
+            onSelect={handleStageSelect}
+            role={role}
+          />
+          <ReviewAllViews views={views} activeView={activeView} onSelect={handleViewSelect} />
+        </aside>
+
+        {/* Main content */}
+        <div className="flex-1 min-w-0 space-y-4">
+          <div className="lg:hidden">
+            <ReviewStageRail
               stages={stages}
-              activeStage={stageFocus}
+              activeStage={activeStage}
               onSelect={handleStageSelect}
+              role={role}
+              horizontal
             />
-          )}
-
-          <div className="flex gap-1 bg-gray-100 rounded-xl p-1 overflow-x-auto">
-            {tabs.map((t) => (
-              <TabButton
-                key={t.id}
-                active={tab === t.id}
-                onClick={() => {
-                  setTab(t.id);
-                  setStageFocus(null);
-                }}
-                icon={t.icon}
-              >
-                {t.label}
-              </TabButton>
-            ))}
           </div>
 
-          {tab === "mine" && (
-            <div className="space-y-3">
-              {myTasks.length === 0 && !cycle?.my_summary && (
-                <div className="text-center py-12 border border-dashed border-gray-200 rounded-xl">
-                  <ClipboardCheck className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">Nothing assigned to you in this cycle</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Tasks appear here when you are assigned a review.
-                  </p>
-                </div>
-              )}
+          <div className="lg:hidden">
+            <ReviewAllViews views={views} activeView={activeView} onSelect={handleViewSelect} />
+          </div>
 
-              {myTasks.map((task) => (
-                <Card key={task.task_id} className="border border-gray-100 shadow-sm rounded-2xl">
-                  <CardContent className="p-4 flex flex-wrap items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-medium text-gray-900">
-                          {ROLE_LABEL[task.role]}
-                        </p>
-                        <span className="text-xs text-gray-400">· {task.employee_name}</span>
-                        {task.submitted ? (
-                          <Badge variant="outline" className="text-[10px] border-green-200 bg-green-50 text-green-700 gap-1">
-                            <CheckCircle2 className="w-2.5 h-2.5" /> Submitted
-                          </Badge>
-                        ) : task.draft_responses ? (
-                          <Badge variant="outline" className="text-[10px] border-amber-200 bg-amber-50 text-amber-700">
-                            Draft saved
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-[10px]">Not started</Badge>
-                        )}
-                        {task.anonymous && (
-                          <Badge variant="outline" className="text-[10px]">Anonymous to employee</Badge>
-                        )}
-                      </div>
-                      {task.due_date && (
-                        <p className="text-[11px] text-gray-500 mt-1 flex items-center gap-1">
-                          <Calendar className="w-3 h-3" /> Due{" "}
-                          {new Date(task.due_date).toLocaleDateString()}
-                        </p>
-                      )}
-                    </div>
-                    <Button
-                      size="sm"
-                      variant={task.submitted ? "outline" : "default"}
-                      className={`h-8 text-xs gap-1 ${task.submitted ? "" : "bg-[#0202ff] hover:bg-[#0101dd] text-white"}`}
-                      onClick={() => setActiveTask(task)}
-                    >
-                      {task.submitted ? "View" : task.draft_responses ? "Continue" : "Start"}
-                      <ChevronRight className="w-3 h-3" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
+          <ReviewNextSteps cycle={cycle} role={role} onNavigate={handleViewSelect} />
 
-              {cycle?.my_summary?.released && (
-                <div className="pt-2">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                    Your final summary
-                  </h3>
-                  <MyReviewSummary
-                    cycle={cycle}
-                    summary={cycle.my_summary}
-                    onUpdated={() => load(cycle.id)}
-                  />
-                </div>
-              )}
+          <ReviewStageHeader
+            stage={headerConf}
+            stageState={viewConf?.stage ? stageState : null}
+            readOnly={!viewConf || (!!viewConf.stage && !canActOnStage(activeStage, role))}
+          />
 
-              {cycle?.my_summary && !cycle.my_summary.released && (
-                <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
-                  <p className="text-xs text-gray-600">
-                    Your review is in progress. You will be able to read the outcome here once your
-                    manager has completed the conversation and it is released.
-                  </p>
-                </div>
-              )}
+          {locked ? (
+            <div className="rounded-lg border border-dashed border-gray-200 bg-white p-6 text-center">
+              <Lock className="w-6 h-6 text-gray-300 mx-auto mb-2" />
+              <p className="text-sm font-medium text-gray-700">
+                {stageConf?.roles?.includes("manager")
+                  ? "Managers and HR Admins run this step"
+                  : "Only HR Admins run this step"}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                You can still follow the cycle from{" "}
+                {role === "employee" ? "My review." : "My team and My review."}
+              </p>
             </div>
+          ) : (
+            <section aria-label="Review workspace content">{renderView()}</section>
           )}
-
-          {(tab === "progress" || tab === "team") && cycle && (
-            <CycleProgressBoard
-              cycle={cycle}
-              isAdmin={tab === "progress"}
-              audit={data?.audit}
-              user={user}
-              focusStage={stageFocus}
-              onClearFocus={() => setStageFocus(null)}
-              canConfigure={canConfigure}
-              onRefresh={() => load(cycle.id)}
-            />
-          )}
-
-          {tab === "calibration" && cycle && user && (
-            <CalibrationView cycle={cycle} user={user} />
-          )}
-
-          {tab === "history" && <ReviewAuditTrail events={data?.audit || []} />}
-        </>
-      )}
+        </div>
+      </div>
 
       <CycleSettingsDialog
         open={showCreate}
