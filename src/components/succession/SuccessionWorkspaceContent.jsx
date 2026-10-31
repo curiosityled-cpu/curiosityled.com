@@ -35,11 +35,18 @@ import { useClient } from "@/components/contexts/ClientContext";
 import { useAuth } from "@/components/useAuth";
 
 // Guided shell components
-import { STAGES, STAGE_MAP, normalizeStage } from "@/components/succession/guided/stageConfig";
+import {
+  STAGES,
+  STAGE_MAP,
+  ALL_VIEWS,
+  normalizeStage,
+} from "@/components/succession/guided/stageConfig";
 import StageRail from "@/components/succession/guided/StageRail";
 import WhatToDoNext from "@/components/succession/guided/WhatToDoNext";
 import AllViewsDrawer from "@/components/succession/guided/AllViewsDrawer";
 import StageHeader from "@/components/succession/guided/StageHeader";
+import StageGuide from "@/components/succession/guided/StageGuide";
+import useSuccessionNextSteps from "@/components/succession/guided/useSuccessionNextSteps";
 import { useCycleRole } from "@/components/succession/guided/useCycleRole";
 
 function renderView(viewKey) {
@@ -220,6 +227,20 @@ export default function SuccessionWorkspaceContent() {
     cycleKey: activeCycle?.cycle_key,
   };
 
+  // The step the cycle actually needs next — shared with the panel so the
+  // action under each stage never contradicts it.
+  const currentStageKey = normalizeStage(activeCycle?.process_stage);
+  const { actions: nextSteps, loading: loadingSteps } = useSuccessionNextSteps(
+    activeCycle,
+    role
+  );
+  const currentStep = nextSteps[0] || null;
+
+  // Standalone views (Overview, Compliance, Methodology…) are not part of a
+  // stage, so there is no stage to explain under them.
+  const activeViewMeta = ALL_VIEWS.find((v) => v.key === activeView);
+  const showStageGuide = activeViewMeta ? activeViewMeta.stage !== null : !!stage;
+
   return (
     <>
       {/* Status badges row — demo controls are Platform Admin only */}
@@ -274,8 +295,8 @@ export default function SuccessionWorkspaceContent() {
 
             {/* What to do next */}
             <WhatToDoNext
-              activeCycle={activeCycle}
-              role={role}
+              actions={nextSteps}
+              loading={loadingSteps}
               onNavigate={(stageKey, viewKey) => handleStageSelect(stageKey, viewKey)}
             />
 
@@ -312,6 +333,20 @@ export default function SuccessionWorkspaceContent() {
             <section aria-label="Succession workspace content">
               {renderView(activeView)}
             </section>
+
+            {/* Stage explainer + the step that moves the cycle forward now */}
+            {showStageGuide && (
+              <StageGuide
+                stageKey={stage?.key || activeStage}
+                currentStageKey={currentStageKey}
+                hasCycle={!!activeCycle}
+                readOnly={isReadOnly}
+                currentStep={currentStep}
+                loadingSteps={loadingSteps}
+                onNavigate={(stageKey, viewKey) => handleStageSelect(stageKey, viewKey)}
+                onGoCurrentStage={() => handleStageSelect(currentStageKey)}
+              />
+            )}
           </div>
         </div>
       )}
