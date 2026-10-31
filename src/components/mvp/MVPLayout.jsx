@@ -296,7 +296,7 @@ function MVPLayoutInner({ children }) {
               <img
               src={isDark ? WORDMARK_DARK : WORDMARK_LIGHT}
               alt="Curiosity Led"
-              className="h-9 w-auto max-w-[170px] object-contain object-left flex-shrink-0" />
+              className="h-11 w-auto max-w-[200px] object-contain object-left flex-shrink-0" />
             </button>
           }
           {collapsed &&
