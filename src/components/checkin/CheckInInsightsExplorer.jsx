@@ -104,77 +104,6 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
     leaderEmail ? `-${leaderEmail.split("@")[0]}` : ""
   }-${hasCustomRange ? `${customRange.start}_to_${customRange.end}` : `${days}d`}`;
 
-  /* ── What this report actually covers ──────────────────────────────────────
-     A check-in report can be about me, one individual, my direct reports, my
-     whole vertical, or the organisation — and each means something different.
-     The PDF says which, in words, before any number appears. */
-  const reportLeader = data?.viewing_leader;
-  const reportRange = data?.date_range;
-  const viewingOtherLeader = !!leaderEmail && !!reportLeader && !reportLeader.is_self;
-  const peopleInScope = (data?.team_members || []).length;
-  const respondents = (reportRange && reportRange.unique_respondents) || 0;
-  const totalCheckIns = (reportRange && reportRange.total_checkins) || 0;
-  const coverage = data?.audience_coverage;
-  const audienceParts = [audienceFilter.title, audienceFilter.tier, audienceFilter.track].filter(Boolean);
-
-  const scopeDescription = (() => {
-    if (scope === "org") {
-      return viewingOtherLeader
-        ? `One leader inside the organisation — ${reportLeader.name} and the ${reportLeader.subtree_size} people in their vertical`
-        : "Whole organisation — every manager's vertical, with no individual attribution";
-    }
-    if (viewingOtherLeader) {
-      return `${reportLeader.name}'s vertical — ${reportLeader.direct_reports} direct reports, ${reportLeader.subtree_size} people below them`;
-    }
-    if (reportLeader) {
-      return `My team — me plus my whole vertical (${reportLeader.direct_reports} direct reports, ${reportLeader.subtree_size} people below me)`;
-    }
-    return scope === "org" ? "Whole organisation" : "My team — my full reporting vertical";
-  })();
-
-  const scopeRows = [
-    { label: "Data scope", value: scopeDescription },
-    {
-      label: "Includes",
-      value: "Morning and evening check-ins from every person in scope, including historical questions no longer active",
-    },
-    {
-      label: "People counted",
-      value: peopleInScope > 0
-        ? `${peopleInScope} people in scope · ${respondents} submitted check-ins · ${totalCheckIns} individual check-ins`
-        : totalCheckIns > 0 ? `${totalCheckIns} individual check-ins` : "",
-    },
-    {
-      label: "Audience",
-      value: audienceParts.length
-        ? `Filtered to ${audienceParts.join(" · ")}`
-        : "No role filter — every title, tier and track in scope",
-    },
-    coverage && coverage.with_profile + coverage.without_profile > 0
-      ? {
-          label: "Role profiles",
-          value: `${coverage.with_profile} of ${coverage.with_profile + coverage.without_profile} check-ins carry a role profile; the rest are counted in totals only`,
-        }
-      : null,
-    {
-      label: "Period",
-      value: [
-        periodLabel,
-        reportRange && reportRange.earliest
-          ? `${formatDateShort(reportRange.earliest)} to ${formatDateShort(reportRange.latest)}`
-          : "",
-      ].filter(Boolean).join(" · "),
-    },
-  ].filter(Boolean);
-
-  const scopeFooter = [
-    scope === "org" ? "Organisation-wide" : "Team vertical",
-    viewingOtherLeader ? reportLeader.name : "",
-    peopleInScope > 0 ? `${peopleInScope} people` : "",
-    periodLabel,
-    audienceParts.length ? audienceParts.join(" · ") : "",
-  ].filter(Boolean).join(" · ");
-
   const fetchSessions = async () => {
     const res = await base44.functions.invoke("getCheckInInsights", {
       scope,
@@ -225,12 +154,7 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
       const sessions = exportOptions.summary ? await fetchSessions() : [];
       downloadInsightsPdf({
         title: heading,
-        subtitle: scope === "org"
-          ? "Aggregate answers to the questions asked in daily check-ins across the organisation. No individual is identified."
-          : "Answers to the questions asked in the daily check-ins of the people in scope below, with averages, distribution and trend.",
         scopeLabel,
-        scopeRows,
-        scopeLine: scopeFooter,
         periodLabel,
         entries: selectedEntries,
         insightsByKey: insights,

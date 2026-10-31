@@ -1,6 +1,5 @@
 import { jsPDF } from "jspdf";
 import { formatDateShort, isNumericType, summariseByPerson } from "./insightsShared";
-import { drawReportHeader, drawReportFooters } from "./pdf/reportHeader";
 
 const INK = [17, 23, 71];
 const BLUE = [2, 2, 255];
@@ -44,10 +43,7 @@ const distColor = (entry, key) => {
 /** Renders the selected questions into a printable PDF report. */
 export function downloadInsightsPdf({
   title,
-  subtitle,
   scopeLabel,
-  scopeRows,
-  scopeLine,
   periodLabel,
   entries = [],
   insightsByKey = {},
@@ -69,43 +65,29 @@ export function downloadInsightsPdf({
     }
   };
 
-  // Every report states what it covers before it states any numbers.
-  const headerRows = scopeRows && scopeRows.length > 0
-    ? scopeRows
-    : [
-        { label: "Data scope", value: scopeLabel || "Team" },
-        {
-          label: "People counted",
-          value: dateRange && dateRange.unique_respondents != null
-            ? `${dateRange.unique_respondents} people submitted check-ins`
-            : "",
-        },
-        {
-          label: "Period",
-          value: [
-            periodLabel,
-            dateRange && dateRange.earliest
-              ? `${formatDateShort(dateRange.earliest)} - ${formatDateShort(dateRange.latest)}`
-              : "",
-          ].filter(Boolean).join(" · "),
-        },
-        {
-          label: "Check-ins",
-          value: dateRange && dateRange.total_checkins != null
-            ? `${dateRange.total_checkins} individual check-ins`
-            : "",
-        },
-        { label: "Generated", value: new Date().toLocaleDateString("en-US") },
-      ].filter(Boolean);
+  let y = M;
 
-  let y = drawReportHeader(doc, {
-    eyebrow: "Curiosity Led · Check-in Intelligence",
-    title: title || "Team Check-in Insights",
-    subtitle: subtitle || "Answers to the questions asked in daily check-ins, aggregated for the people in scope below.",
-    scopeRows: headerRows,
-    units: "pt",
-    margin: M,
-  });
+  doc.setFillColor(...BLUE);
+  doc.rect(0, 0, pageW, 6, "F");
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(17);
+  doc.setTextColor(...INK);
+  doc.text(title || "Team Check-in Insights", M, y);
+  y += 18;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...MUTED);
+  const meta = [
+    scopeLabel,
+    periodLabel,
+    dateRange && dateRange.total_checkins != null ? `${dateRange.total_checkins} check-ins` : "",
+    dateRange && dateRange.earliest ? `${formatDateShort(dateRange.earliest)} - ${formatDateShort(dateRange.latest)}` : "",
+    `Generated ${new Date().toLocaleDateString("en-US")}`,
+  ].filter(Boolean);
+  doc.text(meta.join("   |   "), M, y, { maxWidth: contentW });
+  y += 22;
 
   for (const entry of entries) {
     const insight = insightsByKey[entry.key] || {};
@@ -239,12 +221,14 @@ export function downloadInsightsPdf({
     }
   }
 
-  drawReportFooters(doc, {
-    reportName: title || "Team Check-in Insights",
-    scopeLine: scopeLine || scopeLabel || "",
-    units: "pt",
-    margin: M,
-  });
+  const pages = doc.internal.getNumberOfPages();
+  for (let page = 1; page <= pages; page++) {
+    doc.setPage(page);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...MUTED);
+    doc.text(`${page} / ${pages}`, pageW - M, pageH - 18, { align: "right" });
+  }
 
   doc.save(filename);
 }
