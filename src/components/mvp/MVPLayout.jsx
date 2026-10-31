@@ -282,21 +282,21 @@ function MVPLayoutInner({ children }) {
         className={`hidden sm:flex flex-col ${sidebarWidth} fixed inset-y-0 left-0 z-20 transition-all duration-200`}
         style={{ background: sidebarBg, borderRight: sidebarBorder }}
       >
-        {/* Logo + Collapse Toggle */}
+        {/* Logo + Collapse Toggle — logo centred, chevron pinned right */}
         <div
-          className={`flex items-center h-16 px-3 ${collapsed ? 'justify-center' : 'justify-between px-4'}`}
+          className={`relative flex items-center justify-center h-16 ${collapsed ? '' : 'px-10'}`}
           style={{ borderBottom: sidebarBorder }}
         >
           {!collapsed &&
           <button
             onClick={() => navigate('/')}
-            className="flex items-center min-w-0 rounded-lg transition-opacity hover:opacity-80"
+            className="flex items-center justify-center rounded-lg transition-opacity hover:opacity-80"
             title="Curiosity Led — Home"
           >
               <img
               src={isDark ? WORDMARK_DARK : WORDMARK_LIGHT}
               alt="Curiosity Led"
-              className="h-9 w-auto max-w-[170px] object-contain object-left flex-shrink-0" />
+              className="h-11 w-auto max-w-[172px] object-contain" />
             </button>
           }
           {collapsed &&
@@ -308,12 +308,12 @@ function MVPLayoutInner({ children }) {
             <img
               src={isDark ? "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/329f40d48_Untitleddesign.png" : "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5761758bf_CuriosityLegLogo.png"}
               alt="Curiosity Led"
-              className="w-7 h-7 object-contain" />
+              className="w-11 h-11 object-contain" />
           </button>
           }
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-1.5 rounded-lg flex-shrink-0 transition-colors"
+            className={`p-1.5 rounded-lg flex-shrink-0 transition-colors ${collapsed ? '' : 'absolute right-2 top-1/2 -translate-y-1/2'}`}
             style={collapsed
               ? { position: 'absolute', right: 0, transform: 'translateX(50%)', background: sidebarBg, border: sidebarBorder, color: 'hsl(220 8% 48%)' }
               : { color: 'hsl(220 8% 48%)' }
