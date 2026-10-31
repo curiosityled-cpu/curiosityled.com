@@ -120,6 +120,8 @@ function MVPLayoutInner({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   // While the sidebar is collapsed, a section (Administration) shows as one icon that opens its own flyout
   const [collapsedGroup, setCollapsedGroup] = useState(null);
+  // Where that flyout pops up, anchored to the icon that opened it
+  const [flyoutAnchor, setFlyoutAnchor] = useState({ top: 120, pointer: 40 });
   const [openGroups, setOpenGroups] = useState(() => {
     try {
       const saved = sessionStorage.getItem('mvp_openGroups');
@@ -221,14 +223,23 @@ function MVPLayoutInner({ children }) {
         const highlighted = isFlyoutOpen || childActive;
         return (
           <button
-            onClick={() => setCollapsedGroup(prev => prev === item.label ? null : item.label)}
+            onClick={(e) => {
+              if (isFlyoutOpen) { setCollapsedGroup(null); return; }
+              const rect = e.currentTarget.getBoundingClientRect();
+              const iconCenter = rect.top + rect.height / 2;
+              const estimatedHeight = Math.min(((item.children?.length || 4) * 38) + 46, window.innerHeight - 16);
+              const top = Math.max(8, Math.min(iconCenter - 40, window.innerHeight - estimatedHeight - 8));
+              setFlyoutAnchor({ top, pointer: Math.round(iconCenter - top) });
+              setCollapsedGroup(item.label);
+            }}
             title={item.label}
-            className={`w-full flex items-center justify-center px-3 py-2.5 rounded-lg transition-all ${highlighted ? 'bg-[#0202ff] text-white shadow-sm' : ''}`}
+            className={`relative w-full flex items-center justify-center px-3 py-2.5 rounded-lg transition-all ${highlighted ? 'bg-[#0202ff] text-white shadow-sm' : ''}`}
             style={!highlighted ? { color: 'hsl(var(--muted-foreground))' } : {}}
             onMouseEnter={e => { if (!highlighted) { e.currentTarget.style.background = 'hsl(var(--muted))'; e.currentTarget.style.color = 'hsl(var(--foreground))'; } }}
             onMouseLeave={e => { if (!highlighted) { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'hsl(var(--muted-foreground))'; } }}
           >
             <Icon className="w-4 h-4 flex-shrink-0" />
+            <ChevronRight className="absolute right-1 w-3 h-3 opacity-60" />
           </button>
         );
       }
@@ -540,19 +551,41 @@ function MVPLayoutInner({ children }) {
         return (
           <>
             {isOpen &&
-            <div className="hidden sm:block fixed inset-0 z-30 bg-black/10" onClick={() => setCollapsedGroup(null)} />
+            <div className="hidden sm:block fixed inset-0 z-30 bg-black/5" onClick={() => setCollapsedGroup(null)} />
             }
             <aside
-              className={`hidden sm:flex fixed left-16 top-0 bottom-0 z-40 w-64 flex-col transition-all duration-200 ${isOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none'}`}
-              style={{ background: sidebarBg, borderRight: sidebarBorder }}
+              className={`hidden sm:flex fixed z-40 w-56 flex-col rounded-xl shadow-xl transition-all duration-200 ${isOpen ? 'translate-x-0 opacity-100' : '-translate-x-2 opacity-0 pointer-events-none'}`}
+              style={{ left: 72, top: flyoutAnchor.top, maxHeight: 'min(70vh, 440px)', background: sidebarBg, border: sidebarBorder }}
             >
-              <div className="flex items-center h-14 px-4 flex-shrink-0" style={{ borderBottom: sidebarBorder }}>
-                <p className="text-xs font-semibold uppercase tracking-wider truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>
+              {/* Pucker point, level with the icon that opened the popup */}
+              <span
+                className="absolute w-3 h-3 rotate-45 rounded-[2px]"
+                style={{ left: -7, top: Math.max(10, flyoutAnchor.pointer - 6), background: sidebarBg, borderLeft: sidebarBorder, borderBottom: sidebarBorder }}
+              />
+              <div className="px-3.5 pt-2.5 pb-1.5 flex-shrink-0">
+                <p className="text-[10px] font-semibold uppercase tracking-wider truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>
                   {group.label}
                 </p>
               </div>
-              <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
-                {group.children?.map(child => <NavItem key={child.path} item={child} showLabel />)}
+              <nav className="px-1.5 pb-1.5 space-y-0.5 overflow-y-auto">
+                {group.children?.map(child => {
+                  const ChildIcon = child.icon;
+                  const childActive = location.pathname === child.path.split('?')[0];
+                  return (
+                    <Link
+                      key={child.path}
+                      to={child.path}
+                      onClick={() => setMobileOpen(false)}
+                      className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-colors ${childActive ? 'bg-[#0202ff] text-white' : ''}`}
+                      style={{ color: childActive ? undefined : 'hsl(var(--sidebar-foreground))' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'hsl(var(--muted))'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = ''; }}
+                    >
+                      <ChildIcon className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate">{child.label}</span>
+                    </Link>
+                  );
+                })}
               </nav>
             </aside>
           </>
