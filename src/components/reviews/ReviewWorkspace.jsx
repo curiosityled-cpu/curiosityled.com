@@ -11,9 +11,10 @@ import CycleProgressBoard from "./CycleProgressBoard";
 import CycleSettingsDialog from "./CycleSettingsDialog";
 import ReviewAuditTrail from "./ReviewAuditTrail";
 import CalibrationView from "@/components/performance-mgmt/CalibrationView";
-import GuidedShell from "@/components/guided/GuidedShell";
-import GuidedHeader from "@/components/guided/GuidedHeader";
+import ReviewStageRail from "./guided/ReviewStageRail";
+import ReviewAllViews from "./guided/ReviewAllViews";
 import ReviewNextSteps from "./guided/ReviewNextSteps";
+import ReviewStageHeader from "./guided/ReviewStageHeader";
 import ReviewMyWorkView from "./guided/ReviewMyWorkView";
 import ReviewSetupView from "./guided/ReviewSetupView";
 import {
@@ -148,19 +149,6 @@ export default function ReviewWorkspace({ embedded = false }) {
     : stageConf;
   const stageState = stages.find((s) => s.id === activeStage) || null;
   const locked = !activeView;
-
-  // Normalised for the shared guided shell, which knows nothing about reviews.
-  const guidedStages = stages.map((s) => {
-    const conf = REVIEW_STAGE_MAP[s.id];
-    return {
-      key: s.id,
-      label: s.label,
-      short: s.detail || conf?.short,
-      icon: conf?.icon,
-      state: s.state,
-      canAct: canActOnStage(s.id, role),
-    };
-  });
 
   const clearFocus = () => setActiveView(isAdmin ? "cycle-progress" : "my-team");
 
@@ -321,46 +309,60 @@ export default function ReviewWorkspace({ embedded = false }) {
         )}
       </div>
 
-      <GuidedShell
-        ariaLabel="Review cycle stages"
-        stages={guidedStages}
-        activeStage={activeStage}
-        onStageSelect={handleStageSelect}
-        views={views}
-        activeView={activeView}
-        onViewSelect={handleViewSelect}
-        nextSteps={
-          <ReviewNextSteps cycle={cycle} role={role} onNavigate={handleViewSelect} />
-        }
-        header={
-          <GuidedHeader
-            icon={headerConf?.icon}
-            label={headerConf?.label}
-            description={headerConf?.description}
-            readOnly={!viewConf || (!!viewConf.stage && !canActOnStage(activeStage, role))}
-            current={viewConf?.stage ? stageState?.state === "current" : false}
-            detail={viewConf?.stage ? stageState?.detail : null}
-            percent={viewConf?.stage ? stageState?.percent : null}
+      <div className="flex gap-5">
+        {/* Left rail — desktop */}
+        <aside className="hidden lg:block w-56 flex-shrink-0 space-y-3">
+          <ReviewStageRail
+            stages={stages}
+            activeStage={activeStage}
+            onSelect={handleStageSelect}
+            role={role}
           />
-        }
-      >
-        {locked ? (
-          <div className="rounded-lg border border-dashed border-gray-200 bg-white p-6 text-center">
-            <Lock className="w-6 h-6 text-gray-300 mx-auto mb-2" />
-            <p className="text-sm font-medium text-gray-700">
-              {stageConf?.roles?.includes("manager")
-                ? "Managers and HR Admins run this step"
-                : "Only HR Admins run this step"}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">
-              You can still follow the cycle from{" "}
-              {role === "employee" ? "My review." : "My team and My review."}
-            </p>
+          <ReviewAllViews views={views} activeView={activeView} onSelect={handleViewSelect} />
+        </aside>
+
+        {/* Main content */}
+        <div className="flex-1 min-w-0 space-y-4">
+          <div className="lg:hidden">
+            <ReviewStageRail
+              stages={stages}
+              activeStage={activeStage}
+              onSelect={handleStageSelect}
+              role={role}
+              horizontal
+            />
           </div>
-        ) : (
-          <section aria-label="Review workspace content">{renderView()}</section>
-        )}
-      </GuidedShell>
+
+          <div className="lg:hidden">
+            <ReviewAllViews views={views} activeView={activeView} onSelect={handleViewSelect} />
+          </div>
+
+          <ReviewNextSteps cycle={cycle} role={role} onNavigate={handleViewSelect} />
+
+          <ReviewStageHeader
+            stage={headerConf}
+            stageState={viewConf?.stage ? stageState : null}
+            readOnly={!viewConf || (!!viewConf.stage && !canActOnStage(activeStage, role))}
+          />
+
+          {locked ? (
+            <div className="rounded-lg border border-dashed border-gray-200 bg-white p-6 text-center">
+              <Lock className="w-6 h-6 text-gray-300 mx-auto mb-2" />
+              <p className="text-sm font-medium text-gray-700">
+                {stageConf?.roles?.includes("manager")
+                  ? "Managers and HR Admins run this step"
+                  : "Only HR Admins run this step"}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                You can still follow the cycle from{" "}
+                {role === "employee" ? "My review." : "My team and My review."}
+              </p>
+            </div>
+          ) : (
+            <section aria-label="Review workspace content">{renderView()}</section>
+          )}
+        </div>
+      </div>
 
       <CycleSettingsDialog
         open={showCreate}
