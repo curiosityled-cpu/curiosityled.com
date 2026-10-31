@@ -17,6 +17,7 @@ import ReviewNextSteps from "./guided/ReviewNextSteps";
 import ReviewStageHeader from "./guided/ReviewStageHeader";
 import ReviewMyWorkView from "./guided/ReviewMyWorkView";
 import ReviewSetupView from "./guided/ReviewSetupView";
+import ReviewStagePreview from "./guided/ReviewStagePreview";
 import {
   REVIEW_STAGE_MAP,
   canActOnStage,
@@ -140,13 +141,10 @@ export default function ReviewWorkspace({ embedded = false }) {
 
   const stageConf = REVIEW_STAGE_MAP[activeStage] || null;
   const viewConf = activeView ? viewDef(activeView) : null;
-  // Without a cycle the only real step is setting one up, so the header says so
-  // even if someone browses the rest of the process from the rail.
-  const headerConf = !cycle
-    ? REVIEW_STAGE_MAP.setup
-    : viewConf && !viewConf.stage
-    ? { label: viewConf.label, icon: viewConf.icon, description: viewConf.description }
-    : stageConf;
+  const headerConf =
+    viewConf && !viewConf.stage
+      ? { label: viewConf.label, icon: viewConf.icon, description: viewConf.description }
+      : stageConf;
   const stageState = stages.find((s) => s.id === activeStage) || null;
   const locked = !activeView;
 
@@ -162,12 +160,25 @@ export default function ReviewWorkspace({ embedded = false }) {
   };
 
   const renderView = () => {
+    // No cycle yet: the setup stage offers the create form, every other stage
+    // shows what that step will ask of them, so the person setting the cycle up
+    // can prepare for it before they get there.
     if (!cycle) {
+      if (!activeView || activeView === "settings") {
+        return (
+          <ReviewSetupView
+            cycle={null}
+            canConfigure={canConfigure}
+            onCreate={() => setShowCreate(true)}
+          />
+        );
+      }
       return (
-        <ReviewSetupView
-          cycle={null}
+        <ReviewStagePreview
+          stageKey={activeStage}
           canConfigure={canConfigure}
           onCreate={() => setShowCreate(true)}
+          onGoSetup={() => handleStageSelect("setup")}
         />
       );
     }
