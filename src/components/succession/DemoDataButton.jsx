@@ -13,6 +13,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/components/useAuth";
 import { toast } from "sonner";
 
 /**
@@ -25,6 +26,13 @@ import { toast } from "sonner";
  */
 export default function DemoDataButton({ isDemoTenant }) {
   const [loading, setLoading] = useState(false);
+  const { user, isPlatformAdmin } = useAuth();
+
+  // Platform Admin only. The seeding functions enforce the same rule server-side;
+  // this keeps the control out of everyone else's view entirely.
+  const appRole = user?.app_role || user?.data?.app_role;
+  const canLoadDemo =
+    isPlatformAdmin || appRole === "Platform Admin" || appRole === "Platform Administrator";
 
   const handleLoadDemo = async () => {
     setLoading(true);
@@ -60,6 +68,8 @@ export default function DemoDataButton({ isDemoTenant }) {
       setLoading(false);
     }
   };
+
+  if (!canLoadDemo) return null;
 
   if (isDemoTenant) {
     return (

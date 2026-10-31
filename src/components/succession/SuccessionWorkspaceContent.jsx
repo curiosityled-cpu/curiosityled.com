@@ -32,6 +32,7 @@ import EnablementKitView from "@/components/succession/EnablementKitView";
 import MethodologyView from "@/components/succession/MethodologyView";
 import DemoDataButton from "@/components/succession/DemoDataButton";
 import { useClient } from "@/components/contexts/ClientContext";
+import { useAuth } from "@/components/useAuth";
 
 // Guided shell components
 import { STAGES, STAGE_MAP, normalizeStage } from "@/components/succession/guided/stageConfig";
@@ -152,6 +153,12 @@ export default function SuccessionWorkspaceContent() {
   const { client } = useClient();
   const isDemoTenant = Boolean(client?.settings?.succession_demo);
   const { role, loading: roleLoading } = useCycleRole();
+  const { user } = useAuth();
+  const canLoadDemo =
+    user?.app_role === "Platform Admin" ||
+    user?.data?.app_role === "Platform Admin" ||
+    user?.app_role === "Platform Administrator" ||
+    user?.data?.app_role === "Platform Administrator";
 
   // Fetch the active cycle on mount
   useEffect(() => {
@@ -215,16 +222,18 @@ export default function SuccessionWorkspaceContent() {
 
   return (
     <>
-      {/* Status badges row */}
-      <div className="flex items-center gap-3 mb-4 flex-wrap">
-        {isDemoTenant && (
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
-            <FlaskConical className="w-3.5 h-3.5 text-blue-600" />
-            <span className="text-xs font-medium text-blue-700">Synthetic Demo Tenant</span>
-          </div>
-        )}
-        <DemoDataButton isDemoTenant={isDemoTenant} />
-      </div>
+      {/* Status badges row — demo controls are Platform Admin only */}
+      {(isDemoTenant || canLoadDemo) && (
+        <div className="flex items-center gap-3 mb-4 flex-wrap">
+          {isDemoTenant && (
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
+              <FlaskConical className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-xs font-medium text-blue-700">Synthetic Demo Tenant</span>
+            </div>
+          )}
+          {canLoadDemo && <DemoDataButton isDemoTenant={isDemoTenant} />}
+        </div>
+      )}
 
       {loadingCycle || roleLoading ? (
         <div className="flex items-center justify-center py-20">
