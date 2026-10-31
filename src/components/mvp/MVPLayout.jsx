@@ -284,19 +284,19 @@ function MVPLayoutInner({ children }) {
       >
         {/* Logo + Collapse Toggle */}
         <div
-          className={`flex items-center h-16 px-3 ${collapsed ? 'justify-center' : 'justify-between px-4'}`}
+          className={`flex items-center min-h-[6rem] py-3 ${collapsed ? 'justify-center px-2' : 'justify-between px-4'}`}
           style={{ borderBottom: sidebarBorder }}
         >
           {!collapsed &&
           <button
             onClick={() => navigate('/')}
-            className="flex items-center min-w-0 rounded-lg transition-opacity hover:opacity-80"
+            className="flex items-center flex-1 min-w-0 rounded-lg transition-opacity hover:opacity-80"
             title="Curiosity Led — Home"
           >
               <img
               src={isDark ? WORDMARK_DARK : WORDMARK_LIGHT}
               alt="Curiosity Led"
-              className="h-9 w-auto max-w-[170px] object-contain object-left flex-shrink-0" />
+              className="w-full h-auto object-contain object-left" />
             </button>
           }
           {collapsed &&
@@ -308,7 +308,7 @@ function MVPLayoutInner({ children }) {
             <img
               src={isDark ? "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/329f40d48_Untitleddesign.png" : "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5761758bf_CuriosityLegLogo.png"}
               alt="Curiosity Led"
-              className="w-7 h-7 object-contain" />
+              className="w-12 h-12 object-contain" />
           </button>
           }
           <button
