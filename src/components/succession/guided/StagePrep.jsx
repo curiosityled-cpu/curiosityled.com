@@ -1,18 +1,30 @@
 import React, { useState } from "react";
-import { ChevronDown, ListChecks } from "lucide-react";
+import { ChevronDown, ListChecks, ArrowRight, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { STAGE_PREP } from "./stagePrep";
 
 /**
- * StagePrep — what this stage needs before it can be worked properly.
+ * StagePrep — what this stage needs before it can be worked properly, and the
+ * one step that lets the cycle move past it.
  *
- * Open by default for the stage the cycle is on and for stages still ahead
- * (where it is the whole point), collapsed for stages already behind the
- * cycle so it does not crowd the work in progress.
+ * The list is open by default for the stage the cycle is on and for stages
+ * still ahead (where it is the whole point), collapsed for stages already
+ * behind the cycle so it does not crowd the work in progress. The step button
+ * stays visible either way: it names the work to finish, not the stage.
  */
-export default function StagePrep({ stageKey, defaultOpen = true }) {
+export default function StagePrep({
+  stageKey,
+  defaultOpen = true,
+  readOnly = false,
+  onStep,
+  onBack,
+  backLabel,
+}) {
   const prep = STAGE_PREP[stageKey];
   const [open, setOpen] = useState(defaultOpen);
   if (!prep) return null;
+
+  const step = prep.step;
 
   return (
     <div className="border border-gray-200 rounded-lg bg-white overflow-hidden">
@@ -34,7 +46,7 @@ export default function StagePrep({ stageKey, defaultOpen = true }) {
       </button>
 
       {open && (
-        <div className="px-4 pb-4">
+        <div className="px-4">
           <ul className="space-y-1.5">
             {prep.haveReady.map((item) => (
               <li key={item} className="flex gap-2 text-xs text-gray-600 leading-relaxed">
@@ -48,6 +60,38 @@ export default function StagePrep({ stageKey, defaultOpen = true }) {
           </p>
         </div>
       )}
+
+      <div
+        className={`px-4 pt-3 pb-3.5 flex items-center gap-2 flex-wrap ${
+          open ? "" : "border-t border-gray-100"
+        }`}
+      >
+        {readOnly ? (
+          <p className="text-xs text-gray-500">This stage is read-only for your role.</p>
+        ) : (
+          <>
+            {step && (
+              <Button
+                size="sm"
+                className="h-8 text-xs gap-1"
+                onClick={() => onStep?.(step.view)}
+              >
+                <ArrowRight className="w-3.5 h-3.5" /> {step.label}
+              </Button>
+            )}
+            {backLabel && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 text-xs gap-1 text-gray-600"
+                onClick={onBack}
+              >
+                <ArrowLeft className="w-3.5 h-3.5" /> Back to {backLabel}
+              </Button>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

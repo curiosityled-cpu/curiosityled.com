@@ -224,9 +224,11 @@ export default function SuccessionWorkspaceContent() {
   // Preparation guidance is open for the stage the cycle is on and for anything
   // still ahead of it; stages already behind the cycle keep it collapsed.
   const currentStageKey = normalizeStage(activeCycle?.process_stage);
+  const activeStageIndex = STAGE_ORDER.indexOf(activeStage);
   const prepOpen =
-    !activeCycle ||
-    STAGE_ORDER.indexOf(activeStage) >= STAGE_ORDER.indexOf(currentStageKey);
+    !activeCycle || activeStageIndex >= STAGE_ORDER.indexOf(currentStageKey);
+  const previousStage =
+    activeStageIndex > 0 ? STAGE_MAP[STAGE_ORDER[activeStageIndex - 1]] : null;
 
   return (
     <>
@@ -291,7 +293,15 @@ export default function SuccessionWorkspaceContent() {
             <StageHeader stage={stage} readOnly={isReadOnly} context={assistContext} />
 
             {/* What this stage needs before it can be worked */}
-            <StagePrep key={activeStage} stageKey={activeStage} defaultOpen={prepOpen} />
+            <StagePrep
+              key={activeStage}
+              stageKey={activeStage}
+              defaultOpen={prepOpen}
+              readOnly={isReadOnly}
+              onStep={handleViewSelect}
+              backLabel={previousStage?.label}
+              onBack={() => previousStage && handleStageSelect(previousStage.key)}
+            />
 
             {/* Stage sub-view tabs */}
             {stage && stage.views.length > 1 && (
