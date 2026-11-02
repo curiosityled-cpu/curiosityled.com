@@ -192,7 +192,7 @@ export default function Settings() {
 
         <Tabs defaultValue="notifications" onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="flex flex-wrap h-auto gap-1">
-            {isAdmin && (
+            {isPlatformAdmin && (
               <TabsTrigger value="platform"><SettingsIcon className="w-4 h-4 mr-2" />Platform</TabsTrigger>
             )}
             {(isSuperAdmin || isPlatformAdmin) && (
@@ -204,7 +204,7 @@ export default function Settings() {
           </TabsList>
 
           {/* ── Platform (admin only) ── */}
-          {isAdmin && (
+          {isPlatformAdmin && (
             <TabsContent value="platform">
               <PlatformTab />
             </TabsContent>
