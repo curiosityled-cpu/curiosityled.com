@@ -22,6 +22,11 @@
  * Admin-only. Invoked by scheduled automation Mon–Fri 8:30am ET.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import {
+  loadClientsById,
+  settingsForUser,
+  reflectionDayIndex,
+} from '../../shared/orgNotificationSettings.ts';
 
 // ─── Day-of-week base schedule ────────────────────────────────────────────────
 
@@ -30,7 +35,7 @@ const DAY_SCHEDULE = {
   2: 'baseline_energy',      // Tuesday
   3: 'contextual',           // Wednesday (confidence/overload-gated)
   4: 'baseline_energy',      // Thursday
-  5: 'weekly_reflection',    // Friday
+  5: 'baseline_energy',      // Friday — the weekly reflection moves to the org's chosen day
 };
 
 // ─── Operator mode risk scoring (mirror of sendTeamsPrompt) ──────────────────
@@ -58,7 +63,7 @@ function computeRiskScore(recentPulses, recentActivity) {
 
 // ─── Select final prompt type for this manager today ─────────────────────────
 
-function selectPromptType(dayOfWeek, riskScore, recentPulses, pendingTriggers) {
+function selectPromptType(dayOfWeek, riskScore, recentPulses, pendingTriggers, reflectionDay = 5) {
   // Hard override: high risk always surfaces overload check
   if (riskScore >= 60) return 'overload_check';
 
@@ -74,6 +79,9 @@ function selectPromptType(dayOfWeek, riskScore, recentPulses, pendingTriggers) {
     !p.follow_up_sent
   );
   if (pendingFollowUp) return 'follow_up';
+
+  // The weekly reflection lands on the weekday this organization chose.
+  if (dayOfWeek === reflectionDay) return 'weekly_reflection';
 
   // Base schedule
   const base = DAY_SCHEDULE[dayOfWeek] || 'baseline_energy';

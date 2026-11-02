@@ -11,6 +11,12 @@
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
+import {
+  loadClientsById,
+  settingsForUser,
+  channelEnabled,
+  checkInCadenceAllowsToday,
+} from '../../shared/orgNotificationSettings.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -52,12 +58,20 @@ Deno.serve(async (req) => {
     const managerRoles = new Set(['manager', 'User Level 2', 'User Level 3', 'Admin Level 1', 'Admin Level 2', 'Super Administrator', 'user']);
     const users = allUsers.filter(u => u.email && (managerRoles.has(u.role) || managerRoles.has(u.app_role)));
 
+    // Organization settings decide whether today is a check-in day at all.
+    const clientsById = await loadClientsById(base44);
+
     let sent = 0;
     let skipped = 0;
 
     for (const user of users) {
       const email = user.email;
       if (!email) continue;
+
+      const org = settingsForUser(user, clientsById);
+      const cadence = org.check_in_config.default_cadence || 'daily';
+
+      if (!checkInCadenceAllowsToday(cadence)) { skipped++; continue; }
 
       // ── Read user's notification preferences ──────────────────────────────────
       const notifPrefs = user.notification_preferences || {};
@@ -69,10 +83,11 @@ Deno.serve(async (req) => {
       const reminderEnabled = types[reminderTypeKey] !== false; // default true if not set
       if (!reminderEnabled) { skipped++; continue; }
 
-      // At least one channel must be enabled
-      const inAppEnabled  = channels.in_app  !== false; // default true
-      const emailEnabled  = channels.email   !== false; // default true
-      const teamsEnabled  = channels.teams   === true;  // default off
+      // At least one channel must be enabled. The organization's channel list
+      // is a ceiling: a channel switched off for the tenant is never used.
+      const inAppEnabled  = channels.in_app  !== false && channelEnabled(org, 'in_app'); // default true
+      const emailEnabled  = channels.email   !== false && channelEnabled(org, 'email');  // default true
+      const teamsEnabled  = channels.teams   === true  && channelEnabled(org, 'teams');  // default off
       const atreusEnabled = types.ai_coach_nudges !== false; // default true
 
       // Check if they already completed today's check-in (via DailyCheckIn entity)
@@ -191,7 +206,7 @@ Deno.serve(async (req) => {
       check_in_type: checkInType,
       date: todayET,
       reminders_sent: sent,
-      already_done_or_reminded: skipped,
+      skipped_by_cadence_or_completion: skipped,
       total_users_checked: users.length,
     });
 

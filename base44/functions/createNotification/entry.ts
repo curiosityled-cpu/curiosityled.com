@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { resolveOrgSettings, channelEnabled } from '../../shared/orgNotificationSettings.ts';
 
 /**
  * Production-ready secure backend function to create notifications for any user
@@ -252,11 +253,20 @@ Deno.serve(async (req) => {
             // Critical notifications always sent via email and in-app
             const isCritical = ['goal_assignment', 'assessment_due', 'goal_deadline'].includes(notificationData.type);
 
+            // Organization notification settings: its channel list is a ceiling,
+            // and a batched cadence holds non-critical items for the digest that
+            // processScheduledNotifications delivers.
+            const clientRows = targetUser.client_id
+                ? await base44.asServiceRole.entities.Client.filter({ id: targetUser.client_id }).catch(() => [])
+                : [];
+            const org = resolveOrgSettings(clientRows[0]);
+            const holdForDigest = org.notifications.default_cadence !== 'instant' && !isCritical;
+
             // Dispatch to selected channels
             const dispatchPromises = [];
 
-            // Email (if enabled or critical)
-            if (typePrefs.email || isCritical) {
+            // Email (if enabled or critical, and allowed for the organization)
+            if (!holdForDigest && (typePrefs.email || isCritical) && channelEnabled(org, 'email')) {
                 dispatchPromises.push(
                     base44.asServiceRole.integrations.Core.SendEmail({
                         to: notificationData.user_email,
@@ -289,8 +299,8 @@ Deno.serve(async (req) => {
                 );
             }
 
-            // Teams (if enabled and webhook configured)
-            if (typePrefs.teams && targetUser.teams_webhook_url) {
+            // Teams (if enabled, webhook configured, and allowed for the organization)
+            if (!holdForDigest && typePrefs.teams && targetUser.teams_webhook_url && channelEnabled(org, 'teams')) {
                 dispatchPromises.push(
                     base44.asServiceRole.functions.invoke('sendTeamsNotification', {
                         user_email: notificationData.user_email,
@@ -304,8 +314,8 @@ Deno.serve(async (req) => {
                 );
             }
 
-            // Slack (if enabled and webhook configured)
-            if (typePrefs.slack && targetUser.slack_webhook_url) {
+            // Slack (if enabled, webhook configured, and allowed for the organization)
+            if (!holdForDigest && typePrefs.slack && targetUser.slack_webhook_url && channelEnabled(org, 'slack')) {
                 dispatchPromises.push(
                     base44.asServiceRole.functions.invoke('sendSlackNotification', {
                         user_email: notificationData.user_email,
