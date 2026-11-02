@@ -23,13 +23,24 @@ Deno.serve(async (req) => {
         const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
         const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
         
-        // Get all active goals
-        const goals = await base44.entities.Goal.filter({
+        // Every tenant's active goals. Read as the service role: a scheduled run
+        // has no signed-in user, so a user-scoped read would return nothing and
+        // the reminders would silently stop.
+        const goalResult = await base44.asServiceRole.entities.Goal.filter({
             status: 'active'
-        });
-        
+        }).catch(() => []);
+        const goals = Array.isArray(goalResult) ? goalResult : (goalResult.items || []);
+
         let remindersCreated = 0;
-        
+
+        const createReminder = (payload) => base44.asServiceRole.entities.Notification.create({
+            type: 'reminder',
+            status: 'pending',
+            scheduled_for: now.toISOString(),
+            action_url: '/my-performance',
+            ...payload,
+        });
+
         for (const goal of goals) {
             if (!goal.due_date) continue;
             
@@ -38,24 +49,22 @@ Deno.serve(async (req) => {
             // Check if goal is due in 7 days (and not already reminded)
             if (dueDate >= now && dueDate <= sevenDaysFromNow) {
                 // Check if we already sent a 7-day reminder
-                const existingReminders = await base44.entities.Notification.filter({
+                const existingResult = await base44.asServiceRole.entities.Notification.filter({
                     user_email: goal.user_email,
                     related_entity_id: goal.id,
                     type: 'reminder',
                     created_date: { $gte: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString() }
-                });
-                
+                }).catch(() => []);
+                const existingReminders = Array.isArray(existingResult) ? existingResult : (existingResult.items || []);
+
                 if (existingReminders.length === 0) {
-                    await base44.functions.invoke('createNotification', {
+                    await createReminder({
                         user_email: goal.user_email,
-                        type: 'reminder',
                         title: 'Goal Deadline Approaching',
                         message: `Your goal "${goal.title}" is due in 7 days. Current progress: ${goal.completion_percentage || 0}%`,
                         priority: 'medium',
                         related_entity_type: 'Goal',
-                        related_entity_id: goal.id,
-                        action_url: '/Goals',
-                        scheduled_for: now.toISOString()
+                        related_entity_id: goal.id
                     });
                     remindersCreated++;
                 }
@@ -63,25 +72,23 @@ Deno.serve(async (req) => {
             
             // Check if goal is due in 3 days (higher urgency)
             if (dueDate >= now && dueDate <= threeDaysFromNow) {
-                const existingUrgentReminders = await base44.entities.Notification.filter({
+                const urgentResult = await base44.asServiceRole.entities.Notification.filter({
                     user_email: goal.user_email,
                     related_entity_id: goal.id,
                     type: 'reminder',
                     priority: 'high',
                     created_date: { $gte: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString() }
-                });
-                
+                }).catch(() => []);
+                const existingUrgentReminders = Array.isArray(urgentResult) ? urgentResult : (urgentResult.items || []);
+
                 if (existingUrgentReminders.length === 0 && goal.completion_percentage < 80) {
-                    await base44.functions.invoke('createNotification', {
+                    await createReminder({
                         user_email: goal.user_email,
-                        type: 'reminder',
                         title: 'Urgent: Goal Deadline in 3 Days',
                         message: `Your goal "${goal.title}" is due in 3 days and is ${goal.completion_percentage || 0}% complete. Please update your progress!`,
                         priority: 'high',
                         related_entity_type: 'Goal',
-                        related_entity_id: goal.id,
-                        action_url: '/Goals',
-                        scheduled_for: now.toISOString()
+                        related_entity_id: goal.id
                     });
                     remindersCreated++;
                 }

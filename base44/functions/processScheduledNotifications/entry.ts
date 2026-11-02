@@ -88,14 +88,37 @@ Deno.serve(async (req) => {
         const dueResult = await base44.asServiceRole.entities.Notification.filter({
             status: 'pending',
             scheduled_for: { $lte: nowIso }
-        }, { sort: 'scheduled_for', limit: 200 });
-        const dueNotifications = Array.isArray(dueResult) ? dueResult : (dueResult.items || []);
+        }).catch(() => []);
+        const dueNotifications = (Array.isArray(dueResult) ? dueResult : (dueResult.items || [])).slice(0, 200);
 
         if (dueNotifications.length === 0) {
             return Response.json({ success: true, message: 'No notifications to process', processed: 0 });
         }
 
-        const results = { successful: [], failed: [], held_for_digest: 0 };
+        // A notification that has been queued for more than a day is no longer
+        // worth delivering: it would arrive as a flood of stale reminders the
+        // moment delivery resumes. Cancel it instead of sending it late.
+        const STALE_AFTER_MS = 24 * 60 * 60 * 1000;
+        const fresh = [];
+        let stale = 0;
+        for (const notification of dueNotifications) {
+            const queuedAt = notification.scheduled_for ? new Date(notification.scheduled_for).getTime() : 0;
+            if (queuedAt && now.getTime() - queuedAt > STALE_AFTER_MS) {
+                await base44.asServiceRole.entities.Notification.update(notification.id, {
+                    status: 'cancelled',
+                    metadata: { ...(notification.metadata || {}), stale: true }
+                });
+                stale++;
+                continue;
+            }
+            fresh.push(notification);
+        }
+
+        if (fresh.length === 0) {
+            return Response.json({ success: true, processed: dueNotifications.length, stale_cancelled: stale, successful: 0 });
+        }
+
+        const results = { successful: [], failed: [], held_for_digest: 0, stale_cancelled: stale };
 
         // Users and their organization's settings, fetched once.
         const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 1000).catch(() => []);
@@ -117,7 +140,7 @@ Deno.serve(async (req) => {
         // ── Instant deliveries ────────────────────────────────────────────────
         const digests = new Map(); // email -> notifications
 
-        for (const notification of dueNotifications) {
+        for (const notification of fresh) {
             const targetUser = usersByEmail.get(notification.user_email);
             if (!targetUser) {
                 await base44.asServiceRole.entities.Notification.update(notification.id, {
@@ -257,6 +280,7 @@ Deno.serve(async (req) => {
             successful: results.successful.length,
             failed: results.failed.length,
             held_for_digest: results.held_for_digest,
+            stale_cancelled: stale,
             details: results
         });
 
