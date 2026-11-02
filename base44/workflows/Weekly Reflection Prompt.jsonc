@@ -1,0 +1,45 @@
+{
+  "name": "Weekly Reflection Prompt",
+  "description": "Prompts people to reflect once a week, on the reflection day each organization chose in Organization Settings.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 21 * * *",
+      "one_time_date": null,
+      "timezone": "UTC",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "weekly_reflection_prompt",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "prompt_weekly_reflection": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "scheduleWeeklyReflection",
+            "args": {}
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Prompt weekly reflection",
+            "description": "Runs daily, sends on the org's reflection day"
+          }
+        }
+      }
+    ]
+  }
+}

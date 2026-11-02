@@ -1,0 +1,45 @@
+{
+  "name": "Goal Reminders",
+  "description": "Daily goal deadline reminders plus the organization's goal review cadence (weekly, biweekly, monthly or quarterly).",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 13 * * *",
+      "one_time_date": null,
+      "timezone": "UTC",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "goal_reminders",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "send_goal_reminders": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "scheduleGoalReminders",
+            "args": {}
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Send goal reminders",
+            "description": "Deadlines and review cadence"
+          }
+        }
+      }
+    ]
+  }
+}

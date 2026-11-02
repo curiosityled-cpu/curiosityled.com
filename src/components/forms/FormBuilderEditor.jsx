@@ -5,10 +5,14 @@ import { Card } from "@/components/ui/card";
 import { Plus, GripVertical, Trash2, Settings } from "lucide-react";
 import QuestionTypeSelector from "./QuestionTypeSelector";
 import QuestionEditor from "./QuestionEditor";
+import { useOrgSettings } from "@/lib/orgSettings";
 
 export default function FormBuilderEditor({ sections = [], onChange }) {
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [showQuestionSelector, setShowQuestionSelector] = useState(null);
+  // New rating questions start on the scale the organization set (1–5 or 1–7).
+  const orgSettings = useOrgSettings();
+  const defaultScaleMax = orgSettings?.assessment?.scoring_scale || 5;
 
   const handleAddSection = () => {
     const newSection = {
@@ -38,7 +42,7 @@ export default function FormBuilderEditor({ sections = [], onChange }) {
         ? ["Option 1", "Option 2"]
         : undefined,
       min_value: questionType === "rating_scale" || questionType === "linear_scale" ? 1 : undefined,
-      max_value: questionType === "rating_scale" || questionType === "linear_scale" ? 5 : undefined
+      max_value: questionType === "rating_scale" || questionType === "linear_scale" ? defaultScaleMax : undefined
     };
 
     onChange(sections.map(s => 

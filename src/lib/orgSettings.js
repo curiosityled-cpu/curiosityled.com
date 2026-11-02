@@ -44,7 +44,9 @@ export const ORG_SETTINGS_DEFAULTS = {
     proactivity_level: "proactive",
   },
   notifications: {
-    enabled_channels: [],
+    // Matches the stored default: in-app and email. An administrator who turns
+    // channels off saves an explicit list, which is honoured as written.
+    enabled_channels: ["in_app", "email"],
     default_cadence: "instant",
   },
   integrations: {

@@ -1,5 +1,11 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
 import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
+import {
+    loadClientsById,
+    settingsForUser,
+    goalReviewDue,
+    goalReviewKey,
+} from '../../shared/orgNotificationSettings.ts';
 
 /**
  * Scheduled function to create reminder notifications for upcoming goal deadlines
@@ -82,10 +88,54 @@ Deno.serve(async (req) => {
             }
         }
         
+        // ── Review-cadence reminders ──────────────────────────────────────────
+        // The organization's review cadence decides how often people are asked to
+        // review their goals at all, separate from the deadline reminders above.
+        const clientsById = await loadClientsById(base44);
+        const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 1000).catch(() => []);
+        const usersByEmail = new Map(allUsers.map(u => [u.email, u]));
+
+        let reviewsCreated = 0;
+        const reviewed = new Set();
+
+        for (const goal of goals) {
+            const email = goal.user_email;
+            if (!email || reviewed.has(email)) continue;
+            reviewed.add(email);
+
+            const settings = settingsForUser(usersByEmail.get(email), clientsById);
+            const cadence = settings.goals.review_cadence || 'monthly';
+            if (!goalReviewDue(cadence, now)) continue;
+
+            const cycleKey = `goal_review_${cadence}_${goalReviewKey(cadence, now)}`;
+            const existing = await base44.asServiceRole.entities.Notification.filter(
+                { user_email: email, type: 'reminder' },
+                '-created_date',
+                20
+            ).catch(() => []);
+            if (existing.some(n => n.metadata?.cycle_key === cycleKey)) continue;
+
+            const openGoals = goals.filter(g => g.user_email === email);
+
+            await base44.asServiceRole.entities.Notification.create({
+                user_email: email,
+                type: 'reminder',
+                title: `Time for your ${cadence} goal review`,
+                message: `You have ${openGoals.length} active goal${openGoals.length === 1 ? '' : 's'}. Take a few minutes to review progress and adjust what needs to change.`,
+                priority: 'low',
+                status: 'pending',
+                scheduled_for: now.toISOString(),
+                action_url: '/my-performance',
+                metadata: { cycle_key: cycleKey, goal_review: cadence }
+            });
+            reviewsCreated++;
+        }
+
         return Response.json({
             success: true,
             checked: goals.length,
             reminders_created: remindersCreated,
+            review_reminders_created: reviewsCreated,
             timestamp: now.toISOString()
         });
         

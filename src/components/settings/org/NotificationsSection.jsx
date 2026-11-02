@@ -14,9 +14,12 @@ const CHANNELS = [
 
 export default function NotificationsSection({ settings, update, locks, toggleLock, canLock }) {
   const n = settings.notifications || {};
+  // An organization that has never saved a channel list uses the stored default
+  // (in-app + email), so the screen shows what delivery actually does.
+  const channels = n.enabled_channels || ["in_app", "email"];
   const set = (field, value) => update("notifications", field, value);
   const toggleChannel = (ch) => {
-    const current = n.enabled_channels || [];
+    const current = channels;
     const next = current.includes(ch) ? current.filter((x) => x !== ch) : [...current, ch];
     set("enabled_channels", next);
   };
@@ -27,7 +30,7 @@ export default function NotificationsSection({ settings, update, locks, toggleLo
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Available channels</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {CHANNELS.map((ch) => {
-            const active = (n.enabled_channels || []).includes(ch.value);
+            const active = channels.includes(ch.value);
             return (
               <button
                 key={ch.value}
