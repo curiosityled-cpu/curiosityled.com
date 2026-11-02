@@ -4,6 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { SectionCard, SettingRow } from "./OrgControls";
+import { resolveFrameworkValue } from "@/lib/goalFrameworks";
 
 const FRAMEWORK_OPTIONS = [
   { value: "goals", label: "Goals" },
@@ -11,15 +12,9 @@ const FRAMEWORK_OPTIONS = [
   { value: "okrs", label: "OKRs" },
 ];
 
-// Normalize legacy single-string values into an array for multi-select.
-const normalizeFramework = (raw) => {
-  if (Array.isArray(raw)) return raw;
-  if (typeof raw === "string" && raw) {
-    if (raw === "hybrid") return ["goals", "kpis", "okrs"];
-    return [raw];
-  }
-  return ["goals"];
-};
+// Mirrors what the rest of the app actually shows, so an unset framework reads
+// as all three rather than a single checkbox that has no effect.
+const normalizeFramework = resolveFrameworkValue;
 
 export default function GoalsSection({ settings, update, locks, toggleLock, canLock }) {
   const goals = settings.goals || {};

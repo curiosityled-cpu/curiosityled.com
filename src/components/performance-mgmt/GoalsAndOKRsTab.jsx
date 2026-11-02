@@ -19,6 +19,8 @@ import CascadeGoalDialog from "@/components/goals/CascadeGoalDialog";
 import GoalCard from "@/components/goals/GoalCard";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useClient } from "@/components/contexts/ClientContext";
+import { resolveGoalFrameworks } from "@/lib/goalFrameworks";
 
 const STATUS_COLORS = {
   active: "bg-blue-50 text-blue-700 border-blue-200",
@@ -49,7 +51,7 @@ function ProgressBar({ value }) {
 
 // ─── Goals sub-view ────────────────────────────────────────────────────────────
 
-function GoalsView({ user, coacheeEmails }) {
+function GoalsView({ user, coacheeEmails, hideOkrs }) {
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -100,6 +102,9 @@ function GoalsView({ user, coacheeEmails }) {
   };
 
   const filtered = goals.filter(g => {
+    // Objectives live under the OKRs framework — when the organization has not
+    // turned OKRs on they must not appear in the goals list either.
+    if (hideOkrs && g.goal_type === "okr_objective") return false;
     if (!search) return true;
     return g.title?.toLowerCase().includes(search.toLowerCase()) || g.description?.toLowerCase().includes(search.toLowerCase());
   });
@@ -698,30 +703,41 @@ const SUB_TABS = [
 
 export default function GoalsAndOKRsTab({ user, coacheeEmails }) {
   const [subTab, setSubTab] = useState("goals");
+  const { client } = useClient();
+
+  // Only the frameworks the organization turned on in Organization Settings.
+  const enabledFrameworks = resolveGoalFrameworks(client);
+  const tabs = SUB_TABS.filter(t => enabledFrameworks.includes(t.id));
+  const activeSubTab = tabs.some(t => t.id === subTab) ? subTab : tabs[0]?.id;
+  const okrsEnabled = enabledFrameworks.includes("okrs");
 
   return (
     <div className="space-y-5">
-      <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit overflow-x-auto">
-        {SUB_TABS.map(t => {
-          const Icon = t.icon;
-          return (
-            <button
-              key={t.id}
-              onClick={() => setSubTab(t.id)}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
-                subTab === t.id ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              {t.label}
-            </button>
-          );
-        })}
-      </div>
+      {tabs.length > 1 && (
+        <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit overflow-x-auto">
+          {tabs.map(t => {
+            const Icon = t.icon;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setSubTab(t.id)}
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
+                  activeSubTab === t.id ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
-      {subTab === "goals" && <GoalsView user={user} coacheeEmails={coacheeEmails} />}
-      {subTab === "kpis" && <KPIsView user={user} />}
-      {subTab === "okrs" && <OKRsView user={user} />}
+      {activeSubTab === "goals" && (
+        <GoalsView user={user} coacheeEmails={coacheeEmails} hideOkrs={!okrsEnabled} />
+      )}
+      {activeSubTab === "kpis" && <KPIsView user={user} />}
+      {activeSubTab === "okrs" && <OKRsView user={user} />}
     </div>
   );
 }
