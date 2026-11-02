@@ -23,7 +23,9 @@ export const ClientProvider = ({ children }) => {
     }
   }, [user, authLoading]);
 
-  const loadClientContext = async () => {
+  // force = true skips the 5-minute session cache. Must be used after a save,
+  // otherwise the organisation settings screen reloads the pre-save record.
+  const loadClientContext = async ({ force = false } = {}) => {
     try {
       // Only load client context if user has a client_id
       if (!user?.client_id) {
@@ -40,8 +42,12 @@ export const ClientProvider = ({ children }) => {
 
       // Check cache first (5 minute TTL)
       const cacheKey = `client_context_${user.client_id}`;
-      const cached = sessionStorage.getItem(cacheKey);
-      const cacheTimestamp = sessionStorage.getItem(`${cacheKey}_timestamp`);
+      if (force) {
+        sessionStorage.removeItem(cacheKey);
+        sessionStorage.removeItem(`${cacheKey}_timestamp`);
+      }
+      const cached = force ? null : sessionStorage.getItem(cacheKey);
+      const cacheTimestamp = force ? null : sessionStorage.getItem(`${cacheKey}_timestamp`);
       
       if (cached && cacheTimestamp) {
         const age = Date.now() - parseInt(cacheTimestamp);
@@ -110,7 +116,7 @@ export const ClientProvider = ({ children }) => {
   };
 
   const refreshContext = async () => {
-    await loadClientContext();
+    await loadClientContext({ force: true });
   };
 
   return (
