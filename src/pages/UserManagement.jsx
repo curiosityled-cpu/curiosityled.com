@@ -16,6 +16,16 @@ import { withAuthProtection } from "@/components/hoc/withAuthProtection";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import UserDetailPanel from "../components/command/UserDetailPanel";
 import BulkUserUpload from "../components/users/BulkUserUpload";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -100,6 +110,8 @@ function UserManagement({ embedded = false }) {
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showBulkEditCSV, setShowBulkEditCSV] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [deletingUser, setDeletingUser] = useState(false);
   const [showAssignRoleModal, setShowAssignRoleModal] = useState(false);
   const [selectedUserForRole, setSelectedUserForRole] = useState(null);
   const [showEditUserModal, setShowEditUserModal] = useState(false);
@@ -279,13 +291,23 @@ function UserManagement({ embedded = false }) {
     } catch { toast.error('Failed to update user'); }
   };
 
-  const handleDeleteUser = async (user) => {
-    if (!confirm(`Are you sure you want to delete ${user.full_name || user.email}?`)) return;
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    setDeletingUser(true);
     try {
-      const response = await base44.functions.invoke('deleteUserById', { userId: user.id });
-      if (response.data?.success) { toast.success('User deleted'); await loadData(); }
-      else toast.error(response.data?.error || 'Failed to delete user');
-    } catch { toast.error('Failed to delete user'); }
+      const response = await base44.functions.invoke('deleteUserById', { userId: userToDelete.id });
+      if (response.data?.success) {
+        toast.success(`${userToDelete.full_name || userToDelete.email} deleted`);
+        setUserToDelete(null);
+        await loadData();
+      } else {
+        toast.error(response.data?.error || 'Failed to delete user');
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.error || 'Failed to delete user');
+    } finally {
+      setDeletingUser(false);
+    }
   };
 
   const handleDeleteStaff = async (ic) => {
@@ -755,7 +777,7 @@ function UserManagement({ embedded = false }) {
                               onViewDetails={() => setSelectedUserEmail(user.email)}
                               onEdit={() => handleEditUser(user)}
                               onAssignRole={() => { setSelectedUserForRole(user); setShowAssignRoleModal(true); }}
-                              onDelete={() => handleDeleteUser(user)}
+                              onDelete={() => setUserToDelete(user)}
                               onProxy={() => handleProxyAsUser(user)}
                               isImpersonating={isImpersonating}
                               impersonatingAction={impersonating}
@@ -927,6 +949,27 @@ function UserManagement({ embedded = false }) {
       />
 
       <InviteUserModal open={showInviteModal} onOpenChange={setShowInviteModal} onSuccess={loadData} isPlatformAdmin={isPlatformAdmin} />
+
+      <AlertDialog open={!!userToDelete} onOpenChange={(open) => { if (!open && !deletingUser) setUserToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this user?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {userToDelete?.full_name || userToDelete?.email} will be removed from the app and lose access. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingUser}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(event) => { event.preventDefault(); handleDeleteUser(); }}
+              disabled={deletingUser}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              {deletingUser ? 'Deleting…' : 'Delete user'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <BulkRoleAssignment open={showBulkRoleAssignment} onClose={() => setShowBulkRoleAssignment(false)} onSuccess={loadData} />
 

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { BASE_ROLE_PERMISSIONS } from '@/components/constants/permissions';
+import { claimPendingInvitation } from '@/lib/pendingInvitation';
 
 const AuthContext = createContext(null);
 
@@ -226,7 +227,7 @@ export const AuthProvider = ({ children }) => {
           }
         }
       } else {
-        const currentUser = await base44.auth.me();
+        const currentUser = await claimPendingInvitation(await base44.auth.me());
         if (currentUser && currentUser.email) {
           setUser(currentUser);
           setImpersonation(null);

@@ -19,13 +19,22 @@ export default function InviteUserModal({ open, onOpenChange, onSuccess, isPlatf
 
     setInviting(true);
     try {
-      await base44.users.inviteUser(form.email.trim(), form.role);
+      const { data } = await base44.functions.invoke('inviteAppUser', {
+        email: form.email.trim(),
+        app_role: form.role,
+      });
+
+      if (!data?.success) {
+        toast.error(data?.error || 'Failed to send invitation');
+        return;
+      }
+
       toast.success(`Invitation sent to ${form.email}`);
       setForm(DEFAULT_FORM);
       onOpenChange(false);
       onSuccess?.();
     } catch (error) {
-      toast.error(error.message || 'Failed to send invitation');
+      toast.error(error?.response?.data?.error || error.message || 'Failed to send invitation');
     } finally {
       setInviting(false);
     }
@@ -71,6 +80,9 @@ export default function InviteUserModal({ open, onOpenChange, onSuccess, isPlatf
                 )}
               </SelectContent>
             </Select>
+            <p className="text-xs text-gray-500 mt-1.5">
+              The role takes effect when they accept the invitation and sign in.
+            </p>
           </div>
 
           <div className="flex justify-end gap-3 pt-2 border-t">

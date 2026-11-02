@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { resolveUserScope, isUserInScope } from '../../shared/userScope.ts';
+import { toPlatformRole } from '../../shared/userInvites.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -39,7 +40,7 @@ Deno.serve(async (req) => {
 
     // Re-invite the user using Base44's invite system
     // Note: This will send a new setup/invitation email
-    await base44.users.inviteUser(targetUser.email, targetUser.app_role || 'User Level 1');
+    await base44.users.inviteUser(targetUser.email, toPlatformRole(targetUser.app_role));
 
     // Update invitation tracking
     await base44.asServiceRole.entities.User.update(userId, {

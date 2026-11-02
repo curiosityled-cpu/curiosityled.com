@@ -74,8 +74,23 @@ Deno.serve(async (req) => {
       }
     });
 
-    // Delete user using service role
-    await base44.asServiceRole.entities.User.delete(userId);
+    // Delete user using service role. The platform can remove the record and
+    // still answer "User not found", so the outcome is verified by re-reading
+    // rather than taken from the response.
+    let deleteError = null;
+    try {
+      await base44.asServiceRole.entities.User.delete(userId);
+    } catch (error) {
+      deleteError = error;
+    }
+
+    const remaining = await base44.asServiceRole.entities.User.filter({ id: userId });
+    if (remaining.length > 0) {
+      return Response.json({
+        success: false,
+        error: deleteError?.message || 'The user could not be deleted'
+      }, { status: 500 });
+    }
 
     return Response.json({ 
       success: true,

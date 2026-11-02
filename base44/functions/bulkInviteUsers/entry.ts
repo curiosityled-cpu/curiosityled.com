@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { parse } from 'npm:csv-parse/sync';
+import { sendInvite } from '../../shared/userInvites.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -56,7 +57,12 @@ Deno.serve(async (req) => {
       }
 
       try {
-        await base44.users.inviteUser(email, role);
+        await sendInvite(base44, {
+          email,
+          app_role: role,
+          client_id: user.client_id || '',
+          invited_by_email: user.email,
+        });
         results.push({ email, role, status: 'success', message: 'Invitation sent' });
       } catch (inviteError) {
         results.push({ email, role, status: 'failed', message: inviteError.message });
