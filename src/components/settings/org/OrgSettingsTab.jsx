@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Building2, Loader2, CheckCircle2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/components/useAuth";
 import { useClient } from "@/components/contexts/ClientContext";
+import CompetencyContext from "@/components/contexts/CompetencyContext";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
@@ -21,6 +22,7 @@ import SuperAdminSection from "./SuperAdminSection";
 export default function OrgSettingsTab() {
   const { user, isSuperAdmin, isPlatformAdmin } = useAuth();
   const { client, loading, refreshContext } = useClient();
+  const competencyContext = useContext(CompetencyContext);
   const [settings, setSettings] = useState(null);
   const [selectedCompetencyIds, setSelectedCompetencyIds] = useState([]);
   const [competenciesConfigured, setCompetenciesConfigured] = useState(false);
@@ -102,6 +104,9 @@ export default function OrgSettingsTab() {
         setCompetenciesConfigured(saved.competencies_configured || false);
       }
       await refreshContext();
+      // Competency selections live in their own context with a 10-minute cache
+      // — refresh it so the new competency list is used everywhere at once.
+      await competencyContext?.refreshCompetencies?.({ force: true });
       toast.success("Organization settings saved");
     } catch (error) {
       toast.error(error?.response?.data?.error || error?.message || "Failed to save organization settings");

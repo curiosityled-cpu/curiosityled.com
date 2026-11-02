@@ -12,7 +12,7 @@ export const CompetencyProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [client, setClient] = useState(null);
 
-  const loadCompetencies = useCallback(async () => {
+  const loadCompetencies = useCallback(async ({ force = false } = {}) => {
     if (!user) {
       setLoading(false);
       return;
@@ -21,8 +21,12 @@ export const CompetencyProvider = ({ children }) => {
     try {
       // Check cache first (10 minute TTL for competencies since they change rarely)
       const cacheKey = `competencies_${user.client_id || 'platform'}`;
-      const cached = sessionStorage.getItem(cacheKey);
-      const cacheTimestamp = sessionStorage.getItem(`${cacheKey}_timestamp`);
+      if (force) {
+        sessionStorage.removeItem(cacheKey);
+        sessionStorage.removeItem(`${cacheKey}_timestamp`);
+      }
+      const cached = force ? null : sessionStorage.getItem(cacheKey);
+      const cacheTimestamp = force ? null : sessionStorage.getItem(`${cacheKey}_timestamp`);
       
       if (cached && cacheTimestamp) {
         const age = Date.now() - parseInt(cacheTimestamp);
@@ -101,9 +105,11 @@ export const CompetencyProvider = ({ children }) => {
     loadCompetencies();
   }, [loadCompetencies]);
 
-  const refreshCompetencies = async () => {
+  // force = true skips the 10-minute cache. Used after the organization's
+  // selected competencies are saved, so downstream screens see the new list.
+  const refreshCompetencies = async ({ force = false } = {}) => {
     setLoading(true);
-    await loadCompetencies();
+    await loadCompetencies({ force });
   };
 
   // Update selected competencies (for admin use)
