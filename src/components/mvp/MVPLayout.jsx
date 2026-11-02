@@ -166,6 +166,25 @@ function MVPLayoutInner({ children }) {
     return () => clearInterval(interval);
   }, [user?.email]);
 
+  // Marks EVERY unread notification for this user as read, not just the few
+  // previewed in the dropdown — otherwise the 60-second refresh restores the count.
+  const markAllNotificationsRead = async () => {
+    if (!user?.email) return;
+    setUnreadCount(0);
+    setRecentNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    try {
+      let res;
+      do {
+        res = await base44.entities.Notification.updateMany(
+          { user_email: user.email, is_read: false },
+          { $set: { is_read: true } }
+        );
+      } while (res?.has_more);
+    } catch (err) {
+      console.error('Error marking all as read:', err);
+    }
+  };
+
   const handleNotificationClick = (id) => {
     if (id) {
       setUnreadCount((prev) => Math.max(0, prev - 1));
@@ -406,18 +425,9 @@ function MVPLayoutInner({ children }) {
                         <button
                           className="text-xs font-medium hover:underline disabled:opacity-50"
                           style={{ color: '#0202ff' }}
-                          onClick={async (e) => {
+                          onClick={(e) => {
                             e.stopPropagation();
-                            try {
-                              const updates = recentNotifications
-                                .filter(n => !n.is_read)
-                                .map(n => base44.entities.Notification.update(n.id, { is_read: true }));
-                              await Promise.all(updates);
-                              setUnreadCount(0);
-                              setRecentNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-                            } catch (err) {
-                              console.error('Error marking all as read:', err);
-                            }
+                            markAllNotificationsRead();
                           }}
                         >
                           Mark all as read
@@ -494,18 +504,9 @@ function MVPLayoutInner({ children }) {
                         <button
                           className="text-xs font-medium hover:underline disabled:opacity-50"
                           style={{ color: '#0202ff' }}
-                          onClick={async (e) => {
+                          onClick={(e) => {
                             e.stopPropagation();
-                            try {
-                              const updates = recentNotifications
-                                .filter(n => !n.is_read)
-                                .map(n => base44.entities.Notification.update(n.id, { is_read: true }));
-                              await Promise.all(updates);
-                              setUnreadCount(0);
-                              setRecentNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-                            } catch (err) {
-                              console.error('Error marking all as read:', err);
-                            }
+                            markAllNotificationsRead();
                           }}
                         >
                           Mark all as read
