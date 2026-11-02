@@ -15,6 +15,7 @@ import {
 import { useAuth } from "@/components/useAuth";
 import { toast } from "sonner";
 import { withAuthProtection } from "@/components/hoc/withAuthProtection";
+import { useOrgSettings } from "@/lib/orgSettings";
 import SubNavMenu from "@/components/common/SubNavMenu";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 
@@ -45,6 +46,7 @@ function Insights() {
     isProgramManager,
     hasPermission 
   } = useAuth();
+  const organization = useOrgSettings();
 
   // Read ?tab= from URL to allow direct deep-linking
   const urlParams = new URLSearchParams(window.location.search);
@@ -56,6 +58,15 @@ function Insights() {
   const getInitialView = () => {
     if (tabParam === 'org') return VIEW_SCOPES.ORG;
     if (tabParam === 'portfolio') return VIEW_SCOPES.PORTFOLIO;
+
+    // The organization's chosen landing view (Organization Settings → Reporting).
+    const landingView = {
+      org: VIEW_SCOPES.ORG,
+      team: VIEW_SCOPES.TEAM,
+      personal: VIEW_SCOPES.MY,
+    }[organization.reporting.default_landing_view];
+    if (landingView) return landingView;
+
     if (appRole === 'HRBP') return VIEW_SCOPES.ORG;
     const ORG_DEFAULT_ROLES = ['Platform Admin', 'Super Administrator', 'Partner Business Administrator', 'Analyst', 'Executive', 'Admin Level 2', 'Admin Level 1'];
     if (ORG_DEFAULT_ROLES.includes(appRole)) return VIEW_SCOPES.ORG;

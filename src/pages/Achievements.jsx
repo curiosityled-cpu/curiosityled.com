@@ -15,9 +15,13 @@ import TeamGamificationPanel from "@/components/gamification/TeamGamificationPan
 import { base44 } from "@/api/base44Client";
 import { Progress } from "@/components/ui/progress";
 import { useSearchParams } from "react-router-dom";
+import { useOrgSettings } from "@/lib/orgSettings";
 
 export default function AchievementsPage() {
   const { user, isManagerOfManagers } = useAuth();
+  const organization = useOrgSettings();
+  const gamificationEnabled = organization.gamification.enabled;
+  const leaderboardEnabled = organization.gamification.leaderboard_scope !== "disabled";
   const [searchParams] = useSearchParams();
   const [achievement, setAchievement] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -63,6 +67,25 @@ export default function AchievementsPage() {
     { label: "Coaching Sessions", value: stats.coaching_sessions, icon: Zap, color: "text-orange-600", bgColor: "bg-orange-50" }
   ];
 
+  // The organization can switch gamification off entirely.
+  if (!gamificationEnabled) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6">
+        <div className="max-w-2xl mx-auto">
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Trophy className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+              <h1 className="text-xl font-bold text-gray-900">Gamification is turned off</h1>
+              <p className="text-sm text-gray-500 mt-2">
+                Points, levels, and leaderboards are disabled for your organization by an administrator.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -99,11 +122,11 @@ export default function AchievementsPage() {
           })}
         </div>
 
-        <Tabs defaultValue={defaultTab} className="space-y-6">
+        <Tabs defaultValue={leaderboardEnabled || defaultTab !== 'leaderboard' ? defaultTab : 'overview'} className="space-y-6">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="badges">Badges</TabsTrigger>
-            <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+            {leaderboardEnabled && <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>}
             <TabsTrigger value="history">History</TabsTrigger>
             {isManagerOfManagers && <TabsTrigger value="team">Team</TabsTrigger>}
           </TabsList>
@@ -111,7 +134,7 @@ export default function AchievementsPage() {
           <TabsContent value="overview" className="space-y-6">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               <UserLevelCard />
-              <LeaderboardWidget />
+              {leaderboardEnabled && <LeaderboardWidget />}
               <ActiveCompetitionsCard />
             </div>
             <BadgeGallery />

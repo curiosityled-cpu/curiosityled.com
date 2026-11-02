@@ -6,15 +6,19 @@ import { Progress } from "@/components/ui/progress";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/components/useAuth";
+import { useOrgSettings } from "@/lib/orgSettings";
 
 export default function PointsDisplay({ compact = false, showLevel = false }) {
   const { user } = useAuth();
+  const organization = useOrgSettings();
+  const gamificationEnabled = organization.gamification.enabled;
   const [achievement, setAchievement] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!gamificationEnabled) return;
     loadAchievement();
-  }, [user?.email]);
+  }, [user?.email, gamificationEnabled]);
 
   const loadAchievement = async () => {
     if (!user?.email) return;
@@ -43,6 +47,9 @@ export default function PointsDisplay({ compact = false, showLevel = false }) {
       setLoading(false);
     }
   };
+
+  // Points and levels are switched off for this organization.
+  if (!gamificationEnabled) return null;
 
   if (loading || !achievement) return null;
 

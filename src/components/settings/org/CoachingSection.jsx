@@ -3,6 +3,7 @@ import { Users } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { SectionCard, SettingRow } from "./OrgControls";
+import { COACHING_ENGAGEMENT_TYPES } from "@/lib/orgSettings";
 
 const ENGAGEMENT_TYPES = [
   { value: "1on1_coaching", label: "1:1 Coaching" },
@@ -16,9 +17,14 @@ const ENGAGEMENT_TYPES = [
 export default function CoachingSection({ settings, update, locks, toggleLock, canLock }) {
   const c = settings.coaching || {};
   const set = (field, value) => update("coaching", field, value);
+  // An unset list means every type is offered, which is what the app does.
+  const enabledTypes = (c.enabled_engagement_types || []).length
+    ? c.enabled_engagement_types
+    : COACHING_ENGAGEMENT_TYPES;
   const toggleType = (type) => {
-    const current = c.enabled_engagement_types || [];
-    const next = current.includes(type) ? current.filter((t) => t !== type) : [...current, type];
+    const next = enabledTypes.includes(type)
+      ? enabledTypes.filter((t) => t !== type)
+      : [...enabledTypes, type];
     set("enabled_engagement_types", next);
   };
 
@@ -28,7 +34,7 @@ export default function CoachingSection({ settings, update, locks, toggleLock, c
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Engagement types offered</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {ENGAGEMENT_TYPES.map((t) => {
-            const active = (c.enabled_engagement_types || []).includes(t.value);
+            const active = enabledTypes.includes(t.value);
             return (
               <button
                 key={t.value}
