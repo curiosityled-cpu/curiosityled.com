@@ -429,8 +429,11 @@ warehouse.ic@company.com,Jordan Rivera,,Staff,,Warehouse Associate,Warehouse - S
             check_in_enabled: true,
             web_access_token: crypto.randomUUID(),
           }));
-          const created = await base44.entities.ICRoster.bulkCreate(staffRecords);
-          results.staffSuccess = Array.isArray(created) ? created.length : (created ? 1 : 0);
+          const created = await base44.functions.invoke('importStaffRoster', { records: staffRecords });
+          if (!created.data?.success) {
+            throw new Error(created.data?.error || 'Staff import failed');
+          }
+          results.staffSuccess = created.data.count || 0;
           toast.dismiss('staff-import');
           toast.success(`Imported ${results.staffSuccess} staff`);
         } catch (e) {

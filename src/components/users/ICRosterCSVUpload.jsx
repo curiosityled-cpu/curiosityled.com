@@ -119,8 +119,11 @@ export default function ICRosterCSVUpload({ open, onClose, onDone, clientId, cre
         check_in_enabled: true,
         web_access_token: crypto.randomUUID(),
       }));
-      const created = await base44.entities.ICRoster.bulkCreate(records);
-      const count = Array.isArray(created) ? created.length : (created ? 1 : 0);
+      const created = await base44.functions.invoke('importStaffRoster', { records });
+      if (!created.data?.success) {
+        throw new Error(created.data?.error || 'Import failed');
+      }
+      const count = created.data.count || 0;
       setResult({ count, total: records.length });
       toast.success(`Imported ${count} frontline staff`);
       setPreview([]);
