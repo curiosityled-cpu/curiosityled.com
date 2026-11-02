@@ -84,6 +84,29 @@ Deno.serve(async (req) => {
         const now = new Date();
         const nowIso = now.toISOString();
 
+        // Older queue entries were sometimes written without a scheduled time.
+        // Those can never come due, so a day-old one is cleared rather than
+        // left pending for ever.
+        const unscheduledResult = await base44.asServiceRole.entities.Notification.filter({
+            status: 'pending'
+        }).catch(() => []);
+        const unscheduledItems = (Array.isArray(unscheduledResult) ? unscheduledResult : (unscheduledResult.items || [])).slice(0, 500);
+        const legacyStale = unscheduledItems
+            .filter((n) => !n.scheduled_for)
+            .filter((n) => {
+                const createdAt = n.created_date ? new Date(n.created_date).getTime() : 0;
+                return !createdAt || now.getTime() - createdAt > 24 * 60 * 60 * 1000;
+            });
+        for (let i = 0; i < legacyStale.length; i += 25) {
+            const chunk = legacyStale.slice(i, i + 25);
+            await Promise.all(chunk.map((n) =>
+                base44.asServiceRole.entities.Notification.update(n.id, {
+                    status: 'cancelled',
+                    metadata: { ...(n.metadata || {}), stale: true }
+                }).catch(() => null)
+            ));
+        }
+
         // Get all pending notifications that are due
         const dueResult = await base44.asServiceRole.entities.Notification.filter({
             status: 'pending',
@@ -92,7 +115,12 @@ Deno.serve(async (req) => {
         const dueNotifications = (Array.isArray(dueResult) ? dueResult : (dueResult.items || [])).slice(0, 200);
 
         if (dueNotifications.length === 0) {
-            return Response.json({ success: true, message: 'No notifications to process', processed: 0 });
+            return Response.json({
+                success: true,
+                message: 'No notifications to process',
+                processed: 0,
+                stale_cancelled: legacyStale.length
+            });
         }
 
         // A notification that has been queued for more than a day is no longer
@@ -100,7 +128,7 @@ Deno.serve(async (req) => {
         // moment delivery resumes. Cancel it instead of sending it late.
         const STALE_AFTER_MS = 24 * 60 * 60 * 1000;
         const fresh = [];
-        let stale = 0;
+        let stale = legacyStale.length;
         for (const notification of dueNotifications) {
             const queuedAt = notification.scheduled_for ? new Date(notification.scheduled_for).getTime() : 0;
             if (queuedAt && now.getTime() - queuedAt > STALE_AFTER_MS) {
