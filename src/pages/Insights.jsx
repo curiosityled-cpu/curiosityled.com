@@ -47,6 +47,8 @@ function Insights() {
     hasPermission 
   } = useAuth();
   const organization = useOrgSettings();
+  const canExportCsv = organization.reporting.enabled_export_formats.includes("csv");
+  const canExportPdf = organization.reporting.enabled_export_formats.includes("pdf");
 
   // Read ?tab= from URL to allow direct deep-linking
   const urlParams = new URLSearchParams(window.location.search);
@@ -307,7 +309,7 @@ function Insights() {
             onClick={handleExportCSV}
             variant="ghost"
             size="icon"
-            className="text-gray-600 hover:bg-gray-200"
+            className={`text-gray-600 hover:bg-gray-200 ${canExportCsv ? "" : "hidden"}`}
             title="Export to CSV"
             disabled={exportingCSV}
           >
@@ -321,7 +323,7 @@ function Insights() {
             onClick={handleExportPDF}
             variant="ghost"
             size="icon"
-            className="text-gray-600 hover:bg-gray-200"
+            className={`text-gray-600 hover:bg-gray-200 ${canExportPdf ? "" : "hidden"}`}
             title="Export to PDF"
             disabled={exportingPDF}
           >

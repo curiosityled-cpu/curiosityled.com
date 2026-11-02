@@ -18,9 +18,13 @@ import { useAuth } from "@/components/useAuth";
 import { toast } from "sonner";
 import CascadeGoalModal from "./CascadeGoalModal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useOrgSettings } from "@/lib/orgSettings";
 
 export default function GoalCard({ goal, viewMode, index, onDelete, onEdit, onRefresh }) {
   const { isManagerOfManagers } = useAuth();
+  const organization = useOrgSettings();
+  // Cascade is offered only when the organization has goal cascading switched on
+  const canCascade = organization.goals.cascade_enabled;
   const [showCascadeModal, setShowCascadeModal] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   // Derived: cascade button is disabled while the cascade modal is open
@@ -179,10 +183,12 @@ export default function GoalCard({ goal, viewMode, index, onDelete, onEdit, onRe
                               <UserPlus className="w-3.5 h-3.5 mr-2" />
                               Assign to Team
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={handleCascade} disabled={isProcessing}>
-                              <GitBranch className="w-3.5 h-3.5 mr-2" />
-                              Cascade to Team
-                            </DropdownMenuItem>
+                            {canCascade && (
+                              <DropdownMenuItem onClick={handleCascade} disabled={isProcessing}>
+                                <GitBranch className="w-3.5 h-3.5 mr-2" />
+                                Cascade to Team
+                              </DropdownMenuItem>
+                            )}
                           </>
                         )}
                         <DropdownMenuSeparator />
@@ -300,10 +306,12 @@ export default function GoalCard({ goal, viewMode, index, onDelete, onEdit, onRe
                       <UserPlus className="w-3.5 h-3.5 mr-2" />
                       Assign to Team
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleCascade} disabled={isProcessing} className="text-gray-700 hover:bg-gray-100">
-                      <GitBranch className="w-3.5 h-3.5 mr-2" />
-                      Cascade to Team
-                    </DropdownMenuItem>
+                    {canCascade && (
+                      <DropdownMenuItem onClick={handleCascade} disabled={isProcessing} className="text-gray-700 hover:bg-gray-100">
+                        <GitBranch className="w-3.5 h-3.5 mr-2" />
+                        Cascade to Team
+                      </DropdownMenuItem>
+                    )}
                   </>
                 )}
                 <DropdownMenuSeparator />

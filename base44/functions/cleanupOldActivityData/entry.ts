@@ -29,13 +29,32 @@ Deno.serve(async (req) => {
 
     // Get all user preferences with retention settings
     const allPreferences = await base44.asServiceRole.entities.UserPreference.list();
-    
-    // Default retention: 90 days
+
+    // Organization retention default (Settings → Organization → Privacy). The
+    // administrator sets one period for their organization; a person's own
+    // preference still wins where they have set one.
     const DEFAULT_RETENTION_DAYS = 90;
+    const allUsers = await base44.asServiceRole.entities.User.list();
+    const clients = await base44.asServiceRole.entities.Client.list();
+
+    const clientRetention = {};
+    for (const client of clients) {
+      const days = client?.settings?.privacy?.data_retention_days;
+      if (typeof days === "number" && days > 0) clientRetention[client.id] = days;
+    }
+    const clientIdByEmail = {};
+    for (const u of allUsers) {
+      const clientId = u.client_id || u.data?.client_id;
+      if (clientId) clientIdByEmail[u.email] = clientId;
+    }
+    const orgRetentionDays = (email) => {
+      const clientId = clientIdByEmail[email];
+      return (clientId && clientRetention[clientId]) || DEFAULT_RETENTION_DAYS;
+    };
 
     for (const pref of allPreferences) {
       try {
-        const retentionDays = pref.privacy_settings?.data_retention_days || DEFAULT_RETENTION_DAYS;
+        const retentionDays = pref.privacy_settings?.data_retention_days || orgRetentionDays(pref.user_email);
         const cutoffDate = new Date(now.getTime() - (retentionDays * 24 * 60 * 60 * 1000));
         const cutoffISO = cutoffDate.toISOString();
 
@@ -83,14 +102,14 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Also clean up for users without preferences (use default retention)
-    const allUsers = await base44.asServiceRole.entities.User.list();
+    // Also clean up for users without preferences (organization or default retention)
     const usersWithPrefs = new Set(allPreferences.map(p => p.user_email));
     const usersWithoutPrefs = allUsers.filter(u => !usersWithPrefs.has(u.email));
 
     for (const user of usersWithoutPrefs) {
       try {
-        const cutoffDate = new Date(now.getTime() - (DEFAULT_RETENTION_DAYS * 24 * 60 * 60 * 1000));
+        const retentionDays = orgRetentionDays(user.email);
+        const cutoffDate = new Date(now.getTime() - (retentionDays * 24 * 60 * 60 * 1000));
         const cutoffISO = cutoffDate.toISOString();
 
         const oldActions = await base44.asServiceRole.entities.AgentAction.filter({

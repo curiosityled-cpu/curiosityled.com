@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, UserPlus, Calendar, Target, TrendingUp, Plus, Search, MessageSquare, Clock, CheckCircle, AlertTriangle, Play, Pause } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
+import { useOrgSettings } from '@/lib/orgSettings';
 
 const ENGAGEMENT_TYPES = [
   { value: '1on1_coaching', label: '1:1 Coaching' },
@@ -53,6 +54,12 @@ const RISK_COLORS = {
 
 export default function CoachingManagement() {
   const { user, hasPermission } = useAuth();
+  const organization = useOrgSettings();
+  const coachingDefaults = organization.coaching;
+  // Only the engagement types the organization has switched on are offered
+  const availableEngagementTypes = ENGAGEMENT_TYPES.filter(t =>
+    coachingDefaults.enabled_engagement_types.includes(t.value)
+  );
   const [activeTab, setActiveTab] = useState('engagements');
   const [engagements, setEngagements] = useState([]);
   const [sessions, setSessions] = useState([]);
@@ -178,7 +185,7 @@ export default function CoachingManagement() {
       status: 'pending',
       start_date: '',
       target_end_date: '',
-      total_sessions_planned: 6,
+      total_sessions_planned: coachingDefaults.default_session_count,
       risk_level: 'low'
     });
   };
@@ -191,7 +198,7 @@ export default function CoachingManagement() {
       engagement_id: '',
       coachee_email: '',
       scheduled_date: '',
-      duration_minutes: 60,
+      duration_minutes: coachingDefaults.default_session_length_minutes,
       location: '',
       location_type: 'virtual',
       status: 'scheduled'
@@ -510,7 +517,7 @@ export default function CoachingManagement() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {ENGAGEMENT_TYPES.map(type => (
+                  {availableEngagementTypes.map(type => (
                     <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
                   ))}
                 </SelectContent>
