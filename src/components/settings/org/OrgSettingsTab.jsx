@@ -80,15 +80,23 @@ export default function OrgSettingsTab() {
     if (!clientId) return;
     setSaving(true);
     try {
-      await base44.entities.Client.update(clientId, {
-        settings,
-        selected_competency_ids: selectedCompetencyIds,
-        competencies_configured: competenciesConfigured,
+      // Saved through the server so organization settings are not blocked by
+      // record-level permissions; the function re-checks the caller's role.
+      const response = await base44.functions.invoke("clientUpdate", {
+        client_id: clientId,
+        updates: {
+          settings,
+          selected_competency_ids: selectedCompetencyIds,
+          competencies_configured: competenciesConfigured,
+        },
       });
+      if (!response.data?.success) {
+        throw new Error(response.data?.error || "Save failed");
+      }
       await refreshContext();
       toast.success("Organization settings saved");
     } catch (error) {
-      toast.error("Failed to save organization settings");
+      toast.error(error?.response?.data?.error || error?.message || "Failed to save organization settings");
     } finally {
       setSaving(false);
     }
