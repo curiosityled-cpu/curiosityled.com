@@ -93,6 +93,14 @@ export default function OrgSettingsTab() {
       if (!response.data?.success) {
         throw new Error(response.data?.error || "Save failed");
       }
+      // Apply the record the server just wrote so the screen never falls back to
+      // the values it had before the save.
+      const saved = response.data.client;
+      if (saved?.settings) {
+        setSettings(saved.settings);
+        setSelectedCompetencyIds(saved.selected_competency_ids || []);
+        setCompetenciesConfigured(saved.competencies_configured || false);
+      }
       await refreshContext();
       toast.success("Organization settings saved");
     } catch (error) {
