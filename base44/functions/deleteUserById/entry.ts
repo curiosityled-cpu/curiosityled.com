@@ -58,21 +58,27 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Log the activity before deletion
-    await base44.asServiceRole.entities.ActivityLog.create({
-      timestamp: new Date().toISOString(),
-      initiator_user_email: currentUser.email,
-      action_type: 'USER_DELETED',
-      target_user_email: targetUser.email,
-      metadata: { 
-        deleted_by: currentUser.full_name,
-        deleted_user_data: {
-          email: targetUser.email,
-          full_name: targetUser.full_name,
-          app_role: targetUser.app_role
+    // Log the activity before deletion. client_id is required by the
+    // ActivityLog schema, and an audit write must never block the deletion.
+    try {
+      await base44.asServiceRole.entities.ActivityLog.create({
+        timestamp: new Date().toISOString(),
+        initiator_user_email: currentUser.email,
+        action_type: 'USER_DELETED',
+        target_user_email: targetUser.email,
+        client_id: targetUser.client_id || currentUser.client_id || 'unassigned',
+        metadata: {
+          deleted_by: currentUser.full_name,
+          deleted_user_data: {
+            email: targetUser.email,
+            full_name: targetUser.full_name,
+            app_role: targetUser.app_role
+          }
         }
-      }
-    });
+      });
+    } catch (logError) {
+      console.error('Could not write delete audit log:', logError);
+    }
 
     // Delete user using service role. The platform can remove the record and
     // still answer "User not found", so the outcome is verified by re-reading
