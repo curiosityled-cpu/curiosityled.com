@@ -41,6 +41,12 @@ Deno.serve(async (req) => {
     }
     // Platform Admin sees all users (no filtering)
 
+    // Platform Admin accounts are never shown in the user management of a
+    // client or partner client: only a Platform Admin may see them at all.
+    if (user.app_role !== 'Platform Admin') {
+      users = users.filter(u => u.app_role !== 'Platform Admin');
+    }
+
     console.log('Returning', users.length, 'users');
 
     // Security: Strip credential-related fields from all user records.

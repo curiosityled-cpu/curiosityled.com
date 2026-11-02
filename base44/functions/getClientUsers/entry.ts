@@ -15,8 +15,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'client_id is required' }, { status: 400 });
     }
 
-    // Get all users for this client
-    const users = await base44.asServiceRole.entities.User.filter({ client_id });
+    // Get all users for this client. Platform Admin accounts are never part of
+    // a client's (or partner client's) user management, whatever their client_id.
+    const users = (await base44.asServiceRole.entities.User.filter({ client_id }))
+      .filter(u => u.app_role !== 'Platform Admin');
 
     // Security: Strip credential-related fields from all user records.
     const SENSITIVE_FIELDS = ['temporary_password', 'must_reset_password', 'password_hash', 'reset_token'];

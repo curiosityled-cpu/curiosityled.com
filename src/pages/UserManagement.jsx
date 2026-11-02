@@ -356,6 +356,8 @@ function UserManagement({ embedded = false }) {
     if (filters.accountStatus !== 'all') filtered = filtered.filter(u => (u.account_status || 'active') === filters.accountStatus);
     if (filters.client !== 'all') filtered = filtered.filter(u => u.client_id === filters.client);
     if (filters.partner !== 'all') filtered = filtered.filter(u => u.partner_id === filters.partner || clients.find(c => c.id === u.client_id)?.partner_id === filters.partner);
+    // Platform Admin accounts are never shown when a client or partner client is being viewed
+    if (filters.client !== 'all' || filters.partner !== 'all') filtered = filtered.filter(u => u.app_role !== 'Platform Admin');
     if (filters.status === 'active') { const ago = new Date(Date.now() - 30 * 864e5); filtered = filtered.filter(u => u.__type === 'staff' || (u.updated_date && new Date(u.updated_date) > ago)); }
     if (filters.status === 'inactive') { const ago = new Date(Date.now() - 30 * 864e5); filtered = filtered.filter(u => u.__type !== 'staff' && u.updated_date && new Date(u.updated_date) <= ago); }
 
