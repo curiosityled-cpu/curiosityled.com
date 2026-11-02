@@ -255,7 +255,7 @@ function UserManagement({ embedded = false }) {
         try {
           const roleResp = await base44.functions.invoke('updateUserRole', { userId, newRole: app_role, oldRole: originalEditingUser?.app_role });
           if (!roleResp.data?.success) errors.push(`Role: ${roleResp.data?.error || 'failed'}`);
-        } catch (e) { errors.push(`Role: ${e.response?.data?.error || e.message || 'failed'}`); }
+        } catch (e) { errors.push(`Role: ${e.message || 'failed'}`); }
       }
 
       // 3. Route client_id change through assignUserToClient
