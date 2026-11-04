@@ -285,7 +285,7 @@ rehearsal record was removed.
 | **6** | `succession*` as one family | 125 fn | in parallel with 5 |
 | **7** | Bulk / person-move / destructive functions | ~33 fn | highest consequence |
 | **8** | Read/report, billing, seeds, detection, platform-only guard | rest | last |
-| **9** | Retire `Tenant`; remove its one remaining writer | 1 entity | last |
+| **9** | Retire `Tenant`; remove its one remaining writer | 1 entity | **applied** |
 
 Phase 5 (two-client proof) is the checkpoint after batch 4 and again at the end — the first
 moment reads *and* writes are both closed.
@@ -300,7 +300,7 @@ outstanding:
 1. **Suspended clients:** readable, not writable. Applied with the batch that touches
    client status.
 2. **`Tenant` retirement:** delete the empty entity and repoint its single remaining
-   writer at `Client`. Batch 9.
+   writer at `Client`. Applied in Batch 9.
 
 **Phase 2 is complete.** Every count is measured, every classification is decided, and
 the batch order is fixed. Batch 3 is applied. Batch 4 is applied: forty-three create rules
@@ -324,10 +324,9 @@ person's own email, so their scope already follows the person. The succession co
 derives `client_id` itself. `PartnerCommission` is bound to the partner's own id.
 `CustomRole` is platform-catalog governance and is Platform Admin only.
 
-Batches 5, 7 and 8 are applied (read rules; bulk writes and tenant creation; platform-only
-guard, seeds, billing and the report-path reads). What remains is the read-rule pass for the
-types flagged in 10.1, the update/delete pass in Batch 6, and the Tenant retirement in
-Batch 9.
+Batches 5, 7, 8 and 9 are applied (read rules; bulk writes and tenant creation; platform-only
+guard, seeds, billing and the report-path reads; the `Tenant` retirement). What remains is the
+read-rule pass for the types flagged in 10.1 and the update/delete pass in Batch 6.
 
 ### 10.1 Batch 5 — the read pass
 
@@ -394,3 +393,19 @@ nothing. `listAllUsers`, `clientList`, `listClients`, `updateClient`, `listPartn
 `getManagerInsights` and `getOrganizationUsers` each narrow to the caller's client, partner or
 reporting line. `seedCompetencies` and `seedDefaultBadges` are gated to Platform Admin and
 Super Administrator, writing the platform-default catalogue by design.
+
+### 10.4 Batch 9 — `Tenant` retired
+
+`Tenant` was the first name for a client organization. `Client` replaced it, and every record
+that once pointed at a tenant now points at a client — provisioning batches and user profiles
+keep the column name `tenant_id`, and the id inside it is a client id.
+
+The entity held no records (zero, verified before deletion), so nothing needed migrating. Its
+one remaining writer was `provisioningWixReadinessGate`, the self-test that proves provisioning
+and client resolution end to end by creating throwaway organizations and deleting them again;
+it now creates `Client` records, marks them `trial`, and removes them in its own cleanup. No
+frontend page, function, agent, workflow or MCP config named `Tenant` any more, and the schema
+is deleted, so the entity no longer resolves.
+
+Batch 9 closes the last structural item of Phase 3: one name for a tenant (`Client`), one id
+column feeding it, and nothing left that can write an organization of the old kind.
