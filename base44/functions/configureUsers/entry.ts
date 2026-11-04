@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { setUserClient } from '../../shared/tenantContext.ts';
 
 /**
  * Configures existing users with profile data (app_role, department, manager, etc.)
@@ -123,7 +124,10 @@ Deno.serve(async (req) => {
                 if (userData.sector) updateData.sector = String(userData.sector).trim();
                 if (userData.manager_email) updateData.manager_email = String(userData.manager_email).trim().toLowerCase();
                 if (userData.start_date) updateData.start_date = String(userData.start_date).trim();
-                if (userData.client_id !== undefined) updateData.client_id = userData.client_id || null;
+                // client_id is applied separately, below, through the shared
+                // helper — it has to land in data.client_id too, or the person's
+                // access rules keep the tenant they were moved out of.
+                const newClientId = userData.client_id !== undefined ? (userData.client_id || null) : null;
                 if (userData.partner_id !== undefined) updateData.partner_id = userData.partner_id || null;
 
                 // Security: Validate custom_role_id against platform-permission
@@ -156,6 +160,10 @@ Deno.serve(async (req) => {
 
                 // Update the user
                 await base44.asServiceRole.entities.User.update(existingUser.id, updateData);
+
+                if (userData.client_id !== undefined) {
+                    await setUserClient(base44, existingUser.id, newClientId);
+                }
                 
                 // Verify the update worked
                 const verifyUser = await base44.asServiceRole.entities.User.filter({ email: emailStr }, '-created_date', 1);

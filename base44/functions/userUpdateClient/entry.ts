@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { setUserClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -23,9 +24,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    const updatedUser = await base44.asServiceRole.entities.User.update(user_id, { client_id });
+    // Both fields, through the shared helper — see setUserClient.
+    await setUserClient(base44, user_id, client_id || null);
+    const refreshed = await base44.asServiceRole.entities.User.filter({ id: user_id });
 
-    return Response.json({ success: true, user: updatedUser });
+    return Response.json({ success: true, user: refreshed?.[0] || null });
 
   } catch (error) {
     console.error('Error updating user client:', error);

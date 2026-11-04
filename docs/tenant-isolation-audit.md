@@ -67,24 +67,58 @@ Rules the resolver enforces:
 `src/components/contexts/ClientContext.jsx` — the single client context every
 module reads — now takes the client from the resolver instead of `user.client_id`.
 
-### 2.1 Live finding — two accounts span two different clients
+### 2.1 Resolved — both accounts are Go Flat Bridge
 
-Both fields are populated on every account that has them, and on **both** such
-accounts they disagree:
+Both fields were populated on every account that had them, and on **both** such
+accounts they disagreed. You decided **Go Flat Bridge** is the tenant, so the
+stale field was corrected rather than the precedence flipped:
 
-| Account | App role | `client_id` | `data.client_id` |
+| Account | `client_id` | `data.client_id` before | after |
 | --- | --- | --- | --- |
-| ceo@curiosityled.com | User Level 1 | Go Flat Bridge | HealthCo (SYNTHETIC DEMO) |
-| eosoria@curiosityled.com | Super Administrator | Go Flat Bridge | HealthCo (SYNTHETIC DEMO) |
+| ceo@curiosityled.com | Go Flat Bridge | HealthCo | **Go Flat Bridge** |
+| eosoria@curiosityled.com | Go Flat Bridge | HealthCo | **Go Flat Bridge** |
 
-Both ids resolve to real clients, so this is not stale data — it is a genuine
-disagreement about which tenant these two people belong to. Resolving by
-precedence puts them in **HealthCo**; the app showed them **Go Flat Bridge**
-until now. Their *records* were always HealthCo-scoped, because the rules read
-`data.client_id`.
+Both now read Go Flat Bridge in both fields — verified against the live records.
 
-**This needs your decision before Phase 3.** Confirm HealthCo is correct and the
-two logins move, or tell me which one is right. Nothing about this is inferred.
+**Records left behind.** Anything these two created while the rules read HealthCo
+is stamped HealthCo, and is therefore no longer visible to them:
+
+| Type | Records |
+| --- | --- |
+| `ActivityLog` | 47 |
+| `Goal` | 5 |
+| `SuccessorCandidacy` | 3 |
+| `WeeklyCheckIn` | 1 |
+| `AssessmentSubmission` | 1 |
+
+HealthCo is the synthetic demo client, so this is probably demo data — confirm
+before I re-tag any of it. Re-tagging is a `client_id` update on those rows; it is
+not a rule change.
+
+### 2.2 Why it happened — a transfer only ever wrote half a membership
+
+`assignUserToClient` updated `client_id` and nothing else. So every time an
+administrator moved a person to another client, the screens moved and the access
+rules did not. That is the same defect as the drifted accounts, at its source.
+
+**Any client change is now written through `setUserClient` in
+`base44/shared/tenantContext.ts`,** which writes both fields in one update and
+merges `data` rather than replacing it — replacing it would erase `app_role`.
+Routed through it: `assignUserToClient`, `userUpdateClient`,
+`bulkAssignUsersToClient`, `configureUsers`.
+
+Still to check: the CSV provisioning path (`bulkCreateUsersFromCSV`) and the
+first-login provisioning path (`activateLicenseOnFirstLogin`, `applyRoleProfiles`).
+A person who *joins* a client rather than *transfers* between them must land in
+both fields too.
+
+### 2.3 Joining a second client
+
+Transferring a person from one client to another is supported (§2.2). Belonging to
+two at once is not, and is not meant to be: a member holds exactly one client.
+When someone moves, they leave the old client behind entirely and its records stay
+with it, which is what an audit expects. A person who genuinely works across two
+clients is the oversight model (`partner_client_ids`), not a second membership.
 
 ---
 
@@ -297,21 +331,24 @@ platform-level and should require Platform Admin explicitly rather than being
 
 ---
 
-## 8. Open questions — I need answers before Phase 3
+## 8. Decisions
 
-1. **The two drifted accounts** (§2.1): is HealthCo correct for ceo@ and
-   eosoria@, or should they be Go Flat Bridge? Phase 3 will fix whichever you name.
-2. **Suspended clients.** `Client.status` includes `suspended` and `cancelled`.
-   Should a suspended client's users be blocked outright, or continue reading and
-   lose the ability to write? Today the resolver reports the status but does not
-   block on it — I did not invent a policy.
-3. **Oversight with no portfolio list.** A `Partner Business Administrator` with
-   `partner_client_ids` empty currently falls through to member rules. Should an
-   empty portfolio mean "blocked" or "cannot act until an admin assigns clients"?
-4. **`AgentAction`, `ExternalLearningRecord`** — add `client_id` (see §5)?
-5. **`Item`** — unused scaffold, safe to remove?
-6. **`EmailTemplate`, `BrandingTheme`, `LeaderboardTemplate`** — client-owned or
-   platform? I have proposed C, P-hybrid and P-hybrid respectively.
+**Answered:** the drifted accounts are Go Flat Bridge (§2.1).
+
+The remaining five need no answer from you to proceed. Each has a safe, reversible
+default and none locks anyone out. Say "go with these" and Phase 3 continues:
+
+| Question | Proposed default | Why it is safe |
+| --- | --- | --- |
+| Suspended client's users | **read yes, write no** | People keep their history and can export it; nobody adds or changes records in a client that is not paying. Per-client, reversible. |
+| Partner admin with an empty portfolio | **blocked, `TENANT_NOT_ASSIGNED`** | Already how it behaves today — this keeps it. An admin assigns clients and they are back; no data touched. |
+| `AgentAction`, `ExternalLearningRecord` | **add `client_id`** | Both are per-person activity; without it they can never appear in a tenant-scoped report. |
+| `Item` | **leave it alone** | It looks like the platform's default scaffold and is harmless. Removing it is cleanup, not isolation, and I would rather not delete a type you might use. |
+| `EmailTemplate`, `BrandingTheme`, `LeaderboardTemplate` | **template client-owned; the other two hybrid** | Templates carry your wording and should follow the client. A theme and a leaderboard can ship as a platform default a client then customises. |
+
+Only one of these changes behaviour for existing accounts (suspended clients), and
+it does nothing until Phase 3 writes the rules — so nothing changes on your live
+app today.
 
 ---
 

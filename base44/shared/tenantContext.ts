@@ -291,3 +291,33 @@ export function tenantBlockedResponse(ctx) {
     { status: 403 }
   );
 }
+
+/**
+ * Put a person into a client — the only supported way to write a membership.
+ *
+ * Both fields are written in one update. Writing just one of them is what
+ * produced two live accounts whose `client_id` named Go Flat Bridge while
+ * `data.client_id` named HealthCo: the screens read one field and every access
+ * rule reads the other, so a half-write is not a transfer at all. It leaves the
+ * person in the tenant they were moved out of while showing them the new one.
+ *
+ * `data` is merged rather than replaced because it also carries app_role,
+ * permissions, partner_client_ids and subordinate_emails — overwriting it would
+ * take the person's role with it. Passing `null` removes the membership.
+ */
+export async function setUserClient(base44, userId, clientId) {
+  const found = await base44.asServiceRole.entities.User.filter({ id: userId });
+  const user = Array.isArray(found) ? found[0] : found?.items?.[0];
+  if (!user) throw new Error(`User ${userId} not found`);
+
+  const data = { ...(user.data || {}) };
+  if (clientId) data.client_id = clientId;
+  else delete data.client_id;
+
+  await base44.asServiceRole.entities.User.update(userId, {
+    client_id: clientId || null,
+    data,
+  });
+
+  return { id: userId, email: user.email, client_id: clientId || null };
+}

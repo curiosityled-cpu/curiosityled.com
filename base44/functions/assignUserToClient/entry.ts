@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { setUserClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -32,10 +33,9 @@ Deno.serve(async (req) => {
     const targetUser = users[0];
     const client = clients[0];
 
-    // Update user's client
-    await base44.asServiceRole.entities.User.update(user_id, {
-      client_id: client_id
-    });
+    // Update user's client — both fields, through the shared helper, so the
+    // screens and the access rules cannot disagree about the tenant.
+    await setUserClient(base44, user_id, client_id);
 
     // Update client's seat count
     const clientUsers = await base44.asServiceRole.entities.User.filter({ client_id });
