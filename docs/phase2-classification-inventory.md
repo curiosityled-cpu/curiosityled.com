@@ -476,11 +476,40 @@ Checked before locking: every mutation of these records in the codebase goes thr
 them directly, so nothing in the product breaks; the only thing that stops working is a
 signed-in user editing evidence from the browser.
 
-Remaining in this pass: twenty-six client-owned configuration types whose update and delete
-rules are still null — `Program`, `Cohort`, `Class`, `Journey`, `LearningJourney`,
-`OnboardingPlan`, `CustomAssessment`, `CustomForm`, `CustomFormTemplate`, `GamificationSettings`,
-`OrgBusinessGoal`, `WorkforceMetrics`, `BrandingConfiguration`, `KPI`, `Certification`,
-`Certificate`, `UserBadge`, `UserAchievement`, `DevelopmentRequest`, `Competition`,
-`AssessmentSubmission`, `CoachingEngagement`, `CoachingSession`, `Automation`,
-`ReviewCycleEvent`, `ExternalAssessmentResult`. These need a per-type write rule rather than a
-single lock — each one has its own legitimate editor — so they are the next batch.
+### 10.7 Batch 12 — the update/delete pass, part two: configuration types
+
+Fourteen of the remaining twenty-six now carry explicit write rules, each mirroring the type's
+existing create rule so the people who legitimately edit a record keep doing so, and nobody
+outside the tenant can:
+
+| Type | May update | May delete |
+| --- | --- | --- |
+| `GamificationSettings` | Admin Level 2 / Super Administrator (own client), Partner BA (own clients) | same minus Partner BA |
+| `OrgBusinessGoal` | Admin Level 2, Super Administrator (own client) | same |
+| `CustomFormTemplate` | Admin Level 2, Super Administrator, Partner BA (own scope) | same minus Partner BA; platform defaults are Platform Admin only |
+| `WorkforceMetrics` | Admin Level 2, Super Administrator (own client) | same |
+| `BrandingConfiguration` | Super Administrator (own client), Partner BA (own clients) | same |
+| `Certification` | the holder on their own record, Admin Level 1/2 (own client) | Admin Level 2 (own client) |
+| `ExternalAssessmentResult` | the owner, Admin Level 1/2 (own client) | Admin Level 2 (own client) |
+| `UserBadge` | Admin Level 1/2, Super Administrator (own client) | same |
+| `Competition` | creator (own client), Admin Level 1/2 (own client) | Admin Level 1/2 (own client) |
+| `CustomAssessment` | creator, Admin Level 1/2 (own client) | creator, Admin Level 2 (own client) |
+| `Automation` | creator, Admin Level 1/2 (own client) | creator, Admin Level 2 (own client) |
+| `KPI` | creator, owner, Admin Level 1/2, Super Administrator (own client) | creator, Admin Level 2 (own client) |
+| `DevelopmentRequest` | requester, assignee, Admin Level 1/2, Super Administrator, Partner BA (own scope) | Admin Level 2, Super Administrator (own client) |
+| `ReviewCycleEvent` | Platform Admin only (append-only, like the batch 11 group) | Platform Admin only |
+
+Platform Admin keeps the unrestricted path on every one of them.
+
+One constraint learned here and worth recording: **write rules accept only equality, `$in`,
+`$nin`, `$ne` and `$or`/`$and`.** `$elemMatch` and the other read operators are rejected on
+create/update/delete with "clause never matches". That is why the approval-chain branch stays in
+`DevelopmentRequest`'s read rule but cannot appear in its update rule: an approver who is not the
+requester, the assignee or a tenant administrator decides through the server function, not by
+writing the record from the browser.
+
+Remaining: twelve types whose schemas still need the same treatment — `Program`, `Cohort`,
+`Class`, `Journey`, `LearningJourney`, `OnboardingPlan`, `CustomForm`, `Certificate`,
+`UserAchievement`, `AssessmentSubmission`, `CoachingEngagement`, `CoachingSession`. They are the
+program-delivery and learning-record core, and each needs its own editor map (participant
+admins, journey owners, coaches, the program lead), so they close the pass in the next batch.
