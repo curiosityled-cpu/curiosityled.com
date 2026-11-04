@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, Loader2, Building2, X, Check } from "lucide-react";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ const COMPETENCY_OPTIONS = [
 ];
 
 export default function OrgBusinessGoalManager({ user }) {
+  const { activeClientId } = useClient();
   const [goals, setGoals]       = useState([]);
   const [loading, setLoading]   = useState(true);
   const [showDialog, setShowDialog] = useState(false);
@@ -43,7 +45,7 @@ export default function OrgBusinessGoalManager({ user }) {
 
   const load = async () => {
     setLoading(true);
-    const data = await base44.entities.OrgBusinessGoal.filter({ client_id: user.client_id }).catch(() => []);
+    const data = await base44.entities.OrgBusinessGoal.filter({ client_id: activeClientId }).catch(() => []);
     setGoals(data);
     setLoading(false);
   };
@@ -73,7 +75,7 @@ export default function OrgBusinessGoalManager({ user }) {
   const handleSave = async () => {
     if (!form.title.trim()) { toast.error("Title is required"); return; }
     setSaving(true);
-    const payload = { ...form, client_id: user.client_id };
+    const payload = { ...form, client_id: activeClientId };
     if (editing) {
       await base44.entities.OrgBusinessGoal.update(editing.id, payload);
       toast.success("Goal updated");

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -288,6 +289,7 @@ function ResourceFormDialog({ open, onClose, resource, onSaved }) {
 }
 
 export default function AdminLearningManagementTab({ user }) {
+  const { activeClientId } = useClient();
   const [tab, setTab] = useState("library");
   const [resources, setResources] = useState([]);
   const [assignments, setAssignments] = useState([]);
@@ -306,7 +308,7 @@ export default function AdminLearningManagementTab({ user }) {
     try {
       const [res, assigns] = await Promise.all([
         base44.entities.LearningResource.list('-created_date', 500),
-        base44.entities.AssignedLearning.filter({ client_id: user.client_id }, '-created_date', 200)
+        base44.entities.AssignedLearning.filter({ client_id: activeClientId }, '-created_date', 200)
       ]);
       setResources(res);
       setAssignments(assigns);
@@ -358,7 +360,7 @@ export default function AdminLearningManagementTab({ user }) {
         user_email: assignEmail,
         learning_resource_id: assignDialog.id,
         assigned_by: user.email,
-        client_id: user.client_id,
+        client_id: activeClientId,
         title: assignDialog.title,
         status: "assigned"
       });

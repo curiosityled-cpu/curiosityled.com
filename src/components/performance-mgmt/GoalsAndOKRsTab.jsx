@@ -232,6 +232,7 @@ function OKRCard({ goal, onEdit, onDelete }) {
 }
 
 function OKRsView({ user }) {
+  const { activeClientId } = useClient();
   const [objectives, setObjectives] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedQuarter, setSelectedQuarter] = useState("Q2");
@@ -246,7 +247,7 @@ function OKRsView({ user }) {
   const loadOKRs = async () => {
     setLoading(true);
     try {
-      const data = await base44.entities.Goal.filter({ client_id: user.client_id, goal_type: "okr_objective", status: "active" }, "-created_date");
+      const data = await base44.entities.Goal.filter({ client_id: activeClientId, goal_type: "okr_objective", status: "active" }, "-created_date");
       setObjectives(data);
     } catch (e) {
       console.error(e);
@@ -256,7 +257,7 @@ function OKRsView({ user }) {
   };
 
   const handleCreate = async (goalData) => {
-    const newGoal = await base44.entities.Goal.create({ ...goalData, goal_type: "okr_objective", client_id: user.client_id });
+    const newGoal = await base44.entities.Goal.create({ ...goalData, goal_type: "okr_objective", client_id: activeClientId });
     setObjectives(prev => [newGoal, ...prev]);
     setShowCreate(false);
     toast.success("Objective created");
@@ -280,7 +281,7 @@ function OKRsView({ user }) {
   const handleBulkAssign = async () => {
     setBulkAssigning(true);
     try {
-      await base44.functions.invoke("bulkAssignGoals", { client_id: user.client_id, goal_type: "okr_objective" });
+      await base44.functions.invoke("bulkAssignGoals", { client_id: activeClientId, goal_type: "okr_objective" });
       toast.success("OKR objectives bulk assigned to team members");
     } catch {
       toast.error("Failed to bulk assign OKRs");

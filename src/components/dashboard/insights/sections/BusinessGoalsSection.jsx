@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Building2, Loader2, Settings, AlertCircle } from "lucide-react";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -35,6 +36,7 @@ function GoalCard({ goal, isBenchmark }) {
 }
 
 export default function BusinessGoalsSection({ user }) {
+  const { activeClientId } = useClient();
   const [loading, setLoading]   = useState(true);
   const [goals, setGoals]       = useState([]);
   const [configured, setConfigured] = useState(false);
@@ -48,7 +50,7 @@ export default function BusinessGoalsSection({ user }) {
     setLoading(true);
     try {
       const results = await base44.entities.OrgBusinessGoal.filter({
-        client_id: user.client_id,
+        client_id: activeClientId,
         is_active: true,
       }).catch(() => []);
       if (results.length > 0) {

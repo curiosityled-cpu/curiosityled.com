@@ -7,9 +7,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Copy, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { createPageUrl } from "@/utils";
 
 export default function FormDuplicator({ form }) {
+  const { activeClientId } = useClient();
   const [duplicating, setDuplicating] = useState(false);
   const [options, setOptions] = useState({
     new_title: `${form.title} (Copy)`,
@@ -48,7 +50,7 @@ export default function FormDuplicator({ form }) {
       }
 
       const duplicatedForm = await base44.entities.CustomForm.create({
-        client_id: user.client_id,
+        client_id: activeClientId,
         title: options.new_title,
         description: form.description,
         form_type: form.form_type,

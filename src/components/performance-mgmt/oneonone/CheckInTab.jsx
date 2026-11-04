@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,6 +53,7 @@ function EnergyPicker({ value, onChange, readOnly }) {
 
 // The employee's check-in submission form
 function CheckInForm({ user, targetEmail, targetName, onSaved, weekOf, existingCheckIn, onCancel }) {
+  const { activeClientId } = useClient();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState({
@@ -92,7 +94,7 @@ function CheckInForm({ user, targetEmail, targetName, onSaved, weekOf, existingC
       // Resolve manager email: use prop, user field, or data sub-field
       const resolvedManagerEmail = user.manager_email || user.data?.manager_email || "";
       const payload = {
-        client_id: user.client_id,
+        client_id: activeClientId,
         employee_email: targetEmail,
         manager_email: resolvedManagerEmail,
         week_of: weekOf,

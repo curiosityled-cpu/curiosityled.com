@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -67,6 +68,7 @@ const getRiskLevel = (insight) => {
 };
 
 export default function ExperienceAnalyticsTab({ user, coacheeEmails, isCoachScoped }) {
+  const { activeClientId } = useClient();
   const navigate = useNavigate();
   const [plans, setPlans] = useState([]);
   const [assignments, setAssignments] = useState([]);
@@ -86,9 +88,9 @@ export default function ExperienceAnalyticsTab({ user, coacheeEmails, isCoachSco
         base44.entities.AssignedLearning.list("-created_date"),
         base44.entities.DevelopmentExperience.list("-created_date"),
         base44.entities.LearningResource.list("-created_date", 500),
-        base44.entities.User.filter({ client_id: user.client_id }),
-        base44.entities.AssessmentInsights.filter({ client_id: user.client_id, status: 'generated' }),
-        base44.entities.Assessment.filter({ client_id: user.client_id }, '-submission_ts'),
+        base44.entities.User.filter({ client_id: activeClientId }),
+        base44.entities.AssessmentInsights.filter({ client_id: activeClientId, status: 'generated' }),
+        base44.entities.Assessment.filter({ client_id: activeClientId }, '-submission_ts'),
       ]);
 
       const adminRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin', 'Partner Business Administrator'];
@@ -124,7 +126,7 @@ export default function ExperienceAnalyticsTab({ user, coacheeEmails, isCoachSco
       setAllInsights(insightsMap);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
-  }, [user.client_id, isCoachScoped, coacheeEmails]);
+  }, [activeClientId, isCoachScoped, coacheeEmails]);
 
   useEffect(() => { load(); }, [load]);
 

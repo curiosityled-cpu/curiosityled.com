@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -8,6 +9,7 @@ import { AlertTriangle, CheckCircle2, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 export default function PHIDetectionConfig({ user }) {
+  const { activeClientId } = useClient();
   const [config, setConfig] = useState({
     enabled: true,
     blockOnDetection: true,
@@ -50,7 +52,7 @@ export default function PHIDetectionConfig({ user }) {
       // Load detection statistics from ActivityLog
       const logs = await base44.entities.ActivityLog.filter({
         action_type: "PHI_DETECTION_TRIGGERED",
-        "metadata.client_id": user.client_id
+        "metadata.client_id": activeClientId
       }, '-timestamp', 100);
 
       setDetectionStats({
@@ -78,7 +80,7 @@ export default function PHIDetectionConfig({ user }) {
         initiator_user_email: user.email,
         action_type: "PHI_DETECTION_CONFIG_UPDATED",
         metadata: {
-          client_id: user.client_id,
+          client_id: activeClientId,
           new_config: config
         }
       });

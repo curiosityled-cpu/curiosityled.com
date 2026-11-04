@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -89,6 +90,7 @@ function EmployeeCalibrationRow({ employee, index, onAdjust }) {
 }
 
 export default function CalibrationView({ cycle, user }) {
+  const { activeClientId } = useClient();
   const [calibration, setCalibration] = useState(null);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
@@ -100,7 +102,7 @@ export default function CalibrationView({ cycle, user }) {
     try {
       const existing = await base44.entities.ReviewCalibration.filter({
         review_cycle_id: cycle.id,
-        client_id: user.client_id || user.data?.client_id,
+        client_id: activeClientId,
       }, "-created_date");
       if (existing.length > 0) {
         setCalibration(existing[0]);

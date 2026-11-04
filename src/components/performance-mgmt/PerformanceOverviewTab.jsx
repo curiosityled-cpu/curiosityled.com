@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ function KPICard({ label, value, sub, icon: Icon, color }) {
 }
 
 export default function PerformanceOverviewTab({ user, coacheeEmails }) {
+  const { activeClientId } = useClient();
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,7 +48,7 @@ export default function PerformanceOverviewTab({ user, coacheeEmails }) {
   const loadData = async () => {
     setLoading(true);
     try {
-      const allGoals = await base44.entities.Goal.filter({ client_id: user.client_id });
+      const allGoals = await base44.entities.Goal.filter({ client_id: activeClientId });
       // Leadership Coaches: only goals assigned to their coachees or coached by them
       const scoped = (coacheeEmails || []).length > 0;
       const visible = scoped
@@ -65,7 +67,7 @@ export default function PerformanceOverviewTab({ user, coacheeEmails }) {
 
   const handleExport = async () => {
     try {
-      const res = await base44.functions.invoke("exportGoalsAnalyticsPDF", { client_id: user.client_id });
+      const res = await base44.functions.invoke("exportGoalsAnalyticsPDF", { client_id: activeClientId });
       if (res.data?.url) window.open(res.data.url, "_blank");
       else toast.success("Export triggered");
     } catch {

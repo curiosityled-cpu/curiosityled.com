@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -85,6 +86,7 @@ function LearningItemRow({ item, onChange, onRemove }) {
 }
 
 export default function JourneyEditor({ open, onClose, onSaved, journey, user, users }) {
+  const { activeClientId } = useClient();
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
@@ -107,7 +109,7 @@ export default function JourneyEditor({ open, onClose, onSaved, journey, user, u
         status: "active",
         tags: [],
         author_email: user.email,
-        client_id: user.client_id,
+        client_id: activeClientId,
         in_content_library: false,
         target_competencies: [],
         target_date: "",
@@ -217,7 +219,7 @@ Keep it practical and specific to the title.`,
         thumbnail_url: form.thumbnail_url,
         status: form.status,
         tags: form.tags,
-        client_id: form.client_id || user.client_id,
+        client_id: form.client_id || activeClientId,
         author_email: form.author_email || user.email,
         last_modified_by: user.email,
         in_content_library: form.in_content_library || false,

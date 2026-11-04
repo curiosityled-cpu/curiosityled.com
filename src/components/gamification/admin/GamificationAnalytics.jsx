@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useClient } from "@/components/contexts/ClientContext";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -7,6 +8,7 @@ import { useAuth } from "@/components/useAuth";
 
 export default function GamificationAnalytics() {
   const { user } = useAuth();
+  const { activeClientId } = useClient();
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState("30d");
@@ -18,7 +20,7 @@ export default function GamificationAnalytics() {
   const loadAnalytics = async () => {
     try {
       const { data } = await base44.functions.invoke('getGamificationAnalytics', {
-        client_id: user.client_id,
+        client_id: activeClientId,
         date_range: dateRange
       });
       setAnalytics(data);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function GivePointsModal({ open, onOpenChange, recipientEmail = null }) {
   const { user } = useAuth();
+  const { activeClientId } = useClient();
   const [recipients, setRecipients] = useState([]);
   const [selectedRecipient, setSelectedRecipient] = useState(recipientEmail || "");
   const [pointsAmount, setPointsAmount] = useState("");
@@ -30,7 +32,7 @@ export default function GivePointsModal({ open, onOpenChange, recipientEmail = n
   const loadRecipients = async () => {
     try {
       const users = await base44.entities.User.filter({
-        client_id: user.client_id
+        client_id: activeClientId
       });
       
       setRecipients(users.filter(u => u.email !== user.email));
@@ -42,7 +44,7 @@ export default function GivePointsModal({ open, onOpenChange, recipientEmail = n
   const loadBudget = async () => {
     try {
       const settings = await base44.entities.GamificationSettings.filter({
-        client_id: user.client_id
+        client_id: activeClientId
       });
 
       if (settings.length > 0) {

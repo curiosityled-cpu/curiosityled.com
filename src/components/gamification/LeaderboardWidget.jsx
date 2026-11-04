@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useClient } from "@/components/contexts/ClientContext";
 import { motion } from "framer-motion";
 import { Trophy, Crown, Medal, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +11,7 @@ import { createPageUrl } from "@/utils";
 
 export default function LeaderboardWidget({ scope = "organization", maxDisplay = 5 }) {
   const { user } = useAuth();
+  const { activeClientId } = useClient();
   const [leaders, setLeaders] = useState([]);
   const [userRank, setUserRank] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,7 +25,7 @@ export default function LeaderboardWidget({ scope = "organization", maxDisplay =
 
     try {
       const achievements = await base44.entities.UserAchievement.filter({
-        client_id: user.client_id
+        client_id: activeClientId
       }, '-total_points', maxDisplay + 5);
 
       const leaderData = await Promise.all(

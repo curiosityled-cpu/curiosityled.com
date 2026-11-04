@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +8,7 @@ import { Shield, AlertTriangle, CheckCircle2, Users, FileText } from "lucide-rea
 import { toast } from "sonner";
 
 export default function PrivacyComplianceDashboard({ user }) {
+  const { activeClientId } = useClient();
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState({
     totalUsers: 0,
@@ -26,7 +28,7 @@ export default function PrivacyComplianceDashboard({ user }) {
 
       // Get all users in the organization
       const allUsers = await base44.entities.User.filter({
-        client_id: user.client_id
+        client_id: activeClientId
       });
 
       // Count training completion
@@ -35,13 +37,13 @@ export default function PrivacyComplianceDashboard({ user }) {
       // Get PHI detections
       const phiLogs = await base44.entities.ActivityLog.filter({
         action_type: "PHI_DETECTION_TRIGGERED",
-        "metadata.client_id": user.client_id
+        "metadata.client_id": activeClientId
       });
 
       // Get data access requests
       const dataRequests = await base44.entities.ActivityLog.filter({
         action_type: "USER_DATA_DOWNLOAD",
-        "metadata.client_id": user.client_id
+        "metadata.client_id": activeClientId
       });
 
       // Calculate compliance score

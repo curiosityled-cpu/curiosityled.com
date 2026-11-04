@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Star, Clock, Search, Plus, Pencil, Trash2 } from "lucide-react";
@@ -24,6 +25,7 @@ const STATUS_BADGE = {
 };
 
 export default function AdminExperiencesTab({ user, coacheeEmails }) {
+  const { activeClientId } = useClient();
   const scoped = (coacheeEmails || []).length > 0;
   const [experiences, setExperiences] = useState([]);
   const [users, setUsers] = useState([]);
@@ -40,7 +42,7 @@ export default function AdminExperiencesTab({ user, coacheeEmails }) {
     try {
       const [exps, allUsers] = await Promise.all([
         base44.entities.DevelopmentExperience.list('-created_date'),
-        base44.entities.User.filter({ client_id: user.client_id })
+        base44.entities.User.filter({ client_id: activeClientId })
       ]);
       if (scoped) {
         // Leadership Coaches: only experiences belonging to their coachees
@@ -54,7 +56,7 @@ export default function AdminExperiencesTab({ user, coacheeEmails }) {
       }
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
-  }, [user.client_id, coacheeEmails]);
+  }, [activeClientId, coacheeEmails]);
 
   useEffect(() => { load(); }, [load]);
 

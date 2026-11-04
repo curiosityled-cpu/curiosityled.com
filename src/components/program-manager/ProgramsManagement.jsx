@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useClient } from '@/components/contexts/ClientContext';
 import { useAuth } from '@/components/useAuth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -48,6 +49,7 @@ const STATUS_COLORS = {
 
 export default function ProgramsManagement({ onTabChange, activeSubTab, isMVPBuyer }) {
   const { user, hasPermission, isPlatformAdmin, isSuperAdmin, isHRAdmin } = useAuth();
+  const { activeClientId } = useClient();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -151,7 +153,7 @@ export default function ProgramsManagement({ onTabChange, activeSubTab, isMVPBuy
         program_manager_email: isEditing ? selectedProgram.program_manager_email : user.email,
         journey_ids: formData.journey_ids || []
       };
-      if (user.client_id) programData.client_id = user.client_id;
+      if (activeClientId) programData.client_id = activeClientId;
 
       if (isEditing) {
         await base44.entities.Program.update(selectedProgram.id, programData);

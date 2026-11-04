@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,6 +53,7 @@ import {
 
 function JourneyBuilder() {
   const { user, loading: authLoading } = useAuth();
+  const { activeClientId } = useClient();
   
   const [journey, setJourney] = useState({
     title: "",
@@ -281,7 +283,7 @@ function JourneyBuilder() {
       const journeyData = {
         ...journey,
         author_email: user.email,
-        client_id: user.client_id,
+        client_id: activeClientId,
         partner_id: user.partner_id,
         last_modified_by: user.email,
         status: 'draft',
@@ -326,7 +328,7 @@ function JourneyBuilder() {
         const journeyData = {
           ...journey,
           author_email: user.email,
-          client_id: user.client_id,
+          client_id: activeClientId,
           partner_id: user.partner_id,
           last_modified_by: user.email,
           status: 'draft',

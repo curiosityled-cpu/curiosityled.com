@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,6 +30,7 @@ function looksVague(formData) {
 
 export default function RequestSubmissionForm({ onSuccess, onSubmit, onCancel, defaultRequestType }) {
   const { user, appRole } = useAuth();
+  const { activeClientId } = useClient();
   const { openWithContext } = useAtreusChat();
   const [loading, setLoading] = useState(false);
   const [showAtreusModal, setShowAtreusModal] = useState(false);
@@ -170,7 +172,7 @@ export default function RequestSubmissionForm({ onSuccess, onSubmit, onCancel, d
         risk_level: formData.risk_level,
         risk_categories: formData.risk_categories.length > 0 ? formData.risk_categories : ["none"],
         requested_by_email: user.email,
-        ...(user.client_id && { client_id: user.client_id }),
+        ...(activeClientId && { client_id: activeClientId }),
         budget_amount: formData.budget_amount ? parseFloat(formData.budget_amount) : undefined,
         audience_size: formData.audience_size ? parseInt(formData.audience_size) : undefined,
         estimated_effort_hours: formData.estimated_effort_hours ? parseFloat(formData.estimated_effort_hours) : undefined,
@@ -189,7 +191,7 @@ export default function RequestSubmissionForm({ onSuccess, onSubmit, onCancel, d
         try {
           const { data: accessData } = await base44.functions.invoke('validateCoachingRequestAccess', {
             requester_email: user.email,
-            client_id: user.client_id,
+            client_id: activeClientId,
             request_type: 'coaching_support'
           });
           if (accessData?.allowed === false) {

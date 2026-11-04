@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useClient } from "@/components/contexts/ClientContext";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { useAuth } from "@/components/useAuth";
 
 export default function AIGamificationAssistant() {
   const { user } = useAuth();
+  const { activeClientId } = useClient();
   const [generating, setGenerating] = useState(false);
   const [optimizing, setOptimizing] = useState(false);
   const [formData, setFormData] = useState({
@@ -43,7 +45,7 @@ export default function AIGamificationAssistant() {
     setOptimizing(true);
     try {
       const { data } = await base44.functions.invoke('aiOptimizeGamification', {
-        client_id: user.client_id
+        client_id: activeClientId
       });
       setOptimization(data.optimization);
       toast.success("Optimization analysis complete");

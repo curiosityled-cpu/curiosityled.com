@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,6 +88,7 @@ function AssignDialog({ open, onClose, journey, users, onAssigned }) {
 }
 
 export default function JourneysTab({ user, coacheeEmails }) {
+  const { activeClientId } = useClient();
   const [journeys, setJourneys] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -102,7 +104,7 @@ export default function JourneysTab({ user, coacheeEmails }) {
     try {
       const [allJourneys, allUsers] = await Promise.all([
         base44.entities.Journey.list("-created_date"),
-        base44.entities.User.filter({ client_id: user.client_id }),
+        base44.entities.User.filter({ client_id: activeClientId }),
       ]);
       setJourneys(allJourneys);
       setUsers(allUsers);
@@ -112,7 +114,7 @@ export default function JourneysTab({ user, coacheeEmails }) {
     } finally {
       setLoading(false);
     }
-  }, [user.client_id]);
+  }, [activeClientId]);
 
   useEffect(() => { load(); }, [load]);
 

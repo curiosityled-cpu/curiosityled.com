@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useClient } from '@/components/contexts/ClientContext';
 import { useAuth } from '@/components/useAuth';
 
 const CompetencyContext = createContext(null);
 
 export const CompetencyProvider = ({ children }) => {
   const { user } = useAuth();
+  const { activeClientId } = useClient();
   const [allCompetencies, setAllCompetencies] = useState([]);
   const [selectedCompetencies, setSelectedCompetencies] = useState([]);
   const [competenciesConfigured, setCompetenciesConfigured] = useState(false);
@@ -20,7 +22,7 @@ export const CompetencyProvider = ({ children }) => {
 
     try {
       // Check cache first (10 minute TTL for competencies since they change rarely)
-      const cacheKey = `competencies_${user.client_id || 'platform'}`;
+      const cacheKey = `competencies_${activeClientId || 'platform'}`;
       if (force) {
         sessionStorage.removeItem(cacheKey);
         sessionStorage.removeItem(`${cacheKey}_timestamp`);
@@ -52,8 +54,8 @@ export const CompetencyProvider = ({ children }) => {
       let configured = false;
 
       // Load client's selected competencies if user has client_id
-      if (user.client_id) {
-        const clients = await base44.entities.Client.filter({ id: user.client_id });
+      if (activeClientId) {
+        const clients = await base44.entities.Client.filter({ id: activeClientId });
         if (clients.length > 0) {
           clientData = clients[0];
           setClient(clientData);

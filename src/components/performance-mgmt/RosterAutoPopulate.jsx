@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,7 @@ import { toast } from "sonner";
  * - Peers are same-department colleagues (optional, can be refined)
  */
 export default function RosterAutoPopulate({ isOpen, onClose, cycle, user, onPopulated }) {
+  const { activeClientId } = useClient();
   const [loading, setLoading] = useState(true);
   const [populating, setPopulating] = useState(false);
   const [users, setUsers] = useState([]);
@@ -29,7 +31,7 @@ export default function RosterAutoPopulate({ isOpen, onClose, cycle, user, onPop
   const [preview, setPreview] = useState([]);
   const [includePeers, setIncludePeers] = useState(false);
 
-  const clientId = user.client_id || user.data?.client_id;
+  const clientId = activeClientId;
 
   useEffect(() => {
     if (isOpen) loadUsers();

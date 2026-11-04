@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -8,6 +9,7 @@ import { motion } from "framer-motion";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 export default function SuperAdminAnalytics({ user }) {
+  const { activeClientId } = useClient();
   const [loading, setLoading] = useState(true);
   const [orgGoals, setOrgGoals] = useState([]);
   const [orgItems, setOrgItems] = useState([]);
@@ -21,7 +23,7 @@ export default function SuperAdminAnalytics({ user }) {
     setLoading(true);
     try {
       const [goalsData, itemsData, okrsData] = await Promise.all([
-        base44.entities.Goal.filter({ client_id: user.client_id }, "-updated_date"),
+        base44.entities.Goal.filter({ client_id: activeClientId }, "-updated_date"),
         base44.entities.Item.list("-updated_date"),
         base44.entities.OKR.list("-updated_date")
       ]);

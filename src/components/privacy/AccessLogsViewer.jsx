@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 
 export default function AccessLogsViewer({ user, canViewOthers = false }) {
+  const { activeClientId } = useClient();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchEmail, setSearchEmail] = useState("");
@@ -38,7 +40,7 @@ export default function AccessLogsViewer({ user, canViewOthers = false }) {
       let query = {};
       if (canViewOthers) {
         // Admins can see all logs for their org
-        query = { "metadata.client_id": user.client_id };
+        query = { "metadata.client_id": activeClientId };
       } else {
         // Regular users see only their own access logs
         query = { 

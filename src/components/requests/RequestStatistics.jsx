@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { useAuth } from "@/components/useAuth";
 
 export default function RequestStatistics({ clientId, refreshTrigger }) {
   const { user } = useAuth();
+  const { activeClientId } = useClient();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -14,7 +16,7 @@ export default function RequestStatistics({ clientId, refreshTrigger }) {
   const loadStatistics = async () => {
     try {
       const { data } = await base44.functions.invoke('getRequestAnalytics', {
-        client_id: clientId || user.client_id
+        client_id: clientId || activeClientId
       });
       setStats(data.summary);
     } catch (error) {

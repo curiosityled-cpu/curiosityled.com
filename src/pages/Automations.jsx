@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/components/useAuth";
+import { useClient } from "@/components/contexts/ClientContext";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ import ManualAutomationEditor from "@/components/automations/ManualAutomationEdi
 
 export default function Automations({ embedded = false }) {
   const { user, loading, appRole, hasPermission } = useAuth();
+  const { activeClientId } = useClient();
   const [automations, setAutomations] = useState([]);
   const [loadingAutomations, setLoadingAutomations] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -137,7 +139,7 @@ export default function Automations({ embedded = false }) {
           trigger_config: generatedLogic.trigger_config || {},
           actions: generatedLogic.actions || [],
           ai_generated_logic: generatedLogic,
-          client_id: user.client_id
+          client_id: activeClientId
         });
         toast.success('Automation created successfully!');
       }
@@ -162,7 +164,7 @@ export default function Automations({ embedded = false }) {
         await base44.entities.Automation.create({
           ...formData,
           status: 'draft',
-          client_id: user.client_id
+          client_id: activeClientId
         });
         toast.success('Automation created successfully!');
       }

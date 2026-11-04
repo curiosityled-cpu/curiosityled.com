@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useClient } from "@/components/contexts/ClientContext";
 import { motion } from "framer-motion";
 import { Trophy, TrendingUp, Zap } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,6 +11,7 @@ import { useOrgSettings } from "@/lib/orgSettings";
 
 export default function PointsDisplay({ compact = false, showLevel = false }) {
   const { user } = useAuth();
+  const { activeClientId } = useClient();
   const organization = useOrgSettings();
   const gamificationEnabled = organization.gamification.enabled;
   const [achievement, setAchievement] = useState(null);
@@ -34,7 +36,7 @@ export default function PointsDisplay({ compact = false, showLevel = false }) {
         // Create initial achievement record
         const newAchievement = await base44.entities.UserAchievement.create({
           user_email: user.email,
-          client_id: user.client_id,
+          client_id: activeClientId,
           total_points: 0,
           current_level: 1,
           points_to_next_level: 500

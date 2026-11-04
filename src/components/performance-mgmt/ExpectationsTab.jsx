@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,7 @@ const EVIDENCE_TYPE_STYLES = {
 };
 
 function EvidenceListSection({ user }) {
+  const { activeClientId } = useClient();
   const [goals, setGoals] = useState([]);
   const [kpis, setKpis] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,8 +34,8 @@ function EvidenceListSection({ user }) {
     setLoading(true);
     try {
       const [goalData, kpiData] = await Promise.all([
-        base44.entities.Goal.filter({ client_id: user.client_id, status: "active" }, "-created_date", 50),
-        base44.entities.KPI.filter({ client_id: user.client_id, status: "active" }, "-created_date", 30),
+        base44.entities.Goal.filter({ client_id: activeClientId, status: "active" }, "-created_date", 50),
+        base44.entities.KPI.filter({ client_id: activeClientId, status: "active" }, "-created_date", 30),
       ]);
       setGoals(goalData);
       setKpis(kpiData);

@@ -30,7 +30,7 @@ import { motion } from "framer-motion";
 
 export default function Billing({ embedded = false }) {
   const { user, isSuperAdmin, isPlatformAdmin, loading: authLoading } = useAuth();
-  const { client } = useClient();
+  const { client, activeClientId } = useClient();
   const [loading, setLoading] = useState(true);
   const [plans, setPlans] = useState([]);
   const [subscription, setSubscription] = useState(null);
@@ -77,15 +77,15 @@ export default function Billing({ embedded = false }) {
         // Super Admin: Get users in their client only via backend function
         const { data: usersData } = await base44.functions.invoke('listAllUsers');
         const users = usersData.users || [];
-        const clientUsers = users.filter(u => u.client_id === user.client_id);
+        const clientUsers = users.filter(u => u.client_id === activeClientId);
         setAllUsers(clientUsers);
         setSelectedUser(null); // Super admin directly manages their client's billing, not a specific user's.
 
-        if (user.client_id) {
+        if (activeClientId) {
           try {
             // Fetch client subscription
             const { data: subData } = await base44.functions.invoke('stripeGetClientSubscription', {
-              client_id: user.client_id
+              client_id: activeClientId
             });
             setSubscription(subData.subscription);
           } catch (error) {
@@ -96,7 +96,7 @@ export default function Billing({ embedded = false }) {
           try {
             // Fetch client invoices
             const { data: invoicesData } = await base44.functions.invoke('stripeGetClientInvoices', {
-              client_id: user.client_id
+              client_id: activeClientId
             });
             setInvoices(invoicesData.invoices || []);
           } catch (error) {
@@ -185,11 +185,11 @@ export default function Billing({ embedded = false }) {
       targetUserId = selectedUser.id;
       targetClientId = selectedUser.client_id;
     } else if (isSuperAdmin) {
-      targetClientId = user.client_id;
+      targetClientId = activeClientId;
       targetUserId = user.id; 
     } else {
       targetUserId = user.id;
-      targetClientId = user.client_id;
+      targetClientId = activeClientId;
     }
     
     if (!targetUserId && !targetClientId) {
@@ -231,11 +231,11 @@ export default function Billing({ embedded = false }) {
       targetUserId = selectedUser.id;
       targetClientId = selectedUser.client_id;
     } else if (isSuperAdmin) {
-      targetClientId = user.client_id;
+      targetClientId = activeClientId;
       targetUserId = user.id;
     } else {
       targetUserId = user.id;
-      targetClientId = user.client_id;
+      targetClientId = activeClientId;
     }
     
     if (!targetUserId && !targetClientId) {
@@ -265,12 +265,12 @@ export default function Billing({ embedded = false }) {
       targetClientId = selectedUser.client_id;
       targetName = selectedUser.full_name;
     } else if (isSuperAdmin) {
-      targetClientId = user.client_id;
+      targetClientId = activeClientId;
       targetUserId = user.id;
       targetName = client?.name || 'your organization';
     } else {
       targetUserId = user.id;
-      targetClientId = user.client_id;
+      targetClientId = activeClientId;
       targetName = 'your';
     }
     

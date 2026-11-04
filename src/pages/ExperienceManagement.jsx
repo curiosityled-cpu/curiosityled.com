@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -61,6 +62,7 @@ const COACH_TABS = (isConsultant) => [
 
 export default function ExperienceManagement() {
   const { user, hasPermission, loading: authLoading } = useAuth();
+  const { activeClientId } = useClient();
   const { isCoachScoped, coacheeEmails } = useCoachCoacheeScope(user);
   const isConsultant = user?.app_role === 'Consultant';
   const [section, setSection] = useState(isCoachScoped ? "experiences" : "analytics");
@@ -317,7 +319,7 @@ export default function ExperienceManagement() {
               <RequestSettingsDialog
                 open={showRequestSettings}
                 onOpenChange={setShowRequestSettings}
-                clientId={user.client_id}
+                clientId={activeClientId}
               />
             )}
           </Suspense>

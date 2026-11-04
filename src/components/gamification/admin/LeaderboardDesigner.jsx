@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import { useAuth } from "@/components/useAuth";
 
 export default function LeaderboardDesigner() {
   const { user } = useAuth();
+  const { activeClientId } = useClient();
   const [leaderboards, setLeaderboards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingBoard, setEditingBoard] = useState(null);
@@ -32,7 +34,7 @@ export default function LeaderboardDesigner() {
   const loadLeaderboards = async () => {
     try {
       const boards = await base44.entities.LeaderboardTemplate.filter({
-        client_id: user.client_id
+        client_id: activeClientId
       });
       setLeaderboards(boards);
     } catch (error) {
@@ -51,7 +53,7 @@ export default function LeaderboardDesigner() {
       } else {
         await base44.entities.LeaderboardTemplate.create({
           ...formData,
-          client_id: user.client_id
+          client_id: activeClientId
         });
         toast.success("Leaderboard created successfully");
       }

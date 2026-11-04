@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { useAuth } from "@/components/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ import Breadcrumbs from "@/components/common/Breadcrumbs";
 
 function FormBuilderDashboard() {
   const { user } = useAuth();
+  const { activeClientId } = useClient();
   const [loading, setLoading] = useState(true);
   const [forms, setForms] = useState([]);
   const [templates, setTemplates] = useState([]);
@@ -51,7 +53,7 @@ function FormBuilderDashboard() {
     setLoading(true);
     try {
       const [formsData, templatesData] = await Promise.all([
-        base44.entities.CustomForm.filter({ client_id: user.client_id }),
+        base44.entities.CustomForm.filter({ client_id: activeClientId }),
         base44.entities.CustomFormTemplate.filter({})
       ]);
       setForms(formsData);

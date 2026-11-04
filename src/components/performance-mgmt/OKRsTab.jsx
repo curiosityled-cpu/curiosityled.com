@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -96,6 +97,7 @@ function OKRCard({ goal, onEdit, onDelete }) {
 }
 
 export default function OKRsTab({ user }) {
+  const { activeClientId } = useClient();
   const [objectives, setObjectives] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedQuarter, setSelectedQuarter] = useState("Q2");
@@ -110,7 +112,7 @@ export default function OKRsTab({ user }) {
     setLoading(true);
     try {
       const data = await base44.entities.Goal.filter({
-        client_id: user.client_id,
+        client_id: activeClientId,
         goal_type: "okr_objective",
         status: "active",
       }, "-created_date");
@@ -126,7 +128,7 @@ export default function OKRsTab({ user }) {
     const newGoal = await base44.entities.Goal.create({
       ...goalData,
       goal_type: "okr_objective",
-      client_id: user.client_id,
+      client_id: activeClientId,
     });
     setObjectives(prev => [newGoal, ...prev]);
     setShowCreate(false);

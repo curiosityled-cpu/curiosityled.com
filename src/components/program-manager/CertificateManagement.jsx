@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useClient } from '@/components/contexts/ClientContext';
 import { useAuth } from '@/components/useAuth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ const STATUS_COLORS = {
 
 export default function CertificateManagement() {
   const { user, hasPermission } = useAuth();
+  const { activeClientId } = useClient();
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -94,7 +96,7 @@ export default function CertificateManagement() {
     try {
       const certificate = {
         ...formData,
-        client_id: user.client_id,
+        client_id: activeClientId,
         issued_by_email: user.email,
         issued_by_name: user.full_name,
         issued_date: new Date().toISOString(),

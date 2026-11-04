@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -80,6 +81,7 @@ function AssignLearningDialog({ open, onClose, users, onAssigned, adminEmail }) 
 }
 
 export default function AdminLearningTab({ user }) {
+  const { activeClientId } = useClient();
   const [assignments, setAssignments] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -93,7 +95,7 @@ export default function AdminLearningTab({ user }) {
     try {
       const [allAssignments, allUsers] = await Promise.all([
         base44.entities.AssignedLearning.list('-created_date'),
-        base44.entities.User.filter({ client_id: user.client_id })
+        base44.entities.User.filter({ client_id: activeClientId })
       ]);
       const adminRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin', 'Partner Business Administrator'];
       const adminEmails = new Set(allUsers.filter(u => adminRoles.includes(u.app_role)).map(u => u.email));
@@ -101,7 +103,7 @@ export default function AdminLearningTab({ user }) {
       setUsers(allUsers);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
-  }, [user.client_id]);
+  }, [activeClientId]);
 
   useEffect(() => { load(); }, [load]);
 

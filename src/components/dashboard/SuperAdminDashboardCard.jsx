@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,7 @@ import { motion } from "framer-motion";
 import { useClient } from "@/components/contexts/ClientContext";
 
 export default function SuperAdminDashboardCard({ user }) {
-  const { client } = useClient();
+  const { client, activeClientId } = useClient();
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalPrograms: 0,
@@ -35,7 +34,7 @@ export default function SuperAdminDashboardCard({ user }) {
         // Get users via backend function
         const { data: usersData } = await base44.functions.invoke('listAllUsers');
         const allUsers = usersData.users || [];
-        const clientUsers = allUsers.filter(u => u.client_id === user.client_id);
+        const clientUsers = allUsers.filter(u => u.client_id === activeClientId);
         
         // Get assessments for users in this client
         const clientEmails = clientUsers.map(u => u.email);
@@ -45,7 +44,7 @@ export default function SuperAdminDashboardCard({ user }) {
         // Get cohorts/programs for this client via backend
         const { data: cohortsData } = await base44.functions.invoke('listCohorts');
         const allCohorts = cohortsData.cohorts || [];
-        const clientCohorts = allCohorts.filter(c => c.client_id === user.client_id);
+        const clientCohorts = allCohorts.filter(c => c.client_id === activeClientId);
 
         setStats({
           totalUsers: clientUsers.length,

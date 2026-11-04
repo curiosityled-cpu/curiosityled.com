@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, R
 import { toast } from "sonner";
 
 export default function AnalystAnalytics({ user }) {
+  const { activeClientId } = useClient();
   const [loading, setLoading] = useState(true);
   const [orgGoals, setOrgGoals] = useState([]);
   const [orgItems, setOrgItems] = useState([]);
@@ -23,7 +24,7 @@ export default function AnalystAnalytics({ user }) {
     setLoading(true);
     try {
       const [goalsData, itemsData] = await Promise.all([
-        base44.entities.Goal.filter({ client_id: user.client_id }, "-updated_date"),
+        base44.entities.Goal.filter({ client_id: activeClientId }, "-updated_date"),
         base44.entities.Item.list("-updated_date")
       ]);
 

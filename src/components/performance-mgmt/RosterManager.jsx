@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -250,6 +251,7 @@ function CSVUploadModal({ isOpen, onClose, cycleId, clientId, onUploaded }) {
 }
 
 export default function RosterManager({ cycle, user, onRosterUpdated }) {
+  const { activeClientId } = useClient();
   const [roster, setRoster] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -384,8 +386,8 @@ export default function RosterManager({ cycle, user, onRosterUpdated }) {
         </div>
       )}
 
-      {showAdd && <AddParticipantModal isOpen={showAdd} onClose={() => setShowAdd(false)} cycleId={cycle.id} cycle={cycle} clientId={user.client_id || user.data?.client_id} onAdded={loadRoster} />}
-      {showCSV && <CSVUploadModal isOpen={showCSV} onClose={() => setShowCSV(false)} cycleId={cycle.id} clientId={user.client_id || user.data?.client_id} onUploaded={loadRoster} />}
+      {showAdd && <AddParticipantModal isOpen={showAdd} onClose={() => setShowAdd(false)} cycleId={cycle.id} cycle={cycle} clientId={activeClientId} onAdded={loadRoster} />}
+      {showCSV && <CSVUploadModal isOpen={showCSV} onClose={() => setShowCSV(false)} cycleId={cycle.id} clientId={activeClientId} onUploaded={loadRoster} />}
       {showAutoPopulate && <RosterAutoPopulate isOpen={showAutoPopulate} onClose={() => setShowAutoPopulate(false)} cycle={cycle} user={user} onPopulated={loadRoster} />}
     </div>
   );

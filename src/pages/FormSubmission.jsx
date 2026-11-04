@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useClient } from "@/components/contexts/ClientContext";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/components/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +18,7 @@ export default function FormSubmission() {
   const [searchParams] = useSearchParams();
   const formId = searchParams.get("formId");
   const { user } = useAuth();
+  const { activeClientId } = useClient();
   
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -122,7 +124,7 @@ export default function FormSubmission() {
       const completionTime = Math.floor((Date.now() - startTime) / 1000);
 
       const submission = {
-        client_id: user.client_id,
+        client_id: activeClientId,
         form_id: formId,
         form_version: form.version,
         form_snapshot: form.config,

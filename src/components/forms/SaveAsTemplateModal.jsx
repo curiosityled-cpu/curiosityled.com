@@ -10,10 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { toast } from "sonner";
 import { Loader2, Save } from "lucide-react";
 
 export default function SaveAsTemplateModal({ form, open, onClose, onSaved }) {
+  const { activeClientId } = useClient();
   const [saving, setSaving] = useState(false);
   const [templateData, setTemplateData] = useState({
     title: `${form.title} Template`,
@@ -32,7 +34,7 @@ export default function SaveAsTemplateModal({ form, open, onClose, onSaved }) {
       const user = await base44.auth.me();
       
       const template = {
-        client_id: user.client_id,
+        client_id: activeClientId,
         is_platform_default: false,
         title: templateData.title,
         description: templateData.description,

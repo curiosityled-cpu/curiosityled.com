@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +52,7 @@ function CommitmentRow({ commitment, onChange, onRemove }) {
 }
 
 export default function MeetingRecordModal({ isOpen, onClose, session, user, onSaved }) {
+  const { activeClientId } = useClient();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [existing, setExisting] = useState(null);
@@ -124,7 +126,7 @@ export default function MeetingRecordModal({ isOpen, onClose, session, user, onS
     const empEmail = session.coachee_email || session.participant_email;
     try {
       const payload = {
-        client_id: user.client_id,
+        client_id: activeClientId,
         manager_email: session.coach_email || user.email,
         employee_email: empEmail,
         meeting_date: format(new Date(session.session_date), "yyyy-MM-dd"),

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useClient } from "@/components/contexts/ClientContext";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { useAuth } from "@/components/useAuth";
 
 export default function LevelConfigurator() {
   const { user } = useAuth();
+  const { activeClientId } = useClient();
   const [levels, setLevels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingLevel, setEditingLevel] = useState(null);
@@ -30,7 +32,7 @@ export default function LevelConfigurator() {
   const loadLevels = async () => {
     try {
       const allLevels = await base44.entities.GamificationLevel.filter(
-        { client_id: user.client_id },
+        { client_id: activeClientId },
         'level_order'
       );
       setLevels(allLevels);

@@ -1,19 +1,21 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Users, Target, TrendingUp, CheckCircle2, Clock } from "lucide-react";
 import ManagerActionCenter from "./ManagerActionCenter";
 
 export default function TeamCockpit({ user }) {
+  const { activeClientId } = useClient();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const loadStats = useCallback(async () => {
     setLoading(true);
     try {
-      const goals = await base44.entities.Goal.filter({ client_id: user.client_id, status: "active" }, "-created_date", 500);
-      const kpis = await base44.entities.KPI.filter({ client_id: user.client_id, status: "active" }, "-created_date", 200);
+      const goals = await base44.entities.Goal.filter({ client_id: activeClientId, status: "active" }, "-created_date", 500);
+      const kpis = await base44.entities.KPI.filter({ client_id: activeClientId, status: "active" }, "-created_date", 200);
 
       const totalGoals = goals.length;
       const completedGoals = goals.filter(g => g.progress >= 100).length;

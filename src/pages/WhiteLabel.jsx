@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useBranding } from "@/components/useBranding";
+import { useClient } from "@/components/contexts/ClientContext";
 import { withAuthProtection } from "@/components/hoc/withAuthProtection";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ import { useAuth } from "@/components/useAuth";
 function WhiteLabel({ embedded = false }) {
   const location = useLocation();
   const { user, isPlatformAdmin, isSuperAdmin, isPartnerBusinessAdmin } = useAuth();
+  const { activeClientId } = useClient();
   const { branding } = useBranding();
   const [localBranding, setLocalBranding] = useState(branding || {});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -72,7 +74,7 @@ function WhiteLabel({ embedded = false }) {
             console.error('Error loading client:', error);
             toast.error('Failed to load client information');
           }
-        } else if (isSuperAdmin && user.client_id === clientId) {
+        } else if (isSuperAdmin && activeClientId === clientId) {
           try {
             const { data } = await base44.functions.invoke('listClients');
             const client = data.clients?.find(c => c.id === clientId);
@@ -147,15 +149,15 @@ function WhiteLabel({ embedded = false }) {
         if (isPlatformAdmin) {
           setEditingMode('platform');
           await loadEntityBranding('platform', null);
-        } else if (isSuperAdmin && user.client_id) {
+        } else if (isSuperAdmin && activeClientId) {
           try {
             const { data } = await base44.functions.invoke('listClients');
-            const client = data.clients?.find(c => c.id === user.client_id);
+            const client = data.clients?.find(c => c.id === activeClientId);
             if (client) {
               setTargetClient(client);
-              setTargetClientId(user.client_id);
+              setTargetClientId(activeClientId);
               setEditingMode('client');
-              await loadEntityBranding('client', user.client_id);
+              await loadEntityBranding('client', activeClientId);
             }
           } catch (error) {
             console.error('Error loading client:', error);

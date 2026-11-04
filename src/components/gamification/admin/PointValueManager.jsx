@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useClient } from "@/components/contexts/ClientContext";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { useAuth } from "@/components/useAuth";
 
 export default function PointValueManager() {
   const { user } = useAuth();
+  const { activeClientId } = useClient();
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activityPoints, setActivityPoints] = useState({
@@ -31,7 +33,7 @@ export default function PointValueManager() {
   const loadSettings = async () => {
     try {
       const allSettings = await base44.entities.GamificationSettings.filter({
-        client_id: user.client_id
+        client_id: activeClientId
       });
       
       if (allSettings.length > 0) {

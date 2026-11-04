@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useClient } from "@/components/contexts/ClientContext";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -208,6 +209,7 @@ function LoadingSkeleton() {
 
 export default function ExperienceOverview() {
   const { user } = useAuth();
+  const { activeClientId } = useClient();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [showAssignDialog, setShowAssignDialog] = useState(false);
@@ -216,7 +218,7 @@ export default function ExperienceOverview() {
   const { data: managers = [], isLoading: loadingManagers } = useQuery({
     queryKey: ['managers', user?.client_id],
     queryFn: async () => base44.entities.User.filter({
-      client_id: user.client_id,
+      client_id: activeClientId,
       app_role: { $in: ['User Level 1', 'User Level 2'] }
     }),
     enabled: !!user?.client_id,
@@ -227,7 +229,7 @@ export default function ExperienceOverview() {
     queryKey: ['all-insights', user?.client_id],
     queryFn: async () => {
       const insights = await base44.entities.AssessmentInsights.filter({
-        client_id: user.client_id,
+        client_id: activeClientId,
         status: 'generated'
       });
       return insights.reduce((acc, i) => { acc[i.user_email] = i; return acc; }, {});

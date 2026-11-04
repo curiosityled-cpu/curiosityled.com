@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { useAuth } from "@/components/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +40,7 @@ import { motion } from "framer-motion";
 const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
 
 export default function CareerPathAnalytics({ scope = 'org' }) {
+  const { activeClientId } = useClient();
   const { 
     user, 
     isPlatformAdmin, 
@@ -99,8 +101,8 @@ export default function CareerPathAnalytics({ scope = 'org' }) {
       } else if (scope === 'org' && !isPlatformAdmin && !isPartnerBusinessAdmin) {
         // Filter to client's data
         if (user?.client_id) {
-          filteredPaths = pathsData.filter(p => !p.client_id || p.client_id === user.client_id || p.is_platform_default);
-          filteredUsers = usersData.filter(u => u.client_id === user.client_id);
+          filteredPaths = pathsData.filter(p => !p.client_id || p.client_id === activeClientId || p.is_platform_default);
+          filteredUsers = usersData.filter(u => u.client_id === activeClientId);
         }
       }
 

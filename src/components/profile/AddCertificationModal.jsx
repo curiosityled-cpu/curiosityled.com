@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +10,7 @@ import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
 export default function AddCertificationModal({ open, onClose, onSuccess, user }) {
+  const { activeClientId } = useClient();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -35,7 +37,7 @@ export default function AddCertificationModal({ open, onClose, onSuccess, user }
       // Create certification record
       await base44.entities.Certification.create({
         user_email: user.email,
-        client_id: user.client_id,
+        client_id: activeClientId,
         name: formData.name,
         issuing_body: formData.issuing_body,
         issue_date: formData.issue_date,

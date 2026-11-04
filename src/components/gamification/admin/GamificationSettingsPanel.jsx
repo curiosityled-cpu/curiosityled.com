@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useClient } from "@/components/contexts/ClientContext";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { useAuth } from "@/components/useAuth";
 
 export default function GamificationSettingsPanel() {
   const { user } = useAuth();
+  const { activeClientId } = useClient();
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState({
     peer_point_budget_weekly: 100,
@@ -29,7 +31,7 @@ export default function GamificationSettingsPanel() {
   const loadSettings = async () => {
     try {
       const allSettings = await base44.entities.GamificationSettings.filter({
-        client_id: user.client_id
+        client_id: activeClientId
       });
       
       if (allSettings.length > 0) {

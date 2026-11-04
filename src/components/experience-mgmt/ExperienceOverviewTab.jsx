@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -209,24 +210,25 @@ function ManagerAdminRow({ manager, insight, onManage }) {
 }
 
 export default function ExperienceOverviewTab({ user }) {
+  const { activeClientId } = useClient();
   const [search, setSearch] = useState('');
   const [expandedCategory, setExpandedCategory] = useState(null);
   const [managingUser, setManagingUser] = useState(null);
 
   const { data: managers = [], isLoading: loadingManagers } = useQuery({
-    queryKey: ['exp-mgmt-managers', user?.client_id],
-    queryFn: () => base44.entities.User.filter({ client_id: user.client_id }),
-    enabled: !!user?.client_id,
+    queryKey: ['exp-mgmt-managers', activeClientId],
+    queryFn: () => base44.entities.User.filter({ client_id: activeClientId }),
+    enabled: !!activeClientId,
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: allInsights = {}, isLoading: loadingInsights } = useQuery({
-    queryKey: ['exp-mgmt-insights', user?.client_id],
+    queryKey: ['exp-mgmt-insights', activeClientId],
     queryFn: async () => {
-      const insights = await base44.entities.AssessmentInsights.filter({ client_id: user.client_id, status: 'generated' });
+      const insights = await base44.entities.AssessmentInsights.filter({ client_id: activeClientId, status: 'generated' });
       return insights.reduce((acc, i) => { acc[i.user_email] = i; return acc; }, {});
     },
-    enabled: !!user?.client_id,
+    enabled: !!activeClientId,
     staleTime: 5 * 60 * 1000,
   });
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ export default function AwardPointsToTeamModal({
   onSuccess 
 }) {
   const { user } = useAuth();
+  const { activeClientId } = useClient();
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [pointsAmount, setPointsAmount] = useState("");
   const [reason, setReason] = useState("");
@@ -37,7 +39,7 @@ export default function AwardPointsToTeamModal({
   const loadBudget = async () => {
     try {
       const settings = await base44.entities.GamificationSettings.filter({
-        client_id: user.client_id
+        client_id: activeClientId
       });
 
       if (settings.length > 0) {

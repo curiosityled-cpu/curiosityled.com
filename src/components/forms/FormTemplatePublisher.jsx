@@ -8,8 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Upload, Image as ImageIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 
 export default function FormTemplatePublisher({ form, onPublish }) {
+  const { activeClientId } = useClient();
   const [publishing, setPublishing] = useState(false);
   const [templateData, setTemplateData] = useState({
     title: form.title,
@@ -63,7 +65,7 @@ export default function FormTemplatePublisher({ form, onPublish }) {
       const user = await base44.auth.me();
 
       const template = await base44.entities.CustomFormTemplate.create({
-        client_id: user.client_id,
+        client_id: activeClientId,
         is_platform_default: false,
         title: templateData.title,
         description: templateData.description,

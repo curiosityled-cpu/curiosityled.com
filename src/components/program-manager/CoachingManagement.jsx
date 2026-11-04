@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useClient } from '@/components/contexts/ClientContext';
 import { useAuth } from '@/components/useAuth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -54,6 +55,7 @@ const RISK_COLORS = {
 
 export default function CoachingManagement() {
   const { user, hasPermission } = useAuth();
+  const { activeClientId } = useClient();
   const organization = useOrgSettings();
   const coachingDefaults = organization.coaching;
   // Only the engagement types the organization has switched on are offered
@@ -121,7 +123,7 @@ export default function CoachingManagement() {
     try {
       await base44.entities.CoachingEngagement.create({
         ...engagementForm,
-        client_id: user.client_id,
+        client_id: activeClientId,
         coach_email: user.email,
         sessions_completed: 0,
         overall_progress: 0
@@ -141,7 +143,7 @@ export default function CoachingManagement() {
     try {
       await base44.entities.CoachingSession.create({
         ...sessionForm,
-        client_id: user.client_id,
+        client_id: activeClientId,
         coach_email: user.email
       });
       setShowSessionModal(false);

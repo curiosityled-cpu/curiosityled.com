@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useClient } from "@/components/contexts/ClientContext";
 import { motion } from "framer-motion";
 import { Trophy, Crown, Medal, Award, Download, Filter } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +12,7 @@ import { toast } from "sonner";
 
 export default function FullLeaderboard() {
   const { user } = useAuth();
+  const { activeClientId } = useClient();
   const [leaders, setLeaders] = useState([]);
   const [timeFilter, setTimeFilter] = useState("all_time");
   const [scopeFilter, setScopeFilter] = useState("organization");
@@ -30,7 +32,7 @@ export default function FullLeaderboard() {
       const skip = (page - 1) * pageSize;
       
       const achievements = await base44.entities.UserAchievement.filter({
-        client_id: user.client_id
+        client_id: activeClientId
       }, '-total_points', pageSize, skip);
 
       const leaderData = await Promise.all(

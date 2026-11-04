@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,6 +24,7 @@ export default function CohortCreationModal({ open, onClose, onSuccess }) {
   const [submitting, setSubmitting] = useState(false);
   const [usersLoading, setUsersLoading] = useState(false);
   const { user } = useAuth();
+  const { activeClientId } = useClient();
 
   useEffect(() => {
     if (open) {
@@ -85,7 +87,7 @@ export default function CohortCreationModal({ open, onClose, onSuccess }) {
         end_date: formData.end_date,
         participant_emails: formData.participant_emails,
         manager_email: user.email,
-        client_id: user.client_id,
+        client_id: activeClientId,
         status: 'active'
       };
       await base44.entities.Cohort.create(cohortData);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useClient } from "@/components/contexts/ClientContext";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { useAuth } from "@/components/useAuth";
 
 export default function CompetitionCreator() {
   const { user } = useAuth();
+  const { activeClientId } = useClient();
   const [competitions, setCompetitions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
@@ -31,7 +33,7 @@ export default function CompetitionCreator() {
   const loadCompetitions = async () => {
     try {
       const allCompetitions = await base44.entities.Competition.filter({
-        client_id: user.client_id
+        client_id: activeClientId
       }, '-start_date');
       setCompetitions(allCompetitions);
     } catch (error) {

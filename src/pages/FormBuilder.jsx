@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useClient } from "@/components/contexts/ClientContext";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/components/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,6 +60,7 @@ function FormBuilder() {
   const formId = searchParams.get("formId");
   const templateId = searchParams.get("templateId");
   const { user } = useAuth();
+  const { activeClientId } = useClient();
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -170,7 +172,7 @@ function FormBuilder() {
     try {
       const dataToSave = {
         ...formData,
-        client_id: user.client_id
+        client_id: activeClientId
       };
 
       if (formId) {
@@ -206,7 +208,7 @@ function FormBuilder() {
     try {
       const dataToSave = {
         ...formData,
-        client_id: user.client_id,
+        client_id: activeClientId,
         status: "published"
       };
 

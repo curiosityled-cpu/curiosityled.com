@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useClient } from '@/components/contexts/ClientContext';
 import { useAuth } from '@/components/useAuth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,7 @@ const STATUS_COLORS = {
 
 export default function ClassManagement({ programId = null, cohortId = null }) {
   const { user, hasPermission } = useAuth();
+  const { activeClientId } = useClient();
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -81,7 +83,7 @@ export default function ClassManagement({ programId = null, cohortId = null }) {
     try {
       const newClass = {
         ...formData,
-        client_id: user.client_id,
+        client_id: activeClientId,
         facilitator_email: user.email,
         program_id: programId,
         cohort_id: cohortId,

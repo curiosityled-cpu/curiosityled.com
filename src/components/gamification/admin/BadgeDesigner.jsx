@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useClient } from "@/components/contexts/ClientContext";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { useAuth } from "@/components/useAuth";
 
 export default function BadgeDesigner() {
   const { user } = useAuth();
+  const { activeClientId } = useClient();
   const [badges, setBadges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingBadge, setEditingBadge] = useState(null);
@@ -34,7 +36,7 @@ export default function BadgeDesigner() {
     try {
       const allBadges = await base44.entities.BadgeTemplate.filter({
         '$or': [
-          { client_id: user.client_id },
+          { client_id: activeClientId },
           { is_platform_default: true, client_id: null }
         ]
       });

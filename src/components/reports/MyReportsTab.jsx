@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,6 +19,7 @@ import ShareReportDialog from "./ShareReportDialog";
 import ReportTemplatePicker from "./ReportTemplatePicker";
 
 export default function MyReportsTab({ user, onUseTemplate }) {
+  const { activeClientId } = useClient();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -79,7 +81,7 @@ export default function MyReportsTab({ user, onUseTemplate }) {
     if (report.created_by_email === user.email) return 'owner';
     const individualShare = report.shared_with?.find(s => s.user_email === user.email);
     if (individualShare) return individualShare.permission_level;
-    if (report.is_team_shared && report.client_id === user.client_id) return report.team_permission_level || 'view';
+    if (report.is_team_shared && report.client_id === activeClientId) return report.team_permission_level || 'view';
     return null;
   };
 
@@ -183,7 +185,7 @@ export default function MyReportsTab({ user, onUseTemplate }) {
     try {
       const cloned = {
         report_name: `${report.report_name} (Copy)`,
-        created_by_email: user.email, client_id: user.client_id,
+        created_by_email: user.email, client_id: activeClientId,
         report_config: report.report_config, output_format: report.output_format,
         schedule_interval: report.schedule_interval, recipients: report.recipients,
         status: 'active', cloned_from_id: report.id

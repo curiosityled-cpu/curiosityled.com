@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -55,6 +56,7 @@ const EMPTY_FORM = {
 };
 
 export default function WeeklyCheckInForm({ user, isManager, teamMembers = [] }) {
+  const { activeClientId } = useClient();
   const weekOf = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
 
   const [selectedEmployee, setSelectedEmployee] = useState("");
@@ -116,7 +118,7 @@ export default function WeeklyCheckInForm({ user, isManager, teamMembers = [] })
       const managerEmail = isManager ? user.email : (user.manager_email || user.email);
       const empEmail = isManager ? selectedEmployee : user.email;
       const payload = {
-        client_id: user.client_id,
+        client_id: activeClientId,
         employee_email: empEmail,
         manager_email: managerEmail,
         week_of: weekOf,

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useClient } from "@/components/contexts/ClientContext";
 import { motion } from "framer-motion";
 import { Trophy, Medal, Award, TrendingUp, Crown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { useAuth } from "@/components/useAuth";
 
 export default function Leaderboard({ scope = "organization" }) {
   const { user } = useAuth();
+  const { activeClientId } = useClient();
   const [leaders, setLeaders] = useState([]);
   const [activeTab, setActiveTab] = useState("all_time");
   const [loading, setLoading] = useState(true);
@@ -23,7 +25,7 @@ export default function Leaderboard({ scope = "organization" }) {
     setLoading(true);
     try {
       let achievements = await base44.entities.UserAchievement.filter({
-        client_id: user.client_id
+        client_id: activeClientId
       }, '-total_points', 10);
 
       // Get user details for each achievement

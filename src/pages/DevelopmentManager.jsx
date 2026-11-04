@@ -1,5 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Loader2 } from "lucide-react";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import { useAuth } from "@/components/useAuth";
@@ -67,6 +68,7 @@ const COACH_TABS = (isConsultant) => [
 
 export default function DevelopmentManager() {
   const { user, hasPermission, loading: authLoading } = useAuth();
+  const { activeClientId } = useClient();
   const { isCoachScoped, coacheeEmails } = useCoachCoacheeScope(user);
   const isConsultant = user?.app_role === 'Consultant';
   const [section, setSection] = useState(isCoachScoped ? "experiences" : "experiences");
@@ -334,7 +336,7 @@ export default function DevelopmentManager() {
               <RequestSettingsDialog
                 open={showRequestSettings}
                 onOpenChange={setShowRequestSettings}
-                clientId={user.client_id}
+                clientId={activeClientId}
               />
             )}
           </Suspense>

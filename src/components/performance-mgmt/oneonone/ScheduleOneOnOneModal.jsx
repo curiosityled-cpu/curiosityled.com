@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -266,6 +267,7 @@ const EMPTY_LOGISTICS = {
 };
 
 export default function ScheduleOneOnOneModal({ isOpen, onClose, onCreated, users, user }) {
+  const { activeClientId } = useClient();
   const [page, setPage] = useState(1);
   const [form, setForm] = useState({ ...EMPTY_LOGISTICS });
   const [includeCheckIn, setIncludeCheckIn] = useState(false);
@@ -287,7 +289,7 @@ export default function ScheduleOneOnOneModal({ isOpen, onClose, onCreated, user
         : 30;
 
       // Resolve client_id — try user object, then participant, then fetch fresh user data
-      let clientId = user.client_id || user.data?.client_id;
+      let clientId = activeClientId;
       if (!clientId) {
         try {
           const freshMe = await base44.auth.me();
