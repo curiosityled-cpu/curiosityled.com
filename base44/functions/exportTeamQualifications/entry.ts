@@ -25,7 +25,20 @@ Deno.serve(async (req) => {
     const adminRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Platform Admin'];
     let subordinate_emails;
     if (adminRoles.includes(user.app_role)) {
-      subordinate_emails = body.subordinate_emails || [];
+      // The request names the people. It must not be able to name another
+      // tenant's: keep only the emails that belong to the caller's own client.
+      const requested = body.subordinate_emails || [];
+      if (user.app_role === 'Platform Admin') {
+        subordinate_emails = requested;
+      } else if (!user.client_id) {
+        subordinate_emails = [];
+      } else {
+        const inClient = await base44.asServiceRole.entities.User.filter({
+          email: { $in: requested },
+          client_id: user.client_id
+        });
+        subordinate_emails = inClient.map(u => u.email).filter(Boolean);
+      }
     } else {
       // Managers: always derive subordinates server-side from authoritative
       // User records — never trust the self-editable subordinate_emails field.

@@ -324,9 +324,10 @@ person's own email, so their scope already follows the person. The succession co
 derives `client_id` itself. `PartnerCommission` is bound to the partner's own id.
 `CustomRole` is platform-catalog governance and is Platform Admin only.
 
-Batches 5 and 7 are applied (read rules; bulk writes and tenant creation). What remains is
-the read-rule pass for the types flagged in 10.1, the update/delete pass in Batch 6, the
-platform-only guard in Batch 8, and the Tenant retirement in Batch 9.
+Batches 5, 7 and 8 are applied (read rules; bulk writes and tenant creation; platform-only
+guard, seeds, billing and the report-path reads). What remains is the read-rule pass for the
+types flagged in 10.1, the update/delete pass in Batch 6, and the Tenant retirement in
+Batch 9.
 
 ### 10.1 Batch 5 — the read pass
 
@@ -364,3 +365,32 @@ whether the record they write or delete is pinned to it. Six were reviewed and f
 except Platform Admin, which is intentionally platform-wide. `exitImpersonation` is self-scoped
 by `admin_email`, and `bulkAssignGoals` / `bulkAssignAssessments` reach no tenant-owned record
 of their own — they write goals and notifications against already-verified people.
+
+### 10.3 Batch 8 — platform-only guard, seeds, billing, report reads
+
+The §8.1 group was checked for a single question: is this function's authority *platform*, and
+does its guard say so? Most already did — `clientCreate`, `createOrganization`,
+`deleteOrganization`, `updateOrganization`, `listOrganizations`, `setupPlatformAdmin`,
+`setupSuperAdmin`, `promoteToPlatformAdmin`, `deletePartner`, every `cleanup*` and `prune*`,
+`seedTestData`, `seedFormTemplates`, `stripeCreateClientCheckout`,
+`stripeCreateOrganizationCheckout`, `stripeGetClientInvoices` and the `provisioning*` family.
+`clientList`, `listClients`, `updateClient` and `listPartners` deliberately admit a
+tenant-scoped administrator and then narrow the answer to their own client or partner. Four
+guards did not hold, and the two report paths handed the caller too much rope.
+
+| Function | Was | Now |
+| --- | --- | --- |
+| `deleteClient` | Authorised on the built-in `role` flag as well as `app_role`, so any built-in admin could delete any client (its users had to be unassigned first, which the same admin could do). | Platform Admin only. The built-in flag never grants tenant deletion. |
+| `createPartner` | Allowed Super Administrator, a tenant-scoped role, to create partners. | Platform Admin only. |
+| `updatePartner` | Same. | Platform Admin only. |
+| `exportTeamQualifications` | The admin branch exported whoever the request named, in any client, and returned their names and qualifications. | The named emails are intersected with the caller's own client first. Platform Admin keeps the unrestricted path. |
+| `getCheckInHistory` | Built the reporting tree with the service role over every user on the platform, so a `manager_email` pointing across tenants pulled that tenant's check-ins into the response. | Traversal stays inside the caller's client. Verified live: the endpoint returns the caller's own history after the change. |
+
+Verified sound and left alone: `stripeGetInvoices` / `stripeGetSubscription` read only the
+caller's own Stripe ids. `stripeCreateCustomer` and `stripeCreateCheckoutSession` resolve the
+client from the caller's own membership. `cleanupDemoData` fails closed without a client and
+deletes only the caller's own records. `importCompetencies` extracts and maps in memory, writes
+nothing. `listAllUsers`, `clientList`, `listClients`, `updateClient`, `listPartners`,
+`getManagerInsights` and `getOrganizationUsers` each narrow to the caller's client, partner or
+reporting line. `seedCompetencies` and `seedDefaultBadges` are gated to Platform Admin and
+Super Administrator, writing the platform-default catalogue by design.

@@ -39,6 +39,10 @@ Deno.serve(async (req) => {
       const allUsers = await serviceBase44.entities.User.list(null, 500);
       for (const u of allUsers || []) {
         if (!u.email) continue;
+        // The tree is built with the service role, so it must stay inside the
+        // caller's client: a manager_email that points at another tenant would
+        // otherwise pull that tenant's check-ins into this response.
+        if (user.client_id && u.client_id !== user.client_id) continue;
         userByEmail.set(u.email.toLowerCase(), u);
         const mgr = u?.data?.manager_email || u?.manager_email || '';
         if (mgr) {

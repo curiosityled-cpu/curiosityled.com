@@ -5,17 +5,13 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
-    const allowedRoles = ['Platform Admin', 'Platform Administrator', 'admin'];
-    const hasAccess = user && (
-      allowedRoles.includes(user.app_role) || 
-      allowedRoles.includes(user.data?.app_role) || 
-      allowedRoles.includes(user.role)
-    );
-
-    if (!hasAccess) {
+    // Deleting a client removes a tenant and everything anchored to it. This used
+    // to accept the built-in `role` flag, which is admin/user — so every built-in
+    // admin could delete any client. Tenant lifecycle is platform level only.
+    if (!user || user.app_role !== 'Platform Admin') {
       return Response.json({ 
         error: 'Unauthorized - Platform Admin only'
-      }, { status: 401 });
+      }, { status: 403 });
     }
 
     const { clientId, client_id } = await req.json();

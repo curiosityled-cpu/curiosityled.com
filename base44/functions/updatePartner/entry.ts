@@ -6,7 +6,8 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
 
     // Allow Platform Admin and Super Administrator
-    const allowedRoles = ['Platform Admin', 'Super Administrator'];
+    // Partner records sit above every tenant; editing them is platform level only.
+    const allowedRoles = ['Platform Admin'];
     if (!user || !allowedRoles.includes(user.app_role)) {
       return Response.json({ success: false, error: 'Unauthorized - Admin access required' }, { status: 401 });
     }
