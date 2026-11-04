@@ -139,6 +139,10 @@ made without joining through the user.
 
 ## 4. Classification — all 163 data types
 
+> **Superseded.** `docs/phase2-classification-inventory.md` was rebuilt from a full
+> scan of the live schemas (164 types) and is authoritative. The counts below came
+> from a partial pass.
+
 ### 4.1 Platform-shared (P)
 
 `Permission` · `BadgeTemplate` · `GamificationLevel` · `Tenant` · `Client` ·
@@ -225,6 +229,8 @@ unused so it can be removed rather than scoped.
 
 ## 5. Records that cannot be tenant-scoped today
 
+> The complete count is **27**, not 22 — see §5 of the Phase 2 inventory.
+
 These 22 rows hold tenant or personal data but carry **no `client_id`**, so no
 query can prove which client they belong to. They are readable only by their own
 user today (`user_email` rules), which is safe one record at a time but makes any
@@ -267,6 +273,9 @@ and `ExternalLearningRecord` need the same decision — confirm.
 
 ## 6. The 24 read rules that do not scope by client
 
+> The complete count is **25** — see §6 of the Phase 2 inventory, which also records
+> the write side (67 role-only create rules), missing from this draft.
+
 These carry a client field but a read rule that ignores it. Each is a live
 cross-tenant read path once two real clients exist.
 
@@ -304,6 +313,10 @@ Both need the tenant clause added.
 ---
 
 ## 7. Backend functions — the larger exposure
+
+> Restated in §8 of the Phase 2 inventory against the current tree: 551 functions,
+> 472 using service role, **467 with no tenant resolution** (only 6 use the shared
+> resolver).
 
 471 of 549 functions use service role. Service role bypasses access rules
 entirely, so a function is only tenant-safe if it filters by client itself.
