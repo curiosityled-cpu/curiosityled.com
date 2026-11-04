@@ -15,6 +15,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Admin access required' }, { status: 403 });
     }
 
+    // Resolve the caller's tenant. A missing tenant must never fall back to a
+    // platform-wide level, which would publish one client's levels to every client.
+    const clientId = user.data?.client_id || user.client_id || null;
+    if (user.app_role !== 'Platform Admin' && !clientId) {
+      return Response.json({ error: 'No client is assigned to this account' }, { status: 400 });
+    }
+
     const levelData = await req.json();
 
     // Validate required fields
@@ -24,7 +31,7 @@ Deno.serve(async (req) => {
 
     // Create gamification level
     const level = await base44.asServiceRole.entities.GamificationLevel.create({
-      client_id: user.app_role === 'Platform Admin' ? null : user.client_id,
+      client_id: user.app_role === 'Platform Admin' ? null : clientId,
       level_name: levelData.level_name,
       level_order: levelData.level_order,
       points_threshold: levelData.points_threshold,

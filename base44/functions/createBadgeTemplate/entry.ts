@@ -15,6 +15,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Admin access required' }, { status: 403 });
     }
 
+    // Resolve the caller's tenant. A missing tenant must never fall back to a
+    // platform-wide badge, which would publish one client's badge to every client.
+    const clientId = user.data?.client_id || user.client_id || null;
+    if (user.app_role !== 'Platform Admin' && !clientId) {
+      return Response.json({ error: 'No client is assigned to this account' }, { status: 400 });
+    }
+
     const badgeData = await req.json();
 
     // Validate required fields
@@ -24,7 +31,7 @@ Deno.serve(async (req) => {
 
     // Create badge template
     const badge = await base44.asServiceRole.entities.BadgeTemplate.create({
-      client_id: user.app_role === 'Platform Admin' ? null : user.client_id,
+      client_id: user.app_role === 'Platform Admin' ? null : clientId,
       badge_name: badgeData.badge_name,
       description: badgeData.description,
       icon_url: badgeData.icon_url,
