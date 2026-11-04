@@ -456,6 +456,7 @@ function JourneyBuilder() {
 
         return base44.entities.JourneyEnrollment.create({
           journey_id: editingJourneyId,
+          client_id: journey.client_id || activeClientId,
           user_email: email,
           enrolled_by: user.email,
           enrolled_date: new Date().toISOString(),

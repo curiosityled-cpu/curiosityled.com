@@ -116,6 +116,7 @@ export default function BulkLearningOperations() {
             for (const moduleId of selectedModules) {
               await base44.entities.LearnerProgress.create({
                 user_email: email,
+                client_id: user?.client_id || user?.data?.client_id || null,
                 conversational_learning_module_id: moduleId,
                 status: "not_started",
                 progress_percentage: 0

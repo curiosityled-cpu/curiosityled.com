@@ -94,6 +94,7 @@ Deno.serve(async (req) => {
         // Create enrollment
         const enrollment = await base44.asServiceRole.entities.JourneyEnrollment.create({
           journey_id: journey_id,
+          client_id: journey.client_id || null,
           user_email: userEmail,
           enrolled_date: new Date().toISOString(),
           enrolled_by: currentUser.email,

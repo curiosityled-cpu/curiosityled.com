@@ -259,6 +259,7 @@ export default function ParticipantManagement() {
           for (const email of newEmails) {
             await base44.entities.JourneyEnrollment.create({
               journey_id: selectedEntityId,
+              client_id: user?.client_id || user?.data?.client_id || null,
               user_email: email,
               status: 'not_started',
               enrolled_date: new Date().toISOString(),
@@ -319,6 +320,7 @@ export default function ParticipantManagement() {
           for (const email of emails) {
             await base44.entities.JourneyEnrollment.create({
               journey_id: selectedEntityId,
+              client_id: user?.client_id || user?.data?.client_id || null,
               user_email: email,
               status: 'not_started',
               enrolled_date: new Date().toISOString(),
