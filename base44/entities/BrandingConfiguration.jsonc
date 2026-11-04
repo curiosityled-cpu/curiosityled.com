@@ -126,7 +126,27 @@
     "read": {
       "$or": [
         {
-          "data.is_active": true
+          "$and": [
+            {
+              "data.is_active": true
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "data.is_active": true
+            },
+            {
+              "data.client_id": null
+            },
+            {
+              "data.partner_id": null
+            }
+          ]
         },
         {
           "$and": [
