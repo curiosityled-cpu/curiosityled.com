@@ -5,8 +5,10 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
-    // Allow Platform Admin, Super Administrator, and Partner Business Administrator
-    const allowedRoles = ['Platform Admin', 'Super Administrator', 'Partner Business Administrator'];
+    // Creating a client creates a tenant, which is a platform-level act. A Super
+    // Administrator is scoped to their own client by every access rule, so
+    // letting them create new ones let one tenant's admin mint others.
+    const allowedRoles = ['Platform Admin', 'Partner Business Administrator'];
     if (!user || !allowedRoles.includes(user.app_role)) {
       return Response.json({ error: 'Unauthorized - Admin access required' }, { status: 401 });
     }

@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 import { escapeHtml } from '../../shared/safeResponses.ts';
+import { resolveUserScope, isUserInScope, attachPartnerClientIds } from '../../shared/userScope.ts';
 
 /**
  * Enhanced bulk journey assignment with role-based permissions and audit logging
@@ -35,6 +36,19 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Learning journey not found' }, { status: 404 });
     }
     const journey = journeys[0];
+
+    // The journey itself must be one the caller may reach. Target users are
+    // checked below through getAssignableUsers, but without this a tenant admin
+    // could name another tenant's journey id and enrol their own staff in it.
+    // A journey with no client (a platform-wide catalogue item) stays assignable.
+    const scope = resolveUserScope(currentUser);
+    if (scope.role === 'Partner Business Administrator') {
+      const clientsList = await base44.asServiceRole.entities.Client.list();
+      attachPartnerClientIds(scope, clientsList);
+    }
+    if (journey.client_id && !isUserInScope({ client_id: journey.client_id }, scope)) {
+      return Response.json({ error: 'Learning journey not found' }, { status: 404 });
+    }
 
     // Verify user can assign to all target users
     const assignableResponse = await base44.functions.invoke('getAssignableUsers', {

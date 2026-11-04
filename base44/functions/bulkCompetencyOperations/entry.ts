@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveUserScope } from '../../shared/userScope.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -9,12 +10,28 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // app_role, not the built-in `role` flag — `role` is admin/user, so the old
+    // check refused every administrator who was not the built-in owner.
     const allowedRoles = ['Admin Level 2', 'Super Administrator', 'Platform Admin'];
-    if (!allowedRoles.includes(user.role)) {
+    if (!allowedRoles.includes(user.app_role)) {
       return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
-    const { operation, csv_data } = await req.json();
+    const body = await req.json();
+    const { operation, csv_data } = body;
+
+    // Competencies are client-owned. A Platform Admin names the client; anyone
+    // else writes only into their own, so one tenant's CSV can never edit or
+    // delete another tenant's competency framework.
+    const scope = resolveUserScope(user);
+    const targetClientId = scope.isPlatformAdmin ? body.client_id : scope.client_id;
+    if (!targetClientId) {
+      return Response.json({
+        error: scope.isPlatformAdmin
+          ? 'client_id is required when a Platform Admin performs a bulk competency operation'
+          : 'Your account is not assigned to a client'
+      }, { status: 403 });
+    }
 
     if (operation === 'upload') {
       const lines = csv_data.trim().split('\n');
@@ -80,7 +97,7 @@ Deno.serve(async (req) => {
       const results = [];
       for (const comp of competencies) {
         try {
-          const created = await base44.asServiceRole.entities.Competency.create(comp);
+          const created = await base44.asServiceRole.entities.Competency.create({ ...comp, client_id: targetClientId });
           results.push({ success: true, name: comp.name, id: created.id });
         } catch (error) {
           results.push({ success: false, name: comp.name, error: error.message });
@@ -105,7 +122,7 @@ Deno.serve(async (req) => {
       const results = [];
       for (const name of names) {
         try {
-          const comps = await base44.asServiceRole.entities.Competency.filter({ name });
+          const comps = await base44.asServiceRole.entities.Competency.filter({ name, client_id: targetClientId });
           for (const comp of comps) {
             await base44.asServiceRole.entities.Competency.delete(comp.id);
           }

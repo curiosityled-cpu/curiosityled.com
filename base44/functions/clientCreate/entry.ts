@@ -5,9 +5,10 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
-    // Only Super Administrators can create clients
-    if (!user || user.app_role !== 'Super Administrator') {
-      return Response.json({ error: 'Unauthorized - Super Administrator only' }, { status: 403 });
+    // Creating a client creates a tenant: platform level only. A Super
+    // Administrator is scoped to their own client by every access rule.
+    if (!user || user.app_role !== 'Platform Admin') {
+      return Response.json({ error: 'Unauthorized - Platform Admin only' }, { status: 403 });
     }
 
     const { 

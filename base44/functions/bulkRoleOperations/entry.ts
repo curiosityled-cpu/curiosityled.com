@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveUserScope } from '../../shared/userScope.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -9,13 +10,29 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Only allow admins to perform bulk operations
+    // Only tenant administrators may perform bulk operations. This reads
+    // app_role, not the built-in `role` flag: `role` is admin/user, so the old
+    // check refused every administrator who was not the built-in owner.
     const allowedRoles = ['Admin Level 2', 'Super Administrator', 'Platform Admin'];
-    if (!allowedRoles.includes(user.role)) {
+    if (!allowedRoles.includes(user.app_role)) {
       return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
-    const { operation, csv_data } = await req.json();
+    const body = await req.json();
+    const { operation, csv_data } = body;
+
+    // Every role written here belongs to one client. A Platform Admin must name
+    // the client, because there is no "every client's roles" fallback that
+    // would not also let one tenant's CSV rewrite another tenant's catalogue.
+    const scope = resolveUserScope(user);
+    const targetClientId = scope.isPlatformAdmin ? body.client_id : scope.client_id;
+    if (!targetClientId) {
+      return Response.json({
+        error: scope.isPlatformAdmin
+          ? 'client_id is required when a Platform Admin performs a bulk role operation'
+          : 'Your account is not assigned to a client'
+      }, { status: 403 });
+    }
 
     if (operation === 'upload') {
       // Parse CSV and create roles
@@ -122,7 +139,7 @@ Deno.serve(async (req) => {
       const results = [];
       for (const role of roles) {
         try {
-          const created = await base44.asServiceRole.entities.Role.create(role);
+          const created = await base44.asServiceRole.entities.Role.create({ ...role, client_id: targetClientId });
           results.push({ success: true, title: role.title, id: created.id });
         } catch (error) {
           results.push({ success: false, title: role.title, error: error.message });
@@ -148,7 +165,7 @@ Deno.serve(async (req) => {
       const results = [];
       for (const title of titles) {
         try {
-          const roles = await base44.asServiceRole.entities.Role.filter({ title });
+          const roles = await base44.asServiceRole.entities.Role.filter({ title, client_id: targetClientId });
           for (const role of roles) {
             await base44.asServiceRole.entities.Role.delete(role.id);
           }
