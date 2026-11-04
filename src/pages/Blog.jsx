@@ -92,10 +92,6 @@ export default function Blog() {
           <h1 className="font-serif text-[2.5rem] leading-[1.06] tracking-[-0.02em] md:text-[3.6rem] max-w-3xl">
             Notes on leadership that survives contact with the work.
           </h1>
-          <p className="mt-6 max-w-2xl text-[1.0625rem] leading-relaxed text-[#5B5651]">
-            Short, practical writing on building capability in real organisations — what
-            to do Monday, what to stop doing, and the evidence behind both.
-          </p>
         </div>
       </section>
 
