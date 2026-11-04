@@ -14,6 +14,7 @@ export const ClientProvider = ({ children }) => {
     total_learning_assigned: 0
   });
   const [loading, setLoading] = useState(true);
+  const [tenant, setTenant] = useState(null);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -27,21 +28,11 @@ export const ClientProvider = ({ children }) => {
   // otherwise the organisation settings screen reloads the pre-save record.
   const loadClientContext = async ({ force = false } = {}) => {
     try {
-      // Only load client context if user has a client_id
-      if (!user?.client_id) {
-        setClient(null);
-        setStats({
-          total_users: 0,
-          total_goals: 0,
-          total_assessments: 0,
-          total_learning_assigned: 0
-        });
-        setLoading(false);
-        return;
-      }
-
-      // Check cache first (5 minute TTL)
-      const cacheKey = `client_context_${user.client_id}`;
+      // Which client this person belongs to is decided on the server
+      // (base44/shared/tenantContext.ts). user.client_id is deliberately not
+      // read here: it can disagree with user.data.client_id, and the browser
+      // must never pick the tenant.
+      const cacheKey = `client_context_${user.id || user.email}`;
       if (force) {
         sessionStorage.removeItem(cacheKey);
         sessionStorage.removeItem(`${cacheKey}_timestamp`);
@@ -57,6 +48,7 @@ export const ClientProvider = ({ children }) => {
           // by a transient fetch error and should not block the UI for 5 min.
           if (cachedData.client) {
             setClient(cachedData.client);
+            setTenant(cachedData.tenant || null);
             setStats(cachedData.stats || {
               total_users: 0,
               total_goals: 0,
@@ -75,6 +67,7 @@ export const ClientProvider = ({ children }) => {
         const responseData = response.data?.data || response.data;
         const contextData = {
           client: responseData.client || null,
+          tenant: responseData.tenant || null,
           stats: responseData.stats || {
             total_users: 0,
             total_goals: 0,
@@ -84,6 +77,7 @@ export const ClientProvider = ({ children }) => {
         };
         
         setClient(contextData.client);
+        setTenant(contextData.tenant);
         setStats(contextData.stats);
         
         // Only cache non-null clients — caching a null (from a transient
@@ -122,6 +116,7 @@ export const ClientProvider = ({ children }) => {
   return (
     <ClientContext.Provider value={{ 
       client, 
+      tenant,
       stats, 
       loading, 
       refreshContext 
@@ -138,6 +133,7 @@ export const useClient = () => {
     // gracefully to a loading state when the provider is not in the tree.
     return {
       client: null,
+      tenant: null,
       stats: { total_users: 0, total_goals: 0, total_assessments: 0, total_learning_assigned: 0 },
       loading: true,
       refreshContext: async () => {}
