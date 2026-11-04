@@ -280,8 +280,8 @@ rehearsal record was removed.
 | **1** | `Goal`, `LearningResource`, `CheckInCustomQuestion`, `ReportTemplate`/`ScheduledReport` | 5 | **applied** |
 | **2** | Person record: field locks + server-side invitation claim | 1 fn | **applied** |
 | **3** | The unscoped reads that could cross a client | 7 of 20 | **applied** |
-| **4** | Create rules that let any role holder stamp a record to any client | 44 | **in progress — 25 applied** |
-| **5** | The 27 types that need `client_id`, field then backfill | 27 | after 4 — needs the field before writes can be scoped |
+| **4** | Create rules that let any role holder stamp a record to any client | 44 | **applied** |
+| **5** | Read rules that return another client's records | 27 | **under way — three applied** |
 | **6** | `succession*` as one family | 125 fn | in parallel with 5 |
 | **7** | Bulk / person-move / destructive functions | ~33 fn | highest consequence |
 | **8** | Read/report, billing, seeds, detection, platform-only guard | rest | last |
@@ -326,3 +326,22 @@ derives `client_id` itself. `PartnerCommission` is bound to the partner's own id
 
 What remains is Batch 5 onward: the read-rule and update/delete passes, the backend
 functions that resolve tenancy themselves, and the Tenant retirement in Batch 9.
+
+### 10.1 Batch 5 — the read pass
+
+Every type that carries `client_id` was checked for a read rule that never consults it.
+Fourteen were returned. Eleven were already safe because the rule is bound to the person
+(`user_email`, `tester_email`, creator, subject) or to the control plane, and a person's
+email does not move between clients. Three were not, and are now fixed:
+
+| Type | Was | Now |
+| --- | --- | --- |
+| `ImpersonationLog` | Super Administrator read every impersonation session in every client | Scoped to their own client; create the same. Platform Admin keeps the full audit view. |
+| `UATSubmission` | Super Administrator read every tester's submission across clients | Scoped to their own client; the tester's own create is pinned to their client. |
+| `PartnerCommission` | Super Administrator read and could update or delete every client's commissions | Read, update and delete scoped to their own client. Platform Admin keeps the full view. |
+
+`DiagnosticSession` is the one open question left in this batch: it holds a prospect's name
+and answers and is readable by every Admin Level 1, Admin Level 2, Super Administrator and
+Partner Business Administrator, because it has no `client_id` at all. It is a sales artefact
+rather than tenant data, so narrowing it to Platform Admin is a product call, not a rule
+change — flagged rather than made.
