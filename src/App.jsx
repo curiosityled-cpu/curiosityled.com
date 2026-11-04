@@ -43,6 +43,9 @@ import ICWebCheckIn from './pages/ICWebCheckIn';
 import FlatBridgeHandoff from './pages/FlatBridgeHandoff';
 import VerifyCertificate from './pages/VerifyCertificate';
 import SuccessionTemplateGuide from './pages/SuccessionTemplateGuide';
+import Blog from './pages/Blog';
+import BlogPost from './pages/BlogPost';
+import BlogManager from './pages/BlogManager';
 
 
 import LeadershipIntelligenceHub from './pages/LeadershipIntelligenceHub';
@@ -166,6 +169,10 @@ const AuthenticatedApp = () => {
       {/* Public share-ready summary for Go Flat Bridge — no login required */}
       <Route path="/flat-bridge-handoff" element={<FlatBridgeHandoff />} />
 
+      {/* Public blog — no login required */}
+      <Route path="/blog" element={<Blog />} />
+      <Route path="/blog/:slug" element={<BlogPost />} />
+
       {/* Protected app routes — auth required, unauthenticated users redirect to /login */}
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
       {/* Redirect old ExperienceManagement URL to new DevelopmentManager */}
@@ -246,6 +253,7 @@ const AuthenticatedApp = () => {
             : mvpRole ? <MVPPage><PerformanceManager /></MVPPage> : <LayoutWrapper currentPageName="PerformanceManager"><PerformanceManager /></LayoutWrapper>
       } />
       <Route path="/reviews" element={<MVPLayout><Reviews /></MVPLayout>} />
+      <Route path="/BlogManager" element={<MVPLayout><BlogManager /></MVPLayout>} />
       <Route path="/my-performance" element={<MVPPage><MyPerformance /></MVPPage>} />
       <Route path="/my-goals" element={<Navigate to="/my-performance" replace />} />
       <Route path="/my-rhythm" element={<MVPPage><MyRhythm /></MVPPage>} />

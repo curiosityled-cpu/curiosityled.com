@@ -1,0 +1,244 @@
+{
+  "name": "BlogPost",
+  "type": "object",
+  "description": "A public blog article. Published posts are readable by anyone visiting the marketing site; drafts and archived posts are visible only to the administrator who wrote them and to platform administrators. Articles may be written in the app or filed by the HeyCatch publishing endpoint.",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Headline of the article"
+    },
+    "slug": {
+      "type": "string",
+      "description": "URL segment for the article, e.g. 'leading-through-ambiguity'. Generated from the title unless supplied."
+    },
+    "excerpt": {
+      "type": "string",
+      "maxLength": 400,
+      "description": "One or two sentence summary shown on the blog index and in search results"
+    },
+    "content": {
+      "type": "string",
+      "description": "Full article body in Markdown"
+    },
+    "cover_image_url": {
+      "type": "string",
+      "description": "Header image for the article and its index card"
+    },
+    "category": {
+      "type": "string",
+      "default": "Leadership",
+      "description": "Primary topic, used for the index filters and related articles"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Supporting keywords shown at the foot of the article"
+    },
+    "author_name": {
+      "type": "string",
+      "description": "Name of the article's author"
+    },
+    "author_role": {
+      "type": "string",
+      "description": "Author's title, e.g. 'Chief Operating Officer'"
+    },
+    "author_avatar_url": {
+      "type": "string",
+      "description": "Author photograph shown beside the byline"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ],
+      "default": "draft",
+      "enumColors": [
+        "gray",
+        "green",
+        "red"
+      ],
+      "description": "Lifecycle state. Only published articles are visible to visitors."
+    },
+    "published_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the article went live. Set automatically the first time it is published."
+    },
+    "reading_minutes": {
+      "type": "number",
+      "description": "Estimated reading time in minutes, computed from the body"
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false,
+      "description": "Pins the article to the hero slot on the blog index"
+    },
+    "meta_title": {
+      "type": "string",
+      "description": "Search-result title when it should differ from the headline"
+    },
+    "meta_description": {
+      "type": "string",
+      "maxLength": 320,
+      "description": "Search-result description when it should differ from the excerpt"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "heycatch"
+      ],
+      "default": "manual",
+      "enumColors": [
+        "blue",
+        "purple"
+      ],
+      "description": "Where the article came from: written in the editor or filed by the HeyCatch endpoint"
+    },
+    "external_id": {
+      "type": "string",
+      "description": "Identifier from the publishing system, so a re-sent article updates its existing post instead of creating a duplicate"
+    }
+  },
+  "required": [
+    "title",
+    "slug",
+    "content",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.status": "published"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Super Administrator"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 1"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "Admin Level 2"
+          }
+        }
+      ]
+    }
+  }
+}
