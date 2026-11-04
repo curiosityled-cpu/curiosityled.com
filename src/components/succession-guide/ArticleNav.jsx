@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import BrandLogo from "@/components/landing/BrandLogo";
 
 export default function ArticleNav() {
   const [scrolled, setScrolled] = useState(false);
@@ -17,13 +18,9 @@ export default function ArticleNav() {
         scrolled ? "bg-[#FBFAF7]/95 backdrop-blur border-b border-[#E6E1D7]" : "bg-transparent border-b border-transparent"
       }`}
     >
-      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
         <Link to="/" className="flex items-center">
-          <img
-            src="https://raw.githubusercontent.com/curiosityled-cpu/curiosityled.com/main/public/CuriosityLedLogoBBW%20(1).png"
-            alt="Curiosity Led"
-            className="h-9 object-contain"
-          />
+          <BrandLogo />
         </Link>
         <div className="hidden sm:flex items-center gap-6">
           <Link to="/" className="text-sm text-[#6B6560] hover:text-[#151515] transition-colors">

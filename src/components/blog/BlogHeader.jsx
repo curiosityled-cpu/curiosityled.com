@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import BrandLogo from "@/components/landing/BrandLogo";
 
 export default function BlogHeader() {
   const [scrolled, setScrolled] = useState(false);
@@ -20,12 +21,8 @@ export default function BlogHeader() {
       }`}
     >
       <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
-        <Link to="/" className="flex items-center py-2">
-          <img
-            src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/a426953be_CuriosityLedLogoBBW.png"
-            alt="Curiosity Led"
-            className="h-14 md:h-16 w-auto object-contain"
-          />
+        <Link to="/" className="flex items-center">
+          <BrandLogo />
         </Link>
 
         <nav className="hidden sm:flex items-center gap-7">

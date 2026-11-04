@@ -1,6 +1,7 @@
 import React from "react";
 import { CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import BrandLogo from "@/components/landing/BrandLogo";
 
 export default function LandingFooter() {
   return (
@@ -10,11 +11,7 @@ export default function LandingFooter() {
           {/* Brand */}
           <div>
             <div className="mb-4">
-              <img
-                src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/afe1cf141_CuriosityLedLogoWBB.png"
-                alt="Curiosity Led"
-                className="h-10 object-contain"
-              />
+              <BrandLogo white />
             </div>
             <p className="text-gray-400 text-xs leading-relaxed max-w-[220px]">
               Leadership intelligence, built for the flow of work. Microsoft native. Support first. Designed for operational leaders.
