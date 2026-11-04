@@ -27,6 +27,9 @@ import {
   DropdownMenuTrigger } from
 "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { ClientProvider } from "@/components/contexts/ClientContext";
+import ClientSwitcher from "@/components/mvp/ClientSwitcher";
+import ClientSelectionGate from "@/components/mvp/ClientSelectionGate";
 
 // Role detection helpers
 export const getMVPRole = (appRole) => {
@@ -384,6 +387,8 @@ function MVPLayoutInner({ children }) {
 
         {/* User footer */}
         <div className="p-2" style={{ borderTop: sidebarBorder }}>
+          {/* Partner administrators pick which organisation they are working in */}
+          {!collapsed && <div className="px-1 pb-2"><ClientSwitcher /></div>}
           {!collapsed ?
           <div className="flex items-center gap-1 px-2 py-2 rounded-lg">
               <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'hsl(var(--primary)/0.15)' }}>
@@ -635,6 +640,7 @@ function MVPLayoutInner({ children }) {
           )}
         </div>
         <div className="flex items-center gap-1">
+          <ClientSwitcher />
           <button
             onClick={toggleTheme}
             className="p-2 rounded-lg transition-colors"
@@ -675,7 +681,7 @@ function MVPLayoutInner({ children }) {
 
       {/* Main content */}
       <main className={`flex-1 min-w-0 overflow-hidden ${collapsed ? 'sm:ml-16' : 'sm:ml-64'} pt-14 sm:pt-0 min-h-screen transition-all duration-200`}>
-        <ErrorBoundary>{children}</ErrorBoundary>
+        <ErrorBoundary><ClientSelectionGate>{children}</ClientSelectionGate></ErrorBoundary>
         <FirstLoginLinker />
       </main>
 
@@ -708,8 +714,10 @@ function MVPLayoutInner({ children }) {
 
 export default function MVPLayout({ children }) {
   return (
-    <AtreusProvider>
-      <MVPLayoutInner>{children}</MVPLayoutInner>
-    </AtreusProvider>
+    <ClientProvider>
+      <AtreusProvider>
+        <MVPLayoutInner>{children}</MVPLayoutInner>
+      </AtreusProvider>
+    </ClientProvider>
   );
 }

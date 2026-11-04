@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ const TYPE_LABELS = {
 };
 
 export default function AdminGoalsTab({ user }) {
+  const { activeClientId } = useClient();
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -44,7 +46,7 @@ export default function AdminGoalsTab({ user }) {
   const loadGoals = async () => {
     setLoading(true);
     try {
-      const data = await base44.entities.Goal.filter({ client_id: user.client_id }, "-updated_date");
+      const data = await base44.entities.Goal.filter({ client_id: activeClientId }, "-updated_date");
       setGoals(data);
     } catch (e) {
       console.error(e);
@@ -55,7 +57,7 @@ export default function AdminGoalsTab({ user }) {
   };
 
   const handleCreate = async (goalData) => {
-    const newGoal = await base44.entities.Goal.create({ ...goalData, client_id: user.client_id });
+    const newGoal = await base44.entities.Goal.create({ ...goalData, client_id: activeClientId });
     setGoals(prev => [newGoal, ...prev]);
     setShowCreate(false);
     toast.success("Goal created");
@@ -79,7 +81,7 @@ export default function AdminGoalsTab({ user }) {
   const handleCascade = async (goal) => {
     setCascading(goal.id);
     try {
-      await base44.functions.invoke("cascadeGoals", { goal_id: goal.id, client_id: user.client_id });
+      await base44.functions.invoke("cascadeGoals", { goal_id: goal.id, client_id: activeClientId });
       toast.success("Goal cascaded to team members");
     } catch {
       toast.error("Failed to cascade goal");
@@ -90,7 +92,7 @@ export default function AdminGoalsTab({ user }) {
 
   const handleBulkAssign = async () => {
     try {
-      await base44.functions.invoke("bulkAssignGoals", { client_id: user.client_id });
+      await base44.functions.invoke("bulkAssignGoals", { client_id: activeClientId });
       toast.success("Bulk assignment triggered");
     } catch {
       toast.error("Failed to bulk assign goals");

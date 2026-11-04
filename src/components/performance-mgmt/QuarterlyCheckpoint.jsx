@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,7 @@ import { toast } from "sonner";
 import { DEFAULT_REVIEW_FORM_CONFIG } from "./ReviewFormRenderer";
 
 export default function QuarterlyCheckpoint({ cycle, user, onClose, onSaved }) {
+  const { activeClientId } = useClient();
   const [employeeEmail, setEmployeeEmail] = useState("");
   const [progressNotes, setProgressNotes] = useState("");
   const [concerns, setConcerns] = useState("");
@@ -21,7 +23,7 @@ export default function QuarterlyCheckpoint({ cycle, user, onClose, onSaved }) {
     try {
       let forms = await base44.entities.CustomForm.filter({
         form_type: "review_form",
-        client_id: user.client_id || user.data?.client_id,
+        client_id: activeClientId,
       });
       let form = forms[0];
       if (!form) {
@@ -29,7 +31,7 @@ export default function QuarterlyCheckpoint({ cycle, user, onClose, onSaved }) {
           title: "Performance Review Form",
           form_type: "review_form",
           form_category: "evaluation",
-          client_id: user.client_id || user.data?.client_id,
+          client_id: activeClientId,
           status: "published",
           config: DEFAULT_REVIEW_FORM_CONFIG,
         });
@@ -37,7 +39,7 @@ export default function QuarterlyCheckpoint({ cycle, user, onClose, onSaved }) {
 
       await base44.entities.CustomFormSubmission.create({
         form_id: form.id,
-        client_id: user.client_id || user.data?.client_id,
+        client_id: activeClientId,
         submitter_email: user.email,
         submitter_name: user.full_name || user.email,
         submitter_role: "manager",

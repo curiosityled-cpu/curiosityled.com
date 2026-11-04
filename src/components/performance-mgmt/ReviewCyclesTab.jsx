@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -195,6 +196,7 @@ function CreateCycleModal({ isOpen, onClose, onSubmit, initialData, onEdit }) {
 }
 
 export default function ReviewCyclesTab({ user }) {
+  const { activeClientId } = useClient();
   const [cycles, setCycles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -211,7 +213,7 @@ export default function ReviewCyclesTab({ user }) {
       // Use CustomForm with form_type = 'review_cycle' as lightweight storage
       const data = await base44.entities.CustomForm.filter({
         form_type: "review_cycle",
-        client_id: user.client_id,
+        client_id: activeClientId,
       }, "-created_date");
       setCycles(data);
     } catch (e) {
@@ -228,7 +230,7 @@ export default function ReviewCyclesTab({ user }) {
         description: form.description,
         form_type: "review_cycle",
         form_category: "operational",
-        client_id: user.client_id,
+        client_id: activeClientId,
         status: "draft",
         settings: {
           review_type: form.review_type,
@@ -293,7 +295,7 @@ export default function ReviewCyclesTab({ user }) {
 
   const handleExport = async (cycle) => {
     try {
-      const res = await base44.functions.invoke("exportProgramPerformancePDF", { cycle_id: cycle.id, client_id: user.client_id });
+      const res = await base44.functions.invoke("exportProgramPerformancePDF", { cycle_id: cycle.id, client_id: activeClientId });
       if (res.data?.url) window.open(res.data.url, "_blank");
       else toast.success("Export triggered");
     } catch {

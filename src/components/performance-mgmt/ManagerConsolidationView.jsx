@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -178,6 +179,7 @@ function PerformanceDataSection({ employeeEmail }) {
 }
 
 export default function ManagerConsolidationView({ cycle, employeeEmail, user, onSaved }) {
+  const { activeClientId } = useClient();
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [managerResponses, setManagerResponses] = useState({});
@@ -196,7 +198,7 @@ export default function ManagerConsolidationView({ cycle, employeeEmail, user, o
       // Find or create review form
       let forms = await base44.entities.CustomForm.filter({
         form_type: "review_form",
-        client_id: user.client_id || user.data?.client_id,
+        client_id: activeClientId,
       });
       let form = forms[0];
       if (!form) {
@@ -204,7 +206,7 @@ export default function ManagerConsolidationView({ cycle, employeeEmail, user, o
           title: "Performance Review Form",
           form_type: "review_form",
           form_category: "evaluation",
-          client_id: user.client_id || user.data?.client_id,
+          client_id: activeClientId,
           status: "published",
           config: DEFAULT_REVIEW_FORM_CONFIG,
         });
@@ -243,7 +245,7 @@ export default function ManagerConsolidationView({ cycle, employeeEmail, user, o
       } else {
         await base44.entities.CustomFormSubmission.create({
           form_id: formId,
-          client_id: user.client_id || user.data?.client_id,
+          client_id: activeClientId,
           submitter_email: user.email,
           submitter_name: user.full_name || user.email,
           submitter_role: "manager",

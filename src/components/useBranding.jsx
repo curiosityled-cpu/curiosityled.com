@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useClient } from '@/components/contexts/ClientContext';
 
 const DEFAULT_BRANDING = {
   logo_url: '',
@@ -18,6 +19,9 @@ const DEFAULT_BRANDING = {
 };
 
 export const useBranding = () => {
+  // Branding follows the organisation the person is working in, which the server
+  // resolves — not the membership field on their user record.
+  const { activeClientId } = useClient();
   const [branding, setBranding] = useState(DEFAULT_BRANDING);
   const [loading, setLoading] = useState(true);
 
@@ -30,17 +34,17 @@ export const useBranding = () => {
         let brandingConfig = null;
 
         // PRIORITY 1: Client-specific branding (if user belongs to a client)
-        if (user && user.client_id) {
+        if (activeClientId) {
           try {
             const clientBranding = await base44.entities.BrandingConfiguration.filter({
-              client_id: user.client_id,
+              client_id: activeClientId,
               partner_id: null,
               is_active: true
             });
             
             if (clientBranding.length > 0) {
               brandingConfig = clientBranding[0];
-              console.log('Using client-specific branding for client:', user.client_id);
+              console.log('Using client-specific branding for client:', activeClientId);
             }
           } catch (error) {
             console.warn('No client-specific branding found:', error);
@@ -104,7 +108,7 @@ export const useBranding = () => {
     };
 
     fetchBranding();
-  }, []);
+  }, [activeClientId]);
 
   const updateBranding = async (newBranding) => {
     try {
@@ -117,10 +121,10 @@ export const useBranding = () => {
         is_active: true
       };
 
-      if (user?.client_id) {
+      if (activeClientId) {
         // Update client branding
-        filter = { client_id: user.client_id, partner_id: null, is_active: true };
-        brandingData.client_id = user.client_id;
+        filter = { client_id: activeClientId, partner_id: null, is_active: true };
+        brandingData.client_id = activeClientId;
         brandingData.partner_id = null;
       } else if (user?.partner_id) {
         // Update partner branding
@@ -166,8 +170,8 @@ export const useBranding = () => {
       
       // Find and deactivate existing config
       let filter = {};
-      if (user?.client_id) {
-        filter = { client_id: user.client_id, partner_id: null, is_active: true };
+      if (activeClientId) {
+        filter = { client_id: activeClientId, partner_id: null, is_active: true };
       } else if (user?.partner_id) {
         filter = { partner_id: user.partner_id, client_id: null, is_active: true };
       } else {

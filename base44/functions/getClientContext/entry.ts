@@ -30,6 +30,23 @@ export default async function (req) {
 
     const tenant = await resolveTenantContext(base44, user, requested);
 
+    // The portfolio a partner administrator may switch between. Only ids the
+    // resolver authorized are looked up, so this can never widen anyone's reach.
+    let authorizedClients = [];
+    if (tenant.authorized_client_ids?.length) {
+      const rows = await base44.asServiceRole.entities.Client
+        .filter({ id: { $in: tenant.authorized_client_ids } })
+        .catch(() => []);
+      const list = Array.isArray(rows) ? rows : (rows?.items || []);
+      authorizedClients = list.map((c) => ({
+        id: c.id,
+        name: c.name,
+        slug: c.slug || null,
+        status: c.status || null,
+      }));
+      tenant.authorized_clients = authorizedClients;
+    }
+
     // No tenant (not assigned, client missing) — the caller gets an explicit
     // reason instead of an empty context with no explanation.
     if (!tenant.client_id) {
