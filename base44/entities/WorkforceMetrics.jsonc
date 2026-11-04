@@ -181,13 +181,20 @@
           ]
         },
         {
-          "user_condition": {
-            "role": "Platform Admin"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Executive"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
         },
         {
           "user_condition": {
-            "role": "Executive"
+            "role": "Platform Admin"
           }
         }
       ]
