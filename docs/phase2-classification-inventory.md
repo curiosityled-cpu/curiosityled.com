@@ -9,7 +9,7 @@ follows is the app as it stands, not as it stood before enforcement started.
 here is from memory or from the earlier partial draft.
 
 Phase 3 applies this document in batches, one at a time, each verified against two
-clients before the next begins. Two batches are already applied (§9).
+clients before the next begins. Three batches are already applied (§9).
 
 ---
 
@@ -138,17 +138,29 @@ stay null and are **reported, not guessed**.
 
 ---
 
-## 6. Read rules that ignore the client — 20
+## 6. Read rules that carry a client field — 20, batch 3 applied
 
-Each carries a client field and a read rule that never compares it. Sixteen get a tenant
-clause; four are correctly exempt.
+Twenty read rules never compare the client field. On inspection, only **seven** could
+actually return another client's records: the rest are matched on the person's own email,
+which cannot cross a tenant boundary. The seven are scoped; the others needed no change.
 
-**Get a tenant clause (16):**
-`AssessmentInsights` · `CheckInLeaderNote` · `ConversationalLearningModule` (hybrid:
-platform + own) · `CustomRole` (hybrid) · `DevelopmentExperience` · `DevelopmentPlan` ·
-`HRBPIntervention` · `HRBPPortfolio` · `LeadershipProfileReport` · `LearningCertificate` ·
-`ManagerPulse` · `MeetingRecord` · `SnapshotIntegrityIncident` · `TonePreference` ·
-`UserActivity` · `WeeklyCheckIn`
+**Scoped in batch 3 (7):**
+
+| Type | What it exposed | Rule now |
+| --- | --- | --- |
+| `CustomRole` | read wide open — every custom role and its permission set readable by anyone | platform roles (`client_id` empty) plus own client; Platform Admin sees all |
+| `ConversationalLearningModule` | any Admin Level 1 / Analyst / Partner Admin anywhere could read another client's draft and awaiting-approval modules; and one client's *published* module leaked too | published modules: platform-wide plus own client; author sees own; each admin role matched to its own client |
+| `DevelopmentPlan` | a manager or admin in one client could read every client's development plans | manager and admin branches matched to their own client |
+| `DevelopmentExperience` | same, for coaching and development experiences | manager and admin branches matched to their own client |
+| `HRBPIntervention` | HRBP interventions — sensitive manager-level records — readable by every client's admins | admin, super-admin and partner branches matched to their own / portfolio clients |
+| `HRBPPortfolio` | one client's HRBP portfolio readable by another client's admins | admin, super-admin and partner branches matched to their own / portfolio clients |
+| `LearningCertificate` | every issued certificate readable by any administrator anywhere | each admin, analyst and partner branch matched to its own / portfolio client; learner and their manager unchanged |
+
+**Already safe by identity (9) — no change:** `AssessmentInsights`,
+`CheckInLeaderNote`, `LeadershipProfileReport`, `ManagerPulse`, `TonePreference`,
+`UserActivity`, `WeeklyCheckIn`, `MeetingRecord` and `SnapshotIntegrityIncident` match on
+the person's own email (or are gated to the succession control plane), which cannot return
+another tenant's record. Adding a client clause there would have narrowed nothing.
 
 **Correctly exempt (4):** `CrossTenantAccessGrant`, `ImpersonationLog`, `PartnerCommission`
 (admin-only governance) and `UATSubmission` (internal platform QA).
@@ -234,7 +246,7 @@ accept it. Batched as one, verified once.
 
 ---
 
-## 9. Already applied — batches 1 and 2
+## 9. Already applied — batches 1 to 3
 
 This is why several counts above are lower than the earlier draft.
 
@@ -267,8 +279,8 @@ rehearsal record was removed.
 | --- | --- | --- | --- |
 | **1** | `Goal`, `LearningResource`, `CheckInCustomQuestion`, `ReportTemplate`/`ScheduledReport` | 5 | **applied** |
 | **2** | Person record: field locks + server-side invitation claim | 1 fn | **applied** |
-| **3** | The 16 unscoped reads | 16 | next |
-| **4** | The 58 role-only writes | 58 | after 3 |
+| **3** | The unscoped reads that could cross a client | 7 of 20 | **applied** |
+| **4** | The 58 role-only writes | 58 | next |
 | **5** | The 27 types that need `client_id`, field then backfill | 27 | after 4 — needs the field before writes can be scoped |
 | **6** | `succession*` as one family | 125 fn | in parallel with 5 |
 | **7** | Bulk / person-move / destructive functions | ~33 fn | highest consequence |
@@ -291,5 +303,5 @@ outstanding:
    writer at `Client`. Batch 9.
 
 **Phase 2 is complete.** Every count is measured, every classification is decided, and
-the batch order is fixed. The next piece of work is Phase 3, batch 3 — the 16 read rules
-that carry a client field and never compare it.
+the batch order is fixed. Batch 3 is applied; the next piece of work is Phase 3, batch 4 —
+the 58 create rules that let any holder of a role stamp a record to any client.
