@@ -228,9 +228,9 @@ const AuthenticatedApp = () => {
       <Route path="/CustomAssessmentBuilder" element={<Navigate to="/DevelopmentManager?tab=signals" replace />} />
       <Route path="/my-development" element={<MVPLayout><MyDevelopment /></MVPLayout>} />
       <Route path="/course/:courseId" element={<MVPLayout><CoursePlayer /></MVPLayout>} />
-      <Route path="/signal/:id" element={<MVPLayout><SignalPlayer /></MVPLayout>} />
+      <Route path="/signal/:id" element={<MVPPage><SignalPlayer /></MVPPage>} />
       <Route path="/experience-overview" element={<MVPLayout><ExperienceOverview /></MVPLayout>} />
-      <Route path="/report-builder-mvp" element={<MVPLayout><ReportBuilderMVP /></MVPLayout>} />
+      <Route path="/report-builder-mvp" element={<MVPPage><ReportBuilderMVP /></MVPPage>} />
       <Route path="/manager-detail/:id" element={<MVPLayout><ManagerDetail /></MVPLayout>} />
 
       {/* Shared pages — MVP users get MVPLayout, others get legacy LayoutWrapper */}
@@ -253,7 +253,7 @@ const AuthenticatedApp = () => {
             : mvpRole ? <MVPPage><PerformanceManager /></MVPPage> : <LayoutWrapper currentPageName="PerformanceManager"><PerformanceManager /></LayoutWrapper>
       } />
       <Route path="/reviews" element={<MVPLayout><Reviews /></MVPLayout>} />
-      <Route path="/BlogManager" element={<MVPLayout><BlogManager /></MVPLayout>} />
+      <Route path="/BlogManager" element={<MVPPage><BlogManager /></MVPPage>} />
       <Route path="/my-performance" element={<MVPPage><MyPerformance /></MVPPage>} />
       <Route path="/my-goals" element={<Navigate to="/my-performance" replace />} />
       <Route path="/my-rhythm" element={<MVPPage><MyRhythm /></MVPPage>} />
