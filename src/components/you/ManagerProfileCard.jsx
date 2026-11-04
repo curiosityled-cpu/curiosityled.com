@@ -94,7 +94,14 @@ export default function ManagerProfileCard() {
 
   const handleSave = async () => {
     setSaving(true);
-    await base44.auth.updateMe({ data: { ...user?.data, ...profile } }).catch(() => {});
+    // Carry the rest of the profile through, but never the fields that decide
+    // which organisation or role this person has — those are locked to the server.
+    const {
+      app_role, client_id, partner_id, partner_client_ids,
+      subordinate_emails, managed_program_ids, custom_role_id,
+      ...safeData
+    } = user?.data || {};
+    await base44.auth.updateMe({ data: { ...safeData, ...profile } }).catch(() => {});
     setSaving(false);
     setEditing(false);
   };

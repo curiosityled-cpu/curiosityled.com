@@ -67,14 +67,38 @@ Row distribution: 44 goals unstamped, 8 owned by one client.
 
 ---
 
+## Field locks, and the invitation claim moved to the server
+
+Every rule above trusts a field on the person's own record: `client_id`,
+`app_role`, `partner_id`, `partner_client_ids`, `subordinate_emails`,
+`managed_program_ids`, `custom_role_id`. Until now any signed-in person could
+rewrite those on themselves through a profile update — including their own role.
+A rule that trusts a value the user can set is not a rule.
+
+| Change | Effect |
+| --- | --- |
+| Field-level write locks on those seven `User` fields | only the service role (and the app's editors, from the dashboard) can write them |
+| `ManagerProfileCard` no longer spreads the whole `data` object | saving a profile can no longer carry a locked field back through |
+| New `claimPendingInvitation` function | applies the invited role and client from the **session's** email; the browser sends nothing but the call |
+| `pendingInvitation.js` | calls that function instead of writing `app_role` / `client_id` itself |
+
+The invitation claim was the reason this could not be done earlier, and it was worse
+than a blocker: it was the escalation path. A person could call the profile update with
+`app_role: "Platform Admin"` at any time. The invitation is now read server-side by the
+caller's verified email, verified against the `Client` record it names, and written with
+the service role in a single merged update — the same write path as every other
+membership change.
+
+Verified live: rehearsed with a real invitation for the Platform Admin account carrying
+their existing role and client. The claim applied both and marked the invitation
+claimed; the account's stored values were unchanged, and the rehearsal invitation was
+deleted afterwards.
+
+---
+
 ## Still open
 
-1. **`data.client_id` has no write lock on `User`.** Still the remaining hardening.
-   Deliberately not done in this batch: two profile screens (`ManagerProfileCard`,
-   `Settings`) spread the whole `user.data` object back through `updateMe`, so a field
-   lock needs those screens trimmed to named fields first, or saving a profile would
-   start failing.
-2. **Shared-goal editing is client-wide, not member-only.** The precise form needs
+1. **Shared-goal editing is client-wide, not member-only.** The precise form needs
    `members` denormalized to a list of plain emails; the field-level lock above is the
    same piece of work.
 3. **158 unscoped service-role functions, and the `succession*` family (125).** Next

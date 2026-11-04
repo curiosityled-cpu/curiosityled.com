@@ -93,40 +93,89 @@
         "Platform Admin"
       ],
       "default": "User Level 1",
-      "description": "Platform role"
+      "description": "Platform role",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      }
     },
     "custom_role_id": {
       "type": "string",
-      "description": "ID of the CustomRole assigned to this user (addon permissions)"
+      "description": "ID of the CustomRole assigned to this user (addon permissions)",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      }
     },
     "client_id": {
       "type": "string",
-      "description": "ID of the client organization this user belongs to"
+      "description": "ID of the client organization this user belongs to",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      }
     },
     "partner_id": {
       "type": "string",
-      "description": "ID of the partner organization (for Partner Business Administrators)"
+      "description": "ID of the partner organization (for Partner Business Administrators)",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      }
     },
     "managed_program_ids": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Array of Program IDs that this Admin Level 1 user manages"
+      "description": "Array of Program IDs that this Admin Level 1 user manages",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      }
     },
     "subordinate_emails": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Array of direct report emails (for User Level 2). NOT trusted for authorization \u2014 derive manager/subordinate relationships from PositionAssignment/OrgPosition instead."
+      "description": "Array of direct report emails (for User Level 2). NOT trusted for authorization \u2014 derive manager/subordinate relationships from PositionAssignment/OrgPosition instead.",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      }
     },
     "partner_client_ids": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Array of Client IDs managed by this Partner Business Administrator"
+      "description": "Array of Client IDs managed by this Partner Business Administrator",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      }
     },
     "onboarding_completed": {
       "type": "boolean",
@@ -141,7 +190,7 @@
     "is_uat_tester": {
       "type": "boolean",
       "default": false,
-      "description": "Whether this user has UAT testing capabilities enabled"
+      "description": "Whether user has UAT testing capabilities enabled"
     },
     "account_status": {
       "type": "string",

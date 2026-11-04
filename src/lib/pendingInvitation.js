@@ -11,23 +11,10 @@ export async function claimPendingInvitation(user) {
   if (!user?.email || user.app_role) return user;
 
   try {
-    const invitations = await base44.entities.PendingInvitation.filter({
-      email: user.email,
-      status: 'pending',
-    });
-    if (invitations.length === 0) return user;
-
-    const invitation = invitations[0];
-
-    await base44.auth.updateMe({
-      app_role: invitation.app_role,
-      ...(invitation.client_id ? { client_id: invitation.client_id } : {}),
-    });
-
-    await base44.entities.PendingInvitation.update(invitation.id, {
-      status: 'claimed',
-      claimed_at: new Date().toISOString(),
-    });
+    // The invitation is applied on the server, against the session's own email —
+    // the role and client never come from anything this browser sends.
+    const response = await base44.functions.invoke('claimPendingInvitation', {});
+    if (!response?.data?.claimed) return user;
 
     return await base44.auth.me();
   } catch (error) {
