@@ -165,7 +165,21 @@
     "create": {
       "$or": [
         {
-          "data.user_email": "{{user.email}}"
+          "$and": [
+            {
+              "data.user_email": "{{user.email}}"
+            },
+            {
+              "$or": [
+                {
+                  "data.client_id": null
+                },
+                {
+                  "data.client_id": "{{user.data.client_id}}"
+                }
+              ]
+            }
+          ]
         },
         {
           "$and": [
@@ -176,6 +190,16 @@
             },
             {
               "data.coach_email": "{{user.email}}"
+            },
+            {
+              "$or": [
+                {
+                  "data.client_id": null
+                },
+                {
+                  "data.client_id": "{{user.data.client_id}}"
+                }
+              ]
             }
           ]
         },
