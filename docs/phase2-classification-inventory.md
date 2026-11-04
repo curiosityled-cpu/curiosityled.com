@@ -324,8 +324,9 @@ person's own email, so their scope already follows the person. The succession co
 derives `client_id` itself. `PartnerCommission` is bound to the partner's own id.
 `CustomRole` is platform-catalog governance and is Platform Admin only.
 
-What remains is Batch 5 onward: the read-rule and update/delete passes, the backend
-functions that resolve tenancy themselves, and the Tenant retirement in Batch 9.
+Batches 5 and 7 are applied (read rules; bulk writes and tenant creation). What remains is
+the read-rule pass for the types flagged in 10.1, the update/delete pass in Batch 6, the
+platform-only guard in Batch 8, and the Tenant retirement in Batch 9.
 
 ### 10.1 Batch 5 — the read pass
 
@@ -345,3 +346,21 @@ and answers and is readable by every Admin Level 1, Admin Level 2, Super Adminis
 Partner Business Administrator, because it has no `client_id` at all. It is a sales artefact
 rather than tenant data, so narrowing it to Platform Admin is a product call, not a rule
 change — flagged rather than made.
+
+### 10.2 Batch 7 — the bulk-write and tenant-creation pass
+
+The bulk endpoints were checked for two things: whether they resolve the caller's tenant, and
+whether the record they write or delete is pinned to it. Six were reviewed and four fixed.
+
+| Function | Was | Now |
+| --- | --- | --- |
+| `bulkRoleOperations` | Authorised on `user.role` (the built-in admin/user flag), so every real administrator was refused and any built-in admin passed. Created `Role` records with no `client_id` and deleted by title across every tenant. | Authorised on `app_role`. Writes and deletes pinned to the caller's client; a Platform Admin must name the client, so there is no cross-tenant default. |
+| `bulkCompetencyOperations` | Same broken authorisation, same unscoped create, same delete-by-name across every tenant. | Same treatment. `Competency` is client-owned, so its create and delete are pinned to the caller's client. |
+| `createClient` | Allowed Super Administrator, a tenant-scoped role, to create new tenants. | Platform Admin and Partner Business Administrator only. |
+| `clientCreate` | Allowed Super Administrator to create new tenants. | Platform Admin only. |
+| `bulkAssignJourneys` | Target users were verified, but the journey id was taken on trust — any tenant admin could enrol staff in another tenant's journey. | The journey must belong to the caller's client, or carry no client (a platform-wide catalogue item). Enrollments are stamped by the server. |
+
+`getAssignableUsers` was verified correct: every branch scopes to the caller's own client,
+except Platform Admin, which is intentionally platform-wide. `exitImpersonation` is self-scoped
+by `admin_email`, and `bulkAssignGoals` / `bulkAssignAssessments` reach no tenant-owned record
+of their own — they write goals and notifications against already-verified people.
