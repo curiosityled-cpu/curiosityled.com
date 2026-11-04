@@ -100,8 +100,16 @@
   ],
   "rls": {
     "create": null,
-    "update": null,
-    "delete": null,
+    "update": {
+      "user_condition": {
+        "role": "Platform Admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "Platform Admin"
+      }
+    },
     "read": {
       "$or": [
         {

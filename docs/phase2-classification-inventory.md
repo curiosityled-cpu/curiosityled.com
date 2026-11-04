@@ -441,3 +441,46 @@ Left open on purpose, and why: `Journey` (`in_content_library`), `LearningJourne
 (`is_platform_default`) publish content intended for every tenant. `Goal`, `CustomForm` and
 `ReviewParticipant` keep role branches bounded by `managed_program_ids`,
 `coaching_engagement_id` or the caller's own line, which are already tenant-bound.
+
+### 10.6 Batch 11 — the update/delete pass, part one: append-only records
+
+Thirty-six types carry `client_id` and declare `"update": null, "delete": null`. A null rule
+does not mean "nobody" — it falls back to the create rule, and failing that to read. So on
+every one of those types, anyone who could *see* a record could also rewrite or erase it.
+For configuration that is a privilege-escalation problem; for evidence it is a compliance
+one, because a transcript or an audit trail that the person it records can delete is worth
+nothing in an audit.
+
+The first half of the pass closes the records that must be append-only: audit trails,
+compliance evidence, ledgers and legally owed notices. Ten types, each now updatable and
+deletable only by a Platform Admin — which is also the platform's remediation path, and which
+server functions bypass anyway because they act with the service role.
+
+| Type | What it holds | Why it may not be edited |
+| --- | --- | --- |
+| `LearningRecordEvent` | Every consequential learning action, immutable by design | A transcript must be reconstructable and provably unaltered |
+| `CourseVersion` | The published body of a course at a point in time | Completions point at a version; editing it rewrites history |
+| `ImpersonationLog` | Who impersonated whom, when, and why | The audit trail of privileged access |
+| `ActivityLog` | Administrative actions taken on people and requests | Same class of audit record |
+| `PointTransaction` | The points ledger | A balance must be derivable from its entries |
+| `UATSubmission` | Tester results and evidence | QA evidence is only worth something if the tester cannot amend it |
+| `SuccessionDecisionRecord` | The ratifiable decision artefact | A correction is a new superseding version, never an edit |
+| `SuccessionLegalHold` | Active and released legal holds | A freeze that can be erased defends nothing |
+| `SuccessionSealedDemographic` | Sealed attributes used only for adverse-impact analysis | Purge is the only sanctioned removal, and it is audited |
+| `SuccessionCandidateNotice` | What a candidate was actually told | Versioned rather than edited, by design |
+
+Checked before locking: every mutation of these records in the codebase goes through
+`asServiceRole` (`learningRecordCommand`, `logImpersonationEvent`, `exitImpersonation`,
+`successionRecordDecision`, `successionManageLegalHold`, `successionSealedDemographics`,
+`successionCandidateNotice`, `cleanupOldActivityData`, `cleanupTestData`). No screen writes
+them directly, so nothing in the product breaks; the only thing that stops working is a
+signed-in user editing evidence from the browser.
+
+Remaining in this pass: twenty-six client-owned configuration types whose update and delete
+rules are still null — `Program`, `Cohort`, `Class`, `Journey`, `LearningJourney`,
+`OnboardingPlan`, `CustomAssessment`, `CustomForm`, `CustomFormTemplate`, `GamificationSettings`,
+`OrgBusinessGoal`, `WorkforceMetrics`, `BrandingConfiguration`, `KPI`, `Certification`,
+`Certificate`, `UserBadge`, `UserAchievement`, `DevelopmentRequest`, `Competition`,
+`AssessmentSubmission`, `CoachingEngagement`, `CoachingSession`, `Automation`,
+`ReviewCycleEvent`, `ExternalAssessmentResult`. These need a per-type write rule rather than a
+single lock — each one has its own legitimate editor — so they are the next batch.
