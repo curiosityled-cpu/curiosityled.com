@@ -19,12 +19,12 @@ export default function BlogHeader() {
           : "bg-[#FBFAF7] border-b border-transparent"
       }`}
     >
-      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center">
+      <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+        <Link to="/" className="flex items-center py-2">
           <img
-            src="https://raw.githubusercontent.com/curiosityled-cpu/curiosityled.com/main/public/CuriosityLedLogoBBW%20(1).png"
+            src="https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/a426953be_CuriosityLedLogoBBW.png"
             alt="Curiosity Led"
-            className="h-9 object-contain"
+            className="h-14 md:h-16 w-auto object-contain"
           />
         </Link>
 
