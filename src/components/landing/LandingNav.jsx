@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import BrandLogo from "@/components/landing/BrandLogo";
 
 export default function LandingNav({ hideCtas = false }) {
   const [scrolled, setScrolled] = useState(false);
@@ -21,14 +22,10 @@ export default function LandingNav({ hideCtas = false }) {
         scrolled ? "bg-white border-b border-gray-100 shadow-sm" : "bg-transparent"
       }`}
     >
-      <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
-          <img
-            src="https://raw.githubusercontent.com/curiosityled-cpu/curiosityled.com/main/public/CuriosityLedLogoBBW%20(1).png"
-            alt="Curiosity Led"
-            className="h-10 object-contain"
-          />
+          <BrandLogo />
         </Link>
 
         {/* Nav links */}

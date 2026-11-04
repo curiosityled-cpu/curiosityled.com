@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import BrandLogo from "@/components/landing/BrandLogo";
 
 export default function BlogHeader() {
   const [scrolled, setScrolled] = useState(false);
@@ -19,13 +20,9 @@ export default function BlogHeader() {
           : "bg-[#FBFAF7] border-b border-transparent"
       }`}
     >
-      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
         <Link to="/" className="flex items-center">
-          <img
-            src="https://raw.githubusercontent.com/curiosityled-cpu/curiosityled.com/main/public/CuriosityLedLogoBBW%20(1).png"
-            alt="Curiosity Led"
-            className="h-9 object-contain"
-          />
+          <BrandLogo />
         </Link>
 
         <nav className="hidden sm:flex items-center gap-7">

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ArrowLeft, Shield } from "lucide-react";
+import BrandLogo from "@/components/landing/BrandLogo";
 
 export default function DiagnosticHeader({ onBack, showBack }) {
   return (
@@ -16,11 +17,7 @@ export default function DiagnosticHeader({ onBack, showBack }) {
               Back
             </button>
           ) : (
-            <img
-              src="https://raw.githubusercontent.com/curiosityled-cpu/curiosityled.com/main/public/CuriosityLedLogoBBW%20(1).png"
-              alt="Curiosity Led"
-              className="h-10 object-contain"
-            />
+            <BrandLogo />
           )}
         </div>
         <div className="flex items-center gap-1.5" style={{ color: "#0202ff" }}>

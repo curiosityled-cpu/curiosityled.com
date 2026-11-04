@@ -2,8 +2,7 @@ import React, { useEffect } from "react";
 import { setPageSEO } from "@/lib/seo";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-
-const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689807051dd69c2529ceabd9/2e32ade86_CuriosityLedLogoBBW.png";
+import BrandLogo from "@/components/landing/BrandLogo";
 
 export default function TermsOfService() {
   useEffect(() => {
@@ -20,7 +19,7 @@ export default function TermsOfService() {
       <header className="border-b border-gray-100 sticky top-0 bg-white z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <Link to={createPageUrl("LandingPage")}>
-            <img src={LOGO_URL} alt="Curiosity Led" className="h-8" />
+            <BrandLogo />
           </Link>
         </div>
       </header>
