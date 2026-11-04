@@ -115,6 +115,7 @@ function CompetencyMultiSelect({ value = [], onChange }) {
 }
 
 function ResourceFormDialog({ open, onClose, resource, onSaved }) {
+  const { activeClientId } = useClient();
   const [form, setForm] = useState(EMPTY_RESOURCE);
   const [saving, setSaving] = useState(false);
 
@@ -137,7 +138,7 @@ function ResourceFormDialog({ open, onClose, resource, onSaved }) {
         await base44.entities.LearningResource.update(resource.id, payload);
         toast.success("Resource updated");
       } else {
-        await base44.entities.LearningResource.create(payload);
+        await base44.entities.LearningResource.create({ ...payload, client_id: activeClientId });
         toast.success("Resource created");
       }
       onSaved();

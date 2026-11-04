@@ -6,12 +6,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { base44 } from "@/api/base44Client";
+import { useClient } from "@/components/contexts/ClientContext";
 import { toast } from "sonner";
 import { X, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import ThumbnailPicker from "@/components/dev-manager/ThumbnailPicker";
 
 export default function LearningResourceModal({ resource, isOpen, onClose, onSave }) {
+  const { activeClientId } = useClient();
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -108,7 +110,7 @@ export default function LearningResourceModal({ resource, isOpen, onClose, onSav
         await base44.entities.LearningResource.update(resource.id, formData);
         toast.success("Learning resource updated successfully");
       } else {
-        await base44.entities.LearningResource.create(formData);
+        await base44.entities.LearningResource.create({ ...formData, client_id: activeClientId });
         toast.success("Learning resource created successfully");
       }
       onSave();

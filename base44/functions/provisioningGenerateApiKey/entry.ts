@@ -44,11 +44,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing tenantId', requestId }, { status: 400 });
     }
 
-    // Verify tenant exists
-    const tenants = await base44.asServiceRole.entities.Tenant.filter({ id: tenantId });
-    if (tenants.length === 0) {
-      console.error(`[${requestId}] Tenant not found: ${tenantId}`);
-      return Response.json({ error: 'Tenant not found', requestId }, { status: 404 });
+    // Verify the client (the tenant of record) exists
+    const clients = await base44.asServiceRole.entities.Client.filter({ id: tenantId });
+    if (clients.length === 0) {
+      console.error(`[${requestId}] Client not found: ${tenantId}`);
+      return Response.json({ error: 'Client not found', requestId }, { status: 404 });
     }
 
     // Generate random API key (32 bytes = 64 hex chars)
