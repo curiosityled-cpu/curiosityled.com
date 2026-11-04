@@ -42,6 +42,7 @@ import TestLanding from './pages/TestLanding';
 import ICWebCheckIn from './pages/ICWebCheckIn';
 import FlatBridgeHandoff from './pages/FlatBridgeHandoff';
 import VerifyCertificate from './pages/VerifyCertificate';
+import SuccessionTemplateGuide from './pages/SuccessionTemplateGuide';
 
 
 import LeadershipIntelligenceHub from './pages/LeadershipIntelligenceHub';
@@ -158,6 +159,9 @@ const AuthenticatedApp = () => {
 
       {/* Public certificate verification — no login required */}
       <Route path="/verify-certificate" element={<VerifyCertificate />} />
+
+      {/* Public succession planning article with workbook lead capture — no login required */}
+      <Route path="/succession-planning-template" element={<SuccessionTemplateGuide />} />
 
       {/* Public share-ready summary for Go Flat Bridge — no login required */}
       <Route path="/flat-bridge-handoff" element={<FlatBridgeHandoff />} />

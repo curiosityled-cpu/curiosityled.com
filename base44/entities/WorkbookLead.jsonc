@@ -1,0 +1,84 @@
+{
+  "name": "WorkbookLead",
+  "type": "object",
+  "description": "A visitor who requested the succession planning workbook from the public article page. Captured when someone submits the lead form, together with the marketing consent they gave at that moment. Records are written by the public capture function and readable only by administrators, never by other visitors.",
+  "properties": {
+    "full_name": {
+      "type": "string",
+      "description": "Name the visitor gave on the form"
+    },
+    "email": {
+      "type": "string",
+      "description": "Email address the workbook and download link are sent to"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Phone number the visitor gave on the form"
+    },
+    "consent_marketing": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the visitor agreed to receive the workbook and occasional leadership insights. Required to submit."
+    },
+    "consent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When consent was given"
+    },
+    "source_page": {
+      "type": "string",
+      "description": "Path of the page the lead came from"
+    },
+    "source_article": {
+      "type": "string",
+      "description": "Article the visitor was reading when they requested the workbook"
+    },
+    "email_status": {
+      "type": "string",
+      "enum": [
+        "sent",
+        "failed",
+        "skipped"
+      ],
+      "enumColors": [
+        "green",
+        "red",
+        "gray"
+      ],
+      "default": "skipped",
+      "description": "Whether the workbook email was delivered, could not be delivered, or was not attempted"
+    },
+    "email_error": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Reason the email could not be sent, kept for follow-up"
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Internal follow-up notes"
+    }
+  },
+  "required": [
+    "full_name",
+    "email"
+  ],
+  "rls": {
+    "create": {},
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
