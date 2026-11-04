@@ -22,6 +22,10 @@ export default function LandingFooter() {
             <Link to="/LandingPage" className="text-gray-400 text-xs hover:text-white transition-colors mt-3">
               → Visit main site
             </Link>
+            <br />
+            <Link to="/blog" className="text-gray-400 text-xs hover:text-white transition-colors">
+              → Read the journal
+            </Link>
             {/* Founder identity */}
             <div className="mt-5 pt-5 border-t border-white/10">
               <div className="flex items-center gap-3">

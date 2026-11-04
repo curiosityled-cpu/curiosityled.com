@@ -9,7 +9,7 @@ import {
   Brain, Target, Home, BarChart2, Users, LogOut, Menu, X,
   ChevronRight, ChevronLeft, Bell, User, ArrowLeft,
   Settings, Shield, UserCog, Dumbbell, Sun, Moon, ChevronDown, FolderOpen,
-  ClipboardList, Layers, Network, GraduationCap } from "lucide-react";
+  ClipboardList, Layers, Network, GraduationCap, PenLine } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -76,6 +76,7 @@ const NAV_CONFIG = {
      { label: 'Talent Manager', path: '/talent-manager', icon: Layers },
      { label: 'Report Manager', path: '/report-builder-mvp', icon: BarChart2 },
      { label: 'User Management', path: '/UserManagement', icon: UserCog },
+     { label: 'Blog', path: '/BlogManager', icon: PenLine },
      ]}],
 
   analyst: [
