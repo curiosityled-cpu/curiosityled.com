@@ -19,10 +19,10 @@ Status: applied. Nothing migrated, nothing deleted.
 
 Two deliberate choices:
 
-- **Super Administrator and Platform Admin stay unconditional** on update/delete.
-  Narrowing them would have removed access from the two real administrators on
-  records their own client does not own — a lockout with no security gain, since
-  only Platform Admin is cross-tenant by design.
+- **Platform Admin is the only unconditional write role.** Corrected after review:
+  Super Administrator is a client-specific role, not a platform one, so it is scoped
+  to its own client on every write in this batch. It no longer carries
+  platform-catalogue write reach, and it cannot reach another tenant.
 - **Platform rows stay readable.** A resource or template with no client is the
   platform catalogue, not another tenant's data. Every read keeps that branch.
 
@@ -57,12 +57,13 @@ over.
 
 ## Open items carried into the next batch
 
-1. **Three unattributed goals.** CSAT Score, Ticket Resolution Time, SLA Adherence have
-   no client and are now visible only to Platform Admin. They need attribution before
-   they can be seen by a tenant. Recommend HealthCo (demo), where the rest of that seed
-   lives — needs your call.
-2. **`Goal` writes are still inherited-open.** 47 of 52 goals have no client stamp, so
-   client-scoped writes would lock real rows out. Backfill must precede it.
+1. **Resolved.** CSAT Score, Ticket Resolution Time and SLA Adherence are stamped to
+   HealthCo. 44 goals written by seed service accounts remain unattributed — all of them
+   private, with no assignments or members. They do not block goal write scoping, because
+   the owner branch carries access by identity rather than by client.
+2. **`Goal` writes are still inherited-open.** It no longer needs a backfill first: every
+   real goal is reachable through its creator, and the 44 unstamped rows are private
+   personal goals. Ready to scope, next batch.
 3. **`LearningResource` create is still role-only.** Neither creation dialog stamps a
    client, so requiring one would return 403 on save. Needs the two dialogs wired
    first; platform catalogue rows must be exempt for Platform Admin.
