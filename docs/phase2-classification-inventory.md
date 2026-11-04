@@ -303,14 +303,26 @@ outstanding:
    writer at `Client`. Batch 9.
 
 **Phase 2 is complete.** Every count is measured, every classification is decided, and
-the batch order is fixed. Batch 3 is applied. Batch 4 is under way: twenty-five create rules
-now require a client match — `PendingInvitation`, `UserBadge`, `PointTransaction`,
+the batch order is fixed. Batch 3 is applied. Batch 4 is applied: forty-three create rules
+require a client match — `PendingInvitation`, `UserBadge`, `PointTransaction`,
 `OrgBusinessGoal`, `GamificationSettings`, `ProfileDataConflict`, `RoleTaxonomy`,
 `EmployeeAssignment`, `ManagerPortfolio`, `ICRoster`, `ReviewParticipant`, `ReviewCalibration`,
 `CoachingSession`, `CoachingEngagement`, `CourseProgress`, `AssignedLearning`, `Certificate`,
 `Certification`, `Program`, `Class`, `Cohort`, `Journey`, `LearningJourney`,
-`CustomAssessment` and `CustomFormTemplate` — with 19 remaining, led by the signal and
-submission records (`CustomForm`, `AssessmentSubmission`, `ExternalAssessmentResult`,
-`ExternalLearningRecord`) and then the operational logs (`ActivityLog`, `WorkforceMetrics`,
-`CustomerAccount`, `EmailTemplate`, `BrandingConfiguration`). `MeetingRecord` and `WeeklyCheckIn` need no
-change: their create rules are already bound to the person's own email.
+`CustomAssessment`, `CustomFormTemplate`, `CustomForm`, `AssessmentSubmission`,
+`ExternalAssessmentResult`, `ExternalLearningRecord`, `ActivityLog`, `WorkforceMetrics`,
+`CustomerAccount`, `EmailTemplate`, `BrandingConfiguration`, `ConversationalLearningModule`,
+`Course`, `DevelopmentExperience`, `DevelopmentPlan`, `LearningCertificate`,
+`UserAchievement`, `WeeklyCheckIn`, `MeetingRecord`, `DevelopmentRequest`, `Competition`,
+`OnboardingPlan`, `HRBPPortfolio` and `HRBPIntervention`.
+
+Three groups need no change. `MeetingRecord` and `WeeklyCheckIn` bind creation to the
+person's own email, so their scope already follows the person. The succession core
+(`CriticalRole`, `CriticalRoleRequirement`, `RoleRequirement`, `OrgPosition`,
+`OrgPositionChange`, `SuccessionCycle`, `EffectiveBlueprintSnapshot`,
+`EffectiveRequirementSnapshot`) is writable only by the server-side control plane, which
+derives `client_id` itself. `PartnerCommission` is bound to the partner's own id.
+`CustomRole` is platform-catalog governance and is Platform Admin only.
+
+What remains is Batch 5 onward: the read-rule and update/delete passes, the backend
+functions that resolve tenancy themselves, and the Tenant retirement in Batch 9.
