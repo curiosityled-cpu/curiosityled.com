@@ -10,6 +10,10 @@
       "type": "string",
       "description": "Email of the enrolled user"
     },
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this enrolment belongs to, stamped when the learner is enrolled so enrolment records stay tenant-scoped"
+    },
     "enrolled_date": {
       "type": "string",
       "format": "date-time",
@@ -104,14 +108,28 @@
           "data.enrolled_by": "{{user.email}}"
         },
         {
-          "user_condition": {
-            "role": "Admin Level 1"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
         },
         {
-          "user_condition": {
-            "role": "Admin Level 2"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
         },
         {
           "user_condition": {
@@ -143,29 +161,66 @@
           ]
         },
         {
-          "user_condition": {
-            "role": "Analyst"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Analyst"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
         },
         {
-          "user_condition": {
-            "role": "Admin Level 1"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
         },
         {
-          "user_condition": {
-            "role": "Admin Level 2"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
         },
         {
-          "user_condition": {
-            "role": "Super Administrator"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
         },
         {
-          "user_condition": {
-            "role": "Partner Business Administrator"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            },
+            {
+              "data.client_id": {
+                "$in": "{{user.data.partner_client_ids}}"
+              }
+            }
+          ]
         },
         {
           "user_condition": {
