@@ -280,7 +280,7 @@ rehearsal record was removed.
 | **1** | `Goal`, `LearningResource`, `CheckInCustomQuestion`, `ReportTemplate`/`ScheduledReport` | 5 | **applied** |
 | **2** | Person record: field locks + server-side invitation claim | 1 fn | **applied** |
 | **3** | The unscoped reads that could cross a client | 7 of 20 | **applied** |
-| **4** | Create rules that let any role holder stamp a record to any client | 44 | **in progress — 16 applied** |
+| **4** | Create rules that let any role holder stamp a record to any client | 44 | **in progress — 21 applied** |
 | **5** | The 27 types that need `client_id`, field then backfill | 27 | after 4 — needs the field before writes can be scoped |
 | **6** | `succession*` as one family | 125 fn | in parallel with 5 |
 | **7** | Bulk / person-move / destructive functions | ~33 fn | highest consequence |
@@ -303,12 +303,12 @@ outstanding:
    writer at `Client`. Batch 9.
 
 **Phase 2 is complete.** Every count is measured, every classification is decided, and
-the batch order is fixed. Batch 3 is applied. Batch 4 is under way: sixteen create rules
+the batch order is fixed. Batch 3 is applied. Batch 4 is under way: twenty-one create rules
 now require a client match — `PendingInvitation`, `UserBadge`, `PointTransaction`,
 `OrgBusinessGoal`, `GamificationSettings`, `ProfileDataConflict`, `RoleTaxonomy`,
 `EmployeeAssignment`, `ManagerPortfolio`, `ICRoster`, `ReviewParticipant`, `ReviewCalibration`,
-`CoachingSession`, `CoachingEngagement`, `CourseProgress` and `AssignedLearning` — with 28
-remaining, led by the credential and catalogue records (`Certificate`, `Certification`,
-`Program`, `Class`, `Cohort`, `Journey`, `LearningJourney`, `CustomAssessment`, `CustomForm`,
+`CoachingSession`, `CoachingEngagement`, `CourseProgress`, `AssignedLearning`, `Certificate`,
+`Certification`, `Program`, `Class` and `Cohort` — with 23 remaining, led by the signal and
+journey catalogue (`Journey`, `LearningJourney`, `CustomAssessment`, `CustomForm`,
 `CustomFormTemplate`, `AssessmentSubmission`). `MeetingRecord` and `WeeklyCheckIn` need no
 change: their create rules are already bound to the person's own email.
