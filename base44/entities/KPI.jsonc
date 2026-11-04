@@ -138,7 +138,21 @@
     "read": {
       "$or": [
         {
-          "data.visibility": "shared"
+          "$and": [
+            {
+              "data.visibility": "shared"
+            },
+            {
+              "$or": [
+                {
+                  "data.client_id": "{{user.data.client_id}}"
+                },
+                {
+                  "data.client_id": null
+                }
+              ]
+            }
+          ]
         },
         {
           "created_by": "{{user.email}}"

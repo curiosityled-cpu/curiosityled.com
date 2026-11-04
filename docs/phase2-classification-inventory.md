@@ -409,3 +409,35 @@ is deleted, so the entity no longer resolves.
 
 Batch 9 closes the last structural item of Phase 3: one name for a tenant (`Client`), one id
 column feeding it, and nothing left that can write an organization of the old kind.
+
+### 10.5 Batch 10 — read rules on catalogue and shared-visibility types
+
+Ten read rules granted a role access without naming a tenant, so a holder of that role in one
+client could read every other client's records of that type. Each was narrowed to the client
+the record belongs to, keeping the same roles:
+
+| Entity | Branch that crossed tenants | Now |
+| --- | --- | --- |
+| `Role` | Analyst, Admin Level 1/2, Super Administrator, Partner Business Administrator | role **and** (`client_id` = caller's client, or a tenant-less row for those same roles); platform defaults still shared |
+| `CareerPath` | same five roles | same shape as `Role` |
+| `LeaderboardTemplate` | same five roles | same shape as `Role` |
+| `CourseVersion` | User Level 2, Analyst | role **and** tenant-less version; the caller's own client's versions stay open to all its learners |
+| `Certification` | Super Administrator | Super Administrator **and** `client_id` match |
+| `DevelopmentRequest` | Super Administrator, Partner Business Administrator | client match, and partner branch narrowed to `partner_client_ids` |
+| `ExternalAssessmentResult` | Super Administrator, plus the `is_private: false` shares to User Level 2 / Admin Level 1 / Analyst | all four now require `client_id` match |
+| `WorkforceMetrics` | Executive | Executive **and** `client_id` match |
+| `KPI` | `visibility: shared` | shared **and** (`client_id` match or tenant-less), so an org-wide KPI no longer crosses into another org |
+| `BrandingConfiguration` | `is_active: true` | active **and** (`client_id` match, or the tenant-less platform default); a partner's active branding is readable only through the partner branch |
+
+Every writer already stamps `client_id` on these records — `learningRecordCommand` for course
+versions, `LeaderboardDesigner` for leaderboards, `bulkRoleOperations` for roles,
+`CareerPathModal` for career paths, and the admin tier rules for the rest — so narrowing the
+read side orphans nothing. Tenant-less rows were deliberately left readable by the same roles
+that could already see them, so no catalogue entry disappears from a screen.
+
+Left open on purpose, and why: `Journey` (`in_content_library`), `LearningJourney`
+(`is_template`), `OnboardingPlan` (`is_template`), `Competency` and `CustomFormTemplate`
+(`is_platform_default`), `CustomForm` (`public_access_enabled`) and `Role`
+(`is_platform_default`) publish content intended for every tenant. `Goal`, `CustomForm` and
+`ReviewParticipant` keep role branches bounded by `managed_program_ids`,
+`coaching_engagement_id` or the caller's own line, which are already tenant-bound.

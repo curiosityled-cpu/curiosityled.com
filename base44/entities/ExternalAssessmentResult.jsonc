@@ -167,9 +167,16 @@
           ]
         },
         {
-          "user_condition": {
-            "role": "Super Administrator"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
         },
         {
           "$and": [
@@ -186,45 +193,38 @@
           ]
         },
         {
+          "$and": [
+            {
+              "data.is_private": false
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            },
+            {
+              "$or": [
+                {
+                  "user_condition": {
+                    "role": "User Level 2"
+                  }
+                },
+                {
+                  "user_condition": {
+                    "role": "Admin Level 1"
+                  }
+                },
+                {
+                  "user_condition": {
+                    "role": "Analyst"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
           "user_condition": {
             "role": "Platform Admin"
           }
-        },
-        {
-          "$and": [
-            {
-              "data.is_private": false
-            },
-            {
-              "user_condition": {
-                "role": "User Level 2"
-              }
-            }
-          ]
-        },
-        {
-          "$and": [
-            {
-              "data.is_private": false
-            },
-            {
-              "user_condition": {
-                "role": "Admin Level 1"
-              }
-            }
-          ]
-        },
-        {
-          "$and": [
-            {
-              "data.is_private": false
-            },
-            {
-              "user_condition": {
-                "role": "Analyst"
-              }
-            }
-          ]
         }
       ]
     },
