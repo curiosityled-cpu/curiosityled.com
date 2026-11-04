@@ -93,7 +93,21 @@
     "create": {
       "$or": [
         {
-          "data.tester_email": "{{user.email}}"
+          "$and": [
+            {
+              "data.tester_email": "{{user.email}}"
+            },
+            {
+              "$or": [
+                {
+                  "data.client_id": null
+                },
+                {
+                  "data.client_id": "{{user.data.client_id}}"
+                }
+              ]
+            }
+          ]
         },
         {
           "user_condition": {
@@ -108,13 +122,20 @@
           "data.tester_email": "{{user.email}}"
         },
         {
-          "user_condition": {
-            "role": "Platform Admin"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
         },
         {
           "user_condition": {
-            "role": "Super Administrator"
+            "role": "Platform Admin"
           }
         }
       ]
