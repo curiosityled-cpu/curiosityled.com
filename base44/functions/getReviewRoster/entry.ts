@@ -19,6 +19,20 @@ export default async function(req: Request): Promise<Response> {
 
     if (!review_cycle_id) return Response.json({ error: "review_cycle_id required" }, { status: 400 });
 
+    // Tenant guard: the cycle and everything hanging off it belong to one client.
+    // Without this, any signed-in user could name a cycle id from another tenant
+    // and read its roster and submission status with the service role.
+    const role = user.app_role || user.data?.app_role || user.role;
+    const myClient = user.data?.client_id || user.client_id;
+    const isPlatformAdmin = role === "Platform Admin" || role === "Platform Administrator";
+    if (!isPlatformAdmin) {
+      const cycle = await base44.asServiceRole.entities.CustomForm.get(review_cycle_id).catch(() => null);
+      if (!cycle) return Response.json({ error: "Review cycle not found" }, { status: 404 });
+      if (cycle.client_id && cycle.client_id !== myClient) {
+        return Response.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
+
     // Fetch roster and submissions in parallel
     const [roster, submissions] = await Promise.all([
       base44.asServiceRole.entities.ReviewParticipant.filter({ review_cycle_id }),

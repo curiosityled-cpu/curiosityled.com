@@ -328,6 +328,13 @@ Batches 5, 7, 8 and 9 are applied (read rules; bulk writes and tenant creation; 
 guard, seeds, billing and the report-path reads; the `Tenant` retirement). What remains is the
 read-rule pass for the types flagged in 10.1 and the update/delete pass in Batch 6.
 
+> **Update, phase 3 batches 3–8** — this section is no longer the newest statement of the
+> work. The learning and enrolment family is closed, batch 5 has been re-measured (50
+> unguarded operations across 23 types, split into fixable / column-first / bound-by-design /
+> product-call), and the function layer has been audited over all 552 functions with one real
+> gap fixed (`getReviewRoster`). See `phase3-batch3-8-enforcement.md`, which also records that
+> the two-client proof has not been run and why.
+
 ### 10.1 Batch 5 — the read pass
 
 Every type that carries `client_id` was checked for a read rule that never consults it.
