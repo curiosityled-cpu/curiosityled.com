@@ -280,13 +280,16 @@ moment reads *and* writes are both closed.
 
 ---
 
-## 11. What still needs your word
+## 11. Confirmed — Phase 2 closed
 
-Only two things, and both have a default I will otherwise take:
+Both remaining calls were accepted on 4 November 2026, so nothing in this document is
+outstanding:
 
-1. **Suspended clients:** read yes, write no. Default: apply as stated.
+1. **Suspended clients:** readable, not writable. Applied with the batch that touches
+   client status.
 2. **`Tenant` retirement:** delete the empty entity and repoint its single remaining
-   writer at `Client`. Default: apply in batch 9.
+   writer at `Client`. Batch 9.
 
-Everything else in this document is now derived, measured and locked. Phase 3 batch 3 is
-the 16 unscoped reads.
+**Phase 2 is complete.** Every count is measured, every classification is decided, and
+the batch order is fixed. The next piece of work is Phase 3, batch 3 — the 16 read rules
+that carry a client field and never compare it.
