@@ -81,9 +81,14 @@ Deno.serve(async (req) => {
 
     // A1: Create tenant and roles
     const tenantName = `t_wix_gate_${Date.now()}`;
-    testTenant = await base44.asServiceRole.entities.Tenant.create({
+    // Repointed at Client when the legacy Tenant entity was retired: the id that
+    // travels through provisioning as tenant_id is a client id.
+    testTenant = await base44.asServiceRole.entities.Client.create({
       name: tenantName,
-      status: 'ACTIVE'
+      slug: tenantName,
+      type: 'direct_customer',
+      status: 'trial',
+      contact_email: 'wix-gate@example.com'
     });
     createdEntities.tenants.push(testTenant.id);
     gateReport.metadata.tenantId = testTenant.id;
@@ -455,9 +460,12 @@ Deno.serve(async (req) => {
     gateReport.sections.D_Tenant_Resolution.status = 'RUNNING';
 
     // D1: Create scenario where tenant must be resolved via UserProfile
-    const resolutionTestTenant = await base44.asServiceRole.entities.Tenant.create({
+    const resolutionTestTenant = await base44.asServiceRole.entities.Client.create({
       name: `t_resolution_${Date.now()}`,
-      status: 'ACTIVE'
+      slug: `t_resolution_${Date.now()}`,
+      type: 'direct_customer',
+      status: 'trial',
+      contact_email: 'wix-gate@example.com'
     });
     createdEntities.tenants.push(resolutionTestTenant.id);
 
@@ -495,9 +503,12 @@ Deno.serve(async (req) => {
     }
 
     // D3: Test ambiguous tenant scenario
-    const ambiguousTenant2 = await base44.asServiceRole.entities.Tenant.create({
+    const ambiguousTenant2 = await base44.asServiceRole.entities.Client.create({
       name: `t_ambiguous_${Date.now()}`,
-      status: 'ACTIVE'
+      slug: `t_ambiguous_${Date.now()}`,
+      type: 'direct_customer',
+      status: 'trial',
+      contact_email: 'wix-gate@example.com'
     });
     createdEntities.tenants.push(ambiguousTenant2.id);
 
@@ -561,7 +572,7 @@ Deno.serve(async (req) => {
 
       for (const id of createdEntities.tenants) {
         try {
-          await base44.asServiceRole.entities.Tenant.delete(id);
+          await base44.asServiceRole.entities.Client.delete(id);
         } catch (e) { console.warn('Cleanup warning:', e.message); }
       }
 
