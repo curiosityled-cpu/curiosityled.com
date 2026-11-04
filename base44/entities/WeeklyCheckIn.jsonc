@@ -94,6 +94,16 @@
               }
             }
           ]
+        },
+        {
+          "$or": [
+            {
+              "data.client_id": null
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
         }
       ]
     },
