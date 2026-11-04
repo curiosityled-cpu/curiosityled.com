@@ -1,8 +1,9 @@
 # Tenant isolation — audit and rollout
 
-**Status:** Phase 1 complete. Phase 2 draft for review — nothing has been locked
-down yet. Phase 3 (rule enforcement) has *not* started; no access rule has been
-changed.
+**Status:** Phase 1 complete on the server. Phase 2 **locked** — every count
+below was superseded by the re-measurement in `phase2-classification-inventory.md`
+after batches 1 and 2 were applied. Phase 3 is in progress: batches 1 and 2 are
+live, batch 3 (the 16 unscoped reads) is next.
 
 Measured against the app as it stands:
 
