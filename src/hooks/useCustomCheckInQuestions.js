@@ -61,7 +61,14 @@ export function useCustomCheckInQuestions(checkInType = "both") {
       try {
         const res = await base44.functions.invoke("resolveCheckInQuestions", {
           check_in_type: checkInType === "both" ? "both" : checkInType,
-          client_id: activeClientId || undefined,
+          // The active client when one is selected, otherwise the caller's own
+          // membership client — the resolver validates either and rejects a
+          // request to read another tenant.
+          client_id:
+            activeClientId ||
+            user?.data?.client_id ||
+            user?.client_id ||
+            undefined,
         });
         const data = res?.data || res;
         if (cancelled) return;

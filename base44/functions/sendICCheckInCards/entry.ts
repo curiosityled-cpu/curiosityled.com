@@ -11,6 +11,7 @@
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { isInternalCall } from '../../shared/urlValidation.ts';
+import { resolveTenantContext } from '../../shared/tenantContext.ts';
 import {
   getICQuestions,
   buildICCheckInCard,
@@ -33,9 +34,18 @@ Deno.serve(async (req) => {
     const checkInType = payload.check_in_type || 'morning';
     const icIds = Array.isArray(payload.ic_ids) ? payload.ic_ids.filter(Boolean) : null;
 
-    // Resolve the target client
+    // Resolve the target client. A browser caller is never trusted with the
+    // client_id it sent: the tenant resolver decides which client this person
+    // may act on (their own organisation, or one within an oversight
+    // portfolio), so check-ins can only ever go to an authorised roster.
     let clientId = payload.client_id;
-    if (!clientId && user) {
+    if (!internalCall) {
+      const ctx = await resolveTenantContext(base44, user, payload.client_id || null);
+      if (ctx.blocked || !ctx.client_id) {
+        return Response.json({ error: 'Not authorised for that client' }, { status: 403 });
+      }
+      clientId = ctx.client_id;
+    } else if (!clientId && user) {
       clientId = user?.data?.client_id || user?.client_id;
     }
     if (!clientId) {

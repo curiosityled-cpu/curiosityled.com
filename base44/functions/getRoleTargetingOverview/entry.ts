@@ -24,6 +24,7 @@ import {
   normalizeTitle,
   labelFor,
 } from "../../shared/roleTargeting.ts";
+import { resolveTenantContext } from "../../shared/tenantContext.ts";
 
 const MAX_UNMAPPED = 60;
 const MAX_RESOLVED = 10;
@@ -38,8 +39,16 @@ export default async function (req: Request): Promise<Response> {
     }
 
     const body = await req.json().catch(() => ({}));
-    const clientId: string =
-      (isPlatformAdmin(user) && String(body.client_id || "").trim()) || clientIdOf(user);
+    // The active client, decided by the resolver: a member's own organisation,
+    // or the one an oversight administrator selected inside their portfolio.
+    // The taxonomy and conflicts shown must belong to the client being
+    // configured — not to whichever client the viewer happens to sit in.
+    const ctx = await resolveTenantContext(
+      base44,
+      user,
+      String(body.client_id || "").trim() || null
+    );
+    const clientId: string = ctx.client_id;
     if (!clientId) {
       return Response.json({ error: "No client linked to your account" }, { status: 403 });
     }
