@@ -6,6 +6,10 @@
       "type": "string",
       "description": "Name of the saved theme"
     },
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) that saved this theme. Null for themes that are part of the shared library every tenant can read."
+    },
     "configuration": {
       "type": "object",
       "additionalProperties": true,
@@ -30,9 +34,23 @@
           }
         },
         {
-          "user_condition": {
-            "role": "Super Administrator"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "$or": [
+                {
+                  "data.client_id": null
+                },
+                {
+                  "data.client_id": "{{user.data.client_id}}"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -44,9 +62,23 @@
           }
         },
         {
-          "user_condition": {
-            "role": "Super Administrator"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "$or": [
+                {
+                  "data.client_id": null
+                },
+                {
+                  "data.client_id": "{{user.data.client_id}}"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -58,9 +90,23 @@
           }
         },
         {
-          "user_condition": {
-            "role": "Super Administrator"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "$or": [
+                {
+                  "data.client_id": null
+                },
+                {
+                  "data.client_id": "{{user.data.client_id}}"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -72,9 +118,23 @@
           }
         },
         {
-          "user_condition": {
-            "role": "Super Administrator"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "$or": [
+                {
+                  "data.client_id": null
+                },
+                {
+                  "data.client_id": "{{user.data.client_id}}"
+                }
+              ]
+            }
+          ]
         }
       ]
     }
