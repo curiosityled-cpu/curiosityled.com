@@ -8,6 +8,7 @@ import {
   MessageSquare, Rocket, Users, Clock,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import RosterManager from "@/components/performance-mgmt/RosterManager";
 import CycleSettingsDialog from "./CycleSettingsDialog";
 import RecordConversationDialog from "./RecordConversationDialog";
@@ -43,6 +44,8 @@ export default function CycleProgressBoard({
   onClearFocus,
   canConfigure = true,
 }) {
+  // The active tenant, decided by the server — not the viewer's own field.
+  const activeClientId = useActiveClientId();
   const [showSettings, setShowSettings] = useState(false);
   const [conversationRow, setConversationRow] = useState(null);
   const [busyId, setBusyId] = useState(null);
@@ -61,6 +64,7 @@ export default function CycleProgressBoard({
       await base44.functions.invoke("reviewCycleCommand", {
         action,
         review_cycle_id: cycle.id,
+        client_id: activeClientId,
         ...payload,
       });
       toast.success(successMessage);
@@ -175,7 +179,7 @@ export default function CycleProgressBoard({
                   size="sm"
                   onClick={async () => {
                     try {
-                      const res = await base44.functions.invoke("launchReviewCycle", { review_cycle_id: cycle.id });
+                      const res = await base44.functions.invoke("launchReviewCycle", { review_cycle_id: cycle.id, client_id: activeClientId });
                       toast.success(`Launched — ${res.data.participants_notified} participants notified`);
                       onRefresh?.();
                     } catch (err) {
@@ -293,7 +297,7 @@ export default function CycleProgressBoard({
           open={showSettings}
           onClose={() => setShowSettings(false)}
           cycle={cycle}
-          clientId={user?.client_id || user?.data?.client_id}
+          clientId={activeClientId}
           onSaved={onRefresh}
         />
       )}

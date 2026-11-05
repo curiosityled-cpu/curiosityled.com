@@ -7,8 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Loader2, Star, CheckCircle2, AlertTriangle, Users, Info } from "lucide-react";
 import { toast } from "sonner";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 
 export default function MyReviewSummary({ cycle, summary, onUpdated }) {
+  const activeClientId = useActiveClientId();
   const [comments, setComments] = useState(summary.acknowledgment_comments || "");
   const [response, setResponse] = useState(summary.employee_response || "");
   const [disagree, setDisagree] = useState(!!summary.disagreement);
@@ -22,6 +24,7 @@ export default function MyReviewSummary({ cycle, summary, onUpdated }) {
       await base44.functions.invoke("reviewCycleCommand", {
         action: "acknowledge",
         review_cycle_id: cycle.id,
+        client_id: activeClientId,
         participant_id: summary.participant_id,
         comments,
         response,

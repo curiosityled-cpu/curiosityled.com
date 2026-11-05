@@ -2,7 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { waitUntil } from 'base44:runtime';
 import {
   asList,
-  clientIdOf,
+  resolveReviewTenant,
   cycleConfig,
   isReviewAdmin,
   logReviewEvent,
@@ -23,10 +23,12 @@ export default async function (req: Request): Promise<Response> {
     if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
     if (!isReviewAdmin(user)) return Response.json({ error: "Forbidden" }, { status: 403 });
 
-    const clientId = clientIdOf(user);
-    if (!clientId) return Response.json({ error: "No client context" }, { status: 403 });
+    const body = await req.json().catch(() => ({}));
+    const tenant = await resolveReviewTenant(base44, user, body.client_id);
+    if (tenant.response) return tenant.response;
+    const clientId = tenant.clientId;
 
-    const { review_cycle_id } = await req.json().catch(() => ({}));
+    const { review_cycle_id } = body;
     if (!review_cycle_id) return Response.json({ error: "review_cycle_id required" }, { status: 400 });
 
     const cycle = await base44.asServiceRole.entities.CustomForm

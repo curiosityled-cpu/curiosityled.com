@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import {
   asList,
-  clientIdOf,
+  resolveReviewTenant,
   cycleConfig,
   latestSubmission,
   logReviewEvent,
@@ -29,10 +29,11 @@ export default async function (req: Request): Promise<Response> {
     const user = await base44.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
     if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-    const clientId = clientIdOf(user);
-    if (!clientId) return Response.json({ error: "No client context" }, { status: 403 });
-
     const body = await req.json().catch(() => ({}));
+    const tenant = await resolveReviewTenant(base44, user, body.client_id);
+    if (tenant.response) return tenant.response;
+    const clientId = tenant.clientId;
+
     const { review_cycle_id, action = "submit", responses = {} } = body;
     const requestedEmployee = body.employee_email ? normEmail(body.employee_email) : null;
 

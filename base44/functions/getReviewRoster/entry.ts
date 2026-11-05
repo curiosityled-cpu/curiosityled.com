@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
+import { resolveActiveClient, tenantBlockedResponse } from '../../shared/tenantContext.ts';
 
 /**
  * Fetches the participant roster for a review cycle, enriched with submission status.
@@ -22,15 +23,19 @@ export default async function(req: Request): Promise<Response> {
     // Tenant guard: the cycle and everything hanging off it belong to one client.
     // Without this, any signed-in user could name a cycle id from another tenant
     // and read its roster and submission status with the service role.
-    const role = user.app_role || user.data?.app_role || user.role;
-    const myClient = user.data?.client_id || user.client_id;
-    const isPlatformAdmin = role === "Platform Admin" || role === "Platform Administrator";
-    if (!isPlatformAdmin) {
-      const cycle = await base44.asServiceRole.entities.CustomForm.get(review_cycle_id).catch(() => null);
-      if (!cycle) return Response.json({ error: "Review cycle not found" }, { status: 404 });
-      if (cycle.client_id && cycle.client_id !== myClient) {
-        return Response.json({ error: "Forbidden" }, { status: 403 });
-      }
+    //
+    // The client comes from the shared resolver, so a partner administrator's
+    // selected client is honoured (and validated) instead of being replaced by
+    // whichever client field happens to sit on their own user record.
+    const tenant = await resolveActiveClient(base44, user, body.client_id || null);
+    if (tenant.blocked) return tenantBlockedResponse(tenant);
+    const activeClientId = tenant.client_id || "";
+    const platformWide = !activeClientId && tenant.is_platform;
+
+    const cycle = await base44.asServiceRole.entities.CustomForm.get(review_cycle_id).catch(() => null);
+    if (!cycle) return Response.json({ error: "Review cycle not found" }, { status: 404 });
+    if (!platformWide && cycle.client_id && cycle.client_id !== activeClientId) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Fetch roster and submissions in parallel

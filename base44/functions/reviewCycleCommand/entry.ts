@@ -3,7 +3,7 @@ import {
   asList,
   calibratorFor,
   canConfigureCycles,
-  clientIdOf,
+  resolveReviewTenant,
   cycleConfig,
   isReviewAdmin,
   logReviewEvent,
@@ -25,10 +25,11 @@ export default async function (req: Request): Promise<Response> {
     const user = await base44.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
     if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-    const clientId = clientIdOf(user);
-    if (!clientId) return Response.json({ error: "No client context" }, { status: 403 });
-
     const body = await req.json().catch(() => ({}));
+    const tenant = await resolveReviewTenant(base44, user, body.client_id);
+    if (tenant.response) return tenant.response;
+    const clientId = tenant.clientId;
+
     const { action, review_cycle_id } = body;
     if (!action) return Response.json({ error: "action is required" }, { status: 400 });
     if (!review_cycle_id && action !== "create_cycle") {

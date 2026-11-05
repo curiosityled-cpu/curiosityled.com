@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Loader2, Lock, Save, Send, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import GuidedReviewFlow from "@/components/performance-mgmt/GuidedReviewFlow";
 import { DEFAULT_REVIEW_FORM_CONFIG } from "@/components/performance-mgmt/ReviewFormRenderer";
 import RatingRubricPanel from "./RatingRubricPanel";
@@ -29,6 +30,7 @@ function privacyNote(task, cycle) {
 }
 
 export default function ReviewTaskDialog({ open, onClose, cycle, task, formConfig, onSaved }) {
+  const activeClientId = useActiveClientId();
   const [responses, setResponses] = useState({});
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -46,6 +48,7 @@ export default function ReviewTaskDialog({ open, onClose, cycle, task, formConfi
     try {
       await base44.functions.invoke("submitReviewTask", {
         review_cycle_id: cycle.id,
+        client_id: activeClientId,
         employee_email: task.employee_email,
         action,
         responses,

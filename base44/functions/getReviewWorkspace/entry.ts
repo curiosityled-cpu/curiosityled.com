@@ -2,7 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import {
   asList,
   canConfigureCycles,
-  clientIdOf,
+  resolveReviewTenant,
   cycleConfig,
   deriveProgress,
   isReviewAdmin,
@@ -32,12 +32,13 @@ export default async function (req: Request): Promise<Response> {
     const user = await base44.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
     if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-    const clientId = clientIdOf(user);
-    if (!clientId) return Response.json({ error: "No client context" }, { status: 403 });
+    const body = await req.json().catch(() => ({}));
+    const tenant = await resolveReviewTenant(base44, user, body.client_id);
+    if (tenant.response) return tenant.response;
+    const clientId = tenant.clientId;
 
     const email = normEmail(user.email);
     const admin = isReviewAdmin(user);
-    const body = await req.json().catch(() => ({}));
     const focusCycleId = body.review_cycle_id || null;
 
     const cycles = asList(

@@ -6,6 +6,8 @@
  * launchReviewCycle, assignReviewParticipants and the calibration functions.
  */
 
+import { resolveActiveClient, tenantBlockedResponse } from "./tenantContext.ts";
+
 export const ADMIN_ROLES = [
   "admin",
   "Admin Level 1",
@@ -59,6 +61,41 @@ export function canConfigureCycles(user: any): boolean {
 
 export function clientIdOf(user: any): string {
   return String(user?.data?.client_id || user?.client_id || "");
+}
+
+/**
+ * The tenant a review-cycle request acts on.
+ *
+ * The same rule every other module follows: the caller's explicit selection is
+ * honoured when the server has authorized it, a member is never moved off their
+ * own client, and a tenant that cannot be resolved is refused with a reason
+ * rather than guessed at from whichever field happens to be populated.
+ *
+ * `requestedClientId` comes from the request body — a partner administrator's
+ * selected portfolio company, or null for a member.
+ */
+export async function resolveReviewTenant(
+  base44: any,
+  user: any,
+  requestedClientId: any
+) {
+  const ctx = await resolveActiveClient(base44, user, requestedClientId || null);
+  if (ctx.client_id) return { ctx, clientId: ctx.client_id, response: null };
+  if (ctx.needs_selection) {
+    return {
+      ctx,
+      clientId: "",
+      response: Response.json(
+        {
+          success: false,
+          error: "TENANT_SELECTION_REQUIRED",
+          message: "Choose a client to work in before continuing.",
+        },
+        { status: 400 }
+      ),
+    };
+  }
+  return { ctx, clientId: "", response: tenantBlockedResponse(ctx) };
 }
 
 /** Normalizes both legacy array results and cursor pages to a plain array. */

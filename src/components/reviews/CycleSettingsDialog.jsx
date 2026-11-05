@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,6 +55,8 @@ const EMPTY = {
 };
 
 export default function CycleSettingsDialog({ open, onClose, cycle, clientId, onSaved }) {
+  const activeClientId = useActiveClientId();
+  const tenantId = activeClientId || clientId || null;
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
   const locked = !!cycle && cycle.status !== "draft";
@@ -145,6 +148,7 @@ export default function CycleSettingsDialog({ open, onClose, cycle, clientId, on
         await base44.functions.invoke("reviewCycleCommand", {
           action: "update_cycle",
           review_cycle_id: cycle.id,
+          client_id: tenantId,
           title: form.name,
           description: form.description,
           settings,
@@ -153,6 +157,7 @@ export default function CycleSettingsDialog({ open, onClose, cycle, clientId, on
       } else {
         await base44.functions.invoke("reviewCycleCommand", {
           action: "create_cycle",
+          client_id: tenantId,
           title: form.name,
           description: form.description,
           settings,

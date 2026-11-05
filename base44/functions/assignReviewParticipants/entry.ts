@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
-import { asList, clientIdOf, isReviewAdmin, logReviewEvent, normEmail } from "../../shared/reviewCycleCore.ts";
+import { asList, resolveReviewTenant, isReviewAdmin, logReviewEvent, normEmail } from "../../shared/reviewCycleCore.ts";
 
 /**
  * Replaces a draft cycle's participant roster.
@@ -18,10 +18,12 @@ export default async function (req: Request): Promise<Response> {
     if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
     if (!isReviewAdmin(user)) return Response.json({ error: "Forbidden" }, { status: 403 });
 
-    const clientId = clientIdOf(user);
-    if (!clientId) return Response.json({ error: "No client context" }, { status: 403 });
+    const body = await req.json().catch(() => ({}));
+    const tenant = await resolveReviewTenant(base44, user, body.client_id);
+    if (tenant.response) return tenant.response;
+    const clientId = tenant.clientId;
 
-    const { review_cycle_id, participants } = await req.json().catch(() => ({}));
+    const { review_cycle_id, participants } = body;
     if (!review_cycle_id || !Array.isArray(participants)) {
       return Response.json(
         { error: "review_cycle_id and participants array required" },

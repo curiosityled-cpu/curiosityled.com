@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
-import { asList, clientIdOf, isReviewAdmin, logReviewEvent, normEmail } from "../../shared/reviewCycleCore.ts";
+import { asList, resolveReviewTenant, isReviewAdmin, logReviewEvent, normEmail } from "../../shared/reviewCycleCore.ts";
 
 /**
  * Starts (or refreshes) a calibration session for a review cycle.
@@ -14,10 +14,12 @@ export default async function (req: Request): Promise<Response> {
     const user = await base44.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
     if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-    const clientId = clientIdOf(user);
-    if (!clientId) return Response.json({ error: "No client context" }, { status: 403 });
+    const body = await req.json().catch(() => ({}));
+    const tenant = await resolveReviewTenant(base44, user, body.client_id);
+    if (tenant.response) return tenant.response;
+    const clientId = tenant.clientId;
 
-    const { review_cycle_id, calibrator_emails } = await req.json().catch(() => ({}));
+    const { review_cycle_id, calibrator_emails } = body;
     if (!review_cycle_id) return Response.json({ error: "review_cycle_id required" }, { status: 400 });
 
     const cycle = await base44.asServiceRole.entities.CustomForm

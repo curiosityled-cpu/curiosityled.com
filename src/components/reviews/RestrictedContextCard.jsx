@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +44,7 @@ const EMPTY = {
 };
 
 export default function RestrictedContextCard({ cycle, audit = [], onRefresh }) {
+  const activeClientId = useActiveClientId();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -61,6 +63,7 @@ export default function RestrictedContextCard({ cycle, audit = [], onRefresh }) 
       await base44.functions.invoke("reviewCycleCommand", {
         action: "record_context",
         review_cycle_id: cycle.id,
+        client_id: activeClientId,
         subject_email: form.subject_email || null,
         context_type: form.context_type,
         summary: form.summary,

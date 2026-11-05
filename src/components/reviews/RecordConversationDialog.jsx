@@ -11,8 +11,10 @@ import {
 } from "@/components/ui/dialog";
 import { Loader2, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 
 export default function RecordConversationDialog({ open, onClose, cycle, row, onSaved }) {
+  const activeClientId = useActiveClientId();
   const [notes, setNotes] = useState("");
   const [released, setReleased] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -23,6 +25,7 @@ export default function RecordConversationDialog({ open, onClose, cycle, row, on
       await base44.functions.invoke("reviewCycleCommand", {
         action: "record_conversation",
         review_cycle_id: cycle.id,
+        client_id: activeClientId,
         participant_id: row.participant_id,
         notes,
       });
@@ -30,6 +33,7 @@ export default function RecordConversationDialog({ open, onClose, cycle, row, on
         await base44.functions.invoke("reviewCycleCommand", {
           action: "release",
           review_cycle_id: cycle.id,
+          client_id: activeClientId,
           participant_id: row.participant_id,
         });
       }

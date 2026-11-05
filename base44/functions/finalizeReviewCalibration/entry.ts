@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
-import { asList, clientIdOf, isReviewAdmin, logReviewEvent, normEmail } from "../../shared/reviewCycleCore.ts";
+import { asList, resolveReviewTenant, isReviewAdmin, logReviewEvent, normEmail } from "../../shared/reviewCycleCore.ts";
 
 /**
  * Finalizes a calibration session.
@@ -19,10 +19,12 @@ export default async function (req: Request): Promise<Response> {
     const user = await base44.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
     if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-    const clientId = clientIdOf(user);
-    if (!clientId) return Response.json({ error: "No client context" }, { status: 403 });
+    const body = await req.json().catch(() => ({}));
+    const tenant = await resolveReviewTenant(base44, user, body.client_id);
+    if (tenant.response) return tenant.response;
+    const clientId = tenant.clientId;
 
-    const { calibration_id, adjusted_employees } = await req.json().catch(() => ({}));
+    const { calibration_id, adjusted_employees } = body;
     if (!calibration_id || !Array.isArray(adjusted_employees)) {
       return Response.json(
         { error: "calibration_id and adjusted_employees array required" },

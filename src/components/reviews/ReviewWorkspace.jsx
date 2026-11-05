@@ -6,6 +6,7 @@ import { Loader2, Plus, Settings2, Lock, ClipboardCheck } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import ReviewTaskDialog from "./ReviewTaskDialog";
 import CycleProgressBoard from "./CycleProgressBoard";
 import CycleSettingsDialog from "./CycleSettingsDialog";
@@ -38,6 +39,7 @@ import { buildCycleStages, buildPreviewStages } from "@/lib/reviewStages";
  * exactly as they were.
  */
 export default function ReviewWorkspace({ embedded = false }) {
+  const activeClientId = useActiveClientId();
   const [user, setUser] = useState(null);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -56,10 +58,10 @@ export default function ReviewWorkspace({ embedded = false }) {
   const load = async (cycleId) => {
     setError(null);
     try {
-      const res = await base44.functions.invoke(
-        "getReviewWorkspace",
-        cycleId ? { review_cycle_id: cycleId } : {}
-      );
+      const res = await base44.functions.invoke("getReviewWorkspace", {
+        client_id: activeClientId,
+        ...(cycleId ? { review_cycle_id: cycleId } : {}),
+      });
       setData(res.data);
       setSelectedCycleId((prev) => {
         if (prev) return prev;
@@ -379,7 +381,7 @@ export default function ReviewWorkspace({ embedded = false }) {
         open={showCreate}
         onClose={() => setShowCreate(false)}
         cycle={null}
-        clientId={user?.client_id || user?.data?.client_id}
+        clientId={activeClientId}
         onSaved={() => load()}
       />
 
@@ -388,7 +390,7 @@ export default function ReviewWorkspace({ embedded = false }) {
           open={showSettings}
           onClose={() => setShowSettings(false)}
           cycle={cycle}
-          clientId={user?.client_id || user?.data?.client_id}
+          clientId={activeClientId}
           onSaved={() => load(cycle.id)}
         />
       )}
