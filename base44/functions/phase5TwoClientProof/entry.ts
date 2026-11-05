@@ -4,6 +4,11 @@ import {
   isPlatformPrincipal,
   resolveTenantContext,
 } from '../../shared/tenantContext.ts';
+import {
+  PERSON_OWNED_TENANT_TYPES,
+  membershipClientMap,
+  rowTenantHints,
+} from '../../shared/tenantColumns.ts';
 
 /**
  * Phase 5 — the two-client proof.
@@ -27,10 +32,11 @@ import {
  * Phase 3 batches 1–12 and are recorded there; what has never been measured is
  * whether the code that builds the query actually applies the tenant.
  *
- * Two categories are person-bound rather than client-bound (a check-in and a
- * user profile carry no client column at all). They are included, and recorded
- * as such, because a proof that quietly skipped them would be claiming more
- * coverage than it has.
+ * Every category is now client-bound: the last person-owned types gained a
+ * tenant column in Phase 3, so a check-in and a user profile are measured the
+ * same way as a course. The person-owned types as a whole are then checked for
+ * column coverage below — a row whose owner is a known member but which carries
+ * no tenant column is a row its organisation cannot report on, and fails here.
  *
  * Fixtures are created and removed within the run. The two clients persist, so
  * the proof can be re-run and inspected. Platform Admin only.
@@ -161,17 +167,17 @@ const CATEGORIES: any[] = [
   },
   {
     key: 'daily_checkins', label: 'Daily check-ins',
-    entity: 'DailyCheckIn', basis: 'person',
-    specimen: (_c: string, tag: string, email: string) => ({
-      user_email: email, check_in_date: '2026-01-01', check_in_type: 'morning',
+    entity: 'DailyCheckIn', basis: 'client',
+    specimen: (c: string, tag: string, email: string) => ({
+      client_id: c, user_email: email, check_in_date: '2026-01-01', check_in_type: 'morning',
       focus_note: `P5 proof check-in ${tag}`,
     }),
   },
   {
     key: 'user_profiles', label: 'User profiles',
-    entity: 'UserProfile', basis: 'person',
+    entity: 'UserProfile', basis: 'client',
     specimen: (c: string, tag: string, email: string) => ({
-      tenant_id: c, email, first_name: `Proof${tag}`, last_name: 'Tenant',
+      client_id: c, tenant_id: c, email, first_name: `Proof${tag}`, last_name: 'Tenant',
       status: 'PROVISIONED', source_system: 'MANUAL',
     }),
   },
@@ -345,9 +351,44 @@ export default async function (req: Request): Promise<Response> {
       }
     }
 
+    // ── Person-owned types: does every row carry its tenant? ──────────────────
+    // Phase 3 closed these columns. Measured rather than assumed: a row whose
+    // owner is a known member but which carries no tenant column is a row its
+    // organisation cannot report on. Rows with no known owner are reported as
+    // leftovers, not counted as failures, because there is nobody to attribute
+    // them to.
+    const allUsers = asArray(await base44.asServiceRole.entities.User.list());
+    const clientOf = membershipClientMap(allUsers);
+    const tenantColumns: any[] = [];
+    for (const name of PERSON_OWNED_TENANT_TYPES) {
+      const entity = base44.asServiceRole.entities[name];
+      if (!entity) continue;
+      const rows = asArray(await entity.list('-created_date', 500));
+      let attributableMissing = 0;
+      for (const row of rows) {
+        if (row.client_id) continue;
+        const { clientId, emails } = rowTenantHints(name, row);
+        const resolved = clientId || emails.map((e) => clientOf.get(e)).find(Boolean);
+        if (resolved) attributableMissing += 1;
+      }
+      const withoutColumn = rows.filter((r) => !r.client_id).length;
+      tenantColumns.push({
+        entity: name,
+        sampled: rows.length,
+        without_column: withoutColumn,
+        attributable_missing: attributableMissing,
+        ok: attributableMissing === 0,
+      });
+    }
+
     const allChecks = categories.flatMap((c) => c.checks || []);
     const failed = allChecks.filter((c) => !c.ok);
     const personBound = categories.filter((c) => c.basis === 'person');
+    const columnFailures = tenantColumns
+      .filter((c) => !c.ok)
+      .map(
+        (c) => `${c.entity}: ${c.attributable_missing} row(s) belong to a known member but carry no tenant column`
+      );
 
     return Response.json({
       run_at: new Date().toISOString(),
@@ -359,9 +400,19 @@ export default async function (req: Request): Promise<Response> {
       categories_passed: categories.filter((c) => c.ok).length,
       attempts: allChecks.length,
       passed: allChecks.filter((c) => c.ok).length,
-      failed: failed.length,
-      failures: failed.map((c) => `${c.name}: expected ${c.expected}, got ${c.actual}`),
+      failed: failed.length + columnFailures.length,
+      failures: [
+        ...failed.map((c) => `${c.name}: expected ${c.expected}, got ${c.actual}`),
+        ...columnFailures,
+      ],
       person_bound: personBound.map((c) => `${c.label} (${c.entity}) carries no client column`),
+      tenant_columns: {
+        types_checked: tenantColumns.length,
+        rows_sampled: tenantColumns.reduce((n, c) => n + c.sampled, 0),
+        rows_without_column: tenantColumns.reduce((n, c) => n + c.without_column, 0),
+        attributable_without_column: tenantColumns.reduce((n, c) => n + c.attributable_missing, 0),
+        details: tenantColumns,
+      },
       fixtures: { seeded, removed },
       categories,
     });

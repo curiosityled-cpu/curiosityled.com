@@ -3,6 +3,10 @@
   "type": "object",
   "description": "Persistent turn-by-turn conversation state for the Teams/Slack conversational state machine. One active record per user per channel. Stores the current flow, current step, and collected data between turns. Written by the atreusTeamsRouter (service role).",
   "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this conversation belongs to, stamped from the user's membership so conversational activity can be scoped and reported per organisation."
+    },
     "user_email": {
       "type": "string",
       "description": "Email of the user this conversation state belongs to"

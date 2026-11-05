@@ -2,6 +2,10 @@
   "name": "SyncState",
   "type": "object",
   "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this sync state belongs to, stamped from the owning user's membership so calendar sync rows can be scoped and reported per organisation."
+    },
     "sync_token": {
       "type": "string",
       "description": "Google Calendar sync token for incremental event updates"

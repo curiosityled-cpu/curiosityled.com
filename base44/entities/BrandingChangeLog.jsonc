@@ -2,6 +2,10 @@
   "name": "BrandingChangeLog",
   "type": "object",
   "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) whose branding changed. Stamped from the administrator's active client at the time of the change so branding history can be scoped and reported per organisation. Null records a platform-wide brand change."
+    },
     "changed_by": {
       "type": "string",
       "description": "Email of the admin who made the change"

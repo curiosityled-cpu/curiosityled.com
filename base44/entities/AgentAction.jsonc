@@ -2,6 +2,10 @@
   "name": "AgentAction",
   "type": "object",
   "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this action belongs to, stamped from the requesting user's membership so agent activity can be scoped and reported per organisation."
+    },
     "user_email": {
       "type": "string",
       "description": "Email of the user who requested the action"

@@ -2,6 +2,10 @@
   "name": "LearningRecommendation",
   "type": "object",
   "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this recommendation belongs to, stamped from the recipient's membership so recommendations can be scoped and reported per organisation."
+    },
     "user_email": {
       "type": "string",
       "description": "Email of the user receiving the recommendation"

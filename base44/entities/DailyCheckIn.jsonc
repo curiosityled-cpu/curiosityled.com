@@ -2,6 +2,10 @@
   "name": "DailyCheckIn",
   "type": "object",
   "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this check-in belongs to, stamped from the person's membership at the time of the check-in so check-in analytics can be scoped and reported per organisation. The access rule stays person-bound; this column is what lets the organisation report on its own check-ins."
+    },
     "user_email": {
       "type": "string",
       "description": "Email of the user who completed this check-in"

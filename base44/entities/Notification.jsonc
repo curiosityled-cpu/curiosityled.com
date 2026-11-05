@@ -2,6 +2,10 @@
   "name": "Notification",
   "type": "object",
   "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this notification belongs to, stamped from the recipient's membership so notification volume and delivery can be scoped and reported per organisation."
+    },
     "user_email": {
       "type": "string",
       "description": "Email of the user who should receive this notification"

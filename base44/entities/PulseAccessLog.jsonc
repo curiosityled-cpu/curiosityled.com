@@ -2,6 +2,10 @@
   "name": "PulseAccessLog",
   "type": "object",
   "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this access belongs to, stamped from the person whose private data was accessed so privacy auditing can be scoped and reported per organisation. Null records a platform-level access."
+    },
     "accessed_by": {
       "type": "string",
       "description": "Email of the user or system that accessed the private manager data"

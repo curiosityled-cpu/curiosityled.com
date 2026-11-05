@@ -2,6 +2,10 @@
   "name": "Item",
   "type": "object",
   "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this item belongs to, stamped from its creator's membership (or inherited from the parent goal) so goal execution can be scoped and reported per organisation."
+    },
     "board_id": {
       "type": "string",
       "description": "ID of the Goal this item belongs to"

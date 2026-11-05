@@ -2,6 +2,10 @@
   "name": "UserRoleAssignment",
   "type": "object",
   "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this role assignment belongs to. Canonical tenant partition key, kept alongside tenant_id so assignments scope by the same field as the rest of the platform."
+    },
     "tenant_id": {
       "type": "string",
       "description": "Tenant ID"

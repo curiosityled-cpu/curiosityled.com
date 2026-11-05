@@ -2,6 +2,10 @@
   "name": "UserPreference",
   "type": "object",
   "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this preference record belongs to, stamped from the user's membership so preferences can be scoped and reported per organisation."
+    },
     "user_email": {
       "type": "string",
       "description": "Email of the user"

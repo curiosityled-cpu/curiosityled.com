@@ -2,6 +2,10 @@
   "name": "AtreusMemorySummary",
   "type": "object",
   "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this summary belongs to, stamped from the manager's membership so AI memory can be scoped and reported per organisation."
+    },
     "user_email": {
       "type": "string",
       "description": "Email of the manager this summary belongs to"

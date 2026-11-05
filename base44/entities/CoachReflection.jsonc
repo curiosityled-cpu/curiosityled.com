@@ -2,6 +2,10 @@
   "name": "CoachReflection",
   "type": "object",
   "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this reflection belongs to, stamped from the coach's membership so coaching records can be scoped and reported per organisation."
+    },
     "coach_email": {
       "type": "string",
       "description": "Email of the coach who wrote this private reflection"

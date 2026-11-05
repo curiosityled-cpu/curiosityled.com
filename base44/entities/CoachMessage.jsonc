@@ -2,6 +2,10 @@
   "name": "CoachMessage",
   "type": "object",
   "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this message belongs to, stamped from the sender's membership so coaching threads can be scoped and reported per organisation."
+    },
     "engagement_id": {
       "type": "string",
       "description": "ID of the CoachingEngagement this message belongs to"

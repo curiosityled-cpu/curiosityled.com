@@ -2,6 +2,10 @@
   "name": "Milestone",
   "type": "object",
   "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this milestone belongs to, stamped from its creator's membership (or inherited from the parent goal) so goal execution can be scoped and reported per organisation."
+    },
     "goal_id": {
       "type": "string",
       "description": "ID of the Goal this milestone belongs to"

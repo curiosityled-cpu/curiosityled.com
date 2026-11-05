@@ -2,6 +2,10 @@
   "name": "DecisionJournal",
   "type": "object",
   "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this decision belongs to, stamped from the manager's membership so decision quality can be scoped and reported per organisation."
+    },
     "user_email": {
       "type": "string",
       "description": "Email of the manager who owns this decision"

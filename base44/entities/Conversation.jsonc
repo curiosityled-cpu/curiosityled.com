@@ -2,6 +2,10 @@
   "name": "Conversation",
   "type": "object",
   "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this conversation belongs to, stamped from its creator's membership so conversational learning activity can be scoped and reported per organisation."
+    },
     "title": {
       "type": "string",
       "description": "Conversation title or topic"

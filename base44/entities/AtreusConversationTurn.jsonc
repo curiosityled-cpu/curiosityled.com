@@ -2,6 +2,10 @@
   "name": "AtreusConversationTurn",
   "type": "object",
   "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) this turn belongs to, stamped from the manager's membership so AI conversation history can be scoped and reported per organisation."
+    },
     "user_email": {
       "type": "string",
       "description": "Email of the manager this turn belongs to"
