@@ -2,6 +2,10 @@
   "name": "RequestNonce",
   "type": "object",
   "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Client (tenant) this nonce belongs to. Mirrors tenant_id so every query and report scopes by the same field as the rest of the platform; tenant_id is kept as the provisioning-side name for the same value."
+    },
     "tenant_id": {
       "type": "string",
       "description": "Tenant ID"

@@ -121,6 +121,7 @@ Deno.serve(async (req) => {
     
     const memoryData = {
       user_email: user.email,
+      client_id: user.data?.client_id || user.client_id,
       recurring_triggers,
       what_has_helped,
       stuck_points,

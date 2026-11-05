@@ -1,0 +1,47 @@
+{
+  "description": "Nightly sweep that stamps client_id on any person-owned or provisioning record that arrived without it, so records created in the browser are attributed to their owner's organisation within a day.",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "tenant_column_reconciliation",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "reconcile_tenant_columns": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backfillTenantColumns",
+            "args": {
+              "dry_run": false
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Stamp missing tenant columns",
+            "description": "Fills client_id from each record's owner"
+          }
+        }
+      }
+    ]
+  },
+  "name": "Tenant Column Reconciliation",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "30 2 * * *",
+      "one_time_date": null,
+      "timezone": "America/New_York",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  }
+}

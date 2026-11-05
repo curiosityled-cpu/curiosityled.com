@@ -98,7 +98,18 @@
         }
       ]
     },
-    "update": null,
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "Platform Admin"
+          }
+        }
+      ]
+    },
     "delete": null
   }
 }

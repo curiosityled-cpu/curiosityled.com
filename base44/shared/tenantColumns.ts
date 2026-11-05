@@ -41,6 +41,21 @@ export const TENANT_COLUMN_OWNERS: Record<string, string[]> = {
 export const PERSON_OWNED_TENANT_TYPES = Object.keys(TENANT_COLUMN_OWNERS);
 
 /**
+ * Types that already recorded their tenant under the provisioning-side name
+ * `tenant_id`. The value is the same; the column name was not. They now carry
+ * `client_id` as well so a query or report written against one field sees every
+ * type, instead of silently missing these six.
+ */
+export const TENANT_ID_MIRROR_TYPES = [
+  "IdempotencyKey",
+  "ProvisioningApiKey",
+  "ProvisioningBatch",
+  "ProvisioningRole",
+  "ProvisioningUser",
+  "RequestNonce",
+];
+
+/**
  * The client a row belongs to, read from the row itself where it already records
  * one (`tenant_id` on the provisioned-profile types), otherwise from the person
  * it belongs to.

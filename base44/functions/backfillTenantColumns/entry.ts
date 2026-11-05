@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import {
   PERSON_OWNED_TENANT_TYPES,
+  TENANT_ID_MIRROR_TYPES,
   membershipClientMap,
   rowTenantHints,
 } from '../../shared/tenantColumns.ts';
@@ -27,9 +28,14 @@ export default async function (req: Request): Promise<Response> {
     const user = await base44.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const isPlatformAdmin =
-      user.app_role === 'Platform Admin' || user.data?.app_role === 'Platform Admin';
-    if (!isPlatformAdmin) return Response.json({ error: 'Platform Admin only' }, { status: 403 });
+    // Stamping cannot move a row to another tenant: the value is always the
+    // owner's own membership, never a caller-supplied id. That is why an app
+    // admin may run it as well — the nightly reconciliation runs as its creator.
+    const isAuthorized =
+      user.app_role === 'Platform Admin' ||
+      user.data?.app_role === 'Platform Admin' ||
+      user.role === 'admin';
+    if (!isAuthorized) return Response.json({ error: 'Admin only' }, { status: 403 });
 
     const body = await req.json().catch(() => ({}));
     const dryRun = body?.dry_run === true;
@@ -42,7 +48,12 @@ export default async function (req: Request): Promise<Response> {
     let stamped = 0;
     let leftover = 0;
 
-    for (const name of PERSON_OWNED_TENANT_TYPES) {
+    // Person-owned types, plus the six that kept their tenant under the
+    // provisioning-side name — their client column mirrors tenant_id, which
+    // rowTenantHints already reads.
+    const allTypes = [...PERSON_OWNED_TENANT_TYPES, ...TENANT_ID_MIRROR_TYPES];
+
+    for (const name of allTypes) {
       if (only && !only.includes(name)) continue;
       const entity = base44.asServiceRole.entities[name];
       if (!entity) continue;
@@ -78,12 +89,13 @@ export default async function (req: Request): Promise<Response> {
         }
         result.stamped += updates.length;
         stamped += updates.length;
-        leftover += result.unattributed;
 
         cursor = Array.isArray(response) ? undefined : response?.next_cursor;
         if (!cursor) break;
       }
 
+      // Counted once, after every page for this type has been scanned.
+      leftover += result.unattributed;
       summary.push(result);
     }
 

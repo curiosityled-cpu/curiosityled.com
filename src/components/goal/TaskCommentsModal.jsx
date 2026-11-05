@@ -60,10 +60,12 @@ export default function TaskCommentsModal({ isOpen, onClose, task }) {
         mentions
       });
 
-      // Update task comments count
+      // Update task comments count. The comment itself is the record of what
+      // happened, so a contributor who may read this task but not edit it (an
+      // assignee rather than its owner) still gets their comment posted.
       await base44.entities.Item.update(task.id, {
         comments_count: (task.comments_count || 0) + 1
-      });
+      }).catch(() => null);
 
       // Create notifications for mentions
       for (const mentionedEmail of mentions) {

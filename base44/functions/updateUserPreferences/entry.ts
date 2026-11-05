@@ -97,6 +97,7 @@ Deno.serve(async (req) => {
       // Create new
       const created = await base44.entities.UserPreference.create({
         user_email: user.email,
+        client_id: user.data?.client_id || user.client_id,
         ...newPreferences
       });
       return Response.json({
