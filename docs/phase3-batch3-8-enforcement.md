@@ -75,7 +75,11 @@ paths are ever widened.
 
 The pass was re-measured rather than taken from the inventory. Every read rule was
 walked for a tenant-wide role branch that is not inside a client-bound `$and`.
-**50 operations across 23 types** still carry one.
+**50 operations across 23 types** carried one at the start of this pass. Batch 5 has since
+been executed: three were rule-only fixes, five needed a tenant column before their reads could
+be bound, and two were closed by decision rather than by rule. That leaves **33 operations
+across 20 types**, every one of them bound to a partner, a program, or platform plumbing, or
+deliberately wide — enumerated in section 4.
 
 They split into four kinds, and only the first can be fixed as a rule change:
 
@@ -144,26 +148,91 @@ client, one user in it, and a record of each mirrored type in both.
 
 ---
 
-## 4. Still open
+## 4. Batch 5 executed
 
-1. **Batch 5a — three rule-only fixes** (`UserProfile.create`,
-   `UserRoleAssignment.create`, `Client.read`).
-2. **Batch 5b — the column-first unit**, five types: `LoginHistory`,
-   `ActiveSession`, `BrandingTheme`, `AssessmentQuestion`, `DiagnosticSession`.
-3. **Batch 5d — two product decisions**: `BlogPost` and `UATTestCase` reads.
-4. **The remaining 28 functions** from the batch 7/8 audit, by name:
-   bulk/move — `assignUserToOrganization`, `bulkAssignUsersToOrganization`,
-   `bulkImportAssessmentQuestions`, `bulkInviteUsersDiagnostic`,
-   `bulkInviteUsersE2ETest`, `bulkInviteUsersTest`,
-   `getAIAssignmentRecommendations`, `getReviewRoster` (fixed),
-   `importCompetencies`, `importUATTestCasesFromPDF`; reporting/export —
-   `atreusNightlySummary`, `exportAssessmentAnalyticsPDF`, `exportAssessmentPDF`,
-   `exportBusinessManagerPDF`, `exportConversationPDF`,
-   `exportCustomAssessmentPDF`, `exportGoalsAnalyticsPDF` (verified),
-   `exportJourneyAnalyticsPDF`, `exportLeadershipIndexPDF`,
-   `exportLearningAnalyticsPDF`, `exportPlatformAnalyticsPDF`,
-   `exportProgramPerformancePDF`, `generateDiagnosticReport`,
-   `generateProactiveInsights`, `getManagerInsights` (both files),
-   `getProgramGoalsAnalytics`, `getProgramPerformanceReport`,
-   `scheduleReportProcessor`.
-5. **The two-client proof**, once a second client exists.
+### 4a. Three rule-only fixes — applied
+
+| Type | Change |
+| --- | --- |
+| `UserProfile.create` | The `Admin Level 2` and `Super Administrator` branches could write a profile into **any** tenant; the read rule beside them was already bound. Both now require `data.tenant_id` to equal the caller's client. Platform Admin keeps the cross-tenant path. |
+| `UserRoleAssignment.create` | Same gap, same fix. |
+| `Client.read` | The bare `Super Administrator` and `admin` branches returned **every client row** — name, contact email, phone, ACV, Stripe ids, internal notes — to any tenant administrator. Both are now bound to `id == {{user.data.client_id}}`, which the first branch already granted to the row's own tenant. Platform Admin and Platform Administrator keep the full list; Partner administrator keeps its portfolio. |
+
+### 4b. The column-first unit — five types, field plus writer plus rules
+
+Each of these had no tenant-shaped field at all, so no rule could bind before the field existed.
+
+| Type | Field | Rule shape | Writer stamped |
+| --- | --- | --- | --- |
+| `LoginHistory` | `client_id` | Hard bind: `Admin Level 2`, `Super Administrator` and Partner administrator reads require the client. Own-email and Platform Admin unchanged. | `trackLoginAttempt` resolves the account's client once and stamps both records it writes. |
+| `ActiveSession` | `client_id` | Hard bind on the two tenant-wide reads. Own-session read, self-update and force-logout unchanged. | `trackLoginAttempt`. |
+| `BrandingTheme` | `client_id` | Null-or-own: a theme that belongs to the shared library (null) stays readable by every tenant; a theme a tenant saved is theirs alone. | `ThemeManager` stamps the saving user's client. |
+| `AssessmentQuestion` | `client_id` | Null-or-own on all four operations, so the shared Leadership Index bank keeps working for every tenant while a tenant's own questions stop leaking into another's. | `QuestionEditor` stamps the author's client. `bulkImportAssessmentQuestions` writes the platform bank and correctly leaves it null. |
+| `DiagnosticSession` | `client_id` | Null-or-own for the tenant roles; Partner administrator scoped to its portfolio (or null). | `generateDiagnosticReport` runs the public diagnostic, which belongs to the platform — correctly null. |
+
+**Backfill:** all three affected tables (`LoginHistory`, `ActiveSession`, `BrandingTheme`) are
+empty in this environment, so there was nothing to stamp and no history was orphaned by the
+new bind. Verified by reading the tables back, not by the absence of an error.
+
+### 4c. Two decisions, recorded rather than patched
+
+- **`BlogPost`** stays readable and writable across clients at the admin tiers, because the blog
+  is a public site surface: `/blog` renders without a login and narrowing this rule would break
+  the page rather than protect anything.
+- **`UATTestCase`** stays platform-wide at `Super Administrator` because the UAT suite is
+  internal QA material (`/blog`-style tenant content it is not), seeded by the platform and run
+  against the app as a whole.
+
+Both are now closed by decision. Reversing either is a product change, not a rule fix.
+
+---
+
+## 5. The function pass — completed, no further leaks found
+
+Every one of the 28 functions carried forward from the first sweep was read against the same
+question: *does it act on a record the caller named?* The verdicts:
+
+| Function(s) | Verdict |
+| --- | --- |
+| `getManagerInsights` (both files) | Sound. Gated to `User Level 2`, then resolves the roster by `manager_email === user.email` — the caller's own reports. Service role is used to read those users only. |
+| `generateProactiveInsights` | Sound. The team branch reads through the **user's** client (RLS applies) and resolves direct reports from the caller's email; service role is limited to that lookup. |
+| `atreusNightlySummary`, `scheduleReportProcessor` | Sound as designed. Callerless scheduled sweeps over every tenant — correct precisely because they are platform-wide and take no selector. |
+| `assignUserToOrganization`, `bulkAssignUsersToOrganization` | Sound. Platform Admin only, which is the correct tier for moving a person between tenants. (Separately: they still speak to the retired `Organization` entity — a legacy cleanup, not a tenant gap.) |
+| `bulkInviteUsersE2ETest`, `bulkInviteUsersTest`, `bulkInviteUsersDiagnostic` | Sound. Platform Admin gated. |
+| `bulkImportAssessmentQuestions`, `importUATTestCasesFromPDF`, `importCompetencies`, `getAIAssignmentRecommendations` | Sound. Platform/administrator gated, and none acts on a caller-named tenant record. |
+| `exportAssessmentPDF`, `exportConversationPDF`, `exportCustomAssessmentPDF`, `exportJourneyAnalyticsPDF`, `exportProgramPerformancePDF`, `exportBusinessManagerPDF`, `generateDiagnosticReport` | Sound. None uses the service role, so every read they make is filtered by the caller's own rules; the PDF cannot contain what the caller could not already see. |
+| `exportAssessmentAnalyticsPDF`, `exportLearningAnalyticsPDF`, `exportPlatformAnalyticsPDF`, `exportLeadershipIndexPDF`, `getProgramGoalsAnalytics`, `getProgramPerformanceReport` | Sound. Program-scoped or platform-tier, and the `export*` family renders an analytics payload the caller's screen already computed rather than reading records. |
+| `successionCrossTenantRead` | Sound by design. A control-plane read behind a server-side feature flag, reachable only through a `CrossTenantAccessGrant`, and it writes an audit event on every attempt including the refused ones. It is the sanctioned cross-tenant path, not a leak. |
+
+**One real gap was found in the whole pass, and it was already fixed:** `getReviewRoster`.
+
+### The two-client proof — still not runnable
+
+The checkpoint needs two tenants. This environment has one (`6ad63aa31e34c2b231b1a945`), and
+because invitations are the only way a person is created, a second administrator cannot be
+stood up from here. The static half of the proof is in place: the audit in section 1 walks
+every rule branch of the nine learning types and reports zero unbound client-wide branches.
+The dynamic half — client A's administrator attempting client B's record — needs a second
+client and one user in it before it can be run.
+
+---
+
+## 6. What is left, and why
+
+**33 unguarded operations across 20 types**, none of them in the learning family and none of
+them newly discovered. They fall into three groups:
+
+1. **Bound to something other than a client, by design** — `Partner`, `PartnerCommission`
+   (partner id and portfolio), `Goal`, `CustomForm` (program scope), `Competency` writes
+   (partner catalogue), `IdempotencyKey`, `ProvisioningBatch`, `ProvisioningRole`,
+   `ProvisioningUser`, `IntegrationDoc` (service-role plumbing).
+2. **Deliberately wide** — `BlogPost` and `UATTestCase`, both now recorded decisions.
+3. **Two worth a look, not yet decided** — `User.read`, `User.update` and `User.delete` at
+   `Partner Business Administrator` reach every user row rather than the partner's portfolio,
+   and `WorkbookLead` at the base `admin` flag reaches all marketing leads. Neither is tenant
+   data in the strict sense, but both widen further than their role names imply, and changing
+   the built-in `User` rules carries real risk of locking the partner portal out, so neither
+   was changed without a decision.
+
+**The two-client proof** (section 5) remains the one item that cannot be closed from inside
+this environment.

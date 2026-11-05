@@ -6,6 +6,10 @@
       "type": "string",
       "description": "Linked Prospect entity ID (created at lead capture)"
     },
+    "client_id": {
+      "type": "string",
+      "description": "ID of the client (tenant) that owns this diagnostic session. Null for sessions started from the public diagnostic, which belong to the platform."
+    },
     "respondent_name": {
       "type": "string",
       "description": "First name of the respondent (used for personalization)"
@@ -127,28 +131,86 @@
       "$or": [
         {
           "user_condition": {
-            "role": "Admin Level 1"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Admin Level 2"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Super Administrator"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Partner Business Administrator"
-          }
-        },
-        {
-          "user_condition": {
             "role": "Platform Admin"
           }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "$or": [
+                {
+                  "data.client_id": null
+                },
+                {
+                  "data.client_id": "{{user.data.client_id}}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "$or": [
+                {
+                  "data.client_id": null
+                },
+                {
+                  "data.client_id": "{{user.data.client_id}}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "$or": [
+                {
+                  "data.client_id": null
+                },
+                {
+                  "data.client_id": "{{user.data.client_id}}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            },
+            {
+              "$or": [
+                {
+                  "data.client_id": null
+                },
+                {
+                  "data.client_id": {
+                    "$in": "{{user.data.partner_client_ids}}"
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -156,28 +218,86 @@
       "$or": [
         {
           "user_condition": {
-            "role": "Admin Level 1"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Admin Level 2"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Super Administrator"
-          }
-        },
-        {
-          "user_condition": {
             "role": "Platform Admin"
           }
         },
         {
-          "user_condition": {
-            "role": "Partner Business Administrator"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "$or": [
+                {
+                  "data.client_id": null
+                },
+                {
+                  "data.client_id": "{{user.data.client_id}}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "$or": [
+                {
+                  "data.client_id": null
+                },
+                {
+                  "data.client_id": "{{user.data.client_id}}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "$or": [
+                {
+                  "data.client_id": null
+                },
+                {
+                  "data.client_id": "{{user.data.client_id}}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            },
+            {
+              "$or": [
+                {
+                  "data.client_id": null
+                },
+                {
+                  "data.client_id": {
+                    "$in": "{{user.data.partner_client_ids}}"
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -185,28 +305,86 @@
       "$or": [
         {
           "user_condition": {
-            "role": "Admin Level 1"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Admin Level 2"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Super Administrator"
-          }
-        },
-        {
-          "user_condition": {
             "role": "Platform Admin"
           }
         },
         {
-          "user_condition": {
-            "role": "Partner Business Administrator"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 1"
+              }
+            },
+            {
+              "$or": [
+                {
+                  "data.client_id": null
+                },
+                {
+                  "data.client_id": "{{user.data.client_id}}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "$or": [
+                {
+                  "data.client_id": null
+                },
+                {
+                  "data.client_id": "{{user.data.client_id}}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "$or": [
+                {
+                  "data.client_id": null
+                },
+                {
+                  "data.client_id": "{{user.data.client_id}}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Partner Business Administrator"
+              }
+            },
+            {
+              "$or": [
+                {
+                  "data.client_id": null
+                },
+                {
+                  "data.client_id": {
+                    "$in": "{{user.data.partner_client_ids}}"
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -214,18 +392,46 @@
       "$or": [
         {
           "user_condition": {
-            "role": "Admin Level 2"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Super Administrator"
-          }
-        },
-        {
-          "user_condition": {
             "role": "Platform Admin"
           }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Admin Level 2"
+              }
+            },
+            {
+              "$or": [
+                {
+                  "data.client_id": null
+                },
+                {
+                  "data.client_id": "{{user.data.client_id}}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "$or": [
+                {
+                  "data.client_id": null
+                },
+                {
+                  "data.client_id": "{{user.data.client_id}}"
+                }
+              ]
+            }
+          ]
         }
       ]
     }

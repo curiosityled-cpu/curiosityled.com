@@ -630,9 +630,16 @@
           "id": "{{user.data.client_id}}"
         },
         {
-          "user_condition": {
-            "role": "Super Administrator"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "Super Administrator"
+              }
+            },
+            {
+              "id": "{{user.data.client_id}}"
+            }
+          ]
         },
         {
           "user_condition": {
@@ -645,9 +652,16 @@
           }
         },
         {
-          "user_condition": {
-            "role": "admin"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            },
+            {
+              "id": "{{user.data.client_id}}"
+            }
+          ]
         },
         {
           "$and": [

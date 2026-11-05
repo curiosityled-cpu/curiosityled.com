@@ -329,11 +329,15 @@ guard, seeds, billing and the report-path reads; the `Tenant` retirement). What 
 read-rule pass for the types flagged in 10.1 and the update/delete pass in Batch 6.
 
 > **Update, phase 3 batches 3–8** — this section is no longer the newest statement of the
-> work. The learning and enrolment family is closed, batch 5 has been re-measured (50
-> unguarded operations across 23 types, split into fixable / column-first / bound-by-design /
-> product-call), and the function layer has been audited over all 552 functions with one real
-> gap fixed (`getReviewRoster`). See `phase3-batch3-8-enforcement.md`, which also records that
-> the two-client proof has not been run and why.
+> work. The learning and enrolment family is closed; batch 5 has been **executed** — three
+> rule-only fixes (`UserProfile.create`, `UserRoleAssignment.create`, `Client.read`), five types
+> given a tenant column with their writers stamped (`LoginHistory`, `ActiveSession`,
+> `BrandingTheme`, `AssessmentQuestion`, `DiagnosticSession`), and two closed by recorded
+> decision (`BlogPost`, `UATTestCase`). That leaves 33 unguarded operations across 20 types,
+> every one bound to a partner or program, platform plumbing, or deliberately wide. The function
+> layer has been read line by line rather than swept: one real gap found and fixed
+> (`getReviewRoster`), none in the other 27. See `phase3-batch3-8-enforcement.md`, which also
+> records that the two-client proof has not been run and why.
 
 ### 10.1 Batch 5 — the read pass
 

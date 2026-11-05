@@ -40,9 +40,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invalid status. Must be success, failed, or locked' }, { status: 400 });
     }
 
+    // Resolve the workspace this account belongs to, so sign-in history and live
+    // sessions stay scoped to one tenant instead of being readable tenant-wide.
+    const loginUsers = await base44.asServiceRole.entities.User.list();
+    const loginUser = loginUsers.find(u => u.email === userEmail);
+    const loginClientId = loginUser?.data?.client_id || loginUser?.client_id || null;
+
     // Log the login attempt
     await base44.asServiceRole.entities.LoginHistory.create({
       user_email: userEmail,
+      client_id: loginClientId,
       login_timestamp: new Date().toISOString(),
       ip_address: ipAddress,
       device_type: deviceType,
@@ -57,6 +64,7 @@ Deno.serve(async (req) => {
     if (status === 'success' && sessionId) {
       await base44.asServiceRole.entities.ActiveSession.create({
         user_email: userEmail,
+        client_id: loginClientId,
         session_id: sessionId,
         started_at: new Date().toISOString(),
         last_activity: new Date().toISOString(),

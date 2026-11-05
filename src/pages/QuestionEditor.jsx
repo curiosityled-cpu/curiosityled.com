@@ -175,7 +175,11 @@ function QuestionEditor() {
         await base44.entities.AssessmentQuestion.update(editingQuestion.id, formData);
         toast.success('Question updated successfully');
       } else {
-        await base44.entities.AssessmentQuestion.create(formData);
+        const me = await base44.auth.me();
+        await base44.entities.AssessmentQuestion.create({
+          ...formData,
+          client_id: me?.data?.client_id || me?.client_id || null
+        });
         toast.success('Question created successfully');
       }
       setShowDialog(false);
