@@ -29,7 +29,7 @@ import {
   emailKey,
   loadUsers,
 } from "../../shared/roleTargeting.ts";
-import { resolveTenantContext } from "../../shared/tenantContext.ts";
+import { resolveActiveClient } from "../../shared/tenantContext.ts";
 
 export default async function (req: Request): Promise<Response> {
   try {
@@ -48,7 +48,7 @@ export default async function (req: Request): Promise<Response> {
     // principal (validated against their portfolio), or the one a platform
     // principal is acting for. `client_id` in the body is only ever a hint — a
     // member cannot move themselves to another tenant by sending it.
-    const ctx = await resolveTenantContext(base44, user, body.client_id || null);
+    const ctx = await resolveActiveClient(base44, user, body.client_id || null);
     const clientId = ctx.client_id;
 
     const [taxonomyRaw, questionRaw, allUsers] = await Promise.all([

@@ -11,6 +11,7 @@
  * Body: { tiers, tracks, title_mappings, propagate?: boolean }
  */
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.54";
+import { resolveActiveClient } from "../../shared/tenantContext.ts";
 import {
   sanitizeTaxonomy,
   resolveRoleProfile,
@@ -31,7 +32,14 @@ export default async function (req: Request): Promise<Response> {
     }
 
     const body = await req.json().catch(() => ({}));
-    const clientId = clientIdOf(user);
+    // The taxonomy being edited belongs to the active client, decided by the
+    // tenant resolver — not to whichever client the viewer's account sits in.
+    const ctx = await resolveActiveClient(
+      base44,
+      user,
+      String(body.client_id || "").trim() || null
+    );
+    const clientId = ctx.client_id;
     if (!clientId) {
       return Response.json({ error: "No client linked to your account" }, { status: 403 });
     }

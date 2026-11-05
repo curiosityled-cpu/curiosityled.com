@@ -11,6 +11,7 @@
  * Body: { conflict_id, resolution: "kept_current" | "took_incoming", note? }
  */
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.54";
+import { resolveActiveClient } from "../../shared/tenantContext.ts";
 import {
   isTenantAdmin,
   isPlatformAdmin,
@@ -42,8 +43,15 @@ export default async function (req: Request): Promise<Response> {
     const conflict = (Array.isArray(rows) ? rows : rows?.items || [])[0];
     if (!conflict) return Response.json({ error: "Conflict not found" }, { status: 404 });
 
-    const clientId = clientIdOf(user);
-    if (!isPlatformAdmin(user) && conflict.client_id !== clientId) {
+    // The conflict must belong to a client this caller may act on. A platform
+    // principal spans every client; anyone else is confined to the active one.
+    const ctx = await resolveActiveClient(
+      base44,
+      user,
+      String(body.client_id || "").trim() || null
+    );
+    const clientId = ctx.client_id;
+    if (!ctx.all_clients && conflict.client_id !== clientId) {
       return Response.json({ error: "Conflict is outside your organisation" }, { status: 403 });
     }
 

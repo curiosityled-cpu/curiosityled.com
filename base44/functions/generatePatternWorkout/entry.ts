@@ -10,6 +10,7 @@
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.48';
 import { generateWorkoutModule, attachAssets, WORKOUT_DEFAULTS } from '../../shared/workoutGenerator.ts';
+import { membershipClientId } from '../../shared/tenantContext.ts';
 
 export default async function(req: Request): Promise<Response> {
   try {
@@ -33,8 +34,11 @@ export default async function(req: Request): Promise<Response> {
     const canPublish = adminRoles.includes(user.app_role);
 
     // Managers must have a tenant to scope their draft. Browser-supplied
-    // client_id is never trusted — only the authenticated actor's tenant is used.
-    const actorClientId = user.client_id;
+    // client_id is never trusted — only the authenticated actor's tenant is
+    // used, read through the resolver's precedence so an account whose
+    // authoritative field is set but whose legacy field is empty is not
+    // wrongly told it has no tenant.
+    const actorClientId = membershipClientId(user);
     if (!canPublish && !actorClientId) {
       return Response.json({ error: 'Unauthorized — manager has no tenant assignment; cannot scope draft' }, { status: 403 });
     }

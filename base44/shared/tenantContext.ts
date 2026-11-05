@@ -258,6 +258,32 @@ export async function resolveTenantContext(base44, user, requestedClientId = nul
 }
 
 /**
+ * The client a module should read and write, for screens that configure one
+ * client's content.
+ *
+ * This is `resolveTenantContext` plus one rule: a principal who spans many
+ * clients and passed no selection acts on their own home client when they have
+ * one. Without it, a screen that offers no client selector (role targeting, for
+ * example) would need a selection from a platform administrator before it could
+ * show anything at all, and screens that worked yesterday would start refusing
+ * them today. A selection still wins whenever one is supplied, and a member is
+ * still never moved out of their own tenant.
+ */
+export async function resolveActiveClient(
+  base44,
+  user,
+  requestedClientId = null
+) {
+  const ctx = await resolveTenantContext(base44, user, requestedClientId);
+  if (ctx.client_id || !ctx.can_select_client) return ctx;
+
+  const home = membershipClientId(user);
+  if (!home) return ctx;
+  const client = await fetchClient(base44, home);
+  return client ? applyActiveClient(ctx, client) : ctx;
+}
+
+/**
  * Whether this context may act on the given client at all. Every function that
  * writes a client_id taken from request input calls this before writing.
  */

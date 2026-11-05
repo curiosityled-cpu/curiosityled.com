@@ -16,6 +16,7 @@
  * }
  */
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.54";
+import { resolveActiveClient } from "../../shared/tenantContext.ts";
 import {
   loadTaxonomy,
   sanitizeTaxonomy,
@@ -47,7 +48,15 @@ export default async function (req: Request): Promise<Response> {
     if (!SOURCES.includes(source)) {
       return Response.json({ error: "source must be 'hris' or 'roster'" }, { status: 400 });
     }
-    const clientId = clientIdOf(user);
+    // The client whose people are being profiled, decided by the tenant
+    // resolver: a member's own organisation, or the client an oversight
+    // administrator selected inside their portfolio.
+    const ctx = await resolveActiveClient(
+      base44,
+      user,
+      String(body.client_id || "").trim() || null
+    );
+    const clientId = ctx.client_id;
     if (!clientId) {
       return Response.json({ error: "No client linked to your account" }, { status: 403 });
     }

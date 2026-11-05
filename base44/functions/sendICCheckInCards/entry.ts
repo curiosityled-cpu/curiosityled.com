@@ -11,7 +11,7 @@
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { isInternalCall } from '../../shared/urlValidation.ts';
-import { resolveTenantContext } from '../../shared/tenantContext.ts';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 import {
   getICQuestions,
   buildICCheckInCard,
@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
     // portfolio), so check-ins can only ever go to an authorised roster.
     let clientId = payload.client_id;
     if (!internalCall) {
-      const ctx = await resolveTenantContext(base44, user, payload.client_id || null);
+      const ctx = await resolveActiveClient(base44, user, payload.client_id || null);
       if (ctx.blocked || !ctx.client_id) {
         return Response.json({ error: 'Not authorised for that client' }, { status: 403 });
       }

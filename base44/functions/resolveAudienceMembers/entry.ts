@@ -21,6 +21,7 @@
  * Admin-only: the same roles that are allowed to assign learning.
  */
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.54";
+import { resolveActiveClient } from "../../shared/tenantContext.ts";
 import {
   loadTaxonomy,
   loadTenantPeople,
@@ -42,8 +43,15 @@ export default async function (req: Request): Promise<Response> {
     }
 
     const body = await req.json().catch(() => ({}));
-    const clientId: string =
-      (isPlatformAdmin(user) && String(body.client_id || "").trim()) || clientIdOf(user);
+    // The active client, decided by the resolver — so an oversight
+    // administrator resolves the audience of the client they selected, not the
+    // one their own account happens to sit in.
+    const ctx = await resolveActiveClient(
+      base44,
+      user,
+      String(body.client_id || "").trim() || null
+    );
+    const clientId: string = ctx.client_id;
     if (!clientId) {
       return Response.json({ error: "No client linked to your account" }, { status: 403 });
     }
