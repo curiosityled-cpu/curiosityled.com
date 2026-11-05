@@ -115,9 +115,9 @@ ${actionPending ? '- An action is already waiting for the learner\'s decision, s
 }
 
 /** Carries out an approved action. Never throws — the learner always gets a straight answer. */
-export async function executeModuleAction(action, user) {
+export async function executeModuleAction(action, user, clientId) {
   try {
-    if (action.type === "create_task") return await createTask(action, user);
+    if (action.type === "create_task") return await createTask(action, user, clientId);
     if (action.type === "calendar_event") return await addToCalendar(action, user);
     if (action.type === "draft_communication") return await writeDraft(action, user);
     return { ok: false, message: "I couldn't carry that one out." };
@@ -129,8 +129,11 @@ export async function executeModuleAction(action, user) {
   }
 }
 
-async function createTask(action, user) {
+async function createTask(action, user, clientId) {
   const title = action.title || action.summary || "Follow-through from learning";
+  // The workspace this action belongs to comes from the caller's resolved
+  // selection, so an operator working in another organisation files the goal
+  // there rather than in their own.
   const created = await base44.entities.Goal.create({
     title,
     description: action.details || action.summary,
@@ -138,7 +141,7 @@ async function createTask(action, user) {
     status: "active",
     visibility: "private",
     timeframe_start: new Date().toISOString().slice(0, 10),
-    client_id: user?.data?.client_id || undefined,
+    client_id: clientId || user?.data?.client_id || undefined,
   });
   return {
     ok: true,

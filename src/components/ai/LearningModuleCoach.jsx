@@ -10,9 +10,11 @@ import CoachMessage from "./CoachMessage";
 import TypingIndicator from "./TypingIndicator";
 import ModuleActionCard from "./ModuleActionCard";
 import { requestModuleTurn, executeModuleAction } from "@/lib/moduleActions";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { toast } from "sonner";
 
 export default function LearningModuleCoach({ moduleData, onClose, user }) {
+  const activeClientId = useActiveClientId();
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -195,7 +197,7 @@ export default function LearningModuleCoach({ moduleData, onClose, user }) {
     try {
       if (approved) {
         setIsExecuting(true);
-        const outcome = await executeModuleAction(action, user);
+        const outcome = await executeModuleAction(action, user, activeClientId);
         withOutcome = [
           ...messages,
           { role: "assistant", content: outcome.message, timestamp: new Date().toISOString() },
