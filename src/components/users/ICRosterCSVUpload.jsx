@@ -8,6 +8,7 @@
  */
 import React, { useState, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { useAuth } from "@/components/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,7 +52,8 @@ function parseCSV(text) {
 
 export default function ICRosterCSVUpload({ open, onClose, onDone, clientId, createdByEmail }) {
   const { user: authUser } = useAuth();
-  const cid = clientId || authUser?.data?.client_id || authUser?.client_id;
+  const activeClientId = useActiveClientId();
+  const cid = clientId || activeClientId || authUser?.data?.client_id || authUser?.client_id;
   const creator = createdByEmail || authUser?.email || "";
   const fileRef = useRef(null);
   const [fileName, setFileName] = useState("");

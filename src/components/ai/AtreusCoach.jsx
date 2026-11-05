@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minimize2, Send, Brain, Loader2, Sparkles, History, Download, FileText, ChevronDown, ChevronUp, Trash2, Plus, AlertCircle, Paperclip, XCircle, Map, MessageSquare, BarChart2, TrendingUp, Target } from "lucide-react";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -54,6 +55,7 @@ export default function AtreusCoach({
   draftMessage = null,
 }) {
   const { user, appRole, userPermissions } = useAuth();
+  const activeClientId = useActiveClientId();
   const { updatePageContext } = usePageContext() || { updatePageContext: () => {} };
   const { writeMemory } = useAtreusMemoryWriter({ userEmail: user?.email, pageType: context?.pageType });
   const [messages, setMessages] = useState([]);
@@ -739,7 +741,7 @@ export default function AtreusCoach({
         current_page: context?.pageType || context?.path || null,
         user_role: context?.userRole || appRole || null,
         user_name: context?.user_name || user?.full_name || null,
-        client_id: context?.client_id || user?.client_id || user?.data?.client_id || null,
+        client_id: context?.client_id || activeClientId || user?.client_id || user?.data?.client_id || null,
         current_goals: context?.visible_data_summary?.active_goals || context?.current_goals || null,
         recent_activity: context?.activity_summary || context?.recent_activity || null,
         assessment_summary: context?.page_specific_insights?.assessment_summary || context?.assessment_summary || null,

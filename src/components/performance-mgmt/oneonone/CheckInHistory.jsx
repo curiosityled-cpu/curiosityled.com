@@ -8,6 +8,7 @@
  */
 import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
@@ -23,6 +24,7 @@ import IndividualCheckIns from "@/components/checkin/insights/IndividualCheckIns
 import CheckInCalendar from "./CheckInCalendar";
 
 export default function CheckInHistory({ user }) {
+  const activeClientId = useActiveClientId();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -50,7 +52,7 @@ export default function CheckInHistory({ user }) {
 
   // Load org retroactive lookback window
   useEffect(() => {
-    const clientId = user?.data?.client_id || user?.client_id;
+    const clientId = activeClientId || user?.data?.client_id || user?.client_id;
     if (!clientId) return;
     base44.entities.Client.get(clientId)
       .then((c) => {

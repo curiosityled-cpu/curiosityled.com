@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { useAuth } from "@/lib/AuthContext";
 import { AlertTriangle, TrendingUp, CheckCircle, BarChart2, Users, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,8 +53,10 @@ export default function LeadershipIntelligenceHub() {
   const navigate = useNavigate();
   const [selectedStage, setSelectedStage] = useState(null);
 
-  // client_id stored in data for most roles
-  const clientId = user?.data?.client_id || user?.client_id;
+  // The active tenant, decided on the server: a partner administrator's selected
+  // client wins over the fields on their own user record.
+  const activeClientId = useActiveClientId();
+  const clientId = activeClientId || user?.data?.client_id || user?.client_id;
 
   // Only true Platform Admin (not just base role="admin") can list all users globally
   const isPlatformAdmin = user?.data?.app_role === 'Platform Admin' || user?.app_role === 'Platform Admin';

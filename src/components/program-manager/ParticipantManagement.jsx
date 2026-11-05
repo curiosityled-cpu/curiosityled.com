@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useActiveClientId } from '@/components/contexts/ClientContext';
 import { useAuth } from '@/components/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,6 +48,7 @@ const DISENROLLMENT_REASONS = [
 ];
 
 export default function ParticipantManagement() {
+  const activeClientId = useActiveClientId();
   const { user, hasPermission } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -259,7 +261,7 @@ export default function ParticipantManagement() {
           for (const email of newEmails) {
             await base44.entities.JourneyEnrollment.create({
               journey_id: selectedEntityId,
-              client_id: user?.client_id || user?.data?.client_id || null,
+              client_id: activeClientId || user?.client_id || user?.data?.client_id || null,
               user_email: email,
               status: 'not_started',
               enrolled_date: new Date().toISOString(),
@@ -320,7 +322,7 @@ export default function ParticipantManagement() {
           for (const email of emails) {
             await base44.entities.JourneyEnrollment.create({
               journey_id: selectedEntityId,
-              client_id: user?.client_id || user?.data?.client_id || null,
+              client_id: activeClientId || user?.client_id || user?.data?.client_id || null,
               user_email: email,
               status: 'not_started',
               enrolled_date: new Date().toISOString(),

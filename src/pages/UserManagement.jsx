@@ -11,6 +11,7 @@ import {
   Link2, Send, Pencil, MessageSquare, UserCog, Layers
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { useAuth } from "@/components/useAuth";
 import { withAuthProtection } from "@/components/hoc/withAuthProtection";
 import { toast } from "sonner";
@@ -137,7 +138,8 @@ function UserManagement({ embedded = false }) {
   const usersPerPage = 50;
 
   // Non-user frontline staff (ICRoster) — roster records, never app accounts.
-  const clientId = currentUser?.data?.client_id || currentUser?.client_id;
+  const activeClientId = useActiveClientId();
+  const clientId = activeClientId || currentUser?.data?.client_id || currentUser?.client_id;
   const {
     roster: staffRoster,
     reload: reloadStaff,

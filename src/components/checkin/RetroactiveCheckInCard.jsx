@@ -9,6 +9,7 @@
  */
 import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { useAuth } from "@/lib/AuthContext";
 import { CHECK_IN_PRESETS, SCALE_LABELS } from "@/lib/checkInPresets";
 import { Card, CardContent } from "@/components/ui/card";
@@ -65,7 +66,8 @@ function ScorePicker({ value, onChange }) {
 export default function RetroactiveCheckInCard({ initialDate, initialType, editMode, onSaved, onCancel, targetEmail, targetName }) {
   const { user } = useAuth();
   const userEmail = user?.email;
-  const clientId = user?.data?.client_id || user?.client_id;
+  const activeClientId = useActiveClientId();
+  const clientId = activeClientId || user?.data?.client_id || user?.client_id;
   const userRole = user?.app_role || user?.data?.app_role || user?.role || "";
 
   const [lookback, setLookback] = useState(7);

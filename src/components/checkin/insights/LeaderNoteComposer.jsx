@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,6 +21,7 @@ export default function LeaderNoteComposer({
   onSaved,
   placeholder,
 }) {
+  const activeClientId = useActiveClientId();
   const [editing, setEditing] = useState(!note);
   const [text, setText] = useState(note?.note || "");
   const [shared, setShared] = useState(note?.shared_with_subject || false);
@@ -45,7 +47,7 @@ export default function LeaderNoteComposer({
         await base44.entities.CheckInLeaderNote.update(note.id, fields);
       } else {
         await base44.entities.CheckInLeaderNote.create({
-          client_id: viewer?.data?.client_id || viewer?.client_id || "",
+          client_id: activeClientId || viewer?.data?.client_id || viewer?.client_id || "",
           leader_email: viewer?.email || "",
           leader_name: viewer?.data?.display_name || viewer?.full_name || viewer?.email || "",
           subject_email: subject.email,

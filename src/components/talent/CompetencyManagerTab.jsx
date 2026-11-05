@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -328,6 +329,7 @@ function CompetencySection({ title, items, collapsedCategories, onToggleCategory
 }
 
 export default function CompetencyManagerTab() {
+  const activeClientId = useActiveClientId();
   const { user } = useAuth();
   const appRole = user?.app_role || user?.data?.app_role || user?.role;
   const isPlatformAdmin = appRole === "Platform Admin";
@@ -378,7 +380,7 @@ export default function CompetencyManagerTab() {
   const handleCreate = async () => {
     if (!validateWeights()) return;
     try {
-      await base44.entities.Competency.create({ ...formData, is_platform_default: false, client_id: user?.client_id || user?.data?.client_id });
+      await base44.entities.Competency.create({ ...formData, is_platform_default: false, client_id: activeClientId || user?.client_id || user?.data?.client_id });
       toast.success("Competency created");
       setShowCreateDialog(false);
       setFormData(EMPTY_FORM);
@@ -442,7 +444,7 @@ export default function CompetencyManagerTab() {
     ...(competencies.some((c) => c.category === "Uncategorized") ? ["Uncategorized"] : []),
   ];
 
-  const clientId = user?.client_id || user?.data?.client_id;
+  const clientId = activeClientId || user?.client_id || user?.data?.client_id;
   const coreCompetencies = filteredCompetencies.filter((c) => c.is_platform_default);
   const orgSpecificCompetencies = filteredCompetencies.filter((c) => !c.is_platform_default && c.client_id === clientId);
 

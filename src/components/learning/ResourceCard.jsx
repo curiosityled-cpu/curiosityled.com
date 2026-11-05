@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ExternalLink, Plus, Sparkles, Award, Lock, CheckCircle2, Layers, UserPlus } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { useAuth } from "@/components/useAuth";
 import { toast } from "sonner";
 import ResourceFileViewer from "@/components/learning/ResourceFileViewer";
@@ -18,6 +19,7 @@ export default function ResourceCard({
     showSelfAssign = false,
 }) {
     const { user } = useAuth();
+    const activeClientId = useActiveClientId();
     const [selfAssigning, setSelfAssigning] = React.useState(false);
     const [progress, setProgress] = useState(null);
     const [isLocked, setIsLocked] = useState(false);
@@ -37,7 +39,7 @@ export default function ResourceCard({
             const me = await base44.auth.me();
             if (!me?.email) throw new Error("Not authenticated");
             
-            const clientId = me.client_id || me?.data?.client_id || null;
+            const clientId = activeClientId || me.client_id || me?.data?.client_id || null;
             await base44.entities.AssignedLearning.create({
                 user_email: me.email,
                 learning_resource_id: resource.id,

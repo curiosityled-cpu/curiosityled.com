@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -44,6 +45,7 @@ const COMPETENCIES = [
 ];
 
 export default function ExperienceFormModal({ open, onClose, onSaved, experience, userEmail, coachMode, coachRole }) {
+  const activeClientId = useActiveClientId();
   const editing = !!experience?.id;
   const [form, setForm] = useState({
     title: "",
@@ -106,7 +108,7 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
       const me = await base44.auth.me();
       const email = userEmail || me?.email;
       if (!email) throw new Error("Could not determine your user account. Please refresh and try again.");
-      const clientId = me?.client_id || me?.data?.client_id || null;
+      const clientId = activeClientId || me?.client_id || me?.data?.client_id || null;
       const data = { ...form, user_email: email, client_id: clientId };
       if (coachMode) data.coach_email = me?.email;
       if (editing) {

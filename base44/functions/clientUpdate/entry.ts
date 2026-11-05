@@ -1,11 +1,17 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import {
+  canActOnClient,
+  readAppRole,
+  resolveTenantContext,
+  tenantBlockedResponse,
+} from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
-    if (!user || !['Super Administrator', 'Platform Admin'].includes(user.app_role)) {
+    if (!user || !['Super Administrator', 'Platform Admin'].includes(readAppRole(user))) {
       return Response.json({ error: 'Unauthorized - Super Administrator or Platform Admin only' }, { status: 403 });
     }
 
@@ -15,9 +21,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing client_id' }, { status: 400 });
     }
 
-    // Security: a Super Administrator may only modify their own organization.
-    // Platform Admin retains cross-tenant access.
-    if (user.app_role === 'Super Administrator' && user.client_id && client_id !== user.client_id) {
+    // Which organization may be touched is decided by the shared resolver: a
+    // Super Administrator is held to their own client, Platform Admin spans all.
+    const tenant = await resolveTenantContext(base44, user, client_id);
+    if (tenant.blocked) return tenantBlockedResponse(tenant);
+    if (!canActOnClient(tenant, client_id)) {
       return Response.json({ error: 'Forbidden - you can only modify your own organization' }, { status: 403 });
     }
 

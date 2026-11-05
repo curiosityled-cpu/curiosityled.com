@@ -8,11 +8,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Users, Upload, Send, CheckCircle, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { useAuth } from "@/components/useAuth";
 import { toast } from "sonner";
 import MultiSelectFilter from "@/components/learning/MultiSelectFilter";
 
 export default function BulkLearningOperations() {
+  const activeClientId = useActiveClientId();
   const { user } = useAuth();
   const [operation, setOperation] = useState("assign_resource");
   const [selectedResources, setSelectedResources] = useState([]);
@@ -116,7 +118,7 @@ export default function BulkLearningOperations() {
             for (const moduleId of selectedModules) {
               await base44.entities.LearnerProgress.create({
                 user_email: email,
-                client_id: user?.client_id || user?.data?.client_id || null,
+                client_id: activeClientId || user?.client_id || user?.data?.client_id || null,
                 conversational_learning_module_id: moduleId,
                 status: "not_started",
                 progress_percentage: 0

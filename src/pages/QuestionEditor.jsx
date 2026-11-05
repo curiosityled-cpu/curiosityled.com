@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useActiveClientId } from '@/components/contexts/ClientContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,7 @@ import { withAuthProtection } from '@/components/hoc/withAuthProtection';
 import PageHeader from '@/components/common/PageHeader';
 
 function QuestionEditor() {
+  const activeClientId = useActiveClientId();
   const [questions, setQuestions] = useState([]);
   const [competencies, setCompetencies] = useState([]);
   const [filteredQuestions, setFilteredQuestions] = useState([]);
@@ -178,7 +180,7 @@ function QuestionEditor() {
         const me = await base44.auth.me();
         await base44.entities.AssessmentQuestion.create({
           ...formData,
-          client_id: me?.data?.client_id || me?.client_id || null
+          client_id: activeClientId || me?.data?.client_id || me?.client_id || null
         });
         toast.success('Question created successfully');
       }

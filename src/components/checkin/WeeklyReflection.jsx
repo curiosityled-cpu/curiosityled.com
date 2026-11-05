@@ -7,6 +7,7 @@
  */
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -65,6 +66,7 @@ const STEPS = [
 ];
 
 export default function WeeklyReflection({ onComplete, onSkip }) {
+  const activeClientId = useActiveClientId();
   const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -100,7 +102,7 @@ export default function WeeklyReflection({ onComplete, onSkip }) {
         focus_intention: finalAnswers.intention || null,
         focus_category: 'other',
         source: 'web',
-        client_id: user?.data?.client_id || user?.client_id || null,
+        client_id: activeClientId || user?.data?.client_id || user?.client_id || null,
       });
 
       setDone(true);

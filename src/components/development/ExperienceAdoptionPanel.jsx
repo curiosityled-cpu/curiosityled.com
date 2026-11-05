@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Target, BookOpen, Plus, CheckCircle2, ExternalLink, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { toast } from "sonner";
 
 /**
@@ -13,6 +14,7 @@ import { toast } from "sonner";
  * @param {Function} onAdopted - called after a successful adoption (to reload)
  */
 export default function ExperienceAdoptionPanel({ exp, onAdopted }) {
+  const activeClientId = useActiveClientId();
   const [busyId, setBusyId] = useState(null);
 
   const adoptGoal = async (goal) => {
@@ -30,7 +32,7 @@ export default function ExperienceAdoptionPanel({ exp, onAdopted }) {
         timeframe_end: goal.target_date || "",
         status: "active",
         visibility: "private",
-        client_id: me?.client_id || me?.data?.client_id || null,
+        client_id: activeClientId || me?.client_id || me?.data?.client_id || null,
       });
       const updatedGoals = (exp.captured_goals || []).map((g) =>
         g.id === goal.id ? { ...g, adopted_by_coachee: true, linked_goal_id: newGoal.id } : g
@@ -59,7 +61,7 @@ export default function ExperienceAdoptionPanel({ exp, onAdopted }) {
         user_email: myEmail,
         status: "assigned",
         resource_url: item.resource_url || "",
-        client_id: me?.client_id || me?.data?.client_id || null,
+        client_id: activeClientId || me?.client_id || me?.data?.client_id || null,
       });
       const updatedLearning = (exp.recommended_learning || []).map((r) =>
         r.id === item.id ? { ...r, adopted_by_coachee: true, linked_assigned_learning_id: newAssignment.id } : r

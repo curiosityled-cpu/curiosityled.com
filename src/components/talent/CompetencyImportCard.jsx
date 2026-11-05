@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { base44 } from "@/api/base44Client";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { useAuth } from "@/lib/AuthContext";
 import { useClient } from "@/components/contexts/ClientContext";
 import { toast } from "sonner";
@@ -16,6 +17,7 @@ const CONFIDENCE_STYLES = {
 };
 
 export default function CompetencyImportCard({ competencies, onCreated }) {
+  const activeClientId = useActiveClientId();
   const { user } = useAuth();
   const { client } = useClient();
   const appRole = user?.app_role || user?.data?.app_role || user?.role;
@@ -85,7 +87,7 @@ export default function CompetencyImportCard({ competencies, onCreated }) {
         definition: suggestion.definition || "",
         key_components: suggestion.key_components || [],
         is_platform_default: false,
-        client_id: user?.client_id || user?.data?.client_id,
+        client_id: activeClientId || user?.client_id || user?.data?.client_id,
       });
       setCreatedIds((prev) => new Set(prev).add(suggestionKey));
       toast.success(`Created "${suggestion.name}"`);

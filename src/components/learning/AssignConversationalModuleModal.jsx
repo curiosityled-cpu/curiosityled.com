@@ -11,12 +11,14 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Users, User, Loader2, Send, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { base44 } from "@/api/base44Client";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { useAuth } from "@/lib/AuthContext";
 import { toast } from "sonner";
 
 const ADMIN_ROLES = ["Admin Level 1", "Admin Level 2", "Super Administrator", "Partner Business Administrator", "Platform Admin"];
 
 export default function AssignConversationalModuleModal({ open, onClose, onSuccess, moduleData }) {
+  const activeClientId = useActiveClientId();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [assigning, setAssigning] = useState(false);
@@ -97,7 +99,7 @@ export default function AssignConversationalModuleModal({ open, onClose, onSucce
     }
     setAssigning(true);
     try {
-      const clientId = user?.data?.client_id;
+      const clientId = activeClientId || user?.data?.client_id;
       const records = selectedUsers.map(email => ({
         user_email: email,
         assigned_by: user.email,

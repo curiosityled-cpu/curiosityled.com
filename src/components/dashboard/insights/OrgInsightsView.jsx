@@ -3,6 +3,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { useAuth } from "@/components/useAuth";
 import { base44 } from "@/api/base44Client";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -94,7 +95,8 @@ const PRIORITY_COLORS = {
 
 export default function OrgInsightsView({ user, onMetricsUpdate, actionsRef }) {
   const { isPlatformAdmin, isSuperAdmin } = useAuth();
-  const clientId = user?.client_id || user?.data?.client_id;
+  const activeClientId = useActiveClientId();
+  const clientId = activeClientId || user?.client_id || user?.data?.client_id;
   const navigate = useNavigate();
   const { openWithContext } = useAtreusChat();
   const [activeLifecycleStage, setActiveLifecycleStage] = useState(null);

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useActiveClientId } from '@/components/contexts/ClientContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Map, BookOpen, Star, Clock, CheckCircle, ExternalLink, X } from 'lucide-react';
@@ -12,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
  * On confirm: creates LearningJourney (draft) + DevelopmentExperience records.
  */
 export default function JourneyDraftConfirmModal({ draft, user, onConfirm, onCancel }) {
+  const activeClientId = useActiveClientId();
   const navigate = useNavigate();
   const [creating, setCreating] = useState(false);
   const [createdJourneyId, setCreatedJourneyId] = useState(null);
@@ -22,7 +24,7 @@ export default function JourneyDraftConfirmModal({ draft, user, onConfirm, onCan
     setCreating(true);
     try {
       const userEmail = user?.email || user?.data?.email;
-      const clientId = user?.client_id || user?.data?.client_id || null;
+      const clientId = activeClientId || user?.client_id || user?.data?.client_id || null;
 
       // Build learning_items from matched resources
       const learningItems = (draft.learning_resources || []).map(res => ({
