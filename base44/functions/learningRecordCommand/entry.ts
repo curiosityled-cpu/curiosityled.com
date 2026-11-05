@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
+import { resolveTenantContext, tenantBlockedResponse } from '../../shared/tenantContext.ts';
 
 /**
  * The learning record server.
@@ -160,7 +161,12 @@ export default async function (req) {
         return Response.json({ error: 'Forbidden - admin access required' }, { status: 403 });
       }
 
-      const clientId = user.client_id || body?.client_id;
+      // Which client's records are being retained is the resolver's decision, so an
+      // operator working inside a client's workspace retains that client's records
+      // and a named client is validated rather than trusted.
+      const tenant = await resolveTenantContext(base44, user, body?.client_id ?? null);
+      if (tenant.blocked) return tenantBlockedResponse(tenant);
+      const clientId = tenant.client_id;
       if (!clientId) {
         return Response.json(
           { error: 'A client is required to apply a retention schedule.' },

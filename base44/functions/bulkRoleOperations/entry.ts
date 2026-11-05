@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
-import { resolveUserScope } from '../../shared/userScope.ts';
+import { resolveTenantContext, tenantBlockedResponse } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -21,15 +21,18 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { operation, csv_data } = body;
 
-    // Every role written here belongs to one client. A Platform Admin must name
-    // the client, because there is no "every client's roles" fallback that
-    // would not also let one tenant's CSV rewrite another tenant's catalogue.
-    const scope = resolveUserScope(user);
-    const targetClientId = scope.isPlatformAdmin ? body.client_id : scope.client_id;
+    // Every role written here belongs to one client. The resolver decides which
+    // one: a member is fixed to their own, an operator is held to the portfolio
+    // client they selected, and a named client is validated rather than trusted,
+    // because there is no "every client's roles" fallback that would not also let
+    // one tenant's CSV rewrite another tenant's catalogue.
+    const tenant = await resolveTenantContext(base44, user, body.client_id ?? null);
+    if (tenant.blocked) return tenantBlockedResponse(tenant);
+    const targetClientId = tenant.client_id;
     if (!targetClientId) {
       return Response.json({
-        error: scope.isPlatformAdmin
-          ? 'client_id is required when a Platform Admin performs a bulk role operation'
+        error: tenant.needs_selection
+          ? 'Choose a client before running a bulk role operation'
           : 'Your account is not assigned to a client'
       }, { status: 403 });
     }
