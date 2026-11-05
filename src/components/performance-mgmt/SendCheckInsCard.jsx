@@ -12,6 +12,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/components/useAuth";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -38,7 +39,10 @@ import { toast } from "sonner";
 export default function SendCheckInsCard({ user }) {
   const { user: authUser } = useAuth();
   const currentUser = user || authUser;
-  const clientId = currentUser?.data?.client_id || currentUser?.client_id;
+  // Sends to the active client's roster, not the viewer's own organisation.
+  const activeClientId = useActiveClientId();
+  const clientId =
+    activeClientId || currentUser?.data?.client_id || currentUser?.client_id;
 
   const [roster, setRoster] = useState([]);
   const [loading, setLoading] = useState(true);

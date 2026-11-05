@@ -9,6 +9,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/components/useAuth";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +19,12 @@ import { toast } from "sonner";
 
 export default function CheckInLookbackSetting() {
   const { user } = useAuth();
-  const clientId = user?.data?.client_id || user?.client_id;
+  // This card edits Client.settings — the active client's configuration, not
+  // the viewer's own. The fallback keeps a plain member working while the
+  // context is still resolving.
+  const activeClientId = useActiveClientId();
+  const clientId =
+    activeClientId || user?.data?.client_id || user?.client_id;
   const [lookback, setLookback] = useState(7);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

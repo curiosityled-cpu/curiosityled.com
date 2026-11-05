@@ -13,7 +13,9 @@
  * Returns the applicable questions plus the caller's resolved profile, so the
  * UI can explain which audience they fall into.
  *
- * Body: { check_in_type: "morning" | "evening" | "both" }
+ * Body: { check_in_type: "morning" | "evening" | "both", client_id?: string }
+ * `client_id` is an optional hint naming the active client; the tenant resolver
+ * decides whether it is honoured.
  */
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.54";
 import {
@@ -24,10 +26,10 @@ import {
   questionAudienceLabel,
   findTitleMapping,
   appRoleOf,
-  clientIdOf,
   emailKey,
   loadUsers,
 } from "../../shared/roleTargeting.ts";
+import { resolveTenantContext } from "../../shared/tenantContext.ts";
 
 export default async function (req: Request): Promise<Response> {
   try {
@@ -41,7 +43,13 @@ export default async function (req: Request): Promise<Response> {
       : "both";
 
     const svc = base44.asServiceRole;
-    const clientId = clientIdOf(user);
+    // Which client's questions to read is decided here, once: the caller's own
+    // organisation for a member, the organisation they selected for an oversight
+    // principal (validated against their portfolio), or the one a platform
+    // principal is acting for. `client_id` in the body is only ever a hint — a
+    // member cannot move themselves to another tenant by sending it.
+    const ctx = await resolveTenantContext(base44, user, body.client_id || null);
+    const clientId = ctx.client_id;
 
     const [taxonomyRaw, questionRaw, allUsers] = await Promise.all([
       clientId

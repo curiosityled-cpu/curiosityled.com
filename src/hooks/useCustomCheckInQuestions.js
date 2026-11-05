@@ -14,6 +14,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 
 function todayKey() {
   const d = new Date();
@@ -42,6 +43,10 @@ function setCachedGen(date, checkInType, obj) {
 
 export function useCustomCheckInQuestions(checkInType = "both") {
   const { user } = useAuth();
+  // The active client, resolved server-side. Ask for that client's questions,
+  // not the whole pool: an oversight principal switching organisation must see
+  // the questions of the one they switched to.
+  const activeClientId = useActiveClientId();
   const [questions, setQuestions] = useState([]);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -56,6 +61,7 @@ export function useCustomCheckInQuestions(checkInType = "both") {
       try {
         const res = await base44.functions.invoke("resolveCheckInQuestions", {
           check_in_type: checkInType === "both" ? "both" : checkInType,
+          client_id: activeClientId || undefined,
         });
         const data = res?.data || res;
         if (cancelled) return;
@@ -105,7 +111,7 @@ export function useCustomCheckInQuestions(checkInType = "both") {
     return () => {
       cancelled = true;
     };
-  }, [user?.email, checkInType]);
+  }, [user?.email, checkInType, activeClientId]);
 
   return { questions, profile, loading };
 }

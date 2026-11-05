@@ -9,6 +9,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/components/useAuth";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -108,6 +109,10 @@ const emptyForm = {
 export default function CheckInSetupTab({ user }) {
   const { user: authUser } = useAuth();
   const currentUser = user || authUser;
+  // The organisation this screen is configuring, decided server-side. A platform
+  // or partner administrator acting on another client must edit *that* client's
+  // questions, so this — not the user's own client field — is the scope.
+  const activeClientId = useActiveClientId();
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -128,10 +133,17 @@ export default function CheckInSetupTab({ user }) {
     setError(null);
     try {
       const [all, overviewRes] = await Promise.all([
-        base44.entities.CheckInCustomQuestion.list("display_order", 200),
+        // Scoped to the active client. Listing unfiltered returned every client's
+        // questions to a platform administrator, mixing tenants into one pool.
+        activeClientId
+          ? base44.entities.CheckInCustomQuestion.filter(
+              { client_id: activeClientId },
+              { sort: "display_order", limit: 200 }
+            )
+          : base44.entities.CheckInCustomQuestion.list("display_order", 200),
         base44.functions.invoke("getRoleTargetingOverview", {}).catch(() => null),
       ]);
-      setQuestions(all || []);
+      setQuestions(all?.items || all || []);
       const overview = overviewRes?.data || overviewRes;
       if (overview?.taxonomy) {
         setTaxonomy({
@@ -145,7 +157,7 @@ export default function CheckInSetupTab({ user }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeClientId]);
 
   useEffect(() => {
     loadQuestions();
@@ -263,7 +275,11 @@ export default function CheckInSetupTab({ user }) {
       } else {
         await base44.entities.CheckInCustomQuestion.create({
           ...payload,
-          client_id: currentUser?.data?.client_id || currentUser?.client_id || "",
+          client_id:
+            activeClientId ||
+            currentUser?.data?.client_id ||
+            currentUser?.client_id ||
+            "",
           created_by_email: currentUser?.email || "",
         });
       }
