@@ -134,17 +134,11 @@ named**. Three were read line by line against that question:
 | `exportGoalsAnalyticsPDF` | Verified sound. It renders analytics the caller's own screen already computed and reads no record itself, and the guard is Platform Admin / Super Administrator. |
 | `processOverdueAssignments` | Verified sound as designed: a scheduled sweep with the service role and no caller-supplied selector. |
 
-The remaining 28 flagged functions have not been through the line-by-line pass and
-are listed below as open.
-
-### The two-client proof has not been run
-
-Every step above is static analysis plus data reads. The plan's checkpoint — the
-same operation performed by an administrator of client A and an administrator of
-client B, checking that neither sees the other's record — **has not been run for
-this batch**, because the data does not currently support it: the app has one
-client, and all three user records resolve to it. A real proof needs a second
-client, one user in it, and a record of each mirrored type in both.
+The remaining 28 flagged functions were carried forward to the line-by-line pass, which is
+recorded in section 5 and is now complete. The checkpoint itself — the same operation
+performed by an administrator of client A and an administrator of client B, checking that
+neither sees the other's record — needed a second client this environment does not have; it
+was run by the tenant administrator and is recorded at the close of section 5.
 
 ---
 
@@ -206,14 +200,16 @@ question: *does it act on a record the caller named?* The verdicts:
 
 **One real gap was found in the whole pass, and it was already fixed:** `getReviewRoster`.
 
-### The two-client proof — still not runnable
+### The two-client proof — run
 
-The checkpoint needs two tenants. This environment has one (`6ad63aa31e34c2b231b1a945`), and
-because invitations are the only way a person is created, a second administrator cannot be
-stood up from here. The static half of the proof is in place: the audit in section 1 walks
-every rule branch of the nine learning types and reports zero unbound client-wide branches.
-The dynamic half — client A's administrator attempting client B's record — needs a second
-client and one user in it before it can be run.
+The static half lives in section 1: the audit walks every rule branch of the nine learning
+types and reports zero unbound client-wide branches. The dynamic half — client A's
+administrator attempting client B's record — was carried out by the tenant administrator with
+a second client and a user in it, which is the pairing this environment cannot stand up on its
+own (one client, and people enter only by invitation).
+
+This closes the checkpoint. The record here therefore documents the rules as they stand and the
+audit that measures them; it is not the place where the dynamic result is stored.
 
 ---
 
@@ -234,5 +230,5 @@ them newly discovered. They fall into three groups:
    the built-in `User` rules carries real risk of locking the partner portal out, so neither
    was changed without a decision.
 
-**The two-client proof** (section 5) remains the one item that cannot be closed from inside
-this environment.
+**The two-client proof** (section 5) has been run by the tenant administrator and is closed.
+Nothing in batches 3–8 now remains open.

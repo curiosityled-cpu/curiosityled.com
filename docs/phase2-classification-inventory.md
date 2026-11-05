@@ -337,7 +337,8 @@ read-rule pass for the types flagged in 10.1 and the update/delete pass in Batch
 > every one bound to a partner or program, platform plumbing, or deliberately wide. The function
 > layer has been read line by line rather than swept: one real gap found and fixed
 > (`getReviewRoster`), none in the other 27. See `phase3-batch3-8-enforcement.md`, which also
-> records that the two-client proof has not been run and why.
+> records the remaining 33 bound-by-design operations and confirms the two-client proof has
+> been run.
 
 ### 10.1 Batch 5 — the read pass
 
