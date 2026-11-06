@@ -79,7 +79,6 @@ const NAV_CONFIG = {
      { label: 'Talent Manager', path: '/talent-manager', icon: Layers },
      { label: 'Report Manager', path: '/report-builder-mvp', icon: BarChart2 },
      { label: 'User Management', path: '/UserManagement', icon: UserCog },
-     { label: 'Blog', path: '/BlogManager', icon: PenLine },
      ]}],
 
   analyst: [
@@ -221,9 +220,17 @@ function MVPLayoutInner({ children }) {
           })),
       ]
     : baseNav;
-  // The blog is Platform Admin only, so its nav entry is shown to them alone.
+  // The blog is Platform Admin only (Super Administrators run a client tenant and
+  // have no business there). The entry is appended for that one role instead of
+  // living in NAV_CONFIG, so no other role can inherit it, and the filter below
+  // strips it defensively for everyone else.
+  const blogNavItem = { label: 'Blog', path: '/BlogManager', icon: PenLine };
   const navItems = isPlatformAdminRole
-    ? rawNavItems
+    ? rawNavItems.some(item => item.group)
+      ? rawNavItems.map(item => item.group
+          ? { ...item, children: [...(item.children || []), blogNavItem] }
+          : item)
+      : [...rawNavItems, blogNavItem]
     : rawNavItems.map(item => item.group
         ? { ...item, children: (item.children || []).filter(child => child.path !== '/BlogManager') }
         : item);
