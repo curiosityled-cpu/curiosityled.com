@@ -243,9 +243,13 @@ Five diagnostic functions in the raw screen are excluded by design
 Sampled so far: `launchReviewCycle` and `reviewCycleCommand` resolve through
 `resolveReviewTenant` and compare the record's client explicitly —
 **already correct**. `saveDailyCheckIn` and `saveCheckInForUser` authorise the
-person, not a client — **correct by identity**. `awardPoints` and `courseRoster`
-carry hand-written tenant checks that still need the resolver rather than
-`caller.data?.client_id`, because that is the split Phase 1 exists to remove.
+person, not a client — **correct by identity**.
+
+`awardPoints` and `courseRoster`, previously carried as open here, now resolve
+through `resolveActiveClient` too. `awardPoints` declares its tenant with `let`
+rather than `const` because its internal (non-user) path assigns a tenant from
+the payload before resolving — a scan looking only for `const` reports it
+falsely, which is how it was missed once already.
 
 Order: person-move and bulk writes first, then read/report paths, then detection
 helpers that write nothing.
@@ -267,12 +271,12 @@ buys nothing while both values are always written together.
 **Closed this pass:** all 31 files that read the signed-in person's own membership
 field now take the active organisation from the server context, so a screen can
 no longer stamp a record to a stale membership value. What is left is a different
-question — two screens read *other people's* membership fields to draw a list
-(both `LeadershipIntelligenceHub` reads are now closed):
+question — three screens read *other people's* membership fields to draw a list:
 
 ```
-OrgInsightsView   u.client_id ?? u.data?.client_id   832
-OneOnOnesTab      u.data?.client_id || u.client_id   35
+LeadershipIntelligenceHub   u.data?.client_id || u.client_id   96   population filter
+OrgInsightsView             u.client_id ?? u.data?.client_id   832  roster / CSV export
+OneOnOnesTab                u.data?.client_id || u.client_id   35   participant roster
 ```
 
 These are reads for a roster, not writes, and each is already filtered by the
