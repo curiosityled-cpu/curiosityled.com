@@ -1,6 +1,14 @@
 # Phase 5 — the two-client proof, measured
 
 **Run:** 5 November 2026 · **Result: 18 of 18 categories pass, 156 of 156 attempts held, 0 failures.**
+
+**Re-run:** 6 November 2026, after the roster and agent work landed · the harness now
+covers **31 categories / 279 attempts**. **Every attempt held — 0 cross-tenant reads,
+0 cross-tenant writes, in both directions.** Two categories flagged a *tenant-column
+coverage* gap, not a boundary failure: 1 `Notification` and 4 `PulseAccessLog` rows
+belong to a known member but carry no `client_id` (5 of 1,643 rows sampled). Both
+types are in `TENANT_COLUMN_OWNERS`, so the nightly backfill covers them — the rows
+just predate it. Run `backfillTenantColumns` for those two types to clear it.
 **Harness:** `phase5TwoClientProof` (Platform Admin only, re-runnable).
 
 Phase 4 proved the resolver *decides* correctly when handed a principal. Phase 5 asks the
