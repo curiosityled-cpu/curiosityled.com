@@ -54,10 +54,17 @@ export default async function (req: Request): Promise<Response> {
     }
 
     const svc = base44.asServiceRole;
-    const [taxonomyRaw, people] = await Promise.all([
+    const [taxonomyRaw, people, rosterRaw] = await Promise.all([
       svc.entities.RoleTaxonomy.filter({ client_id: clientId }, "-updated_date", 1).catch(() => []),
       loadTenantPeople(svc, clientId),
+      svc.entities.ICRoster.filter({ client_id: clientId }, "-created_date", 2000).catch(() => []),
     ]);
+    // Frontline staff are not app users: their job title lives on the roster,
+    // not on the User entity. They are read here so the title inventory covers
+    // every title the organisation actually uses.
+    const roster = (Array.isArray(rosterRaw) ? rosterRaw : rosterRaw?.items || []).filter(
+      (ic: any) => ic && ic.is_active !== false
+    );
     const taxonomyRows = Array.isArray(taxonomyRaw) ? taxonomyRaw : taxonomyRaw?.items || [];
     const taxonomy = sanitizeTaxonomy(taxonomyRows[0]);
 
@@ -127,20 +134,43 @@ export default async function (req: Request): Promise<Response> {
       if (profile.track_id) trackCounts.set(profile.track_id, (trackCounts.get(profile.track_id) || 0) + 1);
     }
 
+    // Distinct titles present on profiles and on the frontline roster, so admins
+    // can map what actually exists rather than only what users carry.
+    const titleSeen = new Map<string, { title: string; count: number; mapped: boolean; staff: boolean }>();
+    const noteTitle = (rawTitle: string, isStaff: boolean) => {
+      const title = String(rawTitle || "").trim();
+      if (!title) return;
+      const key = normalizeTitle(title);
+      const existing = titleSeen.get(key);
+      if (existing) {
+        existing.count++;
+        if (isStaff) existing.staff = true;
+      } else {
+        titleSeen.set(key, { title, count: 1, mapped: !!findTitleMapping(taxonomy, title), staff: isStaff });
+      }
+    };
+
+    for (const person of people) {
+      noteTitle(person?.current_role || person?.data?.current_role || "", false);
+    }
+
+    // Staff carry no tier/track of their own, so an unmapped roster title joins
+    // the pending list until an admin points it at a tier and track.
+    for (const ic of roster) {
+      const title = String(ic?.job_title || "").trim();
+      if (!title) continue;
+      noteTitle(title, true);
+      if (!findTitleMapping(taxonomy, title)) {
+        const key = normalizeTitle(title);
+        const entry = unmappedMap.get(key) || { title, count: 0, emails: [] };
+        entry.count++;
+        unmappedMap.set(key, entry);
+      }
+    }
+
     const unmapped = [...unmappedMap.values()]
       .sort((a, b) => b.count - a.count)
       .slice(0, MAX_UNMAPPED);
-
-    // Distinct titles present on profiles, so admins can map what actually exists.
-    const titleSeen = new Map<string, { title: string; count: number; mapped: boolean }>();
-    for (const person of people) {
-      const title = String(person?.current_role || person?.data?.current_role || "").trim();
-      if (!title) continue;
-      const key = normalizeTitle(title);
-      const existing = titleSeen.get(key);
-      if (existing) existing.count++;
-      else titleSeen.set(key, { title, count: 1, mapped: !!findTitleMapping(taxonomy, title) });
-    }
 
     return Response.json({
       taxonomy,
