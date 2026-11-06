@@ -514,7 +514,7 @@ function UserManagement({ embedded = false }) {
       <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit overflow-x-auto">
         {[
           { id: 'users', label: 'Users', icon: Users },
-          { id: 'roles', label: 'Roles & Permissions', icon: Shield },
+          { id: 'roles', label: 'User Roles & Permissions', icon: Shield },
           { id: 'role_profiles', label: 'Role Profiles', icon: Layers },
         ].map(tab => {
           const Icon = tab.icon;

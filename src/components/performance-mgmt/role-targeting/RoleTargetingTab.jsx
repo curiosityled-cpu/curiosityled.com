@@ -106,7 +106,7 @@ export default function RoleTargetingTab({ user }) {
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h2 className="text-sm font-semibold text-foreground">Role targeting</h2>
+          <h2 className="text-sm font-semibold text-foreground">Role Profiles</h2>
           <p className="text-xs text-muted-foreground mt-0.5 max-w-2xl">
             Define the tiers and tracks your organisation uses and map job titles onto them, so
             check-ins, learning and assignments can be aimed at the audiences that matter. People
