@@ -15,11 +15,11 @@ Deno.serve(async (req) => {
             return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Only Admin Level 2 and 3 can create users
-        if (!['Admin Level 2', 'Admin Level 3'].includes(currentUser.app_role)) {
+        // Tenant administrators can create users in their own organization.
+        if (!['Admin Level 2', 'Admin Level 3', 'Super Administrator'].includes(currentUser.app_role)) {
             return Response.json({ 
                 success: false, 
-                error: 'Forbidden - Only Admin Level 2 and Admin Level 3 can create users' 
+                error: 'Forbidden - Only administrators can create users' 
             }, { status: 403 });
         }
 

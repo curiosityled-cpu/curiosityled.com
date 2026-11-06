@@ -47,9 +47,22 @@ export async function sendInvite(base44: any, { email, app_role, client_id, invi
     sent_at: new Date().toISOString(),
   });
 
+  const preferredRole = toPlatformRole(app_role);
   try {
-    await base44.users.inviteUser(email, toPlatformRole(app_role));
+    await base44.users.inviteUser(email, preferredRole);
   } catch (error) {
+    // A client administrator (Super Administrator) is an ordinary platform user,
+    // so the platform only lets them send an invitation as "user". The app role
+    // is not lost: the pending invitation carries it and it is applied at the
+    // person's first sign-in, so inviting as "user" still lands the right role.
+    if (preferredRole === 'admin') {
+      try {
+        await base44.users.inviteUser(email, 'user');
+        return pending;
+      } catch {
+        // Fall through to the original error.
+      }
+    }
     try {
       await base44.asServiceRole.entities.PendingInvitation.delete(pending.id);
     } catch {
