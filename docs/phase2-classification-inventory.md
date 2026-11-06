@@ -1,5 +1,13 @@
 # Phase 2 — Classification inventory (locked)
 
+> **Superseded in part — read `docs/tenant-isolation-rollout-status.md` first.**
+> That document was re-measured on 6 November 2026 and corrects several counts
+> here: the "27 types need a `client_id`" list is applied (8 types legitimately
+> carry no client field), the "twelve types still need update/delete rules" list
+> in §10.7 is **already applied and stale**, and the service-role and
+> frontend-read totals have moved. Use this file for the classification
+> reasoning, not for current counts.
+
 **Status:** **complete and locked**, 4 November 2026. The eight open questions in the
 earlier draft are resolved below from the code itself, not from preference, and every
 count in this document was re-measured after batches 1 and 2 were applied — so what
