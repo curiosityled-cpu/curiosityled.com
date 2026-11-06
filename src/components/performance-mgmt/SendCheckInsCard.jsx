@@ -35,10 +35,14 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { toast } from "sonner";
+import { isHRAdminUser, fetchDirectReports } from "@/lib/checkInAccess";
 
 export default function SendCheckInsCard({ user }) {
   const { user: authUser } = useAuth();
   const currentUser = user || authUser;
+  // Org-wide sending and automation are HR settings. Everyone else sends to
+  // the people who report to them, and only to those people.
+  const isHRAdmin = isHRAdminUser(currentUser);
   // Sends to the active client's roster, not the viewer's own organisation.
   const activeClientId = useActiveClientId();
   const clientId =
@@ -70,7 +74,22 @@ export default function SendCheckInsCard({ user }) {
         ).catch(() => []),
         base44.entities.Client.get(clientId).catch(() => null),
       ]);
-      setRoster(icRows || []);
+      const rows = icRows || [];
+      if (isHRAdmin) {
+        setRoster(rows);
+      } else {
+        // A manager's list is their own staff: people on the roster whose
+        // manager is this user, or who are listed as their subordinates.
+        const directs = await fetchDirectReports(currentUser);
+        const allowed = new Set(directs.map((d) => (d.email || "").toLowerCase()));
+        setRoster(
+          rows.filter(
+            (ic) =>
+              ic.manager_email === currentUser?.email ||
+              allowed.has((ic.email || "").toLowerCase())
+          )
+        );
+      }
       setClient(clientRow);
     } catch {
       setRoster([]);
@@ -78,7 +97,7 @@ export default function SendCheckInsCard({ user }) {
     } finally {
       setLoading(false);
     }
-  }, [clientId]);
+  }, [clientId, isHRAdmin, currentUser?.email]);
 
   useEffect(() => {
     loadData();
@@ -229,11 +248,12 @@ export default function SendCheckInsCard({ user }) {
           <div>
             <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
               <Send className="w-4 h-4 text-[#0202ff]" />
-              Send check-ins to staff
+              {isHRAdmin ? "Send check-ins to staff" : "Send check-ins to my team"}
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5 max-w-xl">
-              Send daily check-in cards to frontline staff via Teams or email.
-              Staff must be active with check-ins enabled to receive them.
+              {isHRAdmin
+                ? "Send daily check-in cards to frontline staff via Teams or email. Staff must be active with check-ins enabled to receive them."
+                : "Send daily check-in cards to the people who report to you. You can only send to your own staff."}
             </p>
           </div>
           <Badge variant="outline" className="text-xs">
@@ -246,8 +266,9 @@ export default function SendCheckInsCard({ user }) {
           <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <span>
-              No eligible staff. Add staff in User Management and ensure they
-              are active with check-ins enabled.
+              {isHRAdmin
+                ? "No eligible staff. Add staff in User Management and ensure they are active with check-ins enabled."
+                : "None of your staff are eligible yet. Staff must be on the roster, active, with check-ins enabled, and have you as their manager."}
             </span>
           </div>
         )}
@@ -282,7 +303,7 @@ export default function SendCheckInsCard({ user }) {
               ) : (
                 <Send className="w-3.5 h-3.5 mr-1" />
               )}
-              Send to all staff
+              {isHRAdmin ? "Send to all staff" : "Send to my team"}
             </Button>
           </div>
         </div>

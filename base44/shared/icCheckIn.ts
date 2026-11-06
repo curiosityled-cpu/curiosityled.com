@@ -25,6 +25,12 @@ const MEASURE_KEYS = ['energy', 'confidence', 'focus', 'load', 'growth'];
 export function getMeasuresForClient(client: any): any[] {
   const presetId = client?.settings?.check_in_config?.preset_id || 'balance';
   const preset = getPreset(presetId) || CHECK_IN_PRESETS.balance;
+  // The organization chooses which standard measures appear; an absent list
+  // means all of the preset's measures, an empty list means none of them.
+  const enabled = client?.settings?.check_in_config?.enabled_measures;
+  if (Array.isArray(enabled)) {
+    return preset.measures.filter((m: any) => enabled.includes(m.key));
+  }
   return preset.measures;
 }
 

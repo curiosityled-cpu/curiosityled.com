@@ -52,6 +52,7 @@ Deno.serve(async (req) => {
 
       // Resolve the client's active check-in preset (org-level config on Client.settings)
       let presetId = 'balance';
+      let enabledMeasures: string[] | null = null;
       try {
         // The organisation is resolved on the server (selected client, else home
         // client), so a module's configuration is read from the tenant the
@@ -63,9 +64,14 @@ Deno.serve(async (req) => {
         if (client?.settings?.check_in_config?.preset_id) {
           presetId = client.settings.check_in_config.preset_id;
         }
+        const enabled = client?.settings?.check_in_config?.enabled_measures;
+        if (Array.isArray(enabled)) enabledMeasures = enabled;
       } catch { /* fall back to balance */ }
       const preset = getPreset(presetId);
-      const measures = preset.measures;
+      // Only the measures the organization has switched on.
+      const measures = enabledMeasures
+        ? preset.measures.filter((m) => enabledMeasures!.includes(m.key))
+        : preset.measures;
 
       const trendData = trends[0] || {};
       const memoryData = memory[0] || {};

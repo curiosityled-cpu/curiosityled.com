@@ -75,6 +75,12 @@ export default async function (req: Request): Promise<Response> {
 
     const applicable = questions
       .filter((q) => {
+        // A question aimed at named people (a manager's check-in for their own
+        // staff) reaches only those people.
+        const namedEmails = Array.isArray(q.target_emails)
+          ? q.target_emails.map((e: string) => e.toLowerCase())
+          : [];
+        if (namedEmails.length > 0 && !namedEmails.includes(callerEmail)) return false;
         if (q.target_role && q.target_role !== userRole) return false;
         if (
           checkInType !== "both" &&

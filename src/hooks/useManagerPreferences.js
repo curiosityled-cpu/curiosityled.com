@@ -37,7 +37,18 @@ export function useManagerPreferences() {
   const orgPresetId = data?.client?.settings?.check_in_config?.preset_id || DEFAULT_PRESET_ID;
   const userPresetOverride = data?.userPref?.check_in_preset_override;
   const presetId = userPresetOverride || orgPresetId;
-  const preset = getPreset(presetId);
+  // The organization decides which standard measures are in play; an absent
+  // list means all of the preset's measures.
+  const enabledMeasureKeys = data?.client?.settings?.check_in_config?.enabled_measures;
+  const basePreset = getPreset(presetId);
+  const preset = Array.isArray(enabledMeasureKeys)
+    ? {
+        ...basePreset,
+        measures: basePreset.measures.filter((m) =>
+          enabledMeasureKeys.includes(m.key)
+        ),
+      }
+    : basePreset;
 
   const orgDensityDefault = data?.client?.settings?.ui_density_default;
   const userDensityOverride = data?.userPref?.ui_density;

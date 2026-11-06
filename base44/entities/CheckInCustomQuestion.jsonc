@@ -41,6 +41,14 @@
       "type": "string",
       "description": "Optional app_role filter. Empty/null = all roles in the tenant see this question."
     },
+    "target_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Specific people this question is for, used when a manager writes a check-in for their own staff. Empty = not restricted to named people (the audience comes from the role, tier, track and title filters)."
+    },
     "target_tiers": {
       "type": "array",
       "items": {
@@ -121,9 +129,7 @@
         {
           "$and": [
             {
-              "user_condition": {
-                "role": "admin"
-              }
+              "data.created_by_email": "{{user.email}}"
             },
             {
               "data.client_id": "{{user.data.client_id}}"
@@ -222,18 +228,6 @@
           "$and": [
             {
               "user_condition": {
-                "role": "admin"
-              }
-            },
-            {
-              "data.client_id": "{{user.data.client_id}}"
-            }
-          ]
-        },
-        {
-          "$and": [
-            {
-              "user_condition": {
                 "data.app_role": "Admin Level 1"
               }
             },
@@ -291,18 +285,6 @@
       "$or": [
         {
           "data.created_by_email": "{{user.email}}"
-        },
-        {
-          "$and": [
-            {
-              "user_condition": {
-                "role": "admin"
-              }
-            },
-            {
-              "data.client_id": "{{user.data.client_id}}"
-            }
-          ]
         },
         {
           "$and": [
