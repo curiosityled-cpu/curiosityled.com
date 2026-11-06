@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { BarChart2, Zap, Settings as SettingsIcon, Users } from "lucide-react";
+import { BarChart2, Zap, Settings as SettingsIcon } from "lucide-react";
 import { motion } from "framer-motion";
 
 import OneOnOneInsights from "./oneonone/OneOnOneInsights";
 import CheckInHistory from "./oneonone/CheckInHistory";
 import CheckInSetupTab from "./CheckInSetupTab";
-import RoleTargetingTab from "./role-targeting/RoleTargetingTab";
 
 const HR_ADMIN_ROLES = ["Admin Level 1", "Admin Level 2", "Super Administrator", "Partner Business Administrator", "Platform Admin"];
 
 export default function OneOnOnesTab({ user, initialTab }) {
   const userRole = user?.app_role || user?.data?.app_role || user?.role || "";
   const isHRAdmin = HR_ADMIN_ROLES.includes(userRole);
-  const SUB_TAB_IDS = ["checkin", "setup", "role_targeting", "insights"];
+  const SUB_TAB_IDS = ["checkin", "setup", "insights"];
   const [activeTab, setActiveTab] = useState(
     SUB_TAB_IDS.includes(initialTab) ? initialTab : "checkin"
   );
@@ -42,7 +41,6 @@ export default function OneOnOnesTab({ user, initialTab }) {
   const SUB_TABS = [
     { id: "checkin", label: "Check-In", icon: Zap },
     ...(isHRAdmin ? [{ id: "setup", label: "Check-In Settings", icon: SettingsIcon }] : []),
-    ...(isHRAdmin ? [{ id: "role_targeting", label: "Role Targeting", icon: Users }] : []),
     { id: "insights", label: "Insights", icon: BarChart2 },
   ];
 
@@ -73,9 +71,6 @@ export default function OneOnOnesTab({ user, initialTab }) {
         )}
         {activeTab === "setup" && isHRAdmin && (
           <CheckInSetupTab user={user} />
-        )}
-        {activeTab === "role_targeting" && isHRAdmin && (
-          <RoleTargetingTab user={user} />
         )}
         {activeTab === "insights" && (
           <OneOnOneInsights user={user} teamMembers={teamMembers} isEmployee={!isManager} />
