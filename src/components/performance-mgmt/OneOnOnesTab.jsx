@@ -22,23 +22,11 @@ export default function OneOnOnesTab({ user, initialTab }) {
   useEffect(() => {
     const loadUsers = async () => {
       try {
-        const allUsersRes = await base44.functions.invoke("listAllUsers", {}).catch(() => null);
-        const allUsers = allUsersRes?.data?.users || [];
-        let usersToShow = allUsers;
-        if (allUsers.length === 0) {
-          try {
-            const allUsersEntity = await base44.entities.User.list();
-            usersToShow = allUsersEntity.map(u => ({
-              email: u.email,
-              full_name: u.data?.display_name || u.full_name || u.email,
-              manager_email: u.data?.manager_email || u.manager_email,
-              client_id: u.data?.client_id || u.client_id,
-              current_role: u.data?.current_role,
-              ...u.data,
-            }));
-          } catch {}
-        }
-        setUsers(usersToShow.filter(u => u.email !== user.email));
+        // The roster is resolved and tenant-labelled on the server, so there is no
+        // membership field to read here and no client-less fallback list to merge in.
+        const rosterRes = await base44.functions.invoke("getTeamRoster", {}).catch(() => null);
+        const roster = rosterRes?.data?.users || [];
+        setUsers(roster.filter(u => u.email !== user.email));
       } catch (e) { console.error(e); }
     };
     loadUsers();
@@ -46,7 +34,6 @@ export default function OneOnOnesTab({ user, initialTab }) {
 
   const teamMembers = users.filter(u =>
     u.manager_email === user.email ||
-    u.data?.manager_email === user.email ||
     (user.subordinate_emails || []).includes(u.email)
   );
 

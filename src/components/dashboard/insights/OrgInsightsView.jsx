@@ -196,10 +196,12 @@ export default function OrgInsightsView({ user, onMetricsUpdate, actionsRef }) {
         base44.entities.Goal.list('-created_date', 500).catch(() => []),
         base44.entities.AssignedLearning.list('-created_date', 500).catch(() => []),
         base44.entities.JourneyEnrollment.list('-created_date', 500).catch(() => []),
-        (clientId
-          ? base44.entities.User.filter({ client_id: clientId })
-          : base44.entities.User.list()
-        ).catch(() => []),
+        // Roster comes back already scoped to the active client, tenant-labelled
+        // by the server — no membership field is read in the browser.
+        base44.functions
+          .invoke('getTeamRoster', { client_id: clientId || undefined })
+          .then(r => r?.data?.users || [])
+          .catch(() => []),
         base44.entities.AssessmentInsights.filter(insightQuery).catch(() => []),
         base44.entities.WorkforceMetrics.filter(workforceQuery, '-effective_date', 12).catch(() => [])
       ]);
@@ -827,9 +829,9 @@ Format as JSON: insights (array of {title, description, priority, targetDashboar
             allUsers.map(u => [
               u.email ?? "",
               u.full_name ?? "",
-              u.app_role ?? u.data?.app_role ?? u.current_role ?? "",
-              u.department ?? u.data?.department ?? "",
-              u.client_id ?? u.data?.client_id ?? "",
+              u.app_role ?? u.current_role ?? "",
+              u.department ?? "",
+              u.client_id ?? "",
             ])
           ));
         }

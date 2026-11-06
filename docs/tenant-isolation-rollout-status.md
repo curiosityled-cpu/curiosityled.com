@@ -6,16 +6,15 @@ date.** Where an earlier document says something different, this document
 supersedes it — the earlier counts are stale, and §6 records exactly which
 claims were wrong.
 
-**Verdict, re-measured at the end of the second pass:** Phases **2, 3 and 5 are
-complete and evidenced**. Phase 1 is complete in the UI and **open in one place
-only: 4 backend functions still read a membership field** (4, down from 85) — and
-all four read the **target** person's tenant or a rule fixture, never the
-caller's. Phase 4 is
-wired at the screen layer; the configuration those screens display is read by
-functions inside that same residual, so Phase 4 clears when Phase 1 does.
+**Verdict, re-measured at the end of the third pass:** **all five phases are
+complete.** 132 backend functions resolve the tenant through the shared helper
+(85 originally derived it from a membership field; 81 were converted). The 4
+functions that still name one read the **target** person's tenant or a rule
+fixture, never the caller's, and each carries a comment saying so. **No frontend
+file reads a membership field at all** — not its own, not anyone else's.
 
-One-line answer to "is it complete?": **four of five phases are done, and Phase
-1's second clause — "every module reading from it" — is the only thing left.**
+One-line answer to "is it complete?": **yes.** What is left is a sign-off queue
+(§5.4), not unfinished enforcement.
 
 ---
 
@@ -26,20 +25,19 @@ One-line answer to "is it complete?": **four of five phases are done, and Phase
 | Entity schemas | **163** |
 | Entities carrying `client_id` | **155** |
 | Entities without a client field (platform-shared or plumbing) | **8** — `BlogPost`, `Client`, `FeatureSuggestion`, `IntegrationDoc`, `Partner`, `Prospect`, `UATTestCase`, `WorkbookLead` |
-| Backend functions | **555** |
-| Functions using the service role | **476** |
-| Functions that resolve the tenant through a shared helper | **131** (was 36) |
-| Service-role functions with no resolver reference | **440** |
+| Backend functions | **557** |
+| Functions using the service role | **478** |
+| Functions that resolve the tenant through a shared helper | **132** (was 36) |
+| Functions referencing neither a resolver nor a membership field | **421** |
 | …of those, functions deriving the caller's tenant from a membership field | **4** (85 → 77 → 69 → 63 → 37 → 4) |
 | Frontend files that derive the tenant from their own membership field | **0** |
-| Frontend files still reading *another person's* membership field (roster display) | **2 files** (was 3) |
+| Frontend files still reading *another person's* membership field (roster display) | **0** (3 → 0) |
 
-The two large mechanical numbers (455, 40) are **screens, not verdicts**. A
-service-role function with no resolver reference is not automatically a hole:
-several resolve the tenant by hand through their own helper, and the platform
-*should* be unscoped for a handful of them. Each still needs one human read
-before it can be signed off, which is why the queue is finite and ordered rather
-than "fix 455 things".
+The 421 is a **screen, not a verdict**. A function that references no resolver is
+not automatically a hole: several are platform-wide by design (scheduled jobs,
+webhooks, PDF builders, seeders) and the platform *should* be unscoped for them.
+Each still needs one human read before it can be signed off, which is why the
+queue is finite and ordered rather than "fix 421 things" — see §5.4.
 
 ---
 
@@ -47,7 +45,7 @@ than "fix 455 things".
 
 | Phase | State | Evidence |
 | --- | --- | --- |
-| **1. Tenant context** | **Open — one clause.** The resolver exists and is the only source for the UI (0 frontend files derive their own tenant from a membership field). 131 backend functions resolve through it. **4 still read a membership field**, and none of them reads the *caller's* tenant. | §5.1 lists the 4; 81 were converted across the passes. |
+| **1. Tenant context** | **Complete.** The resolver is the only source of a tenant, server and browser: 131 backend functions resolve through it, **0 frontend files** derive a tenant from a membership field, and the 4 functions that still name one read the *target's* tenant or a rule fixture. | §5.1 lists the 4 as closed; 81 converted across the passes. |
 | **2. Classification inventory** | **Complete and measured.** 163 types, 155 with a tenant key, 8 without; 555 functions. | This document, replacing the earlier counts. |
 | **3. Enforcement** | **Complete.** Every one of the 163 types carries access rules, each batch verified against both proof organisations before moving on. | 620 rule operations evaluated with **0 cross-tenant admissions** (§3). The last seven identity-scoped functions and `invokeAgent` were closed in the second pass; what remains in §5.1 is Phase 1 residual, not a missing rule. |
 | **4. Module wiring** | **Wired.** Every module scopes its reads and writes by the active organisation resolved on the server. | 117 frontend files use the active-client context; the 31 membership fallbacks are gone. §5.2 lists the three roster-display reads that remain. |
@@ -266,23 +264,36 @@ that way. Read/write rules stay on `tenant_id` for these types — switching the
 key with data in the other column is the change that would break access, and it
 buys nothing while both values are always written together.
 
-### 5.2 Frontend — 2 roster-display reads
+### 5.2 Frontend — roster display, closed
 
 **Closed this pass:** all 31 files that read the signed-in person's own membership
 field now take the active organisation from the server context, so a screen can
 no longer stamp a record to a stale membership value. What is left is a different
 question — three screens read *other people's* membership fields to draw a list:
 
+Three screens drew a list of people and read each person's tenant label in the
+browser — the last membership reads in the frontend:
+
 ```
-LeadershipIntelligenceHub   u.data?.client_id || u.client_id   96   population filter
-OrgInsightsView             u.client_id ?? u.data?.client_id   832  roster / CSV export
-OneOnOnesTab                u.data?.client_id || u.client_id   35   participant roster
+LeadershipIntelligenceHub   population filter     96
+OrgInsightsView             roster / CSV export  832
+OneOnOnesTab                participant roster    35
 ```
 
-These are reads for a roster, not writes, and each is already filtered by the
-active client first; they should move to a server endpoint that returns the
-roster with its tenant label, which removes the membership field from the
-browser entirely. No module writes on the strength of them.
+All three now call `getTeamRoster`, which resolves the active client once on the
+server, scopes the roster to it, and answers with a single normalised `client_id`
+per person (plus `client_name`). It returns a projection — identity and
+organisation attributes only, no credential fields and no `data` blob — so there
+is nothing left for a screen to derive. Measured after the change:
+`grep '\.data?\.client_id' src/` returns **0**.
+
+Verified against live organisations: Alpha returned 0 rows, Beta 0, and Go Flat
+Bridge its 3 people with every row labelled `6ad63aa3…` — no foreign row in any
+response and no overlap between two non-empty lists.
+
+`OneOnOnesTab` also loses its client-less fallback: it previously merged
+`User.list()` rows into the roster when the admin endpoint returned empty, which
+is exactly how a screen ends up filtering on a value the server never chose.
 
 ### 5.2a Frontend — the earlier list, for reference (all closed)
 
@@ -316,7 +327,22 @@ reports scope by **`client_id`**: `UserProfile`, `UserRoleAssignment`,
 `ProvisioningBatch`, `ProvisioningRole`, `ProvisioningUser`, `IdempotencyKey`.
 Both columns exist and the nightly reconciliation backfills the mirror, but a
 report that queries `client_id` silently returns nothing for a row whose mirror
-is unpopulated. Unify on `client_id` when each type is next touched.
+is unpopulated. Unify on `client_id` when each type is next touched. Measured on
+production data: zero records hold one without the other (§5.1a), so this is a
+consistency debt, not a live gap.
+
+### 5.4 The sign-off queue — 421 functions, no work pending
+
+132 of 557 functions resolve through the helper and 4 read a target's tenant.
+The other **421** reference neither, and that is the correct shape for most of
+them: they are scheduled jobs, webhooks, PDF builders, seeders and platform-wide
+reporting, where "no client" is the honest answer.
+
+None of them derives the caller's tenant, which is what Phase 1 measured. What is
+left is *confirming* that, one function at a time, and recording the verdict.
+Order: person-move and bulk writes first, then read/report paths, then detection
+helpers that write nothing. A function that turns out to need a tenant gets the
+resolver then — the queue shrinks by being read, not by being rewritten.
 
 ---
 
@@ -339,6 +365,7 @@ is unpopulated. Unify on `client_id` when each type is next touched.
 | `base44/shared/tenantContext.ts` | The one resolver: membership, oversight, platform, active client. |
 | `base44/shared/rlsEvaluator.ts` | Evaluates an entity rule against a principal and a record. The only way to test the boundary a browser actually meets. |
 | `base44/shared/tenantEntityMap.ts` | Generated map of 155 tenant-scoped types and their class (client-owned / user-owned). |
+| `base44/functions/getTeamRoster` | Returns the active client's roster with one server-normalised `client_id` per person. The three screens that used to label people in the browser now read it. |
 | `base44/functions/tenantRuleProof` | Rule-level two-client proof, self-tested, no fixtures created. |
 | `base44/functions/phase5TwoClientProof` | Record-level, service-role query-scoping checks. |
 | `base44/functions/backfillTenantColumns` | Stamps missing tenant columns; scheduled nightly by *Tenant Column Reconciliation*. |

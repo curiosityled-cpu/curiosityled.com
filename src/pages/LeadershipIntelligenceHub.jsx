@@ -62,11 +62,15 @@ export default function LeadershipIntelligenceHub() {
   const isPlatformAdmin = user?.data?.app_role === 'Platform Admin' || user?.app_role === 'Platform Admin';
 
   const { data: allOrgUsers = [], isLoading: loadingUsers } = useQuery({
-    queryKey: ['exec-all-users', clientId],
-    // Filter by client_id so non-Platform-Admin roles (e.g. Analyst) can access
-    queryFn: () => clientId
-      ? base44.entities.User.filter({ 'data.client_id': clientId }, '-created_date', 500).catch(() => [])
-      : base44.entities.User.list('-created_date', 500).catch(() => []),
+    queryKey: ['exec-roster', clientId],
+    // The roster arrives already scoped to the active client and carries its
+    // tenant label from the server, so the browser never reads a membership field.
+    queryFn: async () => {
+      const res = await base44.functions
+        .invoke('getTeamRoster', { client_id: clientId || undefined })
+        .catch(() => null);
+      return res?.data?.users || [];
+    },
     enabled: !!user,
     staleTime: 5 * 60 * 1000,
   });
@@ -91,11 +95,10 @@ export default function LeadershipIntelligenceHub() {
   const stats = React.useMemo(() => {
     // Only users in the same org, excluding platform-only admins
     const adminOnlyRoles = ['Platform Admin', 'Partner Business Administrator', 'Analyst'];
-    const population = allOrgUsers.filter(u => {
-      const role = u.data?.app_role || u.app_role;
-      const userClientId = u.data?.client_id || u.client_id;
-      return !adminOnlyRoles.includes(role) && userClientId === clientId;
-    });
+    // `client_id` is the server's answer, one field for everyone — no fallback.
+    const population = allOrgUsers.filter(u =>
+      !adminOnlyRoles.includes(u.app_role) && u.client_id === clientId
+    );
 
     if (!population.length) return null;
     const insightMap = insightsList.reduce((acc, i) => { acc[i.user_email] = i; return acc; }, {});
