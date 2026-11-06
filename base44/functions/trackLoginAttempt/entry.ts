@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { isInternalCall } from '../../shared/urlValidation.ts';
+import { membershipClientId } from '../../shared/tenantContext.ts';
 
 /**
  * This function should be called by Base44's authentication system or a webhook
@@ -44,7 +45,7 @@ Deno.serve(async (req) => {
     // sessions stay scoped to one tenant instead of being readable tenant-wide.
     const loginUsers = await base44.asServiceRole.entities.User.list();
     const loginUser = loginUsers.find(u => u.email === userEmail);
-    const loginClientId = loginUser?.data?.client_id || loginUser?.client_id || null;
+    const loginClientId = membershipClientId(loginUser);
 
     // Log the login attempt
     await base44.asServiceRole.entities.LoginHistory.create({

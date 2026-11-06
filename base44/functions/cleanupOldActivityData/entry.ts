@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { authorizeScheduledTask } from '../../shared/scheduledTaskAuth.ts';
+import { membershipClientId } from '../../shared/tenantContext.ts';
 
 /**
  * Automated Data Retention Cleanup
@@ -44,7 +45,9 @@ Deno.serve(async (req) => {
     }
     const clientIdByEmail = {};
     for (const u of allUsers) {
-      const clientId = u.client_id || u.data?.client_id;
+      // One authority for membership: the same precedence the access rules use,
+      // so retention follows the tenant the person's rows are actually scoped to.
+      const clientId = membershipClientId(u);
       if (clientId) clientIdByEmail[u.email] = clientId;
     }
     const orgRetentionDays = (email) => {

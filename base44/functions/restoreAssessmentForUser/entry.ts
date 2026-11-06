@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { membershipClientId } from '../../shared/tenantContext.ts';
 
 /**
  * One-time admin utility to manually create Assessment + AssessmentInsights
@@ -27,7 +28,10 @@ Deno.serve(async (req) => {
     // Look up target user's data
     const users = await base44.asServiceRole.entities.User.filter({ email });
     const targetUser = users[0];
-    const client_id = targetUser?.client_id || targetUser?.data?.client_id || null;
+    // The tenant is the target person's, read through the single membership
+    // authority rather than one of the two fields — the value is looked up, never
+    // taken from the request.
+    const client_id = membershipClientId(targetUser);
     console.log(`Target user found: ${!!targetUser}, client_id: ${client_id}`);
 
     // Check for existing assessment to avoid duplicates

@@ -14,6 +14,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { CHECK_IN_PRESETS, getPreset } from '../../shared/checkInPresets.ts';
 import { buildAudienceSnapshot } from '../../shared/roleTargeting.ts';
+import { membershipClientId, resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -52,11 +53,15 @@ Deno.serve(async (req) => {
       // Resolve the client's active check-in preset (org-level config on Client.settings)
       let presetId = 'balance';
       try {
-        if (user.client_id) {
-          const client = await base44.asServiceRole.entities.Client.get(user.client_id).catch(() => null);
-          if (client?.settings?.check_in_config?.preset_id) {
-            presetId = client.settings.check_in_config.preset_id;
-          }
+        // The organisation is resolved on the server (selected client, else home
+        // client), so a module's configuration is read from the tenant the
+        // resolver decides on and not from whichever membership field is set.
+        const tenant = await resolveActiveClient(base44, user);
+        const client = tenant.client_id
+          ? await base44.asServiceRole.entities.Client.get(tenant.client_id).catch(() => null)
+          : null;
+        if (client?.settings?.check_in_config?.preset_id) {
+          presetId = client.settings.check_in_config.preset_id;
         }
       } catch { /* fall back to balance */ }
       const preset = getPreset(presetId);
@@ -173,7 +178,7 @@ Deno.serve(async (req) => {
         const audienceSnapshot = await buildAudienceSnapshot(
           base44.asServiceRole,
           user.email,
-          user?.data?.client_id || user.client_id || ''
+          membershipClientId(user) || ''
         ).catch(() => null);
         if (audienceSnapshot) updateData.audience_snapshot = audienceSnapshot;
       }

@@ -14,6 +14,7 @@
  * Admin-only. Invoked by scheduled automation nightly.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { membershipClientId } from '../../shared/tenantContext.ts';
 
 const ENERGY_ORDER = { drained: 0, stretched: 1, steady: 2, strong: 3 };
 const CONFIDENCE_ORDER = { low: 0, uncertain: 1, steady: 2, high: 3 };
@@ -155,13 +156,13 @@ Deno.serve(async (req) => {
           continue;
         }
         if (userRecords.length > 1) {
-          const clientIds = [...new Set(userRecords.map(u => u.data?.client_id || u.client_id).filter(Boolean))];
+          const clientIds = [...new Set(userRecords.map(membershipClientId).filter(Boolean))];
           if (clientIds.length > 1) {
             results.push({ email, status: 'skipped', reason: 'Multiple User records with conflicting client_id' });
             continue;
           }
         }
-        const managerClientId = userRecords[0]?.data?.client_id || userRecords[0]?.client_id || null;
+        const managerClientId = membershipClientId(userRecords[0]);
         if (!managerClientId) {
           results.push({ email, status: 'skipped', reason: 'User record has no client_id — tenant membership missing' });
           continue;

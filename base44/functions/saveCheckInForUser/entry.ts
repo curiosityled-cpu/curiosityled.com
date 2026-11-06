@@ -17,6 +17,7 @@
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { buildAudienceSnapshot } from '../../shared/roleTargeting.ts';
+import { membershipClientId } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -119,7 +120,7 @@ Deno.serve(async (req) => {
       const audienceSnapshot = await buildAudienceSnapshot(
         serviceBase44,
         target_email,
-        user?.data?.client_id || user.client_id || ''
+        membershipClientId(user) || ''
       ).catch(() => null);
       if (audienceSnapshot) scorePayload.audience_snapshot = audienceSnapshot;
     }

@@ -7,51 +7,7 @@ import { executeVerifyCertification, executeProcessExternalAssessment, executeRe
  * Handles natural language intent detection and secure platform action execution
  */
 
-// Confirmation levels (mirror from agentTools.js)
-const CONFIRMATION_LEVELS = {
-  LOW: { display: 'toast_only', requireConfirm: false, level: 'LOW' },
-  MEDIUM: { display: 'simple_modal', requireConfirm: true, showImpact: true, showAffectedUsers: true, level: 'MEDIUM' },
-  HIGH: { display: 'detailed_modal', requireConfirm: true, showImpact: true, showAffectedUsers: true, showReversibility: true, showPreview: true, level: 'HIGH' },
-  CRITICAL: { display: 'full_impact_modal', requireConfirm: true, requireTypedConfirmation: true, showImpact: true, showAffectedUsers: true, showReversibility: true, showWarnings: true, showAuditLog: true, level: 'CRITICAL' }
-};
-
-function getConfirmationLevel(toolName) {
-  // LOW: Read-only, info gathering, recommendations
-  const lowRiskTools = ['generateReport', 'getUserAchievements', 'explainBadgeCriteria', 'trackLearningProgress', 
-    'suggestLearningForGaps', 'generateUserActivityReport', 'identifyInactiveUsers', 'createFormFromDescription',
-    'suggestQuestionTypes', 'designConditionalLogic', 'recommendFormTemplate', 'analyzeFormSubmissions',
-    'exportFormData', 'autoTriageRequest', 'prioritizeRequests', 'createInterventionPlan', 'suggestBoardLayout',
-    'analyzeGoalDependencies', 'suggestGoalMilestones', 'alignGoalsToCareerPath', 'identifyGoalsAtRisk',
-    'structureJourneyPath', 'suggestContentGating', 'selectLearningResources', 'analyzeJourneyEffectiveness',
-    'interpretDashboardMetrics', 'identifyOutliers', 'compareDepartments', 'detectTrends', 'generateBenchmarkReport',
-    'explainMetricChange', 'forecastMetric', 'identifyInterventionOpportunities', 'createCompetency',
-    'mapCompetencyToAssessment', 'defineCompetencyLevels', 'suggestCompetencyDevelopment',
-    'recommendCareerPathFromCerts', 'setCertificationReminder', 'suggestPointAwards', 'designBadgeStructure',
-    'generateEmailTemplate', 'recommendEmailTemplate', 'suggestSubjectLines', 'validateTemplateVariables',
-    'previewEmailWithData', 'viewImpersonationHistory', 'getUserLoginHistory', 'viewUserEngagementMetrics'];
-  
-  // MEDIUM: Single user assignments, notifications, basic changes
-  const mediumRiskTools = ['createReminder', 'scheduleNotification', 'assignLearning', 'assignJourney', 'createGoal',
-    'scheduleCalendarEvent', 'inviteUser', 'sendEmail', 'activateUserAccount', 'resendUserInvitation',
-    'unlockUserAccount', 'assignAssessment', 'assignOnboardingPlan', 'assignCohort', 'bulkUpdateRequestStatus',
-    'assignRequestToUser', 'bulkUpdateGoalProgress', 'addJourneyMilestones', 'cloneJourneyAsTemplate',
-    'enrollUserInExperience', 'linkCompetenciesToRole', 'verifyCertification', 'processExternalAssessment',
-    'awardPointsToUser'];
-  
-  // HIGH: Bulk operations, cascading changes, license management
-  const highRiskTools = ['cascadeGoal', 'bulkAssignLearning', 'bulkCreateGoals', 'suspendUserAccount',
-    'assignLicense', 'setAccountExpiration', 'bulkAssignAssessments', 'assignJourneyToTeam', 'createCompetition'];
-  
-  // CRITICAL: Destructive operations, mass changes, security actions
-  const criticalRiskTools = ['bulkInviteUsers', 'terminateUserSessions', 'bulkSetAccountExpiration'];
-  
-  if (lowRiskTools.includes(toolName)) return CONFIRMATION_LEVELS.LOW;
-  if (mediumRiskTools.includes(toolName)) return CONFIRMATION_LEVELS.MEDIUM;
-  if (highRiskTools.includes(toolName)) return CONFIRMATION_LEVELS.HIGH;
-  if (criticalRiskTools.includes(toolName)) return CONFIRMATION_LEVELS.CRITICAL;
-  
-  return CONFIRMATION_LEVELS.MEDIUM; // Default
-}
+// Confirmation levels: shared/agentConfirmation.ts (imported below).
 
 // Workflow state management helpers
 function isInWorkflow(conversationContext) {
@@ -95,10 +51,10 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    // Tenant for every action: selected org, else home org (shared/agentTenant.ts).
+    const { applyAgentTenant, getConfirmationLevel } = await import('../../shared/agentTenant.ts');
+    await applyAgentTenant(base44, user);
     // Check rate limits
     checkRateLimit(user.email);
 

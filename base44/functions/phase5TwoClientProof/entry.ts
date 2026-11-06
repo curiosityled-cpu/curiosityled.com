@@ -181,6 +181,104 @@ const CATEGORIES: any[] = [
       status: 'PROVISIONED', source_system: 'MANUAL',
     }),
   },
+
+  // ── Module configuration ────────────────────────────────────────────────
+  // The records an administrator configures per organisation, as opposed to the
+  // records people create. Each is the configuration surface a wired module
+  // reads, so a leak here is a module running on another tenant's settings.
+  {
+    key: 'gamification_settings', label: 'Gamification settings', module: 'Gamification',
+    entity: 'GamificationSettings', basis: 'client',
+    specimen: (c: string) => ({ client_id: c }),
+  },
+  {
+    key: 'gamification_levels', label: 'Gamification levels', module: 'Gamification',
+    entity: 'GamificationLevel', basis: 'client',
+    specimen: (c: string, tag: string) => ({
+      client_id: c, level_name: `P5 level ${tag}`, level_order: 1, points_threshold: 100,
+    }),
+  },
+  {
+    key: 'badges', label: 'Badges', module: 'Gamification',
+    entity: 'Badge', basis: 'client',
+    specimen: (c: string, tag: string) => ({
+      client_id: c, name: `P5 badge ${tag}`, category: 'learning', tier: 'bronze',
+    }),
+  },
+  {
+    key: 'badge_templates', label: 'Badge templates', module: 'Gamification',
+    entity: 'BadgeTemplate', basis: 'client',
+    specimen: (c: string, tag: string) => ({
+      client_id: c, badge_name: `P5 badge template ${tag}`,
+      badge_category: 'completion', criteria_type: 'manual',
+    }),
+  },
+  {
+    key: 'leaderboard_templates', label: 'Leaderboard templates', module: 'Gamification',
+    entity: 'LeaderboardTemplate', basis: 'client',
+    specimen: (c: string, tag: string) => ({
+      client_id: c, leaderboard_name: `P5 leaderboard ${tag}`,
+      scope: 'global', metric_type: 'total_points',
+    }),
+  },
+  {
+    key: 'competitions', label: 'Competitions', module: 'Gamification',
+    entity: 'Competition', basis: 'client',
+    specimen: (c: string, tag: string) => ({
+      client_id: c, competition_name: `P5 competition ${tag}`,
+      competition_type: 'individual',
+      start_date: '2026-01-01', end_date: '2026-01-31',
+    }),
+  },
+  {
+    key: 'programs', label: 'Programs', module: 'Programs',
+    entity: 'Program', basis: 'client',
+    specimen: (c: string, tag: string) => ({
+      client_id: c, name: `P5 program ${tag}`, status: 'draft',
+    }),
+  },
+  {
+    key: 'classes', label: 'Classes', module: 'Programs',
+    entity: 'Class', basis: 'client',
+    specimen: (c: string, tag: string, email: string) => ({
+      client_id: c, facilitator_email: email, title: `P5 class ${tag}`, class_type: 'virtual_ilt',
+    }),
+  },
+  {
+    key: 'journeys', label: 'Journeys', module: 'Learning',
+    entity: 'Journey', basis: 'client',
+    specimen: (c: string, tag: string) => ({
+      client_id: c, title: `P5 journey ${tag}`, status: 'draft',
+    }),
+  },
+  {
+    key: 'custom_assessments', label: 'Signals', module: 'Signals',
+    entity: 'CustomAssessment', basis: 'client',
+    specimen: (c: string, tag: string) => ({
+      client_id: c, title: `P5 signal ${tag}`, type: 'quiz', status: 'draft',
+    }),
+  },
+  {
+    key: 'email_templates', label: 'Email templates', module: 'Notifications',
+    entity: 'EmailTemplate', basis: 'client',
+    specimen: (c: string, tag: string) => ({
+      client_id: c, template_key: `p5_proof_${tag}`, template_name: `P5 template ${tag}`,
+      subject: 'P5 proof', body_html: '<p>proof</p>', category: 'system',
+    }),
+  },
+  {
+    key: 'role_taxonomy', label: 'Role taxonomy', module: 'Role targeting',
+    entity: 'RoleTaxonomy', basis: 'client',
+    specimen: (c: string) => ({ client_id: c }),
+  },
+  {
+    key: 'coaching_engagements', label: 'Coaching engagements', module: 'Coaching',
+    entity: 'CoachingEngagement', basis: 'client',
+    specimen: (c: string, tag: string, email: string) => ({
+      client_id: c, coach_email: email, title: `P5 engagement ${tag}`,
+      engagement_type: '1on1_coaching',
+    }),
+  },
 ];
 
 function asArray(result: any): any[] {
@@ -266,7 +364,8 @@ export default async function (req: Request): Promise<Response> {
         seeded += 2;
       } catch (error: any) {
         categories.push({
-          key: cat.key, label: cat.label, entity: cat.entity, basis: cat.basis,
+          key: cat.key, label: cat.label, module: cat.module || null,
+          entity: cat.entity, basis: cat.basis,
           ok: false, checks: [],
           error: `fixture could not be created: ${error.message}`,
         });
@@ -338,7 +437,8 @@ export default async function (req: Request): Promise<Response> {
       }
 
       categories.push({
-        key: cat.key, label: cat.label, entity: cat.entity, basis: cat.basis,
+        key: cat.key, label: cat.label, module: cat.module || null,
+        entity: cat.entity, basis: cat.basis,
         ok: checks.every((c) => c.ok),
         checks,
       });
@@ -398,6 +498,14 @@ export default async function (req: Request): Promise<Response> {
       ],
       categories_tested: categories.length,
       categories_passed: categories.filter((c) => c.ok).length,
+      // Grouped by the module each record configures, so "every wired module is
+      // covered" is readable from the run rather than asserted in a document.
+      by_module: Object.fromEntries(
+        [...new Set(categories.map((c) => c.module || 'People and work'))].map((m) => {
+          const inModule = categories.filter((c) => (c.module || 'People and work') === m);
+          return [m, `${inModule.filter((c) => c.ok).length}/${inModule.length} passing`];
+        })
+      ),
       attempts: allChecks.length,
       passed: allChecks.filter((c) => c.ok).length,
       failed: failed.length + columnFailures.length,
