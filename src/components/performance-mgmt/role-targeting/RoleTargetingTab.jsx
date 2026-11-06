@@ -199,6 +199,9 @@ export default function RoleTargetingTab({ user }) {
         tracks={draft.tracks}
         disabled={saving}
         onChange={({ tiers, tracks }) => setDraft((d) => ({ ...d, tiers, tracks }))}
+        onSave={save}
+        saving={saving}
+        dirty={dirty}
       />
 
       <TitleMappingCard

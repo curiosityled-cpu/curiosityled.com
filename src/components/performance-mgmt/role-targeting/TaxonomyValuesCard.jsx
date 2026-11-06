@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Layers, GitBranch, Loader2 } from "lucide-react";
+import { Plus, Trash2, Layers, GitBranch, Loader2, Save } from "lucide-react";
 
 function slugify(text, taken) {
   const base =
@@ -105,14 +105,42 @@ function ValueList({ label, icon: Icon, hint, values, onChange, disabled, placeh
 }
 
 /** The client's structured tiers and tracks — the primary targeting values. */
-export default function TaxonomyValuesCard({ tiers, tracks, onChange, disabled }) {
+export default function TaxonomyValuesCard({
+  tiers,
+  tracks,
+  onChange,
+  disabled,
+  onSave,
+  saving = false,
+  dirty = false,
+}) {
   return (
     <div className="bg-card rounded-xl border border-border p-4">
-      <p className="text-sm font-semibold text-foreground">Tiers &amp; tracks</p>
-      <p className="text-xs text-muted-foreground mt-0.5 mb-3 max-w-2xl">
-        Define the levels your organisation actually uses, and the tracks within them.
-        A tier can have several tracks — for example client-facing and internal.
-      </p>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <p className="text-sm font-semibold text-foreground">Tiers &amp; tracks</p>
+          <p className="text-xs text-muted-foreground mt-0.5 mb-3 max-w-2xl">
+            Define the levels your organisation actually uses, and the tracks within them.
+            A tier can have several tracks — for example client-facing and internal.
+          </p>
+        </div>
+        {onSave && (
+          <Button
+            type="button"
+            size="sm"
+            className="h-9 text-xs bg-[#0202ff] hover:bg-[#0101dd] flex-shrink-0"
+            onClick={onSave}
+            disabled={saving || !dirty}
+          >
+            {saving ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Save className="w-3.5 h-3.5 mr-1" />
+            )}
+            Save tiers &amp; tracks
+          </Button>
+        )}
+      </div>
       <div className="grid md:grid-cols-2 gap-5">
         <ValueList
           label="Tiers"
