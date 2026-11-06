@@ -684,33 +684,69 @@
         {
           "$and": [
             {
-              "id": "{{user.data.client_id}}"
+              "user_condition": {
+                "role": "admin"
+              }
             },
             {
-              "$or": [
-                {
-                  "user_condition": {
-                    "role": "Admin Level 1"
-                  }
-                },
-                {
-                  "user_condition": {
-                    "role": "Admin Level 2"
-                  }
-                },
-                {
-                  "user_condition": {
-                    "role": "Super Administrator"
-                  }
-                }
-              ]
+              "id": "{{user.data.client_id}}"
             }
           ]
         },
         {
           "user_condition": {
-            "role": "Platform Admin"
+            "data.app_role": "Platform Admin"
           }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "data.app_role": "Super Administrator"
+              }
+            },
+            {
+              "id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "data.app_role": "Admin Level 2"
+              }
+            },
+            {
+              "id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "data.app_role": "Admin Level 1"
+              }
+            },
+            {
+              "id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "data.app_role": "Partner Business Administrator"
+              }
+            },
+            {
+              "id": {
+                "$in": "{{user.data.partner_client_ids}}"
+              }
+            }
+          ]
         }
       ]
     },
