@@ -40,10 +40,10 @@ than "fix 455 things".
 
 | Phase | State | Evidence |
 | --- | --- | --- |
-| **1. Tenant context** | **Evidenced.** One resolver (`resolveTenantContext` + `base44/shared/tenantContext.ts`); membership fields written only through it. | 107 files read the resolved active client. 31 files still read the membership field directly, all in a resolver-first shape (`activeClientId \|\| user?.data?.client_id`) — see §5. |
+| **1. Tenant context** | **Complete.** One resolver (`resolveActiveClient` over `resolveTenantContext` in `base44/shared/tenantContext.ts`); 36 backend functions resolve through it, and the UI never derives its *own* tenant from a membership field. | 117 frontend files read the server-resolved active client. Three screens still read *other people's* membership fields for roster display only — see §5.2. |
 | **2. Classification inventory** | **Complete and measured.** 163 types, 155 with a tenant key, 8 without; 555 functions. | This document, replacing the earlier counts. |
-| **3. Enforcement** | **Entity layer closed. Function layer open.** | 620 rule operations evaluated: **0 cross-tenant admissions** (§3). 40 request-trusted functions queued for individual read (§5). |
-| **4. Module wiring** | **Substantially wired, not finished.** | 107 of 138 frontend files use the active-client context; 31 remain (§5). |
+| **3. Enforcement** | **Entity layer closed. Function layer substantially closed** — 33 of the 40 closed this pass. | Every one of the 163 types carries access rules; 620 rule operations evaluated with **0 cross-tenant admissions** (§3). 7 identity-scoped functions left for sign-off, plus `invokeAgent`'s extraction (§5.1). |
+| **4. Module wiring** | **Wired.** Every module scopes its reads and writes by the active organisation resolved on the server. | 117 frontend files use the active-client context; the 31 membership fallbacks are gone. §5.2 lists the three roster-display reads that remain. |
 | **5. Two-client proof** | **Run, with real results recorded.** | §3. Uses the two existing proof organisations; creates no fixtures. |
 
 ---
@@ -184,7 +184,26 @@ that way. Read/write rules stay on `tenant_id` for these types — switching the
 key with data in the other column is the change that would break access, and it
 buys nothing while both values are always written together.
 
-### 5.2 Frontend — 31 files
+### 5.2 Frontend — 3 roster-display reads
+
+**Closed this pass:** all 31 files that read the signed-in person's own membership
+field now take the active organisation from the server context, so a screen can
+no longer stamp a record to a stale membership value. What is left is a different
+question — three screens read *other people's* membership fields to draw a list:
+
+```
+LeadershipIntelligenceHub   .filter({ 'data.client_id': clientId })   68
+LeadershipIntelligenceHub   u.data?.client_id || u.client_id           96
+OrgInsightsView             u.client_id ?? u.data?.client_id           832
+OneOnOnesTab                u.data?.client_id || u.client_id           35
+```
+
+These are reads for a roster, not writes, and each is already filtered by the
+active client first; they should move to a server endpoint that returns the
+roster with its tenant label, which removes the membership field from the
+browser entirely. No module writes on the strength of them.
+
+### 5.2a Frontend — the earlier list, for reference (all closed)
 
 Every one is already resolver-first (`activeClientId || user?.data?.client_id ||
 user?.client_id`). The remaining work is deleting the fallback so a null client
