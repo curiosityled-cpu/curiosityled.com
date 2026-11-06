@@ -209,7 +209,8 @@ function MVPLayoutInner({ children }) {
   // Administration group (no Leadership Intelligence Hub or User Management),
   // and no manager-facing Lead/Practice daily-cadence tools.
   const coachAdminLabels = ['Development Manager', 'Report Manager'];
-  const navItems = isCoachOrConsultant && mvpRole === 'buyer'
+  const isPlatformAdminRole = (user?.app_role || user?.data?.app_role || user?.role) === 'Platform Admin';
+  const rawNavItems = isCoachOrConsultant && mvpRole === 'buyer'
     ? [
         { label: workspaceLabel, path: workspacePath, icon: ClipboardList },
         ...baseNav
@@ -220,6 +221,12 @@ function MVPLayoutInner({ children }) {
           })),
       ]
     : baseNav;
+  // The blog is Platform Admin only, so its nav entry is shown to them alone.
+  const navItems = isPlatformAdminRole
+    ? rawNavItems
+    : rawNavItems.map(item => item.group
+        ? { ...item, children: (item.children || []).filter(child => child.path !== '/BlogManager') }
+        : item);
 
   // Determine if current page is a "sub-page" (not a core nav root)
   const coreNavPaths = navItems.flatMap(i => i.group ? i.children.map(c => c.path.split('?')[0]) : [i.path.split('?')[0]]);

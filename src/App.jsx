@@ -81,6 +81,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import OAuthConsent from './pages/OAuthConsent';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import PlatformAdminOnly from '@/components/PlatformAdminOnly';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -169,9 +170,6 @@ const AuthenticatedApp = () => {
       {/* Public share-ready summary for Go Flat Bridge — no login required */}
       <Route path="/flat-bridge-handoff" element={<FlatBridgeHandoff />} />
 
-      {/* Public blog — no login required */}
-      <Route path="/blog" element={<Blog />} />
-      <Route path="/blog/:slug" element={<BlogPost />} />
 
       {/* Protected app routes — auth required, unauthenticated users redirect to /login */}
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
@@ -253,7 +251,10 @@ const AuthenticatedApp = () => {
             : mvpRole ? <MVPPage><PerformanceManager /></MVPPage> : <LayoutWrapper currentPageName="PerformanceManager"><PerformanceManager /></LayoutWrapper>
       } />
       <Route path="/reviews" element={<MVPLayout><Reviews /></MVPLayout>} />
-      <Route path="/BlogManager" element={<MVPPage><BlogManager /></MVPPage>} />
+      {/* Blog — Platform Admin only */}
+      <Route path="/blog" element={<PlatformAdminOnly><Blog /></PlatformAdminOnly>} />
+      <Route path="/blog/:slug" element={<PlatformAdminOnly><BlogPost /></PlatformAdminOnly>} />
+      <Route path="/BlogManager" element={<PlatformAdminOnly><MVPPage><BlogManager /></MVPPage></PlatformAdminOnly>} />
       <Route path="/my-performance" element={<MVPPage><MyPerformance /></MVPPage>} />
       <Route path="/my-goals" element={<Navigate to="/my-performance" replace />} />
       <Route path="/my-rhythm" element={<MVPPage><MyRhythm /></MVPPage>} />

@@ -20,12 +20,7 @@ import {
   Sparkles,
 } from "lucide-react";
 
-const ALLOWED_ROLES = [
-  "Platform Admin",
-  "Super Administrator",
-  "Admin Level 1",
-  "Admin Level 2",
-];
+const ALLOWED_ROLES = ["Platform Admin"];
 
 const FILTERS = [
   { id: "all", label: "All" },
@@ -43,9 +38,7 @@ export default function BlogManager() {
   const [pendingDelete, setPendingDelete] = useState(null);
   const [busyId, setBusyId] = useState(null);
 
-  const allowed =
-    !authLoading &&
-    (user?.role === "admin" || ALLOWED_ROLES.includes(appRole));
+  const allowed = !authLoading && ALLOWED_ROLES.includes(appRole);
 
   const load = async () => {
     setLoading(true);
