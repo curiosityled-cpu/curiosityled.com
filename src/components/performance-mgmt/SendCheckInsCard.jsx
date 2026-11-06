@@ -33,6 +33,7 @@ import {
   Clock,
   Zap,
   ClipboardList,
+  Save,
 } from "lucide-react";
 import { toast } from "sonner";
 import { isHRAdminUser, fetchDirectReports } from "@/lib/checkInAccess";
@@ -56,6 +57,10 @@ export default function SendCheckInsCard({ user }) {
   const [selectedIds, setSelectedIds] = useState([]);
   const [client, setClient] = useState(null);
   const [savingAutomation, setSavingAutomation] = useState(false);
+  // Draft copy of this card's settings — saved together with the Save button.
+  const [draftAutomationEnabled, setDraftAutomationEnabled] = useState(false);
+  const [draftAutomationType, setDraftAutomationType] = useState("morning");
+  const [draftUseCustomQuestions, setDraftUseCustomQuestions] = useState(true);
 
   const loadData = useCallback(async () => {
     if (!clientId) {
@@ -103,65 +108,28 @@ export default function SendCheckInsCard({ user }) {
     loadData();
   }, [loadData]);
 
-  const automationEnabled =
+  const savedAutomationEnabled =
     client?.settings?.check_in_config?.ic_automation_enabled === true;
-  const automationType =
+  const savedAutomationType =
     client?.settings?.check_in_config?.ic_automation_type || "morning";
   // Custom questions are included independently of the standard measures, so an
   // organization can run measures only, questions only, or both.
-  const useCustomQuestions =
+  const savedUseCustomQuestions =
     client?.settings?.check_in_config?.use_custom_questions !== false;
 
-  const toggleUseCustomQuestions = async (enabled) => {
-    if (!client) return;
-    setSavingAutomation(true);
-    try {
-      const currentSettings = client.settings || {};
-      const currentCheckInConfig = currentSettings.check_in_config || {};
-      const updatedSettings = {
-        ...currentSettings,
-        check_in_config: {
-          ...currentCheckInConfig,
-          use_custom_questions: enabled,
-        },
-      };
-      await base44.entities.Client.update(client.id, { settings: updatedSettings });
-      setClient({ ...client, settings: updatedSettings });
-      toast.success(
-        enabled ? "Custom questions included" : "Custom questions turned off"
-      );
-    } catch (e) {
-      toast.error("Could not update: " + (e.message || ""));
-    } finally {
-      setSavingAutomation(false);
-    }
-  };
+  // Re-sync the draft whenever the saved settings load or change.
+  useEffect(() => {
+    setDraftAutomationEnabled(savedAutomationEnabled);
+    setDraftAutomationType(savedAutomationType);
+    setDraftUseCustomQuestions(savedUseCustomQuestions);
+  }, [savedAutomationEnabled, savedAutomationType, savedUseCustomQuestions]);
 
-  const toggleAutomation = async (enabled) => {
-    if (!client) return;
-    setSavingAutomation(true);
-    try {
-      const currentSettings = client.settings || {};
-      const currentCheckInConfig = currentSettings.check_in_config || {};
-      const updatedSettings = {
-        ...currentSettings,
-        check_in_config: {
-          ...currentCheckInConfig,
-          ic_automation_enabled: enabled,
-          ic_automation_type: automationType,
-        },
-      };
-      await base44.entities.Client.update(client.id, { settings: updatedSettings });
-      setClient({ ...client, settings: updatedSettings });
-      toast.success(enabled ? "Automation enabled" : "Automation paused");
-    } catch (e) {
-      toast.error("Could not update automation: " + (e.message || ""));
-    } finally {
-      setSavingAutomation(false);
-    }
-  };
+  const hasUnsavedChanges =
+    draftAutomationEnabled !== savedAutomationEnabled ||
+    draftAutomationType !== savedAutomationType ||
+    draftUseCustomQuestions !== savedUseCustomQuestions;
 
-  const updateAutomationType = async (type) => {
+  const saveSettings = async () => {
     if (!client) return;
     setSavingAutomation(true);
     try {
@@ -171,14 +139,16 @@ export default function SendCheckInsCard({ user }) {
         ...currentSettings,
         check_in_config: {
           ...currentCheckInConfig,
-          ic_automation_type: type,
+          ic_automation_enabled: draftAutomationEnabled,
+          ic_automation_type: draftAutomationType,
+          use_custom_questions: draftUseCustomQuestions,
         },
       };
       await base44.entities.Client.update(client.id, { settings: updatedSettings });
       setClient({ ...client, settings: updatedSettings });
-      toast.success("Automation type updated");
+      toast.success("Check-in settings saved");
     } catch (e) {
-      toast.error("Could not update: " + (e.message || ""));
+      toast.error("Could not save: " + (e.message || ""));
     } finally {
       setSavingAutomation(false);
     }
@@ -400,18 +370,18 @@ export default function SendCheckInsCard({ user }) {
               </div>
             </div>
             <Switch
-              checked={automationEnabled}
-              onCheckedChange={toggleAutomation}
+              checked={draftAutomationEnabled}
+              onCheckedChange={setDraftAutomationEnabled}
               disabled={savingAutomation}
             />
           </div>
-          {automationEnabled && (
+          {draftAutomationEnabled && (
             <div className="flex items-center gap-2 pl-10">
               <Clock className="w-3.5 h-3.5 text-muted-foreground" />
               <span className="text-[11px] text-muted-foreground">Send type:</span>
               <Select
-                value={automationType}
-                onValueChange={updateAutomationType}
+                value={draftAutomationType}
+                onValueChange={setDraftAutomationType}
                 disabled={savingAutomation}
               >
                 <SelectTrigger className="h-7 text-xs w-32">
@@ -449,11 +419,31 @@ export default function SendCheckInsCard({ user }) {
               </div>
             </div>
             <Switch
-              checked={useCustomQuestions}
-              onCheckedChange={toggleUseCustomQuestions}
+              checked={draftUseCustomQuestions}
+              onCheckedChange={setDraftUseCustomQuestions}
               disabled={savingAutomation}
             />
           </div>
+        </div>
+
+        {/* Save the card's settings together */}
+        <div className="flex items-center justify-end gap-3">
+          {hasUnsavedChanges && (
+            <span className="text-[11px] text-amber-600">Unsaved changes</span>
+          )}
+          <Button
+            size="sm"
+            onClick={saveSettings}
+            disabled={!client || !hasUnsavedChanges || savingAutomation}
+            className="bg-[#0202ff] hover:bg-[#0101dd] text-xs"
+          >
+            {savingAutomation ? (
+              <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+            ) : (
+              <Save className="w-3.5 h-3.5 mr-1" />
+            )}
+            Save changes
+          </Button>
         </div>
       </CardContent>
     </Card>
