@@ -24,7 +24,12 @@
  */
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { resolveActiveClient } from "../../shared/tenantContext.ts";
-import { getPreset, DEFAULT_PRESET_ID } from "../../shared/checkInPresets.ts";
+import {
+  getPreset,
+  DEFAULT_PRESET_ID,
+  getEnabledMeasureKeys,
+  customQuestionsEnabled,
+} from "../../shared/checkInPresets.ts";
 import { createReportingTree } from "../../shared/checkInScope.ts";
 import { resolveDateRange, recordInRange } from "../../shared/checkInRange.ts";
 import {
@@ -67,6 +72,16 @@ export default async function(req: Request): Promise<Response> {
     // never read from a membership field that can drift.
     const tenant = await resolveActiveClient(base44, user);
     const clientId = tenant.client_id || "";
+
+    // The organisation's check-in settings decide which questions exist at all:
+    // the measures it has switched on, and whether its custom questions are
+    // included. Insights only offer what staff are actually asked.
+    const clientRow: any = clientId
+      ? await svc.entities.Client.get(clientId).catch(() => null)
+      : null;
+    const checkInConfig = clientRow?.settings?.check_in_config || {};
+    const enabledMeasureKeys = getEnabledMeasureKeys(checkInConfig);
+    const includeCustomQuestions = customQuestionsEnabled(checkInConfig);
 
     const allUsers = await svc.entities.User.list(null, 2000).catch(() => []);
 
@@ -224,7 +239,7 @@ export default async function(req: Request): Promise<Response> {
 
     // ── Fetch CheckInCustomQuestion definitions (active + inactive) ──
     let customQs: any[] = [];
-    if (clientId) {
+    if (clientId && includeCustomQuestions) {
       try {
         const [activeRes, inactiveRes] = await Promise.all([
           svc.entities.CheckInCustomQuestion.filter(
@@ -249,7 +264,9 @@ export default async function(req: Request): Promise<Response> {
 
     // ── Build question catalog ───────────────────────────────────
     const preset = getPreset(user?.data?.check_in_preset || DEFAULT_PRESET_ID);
-    const measures = preset.measures;
+    const measures = preset.measures.filter((m: any) =>
+      enabledMeasureKeys.includes(m.key)
+    );
     const catalog: any[] = [];
     const knownKeys = new Set<string>();
 
@@ -310,7 +327,7 @@ export default async function(req: Request): Promise<Response> {
     }
 
     // Orphan keys found in data but not in definitions
-    for (const r of allCheckIns) {
+    for (const r of includeCustomQuestions ? allCheckIns : []) {
       if (!r.custom_answers) continue;
       for (const k of Object.keys(r.custom_answers)) {
         if (knownKeys.has(k) || seenQKeys.has(k)) continue;
