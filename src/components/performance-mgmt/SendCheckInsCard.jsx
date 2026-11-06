@@ -107,10 +107,12 @@ export default function SendCheckInsCard({ user }) {
     client?.settings?.check_in_config?.ic_automation_enabled === true;
   const automationType =
     client?.settings?.check_in_config?.ic_automation_type || "morning";
-  const skipMeasures =
-    client?.settings?.check_in_config?.ic_skip_measures === true;
+  // Custom questions are included independently of the standard measures, so an
+  // organization can run measures only, questions only, or both.
+  const useCustomQuestions =
+    client?.settings?.check_in_config?.use_custom_questions !== false;
 
-  const toggleSkipMeasures = async (enabled) => {
+  const toggleUseCustomQuestions = async (enabled) => {
     if (!client) return;
     setSavingAutomation(true);
     try {
@@ -120,12 +122,14 @@ export default function SendCheckInsCard({ user }) {
         ...currentSettings,
         check_in_config: {
           ...currentCheckInConfig,
-          ic_skip_measures: enabled,
+          use_custom_questions: enabled,
         },
       };
       await base44.entities.Client.update(client.id, { settings: updatedSettings });
       setClient({ ...client, settings: updatedSettings });
-      toast.success(enabled ? "Custom-questions-only mode enabled" : "Standard measures restored");
+      toast.success(
+        enabled ? "Custom questions included" : "Custom questions turned off"
+      );
     } catch (e) {
       toast.error("Could not update: " + (e.message || ""));
     } finally {
@@ -426,7 +430,7 @@ export default function SendCheckInsCard({ user }) {
           )}
         </div>
 
-        {/* Skip standard measures — custom questions only (e.g. BPO operational check-ins) */}
+        {/* Custom questions — independent of the standard measures */}
         <div className="rounded-lg border border-border p-3 space-y-2">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-start gap-2">
@@ -435,19 +439,18 @@ export default function SendCheckInsCard({ user }) {
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  Custom-questions-only mode
+                  Use Custom Questions
                 </p>
                 <p className="text-[11px] text-muted-foreground mt-0.5 max-w-md">
-                  When enabled, staff check-ins show only your custom questions
-                  below — no standard wellbeing measures. Use this for
-                  operational check-ins (e.g. BPO logistics) where the 5-measure
-                  preset does not apply.
+                  When on, your custom questions below are added to each staff
+                  check-in, alongside whichever standard measures you have
+                  selected. Turn it off for a measures-only check-in.
                 </p>
               </div>
             </div>
             <Switch
-              checked={skipMeasures}
-              onCheckedChange={toggleSkipMeasures}
+              checked={useCustomQuestions}
+              onCheckedChange={toggleUseCustomQuestions}
               disabled={savingAutomation}
             />
           </div>

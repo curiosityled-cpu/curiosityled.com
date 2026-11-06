@@ -64,8 +64,13 @@ Deno.serve(async (req) => {
         if (client?.settings?.check_in_config?.preset_id) {
           presetId = client.settings.check_in_config.preset_id;
         }
-        const enabled = client?.settings?.check_in_config?.enabled_measures;
-        if (Array.isArray(enabled)) enabledMeasures = enabled;
+        const cfg = client?.settings?.check_in_config;
+        if (Array.isArray(cfg?.enabled_measures)) {
+          enabledMeasures = cfg.enabled_measures;
+        } else if (cfg?.ic_skip_measures === true) {
+          // Legacy organizations that ran custom-questions-only check-ins.
+          enabledMeasures = [];
+        }
       } catch { /* fall back to balance */ }
       const preset = getPreset(presetId);
       // Only the measures the organization has switched on.

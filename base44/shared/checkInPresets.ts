@@ -77,3 +77,23 @@ export const DEFAULT_PRESET_ID = "balance";
 export function getPreset(presetId: string | undefined | null): CheckInPreset {
   return CHECK_IN_PRESETS[presetId || ""] || CHECK_IN_PRESETS[DEFAULT_PRESET_ID];
 }
+
+export const MEASURE_KEYS = ["energy", "confidence", "focus", "load", "growth"];
+
+/**
+ * Which standard measures the organization has switched on, one by one.
+ * An absent list means every measure of the preset. Organizations that used the
+ * older "custom questions only" flag are read as having no measures until they
+ * save a selection, so their check-ins do not silently change.
+ */
+export function getEnabledMeasureKeys(checkInConfig: any): string[] {
+  const list = checkInConfig?.enabled_measures;
+  if (Array.isArray(list)) return list;
+  if (checkInConfig?.ic_skip_measures === true) return [];
+  return MEASURE_KEYS;
+}
+
+/** Whether the organization includes its custom questions in a check-in. */
+export function customQuestionsEnabled(checkInConfig: any): boolean {
+  return checkInConfig?.use_custom_questions !== false;
+}

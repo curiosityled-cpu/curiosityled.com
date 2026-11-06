@@ -48,6 +48,7 @@ import {
 } from "lucide-react";
 import CheckInLookbackSetting from "@/components/performance-mgmt/CheckInLookbackSetting";
 import SendCheckInsCard from "@/components/performance-mgmt/SendCheckInsCard";
+import DefaultMeasuresCard from "@/components/performance-mgmt/DefaultMeasuresCard";
 import AudienceSelector from "@/components/checkin/AudienceSelector";
 
 const RESPONSE_TYPES = [
@@ -345,6 +346,7 @@ export default function CheckInSetupTab({ user }) {
   return (
     <div className="space-y-4">
       <CheckInLookbackSetting />
+      <DefaultMeasuresCard />
       <SendCheckInsCard user={currentUser} />
       {/* Header */}
       <div className="flex items-start justify-between gap-3 flex-wrap">

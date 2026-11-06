@@ -51,7 +51,7 @@ export default async function (req: Request): Promise<Response> {
     const ctx = await resolveActiveClient(base44, user, body.client_id || null);
     const clientId = ctx.client_id;
 
-    const [taxonomyRaw, questionRaw, allUsers] = await Promise.all([
+    const [taxonomyRaw, questionRaw, allUsers, clientRow] = await Promise.all([
       clientId
         ? svc.entities.RoleTaxonomy.filter({ client_id: clientId }, "-updated_date", 1).catch(() => [])
         : Promise.resolve([]),
@@ -61,6 +61,9 @@ export default async function (req: Request): Promise<Response> {
             .catch(() => ({ items: [] }))
         : Promise.resolve({ items: [] }),
       loadUsers(svc, 5000),
+      clientId
+        ? svc.entities.Client.get(clientId).catch(() => null)
+        : Promise.resolve(null),
     ]);
 
     const taxonomyRows = Array.isArray(taxonomyRaw) ? taxonomyRaw : taxonomyRaw?.items || [];
@@ -73,7 +76,13 @@ export default async function (req: Request): Promise<Response> {
     const profile = resolveRoleProfile(person, taxonomy);
     const userRole = appRoleOf(user);
 
-    const applicable = questions
+    // Custom questions are an organization-level switch, independent of which
+    // standard measures the organization selected. Off means the check-in shows
+    // only the measures.
+    const includeCustomQuestions =
+      (clientRow as any)?.settings?.check_in_config?.use_custom_questions !== false;
+
+    const applicable = (includeCustomQuestions ? questions : [])
       .filter((q) => {
         // A question aimed at named people (a manager's check-in for their own
         // staff) reaches only those people.

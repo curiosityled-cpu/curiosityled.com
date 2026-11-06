@@ -18,20 +18,22 @@
  * (scheduled delivery), processICCheckInSubmission (Teams callback),
  * icWebCheckIn (web fallback), and atreusTeamsRouter (bot callback handling).
  */
-import { CHECK_IN_PRESETS, getPreset } from './checkInPresets.ts';
+import {
+  CHECK_IN_PRESETS,
+  getPreset,
+  getEnabledMeasureKeys,
+  customQuestionsEnabled,
+} from './checkInPresets.ts';
 
 const MEASURE_KEYS = ['energy', 'confidence', 'focus', 'load', 'growth'];
 
 export function getMeasuresForClient(client: any): any[] {
   const presetId = client?.settings?.check_in_config?.preset_id || 'balance';
   const preset = getPreset(presetId) || CHECK_IN_PRESETS.balance;
-  // The organization chooses which standard measures appear; an absent list
-  // means all of the preset's measures, an empty list means none of them.
-  const enabled = client?.settings?.check_in_config?.enabled_measures;
-  if (Array.isArray(enabled)) {
-    return preset.measures.filter((m: any) => enabled.includes(m.key));
-  }
-  return preset.measures;
+  // The organization chooses which standard measures appear, one by one; an
+  // absent list means all of the preset's measures.
+  const enabled = getEnabledMeasureKeys(client?.settings?.check_in_config);
+  return preset.measures.filter((m: any) => enabled.includes(m.key));
 }
 
 /**
@@ -140,14 +142,14 @@ export async function getICQuestions(
   client: any,
   checkInType: string
 ): Promise<{ measures: any[]; customQuestions: any[]; questionsUsed: Record<string, string> }> {
-  const skipMeasures = client?.settings?.check_in_config?.ic_skip_measures === true;
-  const measures = skipMeasures ? [] : getMeasuresForClient(client);
-  const customQuestions = await getActiveCustomQuestions(
-    serviceBase44,
-    client?.id || '',
-    '',
-    checkInType
-  );
+  const measures = getMeasuresForClient(client);
+  // Custom questions are included only when the organization has them switched
+  // on — independently of which standard measures it selected.
+  const customQuestions = customQuestionsEnabled(
+    client?.settings?.check_in_config
+  )
+    ? await getActiveCustomQuestions(serviceBase44, client?.id || '', '', checkInType)
+    : [];
 
   // Generate AI text for AI-flagged questions (server-side, since ICs are not app users)
   const aiGenerated = await generateAIQuestionsForIC(serviceBase44, customQuestions, checkInType);
