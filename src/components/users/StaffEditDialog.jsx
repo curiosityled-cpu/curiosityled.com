@@ -24,6 +24,7 @@ import { toast } from "sonner";
 const emptyForm = {
   name: "",
   email: "",
+  job_title: "",
   teams_user_id: "",
   team: "",
   manager_email: "",
@@ -57,6 +58,7 @@ export default function StaffEditDialog({
         setForm({
           name: editingIC.name || "",
           email: editingIC.email || "",
+          job_title: editingIC.job_title || "",
           teams_user_id: editingIC.teams_user_id || "",
           team: editingIC.team || "",
           manager_email: editingIC.manager_email || "",
@@ -81,6 +83,7 @@ export default function StaffEditDialog({
     const payload = {
       name: form.name.trim(),
       email: form.email.trim().toLowerCase(),
+      job_title: form.job_title.trim(),
       teams_user_id: form.teams_user_id.trim(),
       team: form.team.trim(),
       manager_email: form.manager_email.trim().toLowerCase(),
@@ -139,6 +142,18 @@ export default function StaffEditDialog({
             />
             <p className="text-[11px] text-muted-foreground">
               Must match the Teams account email so the bot can identify them.
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Job title</Label>
+            <Input
+              value={form.job_title}
+              onChange={(e) => setForm((f) => ({ ...f, job_title: e.target.value }))}
+              placeholder="Warehouse Associate"
+              className="text-sm"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              The title this person's work is known by, used for reporting and role targeting.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3">

@@ -335,7 +335,8 @@ function UserManagement({ embedded = false }) {
     email: ic.email,
     app_role: 'Staff',
     account_status: ic.is_active === false ? 'suspended' : 'active',
-    current_role: ic.team || '',
+    job_title: ic.job_title || '',
+    current_role: ic.job_title || ic.team || '',
     client_id: ic.client_id,
     last_login: ic.last_check_in_at || null,
     created_date: ic.created_date,
@@ -692,8 +693,10 @@ function UserManagement({ embedded = false }) {
                             <td className="px-4 py-2.5 text-gray-500 text-xs">{user.email}</td>
                             <td className="px-4 py-2.5">
                               <div className="flex flex-col gap-0.5">
-                                <span className="text-xs text-gray-700">{ic.team || '—'}</span>
-                                <span className="text-xs text-gray-400">{ic.manager_email ? `mgr: ${ic.manager_email}` : '—'}</span>
+                                <span className="text-xs text-gray-700">{ic.job_title || ic.team || '—'}</span>
+                                <span className="text-xs text-gray-400">
+                                  {ic.job_title && ic.team ? ic.team : (ic.manager_email ? `mgr: ${ic.manager_email}` : '—')}
+                                </span>
                               </div>
                             </td>
                             <td className="px-4 py-2.5">

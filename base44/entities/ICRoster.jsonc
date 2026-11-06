@@ -11,6 +11,10 @@
       "type": "string",
       "description": "Email used as user_email on DailyCheckIn records. Should match the Teams account email/UPN for identity matching. Also used as the email notification destination."
     },
+    "job_title": {
+      "type": "string",
+      "description": "The person's job title as the organisation names it (e.g. 'Warehouse Associate', 'Customer Service Rep'). Used for display, search and for matching the person to role-targeted check-in questions."
+    },
     "teams_user_id": {
       "type": "string",
       "description": "Azure AD object ID or UPN for the Teams account. Used as a fallback identity match if email differs."

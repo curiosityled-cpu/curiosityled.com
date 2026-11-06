@@ -60,6 +60,7 @@ export default async function (req: Request): Promise<Response> {
         name,
         email,
         client_id: clientId,
+        job_title: cleanText(row.job_title, 200),
         team: cleanText(row.team, 200),
         manager_email: cleanText(row.manager_email, 200).toLowerCase(),
         hris_employee_id: cleanText(row.hris_employee_id, 100),

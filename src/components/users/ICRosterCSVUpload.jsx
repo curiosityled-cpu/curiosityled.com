@@ -22,7 +22,7 @@ import {
 import { Upload, Loader2, AlertCircle, CheckCircle2, FileUp } from "lucide-react";
 import { toast } from "sonner";
 
-const HEADERS = ["name", "email", "team", "manager_email", "hris_employee_id", "preferred_channel"];
+const HEADERS = ["name", "email", "job_title", "team", "manager_email", "hris_employee_id", "preferred_channel"];
 
 function parseCSV(text) {
   const lines = text.split(/\r?\n/).filter((l) => l.trim() !== "");
@@ -83,6 +83,7 @@ export default function ICRosterCSVUpload({ open, onClose, onDone, clientId, cre
         .map((r) => ({
           name: r[idx.name] || "",
           email: (r[idx.email] || "").toLowerCase().trim(),
+          job_title: idx.job_title !== -1 ? r[idx.job_title] || "" : "",
           team: idx.team !== -1 ? r[idx.team] || "" : "",
           manager_email: idx.manager_email !== -1 ? (r[idx.manager_email] || "").toLowerCase().trim() : "",
           hris_employee_id: idx.hris_employee_id !== -1 ? r[idx.hris_employee_id] || "" : "",
@@ -110,6 +111,7 @@ export default function ICRosterCSVUpload({ open, onClose, onDone, clientId, cre
       const records = preview.map((r) => ({
         name: r.name,
         email: r.email,
+        job_title: r.job_title,
         team: r.team,
         manager_email: r.manager_email,
         hris_employee_id: r.hris_employee_id,
@@ -161,7 +163,7 @@ export default function ICRosterCSVUpload({ open, onClose, onDone, clientId, cre
           <div className="rounded-lg border border-dashed border-border p-4 text-center">
             <FileUp className="w-6 h-6 mx-auto text-muted-foreground mb-2" />
             <p className="text-xs text-muted-foreground mb-2">
-              Columns: name, email, team, manager_email, hris_employee_id, preferred_channel (teams/email/both)
+              Columns: name, email, job_title, team, manager_email, hris_employee_id, preferred_channel (teams/email/both)
             </p>
             <Input
               ref={fileRef}
