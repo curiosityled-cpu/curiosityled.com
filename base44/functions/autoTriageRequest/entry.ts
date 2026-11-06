@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -30,8 +31,11 @@ Deno.serve(async (req) => {
 
     const request = requests[0];
 
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
+
     // Security: Verify the caller's tenant matches the request's tenant.
-    if (user.app_role !== 'Platform Admin' && request.client_id !== user.client_id) {
+    if (user.app_role !== 'Platform Admin' && request.client_id !== callerClientId) {
       return Response.json({ error: 'Forbidden — request belongs to a different client' }, { status: 403 });
     }
 

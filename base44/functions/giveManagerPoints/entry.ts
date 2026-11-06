@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -36,8 +37,11 @@ Deno.serve(async (req) => {
     }
 
     // Get gamification settings
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
+
     const settings = await base44.asServiceRole.entities.GamificationSettings.filter({
-      client_id: user.client_id
+      client_id: callerClientId
     });
     const clientSettings = settings.length > 0 ? settings[0] : { manager_point_budget_weekly: 500 };
 
@@ -75,7 +79,7 @@ Deno.serve(async (req) => {
       transaction_type: 'manager_award',
       given_by_email: user.email,
       reason,
-      client_id: user.client_id
+      client_id: callerClientId
     });
 
     return Response.json({

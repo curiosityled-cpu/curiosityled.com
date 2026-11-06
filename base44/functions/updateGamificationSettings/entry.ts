@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -18,8 +19,11 @@ Deno.serve(async (req) => {
     const settingsData = await req.json();
 
     // Get existing settings
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
+
     const existingSettings = await base44.asServiceRole.entities.GamificationSettings.filter({
-      client_id: user.client_id
+      client_id: callerClientId
     });
 
     let settings;
@@ -32,7 +36,7 @@ Deno.serve(async (req) => {
     } else {
       // Create new
       settings = await base44.asServiceRole.entities.GamificationSettings.create({
-        client_id: user.client_id,
+        client_id: callerClientId,
         ...settingsData
       });
     }

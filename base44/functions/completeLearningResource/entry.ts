@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -8,6 +9,9 @@ Deno.serve(async (req) => {
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
 
     const { learning_resource_id, assigned_learning_id } = await req.json();
 
@@ -78,7 +82,7 @@ Deno.serve(async (req) => {
         reason: `Completed learning resource: ${resource.title}`,
         related_entity_type: 'LearningResource',
         related_entity_id: learning_resource_id,
-        client_id: user.client_id
+        client_id: callerClientId
       });
     } catch (gamificationError) {
       console.log('Gamification award failed (non-critical):', gamificationError.message);

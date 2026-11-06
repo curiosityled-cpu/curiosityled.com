@@ -4,6 +4,7 @@
  * Extracts: recurring_triggers, what_has_helped, stuck_points, pressure_responses.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -121,7 +122,7 @@ Deno.serve(async (req) => {
     
     const memoryData = {
       user_email: user.email,
-      client_id: user.data?.client_id || user.client_id,
+      client_id: (await resolveActiveClient(base44, user)).client_id,
       recurring_triggers,
       what_has_helped,
       stuck_points,

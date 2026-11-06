@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -8,6 +9,9 @@ Deno.serve(async (req) => {
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
 
     const { program_id } = await req.json();
     // Security: Points are always awarded to the authenticated caller —
@@ -30,7 +34,7 @@ Deno.serve(async (req) => {
     // Security: verify the program belongs to the caller's organization before
     // awarding completion points. Prevents cross-tenant points farming by
     // enumerating program IDs. Platform Admin is exempt.
-    if (user.app_role !== 'Platform Admin' && program.client_id && program.client_id !== user.client_id) {
+    if (user.app_role !== 'Platform Admin' && program.client_id && program.client_id !== callerClientId) {
       return Response.json({ error: 'This program is not in your organization' }, { status: 403 });
     }
 

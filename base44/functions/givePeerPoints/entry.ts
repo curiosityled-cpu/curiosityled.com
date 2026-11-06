@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -26,15 +27,18 @@ Deno.serve(async (req) => {
     if (recipient_email.toLowerCase() === user.email.toLowerCase()) {
       return Response.json({ error: 'You cannot award points to yourself' }, { status: 400 });
     }
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
+
     const recipients = await base44.asServiceRole.entities.User.filter({ email: recipient_email });
     const recipient = recipients[0];
-    if (!recipient || (user.app_role !== 'Platform Admin' && recipient.client_id !== user.client_id)) {
+    if (!recipient || (user.app_role !== 'Platform Admin' && recipient.client_id !== callerClientId)) {
       return Response.json({ error: 'Recipient not found in your organization' }, { status: 403 });
     }
 
     // Get gamification settings
     const settings = await base44.asServiceRole.entities.GamificationSettings.filter({
-      client_id: user.client_id
+      client_id: callerClientId
     });
     const clientSettings = settings.length > 0 ? settings[0] : { peer_point_budget_weekly: 100 };
 
@@ -72,7 +76,7 @@ Deno.serve(async (req) => {
       transaction_type: 'peer_recognition',
       given_by_email: user.email,
       reason,
-      client_id: user.client_id
+      client_id: callerClientId
     });
 
     return Response.json({

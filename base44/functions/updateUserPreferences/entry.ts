@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 /**
  * User Preference Learning Engine
@@ -97,7 +98,7 @@ Deno.serve(async (req) => {
       // Create new
       const created = await base44.entities.UserPreference.create({
         user_email: user.email,
-        client_id: user.data?.client_id || user.client_id,
+        client_id: (await resolveActiveClient(base44, user)).client_id,
         ...newPreferences
       });
       return Response.json({

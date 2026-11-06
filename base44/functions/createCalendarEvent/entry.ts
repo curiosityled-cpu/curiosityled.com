@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -30,10 +31,13 @@ Deno.serve(async (req) => {
 
     // Security: Verify the caller is the requester, assignee, or an admin
     // scoped to the request's client_id.
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
+
     const adminRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Partner Business Administrator', 'Platform Admin'];
     const isRequester = request.requested_by_email === user.email;
     const isAssignee = request.assigned_to_email === user.email;
-    const isAdminForTenant = adminRoles.includes(user.app_role) && (!request.client_id || request.client_id === user.client_id);
+    const isAdminForTenant = adminRoles.includes(user.app_role) && (!request.client_id || request.client_id === callerClientId);
     if (!isRequester && !isAssignee && !isAdminForTenant) {
       return Response.json({ error: 'Forbidden — you do not have access to this request' }, { status: 403 });
     }

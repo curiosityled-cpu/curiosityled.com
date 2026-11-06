@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 /**
  * Captures a snapshot of current analytics data for historical tracking
@@ -41,9 +42,12 @@ Deno.serve(async (req) => {
       at_risk: div.atRisk || 0
     }));
 
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
+
     // Create snapshot
     const snapshot = await base44.asServiceRole.entities.AnalyticsSnapshot.create({
-      client_id: user.client_id,
+      client_id: callerClientId,
       snapshot_date: new Date().toISOString().split('T')[0],
       snapshot_type: snapshot_type,
       total_leaders: analyticsData.metrics.total_leaders,

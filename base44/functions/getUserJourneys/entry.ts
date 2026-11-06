@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -15,6 +16,9 @@ Deno.serve(async (req) => {
 
     // Fetch all journeys using service role
     const allJourneys = await base44.asServiceRole.entities.LearningJourney.list('-updated_date');
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
     
     // Filter based on user access
     const userJourneys = {
@@ -31,7 +35,7 @@ Deno.serve(async (req) => {
       const isSharedAdmin = journey.shared_admin_emails?.includes(user.email);
       
       // Check if user has access via client_id
-      const hasClientAccess = user.client_id && journey.client_id === user.client_id;
+      const hasClientAccess = callerClientId && journey.client_id === callerClientId;
       
       // Check if user has access via partner_id
       const hasPartnerAccess = user.partner_id && journey.partner_id === user.partner_id;

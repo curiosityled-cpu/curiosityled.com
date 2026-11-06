@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
     try {
@@ -8,6 +9,9 @@ Deno.serve(async (req) => {
         if (!user) {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
+
+        // Tenant comes from the resolver, never from the browser's membership copy.
+        const callerClientId = (await resolveActiveClient(base44, user)).client_id;
 
         // Security: Only managers and admins can assign learning to other users.
         const mgrRoles = ['User Level 2', 'User Level 3', 'Admin Level 1', 'Admin Level 2', 'Super Administrator', 'Partner Business Administrator', 'Platform Admin'];
@@ -46,7 +50,7 @@ Deno.serve(async (req) => {
         const allUsers = await base44.asServiceRole.entities.User.list();
         const allowedEmails = new Set(
           allUsers
-            .filter(u => user.app_role === 'Platform Admin' || u.client_id === user.client_id)
+            .filter(u => user.app_role === 'Platform Admin' || u.client_id === callerClientId)
             .map(u => u.email)
         );
         const validEmails = userEmails.filter(e => allowedEmails.has(e));

@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -17,7 +18,7 @@ Deno.serve(async (req) => {
 
     // Resolve the caller's tenant. A missing tenant must never fall back to a
     // platform-wide level, which would publish one client's levels to every client.
-    const clientId = user.data?.client_id || user.client_id || null;
+    const clientId = (await resolveActiveClient(base44, user)).client_id;
     if (user.app_role !== 'Platform Admin' && !clientId) {
       return Response.json({ error: 'No client is assigned to this account' }, { status: 400 });
     }
