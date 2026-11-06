@@ -51,7 +51,8 @@ Deno.serve(async (req) => {
         // tenant would otherwise pull that tenant's check-ins into this response.
         // With no resolved organisation, only platform administrators may walk
         // the whole tree.
-        if (activeClientId ? u.client_id !== activeClientId : !isPlatformCaller) continue;
+        const memberClient = u.client_id ?? u?.data?.client_id ?? null;
+        if (activeClientId ? memberClient !== activeClientId : !isPlatformCaller) continue;
         userByEmail.set(u.email.toLowerCase(), u);
         const mgr = u?.data?.manager_email || u?.manager_email || '';
         if (mgr) {

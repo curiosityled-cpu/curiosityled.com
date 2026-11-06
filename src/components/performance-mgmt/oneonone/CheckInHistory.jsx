@@ -28,7 +28,10 @@ export default function CheckInHistory({ user }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filter, setFilter] = useState(user?.email || "all");
+  // Left unset until the history arrives: a manager then opens on "Everyone", so
+  // their direct reports' check-ins are on screen immediately, while someone with
+  // no reports still opens on their own days.
+  const [filter, setFilter] = useState(null);
   const [lookback, setLookback] = useState(7);
   const [editor, setEditor] = useState(null); // { kind: 'edit'|'add', record?, date?, targetEmail?, targetName? }
 
@@ -85,24 +88,30 @@ export default function CheckInHistory({ user }) {
   const myName =
     user?.data?.display_name || user?.full_name || user?.email || "you";
 
-  const isSelfFilter = filter === "all" ? false : filter.toLowerCase() === myEmail;
+  const activeFilter =
+    filter || (isManager ? "all" : user?.email || "all");
+
+  const isSelfFilter =
+    activeFilter === "all" ? false : activeFilter.toLowerCase() === myEmail;
   const personName =
-    filter === "all"
+    activeFilter === "all"
       ? ""
       : isSelfFilter
         ? myName
         : teamMembers.find(
-            (m) => m.email.toLowerCase() === filter.toLowerCase()
-          )?.name || filter;
+            (m) => m.email.toLowerCase() === activeFilter.toLowerCase()
+          )?.name || activeFilter;
 
   const notesSubject =
-    filter && filter !== "all" ? { email: filter, name: personName } : null;
+    activeFilter && activeFilter !== "all"
+      ? { email: activeFilter, name: personName }
+      : null;
 
   const openAdd = (date, email, name) => {
     setEditor({
       kind: "add",
       date,
-      targetEmail: email || filter,
+      targetEmail: email || activeFilter,
       targetName: name || personName,
     });
   };
@@ -127,7 +136,7 @@ export default function CheckInHistory({ user }) {
         {isManager && (
           <div className="flex items-center gap-2">
             <Filter className="w-3.5 h-3.5 text-gray-400" />
-            <Select value={filter} onValueChange={setFilter}>
+            <Select value={activeFilter} onValueChange={setFilter}>
               <SelectTrigger className="w-52 h-8 text-xs">
                 <SelectValue placeholder="Filter by person…" />
               </SelectTrigger>
@@ -146,7 +155,7 @@ export default function CheckInHistory({ user }) {
       </div>
 
       <CheckInCalendar
-        filter={filter}
+        filter={activeFilter}
         checkIns={checkIns}
         teamMembers={teamMembers}
         myEmail={myEmail}
