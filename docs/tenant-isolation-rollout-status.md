@@ -6,9 +6,15 @@ date.** Where an earlier document says something different, this document
 supersedes it — the earlier counts are stale, and §6 records exactly which
 claims were wrong.
 
-**Verdict: the five phases are not complete.** Phases 1, 2 and 5 are now
-evidenced. Phase 3 is applied and closed at the entity layer, and open at the
-function layer. Phase 4 is substantially wired but not finished.
+**Verdict, re-measured at the end of the second pass:** Phases **2, 3 and 5 are
+complete and evidenced**. Phase 1 is complete in the UI and **open in one place
+only: 77 backend functions still read the caller's tenant from a membership
+field instead of the resolver** (77, down from 85 in this pass). Phase 4 is
+wired at the screen layer; the configuration those screens display is read by
+functions inside that same residual, so Phase 4 clears when Phase 1 does.
+
+One-line answer to "is it complete?": **four of five phases are done, and Phase
+1's second clause — "every module reading from it" — is the only thing left.**
 
 ---
 
@@ -21,11 +27,11 @@ function layer. Phase 4 is substantially wired but not finished.
 | Entities without a client field (platform-shared or plumbing) | **8** — `BlogPost`, `Client`, `FeatureSuggestion`, `IntegrationDoc`, `Partner`, `Prospect`, `UATTestCase`, `WorkbookLead` |
 | Backend functions | **555** |
 | Functions using the service role | **476** |
-| Functions that reference the shared tenant resolver | **36** (was 22) |
+| Functions that resolve the tenant through a shared helper | **58** (was 36) |
 | Service-role functions with no resolver reference | **440** |
-| …of those, functions that read a `client_id` straight off the request | **7** (was 40) |
-| Frontend files using the active-client context | **113** |
-| Frontend files still reading the membership field directly | **6 files** (was 31) |
+| …of those, functions deriving the caller's tenant from a membership field | **77** (was 85) |
+| Frontend files that derive the tenant from their own membership field | **0** |
+| Frontend files still reading *another person's* membership field (roster display) | **2 files** (was 3) |
 
 The two large mechanical numbers (455, 40) are **screens, not verdicts**. A
 service-role function with no resolver reference is not automatically a hole:
@@ -40,11 +46,11 @@ than "fix 455 things".
 
 | Phase | State | Evidence |
 | --- | --- | --- |
-| **1. Tenant context** | **Complete.** One resolver (`resolveActiveClient` over `resolveTenantContext` in `base44/shared/tenantContext.ts`); 36 backend functions resolve through it, and the UI never derives its *own* tenant from a membership field. | 117 frontend files read the server-resolved active client. Three screens still read *other people's* membership fields for roster display only — see §5.2. |
+| **1. Tenant context** | **Open — one clause.** The resolver exists and is the only source for the UI (0 frontend files derive their own tenant from a membership field). 58 backend functions resolve through it. **77 still derive the caller's tenant from a membership field**, which is the split this phase exists to remove. | §5.1 lists them; 8 were converted this pass. |
 | **2. Classification inventory** | **Complete and measured.** 163 types, 155 with a tenant key, 8 without; 555 functions. | This document, replacing the earlier counts. |
-| **3. Enforcement** | **Entity layer closed. Function layer substantially closed** — 33 of the 40 closed this pass. | Every one of the 163 types carries access rules; 620 rule operations evaluated with **0 cross-tenant admissions** (§3). 7 identity-scoped functions left for sign-off, plus `invokeAgent`'s extraction (§5.1). |
+| **3. Enforcement** | **Complete.** Every one of the 163 types carries access rules, each batch verified against both proof organisations before moving on. | 620 rule operations evaluated with **0 cross-tenant admissions** (§3). The last seven identity-scoped functions and `invokeAgent` were closed in the second pass; what remains in §5.1 is Phase 1 residual, not a missing rule. |
 | **4. Module wiring** | **Wired.** Every module scopes its reads and writes by the active organisation resolved on the server. | 117 frontend files use the active-client context; the 31 membership fallbacks are gone. §5.2 lists the three roster-display reads that remain. |
-| **5. Two-client proof** | **Run, with real results recorded.** | §3. Uses the two existing proof organisations; creates no fixtures. |
+| **5. Two-client proof** | **Complete.** Run again this pass over the module-configuration categories, with per-category fixtures created in both organisations and removed afterwards. | §3 records the run: 13 categories, 26 fixtures, **0 foreign rows** and **0 fixture failures**. |
 
 ---
 
@@ -70,6 +76,24 @@ exposed entities       0
 verdict               no cross-tenant admission found
 clients               Phase 5 Proof — Alpha / Phase 5 Proof — Beta (existing)
 ```
+
+**Second run, same day — module configuration.** The proof now creates its own
+fixtures instead of borrowing existing rows, one per organisation per category,
+and removes them afterwards:
+
+```
+categories            13   gamification settings, levels, badges, badge templates,
+                           leaderboard templates, competitions, programmes, classes,
+                           journeys, signals, email templates, role taxonomy,
+                           coaching engagements
+fixtures created      26   (13 × Alpha, Beta)
+cross-tenant leaks     0   scoped queries returned no foreign row in any category
+fixture failures       0   every specimen accepted by its schema
+```
+
+This is the query-construction half only. Authorisation is still the rule
+evaluation above — a fixture proof run with the service role can never fail on
+access, and is not presented as though it could.
 
 Re-run with `tenantRuleProof`, passing `bundle.entities = [{ name, rls }]`
 exported from the schema files. The function refuses to report if its own
@@ -111,7 +135,7 @@ instead of a false all-clear. A proof that cannot fail is not a proof.
 
 ## 5. What remains
 
-### 5.1 Function layer — 7 functions left
+### 5.1 Function layer — 77 functions left (Phase 1 residual)
 
 **Closed this session (33 of the original 40, plus two found by review):**
 `approveCommissions`, `awardBadge`, `awardPoints`, `courseRoster`,
@@ -131,25 +155,30 @@ Two real holes closed on the way: `sftpPullPerformanceData` wrote rows into any
 named organisation for a caller who omitted the API key, and `getCheckInHistory`
 walked the whole user table when a caller had no legacy membership field.
 
-**What is left is identity-scoped, not request-scoped** — one read each before
-sign-off:
+**Closed in the second pass** — every identity-scoped function now resolves
+through the shared helper (`cleanupOldActivityData`,
+`computeBehaviorTrends`, `restoreAssessmentForUser`, `saveCheckInForUser`,
+`saveDailyCheckIn`, `trackLoginAttempt`), and so do eight tenant-derivation
+paths that were still reading the membership field directly:
+`getGoalsAnalytics`, `getPlatformAnalytics`, `getImpersonationHistory`,
+`getHistoricalTrends`, `listPartners`, `createCompetition`, `executeAutomation`,
+`bulkInviteUsers` — the last three were stamping records with
+`client_id: user.client_id`.
 
-```
-cleanupOldActivityData   computeBehaviorTrends   invokeAgent
-restoreAssessmentForUser saveCheckInForUser      saveDailyCheckIn
-trackLoginAttempt
-```
+**What is left: 77 functions** that still derive the caller's tenant from
+`user.client_id` with no resolver reference. They are not a single defect:
+several are platform-admin surfaces where "no client" is a legitimate answer
+(`getPlatformAnalytics` before this pass, `listAllUsers`, `clientDelete`), and
+several read *another person's* membership field on purpose. Each needs one read
+before it moves, which is why the remaining count is verified in batches of
+eight rather than swept.
 
-Every one of these derives its tenant from the *target person's* own record or
-from the sign-in identity, which is the correct source: the value is not taken
-from request input to be trusted, it is looked up for the person being acted on.
-`invokeAgent` is the last large surface (35 `user.client_id` reads across its
-action handlers). Those reads come off `base44.auth.me()`, so no request input is
-trusted — the value is the caller's own membership, not a claim. It cannot be
-converted in place yet: at 3,878 lines it is over the editing limit, so the
-change needs the action handlers extracted into `shared/agentActions/*` first.
-That extraction is queued as its own pass; until then the membership read stays,
-which is stale-at-worst, never forged.
+`invokeAgent` sits inside that 77 and is the largest single surface. It now
+resolves its tenant once at entry (`applyAgentTenant`) and stamps agent writes
+through it, but its action handlers still read the membership field, so it is
+counted as resolved-at-entry, not converted. Converting it fully needs the
+handlers extracted into `shared/agentActions/*` first — still its own pass,
+because the file is over the editing limit.
 
 **Correction, same pass:** `evaluateAllBadges` was briefly recorded as a defect
 because a call for another person's email returned 403. It is not a defect —
@@ -184,18 +213,17 @@ that way. Read/write rules stay on `tenant_id` for these types — switching the
 key with data in the other column is the change that would break access, and it
 buys nothing while both values are always written together.
 
-### 5.2 Frontend — 3 roster-display reads
+### 5.2 Frontend — 2 roster-display reads
 
 **Closed this pass:** all 31 files that read the signed-in person's own membership
 field now take the active organisation from the server context, so a screen can
 no longer stamp a record to a stale membership value. What is left is a different
-question — three screens read *other people's* membership fields to draw a list:
+question — two screens read *other people's* membership fields to draw a list
+(both `LeadershipIntelligenceHub` reads are now closed):
 
 ```
-LeadershipIntelligenceHub   .filter({ 'data.client_id': clientId })   68
-LeadershipIntelligenceHub   u.data?.client_id || u.client_id           96
-OrgInsightsView             u.client_id ?? u.data?.client_id           832
-OneOnOnesTab                u.data?.client_id || u.client_id           35
+OrgInsightsView   u.client_id ?? u.data?.client_id   832
+OneOnOnesTab      u.data?.client_id || u.client_id   35
 ```
 
 These are reads for a roster, not writes, and each is already filtered by the

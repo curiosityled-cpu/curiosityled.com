@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 // Recursive function to get all subordinates up to maxDepth
 function getAllSubordinateEmails(managerEmail, allUsers, maxDepth = 50, currentDepth = 0, visited = new Set()) {
@@ -30,6 +31,10 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Tenant comes from the server resolver (selected client, else the caller's
+    // home client), never from a membership field that may be stale.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
+
     // Allow Platform Admin, Super Admin, Admin roles, User Level 2, User Level 3, Analyst, and Partner Business Administrator
     const allowedRoles = ['Platform Admin', 'Super Administrator', 'Analyst', 'Partner Business Administrator', 'Admin Level 1', 'Admin Level 2', 'User Level 2', 'User Level 3'];
     if (!allowedRoles.includes(user.app_role)) {
@@ -42,7 +47,7 @@ Deno.serve(async (req) => {
     // Fail-closed: non-Platform-Admin roles (except User Level 2 which uses
     // subordinate hierarchy) must have a resolvable tenant scope to prevent
     // cross-tenant goal aggregate exposure.
-    if (user.app_role !== 'Platform Admin' && user.app_role !== 'User Level 2' && !user.client_id) {
+    if (user.app_role !== 'Platform Admin' && user.app_role !== 'User Level 2' && !callerClientId) {
       return Response.json({ success: false, error: 'Tenant scope required — client_id not configured for your account' }, { status: 403 });
     }
 
@@ -64,20 +69,20 @@ Deno.serve(async (req) => {
       scopeLabel = `${user.full_name || 'Manager'}'s Team`;
     } else if (user.app_role === 'User Level 3' || user.app_role === 'Analyst') {
       // Org Leader or Analyst - filter by client
-      if (user.client_id) {
-        scopedUsers = allUsers.filter(u => u.client_id === user.client_id);
+      if (callerClientId) {
+        scopedUsers = allUsers.filter(u => u.client_id === callerClientId);
         scopeLabel = 'Organization';
       }
     } else if (user.app_role === 'Admin Level 1' || user.app_role === 'Admin Level 2') {
       // Program Admin or HR Admin - filter by client
-      if (user.client_id) {
-        scopedUsers = allUsers.filter(u => u.client_id === user.client_id);
+      if (callerClientId) {
+        scopedUsers = allUsers.filter(u => u.client_id === callerClientId);
         scopeLabel = 'Organization';
       }
     } else if (user.app_role === 'Super Administrator' || user.app_role === 'Partner Business Administrator') {
       // Super Admin or Partner - filter by client or partner clients
-      if (user.client_id) {
-        scopedUsers = allUsers.filter(u => u.client_id === user.client_id);
+      if (callerClientId) {
+        scopedUsers = allUsers.filter(u => u.client_id === callerClientId);
         scopeLabel = 'Organization';
       }
     }

@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 /**
  * Retrieves historical trend data from stored analytics snapshots
@@ -7,6 +8,10 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the server resolver (selected client, else the caller's
+    // home client), never from a membership field that may be stale.
+    const callerClientId = user ? (await resolveActiveClient(base44, user)).client_id : null;
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -56,7 +61,7 @@ Deno.serve(async (req) => {
     // Security: scope snapshots to the caller's tenant. Platform Admin sees all;
     // every other role only sees their own organization's historical analytics.
     if (user.app_role !== 'Platform Admin') {
-      snapshots = snapshots.filter(s => s.client_id === user.client_id);
+      snapshots = snapshots.filter(s => s.client_id === callerClientId);
     }
     
     // Filter by date range

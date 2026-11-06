@@ -1,11 +1,16 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { parse } from 'npm:csv-parse/sync';
 import { sendInvite } from '../../shared/userInvites.ts';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the server resolver (selected client, else the caller's
+    // home client), never from a membership field that may be stale.
+    const callerClientId = user ? (await resolveActiveClient(base44, user)).client_id : null;
 
     if (!user || user.app_role !== 'Platform Admin') {
       return Response.json({ error: 'Unauthorized - Platform Admin only' }, { status: 403 });
@@ -60,7 +65,7 @@ Deno.serve(async (req) => {
         await sendInvite(base44, {
           email,
           app_role: role,
-          client_id: user.client_id || '',
+          client_id: callerClientId || '',
           invited_by_email: user.email,
         });
         results.push({ email, role, status: 'success', message: 'Invitation sent' });

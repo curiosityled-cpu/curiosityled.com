@@ -1,9 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the server resolver (selected client, else the caller's
+    // home client), never from a membership field that may be stale.
+    const callerClientId = user ? (await resolveActiveClient(base44, user)).client_id : null;
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -28,10 +33,10 @@ Deno.serve(async (req) => {
 
     // Tenant scoping: non-Platform-Admin callers can only see logs from their own tenant
     if (user.app_role !== 'Platform Admin') {
-      if (!user.client_id) {
+      if (!callerClientId) {
         return Response.json({ error: 'Access denied — tenant membership required' }, { status: 403 });
       }
-      filter.client_id = user.client_id;
+      filter.client_id = callerClientId;
     }
 
     // Get impersonation logs

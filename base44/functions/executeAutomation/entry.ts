@@ -1,9 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the server resolver (selected client, else the caller's
+    // home client), never from a membership field that may be stale.
+    const callerClientId = user ? (await resolveActiveClient(base44, user)).client_id : null;
     
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -108,7 +113,7 @@ Deno.serve(async (req) => {
                 title: action.action_config.title || 'Learning Assignment',
                 description: action.action_config.description || '',
                 priority: action.action_config.priority || 'medium',
-                client_id: user.client_id
+                client_id: callerClientId
               });
             }
             break;
@@ -119,7 +124,7 @@ Deno.serve(async (req) => {
                 title: action.action_config.title,
                 description: action.action_config.description || '',
                 status: action.action_config.status || 'active',
-                client_id: user.client_id,
+                client_id: callerClientId,
                 ...action.action_config
               });
             }

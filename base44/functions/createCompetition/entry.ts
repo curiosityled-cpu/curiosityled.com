@@ -1,9 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the server resolver (selected client, else the caller's
+    // home client), never from a membership field that may be stale.
+    const callerClientId = user ? (await resolveActiveClient(base44, user)).client_id : null;
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -29,7 +34,7 @@ Deno.serve(async (req) => {
     let participantEmails = competitionData.participant_emails || [];
     if (participantEmails.length && user.app_role !== 'Platform Admin') {
       const tenantUsers = await base44.asServiceRole.entities.User.filter({
-        client_id: user.client_id
+        client_id: callerClientId
       });
       const tenantEmails = new Set(tenantUsers.map(u => (u.email || '').toLowerCase()));
       participantEmails = participantEmails.filter(e => tenantEmails.has((e || '').toLowerCase()));
@@ -37,7 +42,7 @@ Deno.serve(async (req) => {
 
     // Create competition
     const competition = await base44.asServiceRole.entities.Competition.create({
-      client_id: user.client_id,
+      client_id: callerClientId,
       competition_name: competitionData.competition_name,
       description: competitionData.description,
       competition_type: competitionData.competition_type,

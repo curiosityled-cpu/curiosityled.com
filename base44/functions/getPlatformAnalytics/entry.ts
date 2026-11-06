@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -6,6 +7,10 @@ Deno.serve(async (req) => {
     
     // Authenticate and authorize
     const user = await base44.auth.me();
+
+    // Tenant comes from the server resolver (selected client, else the caller's
+    // home client), never from a membership field that may be stale.
+    const callerClientId = user ? (await resolveActiveClient(base44, user)).client_id : null;
     
     if (!user) {
       return Response.json({ 
@@ -102,16 +107,16 @@ Deno.serve(async (req) => {
     if (user.app_role === 'Platform Admin') {
       // Platform Admin sees all data — no scoping
     } else if (user.app_role === 'Super Administrator' || user.app_role === 'Admin Level 1' || user.app_role === 'Admin Level 2') {
-      if (!user.client_id) {
+      if (!callerClientId) {
         return Response.json({ success: false, error: 'Access denied — tenant membership required' }, { status: 403 });
       }
-      scopedClients = scopedClients.filter(c => c.id === user.client_id);
-      scopedUsers = scopedUsers.filter(u => u.client_id === user.client_id);
+      scopedClients = scopedClients.filter(c => c.id === callerClientId);
+      scopedUsers = scopedUsers.filter(u => u.client_id === callerClientId);
       const userEmails = new Set(scopedUsers.map(u => u.email));
       scopedAssessments = scopedAssessments.filter(a => userEmails.has(a.email));
       scopedGoals = scopedGoals.filter(g => userEmails.has(g.created_by));
       scopedLearning = scopedLearning.filter(l => userEmails.has(l.user_email));
-      scopedPrograms = scopedPrograms.filter(p => p.client_id === user.client_id);
+      scopedPrograms = scopedPrograms.filter(p => p.client_id === callerClientId);
     } else if (user.app_role === 'Partner Business Administrator') {
       if (!user.partner_id) {
         return Response.json({ success: false, error: 'Access denied — partner membership required' }, { status: 403 });

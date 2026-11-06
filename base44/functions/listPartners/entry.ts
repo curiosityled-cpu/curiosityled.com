@@ -1,9 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the server resolver (selected client, else the caller's
+    // home client), never from a membership field that may be stale.
+    const callerClientId = user ? (await resolveActiveClient(base44, user)).client_id : null;
 
     if (!user) {
       return Response.json({ success: false, error: 'Unauthorized', partners: [] }, { status: 401 });
@@ -26,8 +31,8 @@ Deno.serve(async (req) => {
       partners = partners.filter(p => p.id === user.partner_id);
     } else if (user.app_role === 'Super Administrator') {
       // Security: Super Administrator is scoped to their own partner only.
-      if (user.client_id) {
-        const ownClient = await base44.asServiceRole.entities.Client.filter({ id: user.client_id });
+      if (callerClientId) {
+        const ownClient = await base44.asServiceRole.entities.Client.filter({ id: callerClientId });
         const partnerId = ownClient[0]?.partner_id;
         partners = partnerId ? partners.filter(p => p.id === partnerId) : [];
       } else {
