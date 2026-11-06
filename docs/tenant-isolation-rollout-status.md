@@ -143,8 +143,19 @@ trackLoginAttempt
 Every one of these derives its tenant from the *target person's* own record or
 from the sign-in identity, which is the correct source: the value is not taken
 from request input to be trusted, it is looked up for the person being acted on.
-`invokeAgent` is the only large surface left (≈30 `user.client_id` reads across
-its action handlers) and is queued as its own pass.
+`invokeAgent` is the last large surface (35 `user.client_id` reads across its
+action handlers). Those reads come off `base44.auth.me()`, so no request input is
+trusted — the value is the caller's own membership, not a claim. It cannot be
+converted in place yet: at 3,878 lines it is over the editing limit, so the
+change needs the action handlers extracted into `shared/agentActions/*` first.
+That extraction is queued as its own pass; until then the membership read stays,
+which is stale-at-worst, never forged.
+
+**Correction, same pass:** `evaluateAllBadges` was briefly recorded as a defect
+because a call for another person's email returned 403. It is not a defect —
+that is `checkBadgeEligibility` refusing a non-admin caller access to someone
+else's badge state, which is the behaviour we want. Evaluation for one's own
+address is unaffected.
 
 Five diagnostic functions in the raw screen are excluded by design
 (`successionE2ETest`, `successionPhase0Test`, `successionPhase1Test`,
