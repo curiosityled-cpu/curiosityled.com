@@ -82,7 +82,7 @@
         },
         {
           "user_condition": {
-            "role": "Platform Admin"
+            "data.app_role": "Platform Admin"
           }
         }
       ]
@@ -94,12 +94,27 @@
         },
         {
           "user_condition": {
-            "role": "Platform Admin"
+            "data.app_role": "Platform Admin"
           }
         }
       ]
     },
-    "update": null,
-    "delete": null
+    "update": {
+      "$or": [
+        {
+          "data.suggested_by_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "data.app_role": "Platform Admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "data.app_role": "Platform Admin"
+      }
+    }
   }
 }
