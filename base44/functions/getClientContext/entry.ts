@@ -39,15 +39,36 @@ export default async function (req) {
       if (home.client_id) {
         tenant.home_client_id = home.client_id;
         tenant.home_client = home.client;
+        // No selection, but the person has a home organisation: present it as the
+        // active one, so the header names the client their screens are already
+        // scoped to. A partner still chooses explicitly (needs_selection).
+        if (!tenant.needs_selection) {
+          tenant.client_id = home.client_id;
+          tenant.client = home.client;
+        }
       }
     }
 
-    // The portfolio a partner administrator may switch between. Only ids the
-    // resolver authorized are looked up, so this can never widen anyone's reach.
+    // The organisations this person may switch between. A Platform Admin spans
+    // every client, so they get the whole list; a partner administrator gets the
+    // portfolio the resolver authorized and nothing wider.
     let authorizedClients = [];
-    if (tenant.authorized_client_ids?.length) {
+    const authorizedIds = tenant.authorized_client_ids?.length ? tenant.authorized_client_ids : [];
+    if (tenant.is_platform) {
+      const allRows = await base44.asServiceRole.entities.Client
+        .list("name", 500)
+        .catch(() => []);
+      const all = Array.isArray(allRows) ? allRows : (allRows?.items || []);
+      tenant.authorized_client_ids = all.map((c) => c.id);
+      authorizedClients = all.map((c) => ({
+        id: c.id,
+        name: c.name,
+        slug: c.slug || null,
+        status: c.status || null,
+      }));
+    } else if (authorizedIds.length) {
       const rows = await base44.asServiceRole.entities.Client
-        .filter({ id: { $in: tenant.authorized_client_ids } })
+        .filter({ id: { $in: authorizedIds } })
         .catch(() => []);
       const list = Array.isArray(rows) ? rows : (rows?.items || []);
       authorizedClients = list.map((c) => ({
@@ -56,6 +77,8 @@ export default async function (req) {
         slug: c.slug || null,
         status: c.status || null,
       }));
+    }
+    if (authorizedClients.length) {
       tenant.authorized_clients = authorizedClients;
     }
 

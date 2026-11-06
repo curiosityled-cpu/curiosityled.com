@@ -20,16 +20,16 @@ Deno.serve(async (req) => {
 
         const { role } = await req.json();
 
-        // Privileged operator: team@curiosityled.com may self-assign ANY role,
-        // including privileged ones. This is the single trust anchor for
-        // privileged role management.
-        const PRIVILEGED_OPERATOR_EMAIL = 'team@curiosityled.com';
+        // Platform Admins may self-assign ANY role, including privileged ones.
+        // The authority belongs to the role: every Platform Admin holds it, so a
+        // newly appointed one has exactly the same reach as the original account.
+        const callerAppRole = user.app_role || user.data?.app_role || null;
         const ALL_ROLES = [
             'User Level 1', 'User Level 2', 'Analyst', 'Executive', 'HRBP',
             'Admin Level 1', 'Leadership Coach', 'Consultant', 'Admin Level 2',
             'Super Administrator', 'Partner Business Administrator', 'Platform Admin'
         ];
-        if (user.email === PRIVILEGED_OPERATOR_EMAIL) {
+        if (callerAppRole === 'Platform Admin') {
             if (!ALL_ROLES.includes(role)) {
                 return Response.json({ error: 'Invalid role selection.' }, { status: 400 });
             }
@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
                     client_id: callerClientId || 'platform',
                     old_value: previousRole,
                     new_value: role,
-                    metadata: { action: 'self_role_change', source: 'privileged_operator' }
+                    metadata: { action: 'self_role_change', source: 'platform_admin' }
                 });
             } catch (logError) {
                 console.error('Failed to log role change:', logError);

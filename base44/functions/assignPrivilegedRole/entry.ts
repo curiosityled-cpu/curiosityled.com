@@ -3,17 +3,16 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 /**
  * Privileged role assignment — tightly controlled.
  *
- * Only the privileged operator email (team@curiosityled.com) may assign the
- * three privileged roles (Super Administrator, Partner Business Administrator,
- * Platform Admin) to a specific target user by email. This is the sole path
- * by which privileged roles are granted from the Role Selector page.
+ * A Platform Admin — any account holding that app role, not one named address —
+ * may assign the three privileged roles (Super Administrator, Partner Business
+ * Administrator, Platform Admin) to a specific target user by email. This is the
+ * sole path by which privileged roles are granted from the Role Selector page.
  *
- * Unlike updateUserRole (which is scoped by tenant/partner and rank), this
- * function uses a single hard-coded operator email gate so that no other
- * account — not even another Platform Admin — can grant privileged roles
- * from this entry point.
+ * The authority belongs to the role, so every Platform Admin carries it: an
+ * account-specific gate would make one address more powerful than the role it
+ * holds, and a newly appointed Platform Admin unable to do the job.
  */
-const PRIVILEGED_OPERATOR_EMAIL = 'team@curiosityled.com';
+const PRIVILEGED_ASSIGNER_ROLE = 'Platform Admin';
 const ASSIGNABLE_PRIVILEGED_ROLES = [
     'Super Administrator',
     'Partner Business Administrator',
@@ -28,11 +27,12 @@ Deno.serve(async (req) => {
             return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Hard gate: only the privileged operator email may assign privileged roles.
-        if (currentUser.email !== PRIVILEGED_OPERATOR_EMAIL) {
+        // Hard gate: the Platform Admin role carries this authority, whoever holds it.
+        const callerRole = currentUser.app_role || currentUser.data?.app_role || null;
+        if (callerRole !== PRIVILEGED_ASSIGNER_ROLE) {
             return Response.json({
                 success: false,
-                error: 'Forbidden — only the privileged operator may assign privileged roles.'
+                error: 'Forbidden — only a Platform Admin may assign privileged roles.'
             }, { status: 403 });
         }
 

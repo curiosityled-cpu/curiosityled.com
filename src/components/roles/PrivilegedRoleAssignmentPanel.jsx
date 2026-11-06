@@ -14,7 +14,7 @@ import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
-const PRIVILEGED_OPERATOR_EMAIL = "team@curiosityled.com";
+const PRIVILEGED_ASSIGNER_ROLE = "Platform Admin";
 
 const PRIVILEGED_ROLES = [
   {
@@ -37,13 +37,13 @@ const PRIVILEGED_ROLES = [
   },
 ];
 
-export default function PrivilegedRoleAssignmentPanel({ currentUserEmail }) {
+export default function PrivilegedRoleAssignmentPanel({ currentUserAppRole }) {
   const [targetEmail, setTargetEmail] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
   const [assigning, setAssigning] = useState(false);
 
-  // Only the privileged operator email may see this panel.
-  if (currentUserEmail !== PRIVILEGED_OPERATOR_EMAIL) {
+  // Any Platform Admin may see this panel — the role carries the authority.
+  if (currentUserAppRole !== PRIVILEGED_ASSIGNER_ROLE) {
     return null;
   }
 
@@ -89,7 +89,7 @@ export default function PrivilegedRoleAssignmentPanel({ currentUserEmail }) {
             <div>
               <CardTitle>Privileged Role Assignment</CardTitle>
               <p className="text-sm text-gray-600 mt-1">
-                Restricted to {PRIVILEGED_OPERATOR_EMAIL}
+                Restricted to Platform Admins
               </p>
             </div>
           </div>
@@ -101,7 +101,7 @@ export default function PrivilegedRoleAssignmentPanel({ currentUserEmail }) {
               <div>
                 <p className="text-sm font-medium text-amber-900">Tight Control</p>
                 <p className="text-xs text-amber-800 mt-1">
-                  Only {PRIVILEGED_OPERATOR_EMAIL} can assign Super Administrator,
+                  Only a Platform Admin can assign Super Administrator,
                   Partner Business Administrator, or Platform Admin roles. Every
                   assignment is audit-logged.
                 </p>
