@@ -515,7 +515,7 @@ function UserManagement({ embedded = false }) {
         {[
           { id: 'users', label: 'Users', icon: Users },
           { id: 'roles', label: 'Roles & Permissions', icon: Shield },
-          { id: 'role_profiles', label: 'Role Profiles', icon: Layers },
+          { id: 'role_profiles', label: 'Role Targeting', icon: Layers },
         ].map(tab => {
           const Icon = tab.icon;
           return (
