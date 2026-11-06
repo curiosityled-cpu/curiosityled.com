@@ -146,6 +146,9 @@ export const ClientProvider = ({ children }) => {
     () => ({
       client,
       activeClientId: client?.id || null,
+      // Resolved on the server for a principal who spans clients and has made no
+      // selection. Screens use it instead of reading a membership field themselves.
+      homeClientId: tenant?.home_client_id || null,
       tenant,
       stats,
       loading,
@@ -174,6 +177,7 @@ export const useClient = () => {
     return {
       client: null,
       activeClientId: null,
+      homeClientId: null,
       tenant: null,
       stats: EMPTY_STATS,
       loading: true,
@@ -192,7 +196,15 @@ export const useClient = () => {
 };
 
 /**
- * The one value a screen should scope its data by. Returns null until the server
- * has resolved it, so callers must not treat null as "all organisations".
+ * The one value a screen should scope its data by.
+ *
+ * The selected client when there is one, otherwise the server-resolved home
+ * client. Both come from base44/shared/tenantContext.ts; neither is read from a
+ * user field, so a screen can no longer stamp a record with a stale membership.
+ * Returns null only when the server resolved no client at all, and callers must
+ * not treat that as "all organisations".
  */
-export const useActiveClientId = () => useClient().activeClientId;
+export const useActiveClientId = () => {
+  const { activeClientId, homeClientId } = useClient();
+  return activeClientId || homeClientId;
+};

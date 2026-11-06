@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -32,8 +33,10 @@ Deno.serve(async (req) => {
 
     // Security: For non-Platform-Admin callers, verify the target user is in
     // the caller's tenant/partner scope before writing points.
+    let callerClientId = null;
     if (caller && caller.app_role !== 'Platform Admin') {
-      const callerClientId = caller.client_id || caller.data?.client_id;
+      const tenant = await resolveActiveClient(base44, caller);
+      callerClientId = tenant.client_id || null;
       if (caller.app_role === 'Partner Business Administrator' && caller.partner_id) {
         const clients = await base44.asServiceRole.entities.Client.list();
         const partnerClientIds = clients.filter(c => c.partner_id === caller.partner_id).map(c => c.id);
@@ -53,7 +56,9 @@ Deno.serve(async (req) => {
       related_entity_type,
       related_entity_id,
       reason,
-      client_id: client_id || user.client_id
+      // An authenticated caller can never stamp a transaction into another
+      // tenant: their resolved client wins over the request body.
+      client_id: (isInternal ? client_id : callerClientId) || user.client_id
     });
 
     const currentPoints = user.total_points || 0;

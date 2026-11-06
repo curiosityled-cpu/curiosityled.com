@@ -24,7 +24,7 @@ export default function CheckInLookbackSetting() {
   // context is still resolving.
   const activeClientId = useActiveClientId();
   const clientId =
-    activeClientId || user?.data?.client_id || user?.client_id;
+    activeClientId;
   const [lookback, setLookback] = useState(7);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

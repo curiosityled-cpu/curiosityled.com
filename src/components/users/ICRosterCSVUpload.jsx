@@ -53,7 +53,7 @@ function parseCSV(text) {
 export default function ICRosterCSVUpload({ open, onClose, onDone, clientId, createdByEmail }) {
   const { user: authUser } = useAuth();
   const activeClientId = useActiveClientId();
-  const cid = clientId || activeClientId || authUser?.data?.client_id || authUser?.client_id;
+  const cid = clientId || activeClientId;
   const creator = createdByEmail || authUser?.email || "";
   const fileRef = useRef(null);
   const [fileName, setFileName] = useState("");

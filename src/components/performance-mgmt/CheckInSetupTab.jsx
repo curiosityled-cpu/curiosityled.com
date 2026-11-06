@@ -275,11 +275,7 @@ export default function CheckInSetupTab({ user }) {
       } else {
         await base44.entities.CheckInCustomQuestion.create({
           ...payload,
-          client_id:
-            activeClientId ||
-            currentUser?.data?.client_id ||
-            currentUser?.client_id ||
-            "",
+          client_id: activeClientId || "",
           created_by_email: currentUser?.email || "",
         });
       }

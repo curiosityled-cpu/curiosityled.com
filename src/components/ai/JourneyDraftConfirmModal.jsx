@@ -24,7 +24,7 @@ export default function JourneyDraftConfirmModal({ draft, user, onConfirm, onCan
     setCreating(true);
     try {
       const userEmail = user?.email || user?.data?.email;
-      const clientId = activeClientId || user?.client_id || user?.data?.client_id || null;
+      const clientId = activeClientId || null;
 
       // Build learning_items from matched resources
       const learningItems = (draft.learning_resources || []).map(res => ({

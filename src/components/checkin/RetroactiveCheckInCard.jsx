@@ -67,7 +67,7 @@ export default function RetroactiveCheckInCard({ initialDate, initialType, editM
   const { user } = useAuth();
   const userEmail = user?.email;
   const activeClientId = useActiveClientId();
-  const clientId = activeClientId || user?.data?.client_id || user?.client_id;
+  const clientId = activeClientId;
   const userRole = user?.app_role || user?.data?.app_role || user?.role || "";
 
   const [lookback, setLookback] = useState(7);

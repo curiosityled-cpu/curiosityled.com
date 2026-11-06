@@ -23,6 +23,7 @@
  * DailyCheckIn RLS is owner-only, so this runs as the service role.
  */
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
+import { resolveActiveClient } from "../../shared/tenantContext.ts";
 import { getPreset, DEFAULT_PRESET_ID } from "../../shared/checkInPresets.ts";
 import { createReportingTree } from "../../shared/checkInScope.ts";
 import { resolveDateRange, recordInRange } from "../../shared/checkInRange.ts";
@@ -62,7 +63,10 @@ export default async function(req: Request): Promise<Response> {
 
     const svc = base44.asServiceRole;
     const userEmail = user.email;
-    const clientId = user?.data?.client_id || user?.client_id || "";
+    // The tenant is resolved on the server (selected client, else home client),
+    // never read from a membership field that can drift.
+    const tenant = await resolveActiveClient(base44, user);
+    const clientId = tenant.client_id || "";
 
     const allUsers = await svc.entities.User.list(null, 2000).catch(() => []);
 

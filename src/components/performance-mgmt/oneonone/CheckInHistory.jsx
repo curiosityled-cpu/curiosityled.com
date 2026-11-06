@@ -52,7 +52,7 @@ export default function CheckInHistory({ user }) {
 
   // Load org retroactive lookback window
   useEffect(() => {
-    const clientId = activeClientId || user?.data?.client_id || user?.client_id;
+    const clientId = activeClientId;
     if (!clientId) return;
     base44.entities.Client.get(clientId)
       .then((c) => {

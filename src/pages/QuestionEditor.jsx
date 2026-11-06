@@ -180,7 +180,7 @@ function QuestionEditor() {
         const me = await base44.auth.me();
         await base44.entities.AssessmentQuestion.create({
           ...formData,
-          client_id: activeClientId || me?.data?.client_id || me?.client_id || null
+          client_id: activeClientId || null
         });
         toast.success('Question created successfully');
       }

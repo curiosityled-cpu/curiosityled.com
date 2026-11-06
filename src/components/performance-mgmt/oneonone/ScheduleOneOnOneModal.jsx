@@ -288,14 +288,9 @@ export default function ScheduleOneOnOneModal({ isOpen, onClose, onCreated, user
         ? (new Date("1970-01-01T" + form.end_time) - new Date("1970-01-01T" + form.start_time)) / 60000
         : 30;
 
-      // Resolve client_id — try user object, then participant, then fetch fresh user data
-      let clientId = activeClientId;
-      if (!clientId) {
-        try {
-          const freshMe = await base44.auth.me();
-          clientId = freshMe.client_id || freshMe.data?.client_id;
-        } catch {}
-      }
+      // The server resolves the tenant (selected client, else home client), so no
+      // membership field is read here.
+      const clientId = activeClientId;
 
       const newSession = await base44.entities.CoachingSession.create({
         ...(clientId ? { client_id: clientId } : {}),

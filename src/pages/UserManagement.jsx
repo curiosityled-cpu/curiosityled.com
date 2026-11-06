@@ -139,7 +139,7 @@ function UserManagement({ embedded = false }) {
 
   // Non-user frontline staff (ICRoster) — roster records, never app accounts.
   const activeClientId = useActiveClientId();
-  const clientId = activeClientId || currentUser?.data?.client_id || currentUser?.client_id;
+  const clientId = activeClientId;
   const {
     roster: staffRoster,
     reload: reloadStaff,

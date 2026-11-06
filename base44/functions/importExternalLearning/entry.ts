@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { secrets } from 'base44:runtime';
 import { parseCSV } from '../../shared/performanceImport.ts';
 import { isInternalCall } from '../../shared/urlValidation.ts';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 /**
  * Brings learning completions recorded in another LMS into Curiosity Led.
@@ -83,10 +84,18 @@ export default async function (req: Request): Promise<Response> {
       if (caller && (caller.role === 'admin' || adminRoles.includes(caller.app_role))) {
         authorized = true;
         importedBy = caller.email;
-        // An app admin may only import for their own tenant.
-        if (caller.app_role !== 'Platform Admin') {
-          clientId = caller.client_id || caller.data?.client_id;
+        // The tenant comes from the resolver. A client named in the request is
+        // honoured only when the resolver authorises it (a platform
+        // administrator naming a client); a foreign id is refused rather than
+        // silently redirected.
+        const tenant = await resolveActiveClient(base44, caller, body.client_id);
+        if (tenant.requested_client_rejected) {
+          return Response.json({ error: 'Forbidden — client is outside your scope' }, { status: 403 });
         }
+        if (!tenant.client_id) {
+          return Response.json({ error: 'Your account is not assigned to an organization' }, { status: 403 });
+        }
+        clientId = tenant.client_id;
       }
     }
 

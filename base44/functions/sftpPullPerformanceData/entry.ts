@@ -1,6 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { secrets } from 'base44:runtime';
 import { csvToObjects, processPerformanceRows } from '../../shared/performanceImport.ts';
+import { isInternalCall } from '../../shared/urlValidation.ts';
+import { resolveActiveClient, canActOnClient } from '../../shared/tenantContext.ts';
 
 /**
  * Processes performance CSV data from an SFTP source.
@@ -23,23 +25,39 @@ import { csvToObjects, processPerformanceRows } from '../../shared/performanceIm
  */
 export default async function(req: Request): Promise<Response> {
   try {
+    const base44 = createClientFromRequest(req);
     const body = await req.json();
     const client_id = body.client_id;
     if (!client_id) {
       return Response.json({ error: "client_id is required" }, { status: 400 });
     }
 
-    // Validate API key if provided (external HTTP calls from customer's cron job).
-    // When called from a scheduled workflow, no API key is present — the platform authenticates internally.
+    // Authorisation: the platform sync key, a verified internal call, or a
+    // signed-in administrator whose resolved tenant covers this client. Before
+    // this check the endpoint wrote performance rows into any named client for
+    // any caller who simply omitted the key.
     const authHeader = req.headers.get("authorization") || "";
     const apiKeyHeader = req.headers.get("x-api-key") || "";
     const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
-    const providedKey = bearerToken || apiKeyHeader || body.api_key;
+    // A user session also arrives as a bearer token, so a bearer only counts as
+    // an API key when it matches the key; otherwise the session path decides.
+    const expectedKey = secrets.get("PERFORMANCE_SYNC_API_KEY");
+    const keyCandidate = apiKeyHeader || body.api_key || bearerToken || "";
+    const keyValid = !!expectedKey && !!keyCandidate && keyCandidate === expectedKey;
+    const explicitBadKey = !!(apiKeyHeader || body.api_key) && !keyValid;
 
-    if (providedKey) {
-      const expectedKey = secrets.get("PERFORMANCE_SYNC_API_KEY");
-      if (!expectedKey || providedKey !== expectedKey) {
-        return Response.json({ error: "Invalid API key" }, { status: 401 });
+    if (explicitBadKey) {
+      return Response.json({ error: "Invalid API key" }, { status: 401 });
+    }
+
+    if (!keyValid && !isInternalCall(req)) {
+      const user = await base44.auth.me().catch(() => null);
+      if (!user) {
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      const tenant = await resolveActiveClient(base44, user, client_id);
+      if (!canActOnClient(tenant, client_id)) {
+        return Response.json({ error: "Forbidden — client is outside your scope" }, { status: 403 });
       }
     }
 
@@ -59,7 +77,6 @@ export default async function(req: Request): Promise<Response> {
       return Response.json({ error: "No data rows found in CSV" }, { status: 400 });
     }
 
-    const base44 = createClientFromRequest(req);
     const result = await processPerformanceRows(base44, rows, client_id, "sftp_sync", false);
 
     // Log to ActivityLog

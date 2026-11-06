@@ -17,13 +17,13 @@ const CATEGORY_COLORS = {
 const CATEGORY_ORDER = ["Tactical", "Self Leadership", "People Leadership", "Situational Intelligence"];
 
 export default function AdditionalCompetenciesCard({ competencies, onEdit, onDelete, canEdit }) {
-  const { client, activeClientId } = useClient();
+  const { client, activeClientId, homeClientId } = useClient();
   const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [collapsedCategories, setCollapsedCategories] = useState({});
 
   const selectedIds = client?.selected_competency_ids || [];
-  const clientId = activeClientId || user?.client_id || user?.data?.client_id;
+  const clientId = activeClientId || homeClientId;
 
   // Additional competencies = client-specific (non-platform-default) AND not in the core set
   const additionalCompetencies = useMemo(() => {

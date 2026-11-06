@@ -56,7 +56,7 @@ export default function LeadershipIntelligenceHub() {
   // The active tenant, decided on the server: a partner administrator's selected
   // client wins over the fields on their own user record.
   const activeClientId = useActiveClientId();
-  const clientId = activeClientId || user?.data?.client_id || user?.client_id;
+  const clientId = activeClientId;
 
   // Only true Platform Admin (not just base role="admin") can list all users globally
   const isPlatformAdmin = user?.data?.app_role === 'Platform Admin' || user?.app_role === 'Platform Admin';

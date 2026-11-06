@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -19,10 +20,13 @@ Deno.serve(async (req) => {
     const { program_admin_email, date_from, date_to } = payload || {};
     const requestedClientId = payload?.client_id;
 
-    // Security: force the client scope from the caller's identity — never
-    // trust a request-supplied client_id. Platform Admin may query any client;
-    // all other roles are restricted to their own client.
-    const effectiveClientId = user.app_role === 'Platform Admin' ? (requestedClientId || null) : user.client_id;
+    // Security: the tenant comes from the shared resolver, not from the request.
+    // A requested client is honoured only when the resolver authorises it; every
+    // other caller is scoped to their own resolved (or home) client. A platform
+    // administrator who names no client keeps the platform-wide view.
+    const tenant = await resolveActiveClient(base44, user, requestedClientId);
+    const effectiveClientId =
+      tenant.is_platform && !tenant.requested_client_id ? null : tenant.client_id || null;
 
     let allRequests;
     if (effectiveClientId) {

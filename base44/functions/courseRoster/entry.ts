@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
+import { resolveActiveClient, canActOnClient } from '../../shared/tenantContext.ts';
 
 /**
  * Admin roster + progress for one course.
@@ -44,8 +45,10 @@ export default async function (req: Request): Promise<Response> {
     if (!course) return Response.json({ error: 'Course not found' }, { status: 404 });
 
     if (!isPlatformAdmin) {
-      const clientId = user.client_id || user.data?.client_id;
-      if (course.client_id && clientId && course.client_id !== clientId) {
+      // Resolved on the server; a caller with no resolved client cannot open a
+      // tenant course, which the previous "clientId &&" guard allowed.
+      const tenant = await resolveActiveClient(base44, user);
+      if (course.client_id && !canActOnClient(tenant, course.client_id)) {
         return Response.json({ error: 'Forbidden - course is outside your organization' }, { status: 403 });
       }
     }

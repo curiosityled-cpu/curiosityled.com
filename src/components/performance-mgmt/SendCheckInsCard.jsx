@@ -42,7 +42,7 @@ export default function SendCheckInsCard({ user }) {
   // Sends to the active client's roster, not the viewer's own organisation.
   const activeClientId = useActiveClientId();
   const clientId =
-    activeClientId || currentUser?.data?.client_id || currentUser?.client_id;
+    activeClientId;
 
   const [roster, setRoster] = useState([]);
   const [loading, setLoading] = useState(true);

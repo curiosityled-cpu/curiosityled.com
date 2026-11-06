@@ -141,7 +141,7 @@ async function createTask(action, user, clientId) {
     status: "active",
     visibility: "private",
     timeframe_start: new Date().toISOString().slice(0, 10),
-    client_id: clientId || user?.data?.client_id || undefined,
+    client_id: clientId || undefined,
   });
   return {
     ok: true,

@@ -99,7 +99,7 @@ export default function AssignConversationalModuleModal({ open, onClose, onSucce
     }
     setAssigning(true);
     try {
-      const clientId = activeClientId || user?.data?.client_id;
+      const clientId = activeClientId;
       const records = selectedUsers.map(email => ({
         user_email: email,
         assigned_by: user.email,

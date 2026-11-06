@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
-import { resolveTenantContext } from '../../shared/tenantContext.ts';
+import { resolveTenantContext, resolveActiveClient } from '../../shared/tenantContext.ts';
 
 const EMPTY_STATS = {
   total_users: 0,
@@ -29,6 +29,18 @@ export default async function (req) {
     const requested = typeof body?.client_id === 'string' ? body.client_id : null;
 
     const tenant = await resolveTenantContext(base44, user, requested);
+
+    // A principal who spans clients but has made no selection acts on their own
+    // home client. Resolved here, on the server, so a screen never has to reach
+    // into a membership field the browser happens to hold: that fallback is what
+    // let a stale client_id stamp a record into the wrong tenant.
+    if (!tenant.client_id && tenant.can_select_client) {
+      const home = await resolveActiveClient(base44, user);
+      if (home.client_id) {
+        tenant.home_client_id = home.client_id;
+        tenant.home_client = home.client;
+      }
+    }
 
     // The portfolio a partner administrator may switch between. Only ids the
     // resolver authorized are looked up, so this can never widen anyone's reach.

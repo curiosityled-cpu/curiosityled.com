@@ -102,7 +102,7 @@ export default function WeeklyReflection({ onComplete, onSkip }) {
         focus_intention: finalAnswers.intention || null,
         focus_category: 'other',
         source: 'web',
-        client_id: activeClientId || user?.data?.client_id || user?.client_id || null,
+        client_id: activeClientId || null,
       });
 
       setDone(true);

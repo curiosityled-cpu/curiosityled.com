@@ -47,7 +47,7 @@ export default function LeaderNoteComposer({
         await base44.entities.CheckInLeaderNote.update(note.id, fields);
       } else {
         await base44.entities.CheckInLeaderNote.create({
-          client_id: activeClientId || viewer?.data?.client_id || viewer?.client_id || "",
+          client_id: activeClientId || "",
           leader_email: viewer?.email || "",
           leader_name: viewer?.data?.display_name || viewer?.full_name || viewer?.email || "",
           subject_email: subject.email,

@@ -108,7 +108,7 @@ export default function ExperienceFormModal({ open, onClose, onSaved, experience
       const me = await base44.auth.me();
       const email = userEmail || me?.email;
       if (!email) throw new Error("Could not determine your user account. Please refresh and try again.");
-      const clientId = activeClientId || me?.client_id || me?.data?.client_id || null;
+      const clientId = activeClientId || null;
       const data = { ...form, user_email: email, client_id: clientId };
       if (coachMode) data.coach_email = me?.email;
       if (editing) {

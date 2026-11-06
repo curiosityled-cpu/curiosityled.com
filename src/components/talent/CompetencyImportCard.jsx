@@ -87,7 +87,7 @@ export default function CompetencyImportCard({ competencies, onCreated }) {
         definition: suggestion.definition || "",
         key_components: suggestion.key_components || [],
         is_platform_default: false,
-        client_id: activeClientId || user?.client_id || user?.data?.client_id,
+        client_id: activeClientId,
       });
       setCreatedIds((prev) => new Set(prev).add(suggestionKey));
       toast.success(`Created "${suggestion.name}"`);

@@ -12,6 +12,7 @@
  * renders whatever the org's preset defines without hard-coding field names.
  */
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
+import { resolveActiveClient } from "../../shared/tenantContext.ts";
 import { getPreset, DEFAULT_PRESET_ID } from "../../shared/checkInPresets.ts";
 import { createReportingTree, normalizeEmail, subordinateSeeds } from "../../shared/checkInScope.ts";
 import { resolveDateRange, recordInRange } from "../../shared/checkInRange.ts";
@@ -28,7 +29,10 @@ export default async function(req: Request): Promise<Response> {
 
     const svc = base44.asServiceRole;
     const callerEmail = normalizeEmail(user.email);
-    const clientId = user?.data?.client_id || user?.client_id || "";
+    // Resolved on the server; only used to label the tenant's custom questions
+    // for a person the caller is already authorised to read.
+    const tenant = await resolveActiveClient(base44, user);
+    const clientId = tenant.client_id || "";
 
     const allUsers = await svc.entities.User.list(null, 2000).catch(() => []);
     const nameByEmail = new Map<string, string>();

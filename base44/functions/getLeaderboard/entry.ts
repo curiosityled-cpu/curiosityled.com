@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { isInternalCall } from '../../shared/urlValidation.ts';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -28,7 +29,8 @@ Deno.serve(async (req) => {
     // Security: Verify the template belongs to the caller's tenant (or caller
     // is Platform Admin / internal) to prevent cross-tenant leaderboard access.
     if (!internalCall && callerUser && callerUser.app_role !== 'Platform Admin') {
-      const callerClientId = callerUser.client_id || callerUser.data?.client_id;
+      const tenant = await resolveActiveClient(base44, callerUser);
+      const callerClientId = tenant.client_id || null;
       if (template.client_id && template.client_id !== callerClientId) {
         return Response.json({ error: 'Leaderboard not found' }, { status: 404 });
       }

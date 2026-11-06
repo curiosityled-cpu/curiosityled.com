@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -26,7 +27,8 @@ Deno.serve(async (req) => {
     // Security: Non-Platform-Admin callers may only process payouts for
     // partners who manage a client in their own tenant.
     if (user.app_role !== 'Platform Admin') {
-      const callerClientId = user.client_id || user.data?.client_id;
+      const tenant = await resolveActiveClient(base44, user);
+      const callerClientId = tenant.client_id || null;
       if (!callerClientId) {
         return Response.json({ error: 'Forbidden — cannot determine tenant scope' }, { status: 403 });
       }

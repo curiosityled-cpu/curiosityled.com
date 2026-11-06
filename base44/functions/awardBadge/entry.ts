@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { isInternalCall } from '../../shared/urlValidation.ts';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -54,7 +55,8 @@ Deno.serve(async (req) => {
     // Security: For non-Platform-Admin callers, verify the target user is in
     // the caller's tenant/partner scope before awarding a badge.
     if (!internalCall && callerUser && callerUser.app_role !== 'Platform Admin') {
-      const callerClientId = callerUser.client_id || callerUser.data?.client_id;
+      const tenant = await resolveActiveClient(base44, callerUser);
+      const callerClientId = tenant.client_id || null;
       if (callerUser.app_role === 'Partner Business Administrator' && callerUser.partner_id) {
         const clients = await base44.asServiceRole.entities.Client.list();
         const partnerClientIds = clients.filter(c => c.partner_id === callerUser.partner_id).map(c => c.id);

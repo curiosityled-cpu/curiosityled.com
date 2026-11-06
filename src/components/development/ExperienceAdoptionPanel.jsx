@@ -32,7 +32,7 @@ export default function ExperienceAdoptionPanel({ exp, onAdopted }) {
         timeframe_end: goal.target_date || "",
         status: "active",
         visibility: "private",
-        client_id: activeClientId || me?.client_id || me?.data?.client_id || null,
+        client_id: activeClientId || null,
       });
       const updatedGoals = (exp.captured_goals || []).map((g) =>
         g.id === goal.id ? { ...g, adopted_by_coachee: true, linked_goal_id: newGoal.id } : g
@@ -61,7 +61,7 @@ export default function ExperienceAdoptionPanel({ exp, onAdopted }) {
         user_email: myEmail,
         status: "assigned",
         resource_url: item.resource_url || "",
-        client_id: activeClientId || me?.client_id || me?.data?.client_id || null,
+        client_id: activeClientId || null,
       });
       const updatedLearning = (exp.recommended_learning || []).map((r) =>
         r.id === item.id ? { ...r, adopted_by_coachee: true, linked_assigned_learning_id: newAssignment.id } : r

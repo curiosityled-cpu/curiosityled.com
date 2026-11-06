@@ -741,7 +741,7 @@ export default function AtreusCoach({
         current_page: context?.pageType || context?.path || null,
         user_role: context?.userRole || appRole || null,
         user_name: context?.user_name || user?.full_name || null,
-        client_id: context?.client_id || activeClientId || user?.client_id || user?.data?.client_id || null,
+        client_id: context?.client_id || activeClientId || null,
         current_goals: context?.visible_data_summary?.active_goals || context?.current_goals || null,
         recent_activity: context?.activity_summary || context?.recent_activity || null,
         assessment_summary: context?.page_specific_insights?.assessment_summary || context?.assessment_summary || null,

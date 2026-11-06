@@ -96,7 +96,7 @@ const PRIORITY_COLORS = {
 export default function OrgInsightsView({ user, onMetricsUpdate, actionsRef }) {
   const { isPlatformAdmin, isSuperAdmin } = useAuth();
   const activeClientId = useActiveClientId();
-  const clientId = activeClientId || user?.client_id || user?.data?.client_id;
+  const clientId = activeClientId;
   const navigate = useNavigate();
   const { openWithContext } = useAtreusChat();
   const [activeLifecycleStage, setActiveLifecycleStage] = useState(null);

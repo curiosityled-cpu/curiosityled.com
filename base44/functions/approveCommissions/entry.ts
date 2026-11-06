@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -14,6 +15,10 @@ Deno.serve(async (req) => {
     if (!Array.isArray(commissionIds) || commissionIds.length === 0) {
       return Response.json({ error: 'No commission IDs provided' }, { status: 400 });
     }
+
+    // The caller's tenant, resolved on the server rather than read from a
+    // membership field that may have drifted.
+    const tenant = user.app_role === 'Platform Admin' ? null : await resolveActiveClient(base44, user);
 
     const results = {
       successful: [],
@@ -36,7 +41,7 @@ Deno.serve(async (req) => {
         // Security: Non-Platform-Admin callers may only approve commissions
         // belonging to their own tenant.
         if (user.app_role !== 'Platform Admin') {
-          const callerClientId = user.client_id || user.data?.client_id;
+          const callerClientId = tenant?.client_id || null;
           if (commission.client_id && commission.client_id !== callerClientId) {
             results.failed.push({ id: commissionId, error: 'Outside your tenant' });
             continue;

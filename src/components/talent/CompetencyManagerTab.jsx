@@ -380,7 +380,7 @@ export default function CompetencyManagerTab() {
   const handleCreate = async () => {
     if (!validateWeights()) return;
     try {
-      await base44.entities.Competency.create({ ...formData, is_platform_default: false, client_id: activeClientId || user?.client_id || user?.data?.client_id });
+      await base44.entities.Competency.create({ ...formData, is_platform_default: false, client_id: activeClientId });
       toast.success("Competency created");
       setShowCreateDialog(false);
       setFormData(EMPTY_FORM);
@@ -444,7 +444,7 @@ export default function CompetencyManagerTab() {
     ...(competencies.some((c) => c.category === "Uncategorized") ? ["Uncategorized"] : []),
   ];
 
-  const clientId = activeClientId || user?.client_id || user?.data?.client_id;
+  const clientId = activeClientId;
   const coreCompetencies = filteredCompetencies.filter((c) => c.is_platform_default);
   const orgSpecificCompetencies = filteredCompetencies.filter((c) => !c.is_platform_default && c.client_id === clientId);
 
