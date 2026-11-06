@@ -64,7 +64,7 @@
           "$and": [
             {
               "user_condition": {
-                "role": "Admin Level 2"
+                "data.app_role": "Admin Level 2"
               }
             },
             {
@@ -76,7 +76,7 @@
           "$and": [
             {
               "user_condition": {
-                "role": "Super Administrator"
+                "data.app_role": "Super Administrator"
               }
             },
             {
@@ -86,7 +86,7 @@
         },
         {
           "user_condition": {
-            "role": "Platform Admin"
+            "data.app_role": "Platform Admin"
           }
         }
       ]
@@ -101,7 +101,7 @@
         },
         {
           "user_condition": {
-            "role": "Platform Admin"
+            "data.app_role": "Platform Admin"
           }
         }
       ]
@@ -112,7 +112,7 @@
           "$and": [
             {
               "user_condition": {
-                "role": "Admin Level 2"
+                "data.app_role": "Admin Level 2"
               }
             },
             {
@@ -124,7 +124,7 @@
           "$and": [
             {
               "user_condition": {
-                "role": "Super Administrator"
+                "data.app_role": "Super Administrator"
               }
             },
             {
@@ -134,7 +134,7 @@
         },
         {
           "user_condition": {
-            "role": "Platform Admin"
+            "data.app_role": "Platform Admin"
           }
         }
       ]
@@ -145,7 +145,7 @@
           "$and": [
             {
               "user_condition": {
-                "role": "Admin Level 2"
+                "data.app_role": "Admin Level 2"
               }
             },
             {
@@ -157,7 +157,7 @@
           "$and": [
             {
               "user_condition": {
-                "role": "Super Administrator"
+                "data.app_role": "Super Administrator"
               }
             },
             {
@@ -167,7 +167,7 @@
         },
         {
           "user_condition": {
-            "role": "Platform Admin"
+            "data.app_role": "Platform Admin"
           }
         }
       ]
