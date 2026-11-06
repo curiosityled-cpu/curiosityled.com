@@ -208,6 +208,9 @@ export default function RoleTargetingTab({ user }) {
         availableTitles={overview?.roster_titles || []}
         unmapped={overview?.unmapped_titles || []}
         onChange={(next) => setDraft((d) => ({ ...d, title_mappings: next }))}
+        onSave={save}
+        saving={saving}
+        dirty={dirty}
       />
 
       <ProfileFeedImportCard onApplied={load} />

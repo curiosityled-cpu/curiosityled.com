@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, Link2, UserRoundCheck } from "lucide-react";
+import { Plus, Trash2, Link2, UserRoundCheck, Save, Loader2 } from "lucide-react";
 
 const NONE = "__none__";
 
@@ -24,6 +24,9 @@ export default function TitleMappingCard({
   availableTitles = [],
   unmapped = [],
   onChange,
+  onSave,
+  saving = false,
+  dirty = false,
 }) {
   const [newTitle, setNewTitle] = useState("");
 
@@ -90,6 +93,22 @@ export default function TitleMappingCard({
           >
             <Plus className="w-3.5 h-3.5" />
           </Button>
+          {onSave && (
+            <Button
+              type="button"
+              size="sm"
+              className="h-9 text-xs bg-[#0202ff] hover:bg-[#0101dd]"
+              onClick={onSave}
+              disabled={saving || !dirty}
+            >
+              {saving ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Save className="w-3.5 h-3.5 mr-1" />
+              )}
+              Save mapping
+            </Button>
+          )}
         </div>
       </div>
 
