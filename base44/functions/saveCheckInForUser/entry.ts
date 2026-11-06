@@ -79,6 +79,25 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Frontline Staff are ICRoster records rather than users, so their manager
+      // link is checked there too — a manager may backfill their own staff.
+      if (!authorized) {
+        try {
+          const roster = await base44.asServiceRole.entities.ICRoster.filter(
+            { email: target_email },
+            null,
+            5
+          );
+          const staff = (roster || []).find(
+            (r) => String(r.email || '').toLowerCase() === targetLower
+          );
+          const mgr = String(staff?.manager_email || '').toLowerCase();
+          if (mgr && mgr === callerEmail.toLowerCase()) authorized = true;
+        } catch (e) {
+          console.warn('[saveCheckInForUser] staff resolve failed:', e.message);
+        }
+      }
+
       if (!authorized) {
         return Response.json(
           { error: 'Not authorized to submit a check-in for this user' },

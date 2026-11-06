@@ -46,10 +46,18 @@ export default function StaffEditDialog({
   clientId,
   createdByEmail,
   onSaved,
+  users = [],
 }) {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState(null);
+
+  // Managers are the client's own people — same picker the other roles get, so a
+  // staff member is tied to a real account and their check-ins reach that manager.
+  const managerCandidates = (users || [])
+    .filter((u) => u?.email && u.email.toLowerCase() !== form.email.trim().toLowerCase())
+    .filter((u) => !clientId || (u.client_id || u.data?.client_id) === clientId)
+    .sort((a, b) => (a.full_name || a.email).localeCompare(b.full_name || b.email));
 
   useEffect(() => {
     if (open) {
@@ -167,14 +175,34 @@ export default function StaffEditDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Manager email</Label>
-              <Input
-                type="email"
-                value={form.manager_email}
-                onChange={(e) => setForm((f) => ({ ...f, manager_email: e.target.value }))}
-                placeholder="manager@company.com"
-                className="text-sm"
-              />
+              <Label className="text-xs font-medium">Manager</Label>
+              {managerCandidates.length > 0 ? (
+                <Select
+                  value={form.manager_email || "none"}
+                  onValueChange={(v) => setForm((f) => ({ ...f, manager_email: v === "none" ? "" : v }))}
+                >
+                  <SelectTrigger className="text-sm h-9">
+                    <SelectValue placeholder="Select manager..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No manager</SelectItem>
+                    {managerCandidates.map((u) => (
+                      <SelectItem key={u.email} value={u.email}>
+                        {u.display_name || u.full_name || u.email}
+                        {u.current_role ? ` — ${u.current_role}` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  type="email"
+                  value={form.manager_email}
+                  onChange={(e) => setForm((f) => ({ ...f, manager_email: e.target.value }))}
+                  placeholder="manager@company.com"
+                  className="text-sm"
+                />
+              )}
             </div>
           </div>
           <div className="space-y-1.5">

@@ -988,6 +988,7 @@ function UserManagement({ embedded = false }) {
         editingIC={editingStaff}
         clientId={clientId}
         createdByEmail={currentUser?.email}
+        users={users}
         onSaved={() => { setEditingStaff(null); reloadStaff(); }}
       />
 

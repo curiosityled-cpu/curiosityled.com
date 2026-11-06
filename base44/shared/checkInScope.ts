@@ -22,6 +22,34 @@ export function subordinateSeeds(user: any): string[] {
   return Array.isArray(seeds) ? seeds.filter(Boolean) : [];
 }
 
+/**
+ * Frontline "Staff" never sign in — they live on the ICRoster, so the reporting
+ * tree built from User records cannot see them or the manager they report to.
+ * These pseudo-user rows graft them onto that manager, which is what puts their
+ * check-ins inside the manager's scope. Anyone already present as a real user is
+ * skipped so nobody is counted twice.
+ */
+export function rosterAsTreeUsers(roster: any[], clientId: string, allUsers: any[] = []) {
+  const known = new Set((allUsers || []).map((u) => normalizeEmail(u?.email)).filter(Boolean));
+  const rows: any[] = [];
+  for (const r of roster || []) {
+    const email = normalizeEmail(r?.email);
+    if (!email || known.has(email)) continue;
+    known.add(email);
+    rows.push({
+      email: String(r.email),
+      full_name: r.name || String(r.email),
+      data: {
+        manager_email: normalizeEmail(r.manager_email),
+        client_id: clientId,
+        job_title: r.job_title || "",
+        is_roster_staff: true,
+      },
+    });
+  }
+  return rows;
+}
+
 export function createReportingTree(allUsers: any[], nameLookup: (email: string) => string) {
   const index = new Map<string, any[]>();
   for (const u of allUsers || []) {

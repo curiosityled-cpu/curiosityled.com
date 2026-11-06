@@ -30,7 +30,7 @@ import {
   getEnabledMeasureKeys,
   customQuestionsEnabled,
 } from "../../shared/checkInPresets.ts";
-import { createReportingTree } from "../../shared/checkInScope.ts";
+import { createReportingTree, rosterAsTreeUsers } from "../../shared/checkInScope.ts";
 import { resolveDateRange, recordInRange } from "../../shared/checkInRange.ts";
 import {
   loadTaxonomy,
@@ -85,14 +85,23 @@ export default async function(req: Request): Promise<Response> {
 
     const allUsers = await svc.entities.User.list(null, 2000).catch(() => []);
 
+    // Frontline Staff never sign in: they live on the tenant's ICRoster, and the
+    // manager recorded there is what places their check-ins in that manager's
+    // team scope. Without this, a manager's own staff were invisible to them.
+    const rosterRaw: any = clientId
+      ? await svc.entities.ICRoster.filter({ client_id: clientId }, null, 2000).catch(() => [])
+      : [];
+    const roster = Array.isArray(rosterRaw) ? rosterRaw : rosterRaw?.items || [];
+    const treeUsers = [...(allUsers || []), ...rosterAsTreeUsers(roster, clientId, allUsers || [])];
+
     const nameByEmail = new Map<string, string>();
-    for (const u of allUsers || []) {
+    for (const u of treeUsers) {
       if (u?.email) nameByEmail.set(u.email.toLowerCase(), u?.data?.display_name || u?.full_name || u.email);
     }
     const nameOf = (email: string) => nameByEmail.get((email || "").toLowerCase()) || email;
 
     // ── Reporting tree (shared helpers, also used by getPersonCheckIns) ──
-    const tree = createReportingTree(allUsers || [], nameOf);
+    const tree = createReportingTree(treeUsers, nameOf);
     const subtreeOf = tree.resolveSubtree;
     const leaderEntry = (email: string) => tree.leaderEntry(email, userEmail);
     const directReportCount = (email: string) => tree.directReports(email).length;
@@ -117,7 +126,7 @@ export default async function(req: Request): Promise<Response> {
       if (!clientId) {
         return Response.json({ error: "No client linked to your account" }, { status: 403 });
       }
-      const orgUsers = (allUsers || []).filter(
+      const orgUsers = treeUsers.filter(
         (u) => (u?.data?.client_id || u?.client_id) === clientId && u.email
       );
       const orgEmails = orgUsers.map((u) => u.email);

@@ -64,6 +64,31 @@ Deno.serve(async (req) => {
       console.warn('[getCheckInHistory] team resolve failed:', e.message);
     }
 
+    // Frontline Staff are ICRoster records, not users, so their manager link only
+    // exists there. Registering them here is what makes their check-ins appear
+    // in the check-in page of the manager they report to.
+    if (activeClientId) {
+      try {
+        const rosterRaw: any = await serviceBase44.entities.ICRoster
+          .filter({ client_id: activeClientId }, null, 2000)
+          .catch(() => []);
+        const roster = Array.isArray(rosterRaw) ? rosterRaw : rosterRaw?.items || [];
+        for (const r of roster) {
+          const staffEmail = String(r?.email || '').toLowerCase();
+          const staffManager = String(r?.manager_email || '').toLowerCase();
+          if (!staffEmail || !staffManager) continue;
+          if (!managerToReports.has(staffManager)) managerToReports.set(staffManager, []);
+          managerToReports.get(staffManager).push({
+            email: r.email,
+            full_name: r.name || r.email,
+            data: { manager_email: r.manager_email },
+          });
+        }
+      } catch (e) {
+        console.warn('[getCheckInHistory] roster resolve failed:', e.message);
+      }
+    }
+
     // BFS down the reporting tree from the current user
     const queue = [userEmail.toLowerCase()];
     while (queue.length > 0) {

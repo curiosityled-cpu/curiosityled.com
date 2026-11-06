@@ -14,7 +14,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { resolveActiveClient } from "../../shared/tenantContext.ts";
 import { getPreset, DEFAULT_PRESET_ID } from "../../shared/checkInPresets.ts";
-import { createReportingTree, normalizeEmail, subordinateSeeds } from "../../shared/checkInScope.ts";
+import { createReportingTree, normalizeEmail, rosterAsTreeUsers, subordinateSeeds } from "../../shared/checkInScope.ts";
 import { resolveDateRange, recordInRange } from "../../shared/checkInRange.ts";
 
 export default async function(req: Request): Promise<Response> {
@@ -35,14 +35,23 @@ export default async function(req: Request): Promise<Response> {
     const clientId = tenant.client_id || "";
 
     const allUsers = await svc.entities.User.list(null, 2000).catch(() => []);
+
+    // Frontline Staff are ICRoster records, not users, so their manager link only
+    // exists there — merge them in so a manager can open their check-ins.
+    const rosterRaw: any = clientId
+      ? await svc.entities.ICRoster.filter({ client_id: clientId }, null, 2000).catch(() => [])
+      : [];
+    const roster = Array.isArray(rosterRaw) ? rosterRaw : rosterRaw?.items || [];
+    const treeUsers = [...(allUsers || []), ...rosterAsTreeUsers(roster, clientId, allUsers || [])];
+
     const nameByEmail = new Map<string, string>();
-    for (const u of allUsers || []) {
+    for (const u of treeUsers) {
       if (u?.email) nameByEmail.set(u.email.toLowerCase(), u?.data?.display_name || u?.full_name || u.email);
     }
     const nameOf = (email: string) => nameByEmail.get(normalizeEmail(email)) || email;
 
     // ── Authorisation: the person must be in the caller's line ──
-    const tree = createReportingTree(allUsers || [], nameOf);
+    const tree = createReportingTree(treeUsers, nameOf);
     const allowed = new Set(
       tree.emailsWithSubtree(user.email, subordinateSeeds(user)).map(normalizeEmail)
     );
@@ -53,7 +62,7 @@ export default async function(req: Request): Promise<Response> {
       );
     }
 
-    const person = (allUsers || []).find((u) => normalizeEmail(u.email) === subjectEmail);
+    const person = treeUsers.find((u) => normalizeEmail(u.email) === subjectEmail);
     const personEmail = person?.email || subjectEmail;
 
     // ── Individual check-ins in range ────────────────────────────
@@ -84,7 +93,9 @@ export default async function(req: Request): Promise<Response> {
     }
 
     // ── Normalize sessions against the person's preset ───────────
-    const preset = getPreset(person?.data?.check_in_preset || DEFAULT_PRESET_ID);
+    const preset = getPreset(
+      person?.data?.check_in_preset || user?.data?.check_in_preset || DEFAULT_PRESET_ID
+    );
     const measures = preset.measures.map((m) => ({ key: m.key, label: m.label, emoji: m.emoji }));
 
     const sessions = records
