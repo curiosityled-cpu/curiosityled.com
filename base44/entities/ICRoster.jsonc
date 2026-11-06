@@ -1,7 +1,7 @@
 {
   "name": "ICRoster",
   "type": "object",
-  "description": "Roster of non-user frontline individual contributors (ICs) who submit daily check-ins via Microsoft Teams or a token-gated web page. These staff are not registered app users and are never invited into the platform; their Teams identity or web access token is matched here so check-in submissions can be routed into DailyCheckIn. These employees typically also exist in the client's HRIS, LMS, and Microsoft tenant \u2014 hris_employee_id and source_system help reconcile the roster against those systems.",
+  "description": "Roster of non-user frontline individual contributors (ICs) who submit daily check-ins via Microsoft Teams or a token-gated web page. These staff are not registered app users and are never invited into the platform; their Teams identity or web access token is matched here so check-in submissions can be routed into DailyCheckIn. These employees typically also exist in the client's HRIS, LMS, and Microsoft tenant \u2014 hris_employee_id and source_system help reconcile the roster against those systems. They carry the same role identifiers as registered users (job title, tier, track) so one audience model covers both.",
   "properties": {
     "name": {
       "type": "string",
@@ -13,7 +13,25 @@
     },
     "job_title": {
       "type": "string",
-      "description": "The person's job title as the organisation names it (e.g. 'Warehouse Associate', 'Customer Service Rep'). Used for display, search and for matching the person to role-targeted check-in questions."
+      "description": "The person's job title as the organisation names it (e.g. 'Warehouse Associate', 'Customer Service Rep'). The equivalent of current_role on a user record: used for display, search and for matching the person to role-targeted check-in questions."
+    },
+    "role_tier": {
+      "type": "string",
+      "description": "ID of the client-defined tier this staff member sits in (RoleTaxonomy.tiers) \u2014 the same identifier a user carries. Populated from HRIS or roster import, or derived from their job title mapping."
+    },
+    "role_track": {
+      "type": "string",
+      "description": "ID of the client-defined track this staff member sits in (RoleTaxonomy.tracks), e.g. client-facing vs internal. Empty when their tier has no track split."
+    },
+    "profile_source": {
+      "type": "string",
+      "enum": [
+        "hris",
+        "roster",
+        "manual"
+      ],
+      "default": "manual",
+      "description": "Which source last wrote this person's title/tier/track. HRIS outranks roster, which outranks manual."
     },
     "teams_user_id": {
       "type": "string",

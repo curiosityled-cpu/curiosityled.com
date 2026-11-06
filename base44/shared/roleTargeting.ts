@@ -112,7 +112,11 @@ export function deriveTierTrack(taxonomy: RoleTaxonomy, title: string): { tier_i
 }
 
 export function resolveRoleProfile(user: any, taxonomy: RoleTaxonomy): RoleProfile {
-  const jobTitle = String(user?.current_role || user?.data?.current_role || "").trim();
+  // Users carry their title on current_role, roster staff on job_title; both are
+  // the same identifier, so one resolver serves the two records.
+  const jobTitle = String(
+    user?.current_role || user?.data?.current_role || user?.job_title || ""
+  ).trim();
   const storedTier = String(user?.role_tier || user?.data?.role_tier || "").trim();
   const storedTrack = String(user?.role_track || user?.data?.role_track || "").trim();
   const derived = deriveTierTrack(taxonomy, jobTitle);
@@ -243,8 +247,18 @@ export async function buildAudienceSnapshot(svc: any, email: string, clientId: s
     const users = await loadUsers(svc);
     const wanted = String(email || "").toLowerCase();
     const record = users.find((u) => emailKey(u) === wanted);
-    if (!record) return null;
-    return buildSnapshot(resolveRoleProfile(record, taxonomy));
+    if (record) return buildSnapshot(resolveRoleProfile(record, taxonomy));
+
+    // Frontline staff are roster records, not users: their title, tier and track
+    // live on ICRoster. Reading them here gives a staff check-in the same
+    // audience snapshot a user's check-in gets.
+    const rosterRes = clientId
+      ? await svc.entities.ICRoster.filter({ client_id: clientId }, null, 2000).catch(() => [])
+      : [];
+    const roster = Array.isArray(rosterRes) ? rosterRes : rosterRes?.items || [];
+    const staff = roster.find((r: any) => emailKey(r) === wanted);
+    if (!staff) return null;
+    return buildSnapshot(resolveRoleProfile(staff, taxonomy));
   } catch {
     return null;
   }

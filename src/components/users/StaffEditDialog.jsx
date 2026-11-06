@@ -20,11 +20,14 @@ import {
 import { Loader2, AlertCircle } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+import useRoleTaxonomy from "@/hooks/useRoleTaxonomy";
 
 const emptyForm = {
   name: "",
   email: "",
   job_title: "",
+  role_tier: "",
+  role_track: "",
   teams_user_id: "",
   team: "",
   manager_email: "",
@@ -52,6 +55,21 @@ export default function StaffEditDialog({
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState(null);
 
+  // Staff carry the same role identifiers as users, from the same taxonomy, so a
+  // question aimed at a tier or track reaches a frontline worker too.
+  const { tiers, tracks, mappingForTitle } = useRoleTaxonomy(clientId);
+
+  const handleTitleChange = (value) => {
+    const mapping = mappingForTitle(value);
+    setForm((f) => ({
+      ...f,
+      job_title: value,
+      // A mapped title fills the tier/track the organisation already defined for
+      // it; an unmapped one leaves whatever was chosen by hand.
+      ...(mapping ? { role_tier: mapping.tier_id || "", role_track: mapping.track_id || "" } : {}),
+    }));
+  };
+
   // Managers are the client's own people — same picker the other roles get, so a
   // staff member is tied to a real account and their check-ins reach that manager.
   const managerCandidates = (users || [])
@@ -67,6 +85,8 @@ export default function StaffEditDialog({
           name: editingIC.name || "",
           email: editingIC.email || "",
           job_title: editingIC.job_title || "",
+          role_tier: editingIC.role_tier || "",
+          role_track: editingIC.role_track || "",
           teams_user_id: editingIC.teams_user_id || "",
           team: editingIC.team || "",
           manager_email: editingIC.manager_email || "",
@@ -88,10 +108,16 @@ export default function StaffEditDialog({
     }
     setSaving(true);
     setFormError(null);
+    // An unmapped title leaves the chosen values alone; a mapped one fills the
+    // gaps so the record always carries a tier and track like a user record.
+    const mapping = mappingForTitle(form.job_title);
     const payload = {
       name: form.name.trim(),
       email: form.email.trim().toLowerCase(),
       job_title: form.job_title.trim(),
+      role_tier: form.role_tier || mapping?.tier_id || "",
+      role_track: form.role_track || mapping?.track_id || "",
+      profile_source: editingIC?.profile_source || "manual",
       teams_user_id: form.teams_user_id.trim(),
       team: form.team.trim(),
       manager_email: form.manager_email.trim().toLowerCase(),
@@ -156,7 +182,7 @@ export default function StaffEditDialog({
             <Label className="text-xs font-medium">Job title</Label>
             <Input
               value={form.job_title}
-              onChange={(e) => setForm((f) => ({ ...f, job_title: e.target.value }))}
+              onChange={(e) => handleTitleChange(e.target.value)}
               placeholder="Warehouse Associate"
               className="text-sm"
             />
@@ -164,6 +190,52 @@ export default function StaffEditDialog({
               The title this person's work is known by, used for reporting and role targeting.
             </p>
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Tier</Label>
+              <Select
+                value={form.role_tier || "none"}
+                onValueChange={(v) => setForm((f) => ({ ...f, role_tier: v === "none" ? "" : v }))}
+              >
+                <SelectTrigger className="text-sm h-9">
+                  <SelectValue placeholder="Select tier..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Not set</SelectItem>
+                  {tiers.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Track</Label>
+              <Select
+                value={form.role_track || "none"}
+                onValueChange={(v) => setForm((f) => ({ ...f, role_track: v === "none" ? "" : v }))}
+              >
+                <SelectTrigger className="text-sm h-9">
+                  <SelectValue placeholder="Select track..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Not set</SelectItem>
+                  {tracks.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          {tiers.length > 0 && (
+            <p className="text-[11px] text-muted-foreground -mt-2">
+              Same tiers and tracks as your people, so role-targeted check-in questions
+              reach staff as well. A mapped job title fills them in automatically.
+            </p>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">Team / shift</Label>
