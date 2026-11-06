@@ -55,6 +55,11 @@ export function getTenantDateStr(timezone: string | undefined | null): string {
   }
 }
 
+// The target_role value that means "everyone on the staff roster". Staff are
+// not app users and never hold an app role, so this is how a check-in question
+// is aimed at them.
+const FRONTLINE_STAFF_ROLE = 'Frontline staff';
+
 export async function getActiveCustomQuestions(
   serviceBase44: any,
   clientId: string,
@@ -68,7 +73,11 @@ export async function getActiveCustomQuestions(
       100
     );
     return (all || []).filter((q: any) => {
-      if (q.target_role && q.target_role !== icRole) return false;
+      // Staff carry no app role, so a question aimed at "Frontline staff" is
+      // theirs; a question aimed at any app role is not.
+      if (q.target_role && q.target_role !== FRONTLINE_STAFF_ROLE && q.target_role !== icRole) {
+        return false;
+      }
       if (checkInType !== 'both' && q.applies_to !== 'both' && q.applies_to !== checkInType) return false;
       return true;
     });

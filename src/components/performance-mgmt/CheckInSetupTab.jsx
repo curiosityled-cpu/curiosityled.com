@@ -59,6 +59,8 @@ const RESPONSE_TYPES = [
   { value: "anchored_choices", label: "Anchored choices", icon: ListChecks, hint: "Fixed list of labeled options" },
 ];
 
+const FRONTLINE_STAFF_ROLE = "Frontline staff";
+
 const ROLE_OPTIONS = [
   { value: "__all__", label: "All roles" },
   { value: "User Level 1", label: "User Level 1" },
@@ -71,6 +73,9 @@ const ROLE_OPTIONS = [
   { value: "Analyst", label: "Analyst" },
   { value: "Leadership Coach", label: "Leadership Coach" },
   { value: "Consultant", label: "Consultant" },
+  // Frontline staff are not app users, so they carry no app role — this value
+  // targets the staff roster instead.
+  { value: FRONTLINE_STAFF_ROLE, label: "Frontline staff" },
 ];
 
 const APPLIES_OPTIONS = [
@@ -126,7 +131,7 @@ export default function CheckInSetupTab({ user }) {
   const [aiAssistLoading, setAiAssistLoading] = useState(false);
   // Client-defined tiers/tracks and the titles present on tenant profiles, used
   // by the audience picker.
-  const [taxonomy, setTaxonomy] = useState({ tiers: [], tracks: [] });
+  const [taxonomy, setTaxonomy] = useState({ tiers: [], tracks: [], title_mappings: [] });
   const [rosterTitles, setRosterTitles] = useState([]);
 
   const loadQuestions = useCallback(async () => {
@@ -150,6 +155,7 @@ export default function CheckInSetupTab({ user }) {
         setTaxonomy({
           tiers: overview.taxonomy.tiers || [],
           tracks: overview.taxonomy.tracks || [],
+          title_mappings: overview.taxonomy.title_mappings || [],
         });
       }
       setRosterTitles(overview?.roster_titles || []);
@@ -334,6 +340,20 @@ export default function CheckInSetupTab({ user }) {
 
   const responseTypeMeta = (t) =>
     RESPONSE_TYPES.find((r) => r.value === t) || RESPONSE_TYPES[0];
+
+  // Every title an admin could target: the titles people and staff actually
+  // carry, plus the titles defined in Role Profiles (mapped titles stay
+  // selectable even when nobody holds them yet).
+  const titleOptions = (() => {
+    const seen = new Map();
+    [...rosterTitles, ...(taxonomy.title_mappings || [])].forEach((t) => {
+      const title = String((typeof t === "string" ? t : t?.title) || "").trim();
+      if (title && !seen.has(title.toLowerCase())) seen.set(title.toLowerCase(), title);
+    });
+    return [...seen.values()]
+      .sort((a, b) => a.localeCompare(b))
+      .map((title) => ({ title }));
+  })();
 
   if (loading) {
     return (
@@ -728,7 +748,7 @@ export default function CheckInSetupTab({ user }) {
             <AudienceSelector
               tiers={taxonomy.tiers}
               tracks={taxonomy.tracks}
-              titles={rosterTitles}
+              titles={titleOptions}
               value={{
                 target_tiers: form.target_tiers,
                 target_tracks: form.target_tracks,
@@ -745,7 +765,7 @@ export default function CheckInSetupTab({ user }) {
             />
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Target role</Label>
+              <Label className="text-xs font-medium">Target User Roles</Label>
               <Select
                 value={form.target_role || "__all__"}
                 onValueChange={(v) =>
@@ -767,8 +787,9 @@ export default function CheckInSetupTab({ user }) {
                 </SelectContent>
               </Select>
               <p className="text-[11px] text-muted-foreground">
-                Only users with this role will see the question. Leave on “All
-                roles” for everyone in the organization.
+                Only users with this role will see the question. “Frontline staff”
+                targets everyone on your staff roster. Leave on “All roles” for
+                everyone in the organization.
               </p>
             </div>
 
