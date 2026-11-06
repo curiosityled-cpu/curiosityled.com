@@ -523,6 +523,16 @@ export default function ManagerToday() {
                 onDecisionCommitted={refetchDecisions}
                 pendingDecisions={pendingDecisions}
               />
+            ) : inAppPatternsForCrossTool.length === 0 ? (
+              // Nothing has been lived in yet: a new manager has no signals to
+              // read, so the zone says so instead of spinning indefinitely.
+              <div className="bg-card border border-border rounded-2xl px-5 py-6 text-center">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Top 3 Patterns</p>
+                <p className="text-sm font-medium text-foreground">Nothing to read yet</p>
+                <p className="text-xs text-muted-foreground leading-relaxed mt-1 max-w-xs mx-auto">
+                  Patterns come from your check-ins and the work you log. A few days of rhythm and this fills in on its own.
+                </p>
+              </div>
             ) : (
               <div className="bg-card border border-border rounded-2xl px-5 py-4">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Top 3 Patterns</p>
