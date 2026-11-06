@@ -122,7 +122,7 @@
           "$and": [
             {
               "user_condition": {
-                "role": "Admin Level 1"
+                "role": "admin"
               }
             },
             {
@@ -134,7 +134,7 @@
           "$and": [
             {
               "user_condition": {
-                "role": "Admin Level 2"
+                "data.app_role": "Admin Level 1"
               }
             },
             {
@@ -146,7 +146,7 @@
           "$and": [
             {
               "user_condition": {
-                "role": "Super Administrator"
+                "data.app_role": "Admin Level 2"
               }
             },
             {
@@ -158,7 +158,19 @@
           "$and": [
             {
               "user_condition": {
-                "role": "Partner Business Administrator"
+                "data.app_role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "data.app_role": "Partner Business Administrator"
               }
             },
             {
@@ -170,7 +182,7 @@
         },
         {
           "user_condition": {
-            "role": "Platform Admin"
+            "data.app_role": "Platform Admin"
           }
         }
       ]
@@ -184,7 +196,7 @@
           "$and": [
             {
               "user_condition": {
-                "role": "Partner Business Administrator"
+                "data.app_role": "Partner Business Administrator"
               }
             },
             {
@@ -196,7 +208,7 @@
         },
         {
           "user_condition": {
-            "role": "Platform Admin"
+            "data.app_role": "Platform Admin"
           }
         }
       ]
@@ -210,7 +222,7 @@
           "$and": [
             {
               "user_condition": {
-                "role": "Admin Level 1"
+                "role": "admin"
               }
             },
             {
@@ -222,7 +234,7 @@
           "$and": [
             {
               "user_condition": {
-                "role": "Admin Level 2"
+                "data.app_role": "Admin Level 1"
               }
             },
             {
@@ -234,7 +246,7 @@
           "$and": [
             {
               "user_condition": {
-                "role": "Super Administrator"
+                "data.app_role": "Admin Level 2"
               }
             },
             {
@@ -246,7 +258,19 @@
           "$and": [
             {
               "user_condition": {
-                "role": "Partner Business Administrator"
+                "data.app_role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "data.app_role": "Partner Business Administrator"
               }
             },
             {
@@ -258,7 +282,7 @@
         },
         {
           "user_condition": {
-            "role": "Platform Admin"
+            "data.app_role": "Platform Admin"
           }
         }
       ]
@@ -272,7 +296,7 @@
           "$and": [
             {
               "user_condition": {
-                "role": "Admin Level 2"
+                "role": "admin"
               }
             },
             {
@@ -284,7 +308,7 @@
           "$and": [
             {
               "user_condition": {
-                "role": "Super Administrator"
+                "data.app_role": "Admin Level 2"
               }
             },
             {
@@ -296,7 +320,19 @@
           "$and": [
             {
               "user_condition": {
-                "role": "Partner Business Administrator"
+                "data.app_role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "data.app_role": "Partner Business Administrator"
               }
             },
             {
@@ -308,7 +344,7 @@
         },
         {
           "user_condition": {
-            "role": "Platform Admin"
+            "data.app_role": "Platform Admin"
           }
         }
       ]
