@@ -620,9 +620,25 @@
   ],
   "rls": {
     "create": {
-      "user_condition": {
-        "role": "Platform Admin"
-      }
+      "$or": [
+        {
+          "user_condition": {
+            "data.app_role": "Platform Admin"
+          }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        }
+      ]
     },
     "read": {
       "$or": [
@@ -630,25 +646,8 @@
           "id": "{{user.data.client_id}}"
         },
         {
-          "$and": [
-            {
-              "user_condition": {
-                "role": "Super Administrator"
-              }
-            },
-            {
-              "id": "{{user.data.client_id}}"
-            }
-          ]
-        },
-        {
           "user_condition": {
-            "role": "Platform Admin"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "Platform Administrator"
+            "data.app_role": "Platform Admin"
           }
         },
         {
@@ -667,7 +666,19 @@
           "$and": [
             {
               "user_condition": {
-                "role": "Partner Business Administrator"
+                "data.app_role": "Super Administrator"
+              }
+            },
+            {
+              "id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "data.app_role": "Partner Business Administrator"
               }
             },
             {
@@ -682,6 +693,11 @@
     "update": {
       "$or": [
         {
+          "user_condition": {
+            "data.app_role": "Platform Admin"
+          }
+        },
+        {
           "$and": [
             {
               "user_condition": {
@@ -692,11 +708,6 @@
               "id": "{{user.data.client_id}}"
             }
           ]
-        },
-        {
-          "user_condition": {
-            "data.app_role": "Platform Admin"
-          }
         },
         {
           "$and": [
@@ -753,21 +764,21 @@
     "delete": {
       "$or": [
         {
-          "$and": [
-            {
-              "id": "{{user.data.client_id}}"
-            },
-            {
-              "user_condition": {
-                "role": "Super Administrator"
-              }
-            }
-          ]
+          "user_condition": {
+            "data.app_role": "Platform Admin"
+          }
         },
         {
-          "user_condition": {
-            "role": "Platform Admin"
-          }
+          "$and": [
+            {
+              "user_condition": {
+                "data.app_role": "Super Administrator"
+              }
+            },
+            {
+              "id": "{{user.data.client_id}}"
+            }
+          ]
         }
       ]
     }
