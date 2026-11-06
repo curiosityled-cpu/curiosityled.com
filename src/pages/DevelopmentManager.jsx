@@ -71,7 +71,9 @@ export default function DevelopmentManager() {
   const { activeClientId } = useClient();
   const { isCoachScoped, coacheeEmails } = useCoachCoacheeScope(user);
   const isConsultant = user?.app_role === 'Consultant';
-  const [section, setSection] = useState(isCoachScoped ? "experiences" : "experiences");
+  // Catalog is the landing view: a client meets what is available before
+  // anything has been sequenced for them.
+  const [section, setSection] = useState(isCoachScoped ? "experiences" : "content");
   const visibleTabs = isCoachScoped ? COACH_TABS(isConsultant) : ADMIN_TABS;
 
   // Read ?tab= param for deep-linking (e.g., /DevelopmentManager?tab=signals)

@@ -46,6 +46,7 @@ import SuccessionTemplateGuide from './pages/SuccessionTemplateGuide';
 import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
 import BlogManager from './pages/BlogManager';
+import TenantCleanup from './pages/TenantCleanup';
 
 
 import LeadershipIntelligenceHub from './pages/LeadershipIntelligenceHub';
@@ -255,6 +256,8 @@ const AuthenticatedApp = () => {
       <Route path="/blog" element={<PlatformAdminOnly><Blog /></PlatformAdminOnly>} />
       <Route path="/blog/:slug" element={<PlatformAdminOnly><BlogPost /></PlatformAdminOnly>} />
       <Route path="/BlogManager" element={<PlatformAdminOnly><MVPPage><BlogManager /></MVPPage></PlatformAdminOnly>} />
+      {/* Tenant rollout console — Platform Admin only */}
+      <Route path="/TenantCleanup" element={<PlatformAdminOnly><MVPPage><TenantCleanup /></MVPPage></PlatformAdminOnly>} />
       <Route path="/my-performance" element={<MVPPage><MyPerformance /></MVPPage>} />
       <Route path="/my-goals" element={<Navigate to="/my-performance" replace />} />
       <Route path="/my-rhythm" element={<MVPPage><MyRhythm /></MVPPage>} />
