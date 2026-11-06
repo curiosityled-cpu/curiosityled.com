@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 // Helper to recursively get subordinate emails
 const getAllSubordinateEmails = async (managerEmail, allUsers, depth = 0, maxDepth = 10, visited = new Set()) => {
@@ -25,6 +26,9 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -64,9 +68,9 @@ Deno.serve(async (req) => {
       const teamEmailSet = new Set([user.email, ...teamEmails.map(u => u.email)]);
       scopedUsers = allUsers.filter(u => teamEmailSet.has(u.email));
       scopeLabel = `${user.full_name}'s Team`;
-    } else if ((user.app_role === 'User Level 3' || user.app_role === 'Analyst') && user.client_id) {
+    } else if ((user.app_role === 'User Level 3' || user.app_role === 'Analyst') && callerClientId) {
       // Org Leader or Analyst: scope to their organization
-      scopedUsers = allUsers.filter(u => u.client_id === user.client_id);
+      scopedUsers = allUsers.filter(u => u.client_id === callerClientId);
       scopeLabel = 'Organization';
     } else if (user.app_role !== 'Platform Admin') {
       // Security: tenant-scoped admins (Admin Level 2, Super Administrator,
@@ -79,8 +83,8 @@ Deno.serve(async (req) => {
         const partnerClientIds = clients.filter(c => c.partner_id === user.partner_id).map(c => c.id);
         scopedUsers = allUsers.filter(u => partnerClientIds.includes(u.client_id));
         scopeLabel = 'Partner Clients';
-      } else if (user.client_id) {
-        scopedUsers = allUsers.filter(u => u.client_id === user.client_id);
+      } else if (callerClientId) {
+        scopedUsers = allUsers.filter(u => u.client_id === callerClientId);
         scopeLabel = 'Organization';
       } else {
         scopedUsers = [];

@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -17,7 +18,8 @@ Deno.serve(async (req) => {
 
     // Security: a Super Administrator may only delete their own organization.
     // Platform Admin retains cross-tenant access.
-    if (user.app_role === 'Super Administrator' && user.client_id && client_id !== user.client_id) {
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
+    if (user.app_role === 'Super Administrator' && callerClientId && client_id !== callerClientId) {
       return Response.json({ error: 'Forbidden - you can only delete your own organization' }, { status: 403 });
     }
 

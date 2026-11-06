@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 // Recursive function to get all subordinates up to maxDepth
 function getAllSubordinateEmails(managerEmail, allUsers, maxDepth = 50, currentDepth = 0, visited = new Set()) {
@@ -49,7 +50,10 @@ Deno.serve(async (req) => {
     // Fail-closed: non-Platform-Admin roles (except User Level 2 which uses
     // subordinate hierarchy) must have a client_id to prevent cross-tenant
     // learning and PII exposure.
-    if (user.app_role !== 'Platform Admin' && user.app_role !== 'User Level 2' && !user.client_id) {
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
+
+    if (user.app_role !== 'Platform Admin' && user.app_role !== 'User Level 2' && !callerClientId) {
       return Response.json({ success: false, error: 'Tenant scope required — client_id not configured for your account' }, { status: 403 });
     }
 
@@ -99,35 +103,35 @@ Deno.serve(async (req) => {
       scopeLabel = `${user.full_name || 'Manager'}'s Team`;
     } else if (user.app_role === 'User Level 3' || user.app_role === 'Analyst') {
       // Org Leader or Analyst - filter by their client
-      if (user.client_id) {
-        scopedUsers = allUsers.filter(u => u.client_id === user.client_id);
-        scopedClients = allClients.filter(c => c.id === user.client_id);
+      if (callerClientId) {
+        scopedUsers = allUsers.filter(u => u.client_id === callerClientId);
+        scopedClients = allClients.filter(c => c.id === callerClientId);
         const userEmails = new Set(scopedUsers.map(u => u.email));
         scopedAssessments = assessments.filter(a => userEmails.has(a.email));
         scopeLabel = 'Organization';
       }
-    } else if (user.app_role === 'Admin Level 1' && user.client_id) {
+    } else if (user.app_role === 'Admin Level 1' && callerClientId) {
       // Program Admin - filter by their client
-      scopedUsers = allUsers.filter(u => u.client_id === user.client_id);
-      scopedClients = allClients.filter(c => c.id === user.client_id);
+      scopedUsers = allUsers.filter(u => u.client_id === callerClientId);
+      scopedClients = allClients.filter(c => c.id === callerClientId);
       const userEmails = new Set(scopedUsers.map(u => u.email));
       scopedAssessments = assessments.filter(a => userEmails.has(a.email));
       scopeLabel = 'Organization';
-    } else if (user.app_role === 'Admin Level 2' && user.client_id) {
+    } else if (user.app_role === 'Admin Level 2' && callerClientId) {
       // HR Admin - filter by their client
-      scopedUsers = allUsers.filter(u => u.client_id === user.client_id);
-      scopedClients = allClients.filter(c => c.id === user.client_id);
+      scopedUsers = allUsers.filter(u => u.client_id === callerClientId);
+      scopedClients = allClients.filter(c => c.id === callerClientId);
       const userEmails = new Set(scopedUsers.map(u => u.email));
       scopedAssessments = assessments.filter(a => userEmails.has(a.email));
       scopeLabel = 'Organization';
     } else if (user.app_role === 'Super Administrator' || user.app_role === 'Partner Business Administrator') {
-      if (user.client_id) {
-        const currentClient = allClients.find(c => c.id === user.client_id);
+      if (callerClientId) {
+        const currentClient = allClients.find(c => c.id === callerClientId);
 
         if (currentClient?.type === 'partner_client' && currentClient.partner_id) {
           scopedClients = allClients.filter(c => c.partner_id === currentClient.partner_id);
         } else {
-          scopedClients = allClients.filter(c => c.id === user.client_id);
+          scopedClients = allClients.filter(c => c.id === callerClientId);
         }
 
         const clientIds = scopedClients.map(c => c.id);

@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 import { roleTier } from '../../shared/userScope.ts';
 
 /**
@@ -35,7 +36,7 @@ export default async function (req: Request): Promise<Response> {
     }
 
     const isPlatformAdmin = user.app_role === 'Platform Admin';
-    const callerClientId = cleanText(user.client_id, 100);
+    const callerClientId = cleanText((await resolveActiveClient(base44, user)).client_id || '', 100);
 
     const records = [];
     const skipped = [];

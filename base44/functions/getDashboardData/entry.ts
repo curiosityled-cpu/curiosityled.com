@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -14,7 +15,8 @@ Deno.serve(async (req) => {
       // Security: Fail closed — a client-less Analyst must NOT receive
       // platform-wide (cross-tenant) data. Require a client_id; return empty
       // metrics instead of unscoped data.
-      if (!user.client_id) {
+      const callerClientId = (await resolveActiveClient(base44, user)).client_id;
+      if (!callerClientId) {
         return Response.json({
           success: true,
           data: {
@@ -28,7 +30,7 @@ Deno.serve(async (req) => {
           }
         });
       }
-      const allUsers = await base44.asServiceRole.entities.User.filter({ client_id: user.client_id });
+      const allUsers = await base44.asServiceRole.entities.User.filter({ client_id: callerClientId });
 
       const userEmails = allUsers.map(u => u.email);
 

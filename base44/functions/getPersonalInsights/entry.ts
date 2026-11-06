@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -68,22 +69,25 @@ Deno.serve(async (req) => {
       new Date(l.created_date) >= startDate
     );
 
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
+
     // Get peer comparison groups
     const sameLevelPeers = allUsers.filter(u => 
       u.app_role === user.app_role && 
       u.email !== user.email &&
-      u.client_id === user.client_id
+      u.client_id === callerClientId
     );
 
     const sameDeptPeers = allUsers.filter(u => 
       u.department === user.department && 
       u.email !== user.email &&
-      u.client_id === user.client_id
+      u.client_id === callerClientId
     );
 
     // Calculate peer benchmarks
     const peerAssessments = await base44.asServiceRole.entities.Assessment.filter({
-      client_id: user.client_id
+      client_id: callerClientId
     });
 
     const sameLevelAssessments = peerAssessments.filter(a => {

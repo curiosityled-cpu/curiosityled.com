@@ -9,11 +9,15 @@
  *   - delete: needs event_id + calendar_source
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     // Security: Only managers and admins may create/update/delete calendar
@@ -135,7 +139,7 @@ export default async function(req) {
         return Response.json({ error: 'Forbidden — attendee must be a platform user' }, { status: 403 });
       }
       const attendee = attendeeUsers[0];
-      if (attendee.client_id !== user.client_id) {
+      if (attendee.client_id !== callerClientId) {
         return Response.json({ error: 'Forbidden — attendee must be in your organization' }, { status: 403 });
       }
     }

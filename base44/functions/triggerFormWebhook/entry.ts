@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 import { validateExternalUrl } from '../../shared/urlValidation.ts';
 
 const ADMIN_ROLES = ['Platform Admin', 'Super Administrator', 'Admin Level 1', 'Admin Level 2'];
@@ -7,6 +8,9 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -34,7 +38,7 @@ Deno.serve(async (req) => {
     // ownership here to prevent a user from firing webhooks on another user's form.
     const isOwner = form.created_by === user.email;
     const isAdmin = ADMIN_ROLES.includes(user.app_role);
-    const sameTenant = form.client_id && form.client_id === user.client_id;
+    const sameTenant = form.client_id && form.client_id === callerClientId;
     if (!isOwner && !(isAdmin && sameTenant)) {
       return Response.json({ error: 'Forbidden - you do not have permission to trigger webhooks for this form' }, { status: 403 });
     }

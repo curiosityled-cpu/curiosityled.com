@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 const ARCHETYPE_CONTENT = {
   "Adaptive Strategist": {
@@ -171,10 +172,13 @@ Deno.serve(async (req) => {
     const bottom3 = sortedComps.slice(-3).map(c => `${c.competency} (${c.score}%)`).join(", ");
 
     // Create placeholder record (service role to bypass RLS during creation)
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
+
     const placeholder = await base44.asServiceRole.entities.LeadershipProfileReport.create({
       user_email: user.email,
       assessment_id,
-      client_id: user.client_id,
+      client_id: callerClientId,
       archetype,
       status: "generating"
     });

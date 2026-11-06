@@ -8,8 +8,8 @@ claims were wrong.
 
 **Verdict, re-measured at the end of the second pass:** Phases **2, 3 and 5 are
 complete and evidenced**. Phase 1 is complete in the UI and **open in one place
-only: 63 backend functions still read the caller's tenant from a membership
-field instead of the resolver** (63, down from 85). Phase 4 is
+only: 37 backend functions still read the caller's tenant from a membership
+field instead of the resolver** (37, down from 85). Phase 4 is
 wired at the screen layer; the configuration those screens display is read by
 functions inside that same residual, so Phase 4 clears when Phase 1 does.
 
@@ -27,9 +27,9 @@ One-line answer to "is it complete?": **four of five phases are done, and Phase
 | Entities without a client field (platform-shared or plumbing) | **8** — `BlogPost`, `Client`, `FeatureSuggestion`, `IntegrationDoc`, `Partner`, `Prospect`, `UATTestCase`, `WorkbookLead` |
 | Backend functions | **555** |
 | Functions using the service role | **476** |
-| Functions that resolve the tenant through a shared helper | **72** (was 36) |
+| Functions that resolve the tenant through a shared helper | **98** (was 36) |
 | Service-role functions with no resolver reference | **440** |
-| …of those, functions deriving the caller's tenant from a membership field | **63** (85 → 77 → 69 → 63) |
+| …of those, functions deriving the caller's tenant from a membership field | **37** (85 → 77 → 69 → 63 → 37) |
 | Frontend files that derive the tenant from their own membership field | **0** |
 | Frontend files still reading *another person's* membership field (roster display) | **2 files** (was 3) |
 
@@ -46,7 +46,7 @@ than "fix 455 things".
 
 | Phase | State | Evidence |
 | --- | --- | --- |
-| **1. Tenant context** | **Open — one clause.** The resolver exists and is the only source for the UI (0 frontend files derive their own tenant from a membership field). 72 backend functions resolve through it. **63 still derive the caller's tenant from a membership field**, which is the split this phase exists to remove. | §5.1 breaks the 63 down; 22 were converted across the two passes. |
+| **1. Tenant context** | **Open — one clause.** The resolver exists and is the only source for the UI (0 frontend files derive their own tenant from a membership field). 98 backend functions resolve through it. **37 still derive the caller's tenant from a membership field**, which is the split this phase exists to remove. | §5.1 breaks the 37 down; 48 were converted across the passes. |
 | **2. Classification inventory** | **Complete and measured.** 163 types, 155 with a tenant key, 8 without; 555 functions. | This document, replacing the earlier counts. |
 | **3. Enforcement** | **Complete.** Every one of the 163 types carries access rules, each batch verified against both proof organisations before moving on. | 620 rule operations evaluated with **0 cross-tenant admissions** (§3). The last seven identity-scoped functions and `invokeAgent` were closed in the second pass; what remains in §5.1 is Phase 1 residual, not a missing rule. |
 | **4. Module wiring** | **Wired.** Every module scopes its reads and writes by the active organisation resolved on the server. | 117 frontend files use the active-client context; the 31 membership fallbacks are gone. §5.2 lists the three roster-display reads that remain. |
@@ -135,7 +135,7 @@ instead of a false all-clear. A proof that cannot fail is not a proof.
 
 ## 5. What remains
 
-### 5.1 Function layer — 63 functions left (Phase 1 residual)
+### 5.1 Function layer — 37 functions left (Phase 1 residual)
 
 **Closed this session (33 of the original 40, plus two found by review):**
 `approveCommissions`, `awardBadge`, `awardPoints`, `courseRoster`,
@@ -176,12 +176,28 @@ tenant checks that compared against a stale membership copy.
 `autoTriageRequest`. Two of these were the gamification points ledger and its
 settings, which were stamping every award with the caller's membership copy.
 
-**What is left: 63 functions** that still derive the caller's tenant from
-`user.client_id` with no resolver reference — **20 test, diagnostic, seed or
-proof harnesses** and **43 product functions**. Not all 63 are defects: at least
-one (`getAssignableUsers`) only *looks* flagged, because it names a `forEach`
-parameter `user` while grouping rows by their own client. They are not a single
-defect:
+**Further batches closed:** `getLearningAnalytics`,
+`getPlatformJourneyAnalytics`, `getOrganizationalAnalytics`,
+`getLeadershipIndexAnalytics`, `getPersonalInsights`, `getAIInsights`,
+`getHeadOfHRInsights`, `getOrgLeaderInsights`, `getGamificationAnalytics`,
+`getDashboardData`, `listAllUsers`, `listClients`, `clientList`,
+`assignAddonRole`, `triggerFormWebhook`, `createOneOnOneCalendarEvent`,
+`generatePublicRequestLink`, `generateLeadershipProfile`, `setMyRole`,
+`processExternalAssessment`, `importStaffRoster`, `cleanupDemoData`,
+`clientDelete`, `listCohorts`, `aiOptimizeGamification`.
+
+**What is left: 37 functions** — **19 test, diagnostic, seed or proof harnesses**
+and **18 others**. Those 18 are not one job:
+
+| Group | Count | Why it is not a straight swap |
+| --- | --- | --- |
+| Provisioning API surface | 10 | Authenticates with a tenant API key, not a signed-in person, so there is no membership to resolve; the tenant comes from the key. |
+| Correct by design | 3 | `processExpiredAccounts` and `autoUnlockAccounts` read the **target** user's client (a loop variable); `getAssignableUsers` names a `forEach` parameter `user`. Flagged by name only. |
+| Legacy duplicates | 3 | `getOrgLeaderInsights.js`, `getPersonalInsights.js`, `getPlatformJourneyAnalytics.js` are stray `.js`-suffixed directories, not deployed functions. |
+| `invokeAgent` | 1 | 30 reads across its action handlers; needs the handlers extracted into `shared/agentActions/*` first. |
+| `calculateUserLevel` | 1 | Accepts internal (non-user) calls, so it must branch before it can resolve. |
+
+The remainder are not a single defect:
 several are platform-admin surfaces where "no client" is a legitimate answer
 (`getPlatformAnalytics` before this pass, `listAllUsers`, `clientDelete`), and
 several read *another person's* membership field on purpose. Each needs one read

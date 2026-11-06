@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -17,6 +18,9 @@ Deno.serve(async (req) => {
 
     console.log('Fetching users for:', user.email, user.app_role);
 
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
+
     // Fetch users using service role to bypass RLS
     let users = await base44.asServiceRole.entities.User.list('-created_date');
 
@@ -24,16 +28,16 @@ Deno.serve(async (req) => {
     // Security: tenant-scoped admins see only their own tenant's users.
     // Unassigned (client-less) users are visible to Platform Admin only to
     // prevent cross-tenant enumeration of pending invites.
-    if (user.app_role === 'Super Administrator' && user.client_id) {
-      users = users.filter(u => u.client_id === user.client_id);
+    if (user.app_role === 'Super Administrator' && callerClientId) {
+      users = users.filter(u => u.client_id === callerClientId);
     } else if (user.app_role === 'Partner Business Administrator' && user.partner_id) {
       const allClients = await base44.asServiceRole.entities.Client.list();
       const partnerClientIds = allClients
         .filter(c => c.partner_id === user.partner_id)
         .map(c => c.id);
       users = users.filter(u => partnerClientIds.includes(u.client_id));
-    } else if (user.app_role === 'Admin Level 2' && user.client_id) {
-      users = users.filter(u => u.client_id === user.client_id);
+    } else if (user.app_role === 'Admin Level 2' && callerClientId) {
+      users = users.filter(u => u.client_id === callerClientId);
     } else if (user.app_role !== 'Platform Admin') {
       // Security: fail closed — tenant-scoped admins without a client_id/partner_id
       // must not receive platform-wide user lists.

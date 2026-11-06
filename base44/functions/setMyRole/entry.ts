@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 /**
  * Allows the current user to update their own app_role
@@ -13,6 +14,9 @@ Deno.serve(async (req) => {
         if (!user) {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
+
+        // Tenant comes from the resolver, never from the browser's membership copy.
+        const callerClientId = (await resolveActiveClient(base44, user)).client_id;
 
         const { role } = await req.json();
 
@@ -37,7 +41,7 @@ Deno.serve(async (req) => {
                     initiator_user_email: user.email,
                     action_type: 'USER_ROLE_CHANGE',
                     target_user_email: user.email,
-                    client_id: user.client_id || 'platform',
+                    client_id: callerClientId || 'platform',
                     old_value: previousRole,
                     new_value: role,
                     metadata: { action: 'self_role_change', source: 'privileged_operator' }
@@ -93,13 +97,13 @@ Deno.serve(async (req) => {
 
         // Best-effort audit log — never block a successful role change on logging.
         try {
-            if (user.client_id) {
+            if (callerClientId) {
                 await base44.asServiceRole.entities.ActivityLog.create({
                     timestamp: new Date().toISOString(),
                     initiator_user_email: user.email,
                     action_type: 'USER_ROLE_CHANGE',
                     target_user_email: user.email,
-                    client_id: user.client_id,
+                    client_id: callerClientId,
                     old_value: oldRole,
                     new_value: role,
                     metadata: { action: 'self_role_change', note: 'Via Role Selector (demo feature)' }

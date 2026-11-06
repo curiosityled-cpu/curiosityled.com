@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -28,7 +29,7 @@ Deno.serve(async (req) => {
     // Create the ExternalAssessmentResult entity with pending status
     const assessmentData = {
       user_email: user.email,
-      client_id: user.client_id || 'default_client',
+      client_id: (await resolveActiveClient(base44, user)).client_id || 'default_client',
       assessment_type,
       date_completed: date_completed || new Date().toISOString().split('T')[0],
       is_private,

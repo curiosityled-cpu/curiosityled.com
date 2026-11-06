@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -9,7 +10,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const clientId = user.client_id;
+    const clientId = (await resolveActiveClient(base44, user)).client_id;
 
     if (!clientId) {
       return Response.json({ error: 'User must be assigned to a client' }, { status: 400 });

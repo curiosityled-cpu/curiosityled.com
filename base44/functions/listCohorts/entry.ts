@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -12,13 +13,16 @@ Deno.serve(async (req) => {
     // Get cohorts based on user role
     let cohorts;
     
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
+
     if (user.app_role === 'Platform Admin') {
       // Platform Admin sees all cohorts
       cohorts = await base44.asServiceRole.entities.Cohort.list();
-    } else if (user.app_role === 'Super Administrator' && user.client_id) {
+    } else if (user.app_role === 'Super Administrator' && callerClientId) {
       // Super Admin sees cohorts in their client
       cohorts = await base44.asServiceRole.entities.Cohort.list();
-      cohorts = cohorts.filter(c => c.client_id === user.client_id);
+      cohorts = cohorts.filter(c => c.client_id === callerClientId);
     } else if (user.app_role === 'Admin Level 1' || user.app_role === 'Admin Level 2' || user.app_role === 'User Level 2' || user.app_role === 'User Level 3') {
       // Program managers and senior leaders see cohorts they manage or participate in
       cohorts = await base44.asServiceRole.entities.Cohort.list();

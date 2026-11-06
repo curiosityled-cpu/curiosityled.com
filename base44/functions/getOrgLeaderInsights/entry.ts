@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -54,8 +55,11 @@ Deno.serve(async (req) => {
       base44.asServiceRole.entities.Cohort.list().catch(() => [])
     ]);
 
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
+
     // Filter users by client
-    const orgUsers = allUsers.filter(u => u.client_id === user.client_id);
+    const orgUsers = allUsers.filter(u => u.client_id === callerClientId);
     
     console.log('[getOrgLeaderInsights] Organization users:', orgUsers.length);
 

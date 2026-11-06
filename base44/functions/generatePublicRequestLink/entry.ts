@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 import { signToken } from '../../shared/publicRequestToken.ts';
 
 Deno.serve(async (req) => {
@@ -20,13 +21,14 @@ Deno.serve(async (req) => {
     // Security: Non-Platform-Admin callers may only mint tokens for their own tenant.
     let client_id = requested_client_id;
     if (user.app_role !== 'Platform Admin') {
-      if (!user.client_id) {
+      const callerClientId = (await resolveActiveClient(base44, user)).client_id;
+      if (!callerClientId) {
         return Response.json({ error: 'Your account has no tenant scope — cannot generate links.' }, { status: 403 });
       }
-      if (client_id && client_id !== user.client_id) {
+      if (client_id && client_id !== callerClientId) {
         return Response.json({ error: 'You can only generate links for your own organization.' }, { status: 403 });
       }
-      client_id = user.client_id;
+      client_id = callerClientId;
     }
 
     if (!client_id) {

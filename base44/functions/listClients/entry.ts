@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -17,6 +18,9 @@ Deno.serve(async (req) => {
 
     console.log('Fetching clients for:', user.email, user.app_role);
 
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
+
     // Use service role to fetch clients
     let clients = await base44.asServiceRole.entities.Client.list('-created_date');
 
@@ -24,9 +28,9 @@ Deno.serve(async (req) => {
     if (user.app_role === 'Partner Business Administrator' && user.partner_id) {
       // Partner Admin sees only their partner's clients
       clients = clients.filter(c => c.partner_id === user.partner_id);
-    } else if (user.app_role === 'Super Administrator' && user.client_id) {
+    } else if (user.app_role === 'Super Administrator' && callerClientId) {
       // Super Admin sees only their own client
-      clients = clients.filter(c => c.id === user.client_id);
+      clients = clients.filter(c => c.id === callerClientId);
     } else if (user.app_role !== 'Platform Admin') {
       // Security: fail closed — tenant-scoped admins without a client_id/partner_id
       // must not receive the full client list.

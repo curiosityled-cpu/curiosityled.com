@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -17,7 +18,10 @@ Deno.serve(async (req) => {
 
     // Fail-closed: non-Platform-Admin roles must have a client_id to prevent
     // cross-tenant leadership assessment analytics exposure.
-    if (user.app_role !== 'Platform Admin' && !user.client_id) {
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
+
+    if (user.app_role !== 'Platform Admin' && !callerClientId) {
       return Response.json({ success: false, error: 'Tenant scope required — client_id not configured for your account' }, { status: 403 });
     }
 
@@ -43,17 +47,17 @@ Deno.serve(async (req) => {
     
     if (user.app_role === 'Analyst' || user.app_role === 'Admin Level 1' || user.app_role === 'Admin Level 2') {
       // Analyst and Admin roles can only see their organization
-      if (user.client_id) {
-        filteredClients = filteredClients.filter(c => c.id === user.client_id);
+      if (callerClientId) {
+        filteredClients = filteredClients.filter(c => c.id === callerClientId);
       }
     } else if (user.app_role === 'Super Administrator' || user.app_role === 'Partner Business Administrator') {
       // Super Admin and Partner Admin see their org and partner clients
-      if (user.client_id) {
-        const currentClient = allClients.find(c => c.id === user.client_id);
+      if (callerClientId) {
+        const currentClient = allClients.find(c => c.id === callerClientId);
         if (currentClient?.partner_id) {
           filteredClients = filteredClients.filter(c => c.partner_id === currentClient.partner_id);
         } else {
-          filteredClients = filteredClients.filter(c => c.id === user.client_id);
+          filteredClients = filteredClients.filter(c => c.id === callerClientId);
         }
       }
     }

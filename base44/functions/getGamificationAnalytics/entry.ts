@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -12,9 +13,10 @@ Deno.serve(async (req) => {
     const { client_id, date_range } = await req.json();
     // Security: non-Platform-Admin callers are locked to their own tenant.
     // Prevents cross-tenant analytics exposure via arbitrary client_id in the body.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
     const targetClientId = user.app_role === 'Platform Admin'
-      ? (client_id || user.client_id)
-      : user.client_id;
+      ? (client_id || callerClientId)
+      : callerClientId;
     if (!targetClientId) {
       return Response.json({ error: 'No client context available' }, { status: 403 });
     }

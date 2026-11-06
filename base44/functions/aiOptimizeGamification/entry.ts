@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -16,7 +17,8 @@ Deno.serve(async (req) => {
     }
 
     const { client_id, current_analytics } = await req.json();
-    const targetClientId = client_id || user.client_id;
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
+    const targetClientId = client_id || callerClientId;
 
     // Get current gamification analytics if not provided
     let analytics = current_analytics;

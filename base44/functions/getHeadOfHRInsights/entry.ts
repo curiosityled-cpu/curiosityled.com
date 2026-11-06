@@ -1,4 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.40";
+import { resolveActiveClient } from "../../shared/tenantContext.ts";
 import {
   fetchManagerSignals,
   buildManagerBundle,
@@ -20,6 +21,9 @@ export default async function(req) {
     if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
     const userRole = user.app_role || user.data?.app_role || user.role;
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
     if (!HEAD_OF_HR_ROLES.includes(userRole)) {
       return Response.json({ error: "Forbidden — Head of HR access required" }, { status: 403 });
     }
@@ -36,8 +40,8 @@ export default async function(req) {
         const clients = await base44.asServiceRole.entities.Client.list();
         const partnerClientIds = clients.filter((c) => c.partner_id === user.partner_id).map((c) => c.id);
         allPortfolios = allPortfolios.filter((p) => partnerClientIds.includes(p.client_id));
-      } else if (user.client_id) {
-        allPortfolios = allPortfolios.filter((p) => p.client_id === user.client_id);
+      } else if (callerClientId) {
+        allPortfolios = allPortfolios.filter((p) => p.client_id === callerClientId);
       } else {
         allPortfolios = [];
       }
@@ -82,7 +86,7 @@ export default async function(req) {
       const allUsers = await base44.asServiceRole.entities.User.list(500);
       const scopedAllUsers = userRole === "Platform Admin"
         ? allUsers
-        : allUsers.filter((u) => u.client_id === user.client_id);
+        : allUsers.filter((u) => u.client_id === callerClientId);
       explicitManagers = resolveExplicitManagers(scopedAllUsers, explicitEmailArray);
     }
 
@@ -108,7 +112,7 @@ export default async function(req) {
     // 6. Fetch all interventions (for HRBP engagement metric)
     let allInterventions = await base44.asServiceRole.entities.HRBPIntervention.list(500);
     if (userRole !== "Platform Admin") {
-      allInterventions = allInterventions.filter((i) => i.client_id === user.client_id);
+      allInterventions = allInterventions.filter((i) => i.client_id === callerClientId);
     }
 
     // 7. Group managers by HRBP and by department (for heat map)

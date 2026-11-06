@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -24,7 +25,10 @@ Deno.serve(async (req) => {
 
     // Fail-closed: Super Administrator must have a client_id to prevent
     // cross-tenant exposure of at-risk user PII. Platform Admin is exempt.
-    if (user.app_role === 'Super Administrator' && !user.client_id) {
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
+
+    if (user.app_role === 'Super Administrator' && !callerClientId) {
       return Response.json({
         success: false,
         error: 'Tenant scope required — client_id not configured for your account'
@@ -76,13 +80,13 @@ Deno.serve(async (req) => {
 
     if (user.app_role === 'Super Administrator') {
       // Super Admin: Only their organization and partner clients
-      if (user.client_id) {
-        const currentClient = clients.find(c => c.id === user.client_id);
+      if (callerClientId) {
+        const currentClient = clients.find(c => c.id === callerClientId);
         
         if (currentClient?.type === 'partner_client' && currentClient.partner_id) {
           scopedClients = clients.filter(c => c.partner_id === currentClient.partner_id);
         } else {
-          scopedClients = clients.filter(c => c.id === user.client_id);
+          scopedClients = clients.filter(c => c.id === callerClientId);
         }
         
         const clientIds = scopedClients.map(c => c.id);

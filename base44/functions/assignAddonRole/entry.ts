@@ -1,9 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
     
     if (!user) {
       return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
@@ -35,10 +39,10 @@ Deno.serve(async (req) => {
     // is missing. This mirrors assignRoleToUser and prevents cross-tenant
     // role assignment.
     if (user.app_role === 'Super Administrator') {
-      if (!user.client_id) {
+      if (!callerClientId) {
         return Response.json({ success: false, error: 'Access denied — tenant membership required.' }, { status: 403 });
       }
-      if (targetUser.client_id !== user.client_id) {
+      if (targetUser.client_id !== callerClientId) {
         return Response.json({ success: false, error: 'Access denied — target user is not in your organization.' }, { status: 403 });
       }
     } else if (user.app_role === 'Partner Business Administrator') {
@@ -53,10 +57,10 @@ Deno.serve(async (req) => {
         return Response.json({ success: false, error: 'Access denied — target user is not in your partner clients.' }, { status: 403 });
       }
     } else if (user.app_role === 'Admin Level 2') {
-      if (!user.client_id) {
+      if (!callerClientId) {
         return Response.json({ success: false, error: 'Access denied — tenant membership required.' }, { status: 403 });
       }
-      if (targetUser.client_id !== user.client_id) {
+      if (targetUser.client_id !== callerClientId) {
         return Response.json({ success: false, error: 'Access denied — target user is not in your organization.' }, { status: 403 });
       }
     }

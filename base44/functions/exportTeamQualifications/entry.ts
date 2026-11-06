@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 import { jsPDF } from 'npm:jspdf@2.5.1';
 import { buildReportContext, drawReportHeader, drawReportFooter, drawSectionHeading } from '../../shared/reportContext.ts';
 
@@ -28,14 +29,17 @@ Deno.serve(async (req) => {
       // The request names the people. It must not be able to name another
       // tenant's: keep only the emails that belong to the caller's own client.
       const requested = body.subordinate_emails || [];
+      // Tenant comes from the resolver, never from the browser's membership copy.
+      const callerClientId = (await resolveActiveClient(base44, user)).client_id;
+
       if (user.app_role === 'Platform Admin') {
         subordinate_emails = requested;
-      } else if (!user.client_id) {
+      } else if (!callerClientId) {
         subordinate_emails = [];
       } else {
         const inClient = await base44.asServiceRole.entities.User.filter({
           email: { $in: requested },
-          client_id: user.client_id
+          client_id: callerClientId
         });
         subordinate_emails = inClient.map(u => u.email).filter(Boolean);
       }

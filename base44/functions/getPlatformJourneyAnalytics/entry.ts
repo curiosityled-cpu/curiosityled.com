@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 // Recursive function to get all subordinates up to maxDepth
 function getAllSubordinateEmails(managerEmail, allUsers, maxDepth = 10, currentDepth = 0, visited = new Set()) {
@@ -27,6 +28,9 @@ Deno.serve(async (req) => {
     
     // Authenticate and authorize
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
     
     if (!user) {
       return Response.json({ 
@@ -59,7 +63,7 @@ Deno.serve(async (req) => {
     // subordinate hierarchy) must have a resolvable tenant scope to prevent
     // cross-tenant enrollment and PII exposure.
     if (!isPlatformAdmin && user.app_role !== 'User Level 2') {
-      const hasTenantScope = user.client_id || (isPartnerBA && partnerClientIds.length > 0);
+      const hasTenantScope = callerClientId || (isPartnerBA && partnerClientIds.length > 0);
       if (!hasTenantScope) {
         return Response.json({
           success: false,
@@ -180,21 +184,21 @@ Deno.serve(async (req) => {
     // Security: Tenant scoping for Admin Level 1/2, Super Administrator, and
     // Partner BA — these roles must only see their own tenant's data, not
     // platform-wide. Super Administrator is tenant-scoped like Admin Level 1/2.
-    if (['Admin Level 1', 'Admin Level 2', 'Super Administrator'].includes(user.app_role) && user.client_id) {
-      filteredUsers = users.filter(u => u.client_id === user.client_id);
+    if (['Admin Level 1', 'Admin Level 2', 'Super Administrator'].includes(user.app_role) && callerClientId) {
+      filteredUsers = users.filter(u => u.client_id === callerClientId);
       const clientUserEmails = new Set(filteredUsers.map(u => u.email));
       filteredEnrollments = enrollments.filter(e => clientUserEmails.has(e.user_email));
       filteredAssessments = assessments.filter(a => clientUserEmails.has(a.email));
       filteredGoals = goals.filter(g => g.created_by && clientUserEmails.has(g.created_by));
-      filteredPrograms = programs.filter(p => p.client_id === user.client_id);
-      filteredCohorts = cohorts.filter(c => c.client_id === user.client_id);
-      filteredClasses = classes.filter(c => c.client_id === user.client_id);
-      filteredCoachingEngagements = coachingEngagements.filter(ce => ce.client_id === user.client_id);
+      filteredPrograms = programs.filter(p => p.client_id === callerClientId);
+      filteredCohorts = cohorts.filter(c => c.client_id === callerClientId);
+      filteredClasses = classes.filter(c => c.client_id === callerClientId);
+      filteredCoachingEngagements = coachingEngagements.filter(ce => ce.client_id === callerClientId);
       filteredCoachingSessions = coachingSessions.filter(cs => {
         const engagement = coachingEngagements.find(ce => ce.id === cs.engagement_id);
-        return engagement && engagement.client_id === user.client_id;
+        return engagement && engagement.client_id === callerClientId;
       });
-      const client = clients.find(c => c.id === user.client_id);
+      const client = clients.find(c => c.id === callerClientId);
       scopeLabel = client?.name || 'Organization';
     } else if (isPartnerBA && partnerClientIds.length > 0) {
       filteredUsers = users.filter(u => partnerClientIds.includes(u.client_id));
@@ -234,22 +238,22 @@ Deno.serve(async (req) => {
       scopeLabel = `${user.full_name || 'Manager'}'s Team`;
     } else if (user.app_role === 'User Level 3' || user.app_role === 'Analyst') {
       // Org Leader or Analyst - filter to client
-      if (user.client_id) {
-        filteredUsers = users.filter(u => u.client_id === user.client_id);
+      if (callerClientId) {
+        filteredUsers = users.filter(u => u.client_id === callerClientId);
         const clientUserEmails = new Set(filteredUsers.map(u => u.email));
         filteredEnrollments = enrollments.filter(e => clientUserEmails.has(e.user_email));
         filteredAssessments = assessments.filter(a => clientUserEmails.has(a.email));
         filteredGoals = goals.filter(g => clientUserEmails.has(g.created_by));
-        filteredPrograms = programs.filter(p => p.client_id === user.client_id);
-        filteredCohorts = cohorts.filter(c => c.client_id === user.client_id);
-        filteredClasses = classes.filter(c => c.client_id === user.client_id);
-        filteredCoachingEngagements = coachingEngagements.filter(ce => ce.client_id === user.client_id);
+        filteredPrograms = programs.filter(p => p.client_id === callerClientId);
+        filteredCohorts = cohorts.filter(c => c.client_id === callerClientId);
+        filteredClasses = classes.filter(c => c.client_id === callerClientId);
+        filteredCoachingEngagements = coachingEngagements.filter(ce => ce.client_id === callerClientId);
         filteredCoachingSessions = coachingSessions.filter(cs => {
           const engagement = coachingEngagements.find(ce => ce.id === cs.engagement_id);
-          return engagement && engagement.client_id === user.client_id;
+          return engagement && engagement.client_id === callerClientId;
         });
         
-        const client = clients.find(c => c.id === user.client_id);
+        const client = clients.find(c => c.id === callerClientId);
         scopeLabel = client?.name || 'Organization';
       }
     }
