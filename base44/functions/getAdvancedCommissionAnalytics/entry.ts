@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 /**
  * Advanced Commission Analytics
@@ -27,6 +28,9 @@ Deno.serve(async (req) => {
     const isPlatformAdmin = user.app_role === 'Platform Admin';
     const isSuperAdmin = user.app_role === 'Super Administrator';
     const isPartner = user.partner_id;
+    // `isAdmin` is referenced by the grouping below; it was never defined, so
+    // the whole analytics call failed with a reference error.
+    const isAdmin = isPlatformAdmin || isSuperAdmin;
 
     // Security: Reject callers who are neither admin nor partner.
     if (!isPlatformAdmin && !isSuperAdmin && !isPartner) {
@@ -47,7 +51,7 @@ Deno.serve(async (req) => {
 
     // Security: Super Administrators are scoped to their own tenant.
     if (isSuperAdmin) {
-      query.client_id = user.client_id || user.data?.client_id;
+      query.client_id = (await resolveActiveClient(base44, user)).client_id || null;
     }
 
     const allCommissions = await base44.asServiceRole.entities.PartnerCommission.filter(query);

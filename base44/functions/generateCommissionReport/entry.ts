@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 /**
  * Generate Commission Report
@@ -49,7 +50,7 @@ Deno.serve(async (req) => {
 
     // Security: Super Administrators are scoped to their own tenant.
     if (isSuperAdmin) {
-      query.client_id = user.client_id || user.data?.client_id;
+      query.client_id = (await resolveActiveClient(base44, user)).client_id || null;
     }
 
     const allCommissions = await base44.asServiceRole.entities.PartnerCommission.filter(query);

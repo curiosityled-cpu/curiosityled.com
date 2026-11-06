@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 /**
  * Get Partner Commissions
@@ -46,7 +47,8 @@ Deno.serve(async (req) => {
     // Security: Super Administrators are scoped to their own tenant;
     // only Platform Admin may query an arbitrary client_id.
     if (isSuperAdmin) {
-      query.client_id = user.client_id || user.data?.client_id;
+      const tenant = await resolveActiveClient(base44, user);
+      query.client_id = tenant.client_id || null;
     } else if (clientId) {
       query.client_id = clientId;
     }

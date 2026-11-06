@@ -4,6 +4,7 @@ import {
   buildManagerBundle,
   resolveHRBPManagerEmails,
 } from "../../shared/portfolioData.ts";
+import { resolveActiveClient } from "../../shared/tenantContext.ts";
 
 const ADMIN_ROLES = [
   "Admin Level 2",
@@ -38,7 +39,8 @@ export default async function (req) {
       if (!targetUser) {
         return Response.json({ error: "Forbidden — target HRBP not found" }, { status: 403 });
       }
-      const callerClientId = user.client_id || user.data?.client_id;
+      const callerTenant = await resolveActiveClient(base44, user);
+      const callerClientId = callerTenant.client_id || null;
       if (userRole === "Partner Business Administrator" && user.partner_id) {
         const clients = await base44.asServiceRole.entities.Client.list();
         const partnerClientIds = clients

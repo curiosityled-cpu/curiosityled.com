@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -17,7 +18,8 @@ Deno.serve(async (req) => {
 
     // Resolve the caller's tenant. A missing tenant must never fall back to a
     // platform-wide badge, which would publish one client's badge to every client.
-    const clientId = user.data?.client_id || user.client_id || null;
+    const tenant = await resolveActiveClient(base44, user);
+    const clientId = tenant.client_id || null;
     if (user.app_role !== 'Platform Admin' && !clientId) {
       return Response.json({ error: 'No client is assigned to this account' }, { status: 400 });
     }

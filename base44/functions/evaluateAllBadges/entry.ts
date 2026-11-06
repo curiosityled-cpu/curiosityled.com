@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { isInternalCall } from '../../shared/urlValidation.ts';
 import { resolveUserScope, isUserInScope, attachPartnerClientIds } from '../../shared/userScope.ts';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -40,7 +41,9 @@ Deno.serve(async (req) => {
           }
         }
       }
-      effectiveClientId = callerUser.client_id || callerUser.data?.client_id || client_id;
+      // Resolved on the server; a client named in the request is not trusted here.
+      const callerTenant = await resolveActiveClient(base44, callerUser);
+      effectiveClientId = callerTenant.client_id || null;
     }
 
     // Get all badge templates for the client

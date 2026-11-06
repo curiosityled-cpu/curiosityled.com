@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { scoreSignal, canAccessSignal } from '../../shared/signalScoring.ts';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 /**
  * Scores a signal attempt on the server and records it. The answer key never leaves
@@ -39,10 +40,12 @@ export default async function (req) {
       );
     }
 
+    // The signal's own organisation wins; otherwise the caller's resolved one.
+    const tenant = await resolveActiveClient(base44, user);
     const submission = await base44.asServiceRole.entities.AssessmentSubmission.create({
       user_email: user.email,
       custom_assessment_id: assessment.id,
-      client_id: assessment.client_id || user.client_id || user?.data?.client_id,
+      client_id: assessment.client_id || tenant.client_id || null,
       leadership_level: user.leadership_level || 'Level 2 (Leading Others)',
       sector: user.sector || 'Corporate/Private',
       submission_date: new Date().toISOString(),

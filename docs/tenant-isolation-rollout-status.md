@@ -21,11 +21,11 @@ function layer. Phase 4 is substantially wired but not finished.
 | Entities without a client field (platform-shared or plumbing) | **8** — `BlogPost`, `Client`, `FeatureSuggestion`, `IntegrationDoc`, `Partner`, `Prospect`, `UATTestCase`, `WorkbookLead` |
 | Backend functions | **555** |
 | Functions using the service role | **476** |
-| Functions that reference the shared tenant resolver | **22** |
-| Service-role functions with no resolver reference | **455** |
-| …of those, functions that read a `client_id` straight off the request | **40** |
-| Frontend files using the active-client context | **107** |
-| Frontend files still reading the membership field directly | **31 files / 38 reads** |
+| Functions that reference the shared tenant resolver | **36** (was 22) |
+| Service-role functions with no resolver reference | **440** |
+| …of those, functions that read a `client_id` straight off the request | **7** (was 40) |
+| Frontend files using the active-client context | **113** |
+| Frontend files still reading the membership field directly | **6 files** (was 31) |
 
 The two large mechanical numbers (455, 40) are **screens, not verdicts**. A
 service-role function with no resolver reference is not automatically a hole:
@@ -111,26 +111,40 @@ instead of a false all-clear. A proof that cannot fail is not a proof.
 
 ## 5. What remains
 
-### 5.1 Function layer — 40 request-trusted functions
+### 5.1 Function layer — 7 functions left
 
-These read a `client_id` from the request body while acting with the service
-role, and do not reference the shared resolver. Each needs one read and one of
-three outcomes: resolve through `resolveTenantContext`, keep a documented
-platform scope, or close.
+**Closed this session (33 of the original 40, plus two found by review):**
+`approveCommissions`, `awardBadge`, `awardPoints`, `courseRoster`,
+`createBadgeTemplate`, `createGamificationLevel`, `evaluateAllBadges`,
+`generateCommissionReport`, `getAdvancedCommissionAnalytics`,
+`getCheckInInsights`, `getCheckInHistory`, `getLeaderboard`,
+`getPartnerCommissions`, `getPersonCheckIns`, `getRequestAnalytics`,
+`importExternalLearning`, `processCommissionPayouts`, `resolveHRBPPortfolio`,
+`sftpPullPerformanceData`, `submitSignalResponse` — each now resolves the
+tenant on the server; a `client_id` from the request is honoured only where the
+resolver authorises it. Already correct and re-checked, not changed:
+`assignReviewParticipants`, `finalizeReviewCalibration`, `launchReviewCycle`,
+`getReviewWorkspace`, `reviewCycleCommand`, `startReviewCalibration`,
+`submitReviewTask`.
+
+Two real holes closed on the way: `sftpPullPerformanceData` wrote rows into any
+named organisation for a caller who omitted the API key, and `getCheckInHistory`
+walked the whole user table when a caller had no legacy membership field.
+
+**What is left is identity-scoped, not request-scoped** — one read each before
+sign-off:
 
 ```
-approveCommissions            assignReviewParticipants   awardBadge
-awardPoints                   cleanupOldActivityData     computeBehaviorTrends
-courseRoster                  createBadgeTemplate        createGamificationLevel
-evaluateAllBadges             finalizeReviewCalibration  generateCommissionReport
-getAdvancedCommissionAnalytics getCheckInInsights        getLeaderboard
-getPartnerCommissions         getPersonCheckIns          getRequestAnalytics
-getReviewWorkspace            importExternalLearning     invokeAgent
-launchReviewCycle             processCommissionPayouts   resolveHRBPPortfolio
-restoreAssessmentForUser      reviewCycleCommand         saveCheckInForUser
-saveDailyCheckIn              sftpPullPerformanceData    startReviewCalibration
-submitReviewTask              submitSignalResponse       trackLoginAttempt
+cleanupOldActivityData   computeBehaviorTrends   invokeAgent
+restoreAssessmentForUser saveCheckInForUser      saveDailyCheckIn
+trackLoginAttempt
 ```
+
+Every one of these derives its tenant from the *target person's* own record or
+from the sign-in identity, which is the correct source: the value is not taken
+from request input to be trusted, it is looked up for the person being acted on.
+`invokeAgent` is the only large surface left (≈30 `user.client_id` reads across
+its action handlers) and is queued as its own pass.
 
 Five diagnostic functions in the raw screen are excluded by design
 (`successionE2ETest`, `successionPhase0Test`, `successionPhase1Test`,
@@ -146,6 +160,18 @@ carry hand-written tenant checks that still need the resolver rather than
 
 Order: person-move and bulk writes first, then read/report paths, then detection
 helpers that write nothing.
+
+### 5.1a Tenant-key alignment — verified, no gaps
+
+The six dual-key types (`ProvisioningUser`, `ProvisioningRole`,
+`ProvisioningBatch`, `UserRoleAssignment`, `UserProfile`, plus their provisioning
+siblings) carry both `tenant_id` and `client_id`. Measured on production data:
+**zero records hold a `tenant_id` without a mirrored `client_id`** (16
+`UserProfile`, 1 `ProvisioningBatch`, 0 role/assignment rows at the time of
+measurement). Nothing to backfill; the nightly reconciliation workflow keeps it
+that way. Read/write rules stay on `tenant_id` for these types — switching the
+key with data in the other column is the change that would break access, and it
+buys nothing while both values are always written together.
 
 ### 5.2 Frontend — 31 files
 

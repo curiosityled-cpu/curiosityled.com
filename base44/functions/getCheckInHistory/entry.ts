@@ -11,6 +11,7 @@
  * No request body required — identity comes from auth.me().
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -22,6 +23,12 @@ Deno.serve(async (req) => {
 
     const serviceBase44 = base44.asServiceRole;
     const userEmail = user.email;
+
+    // The caller's organisation is resolved on the server (selected client,
+    // else home client), never read from a membership field.
+    const tenant = await resolveActiveClient(base44, user);
+    const activeClientId = tenant.client_id || null;
+    const isPlatformCaller = tenant.is_platform === true;
     const myName =
       user?.data?.display_name || user?.full_name || userEmail;
 
@@ -40,9 +47,11 @@ Deno.serve(async (req) => {
       for (const u of allUsers || []) {
         if (!u.email) continue;
         // The tree is built with the service role, so it must stay inside the
-        // caller's client: a manager_email that points at another tenant would
-        // otherwise pull that tenant's check-ins into this response.
-        if (user.client_id && u.client_id !== user.client_id) continue;
+        // caller's resolved organisation: a manager_email that points at another
+        // tenant would otherwise pull that tenant's check-ins into this response.
+        // With no resolved organisation, only platform administrators may walk
+        // the whole tree.
+        if (activeClientId ? u.client_id !== activeClientId : !isPlatformCaller) continue;
         userByEmail.set(u.email.toLowerCase(), u);
         const mgr = u?.data?.manager_email || u?.manager_email || '';
         if (mgr) {
@@ -79,11 +88,14 @@ Deno.serve(async (req) => {
       user?.data?.subordinate_emails || user?.subordinate_emails || [];
     for (const se of subEmails) {
       if (se && !seenEmails.has(se.toLowerCase())) {
+        // A subordinate must be a person inside the caller's own organisation
+        // tree; otherwise a stale email list pulls another tenant's check-ins in.
+        const subUser = userByEmail.get(se.toLowerCase());
+        if (!subUser) continue;
         seenEmails.add(se.toLowerCase());
         teamMembers.push({ email: se, name: se });
         // Also traverse down from this subordinate
-        const subUser = userByEmail.get(se.toLowerCase());
-        if (subUser) queue.push(se.toLowerCase());
+        queue.push(se.toLowerCase());
       }
     }
     // Drain any remaining queue entries from subordinate_emails expansion
