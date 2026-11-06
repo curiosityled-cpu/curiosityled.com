@@ -50,6 +50,14 @@ export default async function(req: Request): Promise<Response> {
 
     const body = await req.json().catch(() => ({}));
     const scope: string = body.scope === "org" ? "org" : "team";
+    // How much of the caller's own line the view covers:
+    //   "self"     — only their own check-ins
+    //   "direct"   — their own plus their direct reports
+    //   "vertical" — everything they can already see (default, unchanged)
+    const includeReports: string =
+      body.include_reports === "self" || body.include_reports === "direct"
+        ? body.include_reports
+        : "vertical";
     const anchorEmail: string = String(body.leader_email || "").trim().toLowerCase();
     const includeRaw: boolean = body.include_raw === true;
     const selectedKeys: string[] = Array.isArray(body.selected_keys)
@@ -140,19 +148,32 @@ export default async function(req: Request): Promise<Response> {
         emailsInScope = dedupe([anchorEmail, ...sub.map((m) => m.email)]);
         teamMembers = [{ email: anchorEmail, name: nameOf(anchorEmail) }, ...sub];
         viewingLeader = leaderEntry(anchorEmail);
+      } else if (includeReports !== "vertical") {
+        // The viewer chose to look at their own line only: either their own
+        // check-ins, or their own plus their direct reports.
+        const reports = includeReports === "direct" ? tree.directReports(userEmail) : [];
+        emailsInScope = dedupe([userEmail, ...reports.map((m) => m.email)]);
+        teamMembers = [{ email: userEmail, name: nameOf(userEmail) }, ...reports];
+        viewingLeader = leaderEntry(userEmail);
       } else {
         emailsInScope = dedupe(orgEmails);
         teamMembers = orgUsers.map((u) => ({ email: u.email, name: nameOf(u.email) }));
       }
 
-      leaders = orgEmails
-        .filter((e) => directReportCount(e) > 0)
-        .map((e) => leaderEntry(e))
-        .sort((a, b) => b.subtree_size - a.subtree_size || a.name.localeCompare(b.name))
-        .slice(0, MAX_LEADERS);
+      // A viewer looking only at their own line cannot drill into other people,
+      // so the leader list is offered only for the full organisational view.
+      leaders = anchorEmail || includeReports !== "vertical"
+        ? []
+        : orgEmails
+            .filter((e) => directReportCount(e) > 0)
+            .map((e) => leaderEntry(e))
+            .sort((a, b) => b.subtree_size - a.subtree_size || a.name.localeCompare(b.name))
+            .slice(0, MAX_LEADERS);
 
       const MIN_GROUP = 5;
-      if (emailsInScope.length < MIN_GROUP) {
+      // The group-size floor protects other people's anonymity; it does not
+      // apply to a viewer looking at nobody but themselves.
+      if ((anchorEmail || includeReports === "vertical") && emailsInScope.length < MIN_GROUP) {
         return Response.json({
           suppressed: true,
           reason: `Organisational insights require at least ${MIN_GROUP} managers to prevent identification.`,
@@ -183,16 +204,24 @@ export default async function(req: Request): Promise<Response> {
         emailsInScope = dedupe([anchorEmail, ...sub.map((m) => m.email)]);
         teamMembers = [{ email: anchorEmail, name: nameOf(anchorEmail) }, ...sub];
         viewingLeader = leaderEntry(anchorEmail);
+      } else if (includeReports !== "vertical") {
+        // Own line only — their own check-ins, or their own plus direct reports.
+        const reports = includeReports === "direct" ? tree.directReports(userEmail) : [];
+        emailsInScope = dedupe([userEmail, ...reports.map((m) => m.email)]);
+        teamMembers = [{ email: userEmail, name: nameOf(userEmail) }, ...reports];
+        viewingLeader = leaderEntry(userEmail);
       } else {
         emailsInScope = ownEmails;
         teamMembers = [{ email: userEmail, name: nameOf(userEmail) }, ...ownTree];
         viewingLeader = leaderEntry(userEmail);
       }
 
-      leaders = ownEmails
-        .filter((e) => directReportCount(e) > 0)
-        .map((e) => leaderEntry(e))
-        .sort((a, b) => b.subtree_size - a.subtree_size || a.name.localeCompare(b.name));
+      leaders = anchorEmail || includeReports !== "vertical"
+        ? []
+        : ownEmails
+            .filter((e) => directReportCount(e) > 0)
+            .map((e) => leaderEntry(e))
+            .sort((a, b) => b.subtree_size - a.subtree_size || a.name.localeCompare(b.name));
     }
 
     if (emailsInScope.length === 0) {

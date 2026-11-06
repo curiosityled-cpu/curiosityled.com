@@ -21,6 +21,9 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
   const [showHistorical, setShowHistorical] = useState(false);
   const [leaderEmail, setLeaderEmail] = useState("");
   const [audienceFilter, setAudienceFilter] = useState({ title: "", tier: "", track: "" });
+  // Whose check-ins this view covers: the viewer alone, the viewer plus their
+  // direct reports, or everything they can see.
+  const [includeReports, setIncludeReports] = useState("vertical");
   const [exportOptions, setExportOptions] = useState({ sessions: true, summary: true });
   const [busy, setBusy] = useState("");
   const initialised = useRef(false);
@@ -41,6 +44,7 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
       scope,
       rangeKey,
       leaderEmail,
+      includeReports,
       audienceFilter.title,
       audienceFilter.tier,
       audienceFilter.track,
@@ -50,6 +54,7 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
         scope,
         ...requestRange,
         leader_email: leaderEmail || "",
+        include_reports: includeReports,
         audience_title: audienceFilter.title || "",
         audience_tier: audienceFilter.tier || "",
         audience_track: audienceFilter.track || "",
@@ -94,21 +99,35 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
 
   const heading = title || (scope === "org" ? "Organisation-wide Check-in Intelligence" : "Team Check-in Insights");
   const viewing = data?.viewing_leader;
-  const scopeLabel = viewing
-    ? viewing.is_self
-      ? scope === "org" ? "Whole organisation" : "My team"
-      : `${viewing.name} — ${viewing.direct_reports} team · ${viewing.subtree_size} vertical`
-    : scope === "org" ? "Whole organisation" : "My team";
+
+  // Whose check-ins the view currently covers.
+  const ownLine = includeReports !== "vertical";
+  const lineLabel =
+    includeReports === "self"
+      ? "Just my own check-ins"
+      : `Me and my ${viewing?.is_self ? viewing.direct_reports : ""} direct reports`.replace("  ", " ");
+
+  const scopeLabel = ownLine
+    ? lineLabel
+    : viewing
+      ? viewing.is_self
+        ? scope === "org" ? "Whole organisation" : "My team"
+        : `${viewing.name} — ${viewing.direct_reports} team · ${viewing.subtree_size} vertical`
+      : scope === "org" ? "Whole organisation" : "My team";
 
   // What the export covers: an individual leader (with their vertical), the
   // caller's own reporting line, or the whole organisation.
   const oneLeader = viewing && !viewing.is_self;
-  const viewLabel = oneLeader ? "Individual" : scope === "org" ? "Organisation" : "Direct reports";
-  const subjectLabel = oneLeader
-    ? `${viewing.name} — ${viewing.direct_reports} direct reports · ${viewing.subtree_size} people in the vertical`
-    : scope === "org"
-      ? "Whole organisation"
-      : "My team — you and everyone in your reporting line";
+  const viewLabel = ownLine
+    ? includeReports === "self" ? "Individual" : "Direct reports"
+    : oneLeader ? "Individual" : scope === "org" ? "Organisation" : "Direct reports";
+  const subjectLabel = ownLine
+    ? lineLabel
+    : oneLeader
+      ? `${viewing.name} — ${viewing.direct_reports} direct reports · ${viewing.subtree_size} people in the vertical`
+      : scope === "org"
+        ? "Whole organisation"
+        : "My team — you and everyone in your reporting line";
 
   const exportFilters = [
     audienceFilter.title && { label: "Job title", value: audienceFilter.title },
@@ -126,6 +145,7 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
       scope,
       ...requestRange,
       leader_email: leaderEmail || "",
+      include_reports: includeReports,
       audience_title: audienceFilter.title || "",
       audience_tier: audienceFilter.tier || "",
       audience_track: audienceFilter.track || "",
@@ -305,6 +325,28 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
             />
           </div>
         )}
+        {/* Whose check-ins to show: just the viewer, them plus their direct
+            reports, or everyone they can already see. */}
+        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+          {[
+            { id: "self", label: "Just mine" },
+            { id: "direct", label: "Mine + direct reports" },
+            { id: "vertical", label: scope === "org" ? "Whole organisation" : "My team" },
+          ].map((option) => (
+            <button
+              key={option.id}
+              onClick={() => {
+                setIncludeReports(option.id);
+                setLeaderEmail("");
+              }}
+              className={`text-xs font-medium py-1.5 px-3 rounded-md transition-all ${
+                includeReports === option.id ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
         <LeaderDrilldown
           leaders={leaders}
           value={leaderEmail}
