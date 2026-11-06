@@ -1,4 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.49";
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 import { validateAssignment, isSnapshotOperationallyBlocked } from "../../shared/successionAssignmentRules.ts";
 import { acquireOrgRoleLock, releaseOrgRoleLock } from "../../shared/successionLockHelper.ts";
 import { quarantineRecord, resolveIntegrityConflict, filterActiveRecords, RESOLUTION_DISPOSITION } from "../../shared/successionIntegrityHelper.ts";
@@ -37,12 +38,15 @@ export default async function(req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
     if (!user) {
       recordTest("authentication", false, { error: "No authenticated user" });
       return Response.json(results, { status: 401 });
     }
 
-    const client_id = user.client_id || user.data?.client_id;
+    const client_id = callerClientId || user.data?.client_id;
     if (!client_id) {
       recordTest("tenant_context", false, { error: "No client_id — tests require tenant user" });
       return Response.json(results, { status: 403 });

@@ -1,9 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
 
     if (!['Platform Admin', 'Super Administrator'].includes(user?.app_role)) {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
@@ -23,7 +27,7 @@ Deno.serve(async (req) => {
         points_amount: 100,
         transaction_type: 'completion',
         reason: 'Unit test - point award validation',
-        client_id: user.client_id
+        client_id: callerClientId
       });
       
       testResults.tests.push({
@@ -81,7 +85,7 @@ Deno.serve(async (req) => {
     try {
       const badgeResult = await base44.asServiceRole.functions.invoke('evaluateAllBadges', {
         user_email: user.email,
-        client_id: user.client_id,
+        client_id: callerClientId,
         check_proximity: true
       });
       

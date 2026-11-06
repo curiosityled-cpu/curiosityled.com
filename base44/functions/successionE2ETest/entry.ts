@@ -1,4 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.49";
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 import {
   E2ETestHarness,
   journey1_OrgFoundation,
@@ -40,6 +41,9 @@ export default async function(req: Request): Promise<Response> {
   try {
     base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
     if (!user) {
       harness.recordTest("PREREQ", "Authentication", false, { error: "No authenticated user" });
       return Response.json(harness.results, { status: 401 });
@@ -70,7 +74,7 @@ export default async function(req: Request): Promise<Response> {
     }
 
     // ── Resolve tenant via canonical resolver (handles slug or entity ID) ──
-    const rawClientId = user.client_id || user.data?.client_id;
+    const rawClientId = callerClientId || user.data?.client_id;
     if (!rawClientId) {
       harness.recordTest("PREREQ", "Tenant context", false, { error: "No client_id — user must have a tenant" });
       return Response.json(harness.results, { status: 403 });

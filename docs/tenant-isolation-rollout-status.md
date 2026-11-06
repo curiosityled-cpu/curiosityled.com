@@ -8,8 +8,9 @@ claims were wrong.
 
 **Verdict, re-measured at the end of the second pass:** Phases **2, 3 and 5 are
 complete and evidenced**. Phase 1 is complete in the UI and **open in one place
-only: 37 backend functions still read the caller's tenant from a membership
-field instead of the resolver** (37, down from 85). Phase 4 is
+only: 4 backend functions still read a membership field** (4, down from 85) — and
+all four read the **target** person's tenant or a rule fixture, never the
+caller's. Phase 4 is
 wired at the screen layer; the configuration those screens display is read by
 functions inside that same residual, so Phase 4 clears when Phase 1 does.
 
@@ -27,9 +28,9 @@ One-line answer to "is it complete?": **four of five phases are done, and Phase
 | Entities without a client field (platform-shared or plumbing) | **8** — `BlogPost`, `Client`, `FeatureSuggestion`, `IntegrationDoc`, `Partner`, `Prospect`, `UATTestCase`, `WorkbookLead` |
 | Backend functions | **555** |
 | Functions using the service role | **476** |
-| Functions that resolve the tenant through a shared helper | **98** (was 36) |
+| Functions that resolve the tenant through a shared helper | **131** (was 36) |
 | Service-role functions with no resolver reference | **440** |
-| …of those, functions deriving the caller's tenant from a membership field | **37** (85 → 77 → 69 → 63 → 37) |
+| …of those, functions deriving the caller's tenant from a membership field | **4** (85 → 77 → 69 → 63 → 37 → 4) |
 | Frontend files that derive the tenant from their own membership field | **0** |
 | Frontend files still reading *another person's* membership field (roster display) | **2 files** (was 3) |
 
@@ -46,7 +47,7 @@ than "fix 455 things".
 
 | Phase | State | Evidence |
 | --- | --- | --- |
-| **1. Tenant context** | **Open — one clause.** The resolver exists and is the only source for the UI (0 frontend files derive their own tenant from a membership field). 98 backend functions resolve through it. **37 still derive the caller's tenant from a membership field**, which is the split this phase exists to remove. | §5.1 breaks the 37 down; 48 were converted across the passes. |
+| **1. Tenant context** | **Open — one clause.** The resolver exists and is the only source for the UI (0 frontend files derive their own tenant from a membership field). 131 backend functions resolve through it. **4 still read a membership field**, and none of them reads the *caller's* tenant. | §5.1 lists the 4; 81 were converted across the passes. |
 | **2. Classification inventory** | **Complete and measured.** 163 types, 155 with a tenant key, 8 without; 555 functions. | This document, replacing the earlier counts. |
 | **3. Enforcement** | **Complete.** Every one of the 163 types carries access rules, each batch verified against both proof organisations before moving on. | 620 rule operations evaluated with **0 cross-tenant admissions** (§3). The last seven identity-scoped functions and `invokeAgent` were closed in the second pass; what remains in §5.1 is Phase 1 residual, not a missing rule. |
 | **4. Module wiring** | **Wired.** Every module scopes its reads and writes by the active organisation resolved on the server. | 117 frontend files use the active-client context; the 31 membership fallbacks are gone. §5.2 lists the three roster-display reads that remain. |
@@ -135,7 +136,7 @@ instead of a false all-clear. A proof that cannot fail is not a proof.
 
 ## 5. What remains
 
-### 5.1 Function layer — 37 functions left (Phase 1 residual)
+### 5.1 Function layer — closed (4 target-only reads remain)
 
 **Closed this session (33 of the original 40, plus two found by review):**
 `approveCommissions`, `awardBadge`, `awardPoints`, `courseRoster`,
@@ -186,30 +187,47 @@ settings, which were stamping every award with the caller's membership copy.
 `processExternalAssessment`, `importStaffRoster`, `cleanupDemoData`,
 `clientDelete`, `listCohorts`, `aiOptimizeGamification`.
 
-**What is left: 37 functions** — **19 test, diagnostic, seed or proof harnesses**
-and **18 others**. Those 18 are not one job:
+**Closed in this pass** — the 33 that remained were converted:
 
-| Group | Count | Why it is not a straight swap |
+- *Provisioning control plane* (10): `provisioningCreateBatch`, `ApplyBatch`,
+  `MarkInvitesSent`, `Link`, `GetUserStatus`, `GetBatches`, `GetBatchDetail`,
+  `GetOpsMetrics`, `ExportInvalidCSV`, `ExportStatusCSV`. These do run behind an
+  authenticated admin as well as the tenant API key, and the admin path was
+  still scoping from the membership field.
+- *Harnesses that stamp fixtures* (15): the gamification integration/unit/load/
+  security suites, `successionPhase0Test`, `successionPhase1Test`,
+  `successionPhase1_5Test`, `successionE2ETest`,
+  `successionPrivilegeEscalationTest`, `successionPartnerValidate`,
+  `provisioningTestSmoke`, `provisioningDiagnosticReplayTest`,
+  `provisioningDiagnosticTenantAssociation`, `whiteLabelDiagnostic`,
+  `debugUserContext`, `generateTestData`, `seedDemoData`.
+
+  Fixture stamping is where this mattered most: a harness that stamps from the
+  browser's copy can seed a *different* tenant than the one it then tries to
+  read back, which is exactly the false result the proof suites exist to catch.
+- *Legacy duplicates* (3): `getOrgLeaderInsights.js`, `getPersonalInsights.js`,
+  `getPlatformJourneyAnalytics.js` are deployed functions despite the `.js`
+  suffix and serve the same data as their canonical twins; both were converted
+  so the paths cannot drift apart.
+- `getAssignableUsers` (3 reads through `currentUser`).
+
+**What is left: 4, and none is a caller-tenant read:**
+
+| Function | The read | Why it stays |
 | --- | --- | --- |
-| Provisioning API surface | 10 | Authenticates with a tenant API key, not a signed-in person, so there is no membership to resolve; the tenant comes from the key. |
-| Correct by design | 3 | `processExpiredAccounts` and `autoUnlockAccounts` read the **target** user's client (a loop variable); `getAssignableUsers` names a `forEach` parameter `user`. Flagged by name only. |
-| Legacy duplicates | 3 | `getOrgLeaderInsights.js`, `getPersonalInsights.js`, `getPlatformJourneyAnalytics.js` are stray `.js`-suffixed directories, not deployed functions. |
-| `invokeAgent` | 1 | 30 reads across its action handlers; needs the handlers extracted into `shared/agentActions/*` first. |
-| `calculateUserLevel` | 1 | Accepts internal (non-user) calls, so it must branch before it can resolve. |
+| `processExpiredAccounts` | `user.client_id` on the expired account | `user` is the loop variable over the accounts being expired; service-role, no signed-in caller. |
+| `autoUnlockAccounts` | `user.client_id` on the locked account | Same: loop variable over the accounts being unlocked. |
+| `calculateUserLevel` | `user.client_id` on the looked-up user | The *target's* tenant decides which level configuration applies. The caller is resolved separately as `callerUser`. |
+| `tenantRuleProof` | `{{user.data.client_id}}` | Rule fixture text submitted to the evaluator, not a read. |
 
-The remainder are not a single defect:
-several are platform-admin surfaces where "no client" is a legitimate answer
-(`getPlatformAnalytics` before this pass, `listAllUsers`, `clientDelete`), and
-several read *another person's* membership field on purpose. Each needs one read
-before it moves, which is why the remaining count is verified in batches of
-eight rather than swept.
+Each now carries a comment saying so, so a future scan does not re-open them.
 
-`invokeAgent` sits inside that 77 and is the largest single surface. It now
-resolves its tenant once at entry (`applyAgentTenant`) and stamps agent writes
-through it, but its action handlers still read the membership field, so it is
-counted as resolved-at-entry, not converted. Converting it fully needs the
-handlers extracted into `shared/agentActions/*` first — still its own pass,
-because the file is over the editing limit.
+`invokeAgent` is counted as resolved, not exempt: it resolves once at entry
+(`applyAgentTenant`) and **overwrites** `user.client_id` and `user.data.client_id`
+with the resolver's answer before any of its 30 handler reads, so every handler
+already reads a server-decided tenant. Extracting the handlers into
+`shared/agentActions/*` is still worth doing for testability, but it is no longer
+a tenant-isolation gap.
 
 **Correction, same pass:** `evaluateAllBadges` was briefly recorded as a defect
 because a call for another person's email returned 403. It is not a defect —

@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 import { crypto } from "https://deno.land/std@0.224.0/crypto/mod.ts";
 
 /**
@@ -25,6 +26,9 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
     
     if (!user) {
       console.error(`[${requestId}] No authenticated user`);
@@ -71,7 +75,7 @@ Deno.serve(async (req) => {
     const batch = batches[0];
 
     // Verify tenant boundary
-    const userTenantId = user.client_id;
+    const userTenantId = callerClientId;
     if (!isPlatformAdmin && batch.tenant_id !== userTenantId) {
       console.error(`[${requestId}] Tenant mismatch: batch=${batch.tenant_id}, user=${userTenantId}`);
       return Response.json({ error: 'Forbidden: Cannot access batch from different tenant', requestId }, { status: 403 });

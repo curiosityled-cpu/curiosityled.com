@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 /**
  * POST /provisioning/test/smoke
@@ -26,6 +27,9 @@ Deno.serve(async (req) => {
   try {
     base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
     
     console.log('[SMOKE TEST] User:', user?.email, 'Role:', user?.app_role);
     
@@ -52,7 +56,7 @@ Deno.serve(async (req) => {
     if (user.app_role === 'Platform Admin' && requestedTenantId) {
       tenantId = requestedTenantId;
     } else {
-      tenantId = user.client_id;
+      tenantId = callerClientId;
     }
 
     if (!tenantId) {

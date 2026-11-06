@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 /**
  * GET /provisioning/users/{email}?tenantId=xxx
@@ -9,6 +10,9 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
     
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -34,7 +38,7 @@ Deno.serve(async (req) => {
     if (user.app_role === 'Platform Admin' && requestedTenantId) {
       tenantId = requestedTenantId;
     } else {
-      tenantId = user.client_id;
+      tenantId = callerClientId;
       if (!tenantId) {
         return Response.json({ error: 'User has no tenant association' }, { status: 400 });
       }

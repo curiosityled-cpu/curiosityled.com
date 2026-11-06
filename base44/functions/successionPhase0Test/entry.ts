@@ -1,4 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.49";
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 import { writeSuccessionAuditEvent } from "../../shared/successionAuditWriter.ts";
 import { isGrantFeatureEnabled } from "../../shared/successionConstants.ts";
 
@@ -42,13 +43,16 @@ export default async function(req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
     if (!user) {
       recordTest("authentication", false, { error: "No authenticated user" });
       return Response.json(results, { status: 401 });
     }
 
     const role = user.app_role || user.data?.app_role || user.role;
-    const client_id = user.client_id || user.data?.client_id;
+    const client_id = callerClientId || user.data?.client_id;
 
     // ── Test 1: Ordinary SDK denial (app-user read of SuccessionAuditEvent) ───
     try {

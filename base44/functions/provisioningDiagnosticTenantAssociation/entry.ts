@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 import { crypto } from "https://deno.land/std@0.224.0/crypto/mod.ts";
 
 /**
@@ -13,6 +14,9 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
     
     if (!user) {
       console.error(`[${requestId}] No authenticated user`);
@@ -30,8 +34,8 @@ Deno.serve(async (req) => {
 
     const normalizedEmail = user.email.toLowerCase().trim();
 
-    // Check user.client_id
-    const hasClientId = !!user.client_id;
+    // Check callerClientId
+    const hasClientId = !!callerClientId;
 
     // Look up UserProfile by email across all tenants
     const allProfiles = await base44.asServiceRole.entities.UserProfile.filter({
@@ -44,13 +48,13 @@ Deno.serve(async (req) => {
     let warnings = [];
 
     if (hasClientId) {
-      resolutionStrategy = 'user.client_id';
-      resolvedTenantId = user.client_id;
+      resolutionStrategy = 'resolver';
+      resolvedTenantId = callerClientId;
       
       // Check if profile exists in that tenant
-      const profileInTenant = allProfiles.find(p => p.tenant_id === user.client_id);
+      const profileInTenant = allProfiles.find(p => p.tenant_id === callerClientId);
       if (!profileInTenant && allProfiles.length > 0) {
-        warnings.push('user.client_id is set but no UserProfile exists in that tenant');
+        warnings.push('callerClientId is set but no UserProfile exists in that tenant');
       }
     } else {
       if (allProfiles.length === 0) {
@@ -72,7 +76,7 @@ Deno.serve(async (req) => {
         id: user.id,
         email: user.email,
         app_role: user.app_role,
-        client_id: user.client_id
+        client_id: callerClientId
       },
       resolution: {
         strategy: resolutionStrategy,

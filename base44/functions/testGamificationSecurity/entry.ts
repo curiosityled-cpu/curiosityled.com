@@ -1,9 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
 
     if (!['Platform Admin', 'Super Administrator'].includes(user?.app_role)) {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
@@ -19,7 +23,7 @@ Deno.serve(async (req) => {
     try {
       // Verify admin can access gamification settings
       const settings = await base44.asServiceRole.entities.GamificationSettings.filter({
-        client_id: user.client_id
+        client_id: callerClientId
       });
 
       // Verify admin can access badge templates
@@ -95,7 +99,7 @@ Deno.serve(async (req) => {
     // Test 3: Budget Enforcement
     try {
       const settings = await base44.asServiceRole.entities.GamificationSettings.filter({
-        client_id: user.client_id
+        client_id: callerClientId
       });
       
       const peerBudget = settings[0]?.peer_point_budget_weekly || 300;
@@ -106,7 +110,7 @@ Deno.serve(async (req) => {
         recipient_email: 'test-recipient@example.com',
         points_amount: peerBudget + 500,
         reason: 'Security test - over budget',
-        client_id: user.client_id
+        client_id: callerClientId
       });
 
       const budgetEnforced = !overBudgetResult.data?.success;

@@ -94,6 +94,8 @@ function selfTest(): string[] {
   const scoped = {
     $and: [
       { user_condition: { role: "Admin Level 2" } },
+      // Rule fixture, not a read: this is the template text the proof submits to
+      // the access-rule evaluator to confirm the rule scopes to the principal.
       { "data.client_id": "{{user.data.client_id}}" },
     ],
   };

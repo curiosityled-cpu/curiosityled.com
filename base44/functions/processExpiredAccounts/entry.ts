@@ -55,6 +55,9 @@ Deno.serve(async (req) => {
           initiator_user_email: 'system@automation',
           action_type: 'USER_ACCOUNT_SUSPENDED',
           target_user_email: user.email,
+          // `user` is the expired account being processed (loop variable), so
+          // this is the target's tenant, not the caller's. Runs as the service
+          // role with no signed-in caller.
           client_id: user.client_id,
           metadata: {
             reason: 'Account expired',

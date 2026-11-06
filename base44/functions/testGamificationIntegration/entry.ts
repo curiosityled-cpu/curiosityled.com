@@ -1,9 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
 
     if (!['Platform Admin', 'Super Administrator'].includes(user?.app_role)) {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
@@ -25,7 +29,7 @@ Deno.serve(async (req) => {
         points_amount: 500,
         transaction_type: 'completion',
         reason: 'Integration test - learning completion',
-        client_id: user.client_id
+        client_id: callerClientId
       });
 
       // Step 2: Check level progression
@@ -63,7 +67,7 @@ Deno.serve(async (req) => {
     // Test 2: Peer Point Giving with Budget Limits
     try {
       const settings = await base44.asServiceRole.entities.GamificationSettings.filter({
-        client_id: user.client_id
+        client_id: callerClientId
       });
       
       const budget = settings[0]?.peer_point_budget_weekly || 300;
@@ -74,7 +78,7 @@ Deno.serve(async (req) => {
         recipient_email: testUserEmail,
         points_amount: 50,
         reason: 'Budget test - within limit',
-        client_id: user.client_id
+        client_id: callerClientId
       });
 
       // Attempt to exceed budget (should fail or warn)
@@ -83,7 +87,7 @@ Deno.serve(async (req) => {
         recipient_email: testUserEmail,
         points_amount: budget + 100,
         reason: 'Budget test - exceed limit',
-        client_id: user.client_id
+        client_id: callerClientId
       });
 
       const budgetEnforced = withinBudgetResult.data?.success && 
@@ -117,7 +121,7 @@ Deno.serve(async (req) => {
           user_email: testUserEmail,
           badge_template_id: testBadge.id,
           awarded_by_system: true,
-          client_id: user.client_id
+          client_id: callerClientId
         });
 
         const userBadges = await base44.asServiceRole.entities.UserBadge.filter({

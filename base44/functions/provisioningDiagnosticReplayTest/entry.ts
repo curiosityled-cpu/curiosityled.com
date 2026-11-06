@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 import { crypto } from "https://deno.land/std@0.224.0/crypto/mod.ts";
 
 /**
@@ -17,6 +18,9 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
     
     if (!user || user.app_role !== 'Platform Admin') {
       return Response.json({ error: 'Platform Admin access required', requestId }, { status: 403 });
@@ -25,7 +29,7 @@ Deno.serve(async (req) => {
     const { testType } = await req.json();
     const results = [];
 
-    const testTenantId = user.client_id || 'test-tenant';
+    const testTenantId = callerClientId || 'test-tenant';
 
     // Get an active API key for this tenant
     const apiKeys = await base44.asServiceRole.entities.ProvisioningApiKey.filter({

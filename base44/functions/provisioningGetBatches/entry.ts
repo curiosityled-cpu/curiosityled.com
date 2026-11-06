@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 import { crypto } from "https://deno.land/std@0.224.0/crypto/mod.ts";
 
 /**
@@ -16,6 +17,9 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
     
     if (!user) {
       console.error(`[${requestId}] No authenticated user`);
@@ -40,7 +44,7 @@ Deno.serve(async (req) => {
     
     // Tenant scoping (Platform Admin can see all)
     if (!isPlatformAdmin) {
-      query.tenant_id = user.client_id;
+      query.tenant_id = callerClientId;
     }
     
     if (status) {

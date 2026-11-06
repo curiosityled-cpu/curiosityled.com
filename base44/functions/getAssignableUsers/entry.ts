@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 /**
  * Gets list of users that the current user can assign resources to
@@ -8,6 +9,9 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const currentUser = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, currentUser)).client_id;
 
     if (!currentUser) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -42,7 +46,7 @@ Deno.serve(async (req) => {
     } else if (currentUser.app_role === 'Admin Level 1') {
       // Program Admin: Get users in their programs/cohorts
       const allUsers = await base44.asServiceRole.entities.User.list();
-      assignableUsers = allUsers.filter(u => u.client_id === currentUser.client_id);
+      assignableUsers = allUsers.filter(u => u.client_id === callerClientId);
       scope = 'programs';
       
       // Group by department
@@ -54,7 +58,7 @@ Deno.serve(async (req) => {
     } else if (['Admin Level 2', 'Super Administrator'].includes(currentUser.app_role)) {
       // HR Admin / Super Admin: All users in organization
       const allUsers = await base44.asServiceRole.entities.User.list();
-      assignableUsers = allUsers.filter(u => u.client_id === currentUser.client_id);
+      assignableUsers = allUsers.filter(u => u.client_id === callerClientId);
       scope = 'organization_wide';
       
       // Group by division/department
@@ -66,7 +70,7 @@ Deno.serve(async (req) => {
     } else if (currentUser.app_role === 'Partner Business Administrator') {
       // Partner Admin: All users in their partner's clients
       const allUsers = await base44.asServiceRole.entities.User.list();
-      assignableUsers = allUsers.filter(u => u.client_id === currentUser.client_id);
+      assignableUsers = allUsers.filter(u => u.client_id === callerClientId);
       scope = 'partner_clients';
       
       // Group by client

@@ -1,9 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -15,7 +19,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden - only Platform Admin or Super Administrator can seed demo data' }, { status: 403 });
     }
 
-    let clientId = user.client_id;
+    let clientId = callerClientId;
 
     // If user is a Platform Admin and no client_id provided, create/use demo client
     if (!clientId && user.app_role === 'Platform Admin') {
@@ -47,7 +51,7 @@ Deno.serve(async (req) => {
       }
 
       // Update current user to be part of demo client if they weren't
-      if (!user.client_id) {
+      if (!callerClientId) {
         await base44.asServiceRole.entities.User.update(user.id, {
           client_id: clientId
         });

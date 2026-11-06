@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 /**
  * POST /provisioning/test/security
@@ -23,6 +24,9 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
     
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -36,8 +40,8 @@ Deno.serve(async (req) => {
     // ========== TEST 1: Tenant Boundary Enforcement ==========
     // Verify endpoints derive tenantId from user context
     
-    const userTenantId = user.client_id || 'test-security-tenant';
-    if (!user.client_id) {
+    const userTenantId = callerClientId || 'test-security-tenant';
+    if (!callerClientId) {
       logTest('TENANT_ASSOCIATION', true, { 
         note: 'Platform Admin without client_id - using test-security-tenant',
         tenantId: userTenantId 
@@ -132,7 +136,7 @@ Deno.serve(async (req) => {
 
     await base44.asServiceRole.entities.UserProfile.delete(testProfile.id);
 
-    // Test 3b: Forged tenantId with missing user.client_id
+    // Test 3b: Forged tenantId with missing callerClientId
     // Create profile in different tenant
     const forgeTenantId = 'forged_tenant_' + Date.now();
     const forgeProfile = await base44.asServiceRole.entities.UserProfile.create({
@@ -152,7 +156,7 @@ Deno.serve(async (req) => {
         base44UserId: user.id
       });
       
-      // Should either succeed (if Platform Admin can override) or use user.client_id
+      // Should either succeed (if Platform Admin can override) or use callerClientId
       // Since function now looks up by email if client_id missing, check behavior
       logTest('LINK_FORGED_TENANT_HANDLING', true, { 
         note: 'Function derives tenant server-side, ignores client input for non-Platform Admin'

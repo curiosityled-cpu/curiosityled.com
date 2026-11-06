@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -6,6 +7,9 @@ Deno.serve(async (req) => {
     
     // Authenticate and authorize
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
     
     if (!user) {
       return Response.json({ 
@@ -36,7 +40,7 @@ Deno.serve(async (req) => {
     const tenantScopedRoles = ['Admin Level 1', 'Admin Level 2', 'Super Administrator', 'User Level 3'];
     const needsTenantScope = tenantScopedRoles.includes(user.app_role);
     if (!isPlatformAdmin && (needsTenantScope || isPartnerBA)) {
-      const hasScope = user.client_id || (isPartnerBA && partnerClientIds.length > 0);
+      const hasScope = callerClientId || (isPartnerBA && partnerClientIds.length > 0);
       if (!hasScope) {
         return Response.json({
           success: false,
@@ -133,9 +137,9 @@ Deno.serve(async (req) => {
       scopedEnrollments = enrollments.filter(e => clientUserEmails.has(e.user_email));
       scopedAssessments = assessments.filter(a => clientUserEmails.has(a.email));
       scopedGoals = goals.filter(g => g.created_by && clientUserEmails.has(g.created_by));
-    } else if (user.client_id) {
+    } else if (callerClientId) {
       // Admin Level 1/2, Super Administrator, User Level 3 — scope to own client
-      scopedUsers = users.filter(u => u.client_id === user.client_id);
+      scopedUsers = users.filter(u => u.client_id === callerClientId);
       const clientUserEmails = new Set(scopedUsers.map(u => u.email));
       scopedEnrollments = enrollments.filter(e => clientUserEmails.has(e.user_email));
       scopedAssessments = assessments.filter(a => clientUserEmails.has(a.email));

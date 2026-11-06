@@ -1,4 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.49";
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 import { writeSuccessionAuditEvent } from "../../shared/successionAuditWriter.ts";
 import { MIN_GROUP_SUPPRESSION_THRESHOLD } from "../../shared/successionConstants.ts";
 
@@ -30,6 +31,9 @@ export default async function(req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
     if (!user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -135,7 +139,7 @@ export default async function(req: Request): Promise<Response> {
     // ── 5. Confirm Client.partner_id matches the caller's partner org ─────────
     // The caller's partner organization is identified by their own client_id
     // (the partner's home client). The target Client.partner_id must match.
-    const caller_partner_org_id = user.client_id || user.data?.client_id;
+    const caller_partner_org_id = callerClientId || user.data?.client_id;
     if (!client.partner_id || client.partner_id !== caller_partner_org_id) {
       await writeSuccessionAuditEvent({
         base44,

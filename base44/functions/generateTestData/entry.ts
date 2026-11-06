@@ -1,9 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
 
     if (user?.app_role !== 'Platform Admin') {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
@@ -43,7 +47,7 @@ Deno.serve(async (req) => {
 
       const achievement = await base44.asServiceRole.entities.UserAchievement.create({
         user_email: testEmail,
-        client_id: user.client_id,
+        client_id: callerClientId,
         total_points: points,
         current_level: level,
         level_name: levelName,
@@ -60,7 +64,7 @@ Deno.serve(async (req) => {
         for (let j = 0; j < transactionCount; j++) {
           const transaction = await base44.asServiceRole.entities.PointTransaction.create({
             user_email: testEmail,
-            client_id: user.client_id,
+            client_id: callerClientId,
             transaction_type: ['completion', 'recognition', 'system_award'][Math.floor(Math.random() * 3)],
             points_amount: Math.floor(Math.random() * 200) + 50,
             reason: `Test transaction ${j}`,

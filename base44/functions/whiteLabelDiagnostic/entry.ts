@@ -1,9 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -12,7 +16,7 @@ Deno.serve(async (req) => {
     const diagnostics = {
       user: {
         email: user.email,
-        client_id: user.client_id,
+        client_id: callerClientId,
         partner_id: user.partner_id,
         role: user.role,
         app_role: user.app_role
@@ -62,10 +66,10 @@ Deno.serve(async (req) => {
     }
 
     // Test 3: If user has client_id, search for client-specific branding
-    if (user.client_id) {
+    if (callerClientId) {
       try {
         const clientConfigs = await base44.entities.BrandingConfiguration.filter({
-          client_id: user.client_id,
+          client_id: callerClientId,
           is_active: true
         });
         diagnostics.branding_search.client_branding_count = clientConfigs.length;
@@ -96,9 +100,9 @@ Deno.serve(async (req) => {
     try {
       let brandingConfig = null;
       
-      if (user.client_id) {
+      if (callerClientId) {
         const results = await base44.entities.BrandingConfiguration.filter({
-          client_id: user.client_id,
+          client_id: callerClientId,
           is_active: true
         });
         if (results.length > 0) {

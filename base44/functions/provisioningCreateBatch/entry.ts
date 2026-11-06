@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 import { crypto } from "https://deno.land/std@0.224.0/crypto/mod.ts";
 
 /**
@@ -13,6 +14,9 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
     
     if (!user) {
       return Response.json({ error: 'Unauthorized', requestId }, { status: 401 });
@@ -60,7 +64,7 @@ Deno.serve(async (req) => {
     }
 
     // Derive tenant from user
-    const tenantId = user.client_id;
+    const tenantId = callerClientId;
     if (!tenantId) {
       return Response.json({ error: 'User must be associated with a client', requestId }, { status: 400 });
     }

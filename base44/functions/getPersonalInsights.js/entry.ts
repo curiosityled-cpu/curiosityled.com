@@ -1,10 +1,13 @@
-
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -73,18 +76,18 @@ Deno.serve(async (req) => {
     const sameLevelPeers = allUsers.filter(u => 
       u.app_role === user.app_role && 
       u.email !== user.email &&
-      u.client_id === user.client_id
+      u.client_id === callerClientId
     );
 
     const sameDeptPeers = allUsers.filter(u => 
       u.department === user.department && 
       u.email !== user.email &&
-      u.client_id === user.client_id
+      u.client_id === callerClientId
     );
 
     // Calculate peer benchmarks
     const peerAssessments = await base44.asServiceRole.entities.Assessment.filter({
-      client_id: user.client_id
+      client_id: callerClientId
     });
 
     const sameLevelAssessments = peerAssessments.filter(a => {

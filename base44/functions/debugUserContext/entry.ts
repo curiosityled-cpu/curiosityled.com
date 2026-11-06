@@ -1,9 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
     
     if (!user) {
       return Response.json({ error: 'Not authenticated' }, { status: 401 });
@@ -40,7 +44,7 @@ Deno.serve(async (req) => {
         email: user.email,
         role: user.role,
         app_role: user.app_role,
-        client_id: user.client_id,
+        client_id: callerClientId,
         data_app_role: user.data?.app_role,
         data_client_id: user.data?.client_id,
       },

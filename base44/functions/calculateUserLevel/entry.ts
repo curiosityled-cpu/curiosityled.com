@@ -47,6 +47,9 @@ Deno.serve(async (req) => {
     // Get all levels for this client (or platform defaults)
     const levels = await base44.asServiceRole.entities.GamificationLevel.filter({
       '$or': [
+        // This is the *target* user's tenant (the person whose level is being
+        // computed), never the caller's — the caller is resolved separately as
+        // callerUser. Level configuration is looked up in the target's tenant.
         { client_id: user.client_id },
         { is_platform_default: true, client_id: null }
       ],

@@ -63,6 +63,8 @@ Deno.serve(async (req) => {
           initiator_user_email: 'system',
           action_type: 'USER_ACCOUNT_UNLOCKED',
           target_user_email: user.email,
+          // `user` is the locked account being unlocked (loop variable), so this
+          // is the target's tenant, not the caller's.
           client_id: user.client_id,
           metadata: {
             reason: 'Automatic unlock - lock period expired'

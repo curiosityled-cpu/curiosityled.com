@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.51';
+import { resolveActiveClient } from '../../shared/tenantContext.ts';
 import { bootstrapSuccessionAuth } from "../../shared/successionAuthBootstrap.ts";
 import { authorizeSuccessionAction } from "../../shared/authorizeSuccessionAction.ts";
 import { deriveServerOwnedPermissions, BASE_ROLE_PERMISSIONS } from "../../shared/successionRolePermissions.ts";
@@ -40,6 +41,9 @@ Deno.serve(async (req) => {
     if (!user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    // Tenant comes from the resolver, never from the browser's membership copy.
+    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
 
     // Save original state
     originalDataPermissions = user.data?.permissions;
@@ -216,7 +220,7 @@ Deno.serve(async (req) => {
           id: 'ESC-13',
           name: 'Self-grant client_id (tenant switch)',
           passed: !switchedTenant,
-          details: { originalClientId: user.client_id || user.data?.client_id, authClientId: auth.client_id, switched: switchedTenant },
+          details: { originalClientId: callerClientId || user.data?.client_id, authClientId: auth.client_id, switched: switchedTenant },
         });
       } catch (err: any) {
         results.push({ id: 'ESC-13', name: 'Self-grant client_id (tenant switch)', passed: false, details: { error: err.message } });
