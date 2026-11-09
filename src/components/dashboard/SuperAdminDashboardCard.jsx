@@ -65,7 +65,7 @@ export default function SuperAdminDashboardCard({ user }) {
       }
     };
     
-    if (user?.client_id) {
+    if (activeClientId) {
       loadClientData();
     } else {
       setLoading(false);

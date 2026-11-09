@@ -18,10 +18,10 @@ export default function LeaderboardWidget({ scope = "organization", maxDisplay =
 
   useEffect(() => {
     loadLeaderboard();
-  }, [user?.client_id]);
+  }, [activeClientId]);
 
   const loadLeaderboard = async () => {
-    if (!user?.client_id) return;
+    if (!activeClientId) return;
 
     try {
       const achievements = await base44.entities.UserAchievement.filter({

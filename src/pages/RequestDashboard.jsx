@@ -50,8 +50,11 @@ import ProgramAdminCard from "../components/program-admin/ProgramAdminCard";
 import RequestAssignmentPanel from "../components/program-admin/RequestAssignmentPanel";
 import AIAssignmentRecommender from "../components/program-admin/AIAssignmentRecommender";
 
+import { useActiveClientId } from "@/components/contexts/ClientContext";
+
 function RequestDashboard() {
   const { user, isHRAdmin, isProgramManager, isAnyAdmin, isPlatformAdmin } = useAuth();
+  const activeClientId = useActiveClientId();
   
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -374,7 +377,7 @@ function RequestDashboard() {
 
             <TabsContent value="requests">
               {/* Statistics */}
-              <RequestStatistics clientId={user?.client_id} refreshTrigger={refreshStats} />
+              <RequestStatistics clientId={activeClientId} refreshTrigger={refreshStats} />
         
         <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mt-6">
           <Card>
@@ -694,7 +697,7 @@ function RequestDashboard() {
         ) : (
           <>
             {/* Statistics for non-HR Admins */}
-            <RequestStatistics clientId={user?.client_id} refreshTrigger={refreshStats} />
+            <RequestStatistics clientId={activeClientId} refreshTrigger={refreshStats} />
             
             <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mt-6">
               <Card>
@@ -940,7 +943,7 @@ function RequestDashboard() {
             <DialogHeader>
               <DialogTitle>Generate Public Submission Link</DialogTitle>
             </DialogHeader>
-            <PublicRequestLinkGenerator clientId={user?.client_id} isAdmin={isAnyAdmin || isPlatformAdmin} />
+            <PublicRequestLinkGenerator clientId={activeClientId} isAdmin={isAnyAdmin || isPlatformAdmin} />
           </DialogContent>
         </Dialog>
       </div>

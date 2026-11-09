@@ -9,8 +9,10 @@ import { toast } from "sonner";
 import { Plus, Search, Edit, Trash2, Sparkles, Loader2, AlertTriangle } from "lucide-react";
 import { BUILTIN_TEMPLATES, AVAILABLE_METRICS, normalizeCustomTemplate, getIconByName } from "./reportTemplates";
 import TemplateEditorDialog from "./TemplateEditorDialog";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 
 export default function ReportLibraryTab({ user, onUseTemplate }) {
+  const activeClientId = useActiveClientId();
   const [customTemplates, setCustomTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -164,7 +166,7 @@ export default function ReportLibraryTab({ user, onUseTemplate }) {
         onOpenChange={setShowEditor}
         editingTemplate={editingTemplate}
         userEmail={user?.email}
-        clientId={user?.client_id}
+        clientId={activeClientId}
         onSuccess={loadCustomTemplates}
       />
     </div>

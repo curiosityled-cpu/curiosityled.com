@@ -34,9 +34,12 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { useActiveClientId } from "@/components/contexts/ClientContext";
+
 export default function ProvisioningBatchDetail() {
   const navigate = useNavigate();
   const { user, isPlatformAdmin, isSuperAdmin } = useAuth();
+  const activeClientId = useActiveClientId();
   const [batch, setBatch] = useState(null);
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
@@ -49,7 +52,7 @@ export default function ProvisioningBatchDetail() {
   // Get batchId from URL params
   const urlParams = new URLSearchParams(window.location.search);
   const batchId = urlParams.get('batchId');
-  const tenantId = user?.client_id || 'default';
+  const tenantId = activeClientId || 'default';
 
   useEffect(() => {
     if (batchId) {

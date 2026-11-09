@@ -100,7 +100,7 @@ export default function CareerPathAnalytics({ scope = 'org' }) {
         filteredUsers = usersData.filter(u => subordinateEmails.includes(u.email));
       } else if (scope === 'org' && !isPlatformAdmin && !isPartnerBusinessAdmin) {
         // Filter to client's data
-        if (user?.client_id) {
+        if (activeClientId) {
           filteredPaths = pathsData.filter(p => !p.client_id || p.client_id === activeClientId || p.is_platform_default);
           filteredUsers = usersData.filter(u => u.client_id === activeClientId);
         }

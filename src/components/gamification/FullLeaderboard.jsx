@@ -22,10 +22,10 @@ export default function FullLeaderboard() {
 
   useEffect(() => {
     loadLeaderboard();
-  }, [timeFilter, scopeFilter, user?.client_id, page]);
+  }, [timeFilter, scopeFilter, activeClientId, page]);
 
   const loadLeaderboard = async () => {
-    if (!user?.client_id) return;
+    if (!activeClientId) return;
 
     setLoading(true);
     try {

@@ -9,6 +9,8 @@ import DeliveryTab from "@/components/reports/DeliveryTab";
 import ReportAnalyticsView from "@/components/reports/ReportAnalyticsView";
 import CreateReportDialog from "@/components/reports/CreateReportDialog";
 
+import { useActiveClientId } from "@/components/contexts/ClientContext";
+
 const TABS = [
   { id: 'reports', label: 'My Reports', icon: FileText },
   { id: 'delivery', label: 'Delivery', icon: Send },
@@ -18,6 +20,7 @@ const TABS = [
 
 export default function ReportBuilder() {
   const { user, appRole, isPlatformAdmin, isSuperAdmin } = useAuth();
+  const activeClientId = useActiveClientId();
   const [section, setSection] = useState('library');
   const [pendingTemplate, setPendingTemplate] = useState(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -95,7 +98,7 @@ export default function ReportBuilder() {
         onOpenChange={(open) => { if (!open) setPendingTemplate(null); setShowCreateDialog(open); }}
         editingReport={null}
         userEmail={user?.email}
-        clientId={user?.client_id}
+        clientId={activeClientId}
         initialTemplate={pendingTemplate}
         onSuccess={() => { setPendingTemplate(null); setShowCreateDialog(false); setSection('reports'); }}
       />

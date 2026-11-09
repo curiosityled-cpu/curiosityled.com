@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import CoursePickerDialog from "./CoursePickerDialog";
 import AssignCourseModal from "@/components/dev-manager/AssignCourseModal";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 
 const today = () => new Date().toISOString().slice(0, 10);
 const inDays = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
@@ -63,6 +64,7 @@ function queryFor(filter, search) {
  * attention first. The only action on a row is the one an admin actually reaches for: nudge.
  */
 export default function AssignmentsBoard({ user }) {
+  const activeClientId = useActiveClientId();
   const [filter, setFilter] = useState("overdue");
   const [search, setSearch] = useState("");
   const [rows, setRows] = useState([]);
@@ -310,7 +312,7 @@ export default function AssignmentsBoard({ user }) {
           course={assignCourse}
           users={users}
           cohorts={cohorts}
-          clientId={user?.client_id}
+          clientId={activeClientId}
           onAssigned={() => {
             setAssignCourse(null);
             setRefreshKey((k) => k + 1);

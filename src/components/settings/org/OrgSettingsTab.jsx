@@ -21,7 +21,7 @@ import SuperAdminSection from "./SuperAdminSection";
 
 export default function OrgSettingsTab() {
   const { user, isSuperAdmin, isPlatformAdmin } = useAuth();
-  const { client, loading, refreshContext } = useClient();
+  const { client, activeClientId, loading, refreshContext } = useClient();
   const competencyContext = useContext(CompetencyContext);
   const [settings, setSettings] = useState(null);
   const [selectedCompetencyIds, setSelectedCompetencyIds] = useState([]);
@@ -78,7 +78,7 @@ export default function OrgSettingsTab() {
     setSettings((prev) => ({ ...prev, locks: { ...(prev.locks || {}), [key]: !prev.locks?.[key] } }));
 
   const handleSave = async () => {
-    const clientId = client?.id || user?.client_id;
+    const clientId = client?.id || activeClientId;
     if (!clientId) return;
     setSaving(true);
     try {

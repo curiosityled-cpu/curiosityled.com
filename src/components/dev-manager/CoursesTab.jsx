@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import CourseBuilderDialog from "./CourseBuilderDialog";
 import AssignCourseModal from "./AssignCourseModal";
 import CourseRosterDrawer from "@/components/learning/CourseRosterDrawer";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 
 const STATUS_BADGES = {
   draft: { className: "bg-gray-100 text-gray-700", label: "Draft" },
@@ -31,6 +32,7 @@ function countLessons(course) {
 }
 
 export default function CoursesTab({ user }) {
+  const activeClientId = useActiveClientId();
   const [courses, setCourses] = useState([]);
   const [users, setUsers] = useState([]);
   const [cohorts, setCohorts] = useState([]);
@@ -304,7 +306,7 @@ export default function CoursesTab({ user }) {
         open={builderOpen}
         onClose={handleBuilderClose}
         editingCourse={editingCourse}
-        clientId={user?.client_id}
+        clientId={activeClientId}
         onSaved={handleBuilderClose}
       />
 
@@ -324,7 +326,7 @@ export default function CoursesTab({ user }) {
           course={assignModal.course}
           users={users}
           cohorts={cohorts}
-          clientId={user?.client_id}
+          clientId={activeClientId}
           onAssigned={() => setRefreshKey(k => k + 1)}
         />
       )}

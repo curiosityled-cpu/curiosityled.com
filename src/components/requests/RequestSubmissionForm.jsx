@@ -187,7 +187,7 @@ export default function RequestSubmissionForm({ onSuccess, onSubmit, onCancel, d
       };
 
       // Enforce per-client allowlist for coaching_support requests
-      if (formData.request_type === 'coaching_support' && user?.client_id) {
+      if (formData.request_type === 'coaching_support' && activeClientId) {
         try {
           const { data: accessData } = await base44.functions.invoke('validateCoachingRequestAccess', {
             requester_email: user.email,

@@ -17,10 +17,10 @@ export default function Leaderboard({ scope = "organization" }) {
 
   useEffect(() => {
     loadLeaderboard();
-  }, [activeTab, user?.client_id]);
+  }, [activeTab, activeClientId]);
 
   const loadLeaderboard = async () => {
-    if (!user?.client_id) return;
+    if (!activeClientId) return;
 
     setLoading(true);
     try {

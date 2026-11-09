@@ -35,7 +35,7 @@ export default function SuperAdminDashboard({ user, loading }) {
       ]);
 
       const allUsers = usersData?.data?.users || [];
-      const clientUsers = allUsers.filter(u => u.client_id === user?.client_id);
+      const clientUsers = allUsers.filter(u => u.client_id === currentClient?.id);
       
       // Calculate metrics
       const totalUsers = clientUsers.length;
@@ -51,7 +51,7 @@ export default function SuperAdminDashboard({ user, loading }) {
         ? Math.round(clientAssessments.reduce((sum, a) => sum + (a.overall_pct || 0), 0) / clientAssessments.length)
         : 0;
 
-      const clientPrograms = programs.filter(p => p.client_id === user?.client_id);
+      const clientPrograms = programs.filter(p => p.client_id === currentClient?.id);
       const activePrograms = clientPrograms.filter(p => p.status === 'active').length;
 
       const clientGoals = goals.filter(g => 

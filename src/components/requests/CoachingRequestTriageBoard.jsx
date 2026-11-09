@@ -19,6 +19,8 @@ import {
   Calendar, CheckCircle, XCircle, UserPlus, Loader2, ArrowRight,
 } from "lucide-react";
 
+import { useActiveClientId } from "@/components/contexts/ClientContext";
+
 const COLUMNS = [
   { status: "submitted", label: "Submitted" },
   { status: "intake_scheduled", label: "Intake" },
@@ -30,6 +32,7 @@ const COLUMNS = [
 
 export default function CoachingRequestTriageBoard() {
   const { user } = useAuth();
+  const activeClientId = useActiveClientId();
   const [requests, setRequests] = useState([]);
   const [practitioners, setPractitioners] = useState([]);
   const [client, setClient] = useState(null);
@@ -38,7 +41,7 @@ export default function CoachingRequestTriageBoard() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [dialogMode, setDialogMode] = useState(null);
 
-  const clientId = user?.client_id;
+  const clientId = activeClientId;
 
   const fetchData = async () => {
     setLoading(true);

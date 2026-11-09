@@ -19,14 +19,16 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import CSVUploadModal from "@/components/provisioning/CSVUploadModal";
 
+import { useActiveClientId } from "@/components/contexts/ClientContext";
+
 export default function ProvisioningBatches() {
   const { user, isPlatformAdmin, isSuperAdmin } = useAuth();
+  const activeClientId = useActiveClientId();
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
 
-  // TODO: Get tenantId from user context
-  const tenantId = user?.client_id || 'default';
+  const tenantId = activeClientId || 'default';
 
   useEffect(() => {
     loadBatches();

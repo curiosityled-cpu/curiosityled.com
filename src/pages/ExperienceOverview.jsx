@@ -216,17 +216,17 @@ export default function ExperienceOverview() {
   const [expandedCategory, setExpandedCategory] = useState(null); // 'atRisk' | 'developing' | 'onTrack'
 
   const { data: managers = [], isLoading: loadingManagers } = useQuery({
-    queryKey: ['managers', user?.client_id],
+    queryKey: ['managers', activeClientId],
     queryFn: async () => base44.entities.User.filter({
       client_id: activeClientId,
       app_role: { $in: ['User Level 1', 'User Level 2'] }
     }),
-    enabled: !!user?.client_id,
+    enabled: !!activeClientId,
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: allInsights = {}, isLoading: loadingInsights } = useQuery({
-    queryKey: ['all-insights', user?.client_id],
+    queryKey: ['all-insights', activeClientId],
     queryFn: async () => {
       const insights = await base44.entities.AssessmentInsights.filter({
         client_id: activeClientId,
@@ -234,7 +234,7 @@ export default function ExperienceOverview() {
       });
       return insights.reduce((acc, i) => { acc[i.user_email] = i; return acc; }, {});
     },
-    enabled: !!user?.client_id,
+    enabled: !!activeClientId,
     staleTime: 5 * 60 * 1000,
   });
 

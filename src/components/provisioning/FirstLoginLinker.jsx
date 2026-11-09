@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 
 /**
  * FirstLoginLinker
@@ -13,12 +14,12 @@ import { toast } from "sonner";
  */
 export default function FirstLoginLinker() {
   const { user } = useAuth();
+  const activeClientId = useActiveClientId();
   const [linking, setLinking] = useState(false);
   const [linked, setLinked] = useState(false);
   const [error, setError] = useState(null);
 
-  // TODO: Get tenantId from user context
-  const tenantId = user?.client_id || 'default';
+  const tenantId = activeClientId || 'default';
 
   useEffect(() => {
     if (user?.email && user?.id && !linked) {

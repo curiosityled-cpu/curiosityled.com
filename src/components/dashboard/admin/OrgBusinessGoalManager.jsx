@@ -41,7 +41,7 @@ export default function OrgBusinessGoalManager({ user }) {
   const [form, setForm]         = useState(EMPTY_FORM);
   const [saving, setSaving]     = useState(false);
 
-  useEffect(() => { if (user?.client_id) load(); }, [user?.client_id]);
+  useEffect(() => { if (activeClientId) load(); }, [activeClientId]);
 
   const load = async () => {
     setLoading(true);

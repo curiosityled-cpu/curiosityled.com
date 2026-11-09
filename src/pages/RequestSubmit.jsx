@@ -17,10 +17,13 @@ import { CATEGORY_LABELS } from "@/components/coaching-request/RequestBadges";
 import { ArrowLeft, Check, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import { useActiveClientId } from "@/components/contexts/ClientContext";
+
 const CATEGORIES = Object.entries(CATEGORY_LABELS).map(([value, label]) => ({ value, label }));
 
 export default function RequestSubmit() {
   const { user } = useAuth();
+  const activeClientId = useActiveClientId();
   const navigate = useNavigate();
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,7 +50,7 @@ export default function RequestSubmit() {
         const list = await base44.entities.Client.list();
         setClients(list);
         if (list.length > 0 && !form.client_id) {
-          setForm(f => ({ ...f, client_id: user?.client_id || list[0].id }));
+          setForm(f => ({ ...f, client_id: activeClientId || list[0].id }));
         }
       } catch (e) {
         setError(e.message);

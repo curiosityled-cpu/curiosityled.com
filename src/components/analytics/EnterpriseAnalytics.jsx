@@ -38,9 +38,11 @@ import CertificationTrendsWidget from "./CertificationTrendsWidget";
 
 import { usePageContext } from "../../Layout";
 import { useViewportTracking } from "@/components/hooks/useViewportTracking";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 
 export default function EnterpriseAnalytics({ isOrgScoped = false }) {
   const { user, appRole, loading: authLoading } = useAuth();
+  const activeClientId = useActiveClientId();
   const { updatePageContext } = usePageContext();
   const { selectedCompetencies, competenciesConfigured } = useCompetencies();
 
@@ -373,7 +375,7 @@ export default function EnterpriseAnalytics({ isOrgScoped = false }) {
     const baseContext = {
       user_role: appRole,
       user_name: user?.full_name,
-      organization: user?.client_name || (user?.client_id ? 'Client Organization' : 'Platform'),
+      organization: user?.client_name || (activeClientId ? 'Client Organization' : 'Platform'),
       timestamp: new Date().toISOString(),
       pageType: 'enterprise_analytics'
     };
@@ -823,7 +825,7 @@ export default function EnterpriseAnalytics({ isOrgScoped = false }) {
   ];
 
   const totalLeaders = analyticsData.metrics.total_leaders || 0;
-  const client = { name: user?.client_name || (user?.client_id ? 'Client Organization' : 'Platform') };
+  const client = { name: user?.client_name || (activeClientId ? 'Client Organization' : 'Platform') };
 
   // Check if any filter is active
   const anyFilterActive =
@@ -983,8 +985,8 @@ export default function EnterpriseAnalytics({ isOrgScoped = false }) {
 
       {/* External Qualifications Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <OrganizationalSkillMapWidget clientId={user?.client_id} />
-        <CertificationTrendsWidget clientId={user?.client_id} timeframe={6} />
+        <OrganizationalSkillMapWidget clientId={activeClientId} />
+        <CertificationTrendsWidget clientId={activeClientId} timeframe={6} />
       </div>
 
       <DrillDownPanel id="section-drill-down" isOpen={drillDownState.isOpen} onClose={closeDrillDown} data={drillDownState.data} title={drillDownState.title} type={drillDownState.type} />

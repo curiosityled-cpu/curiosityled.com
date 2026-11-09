@@ -256,7 +256,7 @@ export default function DevelopmentManager() {
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold text-gray-900">Development Requests</h2>
               <div className="flex items-center gap-2">
-                {!isCoachScoped && user?.client_id && (
+                {!isCoachScoped && activeClientId && (
                   <Button variant="outline" size="sm" onClick={() => setShowRequestSettings(true)}>
                     <Settings className="w-4 h-4 mr-1.5" /> Settings
                   </Button>
@@ -271,7 +271,7 @@ export default function DevelopmentManager() {
               <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-[#0202ff]" /></div>
             ) : (
               <>
-                <RequestStatistics clientId={user?.client_id} refreshTrigger={refreshStats} />
+                <RequestStatistics clientId={activeClientId} refreshTrigger={refreshStats} />
                 {!isCoachScoped && (
                   <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4">
                     <CoachingRequestTriageBoard />
@@ -334,7 +334,7 @@ export default function DevelopmentManager() {
               </DialogContent>
             </Dialog>
 
-            {!isCoachScoped && user?.client_id && (
+            {!isCoachScoped && activeClientId && (
               <RequestSettingsDialog
                 open={showRequestSettings}
                 onOpenChange={setShowRequestSettings}

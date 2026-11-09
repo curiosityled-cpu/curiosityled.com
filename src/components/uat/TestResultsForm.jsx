@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { base44 } from "@/api/base44Client";
 import { AlertCircle, Upload, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 
 export default function TestResultsForm({ 
   open, 
@@ -18,6 +19,7 @@ export default function TestResultsForm({
   uatCycle,
   onSubmitSuccess 
 }) {
+  const activeClientId = useActiveClientId();
   const [formData, setFormData] = useState({
     status: '',
     severity: '',
@@ -100,7 +102,7 @@ export default function TestResultsForm({
 
       // Create submission
       const submission = {
-        client_id: user?.client_id || '',
+        client_id: activeClientId || '',
         tester_email: user?.email || '',
         tester_role: user?.app_role || '',
         uat_cycle: uatCycle,

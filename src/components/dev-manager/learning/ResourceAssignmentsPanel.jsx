@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 
 const STATUSES = ["assigned", "started", "in_progress", "completed", "overdue"];
 const asArray = (result) => (Array.isArray(result) ? result : result?.items || []);
@@ -21,6 +22,7 @@ const asArray = (result) => (Array.isArray(result) ? result : result?.items || [
  * above it; both are the same question asked of a different kind of content.
  */
 export default function ResourceAssignmentsPanel({ user }) {
+  const activeClientId = useActiveClientId();
   const [assignments, setAssignments] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,7 +31,7 @@ export default function ResourceAssignmentsPanel({ user }) {
     setLoading(true);
     try {
       const rows = await base44.entities.AssignedLearning.filter(
-        { client_id: user?.client_id },
+        { client_id: activeClientId },
         { sort: "-created_date", limit: 200 }
       );
       setAssignments(asArray(rows));
@@ -53,7 +55,7 @@ export default function ResourceAssignmentsPanel({ user }) {
   useEffect(() => {
     load();
     loadUsers();
-  }, [user?.client_id]);
+  }, [activeClientId]);
 
   const grouped = useMemo(() => {
     const groups = new Map();

@@ -403,7 +403,7 @@ export default function MyReportsTab({ user, onUseTemplate }) {
         onOpenChange={(open) => { if (!open) setEditingReport(null); setShowCreateDialog(open); }}
         editingReport={editingReport}
         userEmail={user?.email}
-        clientId={user?.client_id}
+        clientId={activeClientId}
         onSuccess={() => { setEditingReport(null); setShowCreateDialog(false); loadReports(); }}
       />
       <ShareReportDialog report={reportToShare} open={showShareDialog} onOpenChange={setShowShareDialog} onSuccess={loadReports} />

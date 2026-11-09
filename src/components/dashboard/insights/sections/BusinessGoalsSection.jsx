@@ -42,9 +42,9 @@ export default function BusinessGoalsSection({ user }) {
   const [configured, setConfigured] = useState(false);
 
   useEffect(() => {
-    if (user?.client_id) loadGoals();
+    if (activeClientId) loadGoals();
     else setLoading(false);
-  }, [user?.client_id]);
+  }, [activeClientId]);
 
   const loadGoals = async () => {
     setLoading(true);

@@ -20,9 +20,11 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useCompetencies } from "@/components/contexts/CompetencyContext";
 import { useAuth } from "@/components/useAuth";
+import { useClient } from "@/components/contexts/ClientContext";
 
 export default function CompetencySelector({ open, onOpenChange }) {
   const { user, isSuperAdmin, isHRAdmin, isPartnerBusinessAdmin, isPlatformAdmin } = useAuth();
+  const { activeClientId } = useClient();
   const { 
     allCompetencies, 
     selectedCompetencies, 
@@ -42,7 +44,7 @@ export default function CompetencySelector({ open, onOpenChange }) {
   }, [open, selectedCompetencies]);
 
   const canConfigure = isSuperAdmin || isHRAdmin || isPartnerBusinessAdmin || isPlatformAdmin;
-  const isPlatformAdminWithoutClient = isPlatformAdmin && !user?.client_id;
+  const isPlatformAdminWithoutClient = isPlatformAdmin && !activeClientId;
 
   // Group competencies by category
   const competenciesByCategory = allCompetencies.reduce((acc, comp) => {
