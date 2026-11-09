@@ -60,6 +60,8 @@ Deno.serve(async (req) => {
     const safeUsers = (users || []).map(u => {
       const safe = { ...u };
       for (const field of SENSITIVE_FIELDS) delete safe[field];
+      // The table reads last_login; the record stores last_login_date.
+      safe.last_login = u.last_login_date || null;
       return safe;
     });
 

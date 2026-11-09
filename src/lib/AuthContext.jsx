@@ -106,6 +106,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // The platform does not expose sign-in times to the app, so the first
+  // authenticated load of a browser session stamps the user's own record.
+  // That is what "Last Login" in user management reports.
+  const recordLogin = async (currentUser) => {
+    if (!currentUser?.email) return;
+    try {
+      if (sessionStorage.getItem('cl_login_recorded')) return;
+      sessionStorage.setItem('cl_login_recorded', '1');
+    } catch {
+      return;
+    }
+    try {
+      const response = await base44.functions.invoke('recordUserLogin', {});
+      const stamp = response.data?.last_login_date;
+      if (stamp) {
+        setUser(prev => (prev ? { ...prev, last_login_date: stamp } : prev));
+      }
+    } catch (error) {
+      console.error('Could not record login time:', error);
+    }
+  };
+
   const checkUserAuth = async () => {
     try {
       // Now check if the user is authenticated
@@ -115,6 +137,7 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(true);
       setIsLoadingAuth(false);
       setAuthChecked(true);
+      recordLogin(currentUser);
     } catch (error) {
       console.error('User auth check failed:', error);
       setIsLoadingAuth(false);
