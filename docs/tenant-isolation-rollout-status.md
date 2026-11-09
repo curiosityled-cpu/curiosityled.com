@@ -295,11 +295,19 @@ response and no overlap between two non-empty lists.
 `User.list()` rows into the roster when the admin endpoint returned empty, which
 is exactly how a screen ends up filtering on a value the server never chose.
 
-### 5.2a Frontend — the earlier list, for reference (all closed)
+### 5.2a Frontend — the earlier list, now closed
 
-Every one is already resolver-first (`activeClientId || user?.data?.client_id ||
-user?.client_id`). The remaining work is deleting the fallback so a null client
-cannot silently stamp a record to a stale membership value:
+Every one of these was resolver-first (`activeClientId || user?.data?.client_id ||
+user?.client_id`). The fallback is now deleted from all 31, so a null client can
+no longer silently stamp a record to a stale membership value. Measured after the
+change: `grep 'user?\.client_id' src/` returns **one** result, and it reads
+another person's row — `RoleProfileFields` asking for the tier/track list of the
+user being edited in the Edit User modal, which is that person's organisation, not
+the signed-in one. `resolvedClientId()` in `goalPermissions` no longer falls back
+to the membership field at all: `Goal.jsx` hands it the server-resolved client, so
+an org-wide view/edit/delete check cannot be widened by a stale value.
+
+The list, for reference:
 
 ```
 LeadershipIntelligenceHub          CompetencyManagerTab
@@ -319,6 +327,26 @@ LeaderNoteComposer                 WeeklyReflection
 RetroactiveCheckInCard             JourneyDraftConfirmModal
 AtreusCoach
 ```
+
+### 5.2b Activity rows with no tenant — measured and closed
+
+Two activity types were written without a tenant column (`Notification`,
+`PulseAccessLog`). Measured on production, every client-less row, not a sample:
+
+| type | client-less rows | whose owner is a known member | resolved |
+|---|---|---|---|
+| `Notification` | 371 | 1 | stamped with that member's client |
+| `PulseAccessLog` | 669 | 0 | left unattributed **by design** |
+
+The remaining 370 notifications and all 669 access-log rows carry no member
+identity — they are addressed to addresses that are not app users
+(`nonexistent@othertenant.com`, demo addresses) or were written by scheduled
+system actors (`system:evaluatePredictiveTriggers`,
+`system:computeBehaviorTrends`). Stamping those would mean inventing an owner,
+which is what the isolation work exists to prevent. They are invisible to every
+tenant by construction: a read scoped to a client cannot match a row with no
+client. A notification addressed to a real member is now written with that
+member's client at creation, so the set stops growing.
 
 ### 5.3 One structural finding
 

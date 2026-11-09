@@ -90,11 +90,12 @@ export const GOAL_PERMISSIONS = {
  * Check if user can create a goal
  */
 /**
- * The organisation a permission check applies to: the one the caller resolved
- * server-side when they supplied it, otherwise the membership on the record.
+ * The organisation a permission check applies to. The caller passes the one it
+ * resolved server-side; a permission check never reads the browser's copy of the
+ * signed-in person's membership, so a stale value cannot widen an org check.
  */
-export function resolvedClientId(user, context = {}) {
-  return context.active_client_id ?? user?.client_id ?? null;
+export function resolvedClientId(context = {}) {
+  return context.active_client_id ?? null;
 }
 
 export function canCreateGoal(userRole, context = {}) {
@@ -125,13 +126,13 @@ export function canViewGoal(userRole, goal, user, context = {}) {
   if (capability === 'platform') return true;
   
   // Super Admin can view everything in their organization
-  if (capability === 'organization' && goal.client_id === resolvedClientId(user, context)) return true;
+  if (capability === 'organization' && goal.client_id === resolvedClientId(context)) return true;
   
   // Partner Business Admin can view goals in managed clients
   if (capability === 'managed_clients' && context.partnerClientIds?.includes(goal.client_id)) return true;
   
   // HR Admin and Analyst can view all organization goals (readonly)
-  if (capability === 'organization_readonly' && goal.client_id === resolvedClientId(user, context)) return true;
+  if (capability === 'organization_readonly' && goal.client_id === resolvedClientId(context)) return true;
   
   // Team Leader can view team goals
   if (capability === 'own_direct_reports_team') {
@@ -171,7 +172,7 @@ export function canEditGoal(userRole, goal, user, context = {}) {
   if (capability === 'platform') return true;
   
   // Super Admin can edit everything in their organization
-  if (capability === 'organization' && goal.client_id === resolvedClientId(user, context)) return true;
+  if (capability === 'organization' && goal.client_id === resolvedClientId(context)) return true;
   
   // Partner Business Admin can edit goals in managed clients
   if (capability === 'managed_clients' && context.partnerClientIds?.includes(goal.client_id)) return true;
@@ -214,7 +215,7 @@ export function canDeleteGoal(userRole, goal, user, context = {}) {
   if (capability === 'platform') return true;
   
   // Super Admin can delete everything in their organization
-  if (capability === 'organization' && goal.client_id === resolvedClientId(user, context)) return true;
+  if (capability === 'organization' && goal.client_id === resolvedClientId(context)) return true;
   
   // Partner Business Admin can delete goals in managed clients
   if (capability === 'managed_clients' && context.partnerClientIds?.includes(goal.client_id)) return true;
@@ -288,6 +289,6 @@ export function buildGoalPermissionContext(user, authData = {}) {
     managedProgramIds: authData.managed_program_ids || user.managed_program_ids || [],
     partnerClientIds: authData.partner_client_ids || user.partner_client_ids || [],
     department: user.department,
-    client_id: resolvedClientId(user, authData)
+    client_id: resolvedClientId(authData)
   };
 }

@@ -25,6 +25,7 @@ import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 import { useAuth } from "@/components/useAuth";
 import { canEditGoal, canDeleteGoal, buildGoalPermissionContext } from "@/components/utils/goalPermissions";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 import GoalHeader from "@/components/goal/GoalHeader";
@@ -132,12 +133,13 @@ export default function GoalPage() {
 
   // Permission context
   const [permissionContext, setPermissionContext] = useState({});
+  const activeClientId = useActiveClientId();
 
   useEffect(() => {
     if (currentUser) {
-      setPermissionContext(buildGoalPermissionContext(currentUser));
+      setPermissionContext(buildGoalPermissionContext(currentUser, { active_client_id: activeClientId }));
     }
-  }, [currentUser]);
+  }, [currentUser, activeClientId]);
 
   useEffect(() => {
     if (goalId) {
