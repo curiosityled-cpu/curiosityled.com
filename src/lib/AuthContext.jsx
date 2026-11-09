@@ -6,6 +6,32 @@ import { createAxiosClient } from '@base44/sdk/dist/utils/axios-client';
 
 const AuthContext = createContext();
 
+// "Proxy as user" records the admin's choice in localStorage; the platform
+// session itself stays the admin's. Every screen — including the manager
+// surface, which reads this context — has to render as the proxied person,
+// so the target's profile replaces the admin's wherever the UI reads `user`.
+const resolveImpersonatedUser = async (realUser) => {
+  let raw = null;
+  try {
+    raw = localStorage.getItem('impersonation');
+  } catch {
+    return realUser;
+  }
+  if (!raw) return realUser;
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed?.target_user_id) throw new Error('invalid impersonation');
+    const targets = await base44.entities.User.filter({ id: parsed.target_user_id });
+    if (targets?.length) return targets[0];
+    localStorage.removeItem('impersonation');
+  } catch (error) {
+    console.error('Could not resolve proxy target, clearing:', error);
+    localStorage.removeItem('impersonation');
+  }
+  return realUser;
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -132,12 +158,13 @@ export const AuthProvider = ({ children }) => {
     try {
       // Now check if the user is authenticated
       setIsLoadingAuth(true);
-      const currentUser = await base44.auth.me();
+      const realUser = await base44.auth.me();
+      const currentUser = await resolveImpersonatedUser(realUser);
       setUser(currentUser);
       setIsAuthenticated(true);
       setIsLoadingAuth(false);
       setAuthChecked(true);
-      recordLogin(currentUser);
+      recordLogin(realUser);
     } catch (error) {
       console.error('User auth check failed:', error);
       setIsLoadingAuth(false);
