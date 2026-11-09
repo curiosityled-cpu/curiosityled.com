@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import AtreusCoach from "@/components/ai/AtreusCoach";
 import DraggableAtreusButton from "@/components/ai/DraggableAtreusButton";
 import { AuthProvider as FullAuthProvider } from "@/components/useAuth";
+import ImpersonationBanner from "@/components/ImpersonationBanner";
 import { AtreusProvider, useAtreusChat } from "@/components/ai/AtreusContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import FirstLoginLinker from "@/components/provisioning/FirstLoginLinker";
@@ -695,6 +696,10 @@ function MVPLayoutInner({ children }) {
 
       {/* Main content */}
       <main className={`flex-1 min-w-0 overflow-hidden ${collapsed ? 'sm:ml-16' : 'sm:ml-64'} pt-14 sm:pt-0 min-h-screen transition-all duration-200`}>
+        {/* Proxy banner — an admin must always be able to step out of a proxy session */}
+        <FullAuthProvider>
+          <ImpersonationBanner />
+        </FullAuthProvider>
         <ErrorBoundary><ClientSelectionGate>{children}</ClientSelectionGate></ErrorBoundary>
         <FirstLoginLinker />
       </main>
