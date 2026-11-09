@@ -54,7 +54,7 @@ export default async function (req: Request): Promise<Response> {
     }
 
     const svc = base44.asServiceRole;
-    const [taxonomyRaw, people, rosterRaw] = await Promise.all([
+    const [taxonomyRaw, peopleRaw, rosterRaw] = await Promise.all([
       svc.entities.RoleTaxonomy.filter({ client_id: clientId }, "-updated_date", 1).catch(() => []),
       loadTenantPeople(svc, clientId),
       svc.entities.ICRoster.filter({ client_id: clientId }, "-created_date", 2000).catch(() => []),
@@ -64,6 +64,12 @@ export default async function (req: Request): Promise<Response> {
     // every title the organisation actually uses.
     const roster = (Array.isArray(rosterRaw) ? rosterRaw : rosterRaw?.items || []).filter(
       (ic: any) => ic && ic.is_active !== false
+    );
+    // Platform-level accounts are the vendor's own team, not the client's
+    // workforce: the title they carry ("Founder - Curiosity Led") is ours, so it
+    // must never be offered as a job title an administrator can map or target.
+    const people = (Array.isArray(peopleRaw) ? peopleRaw : peopleRaw?.items || []).filter(
+      (p: any) => String(p?.app_role || p?.data?.app_role || "") !== "Platform Admin"
     );
     const taxonomyRows = Array.isArray(taxonomyRaw) ? taxonomyRaw : taxonomyRaw?.items || [];
     const taxonomy = sanitizeTaxonomy(taxonomyRows[0]);
