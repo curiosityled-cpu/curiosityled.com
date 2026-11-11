@@ -5,6 +5,7 @@ import ExecutiveRecommendation from "@/components/growth/ExecutiveRecommendation
 import MeetingFindings from "@/components/growth/MeetingFindings";
 import RecapAndActions from "@/components/growth/RecapAndActions";
 import EngagedlyTeardown from "@/components/growth/EngagedlyTeardown";
+import EngagedlyResearch from "@/components/growth/EngagedlyResearch";
 import PackagingModels from "@/components/growth/PackagingModels";
 import FreeEntryStrategy from "@/components/growth/FreeEntryStrategy";
 import Plan306090 from "@/components/growth/Plan306090";
@@ -15,6 +16,7 @@ const TABS = [
   { value: "findings", label: "Meeting evidence" },
   { value: "recap", label: "Recap & actions" },
   { value: "competitor", label: "Engagedly" },
+  { value: "research", label: "Pricing & sales research" },
   { value: "packaging", label: "Pricing & packaging" },
   { value: "free", label: "FREE strategy" },
   { value: "plan", label: "30/60/90 plan" },
@@ -55,6 +57,9 @@ export default function GrowthStrategyBrief() {
         </TabsContent>
         <TabsContent value="competitor" className="mt-0 focus-visible:outline-none">
           <EngagedlyTeardown />
+        </TabsContent>
+        <TabsContent value="research" className="mt-0 focus-visible:outline-none">
+          <EngagedlyResearch />
         </TabsContent>
         <TabsContent value="packaging" className="mt-0 focus-visible:outline-none">
           <PackagingModels />
