@@ -3,6 +3,7 @@ import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ExecutiveRecommendation from "@/components/growth/ExecutiveRecommendation";
 import MeetingFindings from "@/components/growth/MeetingFindings";
+import RecapAndActions from "@/components/growth/RecapAndActions";
 import EngagedlyTeardown from "@/components/growth/EngagedlyTeardown";
 import PackagingModels from "@/components/growth/PackagingModels";
 import FreeEntryStrategy from "@/components/growth/FreeEntryStrategy";
@@ -12,6 +13,7 @@ import AssumptionsSources from "@/components/growth/AssumptionsSources";
 const TABS = [
   { value: "recommendation", label: "Recommendation" },
   { value: "findings", label: "Meeting evidence" },
+  { value: "recap", label: "Recap & actions" },
   { value: "competitor", label: "Engagedly" },
   { value: "packaging", label: "Pricing & packaging" },
   { value: "free", label: "FREE strategy" },
@@ -47,6 +49,9 @@ export default function GrowthStrategyBrief() {
         </TabsContent>
         <TabsContent value="findings" className="mt-0 focus-visible:outline-none">
           <MeetingFindings />
+        </TabsContent>
+        <TabsContent value="recap" className="mt-0 focus-visible:outline-none">
+          <RecapAndActions />
         </TabsContent>
         <TabsContent value="competitor" className="mt-0 focus-visible:outline-none">
           <EngagedlyTeardown />
