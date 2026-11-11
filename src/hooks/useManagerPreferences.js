@@ -11,6 +11,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import {
   getPreset,
   getEnabledMeasureKeys,
@@ -20,18 +21,24 @@ import {
 export function useManagerPreferences() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  // The person's own organisation, not simply the first client the caller can see
+  // (an administrator can see every tenant, which would otherwise apply another
+  // organisation's check-in configuration to everyone).
+  const activeClientId = useActiveClientId();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["manager-preferences", user?.email],
+    queryKey: ["manager-preferences", user?.email, activeClientId],
     queryFn: async () => {
       if (!user?.email) return { userPref: null, client: null };
-      const [prefRows, clients] = await Promise.all([
+      const [prefRows, client] = await Promise.all([
         base44.entities.UserPreference.filter({ user_email: user.email }, null, 1).catch(() => []),
-        base44.entities.Client.list().catch(() => []),
+        activeClientId
+          ? base44.entities.Client.get(activeClientId).catch(() => null)
+          : Promise.resolve(null),
       ]);
       return {
         userPref: prefRows[0] || null,
-        client: clients[0] || null,
+        client: client || null,
       };
     },
     enabled: !!user?.email,

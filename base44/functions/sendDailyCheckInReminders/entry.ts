@@ -18,6 +18,10 @@ import {
   checkInCadenceAllowsToday,
 } from '../../shared/orgNotificationSettings.ts';
 
+// Canonical app URL — the reminder lands on the Lead page when signed in, and on
+// the login page (returning to the Lead page afterwards) when signed out.
+const APP_URL = 'https://curiosityled.ai';
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -150,13 +154,13 @@ Deno.serve(async (req) => {
                 </div>
                 <div style="padding: 28px 32px;">
                   <p style="color: #374151; font-size: 15px; line-height: 1.6; margin: 0 0 20px;">${reminderMessage}</p>
-                  <a href="${Deno.env.get('APP_URL') || 'https://app.curiosityled.com'}/today"
+                  <a href="${APP_URL}/today"
                      style="display: inline-block; background: #0202ff; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">
                     ${reminderCta} →
                   </a>
                   <p style="color: #9ca3af; font-size: 13px; margin: 24px 0 0;">
                     You're receiving this because you're a member of Curiosity Led. Check-ins take about 2 minutes.<br/>
-                    <a href="${Deno.env.get('APP_URL') || 'https://app.curiosityled.com'}/Settings" style="color: #6b7280;">Manage notification preferences</a>
+                    <a href="${APP_URL}/Settings" style="color: #6b7280;">Manage notification preferences</a>
                   </p>
                 </div>
               </div>

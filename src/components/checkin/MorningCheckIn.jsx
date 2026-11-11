@@ -178,6 +178,14 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail, mea
     // Don't reset step if we're already in the done state
     if (stepRef.current >= 6) return;
 
+    // An organization can switch every standard measure off (custom-questions-only
+    // check-ins). With no measures to step through there is nothing to load, so the
+    // card moves straight on instead of waiting on prompts it will never show.
+    if (MEASURES.length === 0) {
+      setStep(1);
+      return;
+    }
+
     // Try to rehydrate an in-progress draft first
     try {
       const raw = localStorage.getItem(getDraftKey(userEmail));
@@ -404,6 +412,48 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail, mea
         accent="#0202ff"
         icon={<Sun className="w-4 h-4 text-amber-400" />}
       />
+    );
+  }
+
+  // No standard measures for this organization — show the custom questions when
+  // there are any, otherwise a single button that completes the check-in.
+  if (MEASURES.length === 0) {
+    const hasRequired = customQs.some(q => q.is_required);
+    if (customQs.length > 0) {
+      return (
+        <CustomQuestionsCard
+          questions={customQs}
+          answers={customAnswers}
+          onChange={(k, v) => setCustomAnswers(a => ({ ...a, [k]: v }))}
+          onComplete={handleSave}
+          onSkip={hasRequired ? null : handleSave}
+          saving={saving}
+          title="Morning check-in"
+          subtitle="A few quick questions to start your day"
+          accent="#0202ff"
+          icon={<Sun className="w-4 h-4 text-amber-400" />}
+        />
+      );
+    }
+    return (
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+        <div className="px-4 pt-4 pb-3 border-b border-border flex items-center gap-2">
+          <Sun className="w-4 h-4 text-amber-400" />
+          <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Morning check-in</p>
+        </div>
+        <div className="px-4 py-5 space-y-4">
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Ready when you are — log your morning intent for today.
+          </p>
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="w-full bg-[#0202ff] hover:bg-[#0101dd] flex items-center justify-center gap-1.5"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Complete morning check-in"}
+          </Button>
+        </div>
+      </div>
     );
   }
 

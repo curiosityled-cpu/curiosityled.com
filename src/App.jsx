@@ -82,6 +82,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import OAuthConsent from './pages/OAuthConsent';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import RedirectToLogin from '@/components/RedirectToLogin';
 import PlatformAdminOnly from '@/components/PlatformAdminOnly';
 
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -173,7 +174,7 @@ const AuthenticatedApp = () => {
 
 
       {/* Protected app routes — auth required, unauthenticated users redirect to /login */}
-      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+      <Route element={<ProtectedRoute unauthenticatedElement={<RedirectToLogin />} />}>
       {/* Redirect old ExperienceManagement URL to new DevelopmentManager */}
       <Route path="/ExperienceManagement" element={<Navigate to="/DevelopmentManager" replace />} />
 

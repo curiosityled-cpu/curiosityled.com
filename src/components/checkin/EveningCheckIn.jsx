@@ -301,6 +301,15 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
 
     if (stepRef.current >= 6) return;
 
+    // An organization can switch every standard measure off (custom-questions-only
+    // check-ins). There are no measures to step through, so go straight to planning
+    // tomorrow rather than waiting on prompts that will never arrive.
+    if (MEASURES.length === 0) {
+      fetchInitiatedRef.current = true;
+      setStep(6);
+      return;
+    }
+
     const draft = loadDraft(userEmail);
     if (draft) {
       setScores(draft.scores);
