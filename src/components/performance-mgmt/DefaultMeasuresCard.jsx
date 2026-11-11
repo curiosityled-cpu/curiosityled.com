@@ -57,9 +57,6 @@ export default function DefaultMeasuresCard() {
       settings.check_in_config = {
         ...(settings.check_in_config || {}),
         enabled_measures: nextKeys,
-        // The individual selection now decides which measures appear, so the
-        // older "no measures at all" flag is retired here.
-        ic_skip_measures: false,
       };
       await base44.entities.Client.update(client.id, { settings });
       setClient({ ...client, settings });

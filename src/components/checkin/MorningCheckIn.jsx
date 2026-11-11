@@ -192,7 +192,7 @@ export default function MorningCheckIn({ onComplete, todayRecord, userEmail, mea
       if (raw) {
         const draft = JSON.parse(raw);
         if (draft.step >= 1 && draft.step <= MEASURES.length) {
-          setStep(draft.step);
+          setStep(Math.min(draft.step, MEASURES.length));
           setScores(draft.scores);
           setNotes(draft.notes);
           if (draft.questions) setQuestions(draft.questions);

@@ -315,7 +315,8 @@ export default function EveningCheckIn({ onComplete, todayRecord, userEmail, goa
       setScores(draft.scores);
       setNotes(draft.notes);
       if (draft.questions) setQuestions(draft.questions);
-      setStep(draft.step);
+      // A draft can outrun the measures now switched on for this organization.
+      setStep(Math.min(draft.step, MEASURES.length));
       fetchInitiatedRef.current = true;
       return;
     }

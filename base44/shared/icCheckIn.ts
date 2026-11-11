@@ -32,7 +32,7 @@ export function getMeasuresForClient(client: any): any[] {
   const preset = getPreset(presetId) || CHECK_IN_PRESETS.balance;
   // The organization chooses which standard measures appear, one by one; an
   // absent list means all of the preset's measures.
-  const enabled = getEnabledMeasureKeys(client?.settings?.check_in_config);
+  const enabled = getEnabledMeasureKeys(client?.settings?.check_in_config, { forFrontline: true });
   return preset.measures.filter((m: any) => enabled.includes(m.key));
 }
 

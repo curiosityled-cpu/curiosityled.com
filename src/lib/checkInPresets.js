@@ -78,7 +78,8 @@ export const MEASURE_KEYS = ["energy", "confidence", "focus", "load", "growth"];
 export function getEnabledMeasureKeys(checkInConfig) {
   const list = checkInConfig?.enabled_measures;
   if (Array.isArray(list)) return list;
-  if (checkInConfig?.ic_skip_measures === true) return [];
+  // A user's own daily check-in always keeps the standard measures; the legacy
+  // "custom questions only" flag applies to frontline (IC) check-ins only.
   return MEASURE_KEYS;
 }
 

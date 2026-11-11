@@ -86,10 +86,15 @@ export const MEASURE_KEYS = ["energy", "confidence", "focus", "load", "growth"];
  * older "custom questions only" flag are read as having no measures until they
  * save a selection, so their check-ins do not silently change.
  */
-export function getEnabledMeasureKeys(checkInConfig: any): string[] {
+export function getEnabledMeasureKeys(
+  checkInConfig: any,
+  options: { forFrontline?: boolean } = {}
+): string[] {
   const list = checkInConfig?.enabled_measures;
   if (Array.isArray(list)) return list;
-  if (checkInConfig?.ic_skip_measures === true) return [];
+  // The older "custom questions only" flag belongs to the frontline (IC) check-in.
+  // It must never strip the measures from a registered user's own daily check-in.
+  if (options.forFrontline === true && checkInConfig?.ic_skip_measures === true) return [];
   return MEASURE_KEYS;
 }
 
