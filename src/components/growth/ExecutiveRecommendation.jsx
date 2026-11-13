@@ -6,13 +6,13 @@ const decisions = [
     n: "01",
     title: "Publish a free plan with hard, visible boundaries",
     body: "One team, up to 10 manager seats, standard morning/evening check-ins, one AI insight per manager per day, 90-day history. Free forever, not a trial. Publish the boundary table on the pricing page so nobody has to talk to you to understand it.",
-    why: "Engagedly has no free door at all (demo-gated). Breezy and Homebase both won Yhan by giving him a working product before asking for money.",
+    why: "Engagedly's own site publishes no free plan and no signup \u2014 its pricing page ends at a demo request, though a partner marketplace carries a trial signal. Homebase currently runs a free plan bounded to one location and ten employees, and Breezy currently publishes no free plan at all, only a no-card 14-day trial, so Yhan's free-use history dates from packaging that may since have changed. Re-confirm with him before citing it.",
   },
   {
     n: "02",
     title: "Price flat by organisation band, never per seat",
     body: "Illustrative annual bands: $3,000 (11–50 managers), $7,500 (51–150), $18,000 (151–500), $35,000+ (500+), plus paid implementation. Frontline staff never count toward a band because they never log in.",
-    why: "Yhan's 40-person Engagedly comparison is ~$7,000 because Engagedly charges $12–17/user/month. $3,000 puts you roughly half of that at the same headcount, with a clean story instead of a discount.",
+    why: "Engagedly publishes a $7,500 annual minimum, so Yhan's reported ~$7,000 at 40 people is roughly the floor rather than a per-seat result, at about $175 per person per year. $3,000 is less than half that floor, which is a cleaner story than any discount off a list rate.",
   },
   {
     n: "03",
@@ -70,7 +70,7 @@ export default function ExecutiveRecommendation() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Engagedly, 40 people" value="~$7,000/yr" sub="Reported on the call; consistent with their published $12–17/user/month stack." />
+        <Stat label="Engagedly, 40 people" value="~$7,000/yr" sub="Customer-reported. Their published minimum is $7,500, so this is in line with the floor, not a list rate." />
         <Stat label="Curiosity Led, 40 managers" value="$3,000/yr" sub="Illustrative Team band — roughly half the Engagedly bill at the same headcount." />
         <Stat label="2,000 frontline staff" value="$0" sub="They get a link, not a login. Engagedly's deskless add-on would be ~$120,000/yr at $5/head." />
         <Stat label="Free tier ceiling" value="10 managers" sub="One team, standard check-ins, one AI insight per manager per day." />
@@ -114,6 +114,11 @@ export default function ExecutiveRecommendation() {
           Engagedly figures come from their public pricing page and from what Yhan reported on the call.
           Nothing here is a Curiosity Led list price until you decide it is, and the first two decisions in
           the 90-day plan exist to test these numbers before they go on the website.
+        </p>
+        <p>
+          The free plan should not open to the public first. Run the gated cohort described in the Validation
+          cohort tab \u2014 tenant separation demonstrated, check-ins reliable, onboarding hours measured \u2014
+          and let the ten-manager boundary be tested on real accounts before anyone can sign up unaided.
         </p>
       </Callout>
 

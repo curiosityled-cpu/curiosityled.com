@@ -3,7 +3,7 @@ import { Callout, DataTable, SectionHeading, Lead, Bullets, Tag } from "./briefU
 
 const assumptions = [
   ["A1", "A 40-person firm will pay $2,000–3,500/year for this", "Yhan: \"maybe they've come in at two to three grand\"; Emilio: \"I can do like three to five\".", "Three quotes above $5,000 all landing, or three at $3,000 all failing."],
-  ["A2", "Free tenants convert at 4% or better within 60 days", "Breezy and Homebase both converted Yhan after free use; no Curiosity Led data exists yet.", "Conversion under 2% after 50 free signups."],
+  ["A2", "Free tenants convert at 4% or better within 60 days", "Yhan reports converting after free use at Breezy and Homebase, but current published terms differ (Homebase: free plan for one location and ten employees; Breezy: no free plan, 14-day no-card trial). No Curiosity Led data exists.", "Conversion under 2% after 50 free signups, or no upgrade trigger hit by any cohort account."],
   ["A3", "Cost to serve a free manager stays under $1.50/month", "Based on batched daily insights and no human onboarding.", "Actual AI + email spend per free tenant at day 30."],
   ["A4", "Managers are the right billing unit", "Frontline staff never log in, per the architecture explained at 46:34.", "Buyers insisting on per-head pricing for budget reasons."],
   ["A5", "Engagedly is the reference competitor in these accounts", "Yhan reports a partner using it at ~$7k/40 people; Emilio calls it a direct competitor.", "Discovery calls naming Lattice, 15Five, Culture Amp or BambooHR instead."],
@@ -53,6 +53,18 @@ const sources = [
     url: "https://engagedly.com/blog/engagedly-vs-performyard/",
     used: "Cited for the G2 figure only, and flagged because the source is Engagedly's own comparison content. Not independently re-verified here.",
     type: "Vendor-cited — low confidence",
+  },
+  {
+    name: "Homebase — pricing",
+    url: "https://www.joinhomebase.com/pricing",
+    used: "Current free Basic plan, bounded to one location and up to 10 employees, with paid plans charged per location. Used to distinguish the present offer from the free use Yhan described.",
+    type: "Primary — vendor",
+  },
+  {
+    name: "Breezy HR — pricing",
+    url: "https://breezy.hr/pricing",
+    used: "Current terms: no free plan, 14-day full-feature trial with no credit card. Used to correct the assumption that a free plan is what won Yhan.",
+    type: "Primary — vendor",
   },
   {
     name: "Implementation call transcript",
@@ -161,7 +173,7 @@ export default function AssumptionsSources() {
             className="mt-2"
             items={[
               "It does not publish Curiosity Led list prices — every figure is a proposal to be tested.",
-              "It does not assume Engagedly's contract terms, minimums or implementation fees, all of which are undisclosed.",
+              "It does not assume Engagedly's contract length or implementation fee, both undisclosed. Their $7,500 annual minimum is published and is treated as published, not inferred.",
               "It does not recommend competing on module breadth, which the review evidence argues against.",
               "It does not treat the free tier as a permanent marketing tactic — it is a measured channel with a cost ceiling.",
               "It does not propose changing the product roadmap; it only sequences which existing capabilities belong in which band.",
@@ -172,9 +184,10 @@ export default function AssumptionsSources() {
 
       <Callout tone="accent" title="If you only do three things">
         <p>
-          Publish a free plan with ten manager seats and unlimited free frontline links. Price the first paid
-          band at $3,000 flat instead of anything per head. Then measure activation before you spend a dollar
-          on acquisition. Everything else in this brief is optimisation around those three moves.
+          Close the two gates that actually block a launch — tenant separation and check-in reliability — then
+          run the invited cohort with the offer visible. Price the first paid band at $3,000 flat instead of
+          anything per head, and ask for a commitment decision at day 45 rather than at day 90. Everything else
+          in this brief is optimisation around those three moves.
         </p>
       </Callout>
     </div>

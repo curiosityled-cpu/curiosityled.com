@@ -80,7 +80,7 @@ const instruments = [
     shape: "Scope-capped",
     detail:
       "One team, ten managers, standard check-ins, one insight per day, 90-day history. No end date, no card, no sales call. The customer's data lives here for as long as they want.",
-    why: "This is the Breezy/Homebase mechanic Yhan described: a working product that keeps the data, so the eventual purchase is an upgrade rather than a migration.",
+    why: "The mechanic Yhan described from Breezy and Homebase: a working product that keeps the data, so the eventual purchase is an upgrade rather than a migration. Their current published terms have moved — Homebase's free plan is bounded to one location and ten employees, and Breezy publishes no free plan at all, only a no-card trial — so cite this as his experience, not as their present offer.",
   },
   {
     name: "Full Access, 30 days",
@@ -113,9 +113,10 @@ export default function FreeEntryStrategy() {
       <div>
         <SectionHeading kicker="Free as a channel, not a discount">Bringing FREE into the marketing</SectionHeading>
         <Lead>
-          Engagedly has no free door: every path on their pricing page ends in "Book a Demo". That is the
-          opening. But free only works if the boundary is deliberate, published and cheap to serve — so the
-          strategy below is as much about what is excluded as what is given away.
+          Engagedly's own pricing page has no free door: every path on it ends in "Book a Demo", and a trial
+          appears only inside a partner marketplace. That is the opening. But free only works if the boundary is
+          deliberate, published and cheap to serve — so the strategy below is as much about what is excluded as
+          what is given away.
         </Lead>
       </div>
 
@@ -133,6 +134,19 @@ export default function FreeEntryStrategy() {
           </div>
         ))}
       </div>
+
+      <Callout tone="danger" title="Prerequisite: this is not a plan for open signup">
+        <p>
+          Everything on this tab describes an offer, not a switch. Before a stranger can create an account
+          unaided, tenant separation has to be demonstrated and check-ins have to be reliable in production.
+          Until then the free plan runs as an invite-only cohort with assisted onboarding — the conditions and
+          measurements are in the Validation cohort tab.
+        </p>
+        <p>
+          A free plan built on an unverified foundation does not fail quietly. It fails in front of the buyers
+          this brief is trying to win.
+        </p>
+      </Callout>
 
       <Callout tone="warning" title="Keep these two apart">
         <p>

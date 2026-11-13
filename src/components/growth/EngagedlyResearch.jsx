@@ -2,6 +2,7 @@ import React from "react";
 import { Callout, DataTable, Stat, SectionHeading, Lead, Bullets, Tag } from "./briefUi";
 
 const A = "11 Nov 2026";
+const RECHECK = "13 Nov 2026";
 
 const coverage = [
   {
@@ -73,9 +74,9 @@ const floor = [
     per: "$31.25",
   },
   {
-    seats: "40 managers (Yhan's account)",
+    seats: "40 managers \u2014 Yhan's account",
     calc: "40 \u00d7 $8 \u00d7 12 = $3,840",
-    paid: "$7,500 \u2014 the floor",
+    paid: "$7,500 at the floor; he reports ~$7,000",
     per: "$15.63",
   },
   {
@@ -151,16 +152,16 @@ const acquisition = [
     read: "Distribution is borrowed from payroll and HRIS vendors \u2014 the opposite of self-serve.",
   },
   {
-    step: "4. Book a demo \u2014 the single conversion event",
+    step: "4. Book a demo \u2014 the only conversion action they publish",
     detail:
-      "One form, one promise: explore scalable solutions for your team. No price is given before a human is involved, and no card is taken online.",
-    read: "Every deal is sales-assisted. There is no motion for a 30-person firm that wants to start on a Sunday.",
+      "One form, one promise: explore scalable solutions for your team. No price is quoted on the page and no card is taken online.",
+    read: "Observable. What a demo leads to is not.",
   },
   {
-    step: "5. Configure, then commit annually",
+    step: "5. Then a quote, then an annual commitment",
     detail:
-      "Modules are selected per client and billed annually against a $7,500 minimum. Implementation and onboarding are assisted.",
-    read: "The contract structure \u2014 not the feature set \u2014 is what excludes small companies.",
+      "Modules are selected per client and billed annually against a $7,500 minimum. Implementation and onboarding appear to be assisted, but neither their fee nor their sequence is published.",
+    read: "Inference from the module structure and annual billing \u2014 not observed.",
   },
   {
     step: "6. Expand the account",
@@ -178,9 +179,9 @@ const implications = [
     where: "Pricing & packaging",
   },
   {
-    point: "Yhan's ~$7,000 is essentially the floor",
+    point: "Yhan's ~$7,000 sits just under the floor",
     detail:
-      "It sits just under the published minimum, which fits either a floor-level deal with a small discount or fewer seats than assumed. Either way the number is credible and should be quoted as customer-reported, not list.",
+      "About $175 per person per year at 40 people. It is consistent with a floor-level deal, a small discount, or different seat and module assumptions \u2014 consistent with, not proof of. Quote it as customer-reported and ask him for the exact contract value, seats, modules, term and any implementation fee.",
     where: "Assumptions & sources",
   },
   {
@@ -230,6 +231,9 @@ const sources = [
   { s: "ITQlick \u2014 plans and hidden fees", u: "https://www.itqlick.com/engagedly/pricing", n: "No free trial and no free version" },
   { s: "CultureMonkey \u2014 alternatives comparison", u: "https://www.culturemonkey.io/employee-engagement/culture-amp-alternatives/", n: "Prices re-checked against the vendor page in Nov 2026; lists a 500+ team minimum" },
   { s: "PeopleGoal \u2014 Engagedly vs PeopleGoal", u: "https://www.peoplegoal.com/blog/peoplegoal-vs-engagedly/", n: "Confirms Engagedly is demo-led rather than trial-led" },
+  { s: "G2 \u2014 Engagedly seller page", u: "https://www.g2.com/sellers/engagedly", n: "4.3 average across several hundred reviews; counts move month to month" },
+  { s: "Homebase \u2014 pricing", u: "https://www.joinhomebase.com/pricing", n: "Current free Basic plan: one location, up to 10 employees" },
+  { s: "Breezy HR \u2014 pricing", u: "https://breezy.hr/pricing", n: "Current terms: no free plan, 14-day trial with no credit card" },
 ];
 
 export default function EngagedlyResearch() {
@@ -245,24 +249,48 @@ export default function EngagedlyResearch() {
         </Lead>
       </div>
 
+      <div className="rounded-xl border border-border bg-muted/40 p-3.5">
+        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+          Evidence key used throughout this tab
+        </p>
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-[12px] text-muted-foreground">
+          <span className="flex items-center gap-1.5"><Tag tone="good">Published</Tag> stated by the vendor on their own site</span>
+          <span className="flex items-center gap-1.5"><Tag tone="default">Third party</Tag> someone else's report, which may be wrong</span>
+          <span className="flex items-center gap-1.5"><Tag tone="accent">Reported</Tag> customer-supplied, not verified against a contract</span>
+          <span className="flex items-center gap-1.5"><Tag tone="warning">Inference</Tag> our reading, not an observable fact</span>
+        </div>
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-3">
-        <Stat label="Published floor" value="$7,500 / yr" sub="Minimum annual pricing stated on their pricing page and corroborated by G2." />
-        <Stat label="Free tier" value="None" sub="No free plan, no self-serve signup, no card-only entry anywhere on their own site." />
-        <Stat label="Entry motion" value="Demo \u2192 sales" sub="One form, then a human. Every deal is sales-assisted and billed annually." />
+        <Stat label="Published floor" value="$7,500 / yr" sub="Minimum annual pricing stated on their pricing page; corroborated by G2 and several independent write-ups." />
+        <Stat label="Free tier on their site" value="None" sub="No free plan and no self-serve signup. A trial signal exists only inside a partner marketplace." />
+        <Stat label="Published entry step" value="Demo request" sub="The only conversion action offered on the pricing page. What happens after the form is not public." />
       </div>
 
       <Callout tone="accent" title="The finding that matters: a $7,500 floor, not a $2 price">
-        <p>
-          Their pricing page states that pricing varies by employee count and bundling, with a{" "}
-          <strong className="font-semibold text-foreground">minimum of $7,500 per year</strong>. That single
-          line reframes the whole comparison. At $8 per user per month on their most expensive core suite, a
-          40-person firm would owe $3,840 \u2014 but pays $7,500. Below roughly 78 seats on the Performance
-          Suite, or 125 on the cheapest suite, the floor sets the price and the per-seat rate is decoration.
+        <p className="flex flex-wrap items-center gap-2">
+          <Tag tone="good">Published</Tag>
+          <span>
+            Their pricing page states that pricing varies by employee count and bundling, with a{" "}
+            <strong className="font-semibold text-foreground">minimum of $7,500 per year</strong>. Re-checked{" "}
+            {RECHECK}; the line is still there and is repeated in their own versus content.
+          </span>
         </p>
         <p>
-          It also means Yhan's ~$7,000 is not an unusually good deal: it is the floor, or just under it. The
-          competitor Curiosity Led is priced against is a $7,500 minimum, and that is the number a 40-person
-          buyer actually faces.
+          At the top of their published core range, $8 per user per month, a 40-person firm would owe $3,840
+          before the minimum \u2014 so it pays $7,500. At the published rates the floor is equivalent to about
+          78 seats at $8 or 125 seats at $5. That is arithmetic on list rates, not evidence that every bundle
+          is priced identically: the vendor says quotes vary by headcount and bundling.
+        </p>
+        <p className="flex flex-wrap items-center gap-2">
+          <Tag tone="accent">Reported</Tag>
+          <span>
+            Yhan's ~$7,000 at roughly 40 people is customer-reported and sits <em>just below</em> the published
+            minimum, at about $175 per person per year. That is consistent with a floor-level deal, a small
+            discount, or slightly different seat and module assumptions \u2014 so say "in line with their
+            published floor", not "proves the floor". The number to ask him for is the exact contract value,
+            paid seat count, modules, term and any implementation fee.
+          </span>
         </p>
       </Callout>
 
@@ -279,8 +307,9 @@ export default function EngagedlyResearch() {
           rows={floor}
         />
         <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-          Arithmetic on published list rates at the top of each suite range ($8 Performance, $5 Learning, $2 the
-          rest), billed annually. Real quotes may bundle differently; the floor is the constraint that binds.
+          Arithmetic only: published list rates at the top of each suite range ($8 Performance, $5 Learning, $2
+          the rest), billed annually, with the published $7,500 minimum applied. It shows where the floor binds,
+          not what any particular customer was quoted.
         </p>
       </div>
 
@@ -320,18 +349,57 @@ export default function EngagedlyResearch() {
         <div className="mt-3">
           <Callout tone="warning" title="Reading the conflict honestly">
             <p>
-              The primary evidence is unambiguous: on Engagedly's own site there is no free plan and no trial
-              \u2014 only a demo request. The trial that does exist lives inside ADP's marketplace and is a
-              channel concession, not a product tier. Third-party sites contradict each other because they
-              scrape and guess; where they claim a trial they do not show one.
+              What is established: on Engagedly's own site there is{" "}
+              <strong className="font-semibold text-foreground">no free plan and no self-serve signup</strong>,
+              and their pricing page offers a demo as the only action. A "Start A Free Trial" control appears
+              inside their ADP Marketplace listing, so a trial exists at least through that partner channel.
             </p>
             <p>
-              For planning purposes: treat Engagedly as having{" "}
-              <strong className="font-semibold text-foreground">no free tier and no self-serve path</strong>, with
-              a demo-gated sales-assisted trial at a rep's discretion. Any other reading is unverified.
+              What is <em>not</em> established: whether a trial or pilot is routinely granted after a demo, how
+              long it runs, whether a card is required, or whether any rep can waive the annual minimum. Those
+              sit behind a form and cannot be read from outside. Third-party sites disagree with each other and
+              none of them demonstrate a trial they claim.
+            </p>
+            <p>
+              For planning purposes: treat Engagedly as having no free tier and no self-serve path, with a
+              sales-assisted or partner-linked trial whose terms are unknown. Do not write "Engagedly offers no
+              trial" in any customer-facing material \u2014 write "no free plan, and no way to start without
+              talking to someone", which the evidence does support.
             </p>
           </Callout>
         </div>
+      </div>
+
+      <div>
+        <p className="mb-3 text-sm font-bold text-foreground">The two benchmarks the brief leans on, at today's published terms</p>
+        <DataTable
+          dense
+          columns={[
+            { key: "p", label: "Product", className: "w-[16%]" },
+            { key: "free", label: "Free plan today", className: "w-[34%]" },
+            { key: "trial", label: "Trial today", className: "w-[24%]" },
+            { key: "care", label: "Why this matters here", className: "w-[26%]" },
+          ]}
+          rows={[
+            {
+              p: <span className="text-[13px] font-semibold text-foreground">Homebase</span>,
+              free: <span className="text-[13px]">Basic: free for one location, up to 10 employees. Paid plans are charged per location.</span>,
+              trial: <span className="text-[13px]">No card required on Basic.</span>,
+              care: <span className="text-[13px] text-muted-foreground">A real, bounded free plan \u2014 and a caution: it is scoped to ten people, not to an unlimited team.</span>,
+            },
+            {
+              p: <span className="text-[13px] font-semibold text-foreground">Breezy HR</span>,
+              free: <span className="text-[13px]">No free plan on their current pricing page. Breezy Perform lists a free plan for teams under 10.</span>,
+              trial: <span className="text-[13px]">14-day full-feature trial, no credit card.</span>,
+              care: <span className="text-[13px] text-muted-foreground">The "won me on free" story Yhan tells may predate current packaging \u2014 re-confirm before citing it.</span>,
+            },
+          ]}
+        />
+        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+          Checked {RECHECK} on joinhomebase.com/pricing and breezy.hr/pricing. Yhan's account of switching to
+          both is <Tag tone="accent">Reported</Tag> and may describe packaging that no longer exists, so the
+          brief should cite it as his experience rather than as either vendor's present offer.
+        </p>
       </div>
 
       <div>
@@ -365,7 +433,7 @@ export default function EngagedlyResearch() {
               "Marketing spend goes into comparison content and review credibility, because that is where HR buyers shortlist.",
               "Marketplace distribution through ADP is how they reach companies too small or too slow to find them by search.",
               "Expansion, not acquisition, drives their revenue: eight stackable suites reward landing one module and growing.",
-              "Nobody in this category offers a genuine free tier. That absence, not any single feature, is the opening.",
+              "Their entry step is a conversation, not a product. Free plans do exist around the edges of HR tech \u2014 Homebase's is bounded to ten people, Breezy Perform's to teams under ten \u2014 but none of the suites a 40-person firm would shortlist here publishes an open one.",
             ]}
           />
         </div>
@@ -452,8 +520,9 @@ export default function EngagedlyResearch() {
         <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
           Vendor pages are their own claims. G2, Capterra, Tech.co, ITQlick, CultureMonkey and PeopleGoal are
           third-party reports and disagree with each other in places; those disagreements are shown above rather
-          than resolved silently. Yhan's ~$7,000 for roughly 40 users is customer-reported and consistent with
-          the published floor.
+          than resolved silently. Yhan's ~$7,000 for roughly 40 users is customer-reported and in line with the
+          published floor; it does not prove it, and the exact contract value, term and fees are still to be
+          confirmed with him.
         </p>
       </div>
     </div>

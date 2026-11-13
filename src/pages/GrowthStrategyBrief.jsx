@@ -6,6 +6,7 @@ import MeetingFindings from "@/components/growth/MeetingFindings";
 import RecapAndActions from "@/components/growth/RecapAndActions";
 import EngagedlyTeardown from "@/components/growth/EngagedlyTeardown";
 import EngagedlyResearch from "@/components/growth/EngagedlyResearch";
+import CohortTestPlan from "@/components/growth/CohortTestPlan";
 import PackagingModels from "@/components/growth/PackagingModels";
 import FreeEntryStrategy from "@/components/growth/FreeEntryStrategy";
 import Plan306090 from "@/components/growth/Plan306090";
@@ -19,6 +20,7 @@ const TABS = [
   { value: "research", label: "Pricing & sales research" },
   { value: "packaging", label: "Pricing & packaging" },
   { value: "free", label: "FREE strategy" },
+  { value: "cohort", label: "Validation cohort" },
   { value: "plan", label: "30/60/90 plan" },
   { value: "sources", label: "Assumptions & sources" },
 ];
@@ -29,7 +31,7 @@ export default function GrowthStrategyBrief() {
   return (
     <MVPPageLayout
       title="Growth Strategy Brief"
-      subtitle="Engagedly teardown, small-company packaging, free-entry strategy and a 90-day plan — prepared 11 November 2026"
+      subtitle="Engagedly evidence, a gated validation cohort, small-company packaging and a 90-day plan — prepared 11 November 2026"
     >
       <Tabs value={tab} onValueChange={setTab} className="w-full">
         <div className="sticky top-0 z-10 -mx-1 mb-5 bg-background/95 px-1 pb-2 pt-1 backdrop-blur">
@@ -66,6 +68,9 @@ export default function GrowthStrategyBrief() {
         </TabsContent>
         <TabsContent value="free" className="mt-0 focus-visible:outline-none">
           <FreeEntryStrategy />
+        </TabsContent>
+        <TabsContent value="cohort" className="mt-0 focus-visible:outline-none">
+          <CohortTestPlan />
         </TabsContent>
         <TabsContent value="plan" className="mt-0 focus-visible:outline-none">
           <Plan306090 />
