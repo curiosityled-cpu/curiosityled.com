@@ -68,6 +68,22 @@ const COMPONENTS = {
     </blockquote>
   ),
   hr: () => <hr className="my-10 border-[#E6E1D7]" />,
+  table: ({ children }) => (
+    <div className="my-8 overflow-x-auto rounded-[14px] border border-[#E6E1D7] bg-white">
+      <table className="w-full border-collapse text-left">{children}</table>
+    </div>
+  ),
+  thead: ({ children }) => <thead className="bg-[#F4F1EA]">{children}</thead>,
+  th: ({ children }) => (
+    <th className="border-b border-[#E6E1D7] px-4 py-3 text-[11.5px] font-bold uppercase tracking-[0.1em] text-[#3D3934]">
+      {children}
+    </th>
+  ),
+  td: ({ children }) => (
+    <td className="border-b border-[#EFEBE3] px-4 py-3 align-top text-[15px] leading-relaxed text-[#3D3934]">
+      {children}
+    </td>
+  ),
   img: ({ src, alt }) => (
     <figure className="my-8">
       <img src={src} alt={alt || ""} loading="lazy" className="w-full rounded-[14px]" />
