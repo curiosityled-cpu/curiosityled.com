@@ -1,6 +1,12 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
 import { canAssignRole } from '../../shared/userScope.ts';
 import { escapeHtml, getAppUrl } from '../../shared/safeResponses.ts';
+import {
+    evaluateCapacityAdd,
+    loadCapacityContext,
+    logCapacityOverage,
+    poolForRole,
+} from '../../shared/capacityGate.ts';
 
 /**
  * Creates a new user manually with validation and welcome email
@@ -58,6 +64,37 @@ Deno.serve(async (req) => {
                 success: false, 
                 error: 'A user with this email already exists' 
             }, { status: 409 });
+        }
+
+        // Capacity: an add is checked against the tenant's allowance before the
+        // record is written. Warn mode logs the overage and continues; block
+        // mode refuses with the block that resolves it.
+        const pool = poolForRole(requestedRole);
+        let capacityWarning = null;
+        if (forcedClientId) {
+            const capacity = await loadCapacityContext(base44, forcedClientId);
+            if (capacity) {
+                const gate = evaluateCapacityAdd({ ...capacity, pool, count: 1 });
+                if (!gate.allowed) {
+                    return Response.json({
+                        success: false,
+                        error: gate.message,
+                        capacity: gate.position
+                    }, { status: 403 });
+                }
+                if (gate.warning) {
+                    capacityWarning = gate.warning;
+                    await logCapacityOverage(base44, {
+                        clientId: forcedClientId,
+                        pool,
+                        count: 1,
+                        actorEmail: currentUser.email,
+                        message: gate.message,
+                        source: 'manual_create',
+                        position: gate.position
+                    });
+                }
+            }
         }
 
         // Security: build the create payload from explicit, validated fields
@@ -126,7 +163,8 @@ Deno.serve(async (req) => {
 
         return Response.json({ 
             success: true,
-            user: newUser
+            user: newUser,
+            capacity_warning: capacityWarning
         });
 
     } catch (error) {

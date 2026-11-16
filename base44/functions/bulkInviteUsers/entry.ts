@@ -2,6 +2,12 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { parse } from 'npm:csv-parse/sync';
 import { sendInvite } from '../../shared/userInvites.ts';
 import { resolveActiveClient } from '../../shared/tenantContext.ts';
+import {
+  evaluateCapacityAdd,
+  loadCapacityContext,
+  logCapacityOverage,
+  poolForRole,
+} from '../../shared/capacityGate.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -47,6 +53,13 @@ Deno.serve(async (req) => {
     const results = [];
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+    // Capacity: checked per row against the tenant allowance, counting the
+    // people already invited in this run. Warn mode lets the row through and
+    // records one overage entry for the whole batch; block mode fails the row.
+    const capacity = callerClientId ? await loadCapacityContext(base44, callerClientId) : null;
+    const capacityWarnings = [];
+    let invitedThisRun = 0;
+
     for (const record of records) {
       const email = record.email?.trim();
       const role = record.app_role?.trim() || 'User Level 1';
@@ -61,6 +74,16 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      const pool = poolForRole(role);
+      if (capacity) {
+        const gate = evaluateCapacityAdd({ ...capacity, pool, count: invitedThisRun + 1 });
+        if (!gate.allowed) {
+          results.push({ email, role, status: 'failed', message: gate.message });
+          continue;
+        }
+        if (gate.warning) capacityWarnings.push(gate.message);
+      }
+
       try {
         await sendInvite(base44, {
           email,
@@ -68,10 +91,23 @@ Deno.serve(async (req) => {
           client_id: callerClientId || '',
           invited_by_email: user.email,
         });
+        invitedThisRun += 1;
         results.push({ email, role, status: 'success', message: 'Invitation sent' });
       } catch (inviteError) {
         results.push({ email, role, status: 'failed', message: inviteError.message });
       }
+    }
+
+    if (capacity && capacityWarnings.length > 0) {
+      await logCapacityOverage(base44, {
+        clientId: callerClientId,
+        pool: 'participant',
+        count: invitedThisRun,
+        actorEmail: user.email,
+        message: capacityWarnings[0],
+        source: 'bulk_invite',
+        position: null,
+      });
     }
 
     const successCount = results.filter(r => r.status === 'success').length;

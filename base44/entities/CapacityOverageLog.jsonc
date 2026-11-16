@@ -1,0 +1,175 @@
+{
+  "name": "CapacityOverageLog",
+  "type": "object",
+  "description": "One row for every add that went over a tenant's allowance while that tenant is in warn mode. Reviewed before a tenant is moved to block, so enforcement is never switched on blind.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Tenant the over-allowance add belongs to"
+    },
+    "pool": {
+      "type": "string",
+      "enum": [
+        "manager",
+        "participant"
+      ],
+      "enumColors": [
+        "blue",
+        "purple"
+      ],
+      "description": "Which allowance the add was charged to"
+    },
+    "enforcement_mode": {
+      "type": "string",
+      "enum": [
+        "warn",
+        "block"
+      ],
+      "enumColors": [
+        "yellow",
+        "red"
+      ],
+      "default": "warn",
+      "description": "The mode the tenant was in when the add happened"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "invite",
+        "bulk_invite",
+        "manual_create",
+        "roster_import"
+      ],
+      "enumColors": [
+        "gray",
+        "gray",
+        "gray",
+        "gray"
+      ],
+      "description": "Which add path recorded this overage"
+    },
+    "attempted_count": {
+      "type": "number",
+      "description": "How many people this add tried to create"
+    },
+    "used_before": {
+      "type": "number",
+      "description": "Pool usage at the time of the add"
+    },
+    "allowed": {
+      "type": "number",
+      "description": "Allowance in force at the time of the add"
+    },
+    "over": {
+      "type": "number",
+      "description": "How far past the allowance the add went"
+    },
+    "actor_email": {
+      "type": "string",
+      "description": "Person who attempted the add"
+    },
+    "message": {
+      "type": "string",
+      "description": "The refusal-style message shown or logged for this add"
+    }
+  },
+  "required": [
+    "client_id",
+    "pool",
+    "source"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "data.app_role": "Platform Admin"
+          }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "data.app_role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "data.app_role": "Partner Business Administrator"
+              }
+            },
+            {
+              "data.client_id": {
+                "$in": "{{user.data.partner_client_ids}}"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "data.app_role": "Platform Admin"
+          }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "data.app_role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "data.app_role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "data.app_role": "Partner Business Administrator"
+              }
+            },
+            {
+              "data.client_id": {
+                "$in": "{{user.data.partner_client_ids}}"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "update": null,
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "data.app_role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,6 +1,11 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { resolveActiveClient } from '../../shared/tenantContext.ts';
 import { roleTier } from '../../shared/userScope.ts';
+import {
+  evaluateCapacityAdd,
+  loadCapacityContext,
+  logCapacityOverage,
+} from '../../shared/capacityGate.ts';
 
 /**
  * importStaffRoster — writes frontline staff (ICRoster rows) on behalf of an
@@ -77,6 +82,36 @@ export default async function (req: Request): Promise<Response> {
       return Response.json({ success: false, error: 'No valid staff rows to import', skipped }, { status: 400 });
     }
 
+    // Capacity: frontline roster identities are participants. Each tenant in the
+    // import is checked before a single row is written, so a refused import
+    // leaves nothing half-created. Warn mode logs the overage and continues.
+    const perClient = new Map<string, number>();
+    for (const record of records) {
+      perClient.set(record.client_id, (perClient.get(record.client_id) || 0) + 1);
+    }
+
+    const capacityWarnings = [];
+    for (const [clientId, count] of perClient) {
+      const capacity = await loadCapacityContext(base44, clientId);
+      if (!capacity) continue;
+      const gate = evaluateCapacityAdd({ ...capacity, pool: 'participant', count });
+      if (!gate.allowed) {
+        return Response.json({ success: false, error: gate.message, capacity: gate.position }, { status: 403 });
+      }
+      if (gate.warning) {
+        capacityWarnings.push(gate.warning);
+        await logCapacityOverage(base44, {
+          clientId,
+          pool: 'participant',
+          count,
+          actorEmail: user.email,
+          message: gate.message,
+          source: 'roster_import',
+          position: gate.position,
+        });
+      }
+    }
+
     let created = 0;
     const failures = [];
     for (let i = 0; i < records.length; i += CHUNK) {
@@ -100,7 +135,13 @@ export default async function (req: Request): Promise<Response> {
       return Response.json({ success: false, error: failures[0] || 'The staff rows could not be imported' }, { status: 500 });
     }
 
-    return Response.json({ success: true, count: created, skipped, failures });
+    return Response.json({
+      success: true,
+      count: created,
+      skipped,
+      failures,
+      capacity_warning: capacityWarnings[0] || null,
+    });
   } catch (error: any) {
     return Response.json({ success: false, error: error?.message || 'Staff import failed' }, { status: 500 });
   }

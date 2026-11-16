@@ -1,6 +1,12 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { canAssignRole } from '../../shared/userScope.ts';
 import { sendInvite } from '../../shared/userInvites.ts';
+import {
+  evaluateCapacityAdd,
+  loadCapacityContext,
+  logCapacityOverage,
+  poolForRole,
+} from '../../shared/capacityGate.ts';
 
 /**
  * Invites a person into the app with one of the app's own roles.
@@ -80,6 +86,37 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Capacity is checked before the invitation goes out. Warn mode records the
+    // overage and lets the add through; block mode refuses it with the block
+    // that would resolve it. Sign-in and everything after it never consult this.
+    const capacityClientId = currentUser.client_id || null;
+    let capacityWarning = null;
+    if (capacityClientId) {
+      const capacity = await loadCapacityContext(base44, capacityClientId);
+      if (capacity) {
+        const pool = poolForRole(app_role);
+        const gate = evaluateCapacityAdd({ ...capacity, pool, count: 1 });
+        if (!gate.allowed) {
+          return Response.json(
+            { success: false, error: gate.message, capacity: gate.position },
+            { status: 403 }
+          );
+        }
+        if (gate.warning) {
+          capacityWarning = gate.warning;
+          await logCapacityOverage(base44, {
+            clientId: capacityClientId,
+            pool,
+            count: 1,
+            actorEmail: currentUser.email,
+            message: gate.message,
+            source: 'invite',
+            position: gate.position,
+          });
+        }
+      }
+    }
+
     await sendInvite(base44, {
       email,
       app_role,
@@ -87,7 +124,7 @@ Deno.serve(async (req) => {
       invited_by_email: currentUser.email,
     });
 
-    return Response.json({ success: true, email, app_role });
+    return Response.json({ success: true, email, app_role, capacity_warning: capacityWarning });
   } catch (error) {
     console.error('Error inviting user:', error);
     return Response.json(
