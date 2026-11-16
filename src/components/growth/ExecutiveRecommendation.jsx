@@ -1,136 +1,77 @@
 import React from "react";
-import { Callout, Stat, DataTable, Bullets, SectionHeading, Lead } from "./briefUi";
-
-const decisions = [
-  {
-    n: "01",
-    title: "Publish a free plan with hard, visible boundaries",
-    body: "One team, up to 10 manager seats, standard morning/evening check-ins, one AI insight per manager per day, 90-day history. Free forever, not a trial. Publish the boundary table on the pricing page so nobody has to talk to you to understand it.",
-    why: "Engagedly's own site publishes no free plan and no signup \u2014 its pricing page ends at a demo request, though a partner marketplace carries a trial signal. Homebase currently runs a free plan bounded to one location and ten employees, and Breezy currently publishes no free plan at all, only a no-card 14-day trial, so Yhan's free-use history dates from packaging that may since have changed. Re-confirm with him before citing it.",
-  },
-  {
-    n: "02",
-    title: "Price flat by organisation band, never per seat",
-    body: "Illustrative annual bands: $3,000 (11–50 managers), $7,500 (51–150), $18,000 (151–500), $35,000+ (500+), plus paid implementation. Frontline staff never count toward a band because they never log in.",
-    why: "Engagedly publishes a $7,500 annual minimum, so Yhan's reported ~$7,000 at 40 people is roughly the floor rather than a per-seat result, at about $175 per person per year. $3,000 is less than half that floor, which is a cleaner story than any discount off a list rate.",
-  },
-  {
-    n: "03",
-    title: "Lead with what Engagedly cannot claim: operational truth",
-    body: "Attendance and Homebase data, daily check-ins against real work, and a manager-first screen. Sell one outcome — 'I can see how my team is actually doing this week' — not a module count.",
-    why: "Yhan's own verdict at 01:05:59: Engagedly reviews are subjective year-end questions and it does not track attendance. Their pricing page confirms no operational data layer.",
-  },
-  {
-    n: "04",
-    title: "Add the Breezy move: pause and resume",
-    body: "On the monthly entry plan, a customer can pause when they are not running a cycle. Their data is retained and read-only; resume costs the same monthly amount. The annual band stays the default.",
-    why: "Breezy reverted Yhan to the free starter pack when he stopped paying — and kept him. Pausing protects the relationship instead of forcing a cancel and a re-sale.",
-  },
-  {
-    n: "05",
-    title: "Build the channel before the ad budget",
-    body: "Go Flat Bridge, Jani's BPO circle and independent HR consultants each carry the free tier into tenants they already advise. Use the Partner Business Administrator role that already exists. Pay wholesale per tenant or a referral percentage, not a reseller discount stack.",
-    why: "Small organisations need more consulting, not less (01:00:03). A partner can deliver that consulting at their cost, which is what keeps your per-tenant delivery affordable.",
-  },
-];
-
-const dos = [
-  "Quote a per-manager annual figure next to every proposal — $75/manager/year at 40 managers beats any feature matrix.",
-  "Keep the free tier genuinely useful for a real manager with 6–10 reports, then charge for a second team.",
-  "Publish list prices annually and stop quoting custom every time; you lose credibility and speed.",
-  "Put implementation and configuration on a separate line item so platform price stays clean.",
-  "Sell the frontline seat as free and unlimited — it is a structural advantage, not a discount.",
-];
-
-const donts = [
-  "Do not discount the enterprise band to win logos; use implementation scope as the negotiable lever instead.",
-  "Do not name a price per employee; it invites headcount audits and punishes the exact buyers you want.",
-  "Do not call the free plan a trial anywhere, in any asset, ever.",
-  "Do not compete on module breadth — Engagedly ships eight suites and six Brandon Hall awards.",
-  "Do not add free onboarding calls for the free tier; it is the fastest way to make free unprofitable.",
-];
+import { SectionHeading, Lead, Callout, Stat, Tag, Bullets } from "./briefUi";
+import { DECISIONS } from "./pricingBriefData";
 
 export default function ExecutiveRecommendation() {
   return (
-    <div className="space-y-6">
-      <div className="rounded-2xl border border-border bg-card p-5 sm:p-7">
+    <div className="space-y-8">
+      <div className="rounded-2xl border border-[#0202ff]/25 bg-[#0202ff]/5 p-6 sm:p-8">
         <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0202ff] dark:text-blue-300">
-          The recommendation in one line
+          Regenerated recommendation • 16 November 2026
         </p>
-        <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight text-foreground">
-          Sell the manager, not the seat — and let the frontline in free.
-        </h2>
+        <h1 className="mt-2 max-w-3xl text-2xl font-extrabold leading-tight tracking-tight text-foreground sm:text-3xl">
+          Sell one package. Quote the other two. Enforce nothing you cannot count.
+        </h1>
         <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-muted-foreground">
-          Curiosity Led already has an unusual structural advantage that the call uncovered: frontline
-          staff complete a check-in from a link and never log in, so they never occupy a paid seat.
-          Engagedly charges $2–5 per head per month for that population. Price on managers, give the
-          frontline away, and the 40-person Caribbean firm that pays Engagedly ~$7,000 becomes a
-          $3,000 customer instead of a lost deal at $35,000.
+          Your revised allowances make Essentials sharper: $3,000 a year for 10 managers and 100 participants is a
+          credible entry offer for a 3–10 manager business. It also creates two problems the previous recommendation
+          did not have — an 11-manager buyer now pays 140% more for one extra manager, and the product still has no way
+          to know how many managers a tenant actually has. Fix both before publishing a price.
         </p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Engagedly, 40 people" value="~$7,000/yr" sub="Customer-reported. Their published minimum is $7,500, so this is in line with the floor, not a list rate." />
-        <Stat label="Curiosity Led, 40 managers" value="$3,000/yr" sub="Illustrative Team band — roughly half the Engagedly bill at the same headcount." />
-        <Stat label="2,000 frontline staff" value="$0" sub="They get a link, not a login. Engagedly's deskless add-on would be ~$120,000/yr at $5/head." />
-        <Stat label="Free tier ceiling" value="10 managers" sub="One team, standard check-ins, one AI insight per manager per day." />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Stat label="Advertised price" value="$3,000" sub="Essentials annually, plus $750 implementation" />
+        <Stat label="Per manager / month" value="$25" sub="At 10 managers; $20 on Growth at 30" />
+        <Stat label="Tiers enforceable today" value="0" sub="No plan, allowance or metering field exists" />
+        <Stat label="P0 claims to fix" value="2" sub="“Judgment changed” and the $319B–$398B statistic" />
       </div>
 
       <div>
-        <SectionHeading kicker="Five decisions">What to actually do</SectionHeading>
-        <div className="grid gap-3 lg:grid-cols-2">
-          {decisions.map((d) => (
-            <div key={d.n} className="rounded-xl border border-border bg-card p-4 sm:p-5">
-              <div className="flex items-baseline gap-2.5">
-                <span className="text-xs font-extrabold tabular-nums text-[#0202ff] dark:text-blue-300">
-                  {d.n}
-                </span>
-                <h3 className="text-base font-bold tracking-tight text-foreground">{d.title}</h3>
-              </div>
-              <p className="mt-2 text-sm leading-relaxed text-foreground">{d.body}</p>
-              <p className="mt-2 border-l-2 border-border pl-3 text-xs leading-relaxed text-muted-foreground">
-                <span className="font-bold uppercase tracking-wide">Evidence: </span>
-                {d.why}
-              </p>
+        <SectionHeading kicker="Five decisions">What I would do differently from the last brief</SectionHeading>
+        <div className="grid gap-4 md:grid-cols-2">
+          {DECISIONS.map((d) => (
+            <div key={d.title} className="rounded-xl border border-border bg-card p-5">
+              <Tag tone="accent">{d.tag}</Tag>
+              <h3 className="mt-2.5 text-[15px] font-bold text-foreground">{d.title}</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{d.body}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-2">
-        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 sm:p-5">
-          <p className="text-sm font-bold text-foreground">Do this</p>
-          <Bullets className="mt-2" items={dos} />
-        </div>
-        <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-4 sm:p-5">
-          <p className="text-sm font-bold text-foreground">Not this</p>
-          <Bullets className="mt-2" items={donts} />
-        </div>
-      </div>
-
-      <Callout tone="warning" title="Read this before you change a public price">
+      <Callout tone="accent" title="The capacity ladder, in one line">
         <p>
-          Every dollar figure in this brief except the Engagedly numbers is <strong>illustrative</strong>.
-          Engagedly figures come from their public pricing page and from what Yhan reported on the call.
-          Nothing here is a Curiosity Led list price until you decide it is, and the first two decisions in
-          the 90-day plan exist to test these numbers before they go on the website.
-        </p>
-        <p>
-          The free plan should not open to the public first. Run the gated cohort described in the Validation
-          cohort tab \u2014 tenant separation demonstrated, check-ins reliable, onboarding hours measured \u2014
-          and let the ten-manager boundary be tested on real accounts before anyone can sign up unaided.
+          Essentials covers the buyer you can serve well today. A <strong>$1,200 / +5 manager block</strong> holds the
+          11–20 manager deal at $4,200 without cannibalising Growth, and a <strong>$600 / +100 participant block</strong>{" "}
+          answers the few-managers-many-staff case. Growth then sells on cross-team intelligence and automation rather
+          than on permission to hire one more manager.
         </p>
       </Callout>
 
       <div>
-        <SectionHeading kicker="The honest risk">What could make this wrong</SectionHeading>
-        <Lead>
-          Free tiers fail in two ways: they attract people who will never pay, and they cost real money to
-          serve. The 30-day plan therefore measures activation and cost per free tenant before any spend on
-          acquisition. If a free tenant costs more than ~$1.50 per manager per month to run, the boundaries
-          in this brief are already too generous.
-        </Lead>
+        <SectionHeading kicker="Why the offer changed shape">What the documents agree on</SectionHeading>
+        <Bullets
+          items={[
+            "The buyer is an owner, HR or operations leader with 3–10 managers across multiple teams and a named internal process owner.",
+            "The core manager experience — assessment, insight, priorities, development, check-ins, goals, 1:1s, reviews, 360s and Atreus — stays in every package. Scale, intelligence, automation, integrations and delivery are what customers pay more for.",
+            "The 90-Day Manager Launch is onboarding and adoption, not a promise of leadership transformation in 90 days.",
+            "Annual subscription billed upfront, implementation separate, no permanent free production plan, no surprise overage billing.",
+            "Frontline participation is included inside the package limits; additional participation capacity is quoted, not forced into unused manager seats.",
+          ]}
+        />
       </div>
+
+      <Callout tone="danger" title="Caveats that belong in front of the buyer, not the appendix">
+        <Bullets
+          items={[
+            "Every price, allowance, block and commitment on this page is a proposed test term. None has been validated for willingness to pay.",
+            "Go Flat Bridge proves the workflow runs, not that retention, productivity or manager effectiveness improved. It should be described as a documented implementation, not an outcome case study.",
+            "The 15-business-day launch assurance needs operational and contractual review before it appears anywhere customers can read it.",
+            "Nothing here authorises publishing a pricing page. Gate 5 stays closed until the two P0 claims are corrected and the diagnostic duration is measured.",
+          ]}
+        />
+      </Callout>
     </div>
   );
 }

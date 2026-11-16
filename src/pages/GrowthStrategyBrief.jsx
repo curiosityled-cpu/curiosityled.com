@@ -2,26 +2,22 @@ import React, { useState } from "react";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ExecutiveRecommendation from "@/components/growth/ExecutiveRecommendation";
+import PricingArchitecture from "@/components/growth/PricingArchitecture";
+import ReadinessAudit from "@/components/growth/ReadinessAudit";
+import CommercialPlan from "@/components/growth/CommercialPlan";
 import MeetingFindings from "@/components/growth/MeetingFindings";
-import RecapAndActions from "@/components/growth/RecapAndActions";
 import EngagedlyTeardown from "@/components/growth/EngagedlyTeardown";
 import EngagedlyResearch from "@/components/growth/EngagedlyResearch";
-import CohortTestPlan from "@/components/growth/CohortTestPlan";
-import PackagingModels from "@/components/growth/PackagingModels";
-import FreeEntryStrategy from "@/components/growth/FreeEntryStrategy";
-import Plan306090 from "@/components/growth/Plan306090";
 import AssumptionsSources from "@/components/growth/AssumptionsSources";
 
 const TABS = [
   { value: "recommendation", label: "Recommendation" },
+  { value: "pricing", label: "Pricing architecture" },
+  { value: "audit", label: "Readiness & claims audit" },
+  { value: "plan", label: "Commercial plan" },
   { value: "findings", label: "Meeting evidence" },
-  { value: "recap", label: "Recap & actions" },
   { value: "competitor", label: "Engagedly" },
   { value: "research", label: "Pricing & sales research" },
-  { value: "packaging", label: "Pricing & packaging" },
-  { value: "free", label: "FREE strategy" },
-  { value: "cohort", label: "Validation cohort" },
-  { value: "plan", label: "30/60/90 plan" },
   { value: "sources", label: "Assumptions & sources" },
 ];
 
@@ -31,7 +27,7 @@ export default function GrowthStrategyBrief() {
   return (
     <MVPPageLayout
       title="Growth Strategy Brief"
-      subtitle="Engagedly evidence, a gated validation cohort, small-company packaging and a 90-day plan — prepared 11 November 2026"
+      subtitle="Regenerated 16 November 2026 — revised allowances, three-tier pricing, a read-only product audit and a sequenced commercial plan"
     >
       <Tabs value={tab} onValueChange={setTab} className="w-full">
         <div className="sticky top-0 z-10 -mx-1 mb-5 bg-background/95 px-1 pb-2 pt-1 backdrop-blur">
@@ -51,29 +47,23 @@ export default function GrowthStrategyBrief() {
         <TabsContent value="recommendation" className="mt-0 focus-visible:outline-none">
           <ExecutiveRecommendation />
         </TabsContent>
+        <TabsContent value="pricing" className="mt-0 focus-visible:outline-none">
+          <PricingArchitecture />
+        </TabsContent>
+        <TabsContent value="audit" className="mt-0 focus-visible:outline-none">
+          <ReadinessAudit />
+        </TabsContent>
+        <TabsContent value="plan" className="mt-0 focus-visible:outline-none">
+          <CommercialPlan />
+        </TabsContent>
         <TabsContent value="findings" className="mt-0 focus-visible:outline-none">
           <MeetingFindings />
-        </TabsContent>
-        <TabsContent value="recap" className="mt-0 focus-visible:outline-none">
-          <RecapAndActions />
         </TabsContent>
         <TabsContent value="competitor" className="mt-0 focus-visible:outline-none">
           <EngagedlyTeardown />
         </TabsContent>
         <TabsContent value="research" className="mt-0 focus-visible:outline-none">
           <EngagedlyResearch />
-        </TabsContent>
-        <TabsContent value="packaging" className="mt-0 focus-visible:outline-none">
-          <PackagingModels />
-        </TabsContent>
-        <TabsContent value="free" className="mt-0 focus-visible:outline-none">
-          <FreeEntryStrategy />
-        </TabsContent>
-        <TabsContent value="cohort" className="mt-0 focus-visible:outline-none">
-          <CohortTestPlan />
-        </TabsContent>
-        <TabsContent value="plan" className="mt-0 focus-visible:outline-none">
-          <Plan306090 />
         </TabsContent>
         <TabsContent value="sources" className="mt-0 focus-visible:outline-none">
           <AssumptionsSources />
