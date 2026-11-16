@@ -1,6 +1,6 @@
 import React from "react";
 import { SectionHeading, Lead, Callout, DataTable, Tag, Bullets } from "./briefUi";
-import { GATES, PLAN } from "./pricingBriefData";
+import { GATES, TASKS, DECISION_RULES } from "./pricingBriefData";
 
 const GATE_TONE = { Done: "good", "Not started": "warning", Blocked: "danger" };
 
@@ -8,15 +8,23 @@ export default function CommercialPlan() {
   return (
     <div className="space-y-8">
       <div>
-        <SectionHeading kicker="Sequenced, not simultaneous">The commercial plan</SectionHeading>
+        <SectionHeading kicker="How we proceed">The detailed plan</SectionHeading>
         <Lead>
-          Sell one package now, build the boundary for the other two, and publish nothing the product cannot enforce.
-          The order matters more than the speed.
+          Four sprints, in this order. The sequence is deliberate: sell before you publish, count before you enforce,
+          enforce before you promise. Every sprint has a single exit condition, so nothing waits on a decision that has
+          not been made.
         </Lead>
       </div>
 
+      <Callout tone="accent" title="The one rule for the next 90 days">
+        <p>
+          Essentials is sold from an order form and provisioned by hand until allowances can be counted. The pricing
+          page goes live in week four, not this week, and it never shows a tier the product cannot enforce.
+        </p>
+      </Callout>
+
       <div>
-        <SectionHeading kicker="Validation gates">Where each gate actually stands</SectionHeading>
+        <SectionHeading kicker="Where each gate stands">Validation gates</SectionHeading>
         <DataTable
           columns={[
             { key: "gate", label: "Gate" },
@@ -28,56 +36,58 @@ export default function CommercialPlan() {
         />
       </div>
 
-      <div className="space-y-4">
-        <SectionHeading kicker="Next 90 days">What happens, in order</SectionHeading>
-        <div className="grid gap-4 lg:grid-cols-2">
-          {PLAN.map((p) => (
-            <div key={p.window} className="rounded-xl border border-border bg-card p-5">
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{p.window}</p>
-              <h3 className="mt-1 text-[15px] font-bold text-foreground">{p.focus}</h3>
-              <div className="mt-3">
-                <Bullets items={p.items} />
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="space-y-6">
+        {TASKS.map((sprint) => (
+          <div key={sprint.sprint}>
+            <SectionHeading>{sprint.sprint}</SectionHeading>
+            <DataTable
+              columns={[
+                { key: "id", label: "#", className: "w-12" },
+                { key: "task", label: "Task" },
+                { key: "done", label: "Done when" },
+                { key: "owner", label: "Owner", className: "w-32" },
+              ]}
+              rows={sprint.items}
+              dense
+            />
+          </div>
+        ))}
       </div>
 
-      <Callout tone="accent" title="The first commercial test stays one offer">
+      <Callout tone="accent" title="The first commercial test — one offer, ten conversations">
         <Bullets
           items={[
-            "Ten qualified prospects from one reachable segment — BPO and service businesses with 3–10 managers and a named internal owner.",
-            "Same Essentials offer, same $3,000 + $750, no exceptions and no discounts for the first ten. The point is to learn whether the offer sells, not to close a tenth deal.",
-            "Growth is quoted only when a prospect genuinely has more than 10 managers or needs cross-team intelligence; it is not a second campaign.",
-            "Measure the full routine — manager returns after week two, insights opened, conversations recorded, reports actually reviewed — not check-in completion.",
+            "Segment: BPO and service businesses with 3–10 managers, multiple teams or client accounts, and a named internal owner.",
+            "Same Essentials offer, same $3,000 + $750, no discounts and no exceptions. A tenth deal won by discounting destroys the test.",
+            "Growth is quoted only when the prospect genuinely has more than 10 managers or asks for cross-team intelligence.",
+            "Qualify out loud: no process owner, needs bespoke integration first, or wants monitoring rather than development — those are not losses.",
+            "Success is what happens after week two — manager returns, insights opened, conversations recorded, reports reviewed — not check-in completion.",
           ]}
         />
       </Callout>
 
       <div>
-        <SectionHeading kicker="Before any pricing page ships">Instrumentation that must exist first</SectionHeading>
+        <SectionHeading kicker="Day 90">Decision rules, agreed before the data arrives</SectionHeading>
         <div className="mb-4">
           <Lead>
-            There are no conversion events today. Without these, the pricing test produces an opinion rather than a
-            baseline.
+            Writing these down now prevents renegotiating the conclusion later. Each signal maps to exactly one change.
           </Lead>
         </div>
-        <Bullets
-          items={[
-            "pricing_view, package_select, demo_start, demo_complete, demo_cta_click, contact_request — with the package and referring page attached.",
-            "Diagnostic_start and diagnostic_complete with real elapsed time, so the “8-minute” claim is either proven or removed.",
-            "For the app: manager_first_action, check_in_complete, insight_opened, conversation_logged, report_reviewed — per role and per tenant, so acceptance can be tested against the 90-Day Launch definition.",
-            "Internal delivery time per implementation, tracked against the five-hour guardrail, because that guardrail is what keeps $750 profitable.",
+        <DataTable
+          columns={[
+            { key: "signal", label: "If we see" },
+            { key: "read", label: "Then we" },
           ]}
+          rows={DECISION_RULES}
         />
       </div>
 
-      <Callout tone="warning" title="What can be sold today, and what cannot">
+      <Callout tone="warning" title="Three things only you can decide">
         <Bullets
           items={[
-            "Sellable now: the complete manager experience, standard team reporting, client-facing aggregated reporting with approval, CSV onboarding and the 90-Day Manager Launch process.",
-            "Sellable by quote only: Growth's cross-team intelligence, historical windows, automation and connectors — real, but not yet bounded or metered.",
-            "Not sellable yet: any named plan enforcement, published AI allowance, multi-unit intelligence guarantee, or the 15-business-day launch assurance before operational review.",
+            "Approve the two P0 claim corrections — they are the only change I would make to the public site this week.",
+            "Approve or change the capacity block prices ($1,200 / +5 managers, $600 / +100 participants). They are derived from your tier rates, not validated.",
+            "Nominate the ten prospects and the segment, since the test only means something if it is one reachable group.",
           ]}
         />
       </Callout>

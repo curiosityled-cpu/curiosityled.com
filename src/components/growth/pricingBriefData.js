@@ -185,3 +185,62 @@ export const DECISIONS = [
     tag: "Economics",
   },
 ];
+
+export const TASKS = [
+  {
+    sprint: "Sprint 1 — Honest claims and a sellable offer (week 1)",
+    items: [
+      { id: "1.1", task: "Replace “Evidence that judgment changed” with a claim the product supports", done: "No causal or proof language on any public page", owner: "Site copy" },
+      { id: "1.2", task: "Qualify or replace the $319B–$398B / 50% statistic", done: "Source, year and population cited, or the statistic removed", owner: "Site copy" },
+      { id: "1.3", task: "Label the interactive preview personas and scores as fictional samples", done: "Visible SAMPLE label at the point of use", owner: "Site copy" },
+      { id: "1.4", task: "Write order form v1: Essentials scope, capacity blocks, acceptance definition", done: "One document a prospect can sign without amendment", owner: "Commercial" },
+      { id: "1.5", task: "Shortlist ten qualified prospects, one segment, 3–10 managers each", done: "Ten named organisations with a named internal owner", owner: "Commercial" },
+    ],
+  },
+  {
+    sprint: "Sprint 2 — Make allowances countable (weeks 2–3)",
+    items: [
+      { id: "2.1", task: "Add package, manager allowance, participant allowance, implementation fee and billing start to the Client record", done: "Fields editable by platform admin on an existing tenant", owner: "Data" },
+      { id: "2.2", task: "Build one counting function: managers (role-based users) vs participants (roster and check-in identities), excluding admin-only and view-only", done: "Returns counts and allowances for a tenant in one call", owner: "Backend" },
+      { id: "2.3", task: "Enforce at invite and roster import only, with a clear over-allowance message", done: "An over-allowance add fails server-side, and no manager flow is blocked", owner: "Backend" },
+      { id: "2.4", task: "Meter Atreus usage per tenant and per active manager", done: "Monthly cost per active manager is reportable", owner: "Backend" },
+    ],
+  },
+  {
+    sprint: "Sprint 3 — Publish narrowly (weeks 4–6)",
+    items: [
+      { id: "3.1", task: "Publish a pricing page: Essentials only, Growth as “talk to us”", done: "Page live with no Growth or Organization price shown", owner: "Site" },
+      { id: "3.2", task: "Make the no-signup demo the primary CTA, reachable from the persistent nav", done: "Demo linked on every public page", owner: "Site" },
+      { id: "3.3", task: "Instrument pricing_view, package_select, demo_start, demo_complete, contact_request", done: "Events firing with package and page attached", owner: "Analytics" },
+      { id: "3.4", task: "Turn the 90-Day Manager Launch into a runbook with the five-hour guardrail", done: "A per-implementation checklist that records actual hours", owner: "Delivery" },
+    ],
+  },
+  {
+    sprint: "Sprint 4 — Test and decide (weeks 7–12)",
+    items: [
+      { id: "4.1", task: "Run ten prospect conversations on identical terms", done: "Ten outcomes logged: signed, declined, deferred, reason", owner: "Commercial" },
+      { id: "4.2", task: "Track delivery hours per implementation", done: "Median at or under five hours across the first three", owner: "Delivery" },
+      { id: "4.3", task: "Track Atreus cost and manager return rate in week two", done: "Cost per active manager and week-two return measured", owner: "Product" },
+      { id: "4.4", task: "Run the day-90 decision review", done: "One recorded decision: hold, re-band or re-boundary", owner: "Founder" },
+    ],
+  },
+];
+
+export const DECISION_RULES = [
+  {
+    signal: "Two or more of ten sign at list price, no discount",
+    read: "The offer holds; keep the price and finish the enforcement work.",
+  },
+  {
+    signal: "Prospects disqualify themselves at the 10-manager line",
+    read: "The allowance is the objection, not the price: lead with the +5 manager block in the conversation.",
+  },
+  {
+    signal: "Buyers want cross-team analytics but not more managers",
+    read: "The Essentials/Growth boundary is wrong: move the analytics boundary, not the headcount.",
+  },
+  {
+    signal: "Fewer than two sign and no one names price",
+    read: "The problem is credibility, not packaging. Return to proof, scope and the demo before touching price.",
+  },
+];

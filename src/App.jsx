@@ -173,6 +173,10 @@ const AuthenticatedApp = () => {
       {/* Public share-ready summary for Go Flat Bridge — no login required */}
       <Route path="/flat-bridge-handoff" element={<FlatBridgeHandoff />} />
 
+      {/* Public Journal — no login required so the nav link works for visitors */}
+      <Route path="/blog" element={<Blog />} />
+      <Route path="/blog/:slug" element={<BlogPost />} />
+
 
       {/* Protected app routes — auth required, unauthenticated users redirect to /login */}
       <Route element={<ProtectedRoute unauthenticatedElement={<RedirectToLogin />} />}>
@@ -254,9 +258,7 @@ const AuthenticatedApp = () => {
             : mvpRole ? <MVPPage><PerformanceManager /></MVPPage> : <LayoutWrapper currentPageName="PerformanceManager"><PerformanceManager /></LayoutWrapper>
       } />
       <Route path="/reviews" element={<MVPLayout><Reviews /></MVPLayout>} />
-      {/* Blog — Platform Admin only */}
-      <Route path="/blog" element={<PlatformAdminOnly><Blog /></PlatformAdminOnly>} />
-      <Route path="/blog/:slug" element={<PlatformAdminOnly><BlogPost /></PlatformAdminOnly>} />
+      {/* Journal administration — Platform Admin only (public reading routes are declared above) */}
       <Route path="/BlogManager" element={<PlatformAdminOnly><MVPPage><BlogManager /></MVPPage></PlatformAdminOnly>} />
       {/* Growth strategy brief — Platform Admin only */}
       <Route path="/growth-brief" element={<PlatformAdminOnly><MVPPage><GrowthStrategyBrief /></MVPPage></PlatformAdminOnly>} />

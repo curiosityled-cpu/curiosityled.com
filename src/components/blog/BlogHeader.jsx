@@ -1,9 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { Menu, X } from "lucide-react";
 import BrandLogo from "@/components/landing/BrandLogo";
+
+const LINKS = [
+  { to: "/", label: "Product" },
+  { to: "/blog", label: "Journal" },
+  { to: "/healthcare", label: "Healthcare" },
+  { to: "/bpo", label: "BPO & Operations" },
+  { to: "/coaching", label: "Coaching" },
+];
 
 export default function BlogHeader() {
   const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+  const { pathname } = useLocation();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -12,32 +23,33 @@ export default function BlogHeader() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => setOpen(false), [pathname]);
+
   return (
     <header
       className={`sticky top-0 z-40 transition-all duration-300 ${
-        scrolled
+        scrolled || open
           ? "bg-[#FBFAF7]/95 backdrop-blur border-b border-[#E6E1D7]"
           : "bg-[#FBFAF7] border-b border-transparent"
       }`}
     >
-      <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between gap-4">
         <Link to="/" className="flex items-center">
           <BrandLogo />
         </Link>
 
         <nav className="hidden sm:flex items-center gap-7">
-          <Link to="/" className="text-sm text-[#6B6560] hover:text-[#151515] transition-colors">
-            Product
-          </Link>
-          <Link to="/blog" className="text-sm font-semibold text-[#151515]">
-            Journal
-          </Link>
-          <Link to="/healthcare" className="text-sm text-[#6B6560] hover:text-[#151515] transition-colors">
-            Healthcare
-          </Link>
-          <Link to="/bpo" className="text-sm text-[#6B6560] hover:text-[#151515] transition-colors">
-            BPO &amp; Operations
-          </Link>
+          {LINKS.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className={`text-sm transition-colors hover:text-[#151515] ${
+                pathname === link.to ? "font-semibold text-[#151515]" : "text-[#6B6560]"
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
 
         <a
@@ -50,16 +62,42 @@ export default function BlogHeader() {
           Book a demo
         </a>
 
-        <a
-          href="https://cal.com/curiosityled/bookdemo"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="sm:hidden text-xs font-semibold text-white px-3 py-2 rounded-lg"
-          style={{ backgroundColor: "#0202ff" }}
-        >
-          Demo
-        </a>
+        <div className="flex items-center gap-2 sm:hidden">
+          <a
+            href="https://cal.com/curiosityled/bookdemo"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs font-semibold text-white px-3 py-2 rounded-lg"
+            style={{ backgroundColor: "#0202ff" }}
+          >
+            Demo
+          </a>
+          <button
+            onClick={() => setOpen((v) => !v)}
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            className="p-2 text-[#151515]"
+          >
+            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
+
+      {open && (
+        <div className="sm:hidden border-t border-[#E6E1D7] bg-[#FBFAF7] px-6 pb-5 pt-2">
+          {LINKS.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className={`block py-2.5 text-[15px] ${
+                pathname === link.to ? "font-semibold text-[#151515]" : "text-[#6B6560]"
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      )}
     </header>
   );
 }
