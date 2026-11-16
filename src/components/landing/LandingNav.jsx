@@ -1,22 +1,25 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useLocation } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Menu, X, ChevronDown } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import BrandLogo from "@/components/landing/BrandLogo";
+
+const INDUSTRY_LINKS = [
+  { to: "/healthcare", label: "Healthcare" },
+  { to: "/bpo", label: "BPO & Operations" },
+  { to: "/coaching", label: "Coaching" },
+];
 
 const NAV_LINKS = [
   { to: "/", label: "Product" },
   { to: "/compare", label: "Why us" },
-  { to: "/healthcare", label: "Healthcare" },
-  { to: "/bpo", label: "BPO & Operations" },
-  { to: "/coaching", label: "Coaching" },
-  { to: "/blog", label: "Journal" },
 ];
 
 export default function LandingNav({ hideCtas = false }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [industryOpen, setIndustryOpen] = useState(false);
+  const industryRef = useRef(null);
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
@@ -26,7 +29,20 @@ export default function LandingNav({ hideCtas = false }) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => setOpen(false), [pathname]);
+  useEffect(() => {
+    setOpen(false);
+    setIndustryOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const onClick = (e) => {
+      if (industryRef.current && !industryRef.current.contains(e.target)) setIndustryOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
+
+  const industryActive = INDUSTRY_LINKS.some((l) => l.to === pathname);
 
   const handleLogin = () => {
     base44.auth.redirectToLogin("/");
@@ -67,6 +83,48 @@ export default function LandingNav({ hideCtas = false }) {
               {link.label}
             </Link>
           ))}
+
+          <div className="relative" ref={industryRef}>
+            <button
+              onClick={() => setIndustryOpen((v) => !v)}
+              aria-expanded={industryOpen}
+              aria-haspopup="true"
+              className={`flex items-center gap-1 text-sm transition-colors hover:text-gray-900 ${
+                industryActive || industryOpen ? "font-semibold text-gray-900" : "font-medium text-gray-600"
+              }`}
+            >
+              Industry
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform ${industryOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+            {industryOpen && (
+              <div className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-56 rounded-xl border border-gray-100 bg-white p-2 shadow-lg">
+                {INDUSTRY_LINKS.map((link) => (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
+                      pathname === link.to
+                        ? "bg-gray-50 font-semibold text-gray-900"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <Link
+            to="/blog"
+            className={`text-sm transition-colors hover:text-gray-900 ${
+              pathname === "/blog" ? "font-semibold text-gray-900" : "font-medium text-gray-600"
+            }`}
+          >
+            Journal
+          </Link>
           <button
             onClick={goToFaq}
             className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
@@ -121,6 +179,30 @@ export default function LandingNav({ hideCtas = false }) {
                 {link.label}
               </Link>
             ))}
+
+            <p className="pt-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-gray-400">
+              Industry
+            </p>
+            {INDUSTRY_LINKS.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`py-2.5 pl-3 text-[15px] ${
+                  pathname === link.to ? "font-semibold text-gray-900" : "font-medium text-gray-600"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+
+            <Link
+              to="/blog"
+              className={`py-2.5 text-[15px] ${
+                pathname === "/blog" ? "font-semibold text-gray-900" : "font-medium text-gray-600"
+              }`}
+            >
+              Journal
+            </Link>
             <button onClick={goToFaq} className="py-2.5 text-left text-[15px] font-medium text-gray-600">
               FAQ
             </button>
