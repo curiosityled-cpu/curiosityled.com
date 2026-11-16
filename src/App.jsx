@@ -47,6 +47,7 @@ import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
 import BlogManager from './pages/BlogManager';
 import GrowthStrategyBrief from './pages/GrowthStrategyBrief';
+import Pricing from './pages/Pricing';
 import TenantCleanup from './pages/TenantCleanup';
 
 
@@ -176,6 +177,9 @@ const AuthenticatedApp = () => {
       {/* Public Journal — no login required so the nav link works for visitors */}
       <Route path="/blog" element={<Blog />} />
       <Route path="/blog/:slug" element={<BlogPost />} />
+
+      {/* Public pricing and packaging — no login required */}
+      <Route path="/pricing" element={<Pricing />} />
 
 
       {/* Protected app routes — auth required, unauthenticated users redirect to /login */}

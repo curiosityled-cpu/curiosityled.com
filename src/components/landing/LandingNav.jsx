@@ -13,6 +13,7 @@ const INDUSTRY_LINKS = [
 const NAV_LINKS = [
   { to: "/", label: "Product" },
   { to: "/compare", label: "Why us" },
+  { to: "/pricing", label: "Pricing" },
 ];
 
 export default function LandingNav({ hideCtas = false }) {
