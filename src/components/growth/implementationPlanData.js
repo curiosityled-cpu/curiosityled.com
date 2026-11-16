@@ -1,18 +1,19 @@
 // Implementation plan for the recommendations in the 16 November 2026 brief
-// and the attached offer documents. Effort is in builder-days for one
-// full-time developer, with the founder selling in parallel.
+// and the attached offer documents. Ordered by dependency, not by calendar:
+// each workstream starts when the one it depends on is finished. Effort is in
+// builder-days for one full-time developer, with the founder selling alongside.
 
 export const EFFORT_BASIS = {
   workstreams: 8,
   days: 36,
-  milestones: 5,
-  parallel: "Atreus metering and delivery documentation run alongside the allowance work, not after it.",
+  milestones: 6,
+  parallel: "Atreus metering and delivery documentation start once the tenant record carries a package — they are measurements, not dependencies.",
 };
 
 export const SEQUENCE = [
   {
     step: "Trust",
-    detail: "Nothing is published or sold until the two P0 claims and the demo labelling are fixed. It is two days of work and it is the only thing that can invalidate a signed deal after the fact.",
+    detail: "Nothing is published or sold until the two P0 claims and the demo labelling are fixed. Two days of work, and the only thing that can invalidate a signed deal after the fact.",
   },
   {
     step: "Count",
@@ -27,7 +28,7 @@ export const SEQUENCE = [
     detail: "The pricing page shows one price. Growth stays quoting-only until cross-team analytics, trend windows and automation have real boundaries.",
   },
   {
-    step: "Test",
+    step: "Prove",
     detail: "Ten conversations on identical terms, with delivery hours and AI cost measured, so the day-90 decision rests on data rather than opinion.",
   },
 ];
@@ -35,35 +36,42 @@ export const SEQUENCE = [
 export const MILESTONES = [
   {
     id: "M1",
-    when: "End of week 1",
+    gate: "After A",
     name: "Showable again",
     unlock: "No unsubstantiated claim on any public page; the demo is labelled fictional at the point of use; the package fields are defined on the tenant record.",
     proves: "A prospect can be taken through the site without us overclaiming.",
   },
   {
     id: "M2",
-    when: "End of week 3",
+    gate: "After B and C",
     name: "Allowances are countable",
     unlock: "One function returns managers used, participants used, allowances and add-on blocks for a tenant, and an admin can see it.",
-    proves: "A capacity conversation is now a measurement, not an estimate.",
+    proves: "A capacity conversation becomes a measurement, not an estimate.",
   },
   {
     id: "M3",
-    when: "End of week 4",
+    gate: "After D",
     name: "Enforcement is live, softly",
-    unlock: "Invite and roster import refuse an over-allowance add in block mode, after two weeks of warn mode on real tenants with no manager flow affected.",
+    unlock: "Invite and roster import refuse an over-allowance add in block mode, after a clean warn-mode period on real tenants with no manager flow affected.",
     proves: "The published allowance has a technical boundary behind it.",
   },
   {
     id: "M4",
-    when: "End of week 6",
+    gate: "After F",
     name: "A narrow offer is public",
     unlock: "Pricing page live with Essentials only, demo as the primary CTA, events firing, and the 90-Day Launch runbook recording actual hours.",
     proves: "The site and the delivery process match the order form.",
   },
   {
     id: "M5",
-    when: "Day 90",
+    gate: "After G",
+    name: "Growth can be quoted",
+    unlock: "Cross-team analytics, the historical window, automation and connector breadth each have an enforced boundary, and multi-unit rollup is proven or scoped only.",
+    proves: "Growth's price is backed by a package a customer would recognise in the product.",
+  },
+  {
+    id: "M6",
+    gate: "After the ten conversations",
     name: "Decision recorded",
     unlock: "Ten prospect outcomes, median implementation hours and AI cost per active manager in hand, and one written decision against the pre-agreed rules.",
     proves: "Hold, re-band or re-boundary is now an evidence-based call.",
@@ -74,7 +82,7 @@ export const WORKSTREAMS = [
   {
     id: "A",
     name: "Claims and trust",
-    window: "Week 1",
+    order: "Step 1 — start now",
     effort: "2 days",
     depends: "Nothing",
     why: "Two P0 claims read as proof of impact the product does not measure, and the interactive preview presents fictional managers as real. Both are one-file fixes and both block showing the site to a qualified buyer.",
@@ -114,7 +122,7 @@ export const WORKSTREAMS = [
   {
     id: "B",
     name: "Package data on the tenant",
-    window: "Weeks 1–2",
+    order: "Step 2 — parallel with A",
     effort: "3 days",
     depends: "Nothing",
     why: "Zero of 163 entities carry a package, allowance or entitlement field today. Everything downstream — counting, enforcement, reporting, the sales conversation — depends on this one record holding the truth.",
@@ -148,7 +156,7 @@ export const WORKSTREAMS = [
   {
     id: "C",
     name: "One counting function",
-    window: "Weeks 2–3",
+    order: "Step 3 — after B",
     effort: "4 days",
     depends: "B",
     why: "Managers are role-based users; participants are roster and check-in identities including frontline staff who never log in. Nothing reconciles the two, so no allowance can be sold honestly.",
@@ -176,10 +184,10 @@ export const WORKSTREAMS = [
   {
     id: "D",
     name: "Enforcement, softly",
-    window: "Weeks 3–4",
+    order: "Step 4 — after C",
     effort: "4 days",
     depends: "C",
-    why: "A published allowance with no boundary behind it is a promise the product cannot keep. Enforcement therefore has to exist before the pricing page does — but only where it cannot break a live customer's week.",
+    why: "A published allowance with no boundary behind it is a promise the product cannot keep. Enforcement therefore exists before the pricing page does — but only where it cannot break a live customer's week.",
     tasks: [
       {
         id: "D1",
@@ -189,8 +197,8 @@ export const WORKSTREAMS = [
       },
       {
         id: "D2",
-        task: "Ship warn mode first: log the overage and allow it, for two clean weeks on real tenants.",
-        done: "Two weeks of warn-mode logs with no false positives on legitimate adds.",
+        task: "Ship warn mode first: log the overage and allow it, until the log is clean on two real tenants.",
+        done: "A warn-mode review shows no false positives on legitimate adds.",
         touch: "Enforcement config",
       },
       {
@@ -210,7 +218,7 @@ export const WORKSTREAMS = [
   {
     id: "E",
     name: "AI cost, measured",
-    window: "Weeks 3–4",
+    order: "Parallel — after B",
     effort: "3 days",
     depends: "B",
     why: "There is no token or credit tracking around Atreus, so cost per active manager is unknown and no usage allowance can be published. Measurement is cheap; an unmeasured unlimited-AI promise is not.",
@@ -229,13 +237,13 @@ export const WORKSTREAMS = [
       },
       {
         id: "E3",
-        task: "Report cost per active manager per month, and week-two manager return alongside it.",
+        task: "Report cost per active manager, and week-two manager return alongside it.",
         done: "One admin view answers both questions for any tenant.",
         touch: "BusinessManager",
       },
       {
         id: "E4",
-        task: "Hold back any published AI allowance until four weeks of real data exist.",
+        task: "Hold back any published AI allowance until four cycles of real data exist.",
         done: "No allowance number on the site without measured unit cost behind it.",
         touch: "Pricing page copy",
       },
@@ -244,7 +252,7 @@ export const WORKSTREAMS = [
   {
     id: "F",
     name: "A narrow public offer",
-    window: "Weeks 4–6",
+    order: "Step 5 — after A, C and D",
     effort: "6 days",
     depends: "A, C, D",
     why: "There is no pricing route and no price string on any public page. The page can go live once — and only once — enforcement exists and the copy is honest, because the price page is the one artefact prospects compare against the order form.",
@@ -278,10 +286,10 @@ export const WORKSTREAMS = [
   {
     id: "G",
     name: "Boundaries behind Growth",
-    window: "Weeks 5–9",
+    order: "Step 6 — after B and C; makes Growth quotable",
     effort: "9 days",
     depends: "B, C",
-    why: "Growth and Organization sell things that exist but are not bounded: cross-team analytics, historical windows, automation and multi-unit rollup. Until each has a boundary, their prices stay quoting-only.",
+    why: "Growth and Organization sell things that exist but are not bounded: cross-team analytics, historical windows, automation, connectors and multi-unit rollup. Each must have a boundary before Growth can carry a price — this is the workstream that turns a quote into a package.",
     tasks: [
       {
         id: "G1",
@@ -324,7 +332,7 @@ export const WORKSTREAMS = [
   {
     id: "H",
     name: "Delivery that matches the order form",
-    window: "Weeks 2–6",
+    order: "Parallel — never blocks F",
     effort: "5 days",
     depends: "None",
     why: "The $750 implementation only works if delivery is a runbook rather than a founder improvising. The five-hour guardrail is what keeps implementation margin positive.",
@@ -337,7 +345,7 @@ export const WORKSTREAMS = [
       },
       {
         id: "H2",
-        task: "Log actual hours per implementation from day one.",
+        task: "Log actual hours for every implementation from the first one.",
         done: "Every implementation records hours against the five-hour guardrail.",
         touch: "Simple log or provisioning record",
       },
@@ -370,11 +378,11 @@ export const GATES_BEFORE_PRICING = [
 export const RISKS = [
   {
     risk: "Enforcement refuses an add a live customer depends on",
-    mitigates: "Warn mode for two weeks, then block; enforcement only at invite and roster import; a tested assertion that the manager loop never consults the allowance.",
+    mitigates: "Warn mode until the log is clean, then block; enforcement only at invite and roster import; a tested assertion that the manager loop never consults the allowance.",
   },
   {
     risk: "A published price becomes the ceiling for every deal",
-    mitigates: "Publish Essentials only. Growth and Organization stay quoting-only until each boundary in workstream G is real.",
+    mitigates: "Publish Essentials only. Growth becomes quotable once workstream G lands, not before.",
   },
   {
     risk: "Allowance disputes with customers",
@@ -382,7 +390,7 @@ export const RISKS = [
   },
   {
     risk: "AI cost turns out to exceed the margin in Essentials",
-    mitigates: "Meter for four weeks before any allowance is published; cost per active manager is a day-90 input, not a launch blocker.",
+    mitigates: "Meter from the first tenant before any allowance is published; cost per active manager is a decision input, not a launch blocker.",
   },
   {
     risk: "Implementation hours drift past five per tenant",
@@ -398,7 +406,7 @@ export const DEFERRED = [
   "Self-serve checkout and in-product upgrade: tenants are provisioned by hand this quarter, which keeps the first ten contracts under founder control.",
   "Organization tier's multi-unit promise: quoted only until the two-unit rollup is proven.",
   "Connector breadth beyond HubSpot, Outlook, Google Calendar and the Teams bot.",
-  "Any published AI or Atreus allowance: measured in workstream E, published only after four weeks of cost data.",
+  "Any published AI or Atreus allowance: measured in workstream E, published only after four cycles of cost data.",
   "The 15-business-day launch assurance: operational and contractual review first.",
   "A fourth tier or per-seat billing: capacity blocks answer the same problem without a new price point.",
 ];
@@ -406,7 +414,7 @@ export const DEFERRED = [
 export const DECISIONS = [
   {
     decision: "Approve the P0 copy corrections",
-    why: "They are the only site changes I would make this week, and they are two days of work that remove the largest credibility risk in the offer.",
+    why: "They are the only site changes I would make before anything else, and two days of work removes the largest credibility risk in the offer.",
   },
   {
     decision: "Approve the capacity blocks ($1,200 / +5 managers, $600 / +100 participants)",
@@ -414,7 +422,7 @@ export const DECISIONS = [
   },
   {
     decision: "Confirm enforcement starts in warn mode",
-    why: "Two weeks of logged overage before any refusal is the difference between a boundary and an outage for an existing customer.",
+    why: "A clean warn-mode period before any refusal is the difference between a boundary and an outage for an existing customer.",
   },
   {
     decision: "Nominate the ten prospects and the single segment",

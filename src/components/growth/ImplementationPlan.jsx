@@ -19,7 +19,7 @@ function Workstream({ ws }) {
           {ws.id} · {ws.name}
         </h3>
         <div className="flex flex-wrap items-center gap-1.5">
-          <Tag tone="default">{ws.window}</Tag>
+          <Tag tone="default">{ws.order}</Tag>
           <Tag tone="accent">{ws.effort}</Tag>
           <Tag tone={ws.depends === "Nothing" || ws.depends === "None" ? "good" : "warning"}>
             Depends on {ws.depends}
@@ -58,10 +58,10 @@ export default function ImplementationPlan() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="Workstreams" value={EFFORT_BASIS.workstreams} sub="Two of them run in parallel" />
+        <Stat label="Workstreams" value={EFFORT_BASIS.workstreams} sub="Three run in parallel" />
         <Stat label="Builder-days" value={totalDays} sub="One developer, full time" />
-        <Stat label="Milestones" value={EFFORT_BASIS.milestones} sub="M1 to M4 inside six weeks" />
-        <Stat label="Pricing page" value="Week 4–6" sub="Never before enforcement exists" />
+        <Stat label="Sequence gates" value={EFFORT_BASIS.milestones} sub="Each one unlocks the next" />
+        <Stat label="Growth quotable" value="After G" sub="Essentials page never waits on it" />
       </div>
 
       <Callout tone="accent" title="How to read the effort figures">
@@ -89,17 +89,17 @@ export default function ImplementationPlan() {
       </div>
 
       <div>
-        <SectionHeading kicker="What has to be true, and when">Milestones</SectionHeading>
+        <SectionHeading kicker="What has to be true, and what it unlocks">Sequence gates</SectionHeading>
         <div className="mb-4">
           <Lead>
-            Each milestone unlocks the next workstream. If a milestone slips, the thing it gates waits — the sequence
-            is what protects the credibility of the offer, not the calendar.
+            No dates. Each gate opens the next workstream, and nothing moves on until its own gate is met — the
+            sequence protects the credibility of the offer, not the calendar.
           </Lead>
         </div>
         <DataTable
           columns={[
             { key: "id", label: "", className: "w-12" },
-            { key: "when", label: "When", className: "w-32" },
+            { key: "gate", label: "Opens after", className: "w-32" },
             { key: "name", label: "Milestone", className: "w-52" },
             { key: "unlock", label: "Unlocked when" },
             { key: "proves", label: "What it proves", className: "w-56" },
@@ -110,12 +110,12 @@ export default function ImplementationPlan() {
       </div>
 
       <div>
-        <SectionHeading kicker="Workstreams in build order">The detailed work</SectionHeading>
+        <SectionHeading kicker="Workstreams in dependency order">The detailed work</SectionHeading>
         <div className="mb-5">
           <Lead>
-            A and B start in week one. C follows B, D follows C, F follows D. E and H run alongside, because AI cost
-            and delivery hours are measurements rather than dependencies. G is what unlocks Growth's price — it never
-            holds up the Essentials page.
+            A and B start together. C follows B, D follows C, F follows D. E and H run alongside, because AI cost and
+            delivery hours are measurements rather than dependencies. G is what makes Growth quotable — it never holds
+            up the Essentials page.
           </Lead>
         </div>
         <div className="space-y-8">
