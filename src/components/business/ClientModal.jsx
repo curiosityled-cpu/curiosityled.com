@@ -25,6 +25,14 @@ export default function ClientModal({ client, onClose, onSuccess, preselectedPar
     contract_start_date: "",
     contract_end_date: "",
     license_count: 999999, // Updated default license count
+    package: "unknown",
+    manager_allowance: 0,
+    manager_addon_blocks: 0,
+    participant_allowance: 0,
+    participant_addon_blocks: 0,
+    implementation_fee: 0,
+    billing_start_date: "",
+    enforcement_mode: "warn",
     annual_contract_value: 0,
     payment_terms: "annual",
     notes: "",
@@ -61,6 +69,14 @@ export default function ClientModal({ client, onClose, onSuccess, preselectedPar
         contract_start_date: client.contract_start_date || "",
         contract_end_date: client.contract_end_date || "",
         license_count: client.license_count || 999999, // Updated default license count for existing clients
+        package: client.package || "unknown",
+        manager_allowance: client.manager_allowance || 0,
+        manager_addon_blocks: client.manager_addon_blocks || 0,
+        participant_allowance: client.participant_allowance || 0,
+        participant_addon_blocks: client.participant_addon_blocks || 0,
+        implementation_fee: client.implementation_fee || 0,
+        billing_start_date: client.billing_start_date || "",
+        enforcement_mode: client.enforcement_mode || "warn",
         annual_contract_value: client.annual_contract_value || 0,
         payment_terms: client.payment_terms || "annual",
         notes: client.notes || "",
@@ -74,6 +90,9 @@ export default function ClientModal({ client, onClose, onSuccess, preselectedPar
       });
     }
   }, [client, preselectedPartnerId]);
+
+  const managersAllowed = (formData.manager_allowance || 0) + 5 * (formData.manager_addon_blocks || 0);
+  const participantsAllowed = (formData.participant_allowance || 0) + 100 * (formData.participant_addon_blocks || 0);
 
   const loadData = async () => {
     try {
@@ -316,6 +335,121 @@ export default function ClientModal({ client, onClose, onSuccess, preselectedPar
             </div>
           </div>
 
+          {/* Package & Capacity */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide border-b pb-2">
+              Package & Capacity
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2 sm:col-span-1">
+                <Label htmlFor="package">Package</Label>
+                <Select
+                  value={formData.package}
+                  onValueChange={(value) => setFormData({ ...formData, package: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="essentials">Essentials</SelectItem>
+                    <SelectItem value="growth">Growth</SelectItem>
+                    <SelectItem value="organization">Organization</SelectItem>
+                    <SelectItem value="internal">Internal</SelectItem>
+                    <SelectItem value="unknown">Unknown — not yet confirmed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="col-span-2 sm:col-span-1">
+                <Label htmlFor="enforcement_mode">Capacity enforcement</Label>
+                <Select
+                  value={formData.enforcement_mode}
+                  onValueChange={(value) => setFormData({ ...formData, enforcement_mode: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="warn">Warn and allow</SelectItem>
+                    <SelectItem value="block">Block at invite / roster import</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500 mt-1">Move to Block only after a clean warn period.</p>
+              </div>
+
+              <div className="col-span-2 sm:col-span-1">
+                <Label htmlFor="manager_allowance">Managers included</Label>
+                <Input
+                  id="manager_allowance"
+                  type="number"
+                  value={formData.manager_allowance}
+                  onChange={(e) => setFormData({ ...formData, manager_allowance: parseInt(e.target.value) || 0 })}
+                  min="0"
+                />
+              </div>
+
+              <div className="col-span-2 sm:col-span-1">
+                <Label htmlFor="manager_addon_blocks">Manager add-on blocks</Label>
+                <Input
+                  id="manager_addon_blocks"
+                  type="number"
+                  value={formData.manager_addon_blocks}
+                  onChange={(e) => setFormData({ ...formData, manager_addon_blocks: parseInt(e.target.value) || 0 })}
+                  min="0"
+                />
+                <p className="text-xs text-gray-500 mt-1">Each block adds 5 managers</p>
+              </div>
+
+              <div className="col-span-2 sm:col-span-1">
+                <Label htmlFor="participant_allowance">Participants included</Label>
+                <Input
+                  id="participant_allowance"
+                  type="number"
+                  value={formData.participant_allowance}
+                  onChange={(e) => setFormData({ ...formData, participant_allowance: parseInt(e.target.value) || 0 })}
+                  min="0"
+                />
+              </div>
+
+              <div className="col-span-2 sm:col-span-1">
+                <Label htmlFor="participant_addon_blocks">Participant add-on blocks</Label>
+                <Input
+                  id="participant_addon_blocks"
+                  type="number"
+                  value={formData.participant_addon_blocks}
+                  onChange={(e) => setFormData({ ...formData, participant_addon_blocks: parseInt(e.target.value) || 0 })}
+                  min="0"
+                />
+                <p className="text-xs text-gray-500 mt-1">Each block adds 100 participants</p>
+              </div>
+
+              <div className="col-span-2 sm:col-span-1">
+                <Label htmlFor="implementation_fee">Implementation fee ($)</Label>
+                <Input
+                  id="implementation_fee"
+                  type="number"
+                  value={formData.implementation_fee}
+                  onChange={(e) => setFormData({ ...formData, implementation_fee: parseInt(e.target.value) || 0 })}
+                  min="0"
+                />
+              </div>
+
+              <div className="col-span-2 sm:col-span-1">
+                <Label htmlFor="billing_start_date">Billing start date</Label>
+                <Input
+                  id="billing_start_date"
+                  type="date"
+                  value={formData.billing_start_date}
+                  onChange={(e) => setFormData({ ...formData, billing_start_date: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="rounded-lg bg-gray-50 border border-gray-200 px-3 py-2 text-sm text-gray-700">
+              Total allowed: <strong>{managersAllowed}</strong> managers · <strong>{participantsAllowed}</strong> participants
+            </div>
+          </div>
+
           {/* Contract & Billing */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide border-b pb-2">
@@ -343,7 +477,7 @@ export default function ClientModal({ client, onClose, onSuccess, preselectedPar
               </div>
 
               <div className="col-span-2 sm:col-span-1">
-                <Label htmlFor="license_count">License Count</Label>
+                <Label htmlFor="license_count">License Count (legacy)</Label>
                 <Input
                   id="license_count"
                   type="number"
@@ -351,7 +485,7 @@ export default function ClientModal({ client, onClose, onSuccess, preselectedPar
                   onChange={(e) => setFormData({ ...formData, license_count: parseInt(e.target.value) || 0 })}
                   min="0"
                 />
-                <p className="text-xs text-gray-500 mt-1">Use 999999 for unlimited licenses</p>
+                <p className="text-xs text-gray-500 mt-1">Display only — capacity is decided by the allowances above</p>
               </div>
 
               <div className="col-span-2 sm:col-span-1">

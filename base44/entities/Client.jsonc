@@ -68,9 +68,68 @@
       "format": "date",
       "description": "Contract end date"
     },
+    "package": {
+      "type": "string",
+      "enum": [
+        "essentials",
+        "growth",
+        "organization",
+        "internal",
+        "unknown"
+      ],
+      "enumColors": [
+        "green",
+        "blue",
+        "purple",
+        "gray",
+        "yellow"
+      ],
+      "default": "unknown",
+      "description": "Commercial package this tenant is on. 'unknown' is a deliberate value for legacy tenants whose package has not been confirmed \u2014 never guess it. Capacity and feature boundaries read this field; licence_count does not."
+    },
+    "manager_allowance": {
+      "type": "number",
+      "description": "Managers included in the base package (role-based users who manage other people)."
+    },
+    "manager_addon_blocks": {
+      "type": "number",
+      "default": 0,
+      "description": "Purchased manager add-on blocks. Each block adds 5 managers."
+    },
+    "participant_allowance": {
+      "type": "number",
+      "description": "Participants included in the base package (registered non-managers plus frontline roster identities who never log in)."
+    },
+    "participant_addon_blocks": {
+      "type": "number",
+      "default": 0,
+      "description": "Purchased participant add-on blocks. Each block adds 100 participants."
+    },
+    "implementation_fee": {
+      "type": "number",
+      "description": "One-time implementation fee in USD for this tenant."
+    },
+    "billing_start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date billing begins for this tenant, which may trail the contract start date when implementation is included."
+    },
+    "enforcement_mode": {
+      "type": "string",
+      "enum": [
+        "warn",
+        "block"
+      ],
+      "enumColors": [
+        "yellow",
+        "red"
+      ],
+      "default": "warn",
+      "description": "How capacity is enforced at invite and roster import. 'warn' records the overage and lets the add through; 'block' refuses it. A tenant should only move to 'block' after a clean warn-mode period, because enforcement must never break a live manager workflow."
+    },
     "license_count": {
       "type": "number",
-      "description": "Number of user licenses purchased"
+      "description": "Legacy licence counter, display-only. Capacity decisions are made from manager_allowance, participant_allowance and their add-on blocks."
     },
     "seats_used": {
       "type": "number",

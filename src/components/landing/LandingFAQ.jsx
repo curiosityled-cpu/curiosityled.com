@@ -44,8 +44,8 @@ const DEFAULT_FAQ = {
       a: "Curiosity Led is built for healthcare organizations, BPO and contact center teams, and coaching and consulting firms, with focused pilots and language tailored to each segment's leadership and workforce stability challenges.",
     },
     {
-      q: "How is the pilot priced, and what is the guarantee?",
-      a: "Pilots are priced to sit below the cost of one bad leadership outcome in each segment, with a clear guarantee that by the end of the pilot you will have a clearer, defensible view of where support is needed next—or the pilot is extended at no additional cost.",
+      q: "How is it priced?",
+      a: "Capacity is priced by manager band and participant band, with blocks available when a cohort grows. Scope, the start date and what counts as done are agreed in writing before a launch begins.",
     },
   ],
 };
