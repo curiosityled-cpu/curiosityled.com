@@ -20,8 +20,8 @@ import LandingFooter from "@/components/landing/LandingFooter";
 export default function LandingPage() {
   useEffect(() => {
     setPageSEO(
-      "Curiosity Led — Manager Intelligence That Proves Change",
-      "Curiosity Led is the manager intelligence platform that develops manager judgment and proves it changed — inside Teams, Slack, and email."
+      "Curiosity Led — Manager Intelligence That Shows What Changed",
+      "Curiosity Led is the manager intelligence platform that develops manager judgment and records what managers did differently — inside Microsoft Teams and by email."
     );
     return () => { document.title = "Curiosity Led"; };
   }, []);

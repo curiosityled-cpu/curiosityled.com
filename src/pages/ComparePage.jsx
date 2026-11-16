@@ -13,7 +13,7 @@ const COMPARISONS = [
     rows: [
       { lms: "Tracks course completions", cl: "Tracks judgment change" },
       { lms: "Asks 'did they finish the module?'", cl: "Asks 'did the manager get better?'" },
-      { lms: "Content sits in a portal", cl: "Support arrives in Teams, Slack, email" },
+      { lms: "Content sits in a portal", cl: "Support arrives in Microsoft Teams and email" },
       { lms: "Activity metrics", cl: "Evidence of behavioral change" },
     ],
     takeaway: "An LMS delivers courses. Curiosity Led delivers better judgment. They are not the same job.",
@@ -48,7 +48,7 @@ export default function ComparePage() {
   useEffect(() => {
     setPageSEO(
       "Curiosity Led vs LMS, Coaching Apps & 360 Tools — Curiosity Led",
-      "How Curiosity Led differs from an LMS, a coaching app, and a 360 review tool. It develops manager judgment and proves it changed — inside the flow of work."
+      "How Curiosity Led differs from an LMS, a coaching app, and a 360 review tool. It develops manager judgment and records what managers did differently — inside the flow of work."
     );
     return () => { document.title = "Curiosity Led"; };
   }, []);
@@ -105,7 +105,7 @@ export default function ComparePage() {
 
           <div className="mt-16 pt-8 border-t border-gray-100">
             <p className="text-lg text-gray-700 mb-6">
-              See it for yourself. Take the 8-minute diagnostic or book a demo.
+              See it for yourself. Take the short diagnostic or book a demo.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
@@ -113,7 +113,7 @@ export default function ComparePage() {
                 className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg font-semibold text-white text-sm transition-all hover:opacity-90"
                 style={{ backgroundColor: "#0202ff" }}
               >
-                Take the 8-minute diagnostic
+                Take the short diagnostic
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <a

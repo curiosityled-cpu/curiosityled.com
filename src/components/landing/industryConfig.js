@@ -37,9 +37,9 @@ export const industryContent = {
       bullets: [
         "Replace subjective scorecards with objective leadership signals.",
         "See the seven BPO leadership risk patterns before they compound.",
-        "Coach in the flow of work — inside Microsoft Teams, Slack, or email.",
+        "Coach in the flow of work — inside Microsoft Teams or by email.",
       ],
-      primaryCta: { label: "Take the 8-minute diagnostic", href: "/bpo-diagnostic" },
+      primaryCta: { label: "Take the diagnostic", href: "/bpo-diagnostic" },
       secondaryCta: { label: "Book a demo", href: "https://cal.com/curiosityled/bookdemo" },
     },
     mockup: {
@@ -206,7 +206,7 @@ export const industryContent = {
         "Build psychological safety through low-burden, private check-ins.",
         "Strengthen manager readiness and succession visibility for HR and Talent teams.",
       ],
-      primaryCta: { label: "Take the 8-minute diagnostic", href: "/diagnostic" },
+      primaryCta: { label: "Take the diagnostic", href: "/diagnostic" },
       secondaryCta: { label: "Book a demo", href: "https://cal.com/curiosityled/bookdemo" },
     },
     mockup: {
@@ -381,7 +381,7 @@ export const industryContent = {
         "Configure your own competency models, frameworks, and branded prompts.",
         "Scale your methodology across 10 clients or 1,000 — without scaling headcount.",
       ],
-      primaryCta: { label: "Take the 8-minute diagnostic", href: "/diagnostic" },
+      primaryCta: { label: "Take the diagnostic", href: "/diagnostic" },
       secondaryCta: { label: "Book a demo", href: "https://cal.com/curiosityled/bookdemo" },
     },
     mockup: {

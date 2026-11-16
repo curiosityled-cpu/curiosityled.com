@@ -68,7 +68,7 @@ export default function BpoOfferPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-base sm:text-lg text-gray-600 leading-relaxed mb-7"
           >
-            The BPO leadership diagnostic is an 8-minute assessment of which leadership pattern is hurting your team's performance. Answer real scenarios, get a 90-day action plan tied to your KPIs.
+            The BPO leadership diagnostic is a short assessment of which leadership pattern is hurting your team's performance. Answer real scenarios, get a 90-day action plan tied to your KPIs.
           </motion.p>
 
           <motion.button

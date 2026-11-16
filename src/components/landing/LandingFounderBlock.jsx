@@ -23,7 +23,7 @@ export default function LandingFounderBlock() {
               I started Curiosity Led because manager development is broken. Organizations spend billions on training, coaching, and assessments every year. Almost none of it produces evidence that anything actually changed.
             </p>
             <p className="text-gray-600 text-base leading-relaxed mb-6">
-              Curiosity Led is what I wish I had when I was building and leading teams. It works inside the tools managers already use — Teams, Slack, email — so support arrives in the flow of work, not in a separate portal nobody opens.
+              Curiosity Led is what I wish I had when I was building and leading teams. It works inside the tools managers already use — Microsoft Teams and email — so support arrives in the flow of work, not in a separate portal nobody opens.
             </p>
             <div className="flex items-center gap-4">
               <a

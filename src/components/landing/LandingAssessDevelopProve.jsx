@@ -45,7 +45,7 @@ const steps = [
     icon: MessageSquareText,
     label: "Develop",
     title: "Build judgment through conversation",
-    body: "Conversational learning, coaching flows, and a manager development companion — delivered in Teams, Slack, and email. Managers practice real situations and produce evidence of how they think, not just what they watched.",
+    body: "Conversational learning, coaching flows, and a manager development companion — delivered in Microsoft Teams and by email. Managers practise real situations and leave a record of how they think, not just what they watched.",
     accent: "#7c3aed",
     accentBg: "#f3e8ff",
     visual: (
@@ -89,8 +89,8 @@ const steps = [
   {
     icon: ShieldCheck,
     label: "Prove",
-    title: "Evidence that judgment changed",
-    body: "Every commitment closes a loop: commit → act → follow up → evidence. You can finally show which managers improved, which didn't, and whether your development spend moved anything.",
+    title: "Evidence of what managers did differently",
+    body: "Every commitment closes a loop: commit → act → follow up → what actually happened. You can see which managers changed their practice, what they did differently, and where development attention is still needed — a record of behaviour, not a score claiming improvement.",
     accent: "#059669",
     accentBg: "#d1fae5",
     visual: (
@@ -187,7 +187,7 @@ export default function LandingAssessDevelopProve() {
           transition={{ duration: 0.6, delay: 0.4 }}
         >
           <div className="h-px w-16 bg-gray-200" />
-          <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Same intelligence, in Teams, Slack, and the platform</span>
+          <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Same intelligence, in Microsoft Teams and the platform</span>
           <div className="h-px w-16 bg-gray-200" />
         </motion.div>
       </div>

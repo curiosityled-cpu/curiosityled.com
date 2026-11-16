@@ -11,9 +11,9 @@ const defaultNotList = [
 
 const defaultIsList = [
   "The intelligence layer that makes your existing tools produce evidence",
-  "Conversational learning, coaching flows, and a manager development companion — in Teams, Slack, and email",
-  "A closed loop: commit → act → follow up → evidence of change",
-  "Consolidates 6–8 point tools into one layer. Net tool count goes down.",
+  "Conversational learning, coaching flows, and a manager development companion — in Microsoft Teams and by email",
+  "A closed loop: commit → act → follow up → a record of what changed",
+  "Covers what you currently buy separately — check-ins, pulse, assessments, coaching support and manager learning — where each is genuinely covered. Net tool count goes down.",
 ];
 
 export default function LandingBeyond({ industry }) {

@@ -59,7 +59,7 @@ export default function LandingConversationalLearning() {
             <div className="rounded-xl border border-gray-200 bg-white p-4">
               <div className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Build it. Launch it in chat. Track it.</div>
               <p className="text-sm text-gray-600 leading-relaxed">
-                L&D builds modules from internal expertise. Managers complete them through Teams or Slack — turn by turn, no login required. Progress, scores, and evidence write back automatically.
+                L&D builds modules from internal expertise. Managers complete them through Microsoft Teams or by email — turn by turn, no login required. Progress, scores, and evidence write back automatically.
               </p>
             </div>
           </motion.div>

@@ -9,7 +9,7 @@ export default function LandingFinalCTA() {
           See where your managers' judgment needs work.
         </h2>
         <p className="text-blue-200 text-lg leading-relaxed mb-10 max-w-2xl mx-auto">
-          Answer 8 minutes of real management scenarios. Get a judgment profile you can share with your team — no platform to install, no email required. The question every HR team should be able to answer.
+          A short set of real management scenarios. Get a judgment profile you can share with your team — no platform to install, no email required. The question every HR team should be able to answer.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <a
@@ -17,7 +17,7 @@ export default function LandingFinalCTA() {
             className="inline-flex items-center justify-center gap-2 bg-white font-bold text-sm px-8 py-4 rounded-xl hover:bg-blue-50 transition-all shadow-lg"
             style={{ color: "#0202ff" }}
           >
-            Take the 8-minute diagnostic
+            Take the diagnostic
             <ArrowRight className="w-4 h-4" />
           </a>
           <a

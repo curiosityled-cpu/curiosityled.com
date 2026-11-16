@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { getIndustryConfig } from "./industryConfig";
 
 const defaultProofPoints = [
-  { title: "You're already paying for bad management — you just can't see it.", body: "$319B–$398B/year in lost productivity from disengaged managers. 50% of employees have left a job to get away from their manager. The cost is real; the line item isn't." },
+  { title: "You're already paying for bad management — you just can't see it.", body: "$319B–$398B a year in lost productivity across the US workforce, and 50% of employees have left a job to get away from their manager (Gallup, 2015). The cost is real; the line item isn't." },
   { title: "No HR team can answer the question that matters most.", body: "“Are our managers getting better?” Assessments, coaching, and 1:1 tools all produce activity data — none of it proves judgment actually changed." },
   { title: "Manager development spend is a black box.", body: "You invest in programs, coaching, and platforms. What you can't show is which managers improved, which didn't, and whether the investment moved anything." },
 ];

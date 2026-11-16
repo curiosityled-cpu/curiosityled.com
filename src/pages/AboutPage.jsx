@@ -7,7 +7,7 @@ export default function AboutPage() {
   useEffect(() => {
     setPageSEO(
       "About Curiosity Led — Founder & Mission",
-      "Meet the founder of Curiosity Led — why we built a manager intelligence platform that develops judgment and proves it changed, inside the flow of work."
+      "Meet the founder of Curiosity Led — why we built a manager intelligence platform that develops judgment and records what managers did differently, inside the flow of work."
     );
     return () => { document.title = "Curiosity Led"; };
   }, []);
@@ -56,7 +56,7 @@ export default function AboutPage() {
               I started Curiosity Led because manager development is broken. Organizations spend billions on training, coaching, and assessments every year. Almost none of it produces evidence that anything actually changed. Managers sit through workshops, get assessed, and return to the same habits. The tools meant to help produce activity metrics — courses completed, sessions attended, hours logged — not proof of better judgment. I kept seeing the same gap in every organization I worked with: investment without evidence, activity without outcomes, and managers who needed support in the moment but got it weeks too late.
             </p>
             <p className="text-gray-600 text-lg leading-relaxed mb-6">
-              Curiosity Led is what I wish I had when I was building and leading teams. It is a manager intelligence platform that develops better judgment and proves it changed. It works inside the tools managers already use — Teams, Slack, email — so support arrives in the flow of work, not in a separate portal nobody opens. It is built for HR, Talent, and L&D leaders who are tired of defending programs with anecdotes. Success looks simple: a manager makes a better decision this week than last week, and you can see it in the data.
+              Curiosity Led is what I wish I had when I was building and leading teams. It is a manager intelligence platform that develops better judgment and records what managers did differently. It works inside the tools managers already use — Microsoft Teams and email — so support arrives in the flow of work, not in a separate portal nobody opens. It is built for HR, Talent, and L&D leaders who are tired of defending programs with anecdotes. Success looks simple: a manager makes a better decision this week than last week, and you can see it in the data.
             </p>
           </div>
 

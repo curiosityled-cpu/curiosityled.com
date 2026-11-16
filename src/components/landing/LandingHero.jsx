@@ -55,7 +55,7 @@ export default function LandingHero() {
              transition={{ duration: 0.7, delay: 0.4 }}
              className="text-lg text-gray-600 leading-relaxed mb-8 font-medium"
             >
-             Curiosity Led is the manager intelligence platform that develops better judgment and proves it changed. Conversational learning, coaching flows, and a manager development companion — right inside Teams, Slack, and email.
+             Curiosity Led is the manager intelligence platform that develops better judgment and records what managers did differently. Conversational learning, coaching flows, and a manager development companion — right inside Microsoft Teams and by email.
             </motion.p>
 
             {/* Bullets */}
@@ -71,7 +71,7 @@ export default function LandingHero() {
               {[
                 "Assess where judgment needs work — a development compass, not a certification.",
                 "Develop through conversations that produce evidence of behavioral change.",
-                "Prove your manager development spend is working — commit, act, follow up, evidence.",
+                "Show what managers did differently — commit, act, follow up, the record.",
               ].map((b, i) => (
                 <motion.li
                   key={i}
@@ -101,7 +101,7 @@ export default function LandingHero() {
                 className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg font-semibold text-white text-sm transition-all hover:opacity-90"
                 style={{ backgroundColor: "#0202ff" }}
               >
-                Take the 8-minute diagnostic
+                Take the diagnostic
                 <ArrowRight className="w-4 h-4" />
               </a>
               <a
@@ -115,7 +115,7 @@ export default function LandingHero() {
             </motion.div>
 
             <p className="text-xs text-gray-400 mt-4 max-w-md leading-relaxed">
-              Answer 8 minutes of real management scenarios. Get a judgment profile you can share with your team — no platform to install.
+              A short set of real management scenarios. Get a judgment profile you can share with your team — no platform to install, no email required.
             </p>
           </div>
 
@@ -150,8 +150,11 @@ export default function LandingHero() {
                 <div className="flex h-[420px]">
                   {/* Main content — Risk Intelligence Dashboard */}
                   <div className="flex-1 p-4 bg-gray-50 overflow-hidden">
-                    <div className="text-sm font-bold text-gray-900 mb-0.5">Leadership Intelligence</div>
-                    <div className="text-[10px] text-gray-500 mb-3">Organisation-wide risk & readiness snapshot</div>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <div className="text-sm font-bold text-gray-900">Leadership Intelligence</div>
+                      <span className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">Sample</span>
+                    </div>
+                    <div className="text-[10px] text-gray-500 mb-3">Organisation-wide risk & readiness snapshot · illustrative data</div>
 
                     {/* Top stats */}
                     <div className="grid grid-cols-3 gap-2 mb-3">
@@ -234,10 +237,10 @@ export default function LandingHero() {
         {/* Proof strip */}
         <div className="mt-16 pt-8 border-t border-gray-100">
           <p className="text-center text-xs text-gray-400 max-w-2xl mx-auto">
-            $319B–$398B lost annually to disengaged managers. 50% of employees have left a job to get away from their manager. You're already paying for this — Curiosity Led makes that cost visible and reducible.
+            In the US workforce, Gallup estimated $319B–$398B a year in lost productivity from disengaged employees, and that 50% of employees have left a job to get away from their manager. You're already paying for this — Curiosity Led makes that cost visible.
           </p>
           <p className="text-center text-[10px] text-gray-400 max-w-2xl mx-auto mt-2">
-            Sources: Gallup, <em>State of the American Manager</em> (2015).
+            Sources: Gallup, <em>State of the American Manager</em> (2015) — US workforce estimates.
           </p>
         </div>
       </div>

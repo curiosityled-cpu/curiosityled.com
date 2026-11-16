@@ -235,6 +235,11 @@ export default function LandingInteractivePreview({ industry }) {
               </div>
             </div>
 
+            {/* Sample-data label — an illustrative manager must never read as a real result */}
+            <div className="bg-amber-50 border-b border-amber-100 px-4 py-2 text-center text-[11px] font-medium text-amber-800">
+              Sample data — an illustrative manager and team, not a real customer or a real result.
+            </div>
+
             {/* Content */}
             <div className="bg-white p-6 min-h-[480px]">
               {/* Subheader */}
