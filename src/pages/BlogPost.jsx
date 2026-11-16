@@ -183,7 +183,7 @@ export default function BlogPost() {
         )}
 
         <div className="mt-12 max-w-[46rem] mx-auto">
-          <ArticleBody content={post.content} />
+          <ArticleBody content={post.content_continued ? `${post.content}\n\n${post.content_continued}` : post.content} />
 
           {post.tags?.length > 0 && (
             <div className="mt-12 flex flex-wrap gap-2">

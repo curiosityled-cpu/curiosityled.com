@@ -20,6 +20,10 @@
       "type": "string",
       "description": "Full article body in Markdown"
     },
+    "content_continued": {
+      "type": "string",
+      "description": "Optional continuation of the article body in Markdown, appended after content when the article is too long for one field"
+    },
     "cover_image_url": {
       "type": "string",
       "description": "Header image for the article and its index card"
