@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Building2, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
+import TenantAllowanceSummary from "@/components/business/TenantAllowanceSummary";
 
 export default function ClientModal({ client, onClose, onSuccess, preselectedPartnerId = null }) {
   const [formData, setFormData] = useState({
@@ -448,6 +449,8 @@ export default function ClientModal({ client, onClose, onSuccess, preselectedPar
             <div className="rounded-lg bg-gray-50 border border-gray-200 px-3 py-2 text-sm text-gray-700">
               Total allowed: <strong>{managersAllowed}</strong> managers · <strong>{participantsAllowed}</strong> participants
             </div>
+
+            {client?.id && <TenantAllowanceSummary clientId={client.id} />}
           </div>
 
           {/* Contract & Billing */}
