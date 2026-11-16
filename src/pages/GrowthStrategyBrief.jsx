@@ -5,6 +5,7 @@ import ExecutiveRecommendation from "@/components/growth/ExecutiveRecommendation
 import PricingArchitecture from "@/components/growth/PricingArchitecture";
 import ReadinessAudit from "@/components/growth/ReadinessAudit";
 import CommercialPlan from "@/components/growth/CommercialPlan";
+import ImplementationPlan from "@/components/growth/ImplementationPlan";
 import MeetingFindings from "@/components/growth/MeetingFindings";
 import EngagedlyTeardown from "@/components/growth/EngagedlyTeardown";
 import EngagedlyResearch from "@/components/growth/EngagedlyResearch";
@@ -15,6 +16,7 @@ const TABS = [
   { value: "pricing", label: "Pricing architecture" },
   { value: "audit", label: "Readiness & claims audit" },
   { value: "plan", label: "Commercial plan" },
+  { value: "implementation", label: "Implementation plan" },
   { value: "findings", label: "Meeting evidence" },
   { value: "competitor", label: "Engagedly" },
   { value: "research", label: "Pricing & sales research" },
@@ -27,7 +29,7 @@ export default function GrowthStrategyBrief() {
   return (
     <MVPPageLayout
       title="Growth Strategy Brief"
-      subtitle="Regenerated 16 November 2026 — revised allowances, three-tier pricing, a read-only product audit and a sequenced commercial plan"
+      subtitle="Regenerated 16 November 2026 — revised allowances, three-tier pricing, a read-only product audit, a sequenced commercial plan and the build order that makes them enforceable"
     >
       <Tabs value={tab} onValueChange={setTab} className="w-full">
         <div className="sticky top-0 z-10 -mx-1 mb-5 bg-background/95 px-1 pb-2 pt-1 backdrop-blur">
@@ -55,6 +57,9 @@ export default function GrowthStrategyBrief() {
         </TabsContent>
         <TabsContent value="plan" className="mt-0 focus-visible:outline-none">
           <CommercialPlan />
+        </TabsContent>
+        <TabsContent value="implementation" className="mt-0 focus-visible:outline-none">
+          <ImplementationPlan />
         </TabsContent>
         <TabsContent value="findings" className="mt-0 focus-visible:outline-none">
           <MeetingFindings />
