@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { asList, resolveReviewTenant, isReviewAdmin, logReviewEvent, normEmail } from "../../shared/reviewCycleCore.ts";
+import { enforceModule } from "../../shared/moduleGate.ts";
 
 /**
  * Starts (or refreshes) a calibration session for a review cycle.
@@ -18,6 +19,12 @@ export default async function (req: Request): Promise<Response> {
     const tenant = await resolveReviewTenant(base44, user, body.client_id);
     if (tenant.response) return tenant.response;
     const clientId = tenant.clientId;
+
+    const gate = await enforceModule(base44, clientId, "reviews", {
+      actorEmail: user.email,
+      source: "startReviewCalibration",
+    });
+    if (gate) return gate;
 
     const { review_cycle_id, calibrator_emails } = body;
     if (!review_cycle_id) return Response.json({ error: "review_cycle_id required" }, { status: 400 });

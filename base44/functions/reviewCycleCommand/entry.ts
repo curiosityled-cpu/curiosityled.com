@@ -12,6 +12,7 @@ import {
   roleOnParticipant,
   statusForParticipant,
 } from "../../shared/reviewCycleCore.ts";
+import { enforceModule } from "../../shared/moduleGate.ts";
 
 /**
  * Consequential review-cycle actions. Every branch authorizes on the server
@@ -29,6 +30,12 @@ export default async function (req: Request): Promise<Response> {
     const tenant = await resolveReviewTenant(base44, user, body.client_id);
     if (tenant.response) return tenant.response;
     const clientId = tenant.clientId;
+
+    const gate = await enforceModule(base44, clientId, "reviews", {
+      actorEmail: user.email,
+      source: "reviewCycleCommand",
+    });
+    if (gate) return gate;
 
     const { action, review_cycle_id } = body;
     if (!action) return Response.json({ error: "action is required" }, { status: 400 });

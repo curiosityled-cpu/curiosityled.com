@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 import { resolveActiveClient } from '../../shared/tenantContext.ts';
+import { enforceModule } from '../../shared/moduleGate.ts';
 
 // Helper to recursively get subordinate emails
 const getAllSubordinateEmails = async (managerEmail, allUsers, depth = 0, maxDepth = 10, visited = new Set()) => {
@@ -90,6 +91,17 @@ Deno.serve(async (req) => {
         scopedUsers = [];
         scopeLabel = 'No Organization';
       }
+    }
+
+    // Package boundary: a manager's own team is in every package; insight
+    // across teams is a Growth module. Only the org-wide scope is gated, so the
+    // team view a manager relies on is never touched.
+    if (scopeLabel !== `${user.full_name}'s Team`) {
+      const gate = await enforceModule(base44, callerClientId, 'cross_team_analytics', {
+        actorEmail: user.email,
+        source: 'getOrganizationalAnalytics',
+      });
+      if (gate) return gate;
     }
 
     // Apply additional filters if provided

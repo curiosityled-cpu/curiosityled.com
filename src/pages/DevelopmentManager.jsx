@@ -7,6 +7,7 @@ import { useAuth } from "@/components/useAuth";
 import { useCoachCoacheeScope } from "@/hooks/useCoachCoacheeScope";
 import ExperiencesTab from "@/components/dev-manager/ExperiencesTab";
 import SignalsTab from "@/components/dev-manager/SignalsTab";
+import ModuleRoute from "@/components/modules/ModuleRoute";
 import ExperienceAnalyticsTab from "@/components/experience-mgmt/ExperienceAnalyticsTab";
 import CoachAnalyticsTab from "@/components/experience-mgmt/CoachAnalyticsTab";
 import AdminLearningManagementTab from "@/components/experience-mgmt/AdminLearningManagementTab";
@@ -217,7 +218,9 @@ export default function DevelopmentManager() {
       {/* ── SIGNALS ── */}
       {section === 'signals' && (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <SignalsTab user={user} />
+          <ModuleRoute moduleKey="signals">
+            <SignalsTab user={user} />
+          </ModuleRoute>
         </motion.div>
       )}
 

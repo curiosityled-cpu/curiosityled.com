@@ -19,10 +19,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion, AnimatePresence } from "framer-motion";
 import ManualAutomationEditor from "@/components/automations/ManualAutomationEditor";
+import { useModuleAccess } from "@/lib/moduleAccess";
+import ModuleLocked from "@/components/modules/ModuleLocked";
 
 export default function Automations({ embedded = false }) {
   const { user, loading, appRole, hasPermission } = useAuth();
   const { activeClientId } = useClient();
+  const { isLocked, moduleFor } = useModuleAccess();
   const [automations, setAutomations] = useState([]);
   const [loadingAutomations, setLoadingAutomations] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -238,6 +241,14 @@ export default function Automations({ embedded = false }) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (isLocked("custom_automations")) {
+    return (
+      <div className={embedded ? "" : "p-6"}>
+        <ModuleLocked module={moduleFor("custom_automations")} />
       </div>
     );
   }

@@ -15,6 +15,7 @@
 import { isGrantFeatureEnabled } from "./successionConstants.ts";
 import { deriveServerOwnedPermissions } from "./successionRolePermissions.ts";
 import { resolveCanonicalClient, TenantResolutionError } from "./resolveClientTenant.ts";
+import { evaluateModule, recordModuleAttempt } from "./moduleGate.ts";
 
 export interface BootstrapAuthContext {
   user: any;
@@ -92,6 +93,19 @@ export async function bootstrapSuccessionAuth(base44: any): Promise<BootstrapAut
   // has NO effect on the permissions returned here.
   const permissions: string[] = await deriveServerOwnedPermissions(user, base44);
 
+  // Package boundary: Talent Manager — the competency library, succession and
+  // career paths — is what Organization adds. Applying it here means every
+  // succession function refuses a tenant whose package excludes it through the
+  // same succession_enabled gate, instead of one function at a time. In warn
+  // mode the attempt is recorded and the call proceeds unchanged.
+  const talentGate = client ? evaluateModule(client, "talent") : null;
+  if (client && talentGate && !talentGate.included_in_package) {
+    recordModuleAttempt(base44, client_id, talentGate, {
+      actorEmail: email,
+      source: "succession",
+    }).catch(() => {});
+  }
+
   return {
     user,
     role,
@@ -104,6 +118,7 @@ export async function bootstrapSuccessionAuth(base44: any): Promise<BootstrapAut
     partner_client_ids,
     permissions,
     grant_feature_enabled: isGrantFeatureEnabled(),
-    succession_enabled: Boolean(client?.settings?.succession_enabled),
+    succession_enabled:
+      Boolean(client?.settings?.succession_enabled) && (talentGate ? talentGate.allowed : true),
   };
 }

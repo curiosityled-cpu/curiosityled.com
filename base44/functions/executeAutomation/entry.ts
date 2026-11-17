@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { resolveActiveClient } from '../../shared/tenantContext.ts';
+import { enforceModule } from '../../shared/moduleGate.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -41,6 +42,16 @@ Deno.serve(async (req) => {
     if (!adminRoles.includes(user.app_role)) {
       return Response.json({ error: 'Forbidden — only administrators may execute automations.' }, { status: 403 });
     }
+
+    // Package boundary: configurable automations are a Growth module. Standard
+    // reminders run outside this function and stay available to every package.
+    const gate = await enforceModule(
+      base44,
+      automation.client_id || callerClientId || null,
+      'custom_automations',
+      { actorEmail: user.email, source: 'executeAutomation' }
+    );
+    if (gate) return gate;
 
     // Security: Entity allowlist — only safe, non-privilege-bearing entities
     // may be written via automation. The User entity (and any entity with

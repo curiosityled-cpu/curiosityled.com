@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 import { resolveActiveClient } from '../../shared/tenantContext.ts';
+import { tenantModuleState, recordModuleAttempt } from '../../shared/moduleGate.ts';
 
 /**
  * Retrieves historical trend data from stored analytics snapshots
@@ -24,6 +25,19 @@ Deno.serve(async (req) => {
     }
 
     const { timeframe = '6months', metric = 'all' } = await req.json();
+
+    // Package boundary: multi-period history is a Growth module. Essentials
+    // gets the current cycle. The request is clamped rather than refused, so an
+    // existing dashboard still renders instead of breaking.
+    const historyState = await tenantModuleState(base44, callerClientId, 'extended_history');
+    const historyClamped = Boolean(historyState && !historyState.included_in_package);
+    if (historyClamped) {
+      await recordModuleAttempt(base44, callerClientId, historyState, {
+        actorEmail: user.email,
+        source: 'getHistoricalTrends',
+      });
+    }
+    const effectiveTimeframe = historyClamped ? '3months' : timeframe;
 
     // Calculate date range
     const getDateRange = (timeframe) => {
@@ -53,7 +67,7 @@ Deno.serve(async (req) => {
       };
     };
 
-    const dateRange = getDateRange(timeframe);
+    const dateRange = getDateRange(effectiveTimeframe);
 
     // Fetch snapshots from the date range
     let snapshots = await base44.asServiceRole.entities.AnalyticsSnapshot.list('-snapshot_date');
@@ -75,7 +89,8 @@ Deno.serve(async (req) => {
         success: true,
         message: 'No historical snapshots found. Displaying synthetic trend data.',
         is_synthetic: true,
-        data: generateSyntheticTrends(timeframe)
+        window_clamped: historyClamped,
+        data: generateSyntheticTrends(effectiveTimeframe)
       });
     }
 
@@ -84,7 +99,7 @@ Deno.serve(async (req) => {
       const date = new Date(snapshot.snapshot_date);
       const monthLabel = date.toLocaleDateString('en-US', { 
         month: 'short', 
-        year: timeframe === '24months' ? '2-digit' : undefined 
+        year: effectiveTimeframe === '24months' ? '2-digit' : undefined 
       });
 
       return {
@@ -110,7 +125,8 @@ Deno.serve(async (req) => {
       is_synthetic: false,
       data: trendData,
       snapshot_count: snapshots.length,
-      date_range: dateRange
+      date_range: dateRange,
+      window_clamped: historyClamped
     });
 
   } catch (error) {

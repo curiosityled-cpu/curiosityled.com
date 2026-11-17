@@ -167,15 +167,24 @@ export function moduleGateMessage(evaluation, packageLabel) {
  * write never stops a live manager's work. In warn mode the attempt is recorded
  * and the call is allowed.
  */
-export async function enforceModule(base44, clientId, moduleKey, context = {}) {
+export async function tenantModuleState(base44, clientId, moduleKey) {
   if (!clientId) return null;
 
   const rows = await base44.asServiceRole.entities.Client.filter({ id: clientId });
   const client = (Array.isArray(rows) ? rows : rows?.items || [])[0];
   if (!client) return null;
 
-  const evaluation = evaluateModule(client, moduleKey);
-  if (evaluation.included_in_package) return null;
+  return evaluateModule(client, moduleKey);
+}
+
+/**
+ * Records one attempt on a module the tenant's package leaves out, and returns
+ * the sentence a refusal would show. Silent when the module is included, so the
+ * log only ever holds real boundaries — and it never throws: a missing log row
+ * must not take down the request it was recording.
+ */
+export async function recordModuleAttempt(base44, clientId, evaluation, context = {}) {
+  if (!clientId || !evaluation || evaluation.included_in_package) return null;
 
   const message =
     moduleGateMessage(evaluation) ||
@@ -184,7 +193,7 @@ export async function enforceModule(base44, clientId, moduleKey, context = {}) {
   try {
     await base44.asServiceRole.entities.ModuleGateLog.create({
       client_id: clientId,
-      module: moduleKey,
+      module: evaluation.module,
       module_label: evaluation.label,
       package: evaluation.package,
       enforcement_mode: evaluation.enforcement_mode,
@@ -194,8 +203,17 @@ export async function enforceModule(base44, clientId, moduleKey, context = {}) {
       message,
     });
   } catch (_error) {
-    // A missing log row must never take down the request it was recording.
+    // Logging is evidence, never a dependency of the request.
   }
+
+  return message;
+}
+
+export async function enforceModule(base44, clientId, moduleKey, context = {}) {
+  const evaluation = await tenantModuleState(base44, clientId, moduleKey);
+  if (!evaluation || evaluation.included_in_package) return null;
+
+  const message = await recordModuleAttempt(base44, clientId, evaluation, context);
 
   if (evaluation.outcome === "blocked") {
     return Response.json(

@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { scoreSignal, canAccessSignal } from '../../shared/signalScoring.ts';
 import { resolveActiveClient } from '../../shared/tenantContext.ts';
+import { enforceModule } from '../../shared/moduleGate.ts';
 
 /**
  * Scores a signal attempt on the server and records it. The answer key never leaves
@@ -26,6 +27,13 @@ export default async function (req) {
     if (!canAccessSignal(assessment, user)) {
       return Response.json({ error: 'You do not have access to this signal' }, { status: 403 });
     }
+
+    // Package boundary: Signals is a Growth module.
+    const gate = await enforceModule(base44, assessment.client_id, 'signals', {
+      actorEmail: user.email,
+      source: 'submitSignalResponse',
+    });
+    if (gate) return gate;
 
     const result = scoreSignal(
       assessment.config,

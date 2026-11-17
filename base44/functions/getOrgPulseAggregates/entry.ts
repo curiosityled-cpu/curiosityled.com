@@ -17,6 +17,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { resolveHRBPManagerEmails } from '../../shared/portfolioData.ts';
 import { resolveUserScope, attachPartnerClientIds } from '../../shared/userScope.ts';
+import { enforceModule } from '../../shared/moduleGate.ts';
 
 const ADMIN_ROLES = ['admin', 'Admin Level 2', 'Super Administrator', 'Partner Business Administrator', 'Platform Admin'];
 const MIN_GROUP_SIZE = 5; // never show metrics for groups smaller than this
@@ -31,6 +32,15 @@ Deno.serve(async (req) => {
     if (!user || ![...ADMIN_ROLES, 'HRBP'].includes(userRole)) {
       return Response.json({ error: 'Forbidden: Admin or HRBP access required' }, { status: 403 });
     }
+
+    // Package boundary: org-wide aggregates are cross-team insight, a Growth
+    // module. The caller's own tenant decides, never a browser value.
+    const gateClientId = user?.client_id || user?.data?.client_id || null;
+    const gate = await enforceModule(base44, gateClientId, 'cross_team_analytics', {
+      actorEmail: user?.email,
+      source: 'getOrgPulseAggregates',
+    });
+    if (gate) return gate;
 
     // Load all manager trends (aggregated signals only — never raw pulses)
     let allTrends = await base44.asServiceRole.entities.ManagerTrends.list('-last_trend_computed_at', 500);
