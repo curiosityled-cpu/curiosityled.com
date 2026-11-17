@@ -9,8 +9,10 @@ import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { X, Plus } from "lucide-react";
 import FormAssistant from "@/components/ai/FormAssistant";
+import { useClient } from "@/components/contexts/ClientContext";
 
 export default function CareerPathModal({ path, roles, isOpen, onClose, onSave }) {
+  const { activeClientId } = useClient();
   const [formData, setFormData] = useState({
     from_role_id: "",
     to_role_id: "",
@@ -104,7 +106,13 @@ export default function CareerPathModal({ path, roles, isOpen, onClose, onSave }
         await base44.entities.CareerPath.update(path.id, formData);
         toast.success("Career path updated successfully");
       } else {
-        await base44.entities.CareerPath.create(formData);
+        await base44.entities.CareerPath.create({
+          ...formData,
+          // The create rule requires the record's tenant to match the caller's,
+          // so the active client is stamped from the server context.
+          ...(activeClientId && { client_id: activeClientId }),
+          is_platform_default: false,
+        });
         toast.success("Career path created successfully");
       }
       onSave();
