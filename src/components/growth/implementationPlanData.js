@@ -5,7 +5,7 @@
 
 export const EFFORT_BASIS = {
   workstreams: 8,
-  days: 38,
+  days: 36,
   milestones: 6,
   parallel: "Atreus metering and delivery documentation start once the tenant record carries a package — they are measurements, not dependencies.",
 };
@@ -43,7 +43,7 @@ export const MILESTONES = [
   },
   {
     id: "M2",
-    gate: "After B and C",
+    gate: "After C",
     name: "Allowances are countable",
     unlock: "One function returns managers used, participants used, allowances and any extra purchased capacity for a tenant, and an admin can see it.",
     proves: "A capacity conversation becomes a measurement, not an estimate.",
@@ -57,7 +57,7 @@ export const MILESTONES = [
   },
   {
     id: "M4",
-    gate: "After F",
+    gate: "After A, C, D",
     name: "A narrow offer is public",
     unlock: "Pricing page live with three bundles, no package prices and one published minimum, package CTAs routing to a conversation, events firing, and the 90-Day Launch runbook recording actual hours.",
     proves: "The site and the delivery process match the order form.",
@@ -203,7 +203,7 @@ export const WORKSTREAMS = [
       },
       {
         id: "D3",
-        task: "Write the refusal message: what the limit is, who to contact, and the conversation that resolves it (no block pricing on the page).",
+        task: "Write the refusal message: what the limit is, who to contact, and the add-on block that resolves it — sold on the order form, never priced on the page.",
         done: "No over-allowance path ends in a dead end.",
         touch: "Invite and roster UI",
       },
@@ -253,7 +253,7 @@ export const WORKSTREAMS = [
     id: "F",
     name: "A narrow public offer",
     order: "Step 5 — after A, C and D",
-    effort: "5 days",
+    effort: "6 days",
     depends: "A, C, D",
     why: "There is no pricing route and no price string on any public page. The page can go live once — and only once — enforcement exists and the copy is honest, because the price page is the one artefact prospects compare against the order form.",
     tasks: [
@@ -287,7 +287,7 @@ export const WORKSTREAMS = [
     id: "G",
     name: "Boundaries behind Growth",
     order: "Step 6 — after B and C; makes Growth quotable",
-    effort: "12 days",
+    effort: "9 days",
     depends: "B, C",
     why: "The page now sells coverage: Essentials without Signals, reviews and 360, and no Talent Manager; Growth with all three modules but no talent bench; Organization with everything. Every one of those claims needs a switch the server actually respects, on top of the cross-team, history, automation and multi-unit boundaries.",
     tasks: [
