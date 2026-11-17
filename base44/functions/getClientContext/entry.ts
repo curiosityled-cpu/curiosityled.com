@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { resolveTenantContext, resolveActiveClient } from '../../shared/tenantContext.ts';
+import { evaluateTenantModules } from '../../shared/moduleGate.ts';
 
 const EMPTY_STATS = {
   total_users: 0,
@@ -87,7 +88,7 @@ export default async function (req) {
     if (!tenant.client_id) {
       return Response.json({
         success: true,
-        data: { client: null, stats: EMPTY_STATS, tenant },
+        data: { client: null, modules: null, stats: EMPTY_STATS, tenant },
       });
     }
 
@@ -111,6 +112,10 @@ export default async function (req) {
       data: {
         client: tenant.client,
         tenant,
+        // Which package modules this tenant may use, decided by the one shared
+        // rule so a menu and a refusal can never disagree. Null means no tenant
+        // was resolved, which every caller treats as "nothing is gated".
+        modules: tenant.client ? evaluateTenantModules(tenant.client) : null,
         stats: {
           total_users: clientUsers.length,
           total_goals: clientGoals.length,
@@ -124,7 +129,7 @@ export default async function (req) {
     return Response.json({
       success: true,
       error: 'Failed to fetch client context',
-      data: { client: null, stats: EMPTY_STATS, tenant: null },
+      data: { client: null, modules: null, stats: EMPTY_STATS, tenant: null },
     });
   }
 }

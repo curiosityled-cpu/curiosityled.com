@@ -83,6 +83,7 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import OAuthConsent from './pages/OAuthConsent';
+import ModuleRoute from '@/components/modules/ModuleRoute';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import RedirectToLogin from '@/components/RedirectToLogin';
 import PlatformAdminOnly from '@/components/PlatformAdminOnly';
@@ -212,7 +213,7 @@ const AuthenticatedApp = () => {
       <Route path="/one-on-ones" element={<MVPLayout><OneOnOneHub /></MVPLayout>} />
       <Route path="/delegation-planner" element={<MVPLayout><DelegationPlanner /></MVPLayout>} />
       <Route path="/decision-journal" element={<MVPLayout><DecisionJournalPage /></MVPLayout>} />
-      <Route path="/decision-analytics" element={<MVPLayout><DecisionQualityAnalytics /></MVPLayout>} />
+      <Route path="/decision-analytics" element={<MVPLayout><ModuleRoute moduleKey="cross_team_analytics"><DecisionQualityAnalytics /></ModuleRoute></MVPLayout>} />
 
       <Route path="/you" element={<Navigate to="/Profile" replace />} />
 
@@ -224,8 +225,8 @@ const AuthenticatedApp = () => {
       <Route path="/consultant-workspace" element={<MVPLayout><ConsultantWorkspace /></MVPLayout>} />
       <Route path="/request-submit" element={<MVPLayout><RequestSubmit /></MVPLayout>} />
       <Route path="/request-triage" element={<Navigate to="/DevelopmentManager" replace />} />
-      <Route path="/talent-manager" element={<MVPLayout><ContextProviders><TalentManager /></ContextProviders></MVPLayout>} />
-      <Route path="/succession" element={<MVPLayout><ContextProviders><SuccessionWorkspace /></ContextProviders></MVPLayout>} />
+      <Route path="/talent-manager" element={<MVPLayout><ModuleRoute moduleKey="talent"><ContextProviders><TalentManager /></ContextProviders></ModuleRoute></MVPLayout>} />
+      <Route path="/succession" element={<MVPLayout><ModuleRoute moduleKey="talent"><ContextProviders><SuccessionWorkspace /></ContextProviders></ModuleRoute></MVPLayout>} />
       <Route path="/assessment-manager" element={<Navigate to="/DevelopmentManager?tab=signals" replace />} />
       <Route path="/assessment-library" element={<Navigate to="/DevelopmentManager?tab=signals" replace />} />
 
@@ -261,7 +262,7 @@ const AuthenticatedApp = () => {
             ? <Navigate to="/coaching-workspace" replace />
             : mvpRole ? <MVPPage><PerformanceManager /></MVPPage> : <LayoutWrapper currentPageName="PerformanceManager"><PerformanceManager /></LayoutWrapper>
       } />
-      <Route path="/reviews" element={<MVPLayout><Reviews /></MVPLayout>} />
+      <Route path="/reviews" element={<MVPLayout><ModuleRoute moduleKey="reviews"><Reviews /></ModuleRoute></MVPLayout>} />
       {/* Journal administration — Platform Admin only (public reading routes are declared above) */}
       <Route path="/BlogManager" element={<PlatformAdminOnly><MVPPage><BlogManager /></MVPPage></PlatformAdminOnly>} />
       {/* Growth strategy brief — Platform Admin only */}

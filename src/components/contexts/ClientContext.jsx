@@ -22,6 +22,9 @@ export const ClientProvider = ({ children }) => {
   const authLoading = authLoadingFromProvider ?? isLoadingAuth;
   const [client, setClient] = useState(null);
   const [tenant, setTenant] = useState(null);
+  // Package modules for this tenant, decided on the server (base44/shared/moduleGate.ts).
+  // Null means nothing is gated, which is the safe reading when no tenant resolved.
+  const [modules, setModules] = useState(null);
   const [stats, setStats] = useState(EMPTY_STATS);
   const [loading, setLoading] = useState(true);
   const [switching, setSwitching] = useState(false);
@@ -59,6 +62,7 @@ export const ClientProvider = ({ children }) => {
             if (cachedData.client) {
               setClient(cachedData.client);
               setTenant(cachedData.tenant || null);
+              setModules(cachedData.modules || null);
               setStats(cachedData.stats || EMPTY_STATS);
               setLoading(false);
               return;
@@ -76,6 +80,7 @@ export const ClientProvider = ({ children }) => {
           const contextData = {
             client: responseData.client || null,
             tenant: resolvedTenant,
+            modules: responseData.modules || null,
             stats: responseData.stats || EMPTY_STATS,
           };
 
@@ -86,6 +91,7 @@ export const ClientProvider = ({ children }) => {
 
           setClient(contextData.client);
           setTenant(resolvedTenant);
+          setModules(contextData.modules);
           setStats(contextData.stats);
 
           // Only cache non-null clients — caching a null (from a transient
@@ -96,11 +102,13 @@ export const ClientProvider = ({ children }) => {
           }
         } else {
           setClient(null);
+          setModules(null);
           setStats(EMPTY_STATS);
         }
       } catch (error) {
         console.error('Error loading client context:', error);
         setClient(null);
+        setModules(null);
         setStats(EMPTY_STATS);
       } finally {
         setLoading(false);
@@ -150,6 +158,7 @@ export const ClientProvider = ({ children }) => {
       // selection. Screens use it instead of reading a membership field themselves.
       homeClientId: tenant?.home_client_id || null,
       tenant,
+      modules,
       stats,
       loading,
       switching,
@@ -163,7 +172,7 @@ export const ClientProvider = ({ children }) => {
       selectClient,
       refreshContext,
     }),
-    [client, tenant, stats, loading, switching, selectClient, refreshContext]
+    [client, tenant, modules, stats, loading, switching, selectClient, refreshContext]
   );
 
   return <ClientContext.Provider value={value}>{children}</ClientContext.Provider>;
@@ -179,6 +188,7 @@ export const useClient = () => {
       activeClientId: null,
       homeClientId: null,
       tenant: null,
+      modules: null,
       stats: EMPTY_STATS,
       loading: true,
       switching: false,

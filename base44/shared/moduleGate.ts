@@ -131,9 +131,13 @@ export function evaluateModule(client, moduleKey) {
     else outcome = "warned";
   }
 
+  const entry = MODULE_CATALOG.find((m) => m.key === moduleKey);
+
   return {
     module: moduleKey,
     label: moduleLabel(moduleKey),
+    claim: entry?.claim || null,
+    min_package: entry?.min_package || null,
     package: pkg,
     enforcement_mode: mode,
     included_in_package: included,

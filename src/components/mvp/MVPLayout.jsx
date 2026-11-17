@@ -9,7 +9,8 @@ import {
   Brain, Target, Home, BarChart2, Users, LogOut, Menu, X,
   ChevronRight, ChevronLeft, Bell, User, ArrowLeft,
   Settings, Shield, UserCog, Dumbbell, Sun, Moon, ChevronDown, FolderOpen,
-  ClipboardList, Layers, Network, GraduationCap, PenLine } from "lucide-react";
+  ClipboardList, Layers, Network, GraduationCap, PenLine, Lock } from "lucide-react";
+import { useModuleAccess, PATH_MODULE_KEY } from "@/lib/moduleAccess";
 import { useTheme } from "@/lib/ThemeContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -118,6 +119,9 @@ const ROLE_COLORS = {
 
 function MVPLayoutInner({ children }) {
   const { user } = useAuth();
+  // Package boundaries: a withheld module keeps its menu entry and shows as locked,
+  // so the limitation is visible instead of looking like a missing feature.
+  const { pathLocked } = useModuleAccess();
   const { isDark, toggleTheme } = useTheme();
   const location = useLocation();
   // Collapse state survives page changes and reloads; only the arrow next to the logo changes it
@@ -317,22 +321,24 @@ function MVPLayoutInner({ children }) {
     const isActive = location.pathname === itemPath ||
       (itemPath === '/today' && (location.pathname === '/my-leadership' || location.pathname === '/'));
     const [navPathname, navSearch] = item.path.split('?');
+    const itemLocked = pathLocked(itemPath);
     return (
       <Link
         to={{ pathname: navPathname, search: navSearch ? `?${navSearch}` : '' }}
         onClick={() => setMobileOpen(false)}
-        title={!showLabel ? item.label : undefined}
+        title={itemLocked ? `${item.label} — not included in your package` : (!showLabel ? item.label : undefined)}
         className={`flex items-center gap-2.5 rounded-lg font-medium transition-all ${
           indent ? 'px-2.5 py-1.5 text-xs' : 'px-3 py-2.5 text-sm'
         } ${
           isActive ? 'bg-[#0202ff] text-white shadow-sm' : ''
-        } ${!showLabel ? 'justify-center' : ''}`}
+        } ${!showLabel ? 'justify-center' : ''} ${itemLocked && !isActive ? 'opacity-70' : ''}`}
         style={!isActive ? { color: 'hsl(var(--muted-foreground))' } : {}}
         onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'hsl(var(--muted))'; e.currentTarget.style.color = 'hsl(var(--foreground))'; }}}
         onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'hsl(var(--muted-foreground))'; }}}>
         <Icon className={`flex-shrink-0 ${indent ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
         {showLabel && <span className="flex-1 truncate">{item.label}</span>}
-        {showLabel && isActive && <ChevronRight className="w-3 h-3" />}
+        {showLabel && itemLocked && <Lock className="w-3 h-3 flex-shrink-0" />}
+        {showLabel && !itemLocked && isActive && <ChevronRight className="w-3 h-3" />}
       </Link>
     );
   };
