@@ -5,10 +5,9 @@
 
 export const EFFORT_BASIS = {
   workstreams: 8,
-  days: 36,
+  days: 38,
   milestones: 6,
-  parallel:
-    "Atreus metering and delivery documentation start once the tenant record carries a package — they are measurements, not dependencies. G can run longest without delaying revenue, because the Essentials page never waits on it.",
+  parallel: "Atreus metering and delivery documentation start once the tenant record carries a package — they are measurements, not dependencies.",
 };
 
 export const SEQUENCE = [
@@ -26,7 +25,7 @@ export const SEQUENCE = [
   },
   {
     step: "Publish",
-    detail: "The pricing page sells one platform in three bundles with a single published minimum, not three prices. It depends on trust, counting and enforcement and on nothing else — Growth's boundaries keep landing after the page is already live.",
+    detail: "The pricing page sells one platform in three bundles with a single published minimum, not three prices. Growth stays quoting-only until the module boundaries and cross-team analytics have real switch-offs.",
   },
   {
     step: "Prove",
@@ -60,14 +59,14 @@ export const MILESTONES = [
     id: "M4",
     gate: "After F",
     name: "A narrow offer is public",
-    unlock: "Pricing page live with three bundles, no package prices and one published minimum, package CTAs routing to a conversation, events firing, and every module the cards name already switched off below its package.",
+    unlock: "Pricing page live with three bundles, no package prices and one published minimum, package CTAs routing to a conversation, events firing, and the 90-Day Launch runbook recording actual hours.",
     proves: "The site and the delivery process match the order form.",
   },
   {
     id: "M5",
     gate: "After G",
-    name: "Growth can be quoted — week 9 anchor",
-    unlock: "Cross-team analytics, the historical window and configurable automation each have a boundary enforced in the query, the connector list on the site matches the authorized set exactly, 360 has been exercised end to end, and multi-unit rollup is proven or Organization stays scoped-only.",
+    name: "Growth can be quoted",
+    unlock: "Cross-team analytics, the historical window, automation and connector breadth each have an enforced boundary, and multi-unit rollup is proven or scoped only.",
     proves: "Growth's price is backed by a package a customer would recognise in the product.",
   },
   {
@@ -156,11 +155,11 @@ export const WORKSTREAMS = [
   },
   {
     id: "C",
-    name: "Counting and entitlements",
+    name: "One counting function",
     order: "Step 3 — after B",
-    effort: "5 days",
+    effort: "4 days",
     depends: "B",
-    why: "Managers are role-based users; participants are roster and check-in identities including frontline staff who never log in. Nothing reconciles the two, so no allowance can be sold honestly. The same record also has to answer the other half of the package question — which capabilities a tenant bought — because otherwise every screen invents its own guess.",
+    why: "Managers are role-based users; participants are roster and check-in identities including frontline staff who never log in. Nothing reconciles the two, so no allowance can be sold honestly.",
     tasks: [
       {
         id: "C1",
@@ -179,12 +178,6 @@ export const WORKSTREAMS = [
         task: "Surface usage in the tenant panel so an admin can see it without asking.",
         done: "Used vs allowed is visible on the client record, including overage.",
         touch: "BusinessManager",
-      },
-      {
-        id: "C4",
-        task: "Put all five capability checks in one place — Signals, reviews and 360, Talent Manager, cross-team analytics and configurable automation — and make every module read it, while standard reminders and the manager loop stay outside it.",
-        done: "Each capability is refused server-side for a package that does not include it, from one function; an Essentials tenant cannot reach Signals, reviews, 360 or the talent bench by role, route or direct call.",
-        touch: "New shared module, SignalsTab, reviewCycleCommand, successionSetActivation",
       },
     ],
   },
@@ -293,10 +286,10 @@ export const WORKSTREAMS = [
   {
     id: "G",
     name: "Boundaries behind Growth",
-    order: "Step 6 — after B and C · week 9 anchor",
-    effort: "9 days",
+    order: "Step 6 — after B and C; makes Growth quotable",
+    effort: "12 days",
     depends: "B, C",
-    why: "Growth is quoted on coverage and reach: analysis across teams, history beyond the current cycle, automation a tenant can build, breadth of connected tools and, for Organization, more than one business unit. Each of those is a claim about the product, so each needs a boundary the server enforces before the quote is written. G is deliberately the longest workstream — it can take nine days without costing a day of revenue, because the Essentials page is already live.",
+    why: "The page now sells coverage: Essentials without Signals, reviews and 360, and no Talent Manager; Growth with all three modules but no talent bench; Organization with everything. Every one of those claims needs a switch the server actually respects, on top of the cross-team, history, automation and multi-unit boundaries.",
     tasks: [
       {
         id: "G1",
@@ -324,15 +317,33 @@ export const WORKSTREAMS = [
       },
       {
         id: "G5",
-        task: "Exercise the 360 flow end to end — self, manager, peer and upward — before Growth is quoted on it.",
-        done: "A multi-rater cycle is completed and calibrated in test, or the claim comes off the Growth card.",
-        touch: "Assessment360 flow, reviewCycleCommand",
+        task: "Exercise the 360 flow end to end before the page is announced — 360 is now named on the public Growth card, so this moved ahead of quoting.",
+        done: "A multi-rater cycle is completed in test, or the claim is removed.",
+        touch: "Assessment360 flow",
       },
       {
         id: "G6",
-        task: "Prove multi-unit rollup on a two-unit fixture before Organization promises it; if it cannot be proven, Organization stays scoped-only.",
-        done: "A two-unit fixture reports correctly, or the promise is removed from the Organization card.",
+        task: "Prove multi-unit rollup on a two-unit fixture before Organization promises it.",
+        done: "A two-unit fixture reports correctly, or Organization stays scoped-only.",
         touch: "OrgPosition, OrgRole, rollups",
+      },
+      {
+        id: "G7",
+        task: "Gate Development Manager's Signals by package: Essentials gets everything except Signals, Growth and above get the full module.",
+        done: "An Essentials tenant cannot reach Signals by role, route or direct call.",
+        touch: "SignalsTab, CustomAssessment access",
+      },
+      {
+        id: "G8",
+        task: "Gate Performance Manager by package: Essentials gets check-ins and goals/KPIs/OKRs only; reviews, calibration and 360 require Growth.",
+        done: "Reviews and 360 are unavailable on Essentials server-side, and check-ins and goals never are.",
+        touch: "Reviews, reviewCycleCommand, launchReviewCycle",
+      },
+      {
+        id: "G9",
+        task: "Gate Talent Manager — competency library, succession and career paths — to Organization.",
+        done: "Succession and career-path functions refuse a Growth tenant rather than hiding a menu item.",
+        touch: "successionSetActivation, career-path tools",
       },
     ],
   },
@@ -405,15 +416,11 @@ export const RISKS = [
   },
   {
     risk: "Workstream G delays the pricing page",
-    mitigates: "It cannot — F depends on A, C and D, never on G. G is the nine-day tail that unlocks Growth's quote, not Essentials' page.",
-  },
-  {
-    risk: "Growth is quoted before its boundaries exist",
-    mitigates: "M5 stays closed until each of the six boundaries is enforced rather than hidden: a rejected request, not a missing menu item.",
+    mitigates: "It cannot — F depends on A, C and D, never on G. G is what unlocks Growth's price, not Essentials' page.",
   },
   {
     risk: "The page claims a module the product cannot switch off",
-    mitigates: "C4 puts all five capability checks in one function before F depends on it, so no card names a capability that is still unconditional; G5 then exercises 360 end to end.",
+    mitigates: "G7–G9 gate Signals, reviews/360 and Talent Manager by package before the page is announced, and 360 is exercised end to end first.",
   },
 ];
 

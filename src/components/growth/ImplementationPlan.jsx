@@ -61,16 +61,15 @@ export default function ImplementationPlan() {
         <Stat label="Workstreams" value={EFFORT_BASIS.workstreams} sub="Three run in parallel" />
         <Stat label="Builder-days" value={totalDays} sub="One developer, full time" />
         <Stat label="Sequence gates" value={EFFORT_BASIS.milestones} sub="Each one unlocks the next" />
-        <Stat label="Growth quotable" value="Week 9" sub="Gate M5; the Essentials page never waits on it" />
+        <Stat label="Growth quotable" value="After G" sub="Essentials page never waits on it" />
       </div>
 
       <Callout tone="accent" title="How to read the effort figures">
         <p>{EFFORT_BASIS.parallel}</p>
         <p>
           Days are build effort, not elapsed time: the founder's selling, the ten prospect conversations and the
-          day-90 decision sit outside them. Thirty-six days is the whole build, and because F, E and H interleave with
-          G rather than queue behind it, the calendar runs shorter than the total. Each task names the screen or
-          function it changes, so a delay shows up as a slipped milestone rather than a vague overrun.
+          day-90 decision sit outside them. Nothing in A–F is research — each task names the screen or function it
+          changes, so a delay shows up as a slipped milestone rather than a vague overrun.
         </p>
       </Callout>
 
@@ -114,10 +113,9 @@ export default function ImplementationPlan() {
         <SectionHeading kicker="Workstreams in dependency order">The detailed work</SectionHeading>
         <div className="mb-5">
           <Lead>
-            A and B start together. C follows B and owns both counting and the capability map; D follows C; F follows D.
-            G runs after B and C on its own nine-day track — F never depends on it, so the Essentials page ships while
-            Growth's boundaries are still being built, and the longest workstream costs no revenue. E and H are
-            measurements and documentation, so they gate nothing.
+            A and B start together. C follows B, D follows C, F follows D. E and H run alongside, because AI cost and
+            delivery hours are measurements rather than dependencies. G is what makes Growth quotable — it never holds
+            up the Essentials page.
           </Lead>
         </div>
         <div className="space-y-8">
