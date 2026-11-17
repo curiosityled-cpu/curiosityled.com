@@ -5,7 +5,7 @@
 
 export const EFFORT_BASIS = {
   workstreams: 8,
-  days: 36,
+  days: 38,
   milestones: 6,
   parallel: "Atreus metering and delivery documentation start once the tenant record carries a package — they are measurements, not dependencies.",
 };
@@ -25,7 +25,7 @@ export const SEQUENCE = [
   },
   {
     step: "Publish",
-    detail: "The pricing page shows one price. Growth stays quoting-only until cross-team analytics, trend windows and automation have real boundaries.",
+    detail: "The pricing page sells one platform in three bundles with a single published minimum, not three prices. Growth stays quoting-only until the module boundaries and cross-team analytics have real switch-offs.",
   },
   {
     step: "Prove",
@@ -45,7 +45,7 @@ export const MILESTONES = [
     id: "M2",
     gate: "After B and C",
     name: "Allowances are countable",
-    unlock: "One function returns managers used, participants used, allowances and add-on blocks for a tenant, and an admin can see it.",
+    unlock: "One function returns managers used, participants used, allowances and any extra purchased capacity for a tenant, and an admin can see it.",
     proves: "A capacity conversation becomes a measurement, not an estimate.",
   },
   {
@@ -59,7 +59,7 @@ export const MILESTONES = [
     id: "M4",
     gate: "After F",
     name: "A narrow offer is public",
-    unlock: "Pricing page live with Essentials only, demo as the primary CTA, events firing, and the 90-Day Launch runbook recording actual hours.",
+    unlock: "Pricing page live with three bundles, no package prices and one published minimum, package CTAs routing to a conversation, events firing, and the 90-Day Launch runbook recording actual hours.",
     proves: "The site and the delivery process match the order form.",
   },
   {
@@ -203,7 +203,7 @@ export const WORKSTREAMS = [
       },
       {
         id: "D3",
-        task: "Write the refusal message: what the limit is, who to contact, and the add-on block that resolves it.",
+        task: "Write the refusal message: what the limit is, who to contact, and the conversation that resolves it (no block pricing on the page).",
         done: "No over-allowance path ends in a dead end.",
         touch: "Invite and roster UI",
       },
@@ -253,21 +253,21 @@ export const WORKSTREAMS = [
     id: "F",
     name: "A narrow public offer",
     order: "Step 5 — after A, C and D",
-    effort: "6 days",
+    effort: "5 days",
     depends: "A, C, D",
     why: "There is no pricing route and no price string on any public page. The page can go live once — and only once — enforcement exists and the copy is honest, because the price page is the one artefact prospects compare against the order form.",
     tasks: [
       {
         id: "F1",
-        task: "Build a pricing page: Essentials priced, Growth as “find your package”, Organization as “talk to us”, capacity blocks shown as order-form line items.",
-        done: "One visible price; no tier priced that the product cannot enforce.",
+        task: "Build a pricing page that sells one platform in three bundles: no per-package price, one published minimum of $5,000 a year, variation stated by user count, organization size and corporate structure.",
+        done: "No package carries a price; the minimum and its three drivers are stated once; each bundle names exactly which modules it unlocks.",
         touch: "New page, public route",
       },
       {
         id: "F2",
-        task: "Make the no-signup demo the primary CTA and put it in the persistent nav.",
-        done: "Demo reachable from every public page, labelled fictional.",
-        touch: "LandingNav, landing sections",
+        task: "Keep the offer to one action per package — “Talk to us about Essentials / Growth / Organization” — with the no-signup diagnostic available beside it, and Pricing reachable from the persistent nav.",
+        done: "Every package CTA reaches the same conversation; the diagnostic is one click away and still labelled fictional.",
+        touch: "LandingNav, pricing page",
       },
       {
         id: "F3",
@@ -287,9 +287,9 @@ export const WORKSTREAMS = [
     id: "G",
     name: "Boundaries behind Growth",
     order: "Step 6 — after B and C; makes Growth quotable",
-    effort: "9 days",
+    effort: "12 days",
     depends: "B, C",
-    why: "Growth and Organization sell things that exist but are not bounded: cross-team analytics, historical windows, automation, connectors and multi-unit rollup. Each must have a boundary before Growth can carry a price — this is the workstream that turns a quote into a package.",
+    why: "The page now sells coverage: Essentials without Signals, reviews and 360, and no Talent Manager; Growth with all three modules but no talent bench; Organization with everything. Every one of those claims needs a switch the server actually respects, on top of the cross-team, history, automation and multi-unit boundaries.",
     tasks: [
       {
         id: "G1",
@@ -317,7 +317,7 @@ export const WORKSTREAMS = [
       },
       {
         id: "G5",
-        task: "Exercise the 360 flow end to end or stop naming it as a differentiator.",
+        task: "Exercise the 360 flow end to end before the page is announced — 360 is now named on the public Growth card, so this moved ahead of quoting.",
         done: "A multi-rater cycle is completed in test, or the claim is removed.",
         touch: "Assessment360 flow",
       },
@@ -327,6 +327,24 @@ export const WORKSTREAMS = [
         done: "A two-unit fixture reports correctly, or Organization stays scoped-only.",
         touch: "OrgPosition, OrgRole, rollups",
       },
+      {
+        id: "G7",
+        task: "Gate Development Manager's Signals by package: Essentials gets everything except Signals, Growth and above get the full module.",
+        done: "An Essentials tenant cannot reach Signals by role, route or direct call.",
+        touch: "SignalsTab, CustomAssessment access",
+      },
+      {
+        id: "G8",
+        task: "Gate Performance Manager by package: Essentials gets check-ins and goals/KPIs/OKRs only; reviews, calibration and 360 require Growth.",
+        done: "Reviews and 360 are unavailable on Essentials server-side, and check-ins and goals never are.",
+        touch: "Reviews, reviewCycleCommand, launchReviewCycle",
+      },
+      {
+        id: "G9",
+        task: "Gate Talent Manager — competency library, succession and career paths — to Organization.",
+        done: "Succession and career-path functions refuse a Growth tenant rather than hiding a menu item.",
+        touch: "successionSetActivation, career-path tools",
+      },
     ],
   },
   {
@@ -335,7 +353,7 @@ export const WORKSTREAMS = [
     order: "Parallel — never blocks F",
     effort: "5 days",
     depends: "None",
-    why: "The $750 implementation only works if delivery is a runbook rather than a founder improvising. The five-hour guardrail is what keeps implementation margin positive.",
+    why: "The implementation only works if delivery is a runbook rather than a founder improvising. The five-hour guardrail is what keeps implementation margin positive.",
     tasks: [
       {
         id: "H1",
@@ -370,7 +388,7 @@ export const GATES_BEFORE_PRICING = [
   "Package, manager allowance and participant allowance stored on every tenant.",
   "Counting function live, with usage visible to an admin.",
   "Invite and roster enforcement exercised in warn mode on two real tenants with no false positives.",
-  "Capacity blocks and the acceptance definition written into the order form.",
+  "The bundle boundaries behind the page — Signals, reviews and 360, Talent Manager — enforced server-side, and the minimum pricing written into the order form.",
   "pricing_view, package_select and demo events firing in production.",
   "No AI allowance, launch assurance or multi-unit promise on the page.",
 ];
@@ -382,11 +400,11 @@ export const RISKS = [
   },
   {
     risk: "A published price becomes the ceiling for every deal",
-    mitigates: "Publish Essentials only. Growth becomes quotable once workstream G lands, not before.",
+    mitigates: "No package carries a list price. One published minimum plus the bundle boundaries is the anchor; Growth becomes quotable once workstream G lands.",
   },
   {
     risk: "Allowance disputes with customers",
-    mitigates: "One written definition, visible usage in the admin panel, and add-on blocks as the resolution path instead of an exception.",
+    mitigates: "One written definition, visible usage in the admin panel, and a standing conversation path instead of an exception.",
   },
   {
     risk: "AI cost turns out to exceed the margin in Essentials",
@@ -400,6 +418,10 @@ export const RISKS = [
     risk: "Workstream G delays the pricing page",
     mitigates: "It cannot — F depends on A, C and D, never on G. G is what unlocks Growth's price, not Essentials' page.",
   },
+  {
+    risk: "The page claims a module the product cannot switch off",
+    mitigates: "G7–G9 gate Signals, reviews/360 and Talent Manager by package before the page is announced, and 360 is exercised end to end first.",
+  },
 ];
 
 export const DEFERRED = [
@@ -408,7 +430,8 @@ export const DEFERRED = [
   "Connector breadth beyond HubSpot, Outlook, Google Calendar and the Teams bot.",
   "Any published AI or Atreus allowance: measured in workstream E, published only after four cycles of cost data.",
   "The 15-business-day launch assurance: operational and contractual review first.",
-  "A fourth tier or per-seat billing: capacity blocks answer the same problem without a new price point.",
+  "A fourth tier, per-seat billing or published package prices: one minimum and three bundles keep the offer a decision rather than a configurator.",
+  "On-page capacity blocks and a package calculator: removed from the offer, because they made the page a puzzle and invited nickel-and-diming.",
 ];
 
 export const DECISIONS = [
@@ -417,8 +440,8 @@ export const DECISIONS = [
     why: "They are the only site changes I would make before anything else, and two days of work removes the largest credibility risk in the offer.",
   },
   {
-    decision: "Approve the capacity blocks ($1,200 / +5 managers, $600 / +100 participants)",
-    why: "They keep the 11–30 manager buyer on Essentials instead of forcing a Growth quote. The numbers are derived from your tier rates, not validated.",
+    decision: "Approve the three bundles and the $5,000 minimum",
+    why: "Packages now sell module coverage and a conversation, not seat bands and blocks. The minimum is the only number the site publishes, so it has to be the one the order form defends.",
   },
   {
     decision: "Confirm enforcement starts in warn mode",
