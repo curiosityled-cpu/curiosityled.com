@@ -1,8 +1,9 @@
 import React from "react";
-import { Check, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Check, ArrowRight, Rocket, TrendingUp, Building2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { TIER_CARDS, BOOK_DEMO_URL } from "@/components/pricing/pricingContent";
+import { TIERS, BOOK_DEMO_URL } from "@/components/pricing/pricingContent";
+
+const ICONS = { essentials: Rocket, growth: TrendingUp, organization: Building2 };
 
 export default function PackageCards() {
   const select = (key) => {
@@ -11,76 +12,51 @@ export default function PackageCards() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {TIER_CARDS.map((tier) => (
-        <div
-          key={tier.key}
-          className={`rounded-2xl border bg-white p-7 flex flex-col ${
-            tier.promoted ? "border-[#0202ff] shadow-xl shadow-blue-100/60" : "border-gray-200"
-          }`}
-        >
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="text-lg font-bold text-gray-900">{tier.name}</h2>
-            {tier.promoted && (
-              <span className="text-[10px] font-bold uppercase tracking-wider text-white px-2 py-1 rounded" style={{ backgroundColor: "#0202ff" }}>
-                Published price
+      {TIERS.map((tier) => {
+        const Icon = ICONS[tier.key];
+        return (
+          <div
+            key={tier.key}
+            className="relative rounded-2xl border border-gray-200 bg-white p-7 flex flex-col overflow-hidden hover:border-blue-300 hover:shadow-lg transition-all"
+          >
+            <div className="absolute inset-x-0 top-0 h-1" style={{ backgroundColor: "#0202ff", opacity: tier.key === "essentials" ? 0.35 : tier.key === "growth" ? 0.65 : 1 }} />
+
+            <div className="flex items-center gap-2.5">
+              <span className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: "#eef2ff" }}>
+                <Icon className="w-4 h-4" style={{ color: "#0202ff" }} />
               </span>
-            )}
-          </div>
-          <p className="text-xs font-medium text-gray-500 mt-1">{tier.promise}</p>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900 leading-tight">{tier.name}</h2>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">{tier.bestFor}</p>
+              </div>
+            </div>
 
-          <div className="mt-5 pb-5 border-b border-gray-100">
-            {tier.price ? (
-              <>
-                <p className="text-4xl font-bold text-gray-900 leading-none">{tier.price}</p>
-                <p className="text-xs text-gray-500 mt-2">{tier.unit}</p>
-                <p className="text-xs text-gray-600 font-medium mt-2">{tier.implementation}</p>
-              </>
-            ) : (
-              <>
-                <p className="text-2xl font-bold text-gray-900 leading-tight">{tier.priceLabel}</p>
-                <p className="text-xs text-gray-500 mt-2">{tier.unit}</p>
-                <p className="text-xs text-gray-600 font-medium mt-2">{tier.implementation}</p>
-              </>
-            )}
-            <p className="text-xs text-gray-500 mt-3">{tier.fit}</p>
-          </div>
+            <p className="mt-4 text-sm font-medium text-gray-900 leading-relaxed">{tier.emphasis}</p>
+            <p className="mt-3 text-[13px] text-gray-500 leading-relaxed">{tier.suitedTo}</p>
 
-          <ul className="mt-5 space-y-2.5 flex-1">
-            {tier.features.map((f) => (
-              <li key={f} className="flex gap-2 text-[13px] leading-relaxed text-gray-600">
-                <Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "#0202ff" }} />
-                <span>{f}</span>
-              </li>
-            ))}
-          </ul>
+            <ul className="mt-5 pt-5 border-t border-gray-100 space-y-2 flex-1">
+              {tier.features.map((f) => (
+                <li key={f} className="flex gap-2 text-[13px] leading-relaxed text-gray-700">
+                  <Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "#0202ff" }} />
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
 
-          <div className="mt-6 space-y-2">
             <a
               href={BOOK_DEMO_URL}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => select(tier.key)}
-              className={`flex items-center justify-center gap-2 text-sm font-semibold px-5 py-3 rounded-xl transition-all ${
-                tier.promoted
-                  ? "text-white hover:opacity-90"
-                  : "border border-gray-300 text-gray-800 hover:border-gray-400"
-              }`}
-              style={tier.promoted ? { backgroundColor: "#0202ff" } : undefined}
+              className="mt-6 flex items-center justify-center gap-2 text-sm font-semibold text-white px-5 py-3 rounded-xl hover:opacity-90 transition-all"
+              style={{ backgroundColor: "#0202ff" }}
             >
-              {tier.cta}
+              Talk to us about {tier.name}
               <ArrowRight className="w-4 h-4" />
             </a>
-            {tier.secondary && (
-              <Link
-                to={tier.secondary.href}
-                className="flex items-center justify-center gap-2 text-xs font-medium text-gray-600 hover:text-gray-900 py-2"
-              >
-                {tier.secondary.label}
-              </Link>
-            )}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
