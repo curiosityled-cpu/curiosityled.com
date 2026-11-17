@@ -2,6 +2,7 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.49";
 import { bootstrapSuccessionAuth } from "../../shared/successionAuthBootstrap.ts";
 import { writeSuccessionAuditEvent } from "../../shared/successionAuditWriter.ts";
 import { isPlatformAdminFullAccessEnabled } from "../../shared/successionConstants.ts";
+import { tenantModuleAccess, packageRequiredResponse } from "../../shared/packageEntitlements.ts";
 
 /**
  * POST /successionSetActivation
@@ -64,6 +65,14 @@ export default async function (req: Request): Promise<Response> {
 
   const client = auth.client;
   const canonicalId = auth.client_id!;
+
+  // ── 3b. Package boundary: Talent Manager is Organization and above ────────
+  // Enabling is new work and meets the boundary; disabling is always allowed so
+  // a tenant can always switch off a module it no longer holds.
+  if (enabled) {
+    const access = await tenantModuleAccess(base44, canonicalId, "talent_manager");
+    if (!access.allowed) return packageRequiredResponse(access);
+  }
 
   // ── 4. Read current settings and toggle ───────────────────────────────────
   const currentSettings = client.settings || {};

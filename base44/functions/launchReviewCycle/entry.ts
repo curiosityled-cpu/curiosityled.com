@@ -8,6 +8,7 @@ import {
   logReviewEvent,
   normEmail,
 } from "../../shared/reviewCycleCore.ts";
+import { tenantModuleAccess, packageRequiredResponse } from "../../shared/packageEntitlements.ts";
 
 /**
  * Launches a review cycle: verifies authorization and tenant scope, freezes the
@@ -27,6 +28,11 @@ export default async function (req: Request): Promise<Response> {
     const tenant = await resolveReviewTenant(base44, user, body.client_id);
     if (tenant.response) return tenant.response;
     const clientId = tenant.clientId;
+
+    // Reviews and 360 are Growth and above. Existing cycles stay readable and
+    // submittable — only launching a new one meets the boundary.
+    const access = await tenantModuleAccess(base44, clientId, "reviews");
+    if (!access.allowed) return packageRequiredResponse(access);
 
     const { review_cycle_id } = body;
     if (!review_cycle_id) return Response.json({ error: "review_cycle_id required" }, { status: 400 });

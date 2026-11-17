@@ -82,6 +82,7 @@ export const WORKSTREAMS = [
   {
     id: "A",
     name: "Claims and trust",
+    state: "Not started",
     order: "Step 1 — start now",
     effort: "2 days",
     depends: "Nothing",
@@ -122,6 +123,7 @@ export const WORKSTREAMS = [
   {
     id: "B",
     name: "Package data on the tenant",
+    state: "Shipped",
     order: "Step 2 — parallel with A",
     effort: "3 days",
     depends: "Nothing",
@@ -156,6 +158,7 @@ export const WORKSTREAMS = [
   {
     id: "C",
     name: "One counting function",
+    state: "Shipped",
     order: "Step 3 — after B",
     effort: "4 days",
     depends: "B",
@@ -184,6 +187,7 @@ export const WORKSTREAMS = [
   {
     id: "D",
     name: "Enforcement, softly",
+    state: "Shipped",
     order: "Step 4 — after C",
     effort: "4 days",
     depends: "C",
@@ -218,6 +222,7 @@ export const WORKSTREAMS = [
   {
     id: "E",
     name: "AI cost, measured",
+    state: "Not started",
     order: "Parallel — after B",
     effort: "3 days",
     depends: "B",
@@ -252,10 +257,11 @@ export const WORKSTREAMS = [
   {
     id: "F",
     name: "A narrow public offer",
+    state: "Shipped",
     order: "Step 5 — after A, C and D",
     effort: "5 days",
     depends: "A, C, D",
-    why: "There is no pricing route and no price string on any public page. The page can go live once — and only once — enforcement exists and the copy is honest, because the price page is the one artefact prospects compare against the order form.",
+    why: "Shipped: /pricing sells one platform in three bundles with a single $5,000 minimum, one CTA per package, no calculators and no capacity blocks. It stays the artefact prospects compare against the order form, so the bundle copy only changes when a boundary behind it changes.",
     tasks: [
       {
         id: "F1",
@@ -286,6 +292,7 @@ export const WORKSTREAMS = [
   {
     id: "G",
     name: "Boundaries behind Growth",
+    state: "In progress",
     order: "Step 6 — after B and C; makes Growth quotable",
     effort: "12 days",
     depends: "B, C",
@@ -330,26 +337,27 @@ export const WORKSTREAMS = [
       {
         id: "G7",
         task: "Gate Development Manager's Signals by package: Essentials gets everything except Signals, Growth and above get the full module.",
-        done: "An Essentials tenant cannot reach Signals by role, route or direct call.",
-        touch: "SignalsTab, CustomAssessment access",
+        done: "An Essentials tenant cannot reach Signals by role, route or direct call. Server gate built; the remaining proof is a live Essentials tenant being refused end to end.",
+        touch: "packageEntitlements, getSignalForTaking, submitSignalResponse",
       },
       {
         id: "G8",
         task: "Gate Performance Manager by package: Essentials gets check-ins and goals/KPIs/OKRs only; reviews, calibration and 360 require Growth.",
-        done: "Reviews and 360 are unavailable on Essentials server-side, and check-ins and goals never are.",
-        touch: "Reviews, reviewCycleCommand, launchReviewCycle",
+        done: "Launching a cycle is refused on Essentials, while existing cycles stay readable and submittable and check-ins and goals never gate.",
+        touch: "packageEntitlements, launchReviewCycle, 360 flow",
       },
       {
         id: "G9",
         task: "Gate Talent Manager — competency library, succession and career paths — to Organization.",
-        done: "Succession and career-path functions refuse a Growth tenant rather than hiding a menu item.",
-        touch: "successionSetActivation, career-path tools",
+        done: "Activating succession is refused below Organization while deactivating is always allowed; career-path creation must follow the same gate.",
+        touch: "packageEntitlements, successionSetActivation, career-path tools",
       },
     ],
   },
   {
     id: "H",
     name: "Delivery that matches the order form",
+    state: "Not started",
     order: "Parallel — never blocks F",
     effort: "5 days",
     depends: "None",

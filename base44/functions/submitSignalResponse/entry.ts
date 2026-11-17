@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { scoreSignal, canAccessSignal } from '../../shared/signalScoring.ts';
 import { resolveActiveClient } from '../../shared/tenantContext.ts';
+import { tenantModuleAccess, packageRequiredResponse } from '../../shared/packageEntitlements.ts';
 
 /**
  * Scores a signal attempt on the server and records it. The answer key never leaves
@@ -26,6 +27,10 @@ export default async function (req) {
     if (!canAccessSignal(assessment, user)) {
       return Response.json({ error: 'You do not have access to this signal' }, { status: 403 });
     }
+
+    // An attempt is new work, so it carries the same package boundary as opening it.
+    const signalAccess = await tenantModuleAccess(base44, assessment.client_id, 'signals');
+    if (!signalAccess.allowed) return packageRequiredResponse(signalAccess);
 
     const result = scoreSignal(
       assessment.config,
