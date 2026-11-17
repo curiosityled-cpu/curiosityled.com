@@ -5,19 +5,19 @@ const STEPS = [
   {
     name: "Essentials",
     icon: Sparkles,
-    adds: ["Atreus", "Lead", "Team", "Practice", "Leadership Intelligence", "Check-ins & goals"],
+    adds: ["Atreus – AI Manager Companion", "Nudges & check-ins", "Goals, KPIs & OKRs", "Reporting & analytics", "LMS"],
     depth: 1,
   },
   {
     name: "Growth",
     icon: TrendingUp,
-    adds: ["Full Performance Manager", "Signals", "Reviews & 360", "Leadership Index"],
+    adds: ["Assessments", "Leadership Index", "Performance reviews", "360 feedback", "Skills library"],
     depth: 2,
   },
   {
     name: "Organization",
     icon: Building2,
-    adds: ["Talent Manager", "Succession", "Career paths"],
+    adds: ["Competency library", "Succession plans", "Career paths"],
     depth: 3,
   },
 ];

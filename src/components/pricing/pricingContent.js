@@ -15,14 +15,15 @@ export const TIERS = [
     name: "Essentials",
     bestFor: "Smaller companies",
     emphasis:
-      "Onboard and manage performance for your managers with the Atreus AI Manager Companion, performance nudges and check-ins, goals/KPIs/OKRs, advanced reporting and analytics, and an LMS.",
+      "Onboard and manage performance for your managers with Atreus – AI Manager Companion, performance nudges and check-ins, goals/KPIs/OKRs, advanced reporting and analytics, and an LMS.",
     suitedTo:
       "For smaller companies where proving ROI means keeping clients happy and attracting their next clients.",
     features: [
-      "Atreus, Lead, Team, Practice and Leadership Intelligence",
-      "Performance Manager: check-ins and goals/KPIs/OKRs",
-      "Development Manager: everything except Signals",
-      "Advanced reporting and analytics with LMS",
+      "Atreus – AI Manager Companion for every manager",
+      "Performance nudges and check-ins",
+      "Goals, KPIs and OKRs",
+      "Advanced reporting and analytics",
+      "Learning management (LMS)",
     ],
   },
   {
@@ -35,9 +36,10 @@ export const TIERS = [
       "For growing organizations where effective leadership means accelerating growth.",
     features: [
       "Everything in Essentials",
-      "Full Development Manager, including Signals",
-      "Full Performance Manager: reviews, calibration and 360 feedback",
-      "Leadership Index Assessment",
+      "Assessments, including our Leadership Index Assessment",
+      "Performance reviews",
+      "360 feedback",
+      "Skills library via learning partners (additional cost)",
     ],
   },
   {
@@ -49,10 +51,11 @@ export const TIERS = [
     suitedTo:
       "For mid-market to large organizations where scaling and integrating leadership and manager development across the enterprise means attracting and retaining top talent.",
     features: [
-      "Full platform access",
-      "Talent Manager: competency library, succession plans, career paths",
       "Everything in Growth",
-      "Enterprise-wide reporting",
+      "Competency library",
+      "Succession plans",
+      "Career paths",
+      "Enterprise-wide reporting and administration",
     ],
   },
 ];
@@ -118,7 +121,7 @@ export const PRICING_FAQ = [
   },
   {
     q: "Do we lose features at the Essentials level?",
-    a: "The manager experience never changes — Atreus, Lead, Team, Practice and Leadership Intelligence are in every package. Packages only add capability: first full performance and development, then talent.",
+    a: "The manager experience never changes — Atreus – AI Manager Companion, the daily rhythm, the team view, practice reps and leadership intelligence are in every package. Packages only add capability: first assessments, reviews and 360, then the leadership bench.",
   },
   {
     q: "Can we move up later?",
