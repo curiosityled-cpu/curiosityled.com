@@ -8,6 +8,7 @@ import {
   logReviewEvent,
   normEmail,
 } from "../../shared/reviewCycleCore.ts";
+import { enforceModule } from "../../shared/moduleGate.ts";
 
 /**
  * Launches a review cycle: verifies authorization and tenant scope, freezes the
@@ -27,6 +28,12 @@ export default async function (req: Request): Promise<Response> {
     const tenant = await resolveReviewTenant(base44, user, body.client_id);
     if (tenant.response) return tenant.response;
     const clientId = tenant.clientId;
+
+    const gate = await enforceModule(base44, clientId, "reviews", {
+      actorEmail: user.email,
+      source: "launchReviewCycle",
+    });
+    if (gate) return gate;
 
     const { review_cycle_id } = body;
     if (!review_cycle_id) return Response.json({ error: "review_cycle_id required" }, { status: 400 });

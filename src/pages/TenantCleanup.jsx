@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Loader2, ShieldCheck, Play, RefreshCw, AlertTriangle } from "lucide-react";
 import TenantCleanupSummary from "@/components/admin/TenantCleanupSummary";
+import ModuleGatePanel from "@/components/admin/ModuleGatePanel";
 import TenantCleanupTable from "@/components/admin/TenantCleanupTable";
 
 function countOf(target) {
@@ -78,6 +79,8 @@ export default function TenantCleanup() {
         </div>
       }
     >
+      <ModuleGatePanel />
+
       <div className="bg-white border border-gray-200 rounded-xl p-4">
         <div className="flex items-start gap-3">
           <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">

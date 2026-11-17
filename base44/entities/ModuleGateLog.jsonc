@@ -1,0 +1,147 @@
+{
+  "name": "ModuleGateLog",
+  "type": "object",
+  "description": "One row for every module a tenant's package excludes while that tenant is in warn mode, plus every refusal in block mode. This is the evidence gathered before a tenant is moved to block, so a package boundary is never switched on blind.",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Tenant the attempt belongs to"
+    },
+    "module": {
+      "type": "string",
+      "enum": [
+        "signals",
+        "reviews",
+        "cross_team_analytics",
+        "extended_history",
+        "custom_automations",
+        "talent"
+      ],
+      "enumColors": [
+        "blue",
+        "purple",
+        "teal",
+        "gray",
+        "amber",
+        "pink"
+      ],
+      "description": "Which package-gated module was reached for"
+    },
+    "module_label": {
+      "type": "string",
+      "description": "Human-readable module name at the time of the attempt"
+    },
+    "package": {
+      "type": "string",
+      "description": "The tenant's package when the attempt happened"
+    },
+    "enforcement_mode": {
+      "type": "string",
+      "enum": [
+        "warn",
+        "block"
+      ],
+      "enumColors": [
+        "yellow",
+        "red"
+      ],
+      "default": "warn",
+      "description": "The mode the tenant was in when the attempt happened"
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "warned",
+        "blocked"
+      ],
+      "enumColors": [
+        "yellow",
+        "red"
+      ],
+      "description": "'warned' \u2014 allowed through and recorded; 'blocked' \u2014 refused"
+    },
+    "source": {
+      "type": "string",
+      "description": "The screen, function or action that reached for the module"
+    },
+    "actor_email": {
+      "type": "string",
+      "description": "Person who made the attempt"
+    },
+    "message": {
+      "type": "string",
+      "description": "The refusal-style message shown or logged for this attempt"
+    }
+  },
+  "required": [
+    "client_id",
+    "module",
+    "outcome"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "data.app_role": "Platform Admin"
+          }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "data.app_role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "data.app_role": "Platform Admin"
+          }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "data.app_role": "Super Administrator"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "data.app_role": "Admin Level 2"
+              }
+            },
+            {
+              "data.client_id": "{{user.data.client_id}}"
+            }
+          ]
+        }
+      ]
+    },
+    "update": null,
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "data.app_role": "Platform Admin"
+          }
+        }
+      ]
+    }
+  }
+}
