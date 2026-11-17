@@ -10,21 +10,21 @@ export default function ExecutiveRecommendation() {
           Regenerated recommendation • 16 November 2026
         </p>
         <h1 className="mt-2 max-w-3xl text-2xl font-extrabold leading-tight tracking-tight text-foreground sm:text-3xl">
-          Sell one package. Quote the other two. Enforce nothing you cannot count.
+          Sell coverage. Publish one minimum. Enforce what the page promises.
         </h1>
         <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-muted-foreground">
-          Your revised allowances make Essentials sharper: $3,000 a year for 10 managers and 100 participants is a
-          credible entry offer for a 3–10 manager business. It also creates two problems the previous recommendation
-          did not have — an 11-manager buyer now pays 140% more for one extra manager, and the product still has no way
-          to know how many managers a tenant actually has. Fix both before publishing a price.
+          The offer is now one platform in three bundles with a single published number — $5,000 a year, varying by user
+          count, organization size and corporate structure. No package carries a price, and nothing is sold as a
+          configurator. That moves the open work off the page and onto the product: Signals, reviews/360 and the talent
+          bench each need a switch the server respects before the bundles mean anything.
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="Advertised price" value="$3,000" sub="Essentials annually, plus $750 implementation" />
-        <Stat label="Per manager / month" value="$25" sub="At 10 managers; $20 on Growth at 30" />
-        <Stat label="Tiers enforceable today" value="0" sub="No plan, allowance or metering field exists" />
-        <Stat label="P0 claims to fix" value="2" sub="“Judgment changed” and the $319B–$398B statistic" />
+        <Stat label="Published minimum" value="$5,000" sub="Annually; packages quoted above it" />
+        <Stat label="Package prices shown" value="0" sub="All three bundles route to a conversation" />
+        <Stat label="Module gates built" value="0 of 3" sub="Signals, reviews/360 and Talent Manager are not gated yet" />
+        <Stat label="P0 claims open" value="0" sub="Claim corrected and statistic sourced" />
       </div>
 
       <div>
@@ -40,12 +40,12 @@ export default function ExecutiveRecommendation() {
         </div>
       </div>
 
-      <Callout tone="accent" title="The capacity ladder, in one line">
+      <Callout tone="accent" title="The bundle ladder, in one line">
         <p>
-          Essentials covers the buyer you can serve well today. A <strong>$1,200 / +5 manager block</strong> holds the
-          11–20 manager deal at $4,200 without cannibalising Growth, and a <strong>$600 / +100 participant block</strong>{" "}
-          answers the few-managers-many-staff case. Growth then sells on cross-team intelligence and automation rather
-          than on permission to hire one more manager.
+          Essentials covers the buyer you can serve well today — the manager loop without Signals, reviews or a talent
+          bench. <strong>Growth</strong> adds the full Performance and Development Managers, and{" "}
+          <strong>Organization</strong> adds the Talent Manager. Nobody upgrades for permission to hire one more manager;
+          they upgrade for coverage.
         </p>
       </Callout>
 
@@ -54,10 +54,10 @@ export default function ExecutiveRecommendation() {
         <Bullets
           items={[
             "The buyer is an owner, HR or operations leader with 3–10 managers across multiple teams and a named internal process owner.",
-            "The core manager experience — assessment, insight, priorities, development, check-ins, goals, 1:1s, reviews, 360s and Atreus — stays in every package. Scale, intelligence, automation, integrations and delivery are what customers pay more for.",
+            "The manager experience — Atreus, Lead, Team, Practice, Leadership Intelligence, check-ins and goals/KPIs/OKRs — stays in every package. Reviews, 360, Signals and the talent bench are what customers move up for.",
             "The 90-Day Manager Launch is onboarding and adoption, not a promise of leadership transformation in 90 days.",
-            "Annual subscription billed upfront, implementation separate, no permanent free production plan, no surprise overage billing.",
-            "Frontline participation is included inside the package limits; additional participation capacity is quoted, not forced into unused manager seats.",
+            "Annual subscription billed upfront, implementation scoped per deployment, no permanent free production plan, no surprise overage billing.",
+            "Frontline participation is counted inside the quoted population; additional capacity is handled in the quote, never as an on-page block.",
           ]}
         />
       </div>
@@ -65,10 +65,10 @@ export default function ExecutiveRecommendation() {
       <Callout tone="danger" title="Caveats that belong in front of the buyer, not the appendix">
         <Bullets
           items={[
-            "Every price, allowance, block and commitment on this page is a proposed test term. None has been validated for willingness to pay.",
+            "The minimum, the bundle boundaries and every commitment on this page are proposed test terms. None has been validated for willingness to pay.",
             "Go Flat Bridge proves the workflow runs, not that retention, productivity or manager effectiveness improved. It should be described as a documented implementation, not an outcome case study.",
             "The 15-business-day launch assurance needs operational and contractual review before it appears anywhere customers can read it.",
-            "Nothing here authorises publishing a pricing page. Gate 5 stays closed until the two P0 claims are corrected and the diagnostic duration is measured.",
+            "The page is live. What is not live is the enforcement behind its bundles: Signals, reviews/360 and Talent Manager must be gated server-side, and 360 exercised end to end, before the Growth card is announced.",
           ]}
         />
       </Callout>

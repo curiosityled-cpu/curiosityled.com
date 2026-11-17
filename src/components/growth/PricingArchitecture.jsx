@@ -25,8 +25,9 @@ export default function PricingArchitecture() {
       <div>
         <SectionHeading kicker="Regenerated 16 November 2026">Pricing architecture</SectionHeading>
         <Lead>
-          Three tiers, one complete manager experience. Allowances are capacity boundaries from the November
-          2026 offer documents. Every number here is a proposed test term, not a published commitment.
+          Three bundles on one platform and exactly one published number: a $5,000-a-year minimum. Packages no longer
+          carry a price — coverage is the upgrade axis — so this tab tracks what each bundle promises rather than what
+          it costs.
         </Lead>
       </div>
 
@@ -38,7 +39,7 @@ export default function PricingArchitecture() {
           >
             <div className="flex items-center justify-between">
               <h3 className="text-base font-bold text-foreground">{t.name}</h3>
-              {t.promoted && <Tag tone="accent">Advertised</Tag>}
+              {t.promoted && <Tag tone="accent">Entry bundle</Tag>}
             </div>
             <p className="mt-3 text-2xl font-extrabold tracking-tight text-foreground">{t.price}</p>
             <p className="text-xs text-muted-foreground">{t.unit}</p>
@@ -57,12 +58,11 @@ export default function PricingArchitecture() {
       </div>
 
       <div>
-        <SectionHeading kicker="What the tiers actually cost">Unit economics of the lower allowances</SectionHeading>
+        <SectionHeading kicker="Where the floor sits">Floor economics, not a rate card</SectionHeading>
         <div className="mb-4">
           <Lead>
-            Cutting the allowances raises the price per manager. Revenue per manager falls 20% from Essentials to
-            Growth, which is the ladder working — but it also means an 11-manager buyer pays 140% more for one extra
-            manager unless something bridges the gap.
+            With no package price, the only arithmetic worth tracking is what the minimum implies at its floor — and
+            what it protects you from, which is anchoring every deal to a list number.
           </Lead>
         </div>
         <DataTable
@@ -76,20 +76,20 @@ export default function PricingArchitecture() {
         />
       </div>
 
-      <Callout tone="accent" title="Capacity blocks close the gap the lower numbers created">
+      <Callout tone="accent" title="Why the page carries no package price">
         <Bullets
           items={[
-            "An 11-manager buyer should not have to jump straight to $7,200. One +5 manager block at $1,200 keeps the deal at $4,200 and leaves Growth's analytics and automation as the real upgrade reason.",
-            "The few-managers-many-participants buyer — already flagged in your offer documents — is served by +100 participant blocks at $600 rather than unused manager access.",
-            "Blocks are proposed test prices derived from the tier rates, not approved terms. They should be written into the order form, not the website.",
+            "A list price per package becomes the ceiling for every negotiation and invites line-by-line comparison with cheaper tools. One minimum plus a conversation keeps the offer whole.",
+            "Capacity blocks and a package calculator are gone from the offer: they made the page a puzzle and turned a decision into a configurator.",
+            "The bundle boundaries — Signals, reviews and 360, Talent Manager — now carry the differentiation, so the server has to switch each one off below its package before the page is announced.",
           ]}
         />
       </Callout>
 
       <DataTable
         columns={[
-          { key: "name", label: "Add-on" },
-          { key: "price", label: "Proposed price" },
+          { key: "name", label: "Commercial lever" },
+          { key: "price", label: "Terms" },
           { key: "why", label: "Why it exists" },
         ]}
         rows={ADDONS}

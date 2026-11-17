@@ -2,7 +2,7 @@ import React from "react";
 import { SectionHeading, Lead, Callout, DataTable, Tag, Bullets } from "./briefUi";
 import { GATES, TASKS, DECISION_RULES } from "./pricingBriefData";
 
-const GATE_TONE = { Done: "good", "Not started": "warning", Blocked: "danger" };
+const GATE_TONE = { Done: "good", Partial: "warning", "Not started": "warning", Blocked: "danger" };
 
 export default function CommercialPlan() {
   return (
@@ -18,8 +18,8 @@ export default function CommercialPlan() {
 
       <Callout tone="accent" title="The one rule for the next 90 days">
         <p>
-          Essentials is sold from an order form and provisioned by hand until allowances can be counted. The pricing
-          page goes live in week four, not this week, and it never shows a tier the product cannot enforce.
+          Every package is sold from an order form and provisioned by hand. The site publishes one minimum and three
+          bundles, never a price per package, and never a capability the server cannot switch off.
         </p>
       </Callout>
 
@@ -58,8 +58,8 @@ export default function CommercialPlan() {
         <Bullets
           items={[
             "Segment: BPO and service businesses with 3–10 managers, multiple teams or client accounts, and a named internal owner.",
-            "Same Essentials offer, same $3,000 + $750, no discounts and no exceptions. A tenth deal won by discounting destroys the test.",
-            "Growth is quoted only when the prospect genuinely has more than 10 managers or asks for cross-team intelligence.",
+            "Same offer, same $5,000 minimum and the same scoped implementation, no discounts and no exceptions. A tenth deal won by discounting destroys the test.",
+            "Growth is quoted when the prospect needs reviews, 360 or the full Development Manager; Organization when they need the talent bench.",
             "Qualify out loud: no process owner, needs bespoke integration first, or wants monitoring rather than development — those are not losses.",
             "Success is what happens after week two — manager returns, insights opened, conversations recorded, reports reviewed — not check-in completion.",
           ]}
@@ -86,7 +86,7 @@ export default function CommercialPlan() {
         <Bullets
           items={[
             "Approve the two P0 claim corrections — they are the only change I would make to the public site this week.",
-            "Approve or change the capacity block prices ($1,200 / +5 managers, $600 / +100 participants). They are derived from your tier rates, not validated.",
+            "Approve the three bundles and the $5,000 minimum. It is the only number the site publishes, so it has to be the one the order form defends.",
             "Nominate the ten prospects and the segment, since the test only means something if it is one reachable group.",
           ]}
         />

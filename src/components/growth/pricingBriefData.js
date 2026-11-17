@@ -2,73 +2,70 @@
 // All prices and allowances are PROPOSED test terms from the November 2026 offer
 // documents — not approved, published or contractual commitments.
 
+// Packages publish coverage, never price. One minimum is the only number on the site.
 export const TIERS = [
   {
     name: "Essentials",
-    price: "$3,000",
-    unit: "per year, billed annually",
-    implementation: "$750",
-    managers: "Up to 10 managers",
-    participants: "Up to 100 staff participants",
-    teams: "Multiple teams, one organization",
+    price: "Minimum $5,000 / year",
+    unit: "quoted by user count, organization size and corporate structure",
+    implementation: "Scoped",
+    managers: "Atreus, Lead, Team, Practice and Leadership Intelligence",
+    participants: "Performance Manager: check-ins and goals/KPIs/OKRs",
+    teams: "Development Manager: everything except Signals",
     value: "Build consistency",
     outcome: "“Our managers have a clear process, practical support and visibility into progress.”",
-    cta: "Explore Curiosity Led",
+    cta: "Talk to us about Essentials",
     promoted: true,
   },
   {
     name: "Growth",
-    price: "$7,200",
-    unit: "per year, billed annually",
-    implementation: "from $1,500",
-    managers: "Up to 30 managers",
-    participants: "Up to 300 staff participants",
-    teams: "Multiple teams and units",
+    price: "Quoted",
+    unit: "same minimum, priced on coverage and population",
+    implementation: "Scoped",
+    managers: "Everything in Essentials",
+    participants: "Full Performance Manager: reviews, calibration, 360",
+    teams: "Full Development Manager, including Signals",
     value: "Scale and optimize",
     outcome: "“We can see what works across teams, identify gaps earlier and make better intervention decisions.”",
-    cta: "Find your package",
+    cta: "Talk to us about Growth",
     promoted: false,
   },
   {
     name: "Organization",
-    price: "Custom",
-    unit: "annual quote",
+    price: "Quoted",
+    unit: "annual quote, negotiated population",
     implementation: "Scoped",
-    managers: "Negotiated population",
-    participants: "Negotiated population",
-    teams: "Multi-unit and multi-site",
+    managers: "Everything in Growth",
+    participants: "Talent Manager: competency library, succession, career paths",
+    teams: "Enterprise-wide reporting",
     value: "Align and transform",
     outcome: "“We can connect manager behavior, team execution and business performance across units.”",
-    cta: "Talk to our team",
+    cta: "Talk to us about Organization",
     promoted: false,
   },
 ];
 
-// Unit economics derived from the proposed tiers — arithmetic on proposed terms, not validated pricing.
+// The floor, not a rate card: what the single published minimum implies.
 export const UNIT_ECONOMICS = [
-  { metric: "Revenue per manager / month", essentials: "$25.00", growth: "$20.00", note: "3,000 ÷ 10 ÷ 12 and 7,200 ÷ 30 ÷ 12" },
-  { metric: "Revenue per participant / year", essentials: "$30", growth: "$24", note: "At full allowance; unused allowance erodes the rate" },
-  { metric: "Implementation per staff hour", essentials: "$150", growth: "—", note: "$750 ÷ 5-hour delivery guardrail" },
-  { metric: "Implementation as % of year one", essentials: "25%", growth: "21%", note: "750 ÷ 3,750 and 1,500 ÷ 8,700" },
-  { metric: "Manager allowance step", essentials: "10", growth: "+20", note: "The gap a 11–30 manager buyer must cross" },
+  { metric: "Published number on the site", essentials: "$5,000 minimum / year", growth: "—", note: "The only figure a prospect sees; every package is quoted above it" },
+  { metric: "Revenue per manager / month at the floor", essentials: "$41.67", growth: "—", note: "5,000 ÷ 10 managers ÷ 12 — a floor, not a target rate" },
+  { metric: "Revenue per participant / year at the floor", essentials: "$50", growth: "—", note: "At the floor's participant allowance" },
+  { metric: "Implementation", essentials: "Scoped", growth: "Scoped", note: "No published fee; priced per deployment against the five-hour guardrail" },
+  { metric: "Upgrade axis", essentials: "Coverage", growth: "Coverage + cross-team", note: "Buyers move up for capability, not for headcount" },
 ];
 
-// Capacity add-ons I recommend to close the gap created by the lower allowances.
+// Capacity blocks were removed from the offer on 17 November. What remains are the
+// only extras that may be priced separately, and only in writing.
 export const ADDONS = [
   {
-    name: "+5 manager block",
-    price: "$1,200 / year",
-    why: "Lets an 11–10 manager buyer stay on Essentials ($4,200 total) instead of being forced to $7,200, while keeping Growth's real advantages for the upgrade.",
+    name: "Learning partner content",
+    price: "Additional cost",
+    why: "Third-party skills libraries and courses are billed at the partner rate — the only extra named on the public Growth card.",
   },
   {
-    name: "+100 participant block",
-    price: "$600 / year",
-    why: "Answers the few-managers-many-participants case the offer documents already flag, without selling unused manager access.",
-  },
-  {
-    name: "Additional reusable report layout",
-    price: "$500 one-time",
-    why: "Keeps bespoke client reporting out of standard delivery, where it is the fastest way to lose margin.",
+    name: "Bespoke report layout",
+    price: "Written scope",
+    why: "Keeps client-specific reporting out of standard delivery, where it is the fastest way to lose margin.",
   },
   {
     name: "Advisory / managed administration",
@@ -81,22 +78,24 @@ export const ENTITLEMENTS = [
   { capability: "Manager experience: Leadership Index, insight, priorities, development", essentials: "Included", growth: "Included", org: "Included", status: "Ready", evidence: "ManagerToday, MyDevelopment, Assessments, scoreAssessmentSubmission" },
   { capability: "Atreus contextual guidance in the manager flow", essentials: "Included", growth: "Included", org: "Included", status: "Partial", evidence: "atreusOrchestrator, AtreusCoach — no usage metering, so no binding allowance can be published" },
   { capability: "Daily check-ins, morning/evening rhythm, custom questions", essentials: "Included", growth: "Included", org: "Included", status: "Ready", evidence: "saveDailyCheckIn, resolveCheckInQuestions, CheckInSettings, Teams + token web check-in" },
-  { capability: "Goals, KPIs, 1:1s, performance reviews and calibration", essentials: "Included", growth: "Included", org: "Included", status: "Ready", evidence: "Goal, KPI, OneOnOneHub, launchReviewCycle, getReviewWorkspace" },
-  { capability: "360 feedback", essentials: "Included", growth: "Included", org: "Included", status: "Partial", evidence: "Assessment360Manager component exists; no dedicated multi-rater cycle flow traced" },
+  { capability: "Check-ins, goals, KPIs, OKRs and 1:1s", essentials: "Included", growth: "Included", org: "Included", status: "Ready", evidence: "Goal, KPI, OneOnOneHub, saveDailyCheckIn, resolveCheckInQuestions" },
+  { capability: "Performance reviews, calibration and 360 feedback", essentials: "—", growth: "Included", org: "Included", status: "Partial", evidence: "launchReviewCycle, reviewCycleCommand, getReviewWorkspace ready; 360 named publicly but the multi-rater flow is not yet exercised end to end" },
+  { capability: "Signals: assessments, quizzes, surveys, pulse and feedback builders", essentials: "—", growth: "Included", org: "Included", status: "Partial", evidence: "CustomAssessment, CustomForm, SignalBuilder ready; no package gate exists yet" },
+  { capability: "Talent Manager: competency library, succession, career paths", essentials: "—", growth: "—", org: "Included", status: "Partial", evidence: "Succession module complete behind successionSetActivation; no package gate exists yet" },
   { capability: "Standard manager and team dashboards", essentials: "Included", growth: "Included", org: "Included", status: "Ready", evidence: "/today, /team, ManagerTeam, team rollup functions" },
   { capability: "Standard reporting templates and PDF export", essentials: "Included", growth: "Included", org: "Included", status: "Ready", evidence: "ReportBuilder, 10 export*PDF functions, ReportTemplate entity" },
-  { capability: "Cross-team pattern and trend analysis", essentials: "Standard", growth: "Included", org: "Included", status: "Partial", evidence: "computeBehaviorTrends, getHistoricalTrends, ManagerTrends — exists but not packaged or bounded" },
+  { capability: "Cross-team pattern and trend analysis", essentials: "Own team only", growth: "Across teams", org: "Across units", status: "Partial", evidence: "computeBehaviorTrends, getHistoricalTrends, ManagerTrends — exists but not yet bounded by package" },
   { capability: "Historical trend window beyond the current cycle", essentials: "Current cycle", growth: "Multi-period", org: "Multi-period", status: "Partial", evidence: "getHistoricalTrends available; no documented retention window per tier" },
   { capability: "Workflow automation and scheduled reminders", essentials: "Standard reminders", growth: "Configurable", org: "Configurable", status: "Partial", evidence: "44 workflows, Automation entity, executeAutomation — no tenant-level entitlement control" },
   { capability: "Verified connectors", essentials: "CSV onboarding", growth: "Supported connectors", org: "Custom scoped", status: "Partial", evidence: "3 authorized (HubSpot, Outlook, Google Calendar), Teams bot, SFTP performance sync; CRM/HRIS breadth unverified" },
   { capability: "Multi-unit organizational hierarchy and rollup", essentials: "Single organization", growth: "Multiple teams", org: "Multi-unit", status: "Partial", evidence: "OrgPosition, OrgRole, ClientContext — hierarchy depth not validated for multi-unit reporting" },
   { capability: "Client-facing aggregated reporting with approval", essentials: "Included", growth: "Included", org: "Included", status: "Ready", evidence: "ReportBuilder sharing, getClientContext, aggregation audits" },
-  { capability: "Standard implementation (kickoff, roster import, 3 check-in templates, 1 report layout, training, 30-day review)", essentials: "$750", growth: "from $1,500", org: "Scoped", status: "Proposed", evidence: "Process, not software — no delivery template exists in the app yet" },
+  { capability: "Standard implementation (kickoff, roster import, 3 check-in templates, 1 report layout, training, 30-day review)", essentials: "Scoped", growth: "Scoped", org: "Scoped", status: "Proposed", evidence: "Process, not software — no delivery template exists in the app yet" },
   { capability: "Tenant isolation and role-scoped access", essentials: "Included", growth: "Included", org: "Included", status: "Ready", evidence: "RLS on 163 entities; 37 reference Analyst, 23 subordinate scopes; tenant proof functions" },
-  { capability: "Plan / entitlement enforcement in product", essentials: "—", growth: "—", org: "—", status: "Absent", evidence: "0 of 163 entities carry a plan, tier or allowance field; no payments or plan gate in app code" },
-  { capability: "Manager and participant allowance counting", essentials: "—", growth: "—", org: "—", status: "Absent", evidence: "No counter exists; Client has license_count only, set by hand" },
+  { capability: "Plan / entitlement enforcement in product", essentials: "Partial", growth: "Partial", org: "Partial", status: "Partial", evidence: "Client carries package, allowances and enforcement_mode; invite and roster adds are gated. Module-level gates (Signals, reviews/360, Talent) are not built" },
+  { capability: "Manager and participant allowance counting", essentials: "Included", growth: "Included", org: "Included", status: "Ready", evidence: "getTenantAllowanceUsage plus tenantAllowance.ts; usage visible on the client record" },
   { capability: "AI consumption metering and allowance", essentials: "—", growth: "—", org: "—", status: "Absent", evidence: "No token or credit tracking around Atreus calls" },
-  { capability: "Public pricing page", essentials: "—", growth: "—", org: "—", status: "Absent", evidence: "No /pricing route; no price string anywhere in public pages" },
+  { capability: "Public pricing page", essentials: "Live", growth: "Live", org: "Live", status: "Ready", evidence: "/pricing: three bundles, no package price, one published minimum, package CTAs routing to a conversation" },
   { capability: "No-signup interactive demo", essentials: "—", growth: "—", org: "—", status: "Partial", evidence: "LandingInteractivePreview is a scripted mock with fictional personas, not labelled as fictional and not linked as the primary CTA" },
 ];
 
@@ -113,10 +112,10 @@ export const CLAIMS = [
 
 export const GATES = [
   { gate: "1 — Inventory capabilities and access boundaries", status: "Done", note: "163 entities, 559 functions, 44 workflows, 125 pages, 87 routes classified in this audit" },
-  { gate: "2 — Define measurable entitlements", status: "Not started", note: "Matrix drafted here; still needs allowance fields and a counting rule per tenant" },
-  { gate: "3 — Validate technical enforcement", status: "Blocked", note: "No plan data exists to enforce. Requires a Client package field plus server-side checks" },
+  { gate: "2 — Define measurable entitlements", status: "Done", note: "Package, allowances, add-on capacity and enforcement mode on every tenant; one counting function returns the position" },
+  { gate: "3 — Validate technical enforcement", status: "Partial", note: "Invite, manual create and roster import are gated. Module gates — Signals, reviews/360, Talent — are still to build" },
   { gate: "4 — Test price/value with qualified prospects", status: "Not started", note: "10-prospect Essentials test; Growth stays quoting-only" },
-  { gate: "5 — Approve copy, CTAs and contractual language", status: "Blocked", note: "Two P0 claims and the unverified diagnostic duration must be resolved first" },
+  { gate: "5 — Approve copy, CTAs and contractual language", status: "Partial", note: "P0 claims corrected and duration removed; 360 is named on Growth before its flow is exercised" },
 ];
 
 export const PLAN = [
@@ -126,7 +125,7 @@ export const PLAN = [
     items: [
       "Correct the two P0 claims and label the demo as fictional sample data.",
       "Sell Essentials from an order form; provision tenants by hand using the existing Client record.",
-      "Write the acceptance definition and the capacity-block terms into the order form.",
+      "Write the acceptance definition and the three-bundle scope into the order form.",
     ],
   },
   {
@@ -142,8 +141,8 @@ export const PLAN = [
     window: "Weeks 4–6",
     focus: "Publish a narrow, enforceable offer",
     items: [
-      "Ship a pricing page that leads with Essentials and presents Growth as a conversation.",
-      "Add the no-signup demo as the primary CTA, clearly labelled fictional.",
+      "Ship a pricing page with three bundles, one published minimum and no package prices.",
+      "Keep the no-signup diagnostic one click from every package CTA, clearly labelled fictional.",
       "Instrument pricing views, package selection, demo starts and demo completions before launch.",
     ],
   },
@@ -153,25 +152,25 @@ export const PLAN = [
     items: [
       "Ten qualified prospects from one reachable segment, same offer, no exceptions.",
       "Track time-to-acceptance against the 5-hour implementation guardrail and Atreus cost per active manager.",
-      "Decide at day 90: hold price, change allowance, or change the boundary between Essentials and Growth.",
+      "Decide at day 90: hold the minimum, move a bundle boundary, or change what Growth includes.",
     ],
   },
 ];
 
 export const DECISIONS = [
   {
-    title: "Advertise one price, quote the other two",
-    body: "Essentials at $3,000 + $750 implementation is the only published number. Growth and Organization stay behind “find your package” until entitlement enforcement exists.",
+    title: "Publish one minimum, quote every package",
+    body: "The site carries a single number — $5,000 a year, varying by user count, organization size and corporate structure. No package shows a price; each CTA is “talk to us about [package]”.",
     tag: "Commercial",
   },
   {
     title: "Keep the manager experience whole in every tier",
-    body: "Check-ins, goals, 1:1s, reviews, 360s, assessment and Atreus stay in Essentials. Differentiation is scale, cross-team intelligence, automation, connectors and delivery — never the core manager loop.",
+    body: "Atreus, Lead, Team, Practice, Leadership Intelligence, check-ins and goals/KPIs/OKRs stay in Essentials. Differentiation is coverage: full performance and development in Growth, the talent bench in Organization.",
     tag: "Packaging",
   },
   {
-    title: "Add capacity blocks, not a fourth tier",
-    body: "The 11–30 manager buyer currently jumps from $3,000 to $7,200 for capacity alone. A $1,200 / +5 manager block keeps that deal, and Growth keeps a reason to exist beyond headcount.",
+    title: "Sell coverage, not seats",
+    body: "Capacity blocks and a package calculator were removed from the offer. They turned a decision into a configurator and invited nickel-and-diming; buyers now upgrade for capability, and population is handled in the quote.",
     tag: "Pricing",
   },
   {
@@ -193,7 +192,7 @@ export const TASKS = [
       { id: "1.1", task: "Replace “Evidence that judgment changed” with a claim the product supports", done: "No causal or proof language on any public page", owner: "Site copy" },
       { id: "1.2", task: "Qualify or replace the $319B–$398B / 50% statistic", done: "Source, year and population cited, or the statistic removed", owner: "Site copy" },
       { id: "1.3", task: "Label the interactive preview personas and scores as fictional samples", done: "Visible SAMPLE label at the point of use", owner: "Site copy" },
-      { id: "1.4", task: "Write order form v1: Essentials scope, capacity blocks, acceptance definition", done: "One document a prospect can sign without amendment", owner: "Commercial" },
+      { id: "1.4", task: "Write order form v1: three-bundle scope, the $5,000 minimum, acceptance definition", done: "One document a prospect can sign without amendment", owner: "Commercial" },
       { id: "1.5", task: "Shortlist ten qualified prospects, one segment, 3–10 managers each", done: "Ten named organisations with a named internal owner", owner: "Commercial" },
     ],
   },
@@ -209,8 +208,8 @@ export const TASKS = [
   {
     sprint: "Sprint 3 — Publish narrowly (weeks 4–6)",
     items: [
-      { id: "3.1", task: "Publish a pricing page: Essentials only, Growth as “talk to us”", done: "Page live with no Growth or Organization price shown", owner: "Site" },
-      { id: "3.2", task: "Make the no-signup demo the primary CTA, reachable from the persistent nav", done: "Demo linked on every public page", owner: "Site" },
+      { id: "3.1", task: "Publish a pricing page: three bundles, no package price, one published minimum", done: "Page live with no package price and the minimum stated once", owner: "Site" },
+      { id: "3.2", task: "Route every package CTA to the same conversation and keep Pricing in the persistent nav", done: "“Talk to us about [package]” on all three cards, diagnostic one click away", owner: "Site" },
       { id: "3.3", task: "Instrument pricing_view, package_select, demo_start, demo_complete, contact_request", done: "Events firing with package and page attached", owner: "Analytics" },
       { id: "3.4", task: "Turn the 90-Day Manager Launch into a runbook with the five-hour guardrail", done: "A per-implementation checklist that records actual hours", owner: "Delivery" },
     ],
@@ -228,12 +227,12 @@ export const TASKS = [
 
 export const DECISION_RULES = [
   {
-    signal: "Two or more of ten sign at list price, no discount",
-    read: "The offer holds; keep the price and finish the enforcement work.",
+    signal: "Two or more of ten sign at the quoted figure, no discount",
+    read: "The offer holds; keep the minimum and finish the bundle boundaries.",
   },
   {
-    signal: "Prospects disqualify themselves at the 10-manager line",
-    read: "The allowance is the objection, not the price: lead with the +5 manager block in the conversation.",
+    signal: "Every prospect asks for a number before the conversation",
+    read: "The minimum is doing its job as a floor: give the figure in writing, and stop short of a range.",
   },
   {
     signal: "Buyers want cross-team analytics but not more managers",
