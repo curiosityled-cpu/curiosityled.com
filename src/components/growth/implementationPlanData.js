@@ -82,7 +82,7 @@ export const WORKSTREAMS = [
   {
     id: "A",
     name: "Claims and trust",
-    state: "Not started",
+    state: "Shipped",
     order: "Step 1 — start now",
     effort: "2 days",
     depends: "Nothing",

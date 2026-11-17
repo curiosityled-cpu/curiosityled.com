@@ -22,7 +22,7 @@ export default function LandingBeyond({ industry }) {
 
   const label = b?.label || "Why it's different";
   const heading = b?.heading || "Not another tool. The layer that makes your tools produce evidence.";
-  const intro = b?.intro || "Skillsoft builds skills. Zensai delivers in Teams. Workday owns enterprise context. Curiosity Led owns the one thing they can't assemble: understanding of managerial judgment and evidence that it changed. It consolidates the point tools you're already paying for and makes them produce evidence instead of activity.";
+  const intro = b?.intro || "Skillsoft builds skills. Zensai delivers in Teams. Workday owns enterprise context. Curiosity Led owns the one thing they can't assemble: a record of what managers actually did — priorities set, 1:1s held, commitments closed — rather than what they attended.";
   const notList = b?.notList || defaultNotList;
   const isList = b?.isList || defaultIsList;
 

@@ -92,7 +92,7 @@ export const ENTITLEMENTS = [
   { capability: "Client-facing aggregated reporting with approval", essentials: "Included", growth: "Included", org: "Included", status: "Ready", evidence: "ReportBuilder sharing, getClientContext, aggregation audits" },
   { capability: "Standard implementation (kickoff, roster import, 3 check-in templates, 1 report layout, training, 30-day review)", essentials: "Scoped", growth: "Scoped", org: "Scoped", status: "Proposed", evidence: "Process, not software — no delivery template exists in the app yet" },
   { capability: "Tenant isolation and role-scoped access", essentials: "Included", growth: "Included", org: "Included", status: "Ready", evidence: "RLS on 163 entities; 37 reference Analyst, 23 subordinate scopes; tenant proof functions" },
-  { capability: "Plan / entitlement enforcement in product", essentials: "Partial", growth: "Partial", org: "Partial", status: "Partial", evidence: "Client carries package, allowances and enforcement_mode; invite and roster adds are gated. Module-level gates (Signals, reviews/360, Talent) are not built" },
+  { capability: "Plan / entitlement enforcement in product", essentials: "Partial", growth: "Partial", org: "Partial", status: "Partial", evidence: "Client carries package, allowances and enforcement_mode; invite and roster adds are gated. Package gate built for Signals, review launch and Talent activation; career paths and 360 still to gate" },
   { capability: "Manager and participant allowance counting", essentials: "Included", growth: "Included", org: "Included", status: "Ready", evidence: "getTenantAllowanceUsage plus tenantAllowance.ts; usage visible on the client record" },
   { capability: "AI consumption metering and allowance", essentials: "—", growth: "—", org: "—", status: "Absent", evidence: "No token or credit tracking around Atreus calls" },
   { capability: "Public pricing page", essentials: "Live", growth: "Live", org: "Live", status: "Ready", evidence: "/pricing: three bundles, no package price, one published minimum, package CTAs routing to a conversation" },
@@ -100,12 +100,12 @@ export const ENTITLEMENTS = [
 ];
 
 export const CLAIMS = [
-  { claim: "“Evidence that judgment changed”", where: "LandingAssessDevelopProve.jsx:92", state: "Unsubstantiated", risk: "P0", fix: "“Evidence of what managers did differently” and show the record type that supports it" },
-  { claim: "“$319B–$398B lost annually… 50% of employees have left a job to get away from their manager”", where: "LandingHero.jsx:237, LandingProblem.jsx:6", state: "Needs qualification", risk: "P0", fix: "Cite the 2015 Gallup source, population and wording, or replace with a sourced 2024+ figure" },
-  { claim: "“Consolidates 6–8 point tools into one layer”", where: "LandingBeyond.jsx:16", state: "Unsupported", risk: "P1", fix: "Name the specific tool categories the product replaces, or drop the count" },
-  { claim: "“Take the 8-minute diagnostic”", where: "LandingHero.jsx:104/118, LandingFinalCTA.jsx:12/20", state: "Unverified", risk: "P1", fix: "Time the live /diagnostic flow; publish the real duration or remove the number" },
-  { claim: "Fictional manager personas and scores presented as customer data", where: "LandingInteractivePreview.jsx", state: "Demo only", risk: "P1", fix: "Label SAMPLE at the point of use and name the demo as the primary CTA" },
-  { claim: "Teams / Slack / email write-back and Microsoft compliance", where: "Industry landing components", state: "Unverified", risk: "P1", fix: "Confirm what is shipped (Teams bot exists; Slack connector does not) before retaining" },
+  { claim: "“Evidence that judgment changed”", where: "LandingAssessDevelopProve.jsx:92", state: "Corrected", risk: "P0", fix: "Now reads “Evidence of what managers did differently”, with the record type shown beside it" },
+  { claim: "“$319B–$398B lost annually… 50% of employees have left a job to get away from their manager”", where: "LandingHero.jsx:240, LandingProblem.jsx:6", state: "Sourced", risk: "P0", fix: "Both places now attribute the figure to Gallup, 2015, US workforce. A newer source would be better than a corrected old one" },
+  { claim: "“Consolidates 6–8 point tools into one layer”", where: "LandingBeyond.jsx:25", state: "Removed", risk: "P1", fix: "The count and the consolidation claim are gone; the paragraph now describes the record the product keeps" },
+  { claim: "“Take the 8-minute diagnostic”", where: "LandingHero.jsx, LandingFinalCTA.jsx", state: "Removed", risk: "P1", fix: "No duration is published on any public page. Re-add a number only after a stopwatch run" },
+  { claim: "Fictional manager personas and scores presented as customer data", where: "LandingInteractivePreview.jsx:240", state: "Labelled", risk: "P1", fix: "A visible “Sample data” note sits at the point of use, above the personas" },
+  { claim: "Teams / Slack / email write-back and Microsoft compliance", where: "Industry landing components", state: "Qualified", risk: "P1", fix: "The Slack reference is gone; Teams and email are the shipped channels and the only ones named" },
   { claim: "Unlimited AI or Atreus usage", where: "Not currently published", state: "Must stay unpublished", risk: "P0 if added", fix: "Meter first; publish an explicit allowance only after unit economics are measured" },
   { claim: "Launch assurance: core workflow live within 15 business days", where: "Offer document only", state: "Proposed", risk: "P1", fix: "Operational and contractual review before it appears on the site" },
 ];
@@ -113,7 +113,7 @@ export const CLAIMS = [
 export const GATES = [
   { gate: "1 — Inventory capabilities and access boundaries", status: "Done", note: "163 entities, 559 functions, 44 workflows, 125 pages, 87 routes classified in this audit" },
   { gate: "2 — Define measurable entitlements", status: "Done", note: "Package, allowances, add-on capacity and enforcement mode on every tenant; one counting function returns the position" },
-  { gate: "3 — Validate technical enforcement", status: "Partial", note: "Invite, manual create and roster import are gated. Module gates — Signals, reviews/360, Talent — are still to build" },
+  { gate: "3 — Validate technical enforcement", status: "Partial", note: "Invite, manual create and roster import are gated, and packageEntitlements refuses Signals, review launch and Talent activation below their bundle. Career paths and the 360 flow are still to gate" },
   { gate: "4 — Test price/value with qualified prospects", status: "Not started", note: "10-prospect Essentials test; Growth stays quoting-only" },
   { gate: "5 — Approve copy, CTAs and contractual language", status: "Partial", note: "P0 claims corrected and duration removed; 360 is named on Growth before its flow is exercised" },
 ];
