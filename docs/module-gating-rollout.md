@@ -66,10 +66,22 @@ After the runs: `Client` count back to **4**, `ModuleGateLog` **0 rows**.
 
 ## 4. What is left
 
-1. **Assign packages — the only thing standing between the boundary and real
-   tenants.** All four tenants are still `package: unknown` in `warn` mode, and
-   `unknown` is permissive by design. Nothing is refused today. Decide each
-   tenant's package, then leave it a clean warn period before moving to `block`.
+1. **Packages are assigned; the warn period is not yet producing evidence.**
+   As of 17 Nov: Alpha `essentials`, Beta `growth`, Go Flat Bridge and HealthCo
+   `organization`, all in `warn` mode, so nothing is refused. Three things stand
+   between this and a warn report worth signing off:
+   - **Alpha has no audience.** All four registered users sit in Go Flat Bridge.
+     A warn period on Essentials produces rows only when someone in that tenant
+     reaches for a gated module, so Alpha needs its managers — or at least one
+     test manager — before the log means anything.
+   - **No allowances are set.** `manager_allowance` and `participant_allowance`
+     are blank on every tenant, which is permissive, so no capacity overage is
+     recorded either — only module attempts would be.
+   - **No timezone on Alpha or Beta.** `business_timezone` is set on Go Flat
+     Bridge and HealthCo only; date-sensitive succession writes reject without
+     it.
+   After a clean warn period, the flip to `block` is a tenant-record change, one
+   tenant at a time, starting with Alpha.
 2. **Read-level career paths.** The create rule requires the record's tenant to
    match the caller's, so a platform-wide default (`client_id: null`) can no
    longer be created or edited from a tenant screen. That is the correct
