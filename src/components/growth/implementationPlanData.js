@@ -25,7 +25,7 @@ export const SEQUENCE = [
   },
   {
     step: "Publish",
-    detail: "The pricing page shows one price. Growth stays quoting-only until cross-team analytics, trend windows and automation have real boundaries.",
+    detail: "The pricing page sells bundles, not list prices: Essentials, Growth, Organization and Studio, quoted from user count and structure with a $5,000 a year minimum.",
   },
   {
     step: "Prove",
@@ -59,7 +59,7 @@ export const MILESTONES = [
     id: "M4",
     gate: "After F",
     name: "A narrow offer is public",
-    unlock: "Pricing page live with Essentials only, demo as the primary CTA, events firing, and the 90-Day Launch runbook recording actual hours.",
+    unlock: "Pricing page live with the four bundles and no list price on any package, demo as the primary CTA, events firing, and the 90-Day Launch runbook recording actual hours.",
     proves: "The site and the delivery process match the order form.",
   },
   {
@@ -259,8 +259,8 @@ export const WORKSTREAMS = [
     tasks: [
       {
         id: "F1",
-        task: "Build a pricing page: Essentials priced, Growth as “find your package”, Organization as “talk to us”, capacity blocks shown as order-form line items.",
-        done: "One visible price; no tier priced that the product cannot enforce.",
+        task: "Build a pricing page around four module bundles — Essentials (Lead, Team, Practice, Leadership Intelligence), Growth (adds Development Manager and Performance Manager), Organization (adds Talent Manager) and Studio (compose your own) — with no price on any package and capacity blocks as order-form line items.",
+        done: "No bundle carries a list price; each names its modules; the $5,000 a year minimum is stated once and the quote follows user count and structure.",
         touch: "New page, public route",
       },
       {
@@ -417,8 +417,8 @@ export const DECISIONS = [
     why: "They are the only site changes I would make before anything else, and two days of work removes the largest credibility risk in the offer.",
   },
   {
-    decision: "Approve the capacity blocks ($1,200 / +5 managers, $600 / +100 participants)",
-    why: "They keep the 11–30 manager buyer on Essentials instead of forcing a Growth quote. The numbers are derived from your tier rates, not validated.",
+    decision: "Approve the four-bundle packaging (Essentials / Growth / Organization / Studio) and the $5,000 annual minimum",
+    why: "Bundles sell modules rather than prices, so the same page works for a 40-person and a 4,000-person buyer. Capacity blocks stay order-form line items keeping an 11–30 manager buyer on Essentials; block rates are derived from your tier rates and still need validating in the quote.",
   },
   {
     decision: "Confirm enforcement starts in warn mode",
