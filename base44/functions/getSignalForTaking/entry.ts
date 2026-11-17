@@ -1,6 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { stripAnswerKeys, canAccessSignal, flattenQuestions } from '../../shared/signalScoring.ts';
-import { tenantModuleAccess, packageRequiredResponse } from '../../shared/packageEntitlements.ts';
 
 /**
  * Returns a signal (quiz / knowledge check / assessment) to the person taking it,
@@ -23,10 +22,6 @@ export default async function (req) {
     if (!canAccessSignal(assessment, user)) {
       return Response.json({ error: 'You do not have access to this signal' }, { status: 403 });
     }
-
-    // Signals sit in Growth and above — the package boundary the site sells.
-    const access = await tenantModuleAccess(base44, assessment.client_id, 'signals');
-    if (!access.allowed) return packageRequiredResponse(access);
 
     const questions = flattenQuestions(assessment.config);
 

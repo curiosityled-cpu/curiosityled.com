@@ -52,7 +52,7 @@ const MOCKUP_CONTENT = [
   <div key="03" className="space-y-2">
     <div className="text-xs text-gray-500 mb-2">Active touchpoints — this week</div>
     {[
-      { icon: "📬", label: "Teams nudge sent", sub: "Decision-making tip", time: "2h ago", done: true },
+      { icon: "📬", label: "Slack nudge sent", sub: "Decision-making tip", time: "2h ago", done: true },
       { icon: "📚", label: "Module unlocked", sub: "Conflict Resolution 101", time: "Yesterday", done: true },
       { icon: "🗓", label: "Coaching session", sub: "Confirmed for Thursday 2pm", time: "Upcoming", done: false },
       { icon: "🎯", label: "Goal check-in", sub: "30-day milestone due", time: "In 3 days", done: false },

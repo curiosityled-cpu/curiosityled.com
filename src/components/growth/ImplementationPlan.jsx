@@ -11,8 +11,6 @@ import {
   DECISIONS,
 } from "./implementationPlanData";
 
-const STATE_TONE = { Shipped: "good", "In progress": "warning", "Not started": "default" };
-
 function Workstream({ ws }) {
   return (
     <div className="space-y-3">
@@ -21,7 +19,6 @@ function Workstream({ ws }) {
           {ws.id} · {ws.name}
         </h3>
         <div className="flex flex-wrap items-center gap-1.5">
-          {ws.state && <Tag tone={STATE_TONE[ws.state] || "default"}>{ws.state}</Tag>}
           <Tag tone="default">{ws.order}</Tag>
           <Tag tone="accent">{ws.effort}</Tag>
           <Tag tone={ws.depends === "Nothing" || ws.depends === "None" ? "good" : "warning"}>
