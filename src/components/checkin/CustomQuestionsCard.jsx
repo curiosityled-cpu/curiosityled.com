@@ -22,7 +22,7 @@ function NumberInput({ q, value, onChange }) {
           onChange(e.target.value === "" ? "" : Number(e.target.value))
         }
         placeholder="0"
-        className="flex-1 text-sm text-foreground bg-muted/40 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
+        className="flex-1 text-sm bg-muted/40 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
       />
       {q.unit_label && (
         <span className="text-xs text-muted-foreground flex-shrink-0">
@@ -40,7 +40,7 @@ function TextInput({ value, onChange }) {
       value={value ?? ""}
       onChange={(e) => onChange(e.target.value)}
       placeholder="Type your answer…"
-      className="w-full text-sm text-foreground bg-muted/40 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
+      className="w-full text-sm bg-muted/40 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
     />
   );
 }
