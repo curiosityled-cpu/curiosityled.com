@@ -92,6 +92,10 @@ export default function RetroactiveCheckInCard({ initialDate, initialType, editM
   const [customAnswers, setCustomAnswers] = useState({});
   const [saving, setSaving] = useState(false);
   const [existingForDate, setExistingForDate] = useState(null);
+  // Exact prompt wording recorded for the selected day+type (questions_used),
+  // keyed by question_key, so an AI-generated question shows the wording that
+  // was actually used that day instead of a newly generated one.
+  const [savedTexts, setSavedTexts] = useState({});
 
   // Load org config (lookback + preset) and custom questions
   useEffect(() => {
@@ -180,15 +184,47 @@ export default function RetroactiveCheckInCard({ initialDate, initialType, editM
             growth: match.growth_note || "",
           });
           setCustomAnswers(match.custom_answers || {});
+          setSavedTexts(match.questions_used || {});
+        } else {
+          setSavedTexts({});
         }
       } catch {
-        if (!cancelled) setExistingForDate(null);
+        if (!cancelled) {
+          setExistingForDate(null);
+          setSavedTexts({});
+        }
       }
     })();
     return () => {
       cancelled = true;
     };
   }, [userEmail, selectedDate]);
+
+  // Backfilling for someone else: their records are owner-only, so the saved
+  // prompt wording comes through the reporting-tree reader.
+  useEffect(() => {
+    let cancelled = false;
+    if (!targetEmail) return;
+    (async () => {
+      try {
+        const res = await base44.functions.invoke("getCheckInHistory", {});
+        const rows = (res?.data || res)?.check_ins || [];
+        const match = rows.find(
+          (r) =>
+            String(r.owner_email || r.user_email || "").toLowerCase() ===
+              targetEmail.toLowerCase() &&
+            r.check_in_date === selectedDate &&
+            r.check_in_type === checkInType
+        );
+        if (!cancelled) setSavedTexts(match?.questions_used || {});
+      } catch {
+        if (!cancelled) setSavedTexts({});
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [targetEmail, selectedDate, checkInType]);
 
   if (loading) {
     return (
@@ -212,6 +248,23 @@ export default function RetroactiveCheckInCard({ initialDate, initialType, editM
     (checkInType === "morning" && existingForDate?.morning_completed) ||
     (checkInType === "evening" && existingForDate?.evening_completed);
 
+  // The prompt wording shown for an AI-generated question: the wording saved
+  // for this day when it exists, otherwise the question's standard label.
+  const promptFor = (q) =>
+    q.is_ai_generated ? savedTexts[q.question_key] || q.title : q.title;
+
+  // Snapshot what was shown into questions_used, so history keeps the exact
+  // wording even when this day had no saved prompt.
+  const aiTextsToSave = Object.fromEntries(
+    applicableCustomQs
+      .filter((q) => q.is_ai_generated)
+      .map((q) => [q.question_key, promptFor(q)])
+      .filter(([, text]) => !!text)
+  );
+  const questionsUsed = Object.keys(aiTextsToSave).length
+    ? { ...(existingForDate?.questions_used || {}), ...aiTextsToSave }
+    : undefined;
+
   const handleSave = async () => {
     if (!userEmail) {
       toast.error("Sign in to save a check-in.");
@@ -231,6 +284,7 @@ export default function RetroactiveCheckInCard({ initialDate, initialType, editM
           notes,
           custom_answers:
             applicableCustomQs.length > 0 ? customAnswers : undefined,
+          questions_used: questionsUsed,
         });
         toast.success(
           `Check-in saved for ${targetName || formatDateLabel(selectedDate)}.`
@@ -250,6 +304,7 @@ export default function RetroactiveCheckInCard({ initialDate, initialType, editM
         growth_score: scores.growth,
         growth_note: notes.growth || "",
         ...(applicableCustomQs.length > 0 ? { custom_answers: customAnswers } : {}),
+        ...(questionsUsed ? { questions_used: questionsUsed } : {}),
       };
       const now = new Date().toISOString();
       if (checkInType === "morning") {
@@ -378,7 +433,22 @@ export default function RetroactiveCheckInCard({ initialDate, initialType, editM
             </p>
             {applicableCustomQs.map((q) => (
               <div key={q.id || q.question_key} className="space-y-1.5">
-                <p className="text-sm font-medium text-foreground">{q.title}</p>
+                {q.is_ai_generated && (
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    {savedTexts[q.question_key]
+                      ? `${q.title} · ${formatDateLabel(selectedDate)}`
+                      : `Prompt · ${formatDateLabel(selectedDate)}`}
+                  </p>
+                )}
+                <p className="text-sm font-medium text-foreground">
+                  {promptFor(q)}
+                </p>
+                {q.is_ai_generated && !savedTexts[q.question_key] && (
+                  <p className="text-[10px] text-amber-600">
+                    The original AI wording for this day wasn't saved — the
+                    standard prompt is shown.
+                  </p>
+                )}
                 {q.response_type === "number" && (
                   <div className="flex items-center gap-2">
                     <Input

@@ -10,10 +10,12 @@
  *   - the target's manager (User.data.manager_email match, or the target is in
  *     the caller's subordinate_emails).
  *
- * Body: { target_email, check_in_date, check_in_type, scores, notes, custom_answers }
+ * Body: { target_email, check_in_date, check_in_type, scores, notes, custom_answers, questions_used }
  *   - scores: { energy, confidence, focus, load, growth } (1–5)
  *   - notes:  { energy, confidence, focus, load, growth } (strings)
  *   - custom_answers: { [question_key]: value }
+ *   - questions_used: { [question_key]: question text } — the exact prompt
+ *     wording shown, kept so history reads the wording used that day.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { buildAudienceSnapshot } from '../../shared/roleTargeting.ts';
@@ -29,6 +31,7 @@ Deno.serve(async (req) => {
       scores = {},
       notes = {},
       custom_answers,
+      questions_used,
     } = body;
 
     if (!target_email || !check_in_date || !check_in_type) {
@@ -132,6 +135,12 @@ Deno.serve(async (req) => {
       growth_score: scores.growth,
       growth_note: notes.growth || '',
     };
+    if (questions_used && Object.keys(questions_used).length > 0) {
+      scorePayload.questions_used = {
+        ...(existing?.questions_used || {}),
+        ...questions_used,
+      };
+    }
     if (custom_answers && Object.keys(custom_answers).length > 0) {
       scorePayload.custom_answers = custom_answers;
       // Snapshot the person's role profile with their answers so role-scoped
