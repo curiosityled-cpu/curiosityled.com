@@ -10,6 +10,7 @@ import { TrendingUp, TrendingDown, Minus, Target, ArrowRight, Compass, BookOpen,
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { Progress } from "@/components/ui/progress";
 
 const DIRECTION_ICONS = {
@@ -67,6 +68,7 @@ function SectionLink({ to, label }) {
 
 export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals = [] }) {
   const { user } = useAuth();
+  const activeClientId = useActiveClientId();
   const [kpiExpanded, setKpiExpanded] = useState(() => {
     try { const s = localStorage.getItem("cl_collapse_scorecard_kpi"); return s !== null ? JSON.parse(s) : true; } catch { return true; }
   });
@@ -81,14 +83,15 @@ export default function TalentScorecard({ kpis = [], cascadedGoals = [], goals =
   });
 
   const { data: devStats = { journeys: 0, learning: 0, experiences: 0 } } = useQuery({
-    queryKey: ['dev-stats', user?.email],
+    queryKey: ['dev-stats', user?.email, activeClientId],
     queryFn: async () => {
       if (!user?.email) return { journeys: 0, learning: 0, experiences: 0 };
       try {
+        const scope = activeClientId ? { client_id: activeClientId } : {};
         const [plans, assigned, exps] = await Promise.all([
-          base44.entities.DevelopmentPlan.filter({ status: { $in: ["active", "paused"] } }),
-          base44.entities.AssignedLearning.filter({ user_email: user.email, status: { $ne: "completed" } }),
-          base44.entities.DevelopmentExperience.filter({ user_email: user.email }),
+          base44.entities.DevelopmentPlan.filter({ ...scope, user_email: user.email, status: { $in: ["active", "paused"] } }),
+          base44.entities.AssignedLearning.filter({ ...scope, user_email: user.email, status: { $ne: "completed" } }),
+          base44.entities.DevelopmentExperience.filter({ ...scope, user_email: user.email }),
         ]);
         return { journeys: plans.length, learning: assigned.length, experiences: exps.length };
       } catch {

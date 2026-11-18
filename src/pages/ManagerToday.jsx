@@ -33,6 +33,7 @@ import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
 import TalentScorecard from "@/components/lead/TalentScoreCard";
 import DecisionJournalCard from "@/components/lead/DecisionJournalCard";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 
 // Patterns imports
 import LeadershipNarrativeCard from "@/components/patterns/LeadershipNarrativeCard";
@@ -50,6 +51,7 @@ function getFirstName(user) {
 
 export default function ManagerToday() {
   const { user } = useAuth();
+  const activeClientId = useActiveClientId();
   const queryClient = useQueryClient();
   const { openWithContext } = useAtreusChat();
   const { preset, presetId, client: clientOrg } = useManagerPreferences();
@@ -177,12 +179,13 @@ export default function ManagerToday() {
   });
 
   const { data: goals = [] } = useQuery({
-    queryKey: ['ml-goals', user?.email],
+    queryKey: ['ml-goals', user?.email, activeClientId],
     queryFn: async () => {
       try {
-        const byCreator = await base44.entities.Goal.filter({ created_by: user.email, status: 'active' }, '-created_date', 15);
+        const scope = activeClientId ? { client_id: activeClientId } : {};
+        const byCreator = await base44.entities.Goal.filter({ ...scope, created_by: user.email, status: 'active' }, '-created_date', 15);
         if (byCreator.length > 0) return byCreator;
-        return await base44.entities.Goal.filter({ assigned_to_emails: { $in: [user.email] }, status: 'active' }, '-created_date', 15);
+        return await base44.entities.Goal.filter({ ...scope, assigned_to_emails: { $in: [user.email] }, status: 'active' }, '-created_date', 15);
       } catch { return []; }
     },
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
@@ -327,16 +330,22 @@ export default function ManagerToday() {
   };
 
   const { data: kpis = [] } = useQuery({
-    queryKey: ['ml-kpis', user?.email],
-    queryFn: async () => { try { return await base44.entities.KPI.filter({ status: "active" }, "-updated_date", 10); } catch { return []; } },
+    queryKey: ['ml-kpis', user?.email, activeClientId],
+    queryFn: async () => {
+      try {
+        const scope = activeClientId ? { client_id: activeClientId } : {};
+        return await base44.entities.KPI.filter({ ...scope, owner_email: user.email, status: "active" }, "-updated_date", 10);
+      } catch { return []; }
+    },
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
   const { data: cascadedGoals = [] } = useQuery({
-    queryKey: ['ml-cascaded-goals', user?.email],
+    queryKey: ['ml-cascaded-goals', user?.email, activeClientId],
     queryFn: async () => {
       try {
-        const allShared = await base44.entities.Goal.filter({ visibility: "shared", status: "active" }, "-updated_date", 10);
+        const scope = activeClientId ? { client_id: activeClientId } : {};
+        const allShared = await base44.entities.Goal.filter({ ...scope, visibility: "shared", status: "active" }, "-updated_date", 10);
         return allShared.filter(g => g.created_by !== user?.email);
       } catch { return []; }
     },
