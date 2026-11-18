@@ -75,18 +75,26 @@ export default function LeadershipIntelligenceHub() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Insights and assessments are read for the active tenant only, so a new
+  // organisation starts from a blank slate and never inherits another tenant's
+  // leadership history. Anything recorded from here on is stamped with the
+  // tenant on write, so it flows straight back into this view.
   const { data: insightsList = [], isLoading: loadingInsights } = useQuery({
     queryKey: ['exec-insights', clientId],
-    queryFn: () => base44.entities.AssessmentInsights.list('-created_date', 500).catch(() => []),
-    enabled: !!user,
+    queryFn: () => clientId
+      ? base44.entities.AssessmentInsights.filter({ client_id: clientId }, '-created_date', 500).catch(() => [])
+      : [],
+    enabled: !!user && !!clientId,
     staleTime: 5 * 60 * 1000,
   });
 
   // Pull assessments — RLS scopes to org for Analyst role
   const { data: allAssessments = [], isLoading: loadingAssessments } = useQuery({
     queryKey: ['exec-assessments', clientId],
-    queryFn: () => base44.entities.Assessment.list('-created_date', 500).catch(() => []),
-    enabled: !!user,
+    queryFn: () => clientId
+      ? base44.entities.Assessment.filter({ client_id: clientId }, '-created_date', 500).catch(() => [])
+      : [],
+    enabled: !!user && !!clientId,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -112,6 +120,11 @@ export default function LeadershipIntelligenceHub() {
       }
       return acc;
     }, {});
+
+    // A tenant with no leadership signals yet reads as a blank slate rather
+    // than a wall of zeros.
+    const hasAnyData = population.some(m => insightMap[m.email] || assessmentMap[m.email]);
+    if (!hasAnyData) return null;
 
     let atRisk = 0, developing = 0, onTrack = 0, noData = 0;
     population.forEach(m => {
