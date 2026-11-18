@@ -1,16 +1,15 @@
 /**
  * DevelopmentProgressCard — compact split view of the manager's own development.
- * Left: overall completion snapshot. Right: a scrollable list of experiences
- * ranked by urgency; the card stays sized to about five rows. Selecting a row
- * opens the full details of that item.
+ * Left: overall completion snapshot. Right: the few experiences that are due
+ * soon, overdue, or closest to done, ranked by urgency.
  */
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Layers, ChevronRight } from "lucide-react";
 import useMyLearning from "@/hooks/useMyLearning";
-import DevelopmentItemDetailDialog from "@/components/practice/DevelopmentItemDetailDialog";
 
 const DAY_MS = 86400000;
+const MAX_ROWS = 5;
 const DUE_SOON_DAYS = 14;
 const NEARLY_DONE = 60;
 
@@ -43,9 +42,8 @@ function rankOf(row) {
 
 export default function DevelopmentProgressCard() {
   const { items, loading } = useMyLearning();
-  const [selected, setSelected] = useState(null);
 
-  const { active, overall, rows, dueSoonCount } = useMemo(() => {
+  const { active, overall, selected, dueSoonCount } = useMemo(() => {
     const live = (items || [])
       .filter((item) => item.status !== "completed")
       .map((item) => ({ ...item, days: daysUntil(item.due_date), percent: Math.round(item.percent || 0) }));
@@ -64,19 +62,19 @@ export default function DevelopmentProgressCard() {
     return {
       active: live,
       overall: live.length ? Math.round(totalPercent / live.length) : 0,
-      rows: ranked,
+      selected: ranked.slice(0, MAX_ROWS),
       dueSoonCount: live.filter((item) => item.days !== null && item.days <= DUE_SOON_DAYS).length,
     };
   }, [items]);
 
   return (
-    <div className="bg-card border border-border rounded-2xl overflow-hidden flex flex-col h-full min-h-[176px]">
+    <div className="bg-card border border-border rounded-2xl overflow-hidden">
       <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border">
         <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/40 flex items-center justify-center flex-shrink-0">
           <Layers className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-300" />
         </div>
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex-1">
-          Development
+          Your Development
         </p>
         <Link
           to="/my-development"
@@ -87,22 +85,24 @@ export default function DevelopmentProgressCard() {
       </div>
 
       {loading ? (
-        <div className="px-4 py-4 flex-1">
+        <div className="px-4 py-4">
           <div className="h-16 rounded-lg bg-muted animate-pulse" />
         </div>
       ) : active.length === 0 ? (
-        <div className="px-4 py-4 flex-1 flex flex-col items-center justify-center text-center">
+        <div className="px-4 py-4 text-center">
           <p className="text-xs font-medium text-foreground">Nothing in progress yet</p>
           <p className="text-[11px] text-muted-foreground mt-0.5">
             Journeys and courses assigned to you will show here.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-[92px_1fr] flex-1 min-h-0">
+        <div className="grid grid-cols-[92px_1fr]">
           <div className="px-3 py-3 border-r border-border flex flex-col items-center justify-center text-center">
             <p className="text-2xl font-extrabold text-foreground leading-none">{overall}%</p>
             <p className="text-[10px] font-medium text-muted-foreground mt-1">complete</p>
-            <p className="text-[10px] text-muted-foreground mt-1.5">{active.length} active</p>
+            <p className="text-[10px] text-muted-foreground mt-1.5">
+              {active.length} active
+            </p>
             {dueSoonCount > 0 && (
               <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 mt-1">
                 {dueSoonCount} due soon
@@ -110,18 +110,18 @@ export default function DevelopmentProgressCard() {
             )}
           </div>
 
-          <div className="overflow-y-auto divide-y divide-border">
-            {rows.map((item) => {
+          <div className="divide-y divide-border">
+            {selected.map((item) => {
               const due = dueLabel(item.days);
               const chip = due || (item.percent > 0
                 ? { text: `${item.percent}%`, tone: "muted" }
                 : null);
+              const to = item.launch?.to || "/my-development";
               return (
-                <button
+                <Link
                   key={item.id}
-                  type="button"
-                  onClick={() => setSelected(item)}
-                  className="block w-full text-left px-3 py-2 hover:bg-muted/40 transition-colors"
+                  to={to}
+                  className="block px-3 py-2 hover:bg-muted/40 transition-colors"
                 >
                   <div className="flex items-center gap-2">
                     <p className="text-xs font-medium text-foreground truncate flex-1">
@@ -145,14 +145,12 @@ export default function DevelopmentProgressCard() {
                       />
                     </div>
                   )}
-                </button>
+                </Link>
               );
             })}
           </div>
         </div>
       )}
-
-      <DevelopmentItemDetailDialog item={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }
