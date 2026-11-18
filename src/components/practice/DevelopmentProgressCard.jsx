@@ -70,7 +70,7 @@ export default function DevelopmentProgressCard() {
   }, [items]);
 
   return (
-    <div className="bg-card border border-border rounded-2xl overflow-hidden">
+    <div className="bg-card border border-border rounded-2xl overflow-hidden flex flex-col h-full min-h-[176px]">
       <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border">
         <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/40 flex items-center justify-center flex-shrink-0">
           <Layers className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-300" />
@@ -87,18 +87,18 @@ export default function DevelopmentProgressCard() {
       </div>
 
       {loading ? (
-        <div className="px-4 py-4">
+        <div className="px-4 py-4 flex-1">
           <div className="h-16 rounded-lg bg-muted animate-pulse" />
         </div>
       ) : active.length === 0 ? (
-        <div className="px-4 py-4 text-center">
+        <div className="px-4 py-4 flex-1 flex flex-col items-center justify-center text-center">
           <p className="text-xs font-medium text-foreground">Nothing in progress yet</p>
           <p className="text-[11px] text-muted-foreground mt-0.5">
             Journeys and courses assigned to you will show here.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-[92px_1fr]">
+        <div className="grid grid-cols-[92px_1fr] flex-1 min-h-0">
           <div className="px-3 py-3 border-r border-border flex flex-col items-center justify-center text-center">
             <p className="text-2xl font-extrabold text-foreground leading-none">{overall}%</p>
             <p className="text-[10px] font-medium text-muted-foreground mt-1">complete</p>
@@ -110,7 +110,7 @@ export default function DevelopmentProgressCard() {
             )}
           </div>
 
-          <div className="max-h-[208px] overflow-y-auto divide-y divide-border">
+          <div className="overflow-y-auto divide-y divide-border">
             {rows.map((item) => {
               const due = dueLabel(item.days);
               const chip = due || (item.percent > 0

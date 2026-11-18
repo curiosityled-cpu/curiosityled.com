@@ -245,17 +245,20 @@ export default function ManagerPractice() {
 
       {/* ── Main grid: Action zone (left) | Context sidebar (right) ── */}
       {!activeFlow && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-          {/* Left — Action zone */}
-          <div className="space-y-4">
-            <PrescribedPracticeCard
-              crossToolData={crossToolData}
-              bpoPatterns={bpoPatterns}
-              trends={trends}
-              recentSessionIds={recentSessionIds}
-              onSessionLogged={handleSessionLogged}
-            />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Row 1 — prescribed practice sits beside development so both share a height */}
+          <PrescribedPracticeCard
+            crossToolData={crossToolData}
+            bpoPatterns={bpoPatterns}
+            trends={trends}
+            recentSessionIds={recentSessionIds}
+            onSessionLogged={handleSessionLogged}
+          />
 
+          <DevelopmentProgressCard />
+
+          {/* Left — Action zone */}
+          <div className="space-y-4 self-start">
             <CoachingFlowsCard onStartFlow={handleStartFlow} />
 
             {/* Leadership Tools */}
@@ -304,8 +307,6 @@ export default function ManagerPractice() {
 
           {/* Right — Context sidebar */}
           <div className="space-y-4 md:sticky md:top-20 md:self-start">
-            <DevelopmentProgressCard />
-
             <div className="space-y-2">
               <div className="px-1 pt-1">
                 <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
