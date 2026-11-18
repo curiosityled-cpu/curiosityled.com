@@ -1,15 +1,16 @@
 /**
  * DevelopmentProgressCard — compact split view of the manager's own development.
- * Left: overall completion snapshot. Right: the few experiences that are due
- * soon, overdue, or closest to done, ranked by urgency.
+ * Left: overall completion snapshot. Right: a scrollable list of experiences
+ * ranked by urgency; the card stays sized to about five rows. Selecting a row
+ * opens the full details of that item.
  */
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Layers, ChevronRight } from "lucide-react";
 import useMyLearning from "@/hooks/useMyLearning";
+import DevelopmentItemDetailDialog from "@/components/practice/DevelopmentItemDetailDialog";
 
 const DAY_MS = 86400000;
-const MAX_ROWS = 5;
 const DUE_SOON_DAYS = 14;
 const NEARLY_DONE = 60;
 
@@ -42,8 +43,9 @@ function rankOf(row) {
 
 export default function DevelopmentProgressCard() {
   const { items, loading } = useMyLearning();
+  const [selected, setSelected] = useState(null);
 
-  const { active, overall, selected, dueSoonCount } = useMemo(() => {
+  const { active, overall, rows, dueSoonCount } = useMemo(() => {
     const live = (items || [])
       .filter((item) => item.status !== "completed")
       .map((item) => ({ ...item, days: daysUntil(item.due_date), percent: Math.round(item.percent || 0) }));
@@ -62,7 +64,7 @@ export default function DevelopmentProgressCard() {
     return {
       active: live,
       overall: live.length ? Math.round(totalPercent / live.length) : 0,
-      selected: ranked.slice(0, MAX_ROWS),
+      rows: ranked,
       dueSoonCount: live.filter((item) => item.days !== null && item.days <= DUE_SOON_DAYS).length,
     };
   }, [items]);
@@ -74,7 +76,7 @@ export default function DevelopmentProgressCard() {
           <Layers className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-300" />
         </div>
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex-1">
-          Your Development
+          Development
         </p>
         <Link
           to="/my-development"
@@ -100,9 +102,7 @@ export default function DevelopmentProgressCard() {
           <div className="px-3 py-3 border-r border-border flex flex-col items-center justify-center text-center">
             <p className="text-2xl font-extrabold text-foreground leading-none">{overall}%</p>
             <p className="text-[10px] font-medium text-muted-foreground mt-1">complete</p>
-            <p className="text-[10px] text-muted-foreground mt-1.5">
-              {active.length} active
-            </p>
+            <p className="text-[10px] text-muted-foreground mt-1.5">{active.length} active</p>
             {dueSoonCount > 0 && (
               <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 mt-1">
                 {dueSoonCount} due soon
@@ -110,18 +110,18 @@ export default function DevelopmentProgressCard() {
             )}
           </div>
 
-          <div className="divide-y divide-border">
-            {selected.map((item) => {
+          <div className="max-h-[208px] overflow-y-auto divide-y divide-border">
+            {rows.map((item) => {
               const due = dueLabel(item.days);
               const chip = due || (item.percent > 0
                 ? { text: `${item.percent}%`, tone: "muted" }
                 : null);
-              const to = item.launch?.to || "/my-development";
               return (
-                <Link
+                <button
                   key={item.id}
-                  to={to}
-                  className="block px-3 py-2 hover:bg-muted/40 transition-colors"
+                  type="button"
+                  onClick={() => setSelected(item)}
+                  className="block w-full text-left px-3 py-2 hover:bg-muted/40 transition-colors"
                 >
                   <div className="flex items-center gap-2">
                     <p className="text-xs font-medium text-foreground truncate flex-1">
@@ -145,12 +145,14 @@ export default function DevelopmentProgressCard() {
                       />
                     </div>
                   )}
-                </Link>
+                </button>
               );
             })}
           </div>
         </div>
       )}
+
+      <DevelopmentItemDetailDialog item={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }
