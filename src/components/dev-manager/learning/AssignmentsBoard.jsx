@@ -80,22 +80,22 @@ export default function AssignmentsBoard({ user }) {
 
   const loadCounts = useCallback(async () => {
     const [overdue, dueSoon, notStarted, inProgress, completed] = await Promise.all([
-      safe(base44.entities.CourseProgress.count({ due_date: { $lt: today() }, status: { $ne: "completed" } }), 0),
-      safe(base44.entities.CourseProgress.count({ due_date: { $gte: today(), $lte: inDays(14) }, status: { $ne: "completed" } }), 0),
-      safe(base44.entities.CourseProgress.count({ status: "not_started" }), 0),
-      safe(base44.entities.CourseProgress.count({ status: "in_progress" }), 0),
-      safe(base44.entities.CourseProgress.count({ status: "completed" }), 0),
+      safe(base44.entities.CourseProgress.count({ client_id: activeClientId, due_date: { $lt: today() }, status: { $ne: "completed" } }), 0),
+      safe(base44.entities.CourseProgress.count({ client_id: activeClientId, due_date: { $gte: today(), $lte: inDays(14) }, status: { $ne: "completed" } }), 0),
+      safe(base44.entities.CourseProgress.count({ client_id: activeClientId, status: "not_started" }), 0),
+      safe(base44.entities.CourseProgress.count({ client_id: activeClientId, status: "in_progress" }), 0),
+      safe(base44.entities.CourseProgress.count({ client_id: activeClientId, status: "completed" }), 0),
     ]);
     setCounts({ overdue, due_soon: dueSoon, not_started: notStarted, in_progress: inProgress, completed });
-  }, []);
+  }, [activeClientId]);
 
   const loadRows = useCallback(async () => {
     setLoading(true);
     try {
-      const page = await base44.entities.CourseProgress.filter(queryFor(filter, search), {
-        sort: "due_date",
-        limit: 100,
-      });
+      const page = await base44.entities.CourseProgress.filter(
+        { ...queryFor(filter, search), client_id: activeClientId },
+        { sort: "due_date", limit: 100 }
+      );
       setRows(asArray(page));
     } catch (error) {
       console.error("Could not load assignments", error);
@@ -103,7 +103,7 @@ export default function AssignmentsBoard({ user }) {
     } finally {
       setLoading(false);
     }
-  }, [filter, search]);
+  }, [filter, search, activeClientId]);
 
   useEffect(() => {
     loadCounts();

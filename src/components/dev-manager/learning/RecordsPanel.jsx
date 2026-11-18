@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import TranscriptTimeline from "./TranscriptTimeline";
 import CertificateRecordList from "@/components/learning/CertificateRecordList";
 import { downloadRecordCsv } from "@/lib/learningRecordExport";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 
 const asArray = (result) => (Array.isArray(result) ? result : result?.items || []);
 const safe = (promise, fallback) => promise.catch(() => fallback);
@@ -19,6 +20,7 @@ const DATALIST_ID = "learning-record-learners";
  * packet an auditor asks for (a CSV of the record itself).
  */
 export default function RecordsPanel() {
+  const activeClientId = useActiveClientId();
   const [learners, setLearners] = useState([]);
   const [learner, setLearner] = useState("");
   const [events, setEvents] = useState([]);
@@ -28,12 +30,15 @@ export default function RecordsPanel() {
 
   useEffect(() => {
     (async () => {
-      const rows = await safe(base44.entities.CourseProgress.list({ distinct: "learner_email" }), []);
-      const emails = asArray(rows).filter(Boolean);
+      const rows = await safe(
+        base44.entities.CourseProgress.filter({ client_id: activeClientId }, { limit: 500 }),
+        []
+      );
+      const emails = [...new Set(asArray(rows).map((r) => r.learner_email).filter(Boolean))];
       setLearners(emails);
       if (emails.length > 0) setLearner(emails[0]);
     })();
-  }, []);
+  }, [activeClientId]);
 
   const load = useCallback(async (email) => {
     if (!email) return;

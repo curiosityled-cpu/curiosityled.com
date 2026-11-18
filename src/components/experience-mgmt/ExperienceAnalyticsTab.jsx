@@ -84,10 +84,10 @@ export default function ExperienceAnalyticsTab({ user, coacheeEmails, isCoachSco
     setLoading(true);
     try {
       const [allPlans, allAssignments, allExps, allResources, users, insights, assessments] = await Promise.all([
-        base44.entities.DevelopmentPlan.list("-created_date"),
-        base44.entities.AssignedLearning.list("-created_date"),
+        base44.entities.DevelopmentPlan.filter({ client_id: activeClientId }, "-created_date"),
+        base44.entities.AssignedLearning.filter({ client_id: activeClientId }, "-created_date"),
         base44.entities.DevelopmentExperience.filter({ client_id: activeClientId }, "-created_date"),
-        base44.entities.LearningResource.list("-created_date", 500),
+        base44.entities.LearningResource.filter({ client_id: activeClientId }, "-created_date", 500),
         base44.entities.User.filter({ client_id: activeClientId }),
         base44.entities.AssessmentInsights.filter({ client_id: activeClientId, status: 'generated' }),
         base44.entities.Assessment.filter({ client_id: activeClientId }, '-submission_ts'),

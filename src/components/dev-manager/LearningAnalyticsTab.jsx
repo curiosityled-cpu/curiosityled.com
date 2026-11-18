@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import LearningMetricsStrip from "@/components/dev-manager/learning/LearningMetricsStrip";
 import CourseCompletionTable from "@/components/dev-manager/learning/CourseCompletionTable";
 import ExternalLearningPanel from "@/components/dev-manager/learning/ExternalLearningPanel";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 
 const asArray = (result) => (Array.isArray(result) ? result : result?.items || []);
 const today = () => new Date().toISOString().slice(0, 10);
@@ -16,6 +17,7 @@ const safe = (promise, fallback) => promise.catch(() => fallback);
  * server rather than from loaded records.
  */
 export default function LearningAnalyticsTab() {
+  const activeClientId = useActiveClientId();
   const [state, setState] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -35,27 +37,28 @@ export default function LearningAnalyticsTab() {
         progressPage,
         externalPage,
       ] = await Promise.all([
-        safe(base44.entities.CourseProgress.count({}), 0),
-        safe(base44.entities.CourseProgress.count({ status: "completed" }), 0),
-        safe(base44.entities.CourseProgress.count({ status: "in_progress" }), 0),
+        safe(base44.entities.CourseProgress.count({ client_id: activeClientId }), 0),
+        safe(base44.entities.CourseProgress.count({ client_id: activeClientId, status: "completed" }), 0),
+        safe(base44.entities.CourseProgress.count({ client_id: activeClientId, status: "in_progress" }), 0),
         safe(
           base44.entities.CourseProgress.count({
+            client_id: activeClientId,
             due_date: { $lt: today() },
             status: { $ne: "completed" },
           }),
           0
         ),
-        safe(base44.entities.AssignedLearning.count({ status: "completed" }), 0),
-        safe(base44.entities.AssignedLearning.count({ status: { $ne: "completed" } }), 0),
-        safe(base44.entities.JourneyEnrollment.count({}), 0),
-        safe(base44.entities.JourneyEnrollment.count({ status: "completed" }), 0),
-        safe(base44.entities.ExternalLearningRecord.count({}), 0),
+        safe(base44.entities.AssignedLearning.count({ client_id: activeClientId, status: "completed" }), 0),
+        safe(base44.entities.AssignedLearning.count({ client_id: activeClientId, status: { $ne: "completed" } }), 0),
+        safe(base44.entities.JourneyEnrollment.count({ client_id: activeClientId }), 0),
+        safe(base44.entities.JourneyEnrollment.count({ client_id: activeClientId, status: "completed" }), 0),
+        safe(base44.entities.ExternalLearningRecord.count({ client_id: activeClientId }), 0),
         safe(
-          base44.entities.CourseProgress.filter({}, { sort: "-created_date", limit: 200 }),
+          base44.entities.CourseProgress.filter({ client_id: activeClientId }, { sort: "-created_date", limit: 200 }),
           []
         ),
         safe(
-          base44.entities.ExternalLearningRecord.filter({}, { sort: "-created_date", limit: 6 }),
+          base44.entities.ExternalLearningRecord.filter({ client_id: activeClientId }, { sort: "-created_date", limit: 6 }),
           []
         ),
       ]);
@@ -113,7 +116,7 @@ export default function LearningAnalyticsTab() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeClientId]);
 
   useEffect(() => {
     load();

@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Archive, Loader2, Lock, Unlock } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 
 const asArray = (result) => (Array.isArray(result) ? result : result?.items || []);
 const RETENTION_YEARS = 7;
@@ -19,6 +20,7 @@ const RETENTION_YEARS = 7;
  * learner's append-only record; nothing here deletes anything.
  */
 export default function RetentionPanel() {
+  const activeClientId = useActiveClientId();
   const [counts, setCounts] = useState({ completed: 0, held: 0, archived: 0 });
   const [held, setHeld] = useState([]);
   const [courses, setCourses] = useState([]);
@@ -35,13 +37,13 @@ export default function RetentionPanel() {
     setLoading(true);
     try {
       const [completed, onHold, archived, heldRows, courseRows] = await Promise.all([
-        base44.entities.CourseProgress.count({ status: "completed" }).catch(() => 0),
-        base44.entities.CourseProgress.count({ legal_hold: true }).catch(() => 0),
-        base44.entities.CourseProgress.count({ retention_state: "archived" }).catch(() => 0),
+        base44.entities.CourseProgress.count({ client_id: activeClientId, status: "completed" }).catch(() => 0),
+        base44.entities.CourseProgress.count({ client_id: activeClientId, legal_hold: true }).catch(() => 0),
+        base44.entities.CourseProgress.count({ client_id: activeClientId, retention_state: "archived" }).catch(() => 0),
         base44.entities.CourseProgress
-          .filter({ legal_hold: true }, { sort: "-legal_hold_set_at", limit: 20 })
+          .filter({ client_id: activeClientId, legal_hold: true }, { sort: "-legal_hold_set_at", limit: 20 })
           .catch(() => []),
-        base44.entities.Course.list({ sort: "-created_date", limit: 100 }).catch(() => []),
+        base44.entities.Course.filter({ client_id: activeClientId }, { sort: "-created_date", limit: 100 }).catch(() => []),
       ]);
       setCounts({ completed, held: onHold, archived });
       setHeld(asArray(heldRows));
@@ -49,7 +51,7 @@ export default function RetentionPanel() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeClientId]);
 
   useEffect(() => {
     load();

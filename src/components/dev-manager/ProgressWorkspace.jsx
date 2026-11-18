@@ -5,6 +5,7 @@ import AssignmentsBoard from "@/components/dev-manager/learning/AssignmentsBoard
 import RecordsPanel from "@/components/dev-manager/learning/RecordsPanel";
 import ResourceAssignmentsPanel from "@/components/dev-manager/learning/ResourceAssignmentsPanel";
 import RetentionPanel from "@/components/dev-manager/learning/RetentionPanel";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 
 /**
  * Progress is the consumption side of the house: it never creates or edits content.
@@ -17,16 +18,17 @@ const SEGMENTS = [
 ];
 
 export default function ProgressWorkspace({ user }) {
+  const activeClientId = useActiveClientId();
   const [segment, setSegment] = useState("assignments");
   const [overdue, setOverdue] = useState(0);
 
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
     base44.entities.CourseProgress
-      .count({ due_date: { $lt: today }, status: { $ne: "completed" } })
+      .count({ client_id: activeClientId, due_date: { $lt: today }, status: { $ne: "completed" } })
       .then(setOverdue)
       .catch(() => setOverdue(0));
-  }, []);
+  }, [activeClientId]);
 
   return (
     <div className="space-y-4">
