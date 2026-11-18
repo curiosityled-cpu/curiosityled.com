@@ -103,7 +103,7 @@ export default function JourneysTab({ user, coacheeEmails }) {
     setLoading(true);
     try {
       const [allJourneys, allUsers] = await Promise.all([
-        base44.entities.Journey.list("-created_date"),
+        base44.entities.Journey.filter({ client_id: activeClientId }, "-created_date"),
         base44.entities.User.filter({ client_id: activeClientId }),
       ]);
       setJourneys(allJourneys);
