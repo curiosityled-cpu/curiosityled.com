@@ -8,19 +8,23 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
+import { useClient } from "@/components/contexts/ClientContext";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function PerformanceMetricsRow() {
   const { user } = useAuth();
+  const { activeClientId } = useClient();
 
   const { data: metrics = { goals: 0, kpis: 0, okrs: 0 } } = useQuery({
-    queryKey: ['perf-metrics', user?.email],
+    queryKey: ['perf-metrics', user?.email, activeClientId],
     queryFn: async () => {
-      if (!user?.email) return { goals: 0, kpis: 0, okrs: 0 };
+      if (!user?.email || !activeClientId) return { goals: 0, kpis: 0, okrs: 0 };
       try {
+        // Always scoped to the active tenant — one organization's goals and KPIs
+        // must never surface inside another tenant.
         const [allGoals, kpis] = await Promise.all([
-          base44.entities.Goal.filter({ status: 'active' }, '-created_date', 50),
-          base44.entities.KPI.filter({ status: 'active' }, '-updated_date', 50),
+          base44.entities.Goal.filter({ client_id: activeClientId, status: 'active' }, '-created_date', 50),
+          base44.entities.KPI.filter({ client_id: activeClientId, status: 'active' }, '-updated_date', 50),
         ]);
 
         const myGoals = allGoals.filter(g =>
@@ -36,7 +40,7 @@ export default function PerformanceMetricsRow() {
         return { goals: 0, kpis: 0, okrs: 0 };
       }
     },
-    enabled: !!user?.email,
+    enabled: !!user?.email && !!activeClientId,
     staleTime: 5 * 60 * 1000,
   });
 

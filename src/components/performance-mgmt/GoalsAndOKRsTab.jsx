@@ -52,6 +52,7 @@ function ProgressBar({ value }) {
 // ─── Goals sub-view ────────────────────────────────────────────────────────────
 
 function GoalsView({ user, coacheeEmails, hideOkrs }) {
+  const { activeClientId } = useClient();
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -59,14 +60,21 @@ function GoalsView({ user, coacheeEmails, hideOkrs }) {
   const [showCreate, setShowCreate] = useState(false);
   const [editingGoal, setEditingGoal] = useState(null);
 
-  useEffect(() => { loadGoals(); }, [user?.email, coacheeEmails]);
+  useEffect(() => { loadGoals(); }, [user?.email, coacheeEmails, activeClientId]);
 
   const loadGoals = async () => {
+    // Leadership Coaches: only goals assigned to their coachees or coached by them
+    const scoped = (coacheeEmails || []).length > 0;
+    if (!scoped && !activeClientId) {
+      setGoals([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
-      const data = await base44.entities.Goal.list("-updated_date");
-      // Leadership Coaches: only goals assigned to their coachees or coached by them
-      const scoped = (coacheeEmails || []).length > 0;
+      const data = scoped
+        ? await base44.entities.Goal.list("-updated_date")
+        : await base44.entities.Goal.filter({ client_id: activeClientId }, "-updated_date");
       const visible = scoped
         ? data.filter(g =>
             (g.assigned_to_emails || []).some(e => coacheeEmails.includes(e)) ||
@@ -82,7 +90,7 @@ function GoalsView({ user, coacheeEmails, hideOkrs }) {
   };
 
   const handleCreate = async (goalData) => {
-    const newGoal = await base44.entities.Goal.create(goalData);
+    const newGoal = await base44.entities.Goal.create({ ...goalData, client_id: goalData.client_id || activeClientId });
     setGoals(prev => [newGoal, ...prev]);
     setShowCreate(false);
     toast.success("Goal created");
@@ -467,6 +475,7 @@ function KpiCard({ kpi, onEdit, onDelete, goals }) {
 }
 
 function KPIsView({ user }) {
+  const { activeClientId } = useClient();
   const [kpis, setKpis] = useState([]);
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -475,14 +484,20 @@ function KPIsView({ user }) {
   const [editingKpi, setEditingKpi] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
 
-  useEffect(() => { loadData(); }, [user?.email]);
+  useEffect(() => { loadData(); }, [user?.email, activeClientId]);
 
   const loadData = async () => {
+    if (!activeClientId) {
+      setKpis([]);
+      setGoals([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const [kpiData, goalData] = await Promise.all([
-        base44.entities.KPI.filter({ status: "active" }, "-updated_date"),
-        base44.entities.Goal.filter({ status: "active" }, "title")
+        base44.entities.KPI.filter({ client_id: activeClientId, status: "active" }, "-updated_date"),
+        base44.entities.Goal.filter({ client_id: activeClientId, status: "active" }, "title")
       ]);
       setKpis(kpiData);
       setGoals(goalData);
@@ -494,7 +509,7 @@ function KPIsView({ user }) {
   };
 
   const handleCreate = async (data) => {
-    const created = await base44.entities.KPI.create(data);
+    const created = await base44.entities.KPI.create({ ...data, client_id: data.client_id || activeClientId });
     setKpis(prev => [created, ...prev]);
     setShowCreate(false);
     toast.success("KPI created");
