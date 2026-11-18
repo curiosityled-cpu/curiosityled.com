@@ -145,7 +145,7 @@ export default function ManagerToday() {
       setCheckInHistory(loadCheckInHistory(user.email));
     }
 
-    queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
+    queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email, activeClientId] });
   };
 
   const { data: insight } = useQuery({
@@ -211,15 +211,19 @@ export default function ManagerToday() {
     enabled: !!user?.email, staleTime: 0, refetchOnMount: true,
   });
 
+  // Trends and pulses both feed the Patterns card, so they carry the tenant scope:
+  // a manager working across two organisations reads only the active one here.
+  const tenantScope = useMemo(() => (activeClientId ? { client_id: activeClientId } : {}), [activeClientId]);
+
   const { data: trends = null } = useQuery({
-    queryKey: ['ml-trends', user?.email],
-    queryFn: async () => { try { const rows = await base44.entities.ManagerTrends.filter({ user_email: user.email }, '-last_trend_computed_at', 1); return rows[0] || null; } catch { return null; } },
+    queryKey: ['ml-trends', user?.email, activeClientId],
+    queryFn: async () => { try { const rows = await base44.entities.ManagerTrends.filter({ ...tenantScope, user_email: user.email }, '-last_trend_computed_at', 1); return rows[0] || null; } catch { return null; } },
     enabled: !!user?.email, staleTime: 30 * 60 * 1000,
   });
 
   const { data: recentPulses = [] } = useQuery({
-    queryKey: ['ml-pulses', user?.email],
-    queryFn: async () => { try { return await base44.entities.ManagerPulse.filter({ user_email: user.email }, '-created_date', 50); } catch { return []; } },
+    queryKey: ['ml-pulses', user?.email, activeClientId],
+    queryFn: async () => { try { return await base44.entities.ManagerPulse.filter({ ...tenantScope, user_email: user.email }, '-created_date', 50); } catch { return []; } },
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
@@ -230,12 +234,12 @@ export default function ManagerToday() {
   });
 
   const { data: pendingDecisions = [], refetch: refetchDecisions } = useQuery({
-    queryKey: ['ml-pending-decisions', user?.email],
+    queryKey: ['ml-pending-decisions', user?.email, activeClientId],
     queryFn: async () => {
       if (!user?.email) return [];
       try {
         return await base44.entities.DecisionJournal.filter(
-          { user_email: user.email, status: 'committed' },
+          { ...tenantScope, user_email: user.email, status: 'committed' },
           '-created_date',
           50
         );
@@ -262,7 +266,7 @@ export default function ManagerToday() {
   );
 
   const { data: crossToolData = null } = useQuery({
-    queryKey: ['ml-cross-tool-patterns', user?.email],
+    queryKey: ['ml-cross-tool-patterns', user?.email, activeClientId],
     queryFn: async () => {
       try {
         const res = await base44.functions.invoke('getCrossToolPatterns', {
@@ -587,7 +591,7 @@ export default function ManagerToday() {
         isOpen={showWeeklyReflection}
         onClose={() => setShowWeeklyReflection(false)}
         onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email] });
+          queryClient.invalidateQueries({ queryKey: ['ml-pulses', user?.email, activeClientId] });
           queryClient.invalidateQueries({ queryKey: ['daily-checkin-history', user?.email] });
         }}
         userEmail={user?.email}
