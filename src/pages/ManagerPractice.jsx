@@ -30,6 +30,7 @@ import PracticeHeroHeader from "@/components/practice/PracticeHeroHeader";
 import PrescribedPracticeCard from "@/components/practice/PrescribedPracticeCard";
 import PracticeSessionsLog from "@/components/practice/PracticeSessionsLog";
 import AssessmentsCard from "@/components/practice/AssessmentsCard";
+import DevelopmentProgressCard from "@/components/practice/DevelopmentProgressCard";
 import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
 import PracticeSettings from "@/components/practice/PracticeSettings";
 import {
@@ -303,6 +304,8 @@ export default function ManagerPractice() {
 
           {/* Right — Context sidebar */}
           <div className="space-y-4 md:sticky md:top-20 md:self-start">
+            <DevelopmentProgressCard />
+
             <div className="space-y-2">
               <div className="px-1 pt-1">
                 <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
