@@ -21,6 +21,7 @@ import { useAtreusOrchestrator } from "@/components/ai/useAtreusOrchestrator";
 import { ChevronRight, MessageSquare, SlidersHorizontal, X, TrendingUp, Target, Lightbulb, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ToneOnboarding from "@/components/checkin/ToneOnboarding";
+import { isImpersonating } from "@/lib/impersonation";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
 import MorningCheckIn from "@/components/checkin/MorningCheckIn";
 import EveningCheckIn from "@/components/checkin/EveningCheckIn";
@@ -342,7 +343,9 @@ export default function ManagerToday() {
   // Only surface tone onboarding once the preference query has resolved —
   // otherwise the banner flashes on every load while tonePref is still null
   // during the initial fetch (the "old-style Atreus settings" flash).
-  const needsToneOnboarding = !tonePending && tonePref === null;
+  // Never during proxy-as-user: that person's missing preference is theirs to
+  // set, and the admin viewing their screen should not be prompted for it.
+  const needsToneOnboarding = !isImpersonating() && !tonePending && tonePref === null;
   const firstName = getFirstName(user);
   const hour = parseInt(new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/New_York', hour: 'numeric', hour12: false

@@ -19,6 +19,7 @@ import ManagerCheckIn from "@/components/checkin/ManagerCheckIn";
 import TrendSummaryCard from "@/components/checkin/TrendSummaryCard";
 import IntentLoopCard from "@/components/checkin/IntentLoopCard";
 import ToneOnboarding from "@/components/checkin/ToneOnboarding";
+import { isImpersonating } from "@/lib/impersonation";
 import CheckInSettings from "@/components/checkin/CheckInSettings";
 import WeeklyFocusReflection from "@/components/checkin/WeeklyFocusReflection";
 import DecisionJournal from "@/components/intelligence/DecisionJournal";
@@ -589,7 +590,10 @@ export default function MyLeadership() {
   // Tone onboarding needed if no TonePreference record exists yet.
   // Guard against the initial loading state so the banner doesn't flash
   // on every page load while the query is still pending.
-  const needsToneOnboarding = !tonePending && tonePref === null;
+  // Not during proxy-as-user: the prompt belongs to the person whose account
+  // it is, and the admin viewing their screen should not answer for them.
+  const needsToneOnboarding =
+    !isImpersonating() && !tonePending && tonePref === null;
 
   return (
     <MVPPageLayout
