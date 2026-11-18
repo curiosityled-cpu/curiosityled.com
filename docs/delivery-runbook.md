@@ -175,5 +175,7 @@ proposal until they exist:
 
 - The 15-business-day launch assurance: needs operational and contractual review.
 - Any published AI or Atreus usage allowance: needs four cycles of measured cost.
-- Multi-unit rollup: quoted only until proven on a two-unit fixture.
+- Multi-unit rollup as enterprise-wide consolidation: a two-unit organisation
+  now reports per unit, but a promise of consolidated multi-unit reporting waits
+  for a customer with more than two units.
 - Connectors beyond HubSpot, Outlook, Google Calendar and the Teams bot.

@@ -9,6 +9,7 @@ import PackageCards from "@/components/pricing/PackageCards";
 import ModuleMatrix from "@/components/pricing/ModuleMatrix";
 import TierLadder from "@/components/pricing/TierLadder";
 import PricingFaq from "@/components/pricing/PricingFaq";
+import IntegrationsNote from "@/components/pricing/IntegrationsNote";
 import { PRICING_NOTE, BOOK_DEMO_URL, DIAGNOSTIC_URL } from "@/components/pricing/pricingContent";
 
 export default function Pricing() {
@@ -83,6 +84,12 @@ export default function Pricing() {
             <p className="text-xs text-gray-500">Hover a row to follow a module across packages.</p>
           </div>
           <ModuleMatrix />
+        </div>
+      </section>
+
+      <section className="py-10 px-6">
+        <div className="max-w-5xl mx-auto">
+          <IntegrationsNote />
         </div>
       </section>
 
