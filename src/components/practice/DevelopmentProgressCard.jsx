@@ -1,15 +1,15 @@
 /**
  * DevelopmentProgressCard — compact split view of the manager's own development.
- * Left: overall completion snapshot. Right: the few experiences that are due
- * soon, overdue, or closest to done, ranked by urgency.
+ * Left: overall completion snapshot. Right: the experiences that are due soon,
+ * overdue, or closest to done, ranked by urgency and scrollable.
  */
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Layers, ChevronRight } from "lucide-react";
 import useMyLearning from "@/hooks/useMyLearning";
+import DevelopmentItemDialog from "@/components/practice/DevelopmentItemDialog";
 
 const DAY_MS = 86400000;
-const MAX_ROWS = 5;
 const DUE_SOON_DAYS = 14;
 const NEARLY_DONE = 60;
 
@@ -42,15 +42,16 @@ function rankOf(row) {
 
 export default function DevelopmentProgressCard() {
   const { items, loading } = useMyLearning();
+  const [selected, setSelected] = useState(null);
 
-  const { active, overall, selected, dueSoonCount } = useMemo(() => {
+  const { active, overall, ranked, dueSoonCount } = useMemo(() => {
     const live = (items || [])
       .filter((item) => item.status !== "completed")
       .map((item) => ({ ...item, days: daysUntil(item.due_date), percent: Math.round(item.percent || 0) }));
 
     const totalPercent = live.reduce((sum, item) => sum + item.percent, 0);
 
-    const ranked = [...live].sort((a, b) => {
+    const sorted = [...live].sort((a, b) => {
       const rankDiff = rankOf(a) - rankOf(b);
       if (rankDiff !== 0) return rankDiff;
       const aDays = a.days ?? 9999;
@@ -62,7 +63,7 @@ export default function DevelopmentProgressCard() {
     return {
       active: live,
       overall: live.length ? Math.round(totalPercent / live.length) : 0,
-      selected: ranked.slice(0, MAX_ROWS),
+      ranked: sorted,
       dueSoonCount: live.filter((item) => item.days !== null && item.days <= DUE_SOON_DAYS).length,
     };
   }, [items]);
@@ -74,7 +75,7 @@ export default function DevelopmentProgressCard() {
           <Layers className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-300" />
         </div>
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex-1">
-          Your Development
+          Development
         </p>
         <Link
           to="/my-development"
@@ -110,18 +111,18 @@ export default function DevelopmentProgressCard() {
             )}
           </div>
 
-          <div className="divide-y divide-border">
-            {selected.map((item) => {
+          <div className="max-h-[220px] overflow-y-auto divide-y divide-border">
+            {ranked.map((item) => {
               const due = dueLabel(item.days);
               const chip = due || (item.percent > 0
                 ? { text: `${item.percent}%`, tone: "muted" }
                 : null);
-              const to = item.launch?.to || "/my-development";
               return (
-                <Link
+                <button
                   key={item.id}
-                  to={to}
-                  className="block px-3 py-2 hover:bg-muted/40 transition-colors"
+                  type="button"
+                  onClick={() => setSelected(item)}
+                  className="block w-full text-left px-3 py-2 hover:bg-muted/40 transition-colors"
                 >
                   <div className="flex items-center gap-2">
                     <p className="text-xs font-medium text-foreground truncate flex-1">
@@ -145,12 +146,14 @@ export default function DevelopmentProgressCard() {
                       />
                     </div>
                   )}
-                </Link>
+                </button>
               );
             })}
           </div>
         </div>
       )}
+
+      <DevelopmentItemDialog item={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }
