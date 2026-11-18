@@ -70,17 +70,10 @@ After the runs: `Client` count back to **4**, `ModuleGateLog` **0 rows**.
    As of 17 Nov: Alpha `essentials`, Beta `growth`, Go Flat Bridge and HealthCo
    `organization`, all in `warn` mode, so nothing is refused. Three things stand
    between this and a warn report worth signing off:
-   - **Audiences are still empty, and only invitations can fill them.** User
-     records cannot be inserted directly — writing one silently does not persist
-     — and an invitation writes no local record either, so no tenant can be
-     stamped in advance. Four test invitations were sent on 18 Nov (Alpha
-     manager, Alpha participant, Beta manager, HealthCo manager) to
-     `team+…@curiosityled.com`; the records appear only when each person accepts
-     and sets a password, and their tenant and role are placed then. A warn row
-     is written only when a signed-in person *in that tenant* opens a gated
-     screen, so the log stays empty until that has happened.
-     Note that HealthCo is `organization`, which includes every module: it can
-     never produce a module row, only a capacity overage.
+   - **Alpha has no audience.** All four registered users sit in Go Flat Bridge.
+     A warn period on Essentials produces rows only when someone in that tenant
+     reaches for a gated module, so Alpha needs its managers — or at least one
+     test manager — before the log means anything.
    - **No allowances are set.** `manager_allowance` and `participant_allowance`
      are blank on every tenant, which is permissive, so no capacity overage is
      recorded either — only module attempts would be.
