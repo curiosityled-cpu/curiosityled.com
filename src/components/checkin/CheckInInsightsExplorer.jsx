@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, AlertCircle, BarChart3, ChevronDown, ChevronUp } from "lucide-react";
 import { motion } from "framer-motion";
@@ -27,6 +28,9 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
   const [exportOptions, setExportOptions] = useState({ sessions: true, summary: true });
   const [busy, setBusy] = useState("");
   const initialised = useRef(false);
+  // The active tenant — sent so the server reads exactly the organisation the
+  // user is looking at, never their home tenant by default.
+  const activeClientId = useActiveClientId();
 
   // Rolling window in days, or the custom start/end the user picked
   const hasCustomRange = !!(customRange?.start && customRange?.end);
@@ -48,10 +52,12 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
       audienceFilter.title,
       audienceFilter.tier,
       audienceFilter.track,
+      activeClientId,
     ],
     queryFn: async () => {
       const res = await base44.functions.invoke("getCheckInInsights", {
         scope,
+        client_id: activeClientId || "",
         ...requestRange,
         leader_email: leaderEmail || "",
         include_reports: includeReports,
@@ -143,6 +149,7 @@ export default function CheckInInsightsExplorer({ scope = "team", title, subtitl
   const fetchSessions = async () => {
     const res = await base44.functions.invoke("getCheckInInsights", {
       scope,
+      client_id: activeClientId || "",
       ...requestRange,
       leader_email: leaderEmail || "",
       include_reports: includeReports,

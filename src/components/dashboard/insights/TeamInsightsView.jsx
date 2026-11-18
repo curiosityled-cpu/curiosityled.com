@@ -25,6 +25,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
 import {
@@ -120,6 +121,7 @@ function TeamComparisonRow({ label, teamScore, benchmarkPercentile, description 
 }
 
 export default function TeamInsightsView({ user, onMetricsUpdate }) {
+  const activeClientId = useActiveClientId();
   const [loading, setLoading] = useState(true);
   const [managerInsights, setManagerInsights] = useState(null);
   const [error, setError] = useState(null);
@@ -144,9 +146,13 @@ export default function TeamInsightsView({ user, onMetricsUpdate }) {
 
   const loadFilterOptions = async () => {
     try {
+      // Cohorts are tenant-owned (a null client_id marks a platform-wide one),
+      // so the group filter never offers another organisation's cohorts.
       const [comps, cohorts] = await Promise.all([
         base44.entities.Competency.list(),
-        base44.entities.Cohort.list()
+        activeClientId
+          ? base44.entities.Cohort.filter({ $or: [{ client_id: activeClientId }, { client_id: null }] }).catch(() => [])
+          : base44.entities.Cohort.list()
       ]);
       setCompetencies(comps);
       setUserGroups(cohorts.map(c => ({ id: c.id, name: c.name })));

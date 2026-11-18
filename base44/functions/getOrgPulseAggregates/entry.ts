@@ -16,7 +16,7 @@
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { resolveHRBPManagerEmails } from '../../shared/portfolioData.ts';
-import { resolveUserScope, attachPartnerClientIds } from '../../shared/userScope.ts';
+import { resolveActiveClient, tenantBlockedResponse } from '../../shared/tenantContext.ts';
 import { enforceModule } from '../../shared/moduleGate.ts';
 
 const ADMIN_ROLES = ['admin', 'Admin Level 2', 'Super Administrator', 'Partner Business Administrator', 'Platform Admin'];
@@ -33,10 +33,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin or HRBP access required' }, { status: 403 });
     }
 
+    // The tenant is resolved on the server from the caller's session and their
+    // selection (validated against what they may act on), never trusted from a
+    // bare membership field that can drift. Without this, an administrator
+    // looking at one organisation saw aggregates pooled across every tenant.
+    const body = await req.json().catch(() => ({}));
+    const tenant = await resolveActiveClient(base44, user, body?.client_id || null);
+    if (tenant.blocked) return tenantBlockedResponse(tenant);
+    const tenantId = tenant.client_id || null;
+
     // Package boundary: org-wide aggregates are cross-team insight, a Growth
-    // module. The caller's own tenant decides, never a browser value.
-    const gateClientId = user?.client_id || user?.data?.client_id || null;
-    const gate = await enforceModule(base44, gateClientId, 'cross_team_analytics', {
+    // module. The resolved tenant decides.
+    const gate = await enforceModule(base44, tenantId, 'cross_team_analytics', {
       actorEmail: user?.email,
       source: 'getOrgPulseAggregates',
     });
@@ -45,16 +53,9 @@ Deno.serve(async (req) => {
     // Load all manager trends (aggregated signals only — never raw pulses)
     let allTrends = await base44.asServiceRole.entities.ManagerTrends.list('-last_trend_computed_at', 500);
 
-    // Security: Tenant scoping — non-Platform-Admin admins see only their own
-    // tenant's managers (or partner-managed clients for Partner Business Admins).
-    const scope = resolveUserScope(user);
-    if (scope.role === 'Partner Business Administrator') {
-      const clientsList = await base44.asServiceRole.entities.Client.list();
-      attachPartnerClientIds(scope, clientsList);
-      const partnerIds = new Set(scope.partnerClientIds || []);
-      allTrends = allTrends.filter(t => partnerIds.has(t.client_id));
-    } else if (!scope.isPlatformAdmin) {
-      allTrends = allTrends.filter(t => t.client_id === scope.client_id);
+    // Security: Tenant scoping — a resolved tenant sees only its own managers.
+    if (tenantId) {
+      allTrends = allTrends.filter(t => t.client_id === tenantId);
     }
 
     // HRBP scoping: narrow to the managers in this HRBP's resolved portfolio

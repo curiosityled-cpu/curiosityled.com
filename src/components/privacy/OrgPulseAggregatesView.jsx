@@ -10,6 +10,7 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { Shield, TrendingUp, TrendingDown, Minus, Users, BookOpen, Target, Brain, AlertCircle, Info, Zap, BarChart3, RefreshCw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -76,11 +77,13 @@ function MetricCard({ icon: Icon, iconBg, title, value, subtitle, note, suppress
 
 export default function OrgPulseAggregatesView({ demoData }) {
   const [refreshKey, setRefreshKey] = useState(0);
+  // The active tenant, so the aggregates describe the organisation on screen.
+  const activeClientId = useActiveClientId();
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['org-pulse-aggregates', refreshKey],
+    queryKey: ['org-pulse-aggregates', refreshKey, activeClientId],
     queryFn: async () => {
-      const res = await base44.functions.invoke('getOrgPulseAggregates', {});
+      const res = await base44.functions.invoke('getOrgPulseAggregates', activeClientId ? { client_id: activeClientId } : {});
       return res;
     },
     staleTime: 30 * 60 * 1000,

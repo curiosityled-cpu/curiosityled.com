@@ -23,7 +23,7 @@
  * DailyCheckIn RLS is owner-only, so this runs as the service role.
  */
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
-import { resolveActiveClient } from "../../shared/tenantContext.ts";
+import { resolveActiveClient, tenantBlockedResponse } from "../../shared/tenantContext.ts";
 import {
   getPreset,
   DEFAULT_PRESET_ID,
@@ -78,7 +78,11 @@ export default async function(req: Request): Promise<Response> {
     const userEmail = user.email;
     // The tenant is resolved on the server (selected client, else home client),
     // never read from a membership field that can drift.
-    const tenant = await resolveActiveClient(base44, user);
+    // The tenant follows the caller's active selection (validated on the server
+    // against what they may act on), so a leader looking at one organisation is
+    // never shown another organisation's check-ins.
+    const tenant = await resolveActiveClient(base44, user, body.client_id || null);
+    if (tenant.blocked) return tenantBlockedResponse(tenant);
     const clientId = tenant.client_id || "";
 
     // The organisation's check-in settings decide which questions exist at all:

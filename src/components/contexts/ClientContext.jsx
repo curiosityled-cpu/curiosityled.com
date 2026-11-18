@@ -14,6 +14,40 @@ const EMPTY_STATS = {
 const selectionKey = (user) =>
   `active_client_id_${user?.id || user?.email || 'anon'}`;
 
+/**
+ * The chosen organisation outlives the tab. A principal who works in one client
+ * for a stretch should not fall back to their home client every time the app is
+ * reopened — that fallback is what made screens flip back to another
+ * organisation's data.
+ */
+const readSelection = (user) => {
+  try {
+    return (
+      localStorage.getItem(selectionKey(user)) ||
+      sessionStorage.getItem(selectionKey(user))
+    );
+  } catch {
+    return null;
+  }
+};
+
+const writeSelection = (user, clientId) => {
+  try {
+    localStorage.setItem(selectionKey(user), clientId);
+  } catch {
+    /* private mode — the in-memory selection still applies for this session */
+  }
+};
+
+const clearSelection = (user) => {
+  try {
+    localStorage.removeItem(selectionKey(user));
+  } catch {
+    /* ignore */
+  }
+  sessionStorage.removeItem(selectionKey(user));
+};
+
 export const ClientProvider = ({ children }) => {
   // Anchored to the app-level auth context, which is mounted for every route.
   // The legacy provider is only present on screens that opt into it, and those
@@ -44,7 +78,7 @@ export const ClientProvider = ({ children }) => {
         return;
       }
       try {
-        const stored = sessionStorage.getItem(selectionKey(user));
+        const stored = readSelection(user);
         const cacheKey = `client_context_${user.id || user.email}_${stored || 'auto'}`;
         if (force) {
           sessionStorage.removeItem(cacheKey);
@@ -86,7 +120,7 @@ export const ClientProvider = ({ children }) => {
 
           // A preference the server refused is no longer a valid selection.
           if (stored && resolvedTenant?.requested_client_rejected) {
-            sessionStorage.removeItem(selectionKey(user));
+            clearSelection(user);
           }
 
           setClient(contextData.client);

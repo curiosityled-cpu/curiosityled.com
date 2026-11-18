@@ -159,11 +159,13 @@ export default function OrgInsightsView({ user, onMetricsUpdate, actionsRef }) {
   const [pulseAggregates, setPulseAggregates] = useState(null);
   const containerRef = useRef(null);
 
+  // Reload whenever the active tenant changes, so a tenant switch never leaves
+  // the previous organisation's numbers on screen.
   useEffect(() => {
     if (user) {
       loadAllData();
     }
-  }, [user]);
+  }, [user, clientId]);
 
   // HRBP lens: fetch portfolio manager scope (incl. delegated coverage) for scoping
   useEffect(() => {
@@ -191,11 +193,19 @@ export default function OrgInsightsView({ user, onMetricsUpdate, actionsRef }) {
 
       const workforceQuery = clientId ? { client_id: clientId } : {};
 
+      // Every record read here belongs to the active tenant. Without the
+      // client_id filter the hub inherited whatever the caller could read
+      // elsewhere, which is how one organisation's numbers appeared under
+      // another organisation's name.
+      const scoped = (entity, sort) => clientId
+        ? entity.filter({ client_id: clientId }, sort, 500).catch(() => [])
+        : entity.list(sort, 500).catch(() => []);
+
       const [assessments, goals, assignedLearning, journeyEnrollments, allUsersRaw, assessmentInsights, workforceMetrics] = await Promise.all([
-        base44.entities.Assessment.list('-created_date', 500).catch(() => []),
-        base44.entities.Goal.list('-created_date', 500).catch(() => []),
-        base44.entities.AssignedLearning.list('-created_date', 500).catch(() => []),
-        base44.entities.JourneyEnrollment.list('-created_date', 500).catch(() => []),
+        scoped(base44.entities.Assessment, '-created_date'),
+        scoped(base44.entities.Goal, '-created_date'),
+        scoped(base44.entities.AssignedLearning, '-created_date'),
+        scoped(base44.entities.JourneyEnrollment, '-created_date'),
         // Roster comes back already scoped to the active client, tenant-labelled
         // by the server — no membership field is read in the browser.
         base44.functions
@@ -222,7 +232,7 @@ export default function OrgInsightsView({ user, onMetricsUpdate, actionsRef }) {
       // OrgPulseAggregatesView fetches its own copy for its panel — this is
       // a separate fetch so the summary can reference wellbeing signals.
       if (!DEMO_SNAPSHOT_MODE) {
-        base44.functions.invoke('getOrgPulseAggregates', {})
+        base44.functions.invoke('getOrgPulseAggregates', clientId ? { client_id: clientId } : {})
           .then((res) => setPulseAggregates(res))
           .catch(() => setPulseAggregates(null));
       } else {

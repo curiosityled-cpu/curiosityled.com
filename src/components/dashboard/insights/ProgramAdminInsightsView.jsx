@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { useAuth } from "@/components/useAuth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,8 @@ import GoalsInsightsSection from "@/components/dashboard/insights/GoalsInsightsS
 
 export default function ProgramAdminInsightsView() {
   const { user } = useAuth();
+  // Programs belong to one organisation; the tab stays on the active tenant.
+  const activeClientId = useActiveClientId();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -41,7 +44,7 @@ export default function ProgramAdminInsightsView() {
     if (user) {
       loadInsightsData();
     }
-  }, [user?.id]);
+  }, [user?.id, activeClientId]);
 
   const loadInsightsData = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -61,7 +64,11 @@ export default function ProgramAdminInsightsView() {
       // Also check for programs where user is primary_manager_email or in manager_emails
       const [programsByPrimaryManager, allPrograms] = await Promise.all([
         base44.entities.Program.filter({ primary_manager_email: user.email }),
-        base44.entities.Program.list("-created_date", 200)
+        // Only the active tenant's programmes can match this user's management
+        // of them — a programme from another organisation is never considered.
+        activeClientId
+          ? base44.entities.Program.filter({ client_id: activeClientId }, "-created_date", 200).catch(() => [])
+          : base44.entities.Program.list("-created_date", 200)
       ]);
       
       // Filter programs where user is in manager_emails array
