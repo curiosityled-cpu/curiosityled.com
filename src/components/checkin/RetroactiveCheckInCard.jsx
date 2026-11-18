@@ -11,7 +11,11 @@ import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { useAuth } from "@/lib/AuthContext";
-import { CHECK_IN_PRESETS, SCALE_LABELS } from "@/lib/checkInPresets";
+import {
+  CHECK_IN_PRESETS,
+  SCALE_LABELS,
+  getEnabledMeasureKeys,
+} from "@/lib/checkInPresets";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -95,19 +99,24 @@ export default function RetroactiveCheckInCard({ initialDate, initialType, editM
     const run = async () => {
       let lb = 7;
       let presetId = "balance";
+      let enabledKeys = null;
       try {
         if (clientId) {
           const client = await base44.entities.Client.get(clientId);
           const cfg = client?.settings?.check_in_config || {};
           lb = cfg.retroactive_lookback_days ?? 7;
           if (cfg.preset_id && CHECK_IN_PRESETS[cfg.preset_id]) presetId = cfg.preset_id;
+          enabledKeys = getEnabledMeasureKeys(cfg);
         }
       } catch {
         /* defaults */
       }
       if (cancelled) return;
       setLookback(lb);
-      setMeasures((CHECK_IN_PRESETS[presetId] || CHECK_IN_PRESETS.balance).measures);
+      const presetMeasures = (CHECK_IN_PRESETS[presetId] || CHECK_IN_PRESETS.balance).measures;
+      setMeasures(
+        enabledKeys ? presetMeasures.filter((m) => enabledKeys.includes(m.key)) : presetMeasures
+      );
       setLoading(false);
 
       // Custom questions (active, role + applies_to filtered client-side)

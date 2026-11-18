@@ -358,6 +358,25 @@
             "ic_send_time": {
               "type": "string",
               "description": "Local send time for IC check-ins in 24h HH:MM format (e.g. '15:00' for 3:00 PM). Interpreted in the tenant's business_timezone. When set, the automated send function skips clients whose local time has not yet reached this time."
+            },
+            "use_custom_questions": {
+              "type": "boolean",
+              "default": true,
+              "description": "Whether this organization's custom KPI questions appear in daily check-ins. Set from Performance Manager > Check-In Setup."
+            },
+            "enabled_measures": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "energy",
+                  "confidence",
+                  "focus",
+                  "load",
+                  "growth"
+                ]
+              },
+              "description": "Which of the standard check-in measures this organization keeps, one by one, from its preset. Absent means every measure of the preset; an empty list means no standard measures, which is how a custom-questions-only check-in is configured. Set from Performance Manager > Check-In Setup."
             }
           },
           "description": "Check-in engine configuration for this organization"

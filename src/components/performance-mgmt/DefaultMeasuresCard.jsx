@@ -10,6 +10,7 @@
  * custom-questions-only check-in is configured.
  */
 import React, { useState, useEffect, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useActiveClientId } from "@/components/contexts/ClientContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +25,7 @@ import {
 
 export default function DefaultMeasuresCard() {
   const activeClientId = useActiveClientId();
+  const queryClient = useQueryClient();
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -72,7 +74,14 @@ export default function DefaultMeasuresCard() {
         enabled_measures: orderedKeys(selected),
       };
       await base44.entities.Client.update(client.id, { settings });
-      setClient({ ...client, settings });
+      const stored = (await base44.entities.Client.get(client.id).catch(() => null)) || {
+        ...client,
+        settings,
+      };
+      setClient(stored);
+      // The check-in screens resolve their measures from this cache, so drop it
+      // and they pick the new selection up on the next check-in.
+      queryClient.invalidateQueries({ queryKey: ["manager-preferences"] });
       toast.success("Standard measures saved");
     } catch (e) {
       toast.error("Could not save: " + (e.message || ""));
