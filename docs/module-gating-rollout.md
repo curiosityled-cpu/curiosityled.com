@@ -70,16 +70,20 @@ After the runs: `Client` count back to **4**, `ModuleGateLog` **0 rows**.
    As of 17 Nov: Alpha `essentials`, Beta `growth`, Go Flat Bridge and HealthCo
    `organization`, all in `warn` mode, so nothing is refused. Three things stand
    between this and a warn report worth signing off:
-   - **Alpha has no audience.** All four registered users sit in Go Flat Bridge.
-     A warn period on Essentials produces rows only when someone in that tenant
-     reaches for a gated module, so Alpha needs its managers — or at least one
-     test manager — before the log means anything.
+   - **Alpha's audience is in place; the evidence is not.** On 18 Nov the two
+     named test managers were moved into Alpha — `eosoria@curiosityled.com`
+     (Super Administrator, so a gated screen is reachable) and
+     `ceo@curiosityled.com` (User Level 1, so the role gate stops him before the
+     package gate does). `getModuleGateStatus` reads Alpha as `essentials`,
+     `warn`, six excluded modules, **0 attempts**. The first warn row lands when
+     one of them opens a gated screen inside that tenant; until then a flip to
+     `block` would be a blind switch.
    - **No allowances are set.** `manager_allowance` and `participant_allowance`
      are blank on every tenant, which is permissive, so no capacity overage is
      recorded either — only module attempts would be.
-   - **No timezone on Alpha or Beta.** `business_timezone` is set on Go Flat
-     Bridge and HealthCo only; date-sensitive succession writes reject without
-     it.
+   - **Timezones are set.** `business_timezone` is now `America/New_York` on all
+     four tenants, Alpha and Beta included, so date-sensitive succession writes
+     no longer reject.
    After a clean warn period, the flip to `block` is a tenant-record change, one
    tenant at a time, starting with Alpha.
 2. **Read-level career paths.** The create rule requires the record's tenant to
