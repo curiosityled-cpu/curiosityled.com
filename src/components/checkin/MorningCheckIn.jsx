@@ -50,7 +50,7 @@ function OptInNote({ value, onChange }) {
         placeholder="Add a note (optional)"
         rows={2}
         autoFocus
-        className="w-full text-sm bg-muted/40 rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/60"
+        className="w-full text-sm text-foreground bg-muted/40 rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/60"
       />
     );
   }

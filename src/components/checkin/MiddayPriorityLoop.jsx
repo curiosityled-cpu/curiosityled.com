@@ -102,7 +102,7 @@ export default function MiddayPriorityLoop({ todayRecord, onComplete }) {
                 onChange={e => setMidNotes(n => ({ ...n, [i]: e.target.value }))}
                 placeholder="What shifted or what's blocking you?"
                 rows={2}
-                className="ml-7 w-[calc(100%-1.75rem)] text-xs bg-muted/40 rounded-lg px-2.5 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
+                className="ml-7 w-[calc(100%-1.75rem)] text-xs text-foreground bg-muted/40 rounded-lg px-2.5 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
               />
             )}
           </motion.div>

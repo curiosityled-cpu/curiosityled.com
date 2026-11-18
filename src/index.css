@@ -95,6 +95,28 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* ── Typed text on light surfaces ─────────────────────────────────────────
+     Some screens and dialogs still paint their fields with a hardcoded white
+     or near-white surface. Those fields must keep readable dark text even when
+     the app theme is dark, otherwise whatever is typed disappears. The dark
+     manager shell (.cl-dark) overrides this with its own field colors.
+  ───────────────────────────────────────────────────────────────────────── */
+  input.bg-white,
+  textarea.bg-white,
+  select.bg-white,
+  input.bg-gray-50,
+  textarea.bg-gray-50,
+  select.bg-gray-50,
+  input.bg-slate-50,
+  textarea.bg-slate-50,
+  select.bg-slate-50 {
+    color: hsl(220 14% 12%);
+  }
+  input.bg-white::placeholder,
+  textarea.bg-white::placeholder {
+    color: hsl(220 8% 46%);
+  }
+
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;

@@ -86,14 +86,14 @@ export default function Register() {
 
   if (step === 'otp') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 px-4 py-12">
+      <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <img src={LOGO_URL} alt="Curiosity Led" className="w-14 h-14 mx-auto mb-4 object-contain" />
-            <h1 className="text-2xl font-bold text-gray-900">Check your email</h1>
-            <p className="text-gray-500 mt-1 text-sm">We sent a verification code to <span className="font-medium text-gray-700">{email}</span></p>
+            <h1 className="text-2xl font-bold text-foreground">Check your email</h1>
+            <p className="text-muted-foreground mt-1 text-sm">We sent a verification code to <span className="font-medium text-foreground">{email}</span></p>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+          <div className="bg-card rounded-2xl shadow-sm border border-border p-8">
             <form onSubmit={handleVerify} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="otp">Verification code</Label>
@@ -110,7 +110,7 @@ export default function Register() {
               </button>
             </div>
           </div>
-          <p className="text-center text-sm text-gray-500 mt-6">
+          <p className="text-center text-sm text-muted-foreground mt-6">
             <Link to="/login" className="hover:underline font-medium" style={{ color: BRAND_BLUE }}>Back to sign in</Link>
           </p>
         </div>
@@ -119,18 +119,18 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <img src={LOGO_URL} alt="Curiosity Led" className="w-14 h-14 mx-auto mb-4 object-contain" />
-          <h1 className="text-2xl font-bold text-gray-900">Create your account</h1>
-          <p className="text-gray-500 mt-1 text-sm">Join the Curiosity Led leadership platform</p>
+          <h1 className="text-2xl font-bold text-foreground">Create your account</h1>
+          <p className="text-muted-foreground mt-1 text-sm">Join the Curiosity Led leadership platform</p>
         </div>
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-start gap-3">
           <ShieldCheck className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-amber-800">Curiosity Led is an <strong>invitation-only</strong> platform. If you haven't received an invitation, your account won't be activated.</p>
         </div>
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+        <div className="bg-card rounded-2xl shadow-sm border border-border p-8">
           <div className="space-y-3 mb-6">
             <Button type="button" variant="outline" className="w-full font-medium" onClick={() => handleProvider('google')} disabled={loading}>
               <GoogleIcon /> Continue with Google
@@ -140,8 +140,8 @@ export default function Register() {
             </Button>
           </div>
           <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
-            <div className="relative flex justify-center text-xs"><span className="bg-white px-2 text-gray-400">or sign up with email</span></div>
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+            <div className="relative flex justify-center text-xs"><span className="bg-card px-2 text-muted-foreground">or sign up with email</span></div>
           </div>
           <form onSubmit={handleRegister} className="space-y-4">
             <div className="space-y-2">
@@ -162,7 +162,7 @@ export default function Register() {
             </Button>
           </form>
         </div>
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-sm text-muted-foreground mt-6">
           Already have an account? <Link to="/login" className="hover:underline font-medium" style={{ color: BRAND_BLUE }}>Sign in</Link>
         </p>
       </div>

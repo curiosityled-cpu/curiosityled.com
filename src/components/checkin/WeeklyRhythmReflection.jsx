@@ -453,7 +453,7 @@ Generate a leadership rhythm analysis. Return JSON with:
                   onChange={e => setWentWell(e.target.value)}
                   placeholder="Wins, moments of focus, things that clicked..."
                   rows={3}
-                  className="w-full text-sm bg-muted/40 rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/60"
+                  className="w-full text-sm text-foreground bg-muted/40 rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/60"
                 />
               </div>
 
@@ -464,7 +464,7 @@ Generate a leadership rhythm analysis. Return JSON with:
                   onChange={e => setSurprised(e.target.value)}
                   placeholder="Unexpected pivots, difficult moments (optional)"
                   rows={2}
-                  className="w-full text-sm bg-muted/40 rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/60"
+                  className="w-full text-sm text-foreground bg-muted/40 rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/60"
                 />
               </div>
 
@@ -475,7 +475,7 @@ Generate a leadership rhythm analysis. Return JSON with:
                   onChange={e => setNextWeekIntent(e.target.value)}
                   placeholder="One thing you want to do differently or protect (optional)"
                   rows={2}
-                  className="w-full text-sm bg-muted/40 rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/60"
+                  className="w-full text-sm text-foreground bg-muted/40 rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/60"
                 />
               </div>
 

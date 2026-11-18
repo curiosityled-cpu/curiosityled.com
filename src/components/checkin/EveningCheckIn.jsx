@@ -47,7 +47,7 @@ function OptInNote({ value, onChange }) {
         placeholder="Add a note (optional)"
         rows={2}
         autoFocus
-        className="w-full text-sm bg-muted/40 rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/60"
+        className="w-full text-sm text-foreground bg-muted/40 rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/60"
       />
     );
   }
@@ -120,7 +120,7 @@ function Big3Step({ goals, onSave, onSkip, isActiveWindow = true, initialPriorit
                autoCapitalize="sentences"
                spellCheck="true"
                data-priority-index={i}
-               className="flex-1 text-sm bg-muted/40 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
+               className="flex-1 text-sm text-foreground bg-muted/40 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
              />
           </div>
           {p.title.trim() && (
@@ -143,7 +143,7 @@ function Big3Step({ goals, onSave, onSkip, isActiveWindow = true, initialPriorit
                onChange={e => update(i, 'context', e.target.value)}
                placeholder="Any context or intention? (optional)"
                rows={1}
-               className="w-full text-xs bg-muted/40 rounded-lg px-2 py-1.5 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
+               className="w-full text-xs text-foreground bg-muted/40 rounded-lg px-2 py-1.5 resize-none focus:outline-none focus:ring-2 focus:ring-[#0202ff]/30 placeholder:text-muted-foreground/50"
              />
           </div>
           )}

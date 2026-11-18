@@ -34,14 +34,14 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <img src={LOGO_URL} alt="Curiosity Led" className="w-14 h-14 mx-auto mb-4 object-contain" />
-          <h1 className="text-2xl font-bold text-gray-900">Set a new password</h1>
-          <p className="text-gray-500 mt-1 text-sm">Choose a strong password for your account</p>
+          <h1 className="text-2xl font-bold text-foreground">Set a new password</h1>
+          <p className="text-muted-foreground mt-1 text-sm">Choose a strong password for your account</p>
         </div>
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+        <div className="bg-card rounded-2xl shadow-sm border border-border p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="password">New password</Label>
@@ -57,7 +57,7 @@ export default function ResetPassword() {
             </Button>
           </form>
         </div>
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-sm text-muted-foreground mt-6">
           <Link to="/login" className="hover:underline font-medium" style={{ color: BRAND_BLUE }}>Back to sign in</Link>
         </p>
       </div>
