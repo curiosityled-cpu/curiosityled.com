@@ -505,6 +505,50 @@ h4.text-xs {
   background-color: hsl(222 13% 14%) !important;
 }
 
+/* ── Tinted washes authored with an opacity (bg-purple-50/40, bg-blue-50/50…) ──
+   Matched by class substring so every hue and every opacity step is covered. */
+.dark :is(.cl-dark,[role="dialog"],[role="alertdialog"])
+  :is([class*="bg-red-50/"],[class*="bg-red-100/"],
+      [class*="bg-rose-50/"],[class*="bg-rose-100/"],
+      [class*="bg-pink-50/"],[class*="bg-pink-100/"],
+      [class*="bg-fuchsia-50/"],[class*="bg-fuchsia-100/"],
+      [class*="bg-purple-50/"],[class*="bg-purple-100/"],
+      [class*="bg-violet-50/"],[class*="bg-violet-100/"],
+      [class*="bg-indigo-50/"],[class*="bg-indigo-100/"],
+      [class*="bg-blue-50/"],[class*="bg-blue-100/"],
+      [class*="bg-sky-50/"],[class*="bg-sky-100/"],
+      [class*="bg-cyan-50/"],[class*="bg-cyan-100/"],
+      [class*="bg-teal-50/"],[class*="bg-teal-100/"],
+      [class*="bg-emerald-50/"],[class*="bg-emerald-100/"],
+      [class*="bg-green-50/"],[class*="bg-green-100/"],
+      [class*="bg-lime-50/"],[class*="bg-lime-100/"],
+      [class*="bg-yellow-50/"],[class*="bg-yellow-100/"],
+      [class*="bg-amber-50/"],[class*="bg-amber-100/"],
+      [class*="bg-orange-50/"],[class*="bg-orange-100/"],
+      [class*="bg-gray-50/"],[class*="bg-gray-100/"],
+      [class*="bg-slate-50/"],[class*="bg-slate-100/"]) {
+  background-color: hsl(222 26% 15%) !important;
+}
+.dark :is(.cl-dark,[role="dialog"],[role="alertdialog"]) [class*="bg-purple-50/"],
+.dark :is(.cl-dark,[role="dialog"],[role="alertdialog"]) [class*="bg-violet-50/"]   { background-color: hsl(272 28% 15%) !important; }
+.dark :is(.cl-dark,[role="dialog"],[role="alertdialog"]) [class*="bg-blue-50/"],
+.dark :is(.cl-dark,[role="dialog"],[role="alertdialog"]) [class*="bg-indigo-50/"]   { background-color: hsl(230 30% 16%) !important; }
+.dark :is(.cl-dark,[role="dialog"],[role="alertdialog"]) [class*="bg-red-50/"],
+.dark :is(.cl-dark,[role="dialog"],[role="alertdialog"]) [class*="bg-rose-50/"]     { background-color: hsl(350 28% 15%) !important; }
+.dark :is(.cl-dark,[role="dialog"],[role="alertdialog"]) [class*="bg-amber-50/"],
+.dark :is(.cl-dark,[role="dialog"],[role="alertdialog"]) [class*="bg-yellow-50/"]   { background-color: hsl(42 30% 15%) !important; }
+.dark :is(.cl-dark,[role="dialog"],[role="alertdialog"]) [class*="bg-emerald-50/"],
+.dark :is(.cl-dark,[role="dialog"],[role="alertdialog"]) [class*="bg-green-50/"]    { background-color: hsl(150 26% 14%) !important; }
+.dark :is(.cl-dark,[role="dialog"],[role="alertdialog"]) [class*="bg-teal-50/"],
+.dark :is(.cl-dark,[role="dialog"],[role="alertdialog"]) [class*="bg-cyan-50/"]     { background-color: hsl(182 26% 14%) !important; }
+.dark :is(.cl-dark,[role="dialog"],[role="alertdialog"]) [class*="bg-sky-50/"]       { background-color: hsl(200 30% 15%) !important; }
+.dark :is(.cl-dark,[role="dialog"],[role="alertdialog"]) [class*="bg-orange-50/"]    { background-color: hsl(25 32% 15%) !important; }
+.dark :is(.cl-dark,[role="dialog"],[role="alertdialog"]) [class*="bg-pink-50/"],
+.dark :is(.cl-dark,[role="dialog"],[role="alertdialog"]) [class*="bg-fuchsia-50/"]  { background-color: hsl(315 28% 15%) !important; }
+.dark :is(.cl-dark,[role="dialog"],[role="alertdialog"]) [class*="bg-lime-50/"]      { background-color: hsl(92 22% 14%) !important; }
+.dark :is(.cl-dark,[role="dialog"],[role="alertdialog"]) [class*="bg-gray-50/"],
+.dark :is(.cl-dark,[role="dialog"],[role="alertdialog"]) [class*="bg-slate-50/"]     { background-color: hsl(222 12% 13%) !important; }
+
 /* ── Form fields: filled boxes must stay readable ────────────────────────── */
 .dark :is(.cl-dark,[role="dialog"],[role="alertdialog"],[data-radix-popper-content-wrapper])
   :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]),textarea,select,[contenteditable="true"]) {
