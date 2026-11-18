@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
@@ -9,7 +8,7 @@ const Alert = React.forwardRef(({ className, variant = "default", ...props }, re
     className={cn(
       "relative w-full rounded-lg border p-4",
       {
-        "bg-white text-slate-950 border-slate-200": variant === "default",
+        "bg-card text-card-foreground border-border": variant === "default",
         "border-red-200 bg-red-50 text-red-900": variant === "destructive",
       },
       className

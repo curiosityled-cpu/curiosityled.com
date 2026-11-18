@@ -61,7 +61,7 @@ function QuestionControl({ q, value, onChange }) {
           value={value || ""}
           onChange={(e) => onChange(key, e.target.value)}
           placeholder={q.unit_label || "0"}
-          className="text-sm"
+          className="text-sm bg-white text-gray-900"
         />
       )}
       {q.response_type === "text" && (
@@ -69,7 +69,7 @@ function QuestionControl({ q, value, onChange }) {
           value={value || ""}
           onChange={(e) => onChange(key, e.target.value)}
           placeholder="Type your answer…"
-          className="text-sm"
+          className="text-sm bg-white text-gray-900"
         />
       )}
       {q.response_type === "yes_no" && (

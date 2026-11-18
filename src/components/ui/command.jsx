@@ -7,7 +7,7 @@ const Command = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "flex h-full w-full flex-col overflow-hidden rounded-md bg-white text-slate-950",
+      "flex h-full w-full flex-col overflow-hidden rounded-md bg-card text-card-foreground",
       className
     )}
     {...props}
@@ -67,7 +67,7 @@ const CommandGroup = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "overflow-hidden p-1 text-slate-950 [&_[data-command-group-heading]]:px-2 [&_[data-command-group-heading]]:py-1.5 [&_[data-command-group-heading]]:text-xs [&_[data-command-group-heading]]:font-medium [&_[data-command-group-heading]]:text-slate-500",
+      "overflow-hidden p-1 text-card-foreground [&_[data-command-group-heading]]:px-2 [&_[data-command-group-heading]]:py-1.5 [&_[data-command-group-heading]]:text-xs [&_[data-command-group-heading]]:font-medium [&_[data-command-group-heading]]:text-slate-500",
       className
     )}
     {...props}
