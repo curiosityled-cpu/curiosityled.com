@@ -30,6 +30,8 @@ const emptyForm = {
   role_track: "",
   teams_user_id: "",
   team: "",
+  department: "",
+  industry: "",
   manager_email: "",
   hris_employee_id: "",
   preferred_channel: "both",
@@ -47,6 +49,7 @@ export default function StaffEditDialog({
   onOpenChange,
   editingIC,
   clientId,
+  client = null,
   createdByEmail,
   onSaved,
   users = [],
@@ -89,6 +92,8 @@ export default function StaffEditDialog({
           role_track: editingIC.role_track || "",
           teams_user_id: editingIC.teams_user_id || "",
           team: editingIC.team || "",
+          department: editingIC.department || "",
+          industry: editingIC.industry || "",
           manager_email: editingIC.manager_email || "",
           hris_employee_id: editingIC.hris_employee_id || "",
           preferred_channel: editingIC.preferred_channel || "both",
@@ -96,10 +101,12 @@ export default function StaffEditDialog({
           check_in_enabled: editingIC.check_in_enabled !== false,
         });
       } else {
-        setForm(emptyForm);
+        // A new staff member starts aligned to the organization being worked in,
+        // carrying that organization's industry unless their site differs.
+        setForm({ ...emptyForm, industry: client?.industry || "" });
       }
     }
-  }, [open, editingIC]);
+  }, [open, editingIC, client?.industry]);
 
   const handleSave = async () => {
     if (!form.name.trim() || !form.email.trim()) {
@@ -120,6 +127,8 @@ export default function StaffEditDialog({
       profile_source: editingIC?.profile_source || "manual",
       teams_user_id: form.teams_user_id.trim(),
       team: form.team.trim(),
+      department: form.department.trim(),
+      industry: form.industry.trim(),
       manager_email: form.manager_email.trim().toLowerCase(),
       hris_employee_id: form.hris_employee_id.trim(),
       preferred_channel: form.preferred_channel,
@@ -188,6 +197,41 @@ export default function StaffEditDialog({
             />
             <p className="text-[11px] text-muted-foreground">
               The title this person's work is known by, used for reporting and role targeting.
+            </p>
+          </div>
+          <div className="space-y-3 rounded-lg border border-border px-3 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">Organization</p>
+                <p className="text-sm font-medium">{client?.name || "Current organization"}</p>
+              </div>
+              <span className="inline-flex items-center rounded border border-border px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                Fixed by the organization you are in
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Department</Label>
+                <Input
+                  value={form.department}
+                  onChange={(e) => setForm((f) => ({ ...f, department: e.target.value }))}
+                  placeholder="Operations"
+                  className="text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Industry</Label>
+                <Input
+                  value={form.industry}
+                  onChange={(e) => setForm((f) => ({ ...f, industry: e.target.value }))}
+                  placeholder={client?.industry || "Logistics"}
+                  className="text-sm"
+                />
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Staff are only ever shown inside their own organization. Department and
+              industry let you report on them without moving them between tenants.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3">

@@ -18,32 +18,28 @@ Deno.serve(async (req) => {
 
     console.log('Fetching users for:', user.email, user.app_role);
 
-    // Tenant comes from the resolver, never from the browser's membership copy.
-    const callerClientId = (await resolveActiveClient(base44, user)).client_id;
+    // One organization at a time, chosen in the org switcher. The selection is
+    // validated by the resolver — a member cannot move out of their own tenant,
+    // and a platform administrator may act on any organization.
+    const body = await req.json().catch(() => ({}));
+    const requestedClientId = typeof body?.client_id === 'string' ? body.client_id : null;
+    const ctx = await resolveActiveClient(base44, user, requestedClientId);
+    const callerClientId = ctx.client_id || null;
+
+    if (!callerClientId) {
+      // Security: fail closed — no organization resolved means no people list,
+      // never a platform-wide one.
+      return Response.json({ error: 'Tenant membership required — no client_id assigned' }, { status: 403 });
+    }
 
     // Fetch users using service role to bypass RLS
     let users = await base44.asServiceRole.entities.User.list('-created_date');
 
-    // Apply role-based filtering
-    // Security: tenant-scoped admins see only their own tenant's users.
-    // Unassigned (client-less) users are visible to Platform Admin only to
-    // prevent cross-tenant enumeration of pending invites.
-    if (user.app_role === 'Super Administrator' && callerClientId) {
-      users = users.filter(u => u.client_id === callerClientId);
-    } else if (user.app_role === 'Partner Business Administrator' && user.partner_id) {
-      const allClients = await base44.asServiceRole.entities.Client.list();
-      const partnerClientIds = allClients
-        .filter(c => c.partner_id === user.partner_id)
-        .map(c => c.id);
-      users = users.filter(u => partnerClientIds.includes(u.client_id));
-    } else if (user.app_role === 'Admin Level 2' && callerClientId) {
-      users = users.filter(u => u.client_id === callerClientId);
-    } else if (user.app_role !== 'Platform Admin') {
-      // Security: fail closed — tenant-scoped admins without a client_id/partner_id
-      // must not receive platform-wide user lists.
-      return Response.json({ error: 'Tenant membership required — no client_id assigned' }, { status: 403 });
-    }
-    // Platform Admin sees all users (no filtering)
+    // Every viewer, Platform Admin included, sees only the active organization.
+    // A person is aligned to their canonical tenant id, falling back to the
+    // legacy field so a half-written account is still found (or still hidden).
+    const tenantOf = (u) => u?.data?.client_id || u?.client_id || null;
+    users = users.filter(u => tenantOf(u) === callerClientId);
 
     // Platform Admin accounts are never shown in the user management of a
     // client or partner client: only a Platform Admin may see them at all.

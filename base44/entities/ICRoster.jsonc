@@ -49,6 +49,14 @@
       "type": "string",
       "description": "Team, department, or shift label (e.g. 'Warehouse - Shift A')"
     },
+    "department": {
+      "type": "string",
+      "description": "The department inside the organization this staff member belongs to (e.g. 'Operations', 'Customer Care'). Kept alongside team so a person can be reported on by department while still being grouped by shift."
+    },
+    "industry": {
+      "type": "string",
+      "description": "The industry this staff member's work sits in (e.g. 'Logistics', 'Healthcare'). Defaults to the organization's industry, and can differ for a site or business unit that operates in another sector."
+    },
     "manager_email": {
       "type": "string",
       "description": "Email of the IC's manager (an app user who can view this IC's check-in data and sees them in their team view)"

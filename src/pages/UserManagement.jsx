@@ -163,12 +163,13 @@ function UserManagement({ embedded = false }) {
     certification: 'all', assessment: 'all'
   });
 
-  useEffect(() => { loadData(); }, []);
+  // Reloads whenever the organization changes, so the screen follows the switch.
+  useEffect(() => { loadData(); }, [clientId]);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const response = await base44.functions.invoke('listAllUsers');
+      const response = await base44.functions.invoke('listAllUsers', { client_id: clientId });
       if (response.data?.success) setUsers(response.data.users);
       reloadStaff();
 
@@ -695,7 +696,8 @@ function UserManagement({ embedded = false }) {
                               <div className="flex flex-col gap-0.5">
                                 <span className="text-xs text-gray-700">{ic.job_title || ic.team || '—'}</span>
                                 <span className="text-xs text-gray-400">
-                                  {ic.job_title && ic.team ? ic.team : (ic.manager_email ? `mgr: ${ic.manager_email}` : '—')}
+                                  {[ic.department, ic.team, ic.industry].filter(Boolean).join(' · ') ||
+                                    (ic.manager_email ? `mgr: ${ic.manager_email}` : '—')}
                                 </span>
                               </div>
                             </td>
@@ -987,6 +989,7 @@ function UserManagement({ embedded = false }) {
         onOpenChange={setShowStaffDialog}
         editingIC={editingStaff}
         clientId={clientId}
+        client={clients.find((c) => c.id === clientId) || null}
         createdByEmail={currentUser?.email}
         users={users}
         onSaved={() => { setEditingStaff(null); reloadStaff(); }}

@@ -19,8 +19,15 @@ export function useStaffRoster(clientId) {
     }
     setLoading(true);
     try {
-      const rows = await base44.entities.ICRoster.list("-created_date", 200);
-      setRoster(rows || []);
+      // One organization at a time: a staff record outside the active tenant is
+      // never loaded, so switching organization empties the roster of anyone the
+      // new organization does not own.
+      const rows = await base44.entities.ICRoster.filter(
+        { client_id: clientId },
+        "-created_date",
+        200
+      );
+      setRoster(rows?.items || rows || []);
     } catch (e) {
       console.warn("Could not load staff roster:", e.message);
       setRoster([]);
