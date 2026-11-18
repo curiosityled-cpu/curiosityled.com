@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext } from "react";
+import React, { useState, useEffect, useRef, createContext, useContext } from "react";
 
 export const SidebarContext = createContext({ collapsed: false });
 export const useSidebar = () => useContext(SidebarContext);
@@ -29,7 +29,7 @@ import {
   DropdownMenuTrigger } from
 "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { ClientProvider } from "@/components/contexts/ClientContext";
+import { ClientProvider, useClient } from "@/components/contexts/ClientContext";
 import ClientSwitcher from "@/components/mvp/ClientSwitcher";
 import ClientSelectionGate from "@/components/mvp/ClientSelectionGate";
 
@@ -119,6 +119,19 @@ const ROLE_COLORS = {
 
 function MVPLayoutInner({ children }) {
   const { user } = useAuth();
+  // The screen to the right of the navigation must follow an organisation switch.
+  // Bumping this key remounts the page subtree, so every screen refetches against
+  // the tenant just selected instead of showing the previous one until a refresh.
+  const { activeClientId } = useClient();
+  const [tenantKey, setTenantKey] = useState(0);
+  const lastClientIdRef = useRef(null);
+  useEffect(() => {
+    // The first resolved client is the page's starting tenant — no remount for it.
+    if (lastClientIdRef.current && activeClientId && activeClientId !== lastClientIdRef.current) {
+      setTenantKey((key) => key + 1);
+    }
+    if (activeClientId) lastClientIdRef.current = activeClientId;
+  }, [activeClientId]);
   // Package boundaries: a withheld module keeps its menu entry and shows as locked,
   // so the limitation is visible instead of looking like a missing feature.
   const { pathLocked } = useModuleAccess();
@@ -706,7 +719,7 @@ function MVPLayoutInner({ children }) {
         <FullAuthProvider>
           <ImpersonationBanner />
         </FullAuthProvider>
-        <ErrorBoundary><ClientSelectionGate>{children}</ClientSelectionGate></ErrorBoundary>
+        <ErrorBoundary><ClientSelectionGate key={tenantKey}>{children}</ClientSelectionGate></ErrorBoundary>
         <FirstLoginLinker />
       </main>
 
