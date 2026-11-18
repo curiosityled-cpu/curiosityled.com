@@ -111,7 +111,8 @@ export default function DevelopmentProgressCard() {
             )}
           </div>
 
-          <div className="max-h-[220px] overflow-y-auto divide-y divide-border">
+          {/* Height capped so the card sits level with Today's Prescribed Practice */}
+          <div className="max-h-[188px] overflow-y-auto divide-y divide-border">
             {ranked.map((item) => {
               const due = dueLabel(item.days);
               const chip = due || (item.percent > 0
