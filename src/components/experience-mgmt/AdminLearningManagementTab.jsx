@@ -21,6 +21,7 @@ import CoursesTab from "@/components/dev-manager/CoursesTab";
 import ThumbnailPicker from "@/components/dev-manager/ThumbnailPicker";
 import LearningResourceFileUpload from "@/components/learning/LearningResourceFileUpload";
 import ContentGapReport from "@/components/dev-manager/learning/ContentGapReport";
+import { useAuth } from "@/components/useAuth";
 
 
 const TYPE_ICONS = {
@@ -291,6 +292,10 @@ function ResourceFormDialog({ open, onClose, resource, onSaved }) {
 
 export default function AdminLearningManagementTab({ user }) {
   const { activeClientId } = useClient();
+  const { isPlatformAdmin, hasAdminAccess } = useAuth();
+  // Content readiness is an authoring-maintenance view — HR Admins (Admin Level 2)
+  // and above only. Everyone else meets the catalogue, not its repair list.
+  const canSeeContentReadiness = isPlatformAdmin || hasAdminAccess;
   const [tab, setTab] = useState("library");
   const [resources, setResources] = useState([]);
   const [assignments, setAssignments] = useState([]);
@@ -431,7 +436,7 @@ export default function AdminLearningManagementTab({ user }) {
         </Card>
       </div>
 
-      <ContentGapReport />
+      {canSeeContentReadiness && <ContentGapReport />}
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="bg-gray-100 rounded-xl p-1">
