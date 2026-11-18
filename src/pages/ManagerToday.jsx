@@ -194,6 +194,9 @@ export default function ManagerToday() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
+  // Set the moment the person saves a tone, so the section stays gone for this
+  // visit even if a refetch is slow or returns before the record is readable.
+  const [toneChosen, setToneChosen] = useState(false);
   const { data: tonePref = null, isPending: tonePending } = useQuery({
     queryKey: ['ml-tone', user?.email],
     queryFn: async () => {
@@ -345,7 +348,8 @@ export default function ManagerToday() {
   // during the initial fetch (the "old-style Atreus settings" flash).
   // Never during proxy-as-user: that person's missing preference is theirs to
   // set, and the admin viewing their screen should not be prompted for it.
-  const needsToneOnboarding = !isImpersonating() && !tonePending && tonePref === null;
+  const needsToneOnboarding =
+    !isImpersonating() && !toneChosen && !tonePending && tonePref === null;
   const firstName = getFirstName(user);
   const hour = parseInt(new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/New_York', hour: 'numeric', hour12: false
@@ -489,8 +493,13 @@ export default function ManagerToday() {
           </div>
           <div className="px-4 pb-4">
             <ToneOnboarding existingTone={null} onComplete={(tone) => {
-              queryClient.setQueryData(['ml-tone', user?.email], (old) => ({ ...old, tone_mode: tone, teams_onboarding_complete: true, user_email: user?.email }));
-              queryClient.invalidateQueries({ queryKey: ['ml-tone', user?.email] });
+              setToneChosen(true);
+              queryClient.setQueryData(['ml-tone', user?.email], (old) => ({
+                ...old,
+                user_email: user?.email,
+                tone_mode: tone,
+                teams_onboarding_complete: true,
+              }));
             }} />
           </div>
         </div>

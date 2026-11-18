@@ -536,6 +536,9 @@ export default function MyLeadership() {
   });
 
   // Check if tone onboarding is complete
+  // Set the moment the person saves a tone, so the gate stays open for this
+  // visit even if a refetch is slow or returns before the record is readable.
+  const [toneChosen, setToneChosen] = useState(false);
   const { data: tonePref = null, isPending: tonePending } = useQuery({
     queryKey: ['ml-tone', user?.email],
     queryFn: async () => {
@@ -593,7 +596,7 @@ export default function MyLeadership() {
   // Not during proxy-as-user: the prompt belongs to the person whose account
   // it is, and the admin viewing their screen should not answer for them.
   const needsToneOnboarding =
-    !isImpersonating() && !tonePending && tonePref === null;
+    !isImpersonating() && !toneChosen && !tonePending && tonePref === null;
 
   return (
     <MVPPageLayout
@@ -621,8 +624,13 @@ export default function MyLeadership() {
                 <ToneOnboarding
                   existingTone={null}
                   onComplete={(tone) => {
-                    queryClient.setQueryData(['ml-tone', user?.email], (old) => ({ ...old, tone_mode: tone, teams_onboarding_complete: true, user_email: user?.email }));
-                    queryClient.invalidateQueries({ queryKey: ['ml-tone', user?.email] });
+                    setToneChosen(true);
+                    queryClient.setQueryData(['ml-tone', user?.email], (old) => ({
+                      ...old,
+                      user_email: user?.email,
+                      tone_mode: tone,
+                      teams_onboarding_complete: true,
+                    }));
                   }}
                 />
               </div>

@@ -55,9 +55,11 @@ export default function ToneOnboarding({ existingTone, onComplete, onCancel }) {
   const [selected, setSelected] = useState(existingTone || "warm_candid");
   const [acknowledged, setAcknowledged] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   const handleSave = async () => {
     setSaving(true);
+    setSaveError(null);
     try {
       const existing = await base44.entities.TonePreference.filter({ user_email: user.email }, null, 1);
       if (existing[0]) {
@@ -76,6 +78,9 @@ export default function ToneOnboarding({ existingTone, onComplete, onCancel }) {
         });
       }
       if (onComplete) onComplete(selected);
+    } catch (error) {
+      setSaveError("That didn't save — please try again.");
+      console.error("Could not save tone preference:", error);
     } finally {
       setSaving(false);
     }
@@ -146,6 +151,9 @@ export default function ToneOnboarding({ existingTone, onComplete, onCancel }) {
         {saving ? "Saving…" : "Save my choice"}
         {!saving && <ArrowRight className="w-4 h-4 ml-2" />}
       </Button>
+      {saveError && (
+        <p className="text-xs text-rose-600 text-center">{saveError}</p>
+      )}
       {onCancel && (
         <button
           onClick={onCancel}
