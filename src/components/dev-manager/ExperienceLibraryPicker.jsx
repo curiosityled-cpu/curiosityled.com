@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Briefcase, Loader2, Plus } from "lucide-react";
+import { useClient } from "@/components/contexts/ClientContext";
 
 const TYPE_LABELS = {
   leadership_coaching: "Leadership Coaching",
@@ -22,6 +23,7 @@ const TYPE_LABELS = {
 };
 
 export default function ExperienceLibraryPicker({ onPick, onClose }) {
+  const { activeClientId } = useClient();
   const [experiences, setExperiences] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -29,7 +31,7 @@ export default function ExperienceLibraryPicker({ onPick, onClose }) {
   useEffect(() => {
     (async () => {
       try {
-        const data = await base44.entities.DevelopmentExperience.list("-created_date", 200);
+        const data = await base44.entities.DevelopmentExperience.filter({ client_id: activeClientId }, "-created_date", 200);
         setExperiences(data || []);
       } catch (e) {
         console.error("Failed to load experiences:", e);
@@ -37,7 +39,7 @@ export default function ExperienceLibraryPicker({ onPick, onClose }) {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [activeClientId]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();

@@ -41,7 +41,7 @@ export default function AdminExperiencesTab({ user, coacheeEmails }) {
     setLoading(true);
     try {
       const [exps, allUsers] = await Promise.all([
-        base44.entities.DevelopmentExperience.list('-created_date'),
+        base44.entities.DevelopmentExperience.filter({ client_id: activeClientId }, '-created_date'),
         base44.entities.User.filter({ client_id: activeClientId })
       ]);
       if (scoped) {
