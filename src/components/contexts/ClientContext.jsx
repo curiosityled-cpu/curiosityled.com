@@ -165,7 +165,7 @@ export const ClientProvider = ({ children }) => {
       if (!clientId || clientId === client?.id) return;
       setSwitching(true);
       try {
-        sessionStorage.setItem(selectionKey(user), clientId);
+        writeSelection(user, clientId);
         // Drop every cached context for this person: they are now a different
         // organisation and the previous client's counts must not be reused.
         Object.keys(sessionStorage)
