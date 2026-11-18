@@ -75,8 +75,7 @@ export default function AssessmentsCard() {
         id: "li-live",
         title: "Leadership Index Assessment",
         subtitle: "20–30 min · 6 core competencies",
-        kind: "Validated",
-        action: { label: "Start", to: "/LeadershipAssessment" },
+        kind: "Coming soon",
       });
     }
     for (const a of customAssigned) {

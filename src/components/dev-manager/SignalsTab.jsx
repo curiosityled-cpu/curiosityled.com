@@ -22,10 +22,10 @@ const VALIDATED_SIGNALS = [
     title: "Leadership Index Assessment",
     description: "A development compass — not a certification — evaluating your leadership capabilities across 6 core competencies.",
     duration: "20–30 min",
-    route: "/LeadershipAssessment",
+    route: null,
     icon: Brain,
     color: "#A25DDC",
-    badge: "Validated",
+    comingSoon: true,
   },
   {
     id: "situational-leadership",
