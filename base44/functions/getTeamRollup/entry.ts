@@ -4,6 +4,7 @@ import {
   deriveDirectReports,
 } from "../../shared/teamHierarchy.ts";
 import { resolveHRBPManagerEmails } from "../../shared/portfolioData.ts";
+import { resolveActiveClient, tenantBlockedResponse } from "../../shared/tenantContext.ts";
 
 // ── Leadership-level → Team Landscape layout tier ─────────────────────────
 // Levels 1-5 mirror the Competency Matrix. "hipo" is treated as Level 1 for
@@ -206,8 +207,31 @@ export default async function (req) {
     const role = currentUser.app_role;
     if (!ROLE_CONFIG[role]) return Response.json({ error: "Insufficient permissions" }, { status: 403 });
 
-    const clientId = currentUser.client_id;
-    const allUsers = await base44.asServiceRole.entities.User.list(500);
+    // The active tenant is resolved on the server from the selection the screen
+    // holds, never trusted from it directly. Everything below — the reporting
+    // tree, the roster, the aggregates and the KPIs — is scoped to that tenant,
+    // so a card never rolls up another organisation's people or history.
+    const body = await req.json().catch(() => ({}));
+    const requestedClientId = typeof body?.client_id === "string" ? body.client_id : null;
+    const tenant = await resolveActiveClient(base44, currentUser, requestedClientId);
+    if (tenant.blocked) return tenantBlockedResponse(tenant);
+    const clientId =
+      tenant.client_id || currentUser.client_id || currentUser.data?.client_id || null;
+    const pbaClientIds =
+      currentUser.partner_client_ids || currentUser.data?.partner_client_ids || [];
+    const clientOf = (u) => u?.client_id || u?.data?.client_id || null;
+    // Legacy rows written before tenant stamping carry no client_id; they stay
+    // readable for their own tenant's members, while another tenant's rows drop.
+    const inTenant = (rows) =>
+      !clientId ? rows : rows.filter((r) => !r.client_id || r.client_id === clientId);
+
+    const allUsersRaw = await base44.asServiceRole.entities.User.list(500);
+    const allUsers =
+      role === "Partner Business Administrator"
+        ? allUsersRaw.filter((u) => pbaClientIds.includes(clientOf(u)))
+        : clientId
+          ? allUsersRaw.filter((u) => clientOf(u) === clientId)
+          : allUsersRaw;
 
     // ── Resolve leadership level (explicit field or auto from depth) ──
     const leaderLevel = resolveLeaderLevel(currentUser, allUsers);
@@ -267,10 +291,9 @@ export default async function (req) {
       if (role === "Platform Admin") {
         enterpriseUsers = allUsers;
       } else if (role === "Partner Business Administrator") {
-        const partnerClientIds = currentUser.partner_client_ids || currentUser.data?.partner_client_ids || [];
-        enterpriseUsers = allUsers.filter((u) => partnerClientIds.includes(u.client_id));
+        enterpriseUsers = allUsers.filter((u) => pbaClientIds.includes(clientOf(u)));
       } else {
-        enterpriseUsers = allUsers.filter((u) => u.client_id === clientId);
+        enterpriseUsers = allUsers.filter((u) => clientOf(u) === clientId);
       }
       scopeEmails = enterpriseUsers.map((u) => u.email).filter(Boolean).filter((e) => e !== currentUser.email);
       if (detailLevel === "full") detailEmails = [...scopeEmails];
@@ -299,21 +322,29 @@ export default async function (req) {
     }
 
     const emailIn = { $in: scopeEmails };
-    const partnerClientIds = currentUser.partner_client_ids || currentUser.data?.partner_client_ids || [];
 
     // ── Fetch all scoped data in parallel ──────────────────────────────
-    const [goals, journeys, assessments, checkins, learnerProgress, kpisRaw] = await Promise.all([
+    const [goalsRaw, journeysRaw, assessmentsRaw, checkinsRaw, learnerProgressRaw, kpisScoped] = await Promise.all([
       base44.asServiceRole.entities.Goal.filter({ created_by: emailIn }, "-created_date", 500),
       base44.asServiceRole.entities.JourneyEnrollment.filter({ user_email: emailIn }, "-created_date", 500),
       base44.asServiceRole.entities.Assessment.filter({ email: emailIn }, "-submission_ts", 500),
       base44.asServiceRole.entities.WeeklyCheckIn.filter({ employee_email: emailIn }, "-week_of", 500),
       base44.asServiceRole.entities.LearnerProgress.filter({ user_email: emailIn }, "-created_date", 500),
       role === "Platform Admin"
-        ? base44.asServiceRole.entities.KPI.list(500)
+        ? base44.asServiceRole.entities.KPI.list(500).then((rows) => inTenant(rows))
         : role === "Partner Business Administrator"
-          ? base44.asServiceRole.entities.KPI.filter({ client_id: { $in: partnerClientIds } }, "-created_date", 500)
+          ? base44.asServiceRole.entities.KPI.filter({ client_id: { $in: pbaClientIds } }, "-created_date", 500)
           : base44.asServiceRole.entities.KPI.filter({ client_id: clientId }, "-created_date", 500),
     ]);
+
+    // Every signal behind the card is tenant-scoped, so a tenant with no history
+    // reads as a blank slate instead of inheriting another organisation's records.
+    const goals = inTenant(goalsRaw);
+    const journeys = inTenant(journeysRaw);
+    const assessments = inTenant(assessmentsRaw);
+    const checkins = inTenant(checkinsRaw);
+    const learnerProgress = inTenant(learnerProgressRaw);
+    const kpisRaw = kpisScoped;
 
     // ── Aggregates across the full scope ───────────────────────────────
     const totalGoals = goals.length;

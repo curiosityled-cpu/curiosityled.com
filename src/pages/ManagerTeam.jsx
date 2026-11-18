@@ -19,6 +19,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
+import { useActiveClientId } from "@/components/contexts/ClientContext";
 import {
   Users, AlertTriangle, Loader2, Info,
   TrendingUp, Activity, ChevronRight, Brain, ClipboardList, Layers,
@@ -51,10 +52,11 @@ function ActionTile({ icon: Icon, iconBg, iconColor, title, description, to }) {
 
 export default function ManagerTeam() {
   const { user } = useAuth();
+  const activeClientId = useActiveClientId();
   const { data, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ["teamRollup", user?.email],
+    queryKey: ["teamRollup", user?.email, activeClientId],
     queryFn: async () => {
-      const res = await base44.functions.invoke("getTeamRollup", {});
+      const res = await base44.functions.invoke("getTeamRollup", activeClientId ? { client_id: activeClientId } : {});
       return res.data;
     },
     enabled: !!user?.email,
