@@ -5,13 +5,11 @@
  */
 import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 import { Layers, ChevronRight } from "lucide-react";
 import useMyLearning from "@/hooks/useMyLearning";
-import { openResource } from "@/lib/openResource";
 
 const DAY_MS = 86400000;
+const MAX_ROWS = 5;
 const DUE_SOON_DAYS = 14;
 const NEARLY_DONE = 60;
 
@@ -44,24 +42,6 @@ function rankOf(row) {
 
 export default function DevelopmentProgressCard() {
   const { items, loading } = useMyLearning();
-  const navigate = useNavigate();
-
-  const open = async (item) => {
-    if (item.launch?.to) {
-      navigate(item.launch.to);
-      return;
-    }
-    if (item.launch?.journey?.id) {
-      navigate(`/JourneyDetails?journeyId=${item.launch.journey.id}`);
-      return;
-    }
-    if (item.launch?.resource) {
-      const opened = await openResource(item.launch.resource);
-      if (!opened) toast.info("This resource has no link or file attached yet.");
-      return;
-    }
-    navigate("/my-development");
-  };
 
   const { active, overall, selected, dueSoonCount } = useMemo(() => {
     const live = (items || [])
@@ -82,7 +62,7 @@ export default function DevelopmentProgressCard() {
     return {
       active: live,
       overall: live.length ? Math.round(totalPercent / live.length) : 0,
-      selected: ranked,
+      selected: ranked.slice(0, MAX_ROWS),
       dueSoonCount: live.filter((item) => item.days !== null && item.days <= DUE_SOON_DAYS).length,
     };
   }, [items]);
@@ -94,7 +74,7 @@ export default function DevelopmentProgressCard() {
           <Layers className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-300" />
         </div>
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex-1">
-          Development
+          Your Development
         </p>
         <Link
           to="/my-development"
@@ -130,18 +110,18 @@ export default function DevelopmentProgressCard() {
             )}
           </div>
 
-          <div className="divide-y divide-border max-h-[264px] overflow-y-auto">
+          <div className="divide-y divide-border">
             {selected.map((item) => {
               const due = dueLabel(item.days);
               const chip = due || (item.percent > 0
                 ? { text: `${item.percent}%`, tone: "muted" }
                 : null);
+              const to = item.launch?.to || "/my-development";
               return (
-                <button
+                <Link
                   key={item.id}
-                  type="button"
-                  onClick={() => open(item)}
-                  className="block w-full text-left px-3 py-2 hover:bg-muted/40 transition-colors"
+                  to={to}
+                  className="block px-3 py-2 hover:bg-muted/40 transition-colors"
                 >
                   <div className="flex items-center gap-2">
                     <p className="text-xs font-medium text-foreground truncate flex-1">
@@ -165,7 +145,7 @@ export default function DevelopmentProgressCard() {
                       />
                     </div>
                   )}
-                </button>
+                </Link>
               );
             })}
           </div>
