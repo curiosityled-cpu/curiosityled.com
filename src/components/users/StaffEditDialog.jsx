@@ -50,13 +50,17 @@ export default function StaffEditDialog({
   editingIC,
   clientId,
   client = null,
+  clients = [],
   createdByEmail,
   onSaved,
   users = [],
 }) {
   const [form, setForm] = useState(emptyForm);
+  const [orgId, setOrgId] = useState(clientId || "");
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState(null);
+
+  const selectedClient = clients.find((c) => c.id === orgId) || (orgId === clientId ? client : null);
 
   // Staff carry the same role identifiers as users, from the same taxonomy, so a
   // question aimed at a tier or track reaches a frontline worker too.
@@ -77,12 +81,21 @@ export default function StaffEditDialog({
   // staff member is tied to a real account and their check-ins reach that manager.
   const managerCandidates = (users || [])
     .filter((u) => u?.email && u.email.toLowerCase() !== form.email.trim().toLowerCase())
-    .filter((u) => !clientId || (u.client_id || u.data?.client_id) === clientId)
+    .filter((u) => !orgId || (u.client_id || u.data?.client_id) === orgId)
     .sort((a, b) => (a.full_name || a.email).localeCompare(b.full_name || b.email));
+
+  const handleOrgChange = (value) => {
+    setOrgId(value);
+    const org = clients.find((c) => c.id === value);
+    // A staff member follows the organization chosen here, including its
+    // industry, unless their own site differs.
+    setForm((f) => (f.industry.trim() ? f : { ...f, industry: org?.industry || "" }));
+  };
 
   useEffect(() => {
     if (open) {
       setFormError(null);
+      setOrgId(editingIC?.client_id || clientId || "");
       if (editingIC) {
         setForm({
           name: editingIC.name || "",
@@ -119,6 +132,7 @@ export default function StaffEditDialog({
     // gaps so the record always carries a tier and track like a user record.
     const mapping = mappingForTitle(form.job_title);
     const payload = {
+      client_id: orgId || clientId,
       name: form.name.trim(),
       email: form.email.trim().toLowerCase(),
       job_title: form.job_title.trim(),
@@ -142,7 +156,6 @@ export default function StaffEditDialog({
       } else {
         await base44.entities.ICRoster.create({
           ...payload,
-          client_id: clientId,
           created_by_email: createdByEmail || "",
           source_system: "manual",
           web_access_token: crypto.randomUUID(),
@@ -200,14 +213,26 @@ export default function StaffEditDialog({
             </p>
           </div>
           <div className="space-y-3 rounded-lg border border-border px-3 py-3">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-medium text-muted-foreground">Organization</p>
-                <p className="text-sm font-medium">{client?.name || "Current organization"}</p>
-              </div>
-              <span className="inline-flex items-center rounded border border-border px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                Fixed by the organization you are in
-              </span>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Organization</Label>
+              {clients.length > 0 ? (
+                <Select value={orgId || "none"} onValueChange={handleOrgChange}>
+                  <SelectTrigger className="text-sm h-9">
+                    <SelectValue placeholder="Select organization..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[...clients]
+                      .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+                      .map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="text-sm font-medium">{selectedClient?.name || "Current organization"}</p>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
