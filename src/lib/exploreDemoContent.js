@@ -3,14 +3,14 @@
 // one file. When a feature changes in the app, update the matching block below and
 // bump DEMO_VERSION. See docs/explore-demo-maintenance.md.
 
-export const DEMO_VERSION = "2026.11.20";
+export const DEMO_VERSION = "2026.11.21";
 
 export const DEMO_SOURCE_MAP = [
   { screen: "Leadership Index sample", mirrors: "Assessment / Leadership Index (3 sample items)", block: "LI_ITEMS" },
   { screen: "Atreus coaching", mirrors: "Atreus conversation (scripted)", block: "ATREUS" },
   { screen: "Daily check-in", mirrors: "Morning check-in + trend (Go Flat Bridge model)", block: "CHECKIN" },
   { screen: "Training module", mirrors: "Onboarding journey module completion", block: "TRAINING, ONBOARDING" },
-  { screen: "Onboarding + org view", mirrors: "Onboarding journey + Leadership Intelligence aggregates", block: "ONBOARDING, ORG" },
+  { screen: "Org view", mirrors: "Leadership Intelligence Hub — metrics, priority areas, lifecycle", block: "HUB, ORG" },
 ];
 
 export const STEPS = [
@@ -230,6 +230,63 @@ export const TRAINING = {
   ],
   completion:
     "Recorded against your onboarding journey and your development record — the same place a quarterly review would look. Nothing here is a certificate for its own sake; the evidence is the change in your week.",
+};
+
+// Mirrors the Leadership Intelligence Hub as the app renders it: filter bar,
+// four headline metrics, priority areas and the lifecycle stage grid.
+export const HUB = {
+  title: "Leadership Intelligence Hub",
+  subtitle: "Analytics and strategic insights",
+  filters: ["All Time", "All Divisions", "All Levels", "All Tenure", "All Risk Profiles"],
+  dataConfidence: 40,
+  metrics: [
+    {
+      id: "health",
+      label: "Leadership Health",
+      value: "68%",
+      tone: "blue",
+      headline: "Building — targeted coaching recommended",
+      foot: "Manager Effectiveness Index",
+    },
+    {
+      id: "risk",
+      label: "Immediate Risk",
+      value: "0",
+      tone: "green",
+      headline: "All leaders above performance threshold",
+      foot: "leaders requiring review this cycle",
+    },
+    {
+      id: "succession",
+      label: "Succession Coverage",
+      value: "0%",
+      tone: "purple",
+      headline: "Thin bench — prioritise succession slate review",
+      foot: "weighted bench score · 1 assessed leader",
+    },
+    {
+      id: "confidence",
+      label: "Data Confidence",
+      value: "40%",
+      tone: "gray",
+      headline: "Platform-native only — 3 signals not connected",
+      foot: "2 of 5 signals active",
+    },
+  ],
+  priorityAreas: [
+    { label: "Thin succession bench", tone: "amber" },
+    { label: "Learning velocity low", tone: "amber" },
+    { label: "Engagement not connected", tone: "gray" },
+  ],
+  lifecycle: [
+    { label: "Attract & Hire", description: "Brand perception & pipeline quality", status: "ok" },
+    { label: "Onboarding", description: "90-day integration & early signals", status: "watch" },
+    { label: "Develop", description: "Growth, coaching & capability", status: "watch" },
+    { label: "Perform", description: "Execution, goals & manager effectiveness", status: "ok" },
+    { label: "Mobility & Succession", description: "Bench strength & readiness", status: "watch" },
+    { label: "Retain", description: "Flight risk, engagement & loyalty", status: "ok" },
+    { label: "Separation", description: "Exit signals & knowledge transfer", status: "watch" },
+  ],
 };
 
 export const ORG = {
