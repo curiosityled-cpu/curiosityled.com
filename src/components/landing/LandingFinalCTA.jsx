@@ -7,20 +7,21 @@ export default function LandingFinalCTA() {
     <section className="py-24" style={{ backgroundColor: "#0202ff" }}>
       <div className="max-w-3xl mx-auto px-6 text-center">
         <h2 className="text-3xl lg:text-[2.6rem] font-bold text-white leading-[1.15] tracking-tight">
-          Start with the manager you're worried about.
+          See it before you buy it.
         </h2>
         <p className="mt-5 text-blue-100 text-lg leading-relaxed max-w-2xl mx-auto">
-          One manager, one real situation, eight minutes. You'll see exactly what the check reveals
-          — and what your organisation would be able to prove if every manager did it.
+          Walk through the manager experience yourself in five minutes — the profile, the coaching,
+          the check-in, and the view your board would ask for. Then talk to us about your own
+          organisation.
         </p>
 
         <div className="mt-9 flex flex-col sm:flex-row gap-3 justify-center">
           <Link
-            to="/diagnostic"
+            to="/explore"
             className="inline-flex items-center justify-center gap-2 bg-white font-bold text-sm px-8 py-4 rounded-xl hover:bg-blue-50 transition-all shadow-lg"
             style={{ color: "#0202ff" }}
           >
-            Take the 8-minute manager check
+            Experience Curiosity Led for yourself
             <ArrowRight className="w-4 h-4" />
           </Link>
           <a
@@ -29,12 +30,12 @@ export default function LandingFinalCTA() {
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 bg-transparent font-bold text-sm px-8 py-4 rounded-xl border border-white/30 text-white hover:bg-white/10 transition-all"
           >
-            Book a walkthrough
+            Book a demo
           </a>
         </div>
 
         <p className="mt-5 text-xs text-blue-200">
-          No account required for the check. No pitch on the walkthrough.
+          No account for the demo. A real conversation, not a slide deck, on the demo call.
         </p>
       </div>
     </section>

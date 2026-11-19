@@ -48,6 +48,7 @@ import BlogPost from './pages/BlogPost';
 import BlogManager from './pages/BlogManager';
 import GrowthStrategyBrief from './pages/GrowthStrategyBrief';
 import Pricing from './pages/Pricing';
+import Explore from './pages/Explore';
 import TenantCleanup from './pages/TenantCleanup';
 
 
@@ -181,6 +182,9 @@ const AuthenticatedApp = () => {
 
       {/* Public pricing and packaging — no login required */}
       <Route path="/pricing" element={<Pricing />} />
+
+      {/* Public interactive demo — self-contained, never touches app data */}
+      <Route path="/explore" element={<Explore />} />
 
 
       {/* Protected app routes — auth required, unauthenticated users redirect to /login */}

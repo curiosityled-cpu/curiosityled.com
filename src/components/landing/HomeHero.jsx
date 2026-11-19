@@ -63,48 +63,31 @@ export default function HomeHero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.65, delay: 0.28 }}
-              className="mt-9 grid sm:grid-cols-2 gap-3 max-w-xl"
+              className="mt-9 flex flex-col sm:flex-row gap-3"
             >
-              <Link
-                to="/diagnostic"
-                className="group rounded-xl border border-gray-200 bg-white p-4 hover:border-[#0202ff] hover:shadow-sm transition-all"
-              >
-                <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
-                  I manage a team
-                </p>
-                <p className="mt-1.5 text-sm font-semibold text-gray-900 leading-snug">
-                  Take the 8-minute manager check
-                </p>
-                <p className="mt-1 text-xs text-gray-500 leading-relaxed">
-                  Real scenarios, a profile you can keep. No account needed.
-                </p>
-                <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold" style={{ color: "#0202ff" }}>
-                  Start now
-                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-                </span>
-              </Link>
-
               <a
                 href="https://cal.com/curiosityled/bookdemo"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group rounded-xl border border-gray-200 bg-gray-50 p-4 hover:border-gray-300 hover:bg-white transition-all"
+                className="group inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-bold text-white hover:opacity-90 transition-all shadow-sm"
+                style={{ backgroundColor: "#0202ff" }}
               >
-                <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
-                  I'm accountable for managers
-                </p>
-                <p className="mt-1.5 text-sm font-semibold text-gray-900 leading-snug">
-                  See what the evidence looks like
-                </p>
-                <p className="mt-1 text-xs text-gray-500 leading-relaxed">
-                  25 minutes, your org structure, no slide deck.
-                </p>
-                <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-gray-700">
-                  Book a walkthrough
-                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-                </span>
+                Book a demo
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
               </a>
+              <Link
+                to="/explore"
+                className="group inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 px-6 py-3.5 text-sm font-bold text-gray-800 hover:border-gray-400 hover:bg-gray-50 transition-all"
+              >
+                Experience Curiosity Led for yourself
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
             </motion.div>
+
+            <p className="mt-3 text-xs text-gray-500">
+              Five minutes, no account. Managers usually start there; HR and owners usually book the
+              walkthrough.
+            </p>
 
             <motion.ul
               initial={{ opacity: 0 }}

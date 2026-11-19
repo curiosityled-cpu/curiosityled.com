@@ -151,6 +151,13 @@ export default function LandingNav({ hideCtas = false }) {
         <div className="flex items-center gap-2">
           {!hideCtas && (
             <div className="hidden md:flex items-center gap-3">
+              <Link
+                to="/explore"
+                className="text-sm font-semibold hover:opacity-80 transition-opacity px-1"
+                style={{ color: "#0202ff" }}
+              >
+                Experience the demo
+              </Link>
               <button
                 onClick={handleLogin}
                 className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-3 py-2"
@@ -224,6 +231,13 @@ export default function LandingNav({ hideCtas = false }) {
             </button>
             {!hideCtas && (
               <div className="mt-3 flex flex-col gap-2 border-t border-gray-100 pt-3">
+                <Link
+                  to="/explore"
+                  className="py-2 text-[15px] font-semibold"
+                  style={{ color: "#0202ff" }}
+                >
+                  Experience the demo
+                </Link>
                 <button
                   onClick={handleLogin}
                   className="py-2 text-left text-[15px] font-medium text-gray-600"

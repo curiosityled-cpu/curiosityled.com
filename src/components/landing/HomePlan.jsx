@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Compass, MessagesSquare, Repeat } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Compass, MessagesSquare, Repeat, ArrowRight } from "lucide-react";
 
 const STEPS = [
   {
@@ -78,6 +79,23 @@ export default function HomePlan() {
               </motion.div>
             );
           })}
+        </div>
+
+        <div className="mt-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-gray-50 px-6 py-5">
+          <div>
+            <p className="text-sm font-bold text-[#0a0a0a]">Reading about it isn't the same as doing it.</p>
+            <p className="mt-1 text-sm text-gray-600">
+              The whole loop takes five minutes, and nothing is gated behind a form.
+            </p>
+          </div>
+          <Link
+            to="/explore"
+            className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white hover:opacity-90 flex-shrink-0"
+            style={{ backgroundColor: "#0202ff" }}
+          >
+            Experience Curiosity Led for yourself
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </div>
     </section>
