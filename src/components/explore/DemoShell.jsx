@@ -66,50 +66,10 @@ function NavRow({ item, active }) {
 
 export default function DemoShell({ step, onStep, children }) {
   const [groupOpen, setGroupOpen] = useState(true);
-  const meta = STEPS[step];
-
-  const progress = (
-    <div className="flex items-center gap-2">
-      <div className="hidden sm:flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1">
-        {STEPS.map((s, i) => {
-          const done = i < step;
-          const active = i === step;
-          return (
-            <button
-              key={s.id}
-              onClick={() => onStep(i)}
-              title={s.label}
-              className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-semibold transition-colors ${
-                active ? "bg-[#0202ff] text-white" : "text-gray-500 hover:bg-gray-100"
-              }`}
-            >
-              <span
-                className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold ${
-                  done ? "bg-emerald-500 text-white" : active ? "bg-white/20 text-white" : "bg-gray-200 text-gray-600"
-                }`}
-              >
-                {done ? <Check className="w-2 h-2" /> : i + 1}
-              </span>
-              <span className="hidden lg:inline">{s.short}</span>
-            </button>
-          );
-        })}
-      </div>
-      <span className="sm:hidden text-[11px] font-semibold text-gray-500">
-        Step {step + 1}/{STEPS.length}
-      </span>
-      <Link
-        to="/"
-        className="text-xs font-semibold text-gray-500 hover:text-gray-900 px-2 py-1.5 whitespace-nowrap"
-      >
-        Exit demo
-      </Link>
-    </div>
-  );
 
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Desktop sidebar — mirrors the app shell */}
+      {/* Desktop sidebar — the app shell */}
       <aside
         className="hidden sm:flex flex-col w-64 fixed inset-y-0 left-0 z-20"
         style={{ background: "hsl(var(--sidebar-background))", borderRight: "1px solid hsl(var(--sidebar-border))" }}
@@ -182,7 +142,7 @@ export default function DemoShell({ step, onStep, children }) {
         </div>
       </aside>
 
-      {/* Mobile header — mirrors the app */}
+      {/* Mobile header — the app shell */}
       <header
         className="sm:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 h-14"
         style={{ background: "hsl(var(--card))", borderBottom: "1px solid hsl(var(--sidebar-border))" }}
@@ -202,23 +162,56 @@ export default function DemoShell({ step, onStep, children }) {
         </span>
       </header>
 
-      {/* Main — the app's own page shell */}
       <main className="flex-1 min-w-0 overflow-hidden sm:ml-64 pt-14 sm:pt-0 min-h-screen">
-        {/* Same page shell the app's own pages render */}
-        <div className="min-h-screen bg-gray-50 transition-all duration-200">
-          <div className="w-full min-w-0 overflow-x-hidden px-4 sm:px-6 py-4 sm:py-6 space-y-4">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight leading-[1.15]">
-                  {meta.title}
-                </h1>
-                <p className="text-[0.9375rem] text-gray-600 mt-1.5 leading-relaxed">{meta.subtitle}</p>
-              </div>
-              <div className="flex-shrink-0">{progress}</div>
+        {/* Demo strip — sits above the page exactly like the app's own banners */}
+        <div className="border-b border-gray-200 bg-white">
+          <div className="max-w-6xl mx-auto px-4 py-2 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider text-[9px] font-bold flex-shrink-0">
+                Demo
+              </span>
+              <span className="text-[11px] text-gray-500 truncate hidden sm:inline">
+                Sample data — nothing here is saved
+              </span>
             </div>
-            <div className="space-y-4">{children}</div>
+
+            <div className="flex items-center gap-1">
+              {STEPS.map((s, i) => {
+                const done = i < step;
+                const active = i === step;
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => onStep(i)}
+                    title={s.label}
+                    className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-semibold transition-colors ${
+                      active ? "bg-[#0202ff] text-white" : "text-gray-500 hover:bg-gray-100"
+                    }`}
+                  >
+                    <span
+                      className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold ${
+                        done
+                          ? "bg-emerald-500 text-white"
+                          : active
+                          ? "bg-white/20 text-white"
+                          : "bg-gray-200 text-gray-600"
+                      }`}
+                    >
+                      {done ? <Check className="w-2 h-2" /> : i + 1}
+                    </span>
+                    <span className="hidden lg:inline">{s.short}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <Link to="/" className="text-xs font-semibold text-gray-500 hover:text-gray-900 whitespace-nowrap">
+              Exit
+            </Link>
           </div>
         </div>
+
+        {children}
       </main>
     </div>
   );
