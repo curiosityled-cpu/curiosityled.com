@@ -11,9 +11,10 @@ const INDUSTRY_LINKS = [
 ];
 
 const NAV_LINKS = [
-  { to: "/", label: "Product" },
-  { to: "/compare", label: "Why us" },
+  { to: "/#how-it-works", label: "How it works", anchor: "how-it-works" },
+  { to: "/#outcomes", label: "Outcomes", anchor: "outcomes" },
   { to: "/pricing", label: "Pricing" },
+  { to: "/compare", label: "Why us" },
 ];
 
 export default function LandingNav({ hideCtas = false }) {
@@ -49,6 +50,18 @@ export default function LandingNav({ hideCtas = false }) {
     base44.auth.redirectToLogin("/");
   };
 
+  const handleAnchor = (e, id) => {
+    e.preventDefault();
+    setOpen(false);
+    setIndustryOpen(false);
+    if (pathname !== "/") {
+      navigate("/");
+      setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }), 300);
+      return;
+    }
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  };
+
   const goToFaq = () => {
     setOpen(false);
     const el = document.getElementById("faq");
@@ -77,6 +90,7 @@ export default function LandingNav({ hideCtas = false }) {
             <Link
               key={link.to}
               to={link.to}
+              onClick={link.anchor ? (e) => handleAnchor(e, link.anchor) : undefined}
               className={`text-sm transition-colors hover:text-gray-900 ${
                 pathname === link.to ? "font-semibold text-gray-900" : "font-medium text-gray-600"
               }`}
@@ -173,6 +187,7 @@ export default function LandingNav({ hideCtas = false }) {
               <Link
                 key={link.to}
                 to={link.to}
+                onClick={link.anchor ? (e) => handleAnchor(e, link.anchor) : undefined}
                 className={`py-2.5 text-[15px] ${
                   pathname === link.to ? "font-semibold text-gray-900" : "font-medium text-gray-600"
                 }`}

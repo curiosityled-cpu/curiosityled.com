@@ -1,27 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { setPageSEO } from "@/lib/seo";
 import LandingNav from "@/components/landing/LandingNav";
-import LandingHero from "@/components/landing/LandingHero";
-import LandingProblem from "@/components/landing/LandingProblem";
-import LandingAssessDevelopProve from "@/components/landing/LandingAssessDevelopProve";
-import LandingConversationalLearning from "@/components/landing/LandingConversationalLearning";
-import LandingObjectionStrip from "@/components/landing/LandingObjectionStrip";
-import LandingBuyerNeeds from "@/components/landing/LandingBuyerNeeds";
-import LandingExplainer from "@/components/landing/LandingExplainer";
-import LandingInteractivePreview from "@/components/landing/LandingInteractivePreview";
+import HomeHero from "@/components/landing/HomeHero";
+import HomeCost from "@/components/landing/HomeCost";
+import HomePlan from "@/components/landing/HomePlan";
+import HomeInside from "@/components/landing/HomeInside";
+import HomeOutcomes from "@/components/landing/HomeOutcomes";
 import LandingFitSection from "@/components/landing/LandingFitSection";
-import Landing90Days from "@/components/landing/Landing90Days";
-import LandingBeyond from "@/components/landing/LandingBeyond";
+import LandingFounderBlock from "@/components/landing/LandingFounderBlock";
 import LandingFinalCTA from "@/components/landing/LandingFinalCTA";
 import LandingFAQ from "@/components/landing/LandingFAQ";
-import LandingFounderBlock from "@/components/landing/LandingFounderBlock";
 import LandingFooter from "@/components/landing/LandingFooter";
 
 export default function LandingPage() {
   useEffect(() => {
     setPageSEO(
-      "Curiosity Led — Manager Intelligence That Shows What Changed",
-      "Curiosity Led is the manager intelligence platform that develops manager judgment and records what managers did differently — inside Microsoft Teams and by email."
+      "Curiosity Led — Manager development that leaves a record",
+      "Curiosity Led helps managers think through the hard moment before they walk into it, and gives HR and owners evidence of what changed — inside Microsoft Teams and email."
     );
     return () => { document.title = "Curiosity Led"; };
   }, []);
@@ -29,20 +24,15 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white font-sans">
       <LandingNav />
-      <LandingHero />
-      <LandingProblem />
-      <LandingAssessDevelopProve />
-      <LandingConversationalLearning />
-      <LandingObjectionStrip />
-      <LandingBuyerNeeds />
-      <LandingExplainer />
-      <LandingInteractivePreview />
+      <HomeHero />
+      <HomeCost />
+      <HomePlan />
+      <HomeInside />
+      <HomeOutcomes />
       <LandingFitSection />
-      <Landing90Days />
-      <LandingBeyond />
-      <LandingFinalCTA />
       <LandingFounderBlock />
       <LandingFAQ />
+      <LandingFinalCTA />
       <LandingFooter />
     </div>
   );
