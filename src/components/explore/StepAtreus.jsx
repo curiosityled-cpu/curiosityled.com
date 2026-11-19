@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { ArrowRight, Send, Sparkles, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { ATREUS, DIMENSIONS } from "@/lib/exploreDemoContent";
 
 const weakestOf = (profile) => {
@@ -41,19 +42,8 @@ export default function StepAtreus({ profile, onNext }) {
   };
 
   return (
-    <div>
-      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gray-500 mb-3">
-        Atreus · coaching
-      </p>
-      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight mb-2">
-        The support arrives before the moment, not after.
-      </h1>
-      <p className="text-gray-600 leading-relaxed mb-6">
-        Atreus works from your real week — the check-in you skipped, the commitment you made, the
-        1:1 you moved. Pick a situation to see how it answers.
-      </p>
-
-      <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+    <div className="space-y-4">
+      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
         <div className="flex items-center gap-2.5 px-4 py-3 border-b border-gray-100 bg-gray-50">
           <div
             className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
@@ -67,7 +57,7 @@ export default function StepAtreus({ profile, onNext }) {
           </div>
         </div>
 
-        <div className="p-4 space-y-3 max-h-[380px] overflow-y-auto">
+        <div className="p-4 space-y-3 max-h-[360px] overflow-y-auto">
           {messages.map((m, i) => (
             <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
               <div
@@ -83,7 +73,7 @@ export default function StepAtreus({ profile, onNext }) {
         </div>
 
         {commitment && (
-          <div className="mx-4 mb-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5">
+          <div className="mx-4 mb-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3.5">
             <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 mb-1">
               This week's commitment
             </p>
@@ -122,30 +112,27 @@ export default function StepAtreus({ profile, onNext }) {
             placeholder="Type anything — you'll see the scripted answer"
             className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-[13px] outline-none focus:border-[#0202ff]"
           />
-          <button
-            type="submit"
-            className="rounded-lg p-2 text-white"
-            style={{ backgroundColor: "#0202ff" }}
-            aria-label="Send"
-          >
+          <Button type="submit" size="icon" className="text-white" style={{ backgroundColor: "#0202ff" }} aria-label="Send">
             <Send className="w-4 h-4" />
-          </button>
+          </Button>
         </form>
       </div>
 
-      <div className="mt-5 flex items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <p className="text-xs text-gray-500">
-          {used.length === 0 ? "Pick one prompt to continue." : "Every answer ends in something you can do this week."}
+          {used.length === 0
+            ? "Pick one prompt to continue."
+            : "Every answer ends in something you can do this week."}
         </p>
-        <button
+        <Button
           onClick={onNext}
           disabled={used.length === 0}
-          className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-bold text-white disabled:opacity-40 flex-shrink-0"
+          className="text-white flex-shrink-0"
           style={{ backgroundColor: "#0202ff" }}
         >
           Keep the rhythm
-          <ArrowRight className="w-4 h-4" />
-        </button>
+          <ArrowRight className="w-4 h-4 ml-1.5" />
+        </Button>
       </div>
     </div>
   );

@@ -13,10 +13,38 @@ export const DEMO_SOURCE_MAP = [
 ];
 
 export const STEPS = [
-  { id: "leadership", label: "See yourself", short: "Profile", minutes: 2 },
-  { id: "atreus", label: "Get the support", short: "Atreus", minutes: 2 },
-  { id: "checkin", label: "Keep the rhythm", short: "Check-in", minutes: 1 },
-  { id: "org", label: "Make it real", short: "For the org", minutes: 1 },
+  {
+    id: "leadership",
+    label: "See yourself",
+    short: "Profile",
+    minutes: 2,
+    title: "See yourself clearly",
+    subtitle: "Three questions from the Leadership Index. Not a personality quiz, and not pass or fail.",
+  },
+  {
+    id: "atreus",
+    label: "Get the support",
+    short: "Atreus",
+    minutes: 2,
+    title: "Get support before the moment",
+    subtitle: "Atreus works from your real week — the 1:1 you moved, the commitment you made.",
+  },
+  {
+    id: "checkin",
+    label: "Keep the rhythm",
+    short: "Check-in",
+    minutes: 1,
+    title: "Keep the rhythm",
+    subtitle: "Forty seconds a day, in Teams or email. This is what turns a feeling into a pattern.",
+  },
+  {
+    id: "org",
+    label: "Make it real",
+    short: "For the org",
+    minutes: 1,
+    title: "What the organisation sees",
+    subtitle: "The same data, read at the level a board asks about — aggregates only, never transcripts.",
+  },
 ];
 
 export const LI_ITEMS = [

@@ -43,8 +43,8 @@ export default function HomeHero() {
               transition={{ duration: 0.65, delay: 0.08 }}
               className="text-[2.1rem] leading-[1.08] sm:text-5xl lg:text-[3.4rem] font-bold text-[#0a0a0a] tracking-tight"
             >
-              Nobody trained you for the{" "}
-              <span style={{ color: "#0202ff" }}>people part</span> of managing.
+              Nobody hands you{" "}
+              <span style={{ color: "#0202ff" }}>a manual</span> the day you get the title.
             </motion.h1>
 
             <motion.p

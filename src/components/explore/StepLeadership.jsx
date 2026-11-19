@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { LI_ITEMS, SCALE_LABELS, DIMENSIONS } from "@/lib/exploreDemoContent";
 import ProfileSummary from "@/components/explore/ProfileSummary";
 
@@ -18,53 +19,39 @@ export default function StepLeadership({ onComplete }) {
 
   if (showProfile) {
     return (
-      <div>
-        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gray-500 mb-3">
-          Step 1 complete
-        </p>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight mb-2">
-          That's your profile. Three answers, one honest read.
-        </h1>
-        <p className="text-gray-600 leading-relaxed mb-6">
-          The full Leadership Index uses {Object.keys(DIMENSIONS).length}+ dimensions and a
-          validated item bank. This is the shape of it — enough to show you what you'd be
-          working from.
-        </p>
+      <div className="space-y-4">
+        <div className="rounded-xl border border-gray-200 bg-white p-5">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Step 1 complete</p>
+          <h2 className="text-lg font-bold text-gray-900 mt-1">That's your profile — three answers, one honest read.</h2>
+          <p className="text-sm text-gray-600 mt-1.5 leading-relaxed">
+            The full Leadership Index uses a validated item bank across {Object.keys(DIMENSIONS).length}+ dimensions.
+            This is the shape of it, enough to show you what you'd be working from.
+          </p>
+        </div>
 
         <ProfileSummary scores={scores} />
 
-        <button
+        <Button
           onClick={() => onComplete(scores)}
-          className="mt-6 inline-flex items-center gap-2 rounded-lg px-5 py-3 text-sm font-bold text-white hover:opacity-90"
+          className="text-white"
           style={{ backgroundColor: "#0202ff" }}
         >
           Now get the support for it
-          <ArrowRight className="w-4 h-4" />
-        </button>
+          <ArrowRight className="w-4 h-4 ml-1.5" />
+        </Button>
       </div>
     );
   }
 
   return (
-    <div>
-      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gray-500 mb-3">
-        Leadership Index · sample
-      </p>
-      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight mb-2">
-        See yourself clearly. Three questions.
-      </h1>
-      <p className="text-gray-600 leading-relaxed mb-7">
-        Not a personality quiz and not a pass/fail. Just where your judgment is strong, and where
-        it quietly costs you.
-      </p>
-
-      <div className="rounded-2xl border border-gray-200 bg-white p-6">
+    <div className="space-y-4">
+      <div className="rounded-xl border border-gray-200 bg-white p-5">
         <div className="flex items-center justify-between mb-4">
           <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-            {idx + 1} of {LI_ITEMS.length}
+            Leadership Index · {idx + 1} of {LI_ITEMS.length}
           </span>
           <div className="flex gap-1">
-            {LI_ITEMS.map((it, i) => (
+            {LI_ITEMS.map((it) => (
               <span
                 key={it.id}
                 className="h-1 w-6 rounded-full"
@@ -74,7 +61,7 @@ export default function StepLeadership({ onComplete }) {
           </div>
         </div>
 
-        <p className="text-lg font-semibold text-gray-900 leading-snug mb-6">{item.statement}</p>
+        <p className="text-base font-semibold text-gray-900 leading-snug mb-5">{item.statement}</p>
 
         <div className="grid grid-cols-5 gap-1.5">
           {SCALE_LABELS.map((label, i) => {
@@ -84,7 +71,7 @@ export default function StepLeadership({ onComplete }) {
               <button
                 key={label}
                 onClick={() => setAnswers((a) => ({ ...a, [item.id]: value }))}
-                className={`rounded-xl border px-1 py-3 text-[10px] font-semibold leading-tight transition-all ${
+                className={`rounded-lg border px-1 py-2.5 text-[10px] font-semibold leading-tight transition-all ${
                   selected
                     ? "text-white border-transparent"
                     : "border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50"
@@ -98,24 +85,22 @@ export default function StepLeadership({ onComplete }) {
         </div>
       </div>
 
-      <div className="mt-5 flex items-center gap-3">
+      <div className="flex items-center gap-2">
         {idx > 0 && (
-          <button
-            onClick={() => setIdx((i) => i - 1)}
-            className="text-xs font-semibold text-gray-500 hover:text-gray-900 px-2 py-2"
-          >
+          <Button variant="ghost" size="sm" onClick={() => setIdx((i) => i - 1)}>
+            <ChevronLeft className="w-4 h-4 mr-1" />
             Previous
-          </button>
+          </Button>
         )}
-        <button
+        <Button
           disabled={!current}
           onClick={() => (idx === LI_ITEMS.length - 1 ? setShowProfile(true) : setIdx((i) => i + 1))}
-          className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-bold text-white disabled:opacity-40"
+          className="text-white"
           style={{ backgroundColor: "#0202ff" }}
         >
           {idx === LI_ITEMS.length - 1 ? "See my profile" : "Next"}
-          <ArrowRight className="w-4 h-4" />
-        </button>
+          <ArrowRight className="w-4 h-4 ml-1.5" />
+        </Button>
       </div>
     </div>
   );
