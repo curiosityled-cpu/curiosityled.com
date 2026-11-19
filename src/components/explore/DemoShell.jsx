@@ -36,7 +36,7 @@ const ADMIN_CHILDREN = [
 ];
 
 // Which nav entry lights up on each demo step, mirroring the real app's active state
-const ACTIVE_BY_STEP = ["Practice", "Lead", "Lead", "Leadership Intelligence"];
+const ACTIVE_BY_STEP = ["Practice", "Lead", "Lead", "Practice", "Leadership Intelligence"];
 
 function NavRow({ item, active }) {
   const Icon = item.icon;

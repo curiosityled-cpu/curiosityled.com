@@ -3,12 +3,13 @@
 // one file. When a feature changes in the app, update the matching block below and
 // bump DEMO_VERSION. See docs/explore-demo-maintenance.md.
 
-export const DEMO_VERSION = "2026.11.19";
+export const DEMO_VERSION = "2026.11.20";
 
 export const DEMO_SOURCE_MAP = [
   { screen: "Leadership Index sample", mirrors: "Assessment / Leadership Index (3 sample items)", block: "LI_ITEMS" },
   { screen: "Atreus coaching", mirrors: "Atreus conversation (scripted)", block: "ATREUS" },
   { screen: "Daily check-in", mirrors: "Morning check-in + trend (Go Flat Bridge model)", block: "CHECKIN" },
+  { screen: "Training module", mirrors: "Onboarding journey module completion", block: "TRAINING, ONBOARDING" },
   { screen: "Onboarding + org view", mirrors: "Onboarding journey + Leadership Intelligence aggregates", block: "ONBOARDING, ORG" },
 ];
 
@@ -36,6 +37,14 @@ export const STEPS = [
     minutes: 1,
     title: "Keep the rhythm",
     subtitle: "Forty seconds a day, in Teams or email. This is what turns a feeling into a pattern.",
+  },
+  {
+    id: "training",
+    label: "Build the habit",
+    short: "Training",
+    minutes: 2,
+    title: "Training that lands in the work",
+    subtitle: "A module from the onboarding journey — read, reflect, commit.",
   },
   {
     id: "org",
@@ -174,6 +183,53 @@ export const ONBOARDING = {
     { title: "Share your team's operating rhythm", when: "Week 4", status: "due" },
     { title: "First quarterly review, with evidence", when: "Day 90", status: "locked" },
   ],
+};
+
+export const TRAINING = {
+  title: "Leading the first 90 days",
+  subtitle: "Module 2 of your new manager onboarding journey · assigned by HR",
+  minutes: 6,
+  steps: [
+    {
+      id: "tr_1",
+      title: "What changes when you stop being the best doer",
+      body: [
+        "The thing that got you promoted is now the thing that limits you. Doing the work well and getting work done well are different jobs, and only one of them scales.",
+        "Most new managers keep a hand in the work for comfort. It reads as commitment for about six weeks, then it reads as bottleneck.",
+      ],
+      prompt: "Which of these is closest to your last week?",
+      options: [
+        "I did the work myself because it was faster",
+        "I handed it over and watched too closely",
+        "I handed it over and let it land",
+      ],
+    },
+    {
+      id: "tr_2",
+      title: "Making 'good enough' explicit",
+      body: [
+        "Every handoff carries a standard. If that standard only exists in your head, the other person is being set up to fail and neither of you knows it yet.",
+        "Three lines is enough: what matters, what doesn't, and what to send me before it ships.",
+      ],
+      prompt: "Where does your standard stay unspoken?",
+      options: ["Reviews I redo", "Anything client-facing", "Handoffs to my newest hire"],
+    },
+    {
+      id: "tr_3",
+      title: "The commitment you take into next week",
+      body: [
+        "A module only counts if something changes on Monday. This is the line next week's check-in will ask you about.",
+      ],
+      prompt: "Pick the one you'll actually do.",
+      options: [
+        "Write the good-enough bar for one task, in three lines",
+        "Stop re-checking one handoff for two weeks",
+        "Tell my team what I'm no longer reviewing",
+      ],
+    },
+  ],
+  completion:
+    "Recorded against your onboarding journey and your development record — the same place a quarterly review would look. Nothing here is a certificate for its own sake; the evidence is the change in your week.",
 };
 
 export const ORG = {

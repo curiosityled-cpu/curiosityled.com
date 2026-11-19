@@ -5,6 +5,7 @@ import DemoShell from "@/components/explore/DemoShell";
 import StepLeadership from "@/components/explore/StepLeadership";
 import StepAtreus from "@/components/explore/StepAtreus";
 import StepCheckIn from "@/components/explore/StepCheckIn";
+import StepTraining from "@/components/explore/StepTraining";
 import StepOrg from "@/components/explore/StepOrg";
 
 export default function Explore() {
@@ -39,9 +40,9 @@ export default function Explore() {
       )}
       {step === 1 && <StepAtreus profile={profile} onNext={() => go(2)} />}
       {step === 2 && <StepCheckIn onNext={() => go(3)} />}
-      {step === 3 && (
+      {step === 3 && <StepTraining onNext={() => go(4)} />}
+      {step === 4 && (
         <StepOrg
-          profile={profile}
           onRestart={() => {
             setProfile(null);
             go(0);
