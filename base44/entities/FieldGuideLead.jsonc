@@ -1,0 +1,69 @@
+{
+  "name": "FieldGuideLead",
+  "type": "object",
+  "description": "A visitor who requested a downloadable guide from a public blog article. Written by the public capture function; readable only by administrators.",
+  "properties": {
+    "full_name": {
+      "type": "string",
+      "description": "Name given on the form"
+    },
+    "email": {
+      "type": "string",
+      "description": "Email address given on the form"
+    },
+    "company_name": {
+      "type": "string",
+      "description": "Company the visitor works for"
+    },
+    "employee_count": {
+      "type": "string",
+      "description": "Estimated employee count as entered or selected"
+    },
+    "consent_marketing": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the visitor agreed to receive follow-up emails"
+    },
+    "consent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When consent was given"
+    },
+    "resource": {
+      "type": "string",
+      "description": "Which guide was downloaded"
+    },
+    "source_page": {
+      "type": "string",
+      "description": "Path of the page the lead came from"
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Internal follow-up notes"
+    }
+  },
+  "required": [
+    "full_name",
+    "email",
+    "company_name"
+  ],
+  "rls": {
+    "create": {},
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
