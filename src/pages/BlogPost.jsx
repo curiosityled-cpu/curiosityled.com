@@ -6,8 +6,14 @@ import { formatPostDate, postUrl } from "@/lib/blog";
 import { ArrowLeft, ArrowRight, Check, Linkedin, Link2 } from "lucide-react";
 import BlogHeader from "@/components/blog/BlogHeader";
 import ArticleBody from "@/components/blog/ArticleBody";
+import FieldGuideCta from "@/components/blog/FieldGuideCta";
+import FieldGuideModal from "@/components/blog/FieldGuideModal";
 import PostCard from "@/components/blog/PostCard";
 import LandingFooter from "@/components/landing/LandingFooter";
+
+// Articles that offer the Difficult Conversations field guide as a lead magnet.
+const FIELD_GUIDE_SLUG = "difficult-conversations-at-work";
+const FIELD_GUIDE_POPUP_DELAY_MS = 40000;
 
 function Byline({ post }) {
   return (
@@ -36,6 +42,7 @@ export default function BlogPost() {
   const [related, setRelated] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -81,6 +88,34 @@ export default function BlogPost() {
     document.head.appendChild(meta);
     return () => meta.remove();
   }, [loading, post]);
+
+  const hasFieldGuide = post?.slug === FIELD_GUIDE_SLUG;
+
+  // Open the field guide popup once, a little way into the read.
+  useEffect(() => {
+    if (!hasFieldGuide) return undefined;
+    const key = `field-guide-popup:${FIELD_GUIDE_SLUG}`;
+    if (sessionStorage.getItem(key)) return undefined;
+    const timer = setTimeout(() => {
+      sessionStorage.setItem(key, "1");
+      setGuideOpen(true);
+    }, FIELD_GUIDE_POPUP_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [hasFieldGuide]);
+
+  const openGuide = (event) => {
+    if (event) event.preventDefault();
+    setGuideOpen(true);
+  };
+
+  // In-article links that point at #field-guide open the popup instead of jumping.
+  const handleArticleClick = (event) => {
+    if (!hasFieldGuide) return;
+    const anchor = event.target.closest?.("a");
+    if (anchor && anchor.getAttribute("href") === "#field-guide") {
+      openGuide(event);
+    }
+  };
 
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
 
@@ -182,8 +217,10 @@ export default function BlogPost() {
           </div>
         )}
 
-        <div className="mt-12 max-w-[46rem] mx-auto">
+        <div className="mt-12 max-w-[46rem] mx-auto" onClick={handleArticleClick}>
           <ArticleBody content={post.content_continued ? `${post.content}\n\n${post.content_continued}` : post.content} />
+
+          {hasFieldGuide && <FieldGuideCta onOpen={openGuide} />}
 
           {post.tags?.length > 0 && (
             <div className="mt-12 flex flex-wrap gap-2">
@@ -281,6 +318,14 @@ export default function BlogPost() {
       </section>
 
       <LandingFooter />
+
+      {hasFieldGuide && (
+        <FieldGuideModal
+          open={guideOpen}
+          onOpenChange={setGuideOpen}
+          sourcePage={window.location.pathname}
+        />
+      )}
     </div>
   );
 }
