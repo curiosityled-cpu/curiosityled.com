@@ -11,7 +11,7 @@
  */
 import React, { useState, useEffect } from "react";
 import { Dumbbell, CheckCircle2, Brain, RotateCcw, Clock, Target, Zap, ChevronDown, ChevronUp } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -55,7 +55,7 @@ function scoreExercise(exercise, goals, trends, insight) {
   return score;
 }
 
-export default function WorkoutsSection({ goals = [], trends = null, insight = null }) {
+export default function WorkoutsSection({ goals = [], trends = null, insight = null, prescription = null }) {
   const { user } = useAuth();
   const { openWithContext } = useAtreusChat();
   const [dynamicWorkouts, setDynamicWorkouts] = useState([]);
@@ -113,16 +113,13 @@ export default function WorkoutsSection({ goals = [], trends = null, insight = n
 
   return (
     <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
-      <button
-        onClick={() => { const v = !expanded; setExpanded(v); try { localStorage.setItem("cl_collapse_workouts", JSON.stringify(v)); } catch {} }}
-        className="px-5 pt-5 pb-2 flex items-center justify-between w-full text-left group"
-      >
+      <div className="px-5 pt-5 pb-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-violet-50 border border-violet-100 flex items-center justify-center">
-            <Dumbbell className="w-3.5 h-3.5 text-violet-600" />
+          <div className="w-7 h-7 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center">
+            <Dumbbell className="w-3.5 h-3.5 text-amber-600" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-900">Workouts</p>
+            <p className="text-sm font-semibold text-gray-900">Daily Gym</p>
             <p className="text-[10px] text-gray-400">
               {dynamicWorkouts.length > 0
                 ? `${dynamicWorkouts.length} pattern-driven ${dynamicWorkouts.length === 1 ? 'workout' : 'workouts'} ready`
@@ -130,12 +127,25 @@ export default function WorkoutsSection({ goals = [], trends = null, insight = n
             </p>
           </div>
         </div>
-        {expanded
-          ? <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
-          : <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />}
-      </button>
+        <button
+          onClick={() => { const v = !expanded; setExpanded(v); try { localStorage.setItem("cl_collapse_workouts", JSON.stringify(v)); } catch {} }}
+          aria-label={expanded ? "Hide workouts" : "Show workouts"}
+          className="text-gray-400 transition-colors hover:text-gray-600"
+        >
+          {expanded
+            ? <ChevronUp className="w-4 h-4 flex-shrink-0" />
+            : <ChevronDown className="w-4 h-4 flex-shrink-0" />}
+        </button>
+      </div>
+
+      {prescription && <div className="px-5 pb-4">{prescription}</div>}
+
       {expanded && (
-      <CardContent className="px-5 pt-2 pb-5 space-y-2">
+      <div className="border-t border-gray-100 px-5 pt-4 pb-5">
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+          Workouts{dynamicWorkouts.length > 0 ? ` · ${dynamicWorkouts.length}` : ''}
+        </p>
+        <div className="space-y-2">
         {/* Dynamic pattern-driven workouts */}
         {loadingDynamic ? (
           <div className="py-6 flex justify-center">
@@ -286,7 +296,8 @@ export default function WorkoutsSection({ goals = [], trends = null, insight = n
             <RotateCcw className="w-3 h-3" /> Reset completed
           </button>
         )}
-      </CardContent>
+        </div>
+      </div>
       )}
     </Card>
   );

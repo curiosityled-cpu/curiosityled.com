@@ -13,7 +13,7 @@
  * accepted, awards points). Static workouts keep the lightweight log behavior.
  */
 import React, { useMemo, useState, useEffect } from "react";
-import { Sparkles, Brain, CheckCircle2, ArrowRight, Dumbbell, Target, Zap, Clock } from "lucide-react";
+import { Sparkles, Brain, CheckCircle2, ArrowRight, Target, Zap, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -269,7 +269,7 @@ export default function PrescribedPracticeCard({
 
   if (done) {
     return (
-      <div className="bg-card border border-border rounded-2xl px-5 py-4">
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-3.5">
         <div className="flex items-center gap-2.5">
           <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
           <div>
@@ -287,35 +287,23 @@ export default function PrescribedPracticeCard({
   const TypeIcon = isGenerated ? (module.workout_type === "task" ? Target : Zap) : null;
 
   return (
-    <div className="bg-card border border-border rounded-2xl px-5 py-4">
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-2.5">
-        <div className="w-6 h-6 rounded-lg bg-[#0202ff] flex items-center justify-center flex-shrink-0">
-          <Dumbbell className="w-3 h-3 text-white" />
-        </div>
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-          Today's Prescribed Practice
+    <div className="rounded-xl border border-[#0202ff]/15 bg-[#0202ff]/5 px-4 py-3.5">
+      <div className="flex items-center gap-1.5 mb-2">
+        <Sparkles className="w-3 h-3 text-[#0202ff] flex-shrink-0" />
+        <p className="text-[10px] font-bold text-[#0202ff] uppercase tracking-widest">
+          Today's prescribed practice
         </p>
         <span className="text-[9px] text-muted-foreground ml-auto">{sourceLabel}</span>
       </div>
-
-      {/* Prescription */}
-      <div className="bg-gradient-to-br from-[#0202ff]/5 to-transparent rounded-xl px-4 py-3.5 border border-[#0202ff]/10">
         {isPattern && patternName && (
-          <div className="flex items-center gap-1.5 mb-2">
-            <Sparkles className="w-3 h-3 text-[#0202ff] flex-shrink-0" />
-            <p className="text-[10px] font-medium text-[#0202ff] leading-snug">
-              Prescribed for your <span className="font-semibold">{patternName}</span> pattern
-            </p>
-          </div>
+          <p className="mb-2 text-[10px] font-medium leading-snug text-[#0202ff]">
+            Prescribed for your <span className="font-semibold">{patternName}</span> pattern
+          </p>
         )}
         {prescription.kind === "consistency" && (
-          <div className="flex items-center gap-1.5 mb-2">
-            <Sparkles className="w-3 h-3 text-amber-500 flex-shrink-0" />
-            <p className="text-[10px] font-medium text-amber-600 leading-snug">
-              A workout you haven't done recently — keep your practice consistent
-            </p>
-          </div>
+          <p className="mb-2 text-[10px] font-medium leading-snug text-amber-600">
+            A workout you haven't done recently — keep your practice consistent
+          </p>
         )}
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
@@ -363,7 +351,6 @@ export default function PrescribedPracticeCard({
             <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-500" /> {busy ? "Saving…" : "Done"}
           </Button>
         </div>
-      </div>
     </div>
   );
 }
