@@ -96,6 +96,9 @@ export default function JourneyDetail() {
     [journey, enrollment]
   );
 
+  const resourceSteps = steps.filter((step) => step.kind === "resource");
+  const doneSteps = resourceSteps.filter((step) => progressMap[step.id] === "completed").length;
+
   // A sequential learning path holds back a step until the ones before it are done.
   const lockedKeys = useMemo(() => {
     if (journey?.type !== "learning_path") return new Set();
@@ -237,7 +240,7 @@ export default function JourneyDetail() {
           <div className="flex items-center gap-3 md:flex-col md:items-end">
             <ProgressRing percent={percent} size={84} stroke={8} />
             <p className="text-xs text-muted-foreground">
-              {steps.filter((step) => progressMap[step.id] === "completed").length} of {steps.length} steps
+              {doneSteps} of {resourceSteps.length} learning steps
             </p>
           </div>
         </div>
