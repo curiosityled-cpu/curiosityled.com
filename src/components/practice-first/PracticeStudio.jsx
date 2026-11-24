@@ -6,32 +6,18 @@
  * recent sessions, assessments). A started coaching flow takes the full width.
  */
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { Brain, Users, Layers } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/AuthContext";
 import usePracticeStudio from "@/hooks/usePracticeStudio";
 import PrescribedPracticeCard from "@/components/practice/PrescribedPracticeCard";
 import DevelopmentProgressCard from "@/components/practice/DevelopmentProgressCard";
 import CoachingFlowsCard from "@/components/practice/CoachingFlowsCard";
+import LeadershipToolsCard from "@/components/practice-first/LeadershipToolsCard";
 import WorkoutsSection from "@/components/practice/WorkoutsSection";
 import PracticeSessionsLog from "@/components/practice/PracticeSessionsLog";
 import AssessmentsCard from "@/components/practice/AssessmentsCard";
 import PracticeFlow from "@/components/practice/PracticeFlow";
-
-function ToolTile({ icon: Icon, label, to, accent }) {
-  return (
-    <Link
-      to={to}
-      className="flex flex-col gap-2 rounded-[14px] border border-[var(--pf-soft-border)] bg-[var(--pf-soft)] p-3 transition-[background,box-shadow] duration-200 hover:bg-[var(--pf-soft-hover)] hover:shadow-[0_4px_10px_rgba(23,40,50,0.1)] active:opacity-85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#3B7890]"
-    >
-      <Icon className={cn("h-[22px] w-[22px]", accent ? "text-[#E1A45E]" : "text-[var(--pf-accent)]")} />
-      <span className="text-xs font-bold leading-[1.25] text-[var(--pf-text)]">{label}</span>
-    </Link>
-  );
-}
 
 export default function PracticeStudio() {
   const { user } = useAuth();
@@ -74,19 +60,7 @@ export default function PracticeStudio() {
 
             <CoachingFlowsCard onStartFlow={handleStartFlow} />
 
-            <div className="rounded-[20px] border border-[var(--pf-border)] bg-[var(--pf-surface)] p-4 shadow-[0_10px_26px_rgba(23,40,50,0.1)]">
-              <p className="px-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--pf-accent)]">
-                Leadership Tools
-              </p>
-              <p className="px-1.5 pb-2 pt-1 text-[11px] leading-[1.4] text-[var(--pf-muted)]">
-                Jump to a structured tool to capture, plan, or review.
-              </p>
-              <div className="flex flex-col gap-2.5">
-                <ToolTile icon={Brain} label="Leadership Support Tool" to="/decision-journal" />
-                <ToolTile icon={Users} label="1:1 prep & notes" to="/one-on-ones" />
-                <ToolTile icon={Layers} label="Delegation planner" to="/delegation-planner" accent />
-              </div>
-            </div>
+            <LeadershipToolsCard />
           </div>
 
           {/* ── Development + practice context ── */}
