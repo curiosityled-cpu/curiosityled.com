@@ -134,6 +134,7 @@ export default function PrescribedPracticeCard({
   trends,
   recentSessionIds = [],
   onSessionLogged,
+  variant,
 }) {
   const { user } = useAuth();
   const { openWithContext } = useAtreusChat();
@@ -224,6 +225,9 @@ export default function PrescribedPracticeCard({
   const patternName = prescription.patternName;
   const sourceLabel = prescription.sourceLabel;
   const isPattern = prescription.kind === "generated" || prescription.kind === "static";
+  // "callout" sits inside the Daily Gym panel: no outer card, no nested box.
+  const callout = variant === "callout";
+  const accentText = callout ? "text-[#8a5a1f] dark:text-[#E1A45E]" : "text-[#0202ff]";
 
   const handleStart = () => {
     if (isGenerated) {
@@ -269,7 +273,9 @@ export default function PrescribedPracticeCard({
 
   if (done) {
     return (
-      <div className="bg-card border border-border rounded-2xl px-5 py-4">
+      <div className={callout
+        ? "rounded-2xl border border-emerald-200/70 bg-emerald-50/60 px-4 py-3.5 dark:border-emerald-900/50 dark:bg-emerald-950/40"
+        : "bg-card border border-border rounded-2xl px-5 py-4"}>
         <div className="flex items-center gap-2.5">
           <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
           <div>
@@ -287,24 +293,36 @@ export default function PrescribedPracticeCard({
   const TypeIcon = isGenerated ? (module.workout_type === "task" ? Target : Zap) : null;
 
   return (
-    <div className="bg-card border border-border rounded-2xl px-5 py-4">
+    <div className={callout
+      ? "relative overflow-hidden rounded-2xl border border-[#E1A45E]/45 bg-[#E1A45E]/10 px-4 py-4"
+      : "bg-card border border-border rounded-2xl px-5 py-4"}>
+      {callout && <span className="absolute inset-y-4 left-0 w-[3px] rounded-r bg-[#E1A45E]" />}
+
       {/* Header */}
       <div className="flex items-center gap-2 mb-2.5">
-        <div className="w-6 h-6 rounded-lg bg-[#0202ff] flex items-center justify-center flex-shrink-0">
-          <Dumbbell className="w-3 h-3 text-white" />
+        <div className={callout
+          ? "w-6 h-6 rounded-lg bg-[#E1A45E] flex items-center justify-center flex-shrink-0"
+          : "w-6 h-6 rounded-lg bg-[#0202ff] flex items-center justify-center flex-shrink-0"}>
+          <Dumbbell className={callout ? "w-3 h-3 text-[#172832]" : "w-3 h-3 text-white"} />
         </div>
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+        <p className={callout
+          ? `text-[10px] font-bold uppercase tracking-widest ${accentText}`
+          : "text-[10px] font-bold text-muted-foreground uppercase tracking-widest"}>
           Today's Prescribed Practice
         </p>
-        <span className="text-[9px] text-muted-foreground ml-auto">{sourceLabel}</span>
+        <span className={callout
+          ? `text-[9px] ml-auto ${accentText} opacity-80`
+          : "text-[9px] text-muted-foreground ml-auto"}>
+          {sourceLabel}
+        </span>
       </div>
 
       {/* Prescription */}
-      <div className="bg-gradient-to-br from-[#0202ff]/5 to-transparent rounded-xl px-4 py-3.5 border border-[#0202ff]/10">
+      <div className={callout ? "" : "bg-gradient-to-br from-[#0202ff]/5 to-transparent rounded-xl px-4 py-3.5 border border-[#0202ff]/10"}>
         {isPattern && patternName && (
           <div className="flex items-center gap-1.5 mb-2">
-            <Sparkles className="w-3 h-3 text-[#0202ff] flex-shrink-0" />
-            <p className="text-[10px] font-medium text-[#0202ff] leading-snug">
+            <Sparkles className={`w-3 h-3 flex-shrink-0 ${accentText}`} />
+            <p className={`text-[10px] font-medium leading-snug ${accentText}`}>
               Prescribed for your <span className="font-semibold">{patternName}</span> pattern
             </p>
           </div>
@@ -320,19 +338,19 @@ export default function PrescribedPracticeCard({
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-1">
-              <p className="text-sm font-bold text-card-foreground leading-tight">{title}</p>
+              <p className={`text-sm font-bold leading-tight ${callout ? "text-[var(--pf-text)]" : "text-card-foreground"}`}>{title}</p>
               {isGenerated && (
                 <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border inline-flex items-center gap-1 ${module.workout_type === "task" ? "bg-amber-50 text-amber-700 border-amber-100" : "bg-[#0202ff]/5 text-[#0202ff] border-[#0202ff]/15"}`}>
                   <TypeIcon className="w-2.5 h-2.5" /> {typeLabel}
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-muted-foreground leading-relaxed mt-1">
+            <p className={`text-[11px] leading-relaxed mt-1 ${callout ? "text-[var(--pf-muted)]" : "text-muted-foreground"}`}>
               {description}
             </p>
             <div className="flex items-center gap-2 mt-1.5">
               {duration && (
-                <p className="text-[10px] text-muted-foreground/70 inline-flex items-center gap-0.5">
+                <p className={`text-[10px] inline-flex items-center gap-0.5 ${callout ? "text-[var(--pf-muted)]" : "text-muted-foreground/70"}`}>
                   <Clock className="w-2.5 h-2.5" /> {duration}
                 </p>
               )}
@@ -347,7 +365,9 @@ export default function PrescribedPracticeCard({
         <div className="flex gap-2 mt-3">
           <Button
             size="sm"
-            className="flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-8"
+            className={callout
+              ? "flex-1 bg-[#E1A45E] hover:bg-[#d59a52] text-[#172832] font-semibold text-xs h-8"
+              : "flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-8"}
             onClick={handleStart}
             disabled={busy}
           >
@@ -356,7 +376,9 @@ export default function PrescribedPracticeCard({
           <Button
             size="sm"
             variant="outline"
-            className="text-xs h-8 text-muted-foreground"
+            className={callout
+              ? "text-xs h-8 border-[var(--pf-border)] bg-transparent text-[var(--pf-muted)] hover:bg-[var(--pf-soft)] hover:text-[var(--pf-text)]"
+              : "text-xs h-8 text-muted-foreground"}
             onClick={handleDone}
             disabled={busy}
           >
