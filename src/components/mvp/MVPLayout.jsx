@@ -68,7 +68,7 @@ const NAV_CONFIG = {
   manager: [
   { label: 'Lead', path: '/today', icon: Home },
   { label: 'Team', path: '/team', icon: Users },
-  { label: 'Practice', path: '/practice', icon: Dumbbell }],
+  { label: 'Practice', path: '/my-development', icon: Dumbbell }],
 
   buyer: [
   { label: 'Lead', path: '/today', icon: Home },

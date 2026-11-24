@@ -1,30 +1,24 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Layers, Plus, Star } from "lucide-react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { SlidersHorizontal, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import MVPPageLayout from "@/components/mvp/MVPPageLayout";
-import LearningShelf from "@/components/learning/LearningShelf";
-import CertificateViewer from "@/components/learning/CertificateViewer";
-import MyLearningRecord from "@/components/learning/MyLearningRecord";
-import CollapsibleSection from "@/components/learning/CollapsibleSection";
-import ExperienceShelfCard from "@/components/development/ExperienceShelfCard";
-import ShelfCarousel from "@/components/journey-home/ShelfCarousel";
 import useMyLearning from "@/hooks/useMyLearning";
+import PracticeCanvasHero from "@/components/practice-first/PracticeCanvasHero";
+import PracticeStudio from "@/components/practice-first/PracticeStudio";
+import DevelopLibrary from "@/components/practice-first/DevelopLibrary";
+import PracticeSettings from "@/components/practice/PracticeSettings";
 import ExperienceFormModal from "@/components/development/ExperienceFormModal";
 import CreateDevelopmentPlanModal from "@/components/development/CreateDevelopmentPlanModal";
 import DeleteJourneyDialog from "@/components/development/DeleteJourneyDialog";
-import JourneyHomeHero from "@/components/journey-home/JourneyHomeHero";
-import JourneyCarousel from "@/components/journey-home/JourneyCarousel";
-import SectionHeader from "@/components/journey-home/SectionHeader";
-import AchievementsStrip from "@/components/journey-home/AchievementsStrip";
 
 const STATUS_RANK = { in_progress: 0, not_started: 1, completed: 2 };
 
 /**
- * Journey Home — the learner's development in one place: journeys to continue,
- * courses and resources to work through, and experiences they've taken on.
+ * Practice First — the learner's single development home. Practice sits at the
+ * top as the immediate starting point; the Develop library below holds journeys,
+ * courses, experiences and records.
  */
 export default function MyDevelopment() {
   const { user } = useAuth();
@@ -38,6 +32,7 @@ export default function MyDevelopment() {
   const [deletingJourney, setDeletingJourney] = useState(null);
   const [showExpModal, setShowExpModal] = useState(false);
   const [editingExp, setEditingExp] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
 
   const email = user?.email || user?.data?.email;
   const { items, loading, reload } = useMyLearning();
@@ -77,22 +72,6 @@ export default function MyDevelopment() {
     learningItems.filter((item) => item.status === "completed").length;
   const overallPercent = items.length ? Math.round((completedCount / items.length) * 100) : 0;
 
-  const firstName = (() => {
-    const raw = user?.display_name || user?.data?.display_name || user?.full_name;
-    return raw && raw.trim() && !raw.includes("@") ? raw.split(" ")[0] : null;
-  })();
-
-  // The single next thing: a journey in progress, else an unfinished course, else a journey.
-  const nextAction = useMemo(() => {
-    const journey = activeJourneys.find((item) => item.status === "in_progress") || activeJourneys[0];
-    const course = activeLearning.find((item) => item.launch?.to);
-    if (journey) {
-      return { to: `/journey/${journey.launch.journey.id}`, label: `Continue ${journey.title}` };
-    }
-    if (course) return { to: course.launch.to, label: `Continue ${course.title}` };
-    return null;
-  }, [activeJourneys, activeLearning]);
-
   const activeExperiences = experiences.filter((e) => e.status !== "completed" && e.status !== "cancelled");
   const completedExperiences = experiences.filter((e) => e.status === "completed");
   const shownExperiences = showCompletedExperiences ? completedExperiences : activeExperiences;
@@ -105,181 +84,108 @@ export default function MyDevelopment() {
     setEditingJourney(item.launch.journey);
     setShowModal(true);
   };
+  const openExperience = () => {
+    setEditingExp(null);
+    setShowExpModal(true);
+  };
 
   return (
-    <MVPPageLayout>
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <JourneyHomeHero
-          firstName={firstName}
-          percent={overallPercent}
-          activeJourneys={activeJourneys.length}
-          activeLearning={activeLearning.length}
-          nextAction={nextAction}
-        />
-      </motion.div>
+    <div className="relative min-h-screen overflow-hidden bg-[#E9EEF2] pb-10 text-[#172832]">
+      {/* Copper thread traced from the banner down through Practice into Develop */}
+      <div
+        className="pointer-events-none absolute left-10 top-[300px] hidden h-[1380px] w-[3px] rounded-[2px] lg:block"
+        style={{
+          background: "linear-gradient(#E1A45E,#E1A45E 60%,rgba(225,164,94,.2))",
+          transformOrigin: "top",
+          animation: "pf-draw 1.6s ease-out both",
+        }}
+      />
 
-      <motion.section
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05 }}
+      <PracticeCanvasHero
+        percent={overallPercent}
+        activeJourneys={activeJourneys.length}
+        activeLearning={activeLearning.length}
+        onSettingsClick={() => setShowSettings((s) => !s)}
+      />
+
+      <div
+        className="relative mx-4 mt-7 sm:mx-6 sm:ml-12 lg:ml-16"
+        style={{ animation: "pf-rise .8s ease-out both", animationDelay: ".3s" }}
       >
-        <SectionHeader
-          title="My Journeys"
-          subtitle="Multi-step development paths — resume where you left off."
-          action={
-            <button
-              type="button"
-              onClick={openCreate}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
-            >
-              <Plus className="h-3.5 w-3.5" /> New journey
-            </button>
-          }
-        />
+        <PracticeStudio />
+      </div>
 
-        {loading ? (
-          <div className="flex gap-3 overflow-hidden">
-            {[0, 1, 2].map((key) => (
-              <div key={key} className="h-64 w-[280px] flex-shrink-0 animate-pulse rounded-2xl border border-border bg-card" />
-            ))}
-          </div>
-        ) : journeyItems.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
-            <Layers className="mx-auto mb-3 h-9 w-9 text-muted-foreground/40" />
-            <p className="font-medium text-foreground">No journeys yet</p>
-            <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-              Journeys combine coaching, projects and learning into one path. Create one, or wait for
-              your program team to assign one.
-            </p>
-          </div>
-        ) : (
-          <JourneyCarousel
-            items={journeyItems}
-            onOpen={(item) => navigate(`/journey/${item.launch.journey.id}`)}
-            onEdit={openEdit}
-            onDelete={(item) => setDeletingJourney(item.launch.journey)}
-            canManage={(item) => item.launch?.journey?.author_email === email}
-          />
-        )}
-      </motion.section>
-
-      <motion.section
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+      <div
+        className="relative mx-4 mt-[34px] sm:mx-6 sm:ml-12 lg:ml-16"
+        style={{ animation: "pf-rise .8s ease-out both", animationDelay: ".55s" }}
       >
-        <SectionHeader
-          title="My Courses & Learning"
-          subtitle="Assigned courses, resources and conversations."
-          action={
-            <button
-              type="button"
-              onClick={() => setShowCompletedLearning((prev) => !prev)}
-              className="text-xs font-medium text-[#0202ff] hover:underline"
-            >
-              {showCompletedLearning ? "Show active" : "Show completed"}
-            </button>
-          }
-        />
-        <LearningShelf
-          items={showCompletedLearning ? completedLearning : activeLearning}
+        <DevelopLibrary
+          journeyItems={journeyItems}
+          learningItems={showCompletedLearning ? completedLearning : activeLearning}
+          showCompletedLearning={showCompletedLearning}
+          onToggleCompletedLearning={() => setShowCompletedLearning((prev) => !prev)}
+          experiences={shownExperiences}
+          showCompletedExperiences={showCompletedExperiences}
+          onToggleCompletedExperiences={() => setShowCompletedExperiences((prev) => !prev)}
           loading={loading}
-          onChanged={reload}
+          loadingExperiences={loadingExperiences}
+          email={email}
+          onOpenJourney={(item) => navigate(`/journey/${item.launch.journey.id}`)}
+          onEditJourney={openEdit}
+          onDeleteJourney={(item) => setDeletingJourney(item.launch.journey)}
+          canManageJourney={(item) => item.launch?.journey?.author_email === email}
+          onNewJourney={openCreate}
+          onLearningChanged={reload}
+          onLogExperience={openExperience}
+          onEditExperience={(exp) => {
+            setEditingExp(exp);
+            setShowExpModal(true);
+          }}
+          onDeleteExperience={async (exp) => {
+            await base44.entities.DevelopmentExperience.delete(exp.id);
+            loadExperiences();
+          }}
+          onAdoptExperience={loadExperiences}
         />
-      </motion.section>
+      </div>
 
-      <motion.section
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-      >
-        <SectionHeader
-          title="My Experiences"
-          subtitle="Coaching, stretch projects, mentorship and more."
-          action={
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setShowCompletedExperiences((prev) => !prev)}
-                className="text-xs font-medium text-[#0202ff] hover:underline"
-              >
-                {showCompletedExperiences ? "Show active" : "Show completed"}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingExp(null);
-                  setShowExpModal(true);
-                }}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
-              >
-                <Plus className="h-3.5 w-3.5" /> Log experience
-              </button>
-            </div>
-          }
-        />
-
-        {loadingExperiences ? (
-          <div className="flex gap-3 overflow-hidden">
-            {[0, 1, 2].map((key) => (
-              <div
-                key={key}
-                className="h-48 w-[280px] flex-shrink-0 animate-pulse rounded-2xl border border-border bg-card"
-              />
-            ))}
-          </div>
-        ) : shownExperiences.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
-            <Star className="mx-auto mb-3 h-9 w-9 text-muted-foreground/40" />
-            <p className="font-medium text-foreground">
-              {showCompletedExperiences ? "No completed experiences yet" : "No active experiences"}
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Log coaching, stretch projects, mentorship and more.
-            </p>
-            {!showCompletedExperiences && (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingExp(null);
-                  setShowExpModal(true);
-                }}
-                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#0202ff] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#0101dd]"
-              >
-                Log experience
-              </button>
-            )}
-          </div>
-        ) : (
-          <ShelfCarousel
-            items={shownExperiences}
-            renderItem={(exp) => (
-              <ExperienceShelfCard
-                exp={exp}
-                onEdit={() => {
-                  setEditingExp(exp);
-                  setShowExpModal(true);
-                }}
-                onDelete={async () => {
-                  await base44.entities.DevelopmentExperience.delete(exp.id);
-                  loadExperiences();
-                }}
-                onAdopt={loadExperiences}
-              />
-            )}
-          />
+      {/* ── Settings slide-out ── */}
+      <AnimatePresence>
+        {showSettings && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-black/30"
+              onClick={() => setShowSettings(false)}
+            />
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-md overflow-y-auto bg-background shadow-2xl"
+            >
+              <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background px-5 py-4">
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="h-4 w-4 text-[#0202ff]" />
+                  <p className="text-sm font-semibold text-foreground">Practice Settings</p>
+                </div>
+                <button
+                  onClick={() => setShowSettings(false)}
+                  className="text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="p-5">
+                <PracticeSettings />
+              </div>
+            </motion.div>
+          </>
         )}
-      </motion.section>
-
-      <AchievementsStrip />
-
-      <CollapsibleSection title="My certificates">
-        <CertificateViewer />
-      </CollapsibleSection>
-
-      <CollapsibleSection title="My learning record">
-        <MyLearningRecord email={email} />
-      </CollapsibleSection>
+      </AnimatePresence>
 
       <ExperienceFormModal
         open={showExpModal}
@@ -320,6 +226,6 @@ export default function MyDevelopment() {
         userEmail={email}
         plan={editingJourney}
       />
-    </MVPPageLayout>
+    </div>
   );
 }

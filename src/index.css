@@ -730,3 +730,22 @@ h4.text-xs {
 }
 .reqstats-enter { animation: reqstats-enter 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 .reqstats-glow-circle { animation: reqstats-glow 5s ease-in-out infinite; }
+
+/* ── Practice First canvas ──────────────────────────────────────────────────
+   The shared banner, the copper thread and each chapter rise in on load.
+─────────────────────────────────────────────────────────────────────────── */
+@keyframes pf-draw {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+@keyframes pf-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pf-ring {
+  0% { transform: scale(.7); opacity: .6; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+/* Fixed white surface for the Practice First canvas — the page owns its palette,
+   so it must not be recoloured by the app-wide dark-mode overrides. */
+.pf-white { background-color: #ffffff; }
