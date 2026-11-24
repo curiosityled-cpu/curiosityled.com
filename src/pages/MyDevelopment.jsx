@@ -1,13 +1,11 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Layers, GraduationCap, Star } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Layers, Plus, Star } from "lucide-react";
 import { motion } from "framer-motion";
-import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
 import LearningInbox from "@/components/learning/LearningInbox";
-import JourneyInbox from "@/components/learning/JourneyInbox";
 import CertificateViewer from "@/components/learning/CertificateViewer";
 import MyLearningRecord from "@/components/learning/MyLearningRecord";
 import CollapsibleSection from "@/components/learning/CollapsibleSection";
@@ -16,14 +14,24 @@ import useMyLearning from "@/hooks/useMyLearning";
 import ExperienceFormModal from "@/components/development/ExperienceFormModal";
 import CreateDevelopmentPlanModal from "@/components/development/CreateDevelopmentPlanModal";
 import DeleteJourneyDialog from "@/components/development/DeleteJourneyDialog";
+import JourneyHomeHero from "@/components/journey-home/JourneyHomeHero";
+import JourneyCarousel from "@/components/journey-home/JourneyCarousel";
+import SectionHeader from "@/components/journey-home/SectionHeader";
+import AchievementsStrip from "@/components/journey-home/AchievementsStrip";
 
+const STATUS_RANK = { in_progress: 0, not_started: 1, completed: 2 };
+
+/**
+ * Journey Home — the learner's development in one place: journeys to continue,
+ * courses and resources to work through, and experiences they've taken on.
+ */
 export default function MyDevelopment() {
   const { user } = useAuth();
-  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [experiences, setExperiences] = useState([]);
   const [loadingExperiences, setLoadingExperiences] = useState(true);
-  const [section, setSection] = useState(searchParams.get("tab") === "learning" ? "learning" : "journeys");
-  const [activeTab, setActiveTab] = useState("active");
+  const [showCompletedLearning, setShowCompletedLearning] = useState(false);
+  const [showCompletedExperiences, setShowCompletedExperiences] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingJourney, setEditingJourney] = useState(null);
   const [deletingJourney, setDeletingJourney] = useState(null);
@@ -51,20 +59,41 @@ export default function MyDevelopment() {
     loadExperiences();
   }, [loadExperiences]);
 
-  const journeyItems = items.filter((item) => item.kind === "journey");
-  const learningItems = items.filter((item) => item.kind !== "journey");
-  const completedJourneys = journeyItems.filter((item) => item.status === "completed");
+  const journeyItems = useMemo(
+    () =>
+      items
+        .filter((item) => item.kind === "journey")
+        .sort((a, b) => (STATUS_RANK[a.status] ?? 1) - (STATUS_RANK[b.status] ?? 1)),
+    [items]
+  );
+  const learningItems = useMemo(() => items.filter((item) => item.kind !== "journey"), [items]);
+
   const activeJourneys = journeyItems.filter((item) => item.status !== "completed");
   const activeLearning = learningItems.filter((item) => item.status !== "completed");
+  const completedCount =
+    journeyItems.filter((item) => item.status === "completed").length +
+    learningItems.filter((item) => item.status === "completed").length;
+  const overallPercent = items.length ? Math.round((completedCount / items.length) * 100) : 0;
+
+  const firstName = (() => {
+    const raw = user?.display_name || user?.data?.display_name || user?.full_name;
+    return raw && raw.trim() && !raw.includes("@") ? raw.split(" ")[0] : null;
+  })();
+
+  // The single next thing: a journey in progress, else an unfinished course, else a journey.
+  const nextAction = useMemo(() => {
+    const journey = activeJourneys.find((item) => item.status === "in_progress") || activeJourneys[0];
+    const course = activeLearning.find((item) => item.launch?.to);
+    if (journey) {
+      return { to: `/journey/${journey.launch.journey.id}`, label: `Continue ${journey.title}` };
+    }
+    if (course) return { to: course.launch.to, label: `Continue ${course.title}` };
+    return null;
+  }, [activeJourneys, activeLearning]);
 
   const activeExperiences = experiences.filter((e) => e.status !== "completed" && e.status !== "cancelled");
   const completedExperiences = experiences.filter((e) => e.status === "completed");
-
-  const stats = [
-    { label: "Active Journeys", value: activeJourneys.length, color: "text-purple-600" },
-    { label: "Active Learning", value: activeLearning.length, color: "text-blue-600" },
-    { label: "Experiences", value: experiences.length, color: "text-amber-600" },
-  ];
+  const shownExperiences = showCompletedExperiences ? completedExperiences : activeExperiences;
 
   const openCreate = () => {
     setEditingJourney(null);
@@ -75,160 +104,172 @@ export default function MyDevelopment() {
     setShowModal(true);
   };
 
-  const activeCount =
-    section === "journeys"
-      ? activeJourneys.length
-      : section === "learning"
-      ? activeLearning.length
-      : activeExperiences.length;
-  const completedCount =
-    section === "journeys"
-      ? completedJourneys.length
-      : section === "learning"
-      ? learningItems.length - activeLearning.length
-      : completedExperiences.length;
-
-  const SECTIONS = [
-    { id: "journeys", label: "Journeys", Icon: Layers },
-    { id: "learning", label: "Learning Progress", Icon: GraduationCap },
-    { id: "experiences", label: "Experiences", Icon: Star },
-  ];
-
   return (
-    <MVPPageLayout title="My Development" subtitle="Your journeys, learning and experiences in one place">
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-3 gap-3">
-        {stats.map((stat) => (
-          <Card key={stat.label} className="shadow-sm border border-gray-100 rounded-2xl">
-            <CardContent className="p-4 text-center">
-              <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{stat.label}</p>
-            </CardContent>
-          </Card>
-        ))}
+    <MVPPageLayout>
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+        <JourneyHomeHero
+          firstName={firstName}
+          percent={overallPercent}
+          activeJourneys={activeJourneys.length}
+          activeLearning={activeLearning.length}
+          nextAction={nextAction}
+        />
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-        <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
-          {SECTIONS.map(({ id, label, Icon }) => (
-            <button
-              key={id}
-              onClick={() => {
-                setSection(id);
-                setActiveTab("active");
-              }}
-              className={`flex-1 flex items-center justify-center gap-1.5 text-sm font-medium py-2 rounded-lg transition-all ${
-                section === id ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" /> {label}
-            </button>
-          ))}
-        </div>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
+      <motion.section
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="space-y-4"
+        transition={{ delay: 0.05 }}
       >
-        <div className="flex gap-1 bg-gray-50 border border-gray-100 rounded-xl p-1">
-          <button
-            onClick={() => setActiveTab("active")}
-            className={`flex-1 text-sm font-medium py-1.5 rounded-lg transition-all ${
-              activeTab === "active" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Active ({activeCount})
-          </button>
-          <button
-            onClick={() => setActiveTab("completed")}
-            className={`flex-1 text-sm font-medium py-1.5 rounded-lg transition-all ${
-              activeTab === "completed" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Completed ({completedCount})
-          </button>
-        </div>
+        <SectionHeader
+          title="Your journeys"
+          subtitle="Multi-step development paths — resume where you left off."
+          action={
+            <button
+              type="button"
+              onClick={openCreate}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              <Plus className="h-3.5 w-3.5" /> New journey
+            </button>
+          }
+        />
 
-        {section === "journeys" && (
-          <JourneyInbox
-            items={activeTab === "active" ? activeJourneys : completedJourneys}
-            loading={loading}
-            onCreate={activeTab === "active" ? openCreate : null}
+        {loading ? (
+          <div className="flex gap-3 overflow-hidden">
+            {[0, 1, 2].map((key) => (
+              <div key={key} className="h-64 w-[280px] flex-shrink-0 animate-pulse rounded-2xl border border-border bg-card" />
+            ))}
+          </div>
+        ) : journeyItems.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
+            <Layers className="mx-auto mb-3 h-9 w-9 text-muted-foreground/40" />
+            <p className="font-medium text-foreground">No journeys yet</p>
+            <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
+              Journeys combine coaching, projects and learning into one path. Create one, or wait for
+              your program team to assign one.
+            </p>
+          </div>
+        ) : (
+          <JourneyCarousel
+            items={journeyItems}
+            onOpen={(item) => navigate(`/journey/${item.launch.journey.id}`)}
             onEdit={openEdit}
             onDelete={(item) => setDeletingJourney(item.launch.journey)}
-            onChanged={reload}
+            canManage={(item) => item.launch?.journey?.author_email === email}
           />
         )}
+      </motion.section>
 
-        {section === "learning" && (
-          <>
-            {activeTab === "completed" ? (
-              <>
-                <CollapsibleSection title="Courses">
-                  <LearningInbox status={activeTab} />
-                </CollapsibleSection>
-                <CollapsibleSection title="My Certificates">
-                  <CertificateViewer />
-                </CollapsibleSection>
-              </>
-            ) : (
-              <LearningInbox status={activeTab} />
-            )}
-            <CollapsibleSection title="My learning record">
-              <MyLearningRecord email={email} />
-            </CollapsibleSection>
-          </>
-        )}
+      <motion.section
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <SectionHeader
+          title="Courses & learning"
+          subtitle="Assigned courses, resources and conversations."
+          action={
+            <button
+              type="button"
+              onClick={() => setShowCompletedLearning((prev) => !prev)}
+              className="text-xs font-medium text-[#0202ff] hover:underline"
+            >
+              {showCompletedLearning ? "Show active" : "Show completed"}
+            </button>
+          }
+        />
+        <LearningInbox status={showCompletedLearning ? "completed" : "active"} />
+      </motion.section>
 
-        {section === "experiences" && (
-          <div className="space-y-3">
-            {(activeTab === "active" ? activeExperiences : completedExperiences).map((exp, index) => (
-              <ExperienceCard
-                key={exp.id}
-                exp={exp}
-                index={index}
-                onEdit={() => {
-                  setEditingExp(exp);
+      <motion.section
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+      >
+        <SectionHeader
+          title="Experiences"
+          subtitle="Coaching, stretch projects, mentorship and more."
+          action={
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setShowCompletedExperiences((prev) => !prev)}
+                className="text-xs font-medium text-[#0202ff] hover:underline"
+              >
+                {showCompletedExperiences ? "Show active" : "Show completed"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingExp(null);
                   setShowExpModal(true);
                 }}
-                onDelete={async () => {
-                  await base44.entities.DevelopmentExperience.delete(exp.id);
-                  loadExperiences();
-                }}
-                onAdopt={loadExperiences}
-              />
-            ))}
-            {loadingExperiences && <div className="h-24 rounded-2xl border border-gray-100 bg-white animate-pulse" />}
-            {!loadingExperiences &&
-              (activeTab === "active" ? activeExperiences : completedExperiences).length === 0 && (
-                <Card className="shadow-sm border border-gray-100 rounded-2xl">
-                  <CardContent className="p-8 text-center">
-                    <Star className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                    <p className="font-semibold text-gray-800">
-                      {activeTab === "active" ? "No active experiences" : "No completed experiences yet"}
-                    </p>
-                    <p className="text-sm text-gray-500 mt-1 mb-4">
-                      Log coaching, stretch projects, mentorship and more.
-                    </p>
-                    {activeTab === "active" && (
-                      <button
-                        onClick={() => {
-                          setEditingExp(null);
-                          setShowExpModal(true);
-                        }}
-                        className="inline-flex items-center gap-2 rounded-lg bg-[#0202ff] px-4 py-2 text-sm font-medium text-white hover:bg-[#0101dd]"
-                      >
-                        Log experience
-                      </button>
-                    )}
-                  </CardContent>
-                </Card>
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+              >
+                <Plus className="h-3.5 w-3.5" /> Log experience
+              </button>
+            </div>
+          }
+        />
+
+        <div className="space-y-3">
+          {shownExperiences.map((exp, index) => (
+            <ExperienceCard
+              key={exp.id}
+              exp={exp}
+              index={index}
+              onEdit={() => {
+                setEditingExp(exp);
+                setShowExpModal(true);
+              }}
+              onDelete={async () => {
+                await base44.entities.DevelopmentExperience.delete(exp.id);
+                loadExperiences();
+              }}
+              onAdopt={loadExperiences}
+            />
+          ))}
+
+          {loadingExperiences && (
+            <div className="h-24 animate-pulse rounded-2xl border border-border bg-card" />
+          )}
+
+          {!loadingExperiences && shownExperiences.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
+              <Star className="mx-auto mb-3 h-9 w-9 text-muted-foreground/40" />
+              <p className="font-medium text-foreground">
+                {showCompletedExperiences ? "No completed experiences yet" : "No active experiences"}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Log coaching, stretch projects, mentorship and more.
+              </p>
+              {!showCompletedExperiences && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingExp(null);
+                    setShowExpModal(true);
+                  }}
+                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#0202ff] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#0101dd]"
+                >
+                  Log experience
+                </button>
               )}
-          </div>
-        )}
-      </motion.div>
+            </div>
+          )}
+        </div>
+      </motion.section>
+
+      <AchievementsStrip />
+
+      <CollapsibleSection title="My certificates">
+        <CertificateViewer />
+      </CollapsibleSection>
+
+      <CollapsibleSection title="My learning record">
+        <MyLearningRecord email={email} />
+      </CollapsibleSection>
 
       <ExperienceFormModal
         open={showExpModal}
