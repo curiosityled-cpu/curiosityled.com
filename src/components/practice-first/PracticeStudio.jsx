@@ -70,13 +70,7 @@ export default function PracticeStudio() {
         <div className="grid grid-cols-1 items-start gap-[18px] lg:grid-cols-2">
           {/* ── Practice actions ── */}
           <div className="flex min-w-0 flex-col gap-4">
-            <PrescribedPracticeCard
-              crossToolData={crossToolData}
-              bpoPatterns={bpoPatterns}
-              trends={trends}
-              recentSessionIds={recentSessionIds}
-              onSessionLogged={handleSessionLogged}
-            />
+            <DevelopmentProgressCard />
 
             <CoachingFlowsCard onStartFlow={handleStartFlow} />
 
@@ -97,7 +91,13 @@ export default function PracticeStudio() {
 
           {/* ── Development + practice context ── */}
           <div className="flex min-w-0 flex-col gap-4">
-            <DevelopmentProgressCard />
+            <PrescribedPracticeCard
+              crossToolData={crossToolData}
+              bpoPatterns={bpoPatterns}
+              trends={trends}
+              recentSessionIds={recentSessionIds}
+              onSessionLogged={handleSessionLogged}
+            />
 
             <div id="daily-gym" className="flex scroll-mt-24 flex-col gap-2">
               <div className="px-1">
