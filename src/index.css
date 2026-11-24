@@ -746,6 +746,33 @@ h4.text-xs {
   0% { transform: scale(.7); opacity: .6; }
   100% { transform: scale(1.6); opacity: 0; }
 }
-/* Fixed white surface for the Practice First canvas — the page owns its palette,
-   so it must not be recoloured by the app-wide dark-mode overrides. */
-.pf-white { background-color: #ffffff; }
+/* Practice First canvas palette — light by default, inverted under .dark so the
+   page has a real dark mode instead of a fixed light sheet. */
+.pf-canvas {
+  --pf-bg: #E9EEF2;
+  --pf-surface: #ffffff;
+  --pf-panel: #f6f9fb;
+  --pf-text: #172832;
+  --pf-muted: #5c707c;
+  --pf-border: #cfd8de;
+  --pf-soft: #E9EEF2;
+  --pf-soft-border: #d3dce2;
+  --pf-soft-hover: #dfe8ee;
+  --pf-dash: #b7c5ce;
+  --pf-accent: #3B7890;
+  background-color: var(--pf-bg);
+  color: var(--pf-text);
+}
+.dark .pf-canvas {
+  --pf-bg: #10171c;
+  --pf-surface: #182229;
+  --pf-panel: #141d23;
+  --pf-text: #E9EEF2;
+  --pf-muted: #9db0ba;
+  --pf-border: #29373f;
+  --pf-soft: #1e2a32;
+  --pf-soft-border: #2b3b45;
+  --pf-soft-hover: #26343d;
+  --pf-dash: #35474f;
+  --pf-accent: #6fb4cd;
+}

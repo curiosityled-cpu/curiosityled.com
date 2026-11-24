@@ -90,7 +90,7 @@ export default function MyDevelopment() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#E9EEF2] pb-10 text-[#172832]">
+    <div className="pf-canvas relative min-h-screen overflow-hidden pb-10">
       {/* Copper thread traced from the banner down through Practice into Develop */}
       <div
         className="pointer-events-none absolute left-10 top-[300px] hidden h-[1380px] w-[3px] rounded-[2px] lg:block"

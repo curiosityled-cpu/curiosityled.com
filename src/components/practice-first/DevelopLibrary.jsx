@@ -22,7 +22,7 @@ function LinkButton({ onClick, children }) {
     <button
       type="button"
       onClick={onClick}
-      className="text-xs font-bold text-[#3B7890] transition-colors duration-200 hover:text-[#E1A45E] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#3B7890]"
+      className="text-xs font-bold text-[var(--pf-accent)] transition-colors duration-200 hover:text-[#E1A45E] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#3B7890]"
     >
       {children}
     </button>
@@ -45,8 +45,8 @@ function RowHeader({ title, subtitle, actions }) {
   return (
     <div className="mb-3 flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h2 className="text-[22px] font-bold leading-[1.3] tracking-[-0.014em] text-[#172832]">{title}</h2>
-        <p className="mt-1 text-[13px] text-[#5c707c]">{subtitle}</p>
+        <h2 className="text-[22px] font-bold leading-[1.3] tracking-[-0.014em] text-[var(--pf-text)]">{title}</h2>
+        <p className="mt-1 text-[13px] text-[var(--pf-muted)]">{subtitle}</p>
       </div>
       {actions && <div className="flex items-center gap-3.5">{actions}</div>}
     </div>
@@ -55,11 +55,11 @@ function RowHeader({ title, subtitle, actions }) {
 
 function EmptyState({ icon: Icon, title, text, action }) {
   return (
-    <div className="pf-white rounded-2xl border-[1.5px] border-dashed border-[#b7c5ce] px-6 py-7 text-center">
+    <div className="rounded-2xl border-[1.5px] border-dashed border-[var(--pf-dash)] bg-[var(--pf-surface)] px-6 py-7 text-center">
       <Icon className="mx-auto mb-2 h-[34px] w-[34px] text-[#3B7890] opacity-55" />
-      <b className="block text-[15px] text-[#172832]">{title}</b>
+      <b className="block text-[15px] text-[var(--pf-text)]">{title}</b>
       {text && (
-        <span className="mx-auto mt-1 block max-w-[420px] text-[13px] leading-[1.5] text-[#5c707c]">{text}</span>
+        <span className="mx-auto mt-1 block max-w-[420px] text-[13px] leading-[1.5] text-[var(--pf-muted)]">{text}</span>
       )}
       {action && <div className="mt-3.5">{action}</div>}
     </div>
@@ -70,7 +70,7 @@ function SkeletonRow() {
   return (
     <div className="flex gap-3 overflow-hidden">
       {[0, 1, 2].map((key) => (
-        <div key={key} className="pf-white h-56 w-[280px] flex-shrink-0 animate-pulse rounded-2xl border border-[#cfd8de]" />
+        <div key={key} className="h-56 w-[280px] flex-shrink-0 animate-pulse rounded-2xl border border-[var(--pf-border)] bg-[var(--pf-surface)]" />
       ))}
     </div>
   );
@@ -101,10 +101,10 @@ export default function DevelopLibrary({
   const feature = journeyItems[0] || null;
 
   return (
-    <section className="rounded-3xl border border-[#cfd8de] bg-[#f6f9fb] p-5 sm:p-[30px]">
+    <section className="rounded-3xl border border-[var(--pf-border)] bg-[var(--pf-panel)] p-5 sm:p-[30px]">
       {/* Chapter header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-[#3B7890]">
+        <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-[var(--pf-accent)]">
           <Layers className="h-3.5 w-3.5" />
           My development
         </span>
