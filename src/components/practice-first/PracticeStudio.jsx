@@ -1,9 +1,9 @@
 /**
  * PracticeStudio — the Practice chapter of the combined Practice First page.
  *
- * Two columns: the practice action column, and a left column holding the
- * Leadership Tools rail with recent sessions and assessments beneath it. A
- * started coaching flow takes the full width.
+ * Two columns: the practice action column (today's prescription, coaching flows,
+ * Leadership Tools) and a context column (development progress, Daily Gym,
+ * recent sessions, assessments). A started coaching flow takes the full width.
  */
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/AuthContext";
 import usePracticeStudio from "@/hooks/usePracticeStudio";
 import PrescribedPracticeCard from "@/components/practice/PrescribedPracticeCard";
+import DevelopmentProgressCard from "@/components/practice/DevelopmentProgressCard";
 import CoachingFlowsCard from "@/components/practice/CoachingFlowsCard";
 import WorkoutsSection from "@/components/practice/WorkoutsSection";
 import PracticeSessionsLog from "@/components/practice/PracticeSessionsLog";
@@ -66,31 +67,19 @@ export default function PracticeStudio() {
       </AnimatePresence>
 
       {!activeFlow && (
-        <div className="grid grid-cols-1 items-start gap-[18px] lg:grid-cols-[280px_minmax(0,1fr)]">
-          {/* ── Central practice column ── */}
-          <div className="flex min-w-0 flex-col gap-4 lg:col-start-2 lg:row-start-1">
-            <div id="daily-gym" className="scroll-mt-24">
-              <WorkoutsSection
-                goals={goals}
-                trends={trends}
-                insight={insight}
-                prescription={
-                  <PrescribedPracticeCard
-                    crossToolData={crossToolData}
-                    bpoPatterns={bpoPatterns}
-                    trends={trends}
-                    recentSessionIds={recentSessionIds}
-                    onSessionLogged={handleSessionLogged}
-                  />
-                }
-              />
-            </div>
+        <div className="grid grid-cols-1 items-start gap-[18px] lg:grid-cols-2">
+          {/* ── Practice actions ── */}
+          <div className="flex min-w-0 flex-col gap-4">
+            <PrescribedPracticeCard
+              crossToolData={crossToolData}
+              bpoPatterns={bpoPatterns}
+              trends={trends}
+              recentSessionIds={recentSessionIds}
+              onSessionLogged={handleSessionLogged}
+            />
 
             <CoachingFlowsCard onStartFlow={handleStartFlow} />
-          </div>
 
-          {/* ── Leadership Tools + practice context ── */}
-          <div className="flex flex-col gap-3.5 lg:col-start-1 lg:row-start-1">
             <div className="rounded-[20px] border border-[var(--pf-border)] bg-[var(--pf-surface)] p-4 shadow-[0_10px_26px_rgba(23,40,50,0.1)]">
               <p className="px-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--pf-accent)]">
                 Leadership Tools
@@ -103,6 +92,23 @@ export default function PracticeStudio() {
                 <ToolTile icon={Users} label="1:1 prep & notes" to="/one-on-ones" />
                 <ToolTile icon={Layers} label="Delegation planner" to="/delegation-planner" accent />
               </div>
+            </div>
+          </div>
+
+          {/* ── Development + practice context ── */}
+          <div className="flex min-w-0 flex-col gap-4">
+            <DevelopmentProgressCard />
+
+            <div id="daily-gym" className="flex scroll-mt-24 flex-col gap-2">
+              <div className="px-1">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--pf-muted)]">
+                  Daily Gym
+                </p>
+                <p className="mt-0.5 text-xs leading-[1.4] text-[var(--pf-muted)]">
+                  Short exercises personalised to your active patterns and goals.
+                </p>
+              </div>
+              <WorkoutsSection goals={goals} trends={trends} insight={insight} />
             </div>
 
             <div id="practice-sessions" className="scroll-mt-24">

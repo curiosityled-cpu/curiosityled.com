@@ -269,7 +269,7 @@ export default function PrescribedPracticeCard({
 
   if (done) {
     return (
-      <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-3.5">
+      <div className="rounded-2xl border border-border bg-card px-5 py-4">
         <div className="flex items-center gap-2.5">
           <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
           <div>
@@ -287,13 +287,15 @@ export default function PrescribedPracticeCard({
   const TypeIcon = isGenerated ? (module.workout_type === "task" ? Target : Zap) : null;
 
   return (
-    <div className="rounded-xl border border-[#0202ff]/15 bg-[#0202ff]/5 px-4 py-3.5">
-      <div className="flex items-center gap-1.5 mb-2">
-        <Sparkles className="w-3 h-3 text-[#0202ff] flex-shrink-0" />
-        <p className="text-[10px] font-bold text-[#0202ff] uppercase tracking-widest">
-          Today's prescribed practice
+    <div className="rounded-2xl border border-border bg-card px-5 py-4">
+      <div className="mb-2.5 flex items-center gap-2">
+        <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg bg-[#0202ff]">
+          <Sparkles className="h-3 w-3 text-white" />
+        </div>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          Today's Prescribed Practice
         </p>
-        <span className="text-[9px] text-muted-foreground ml-auto">{sourceLabel}</span>
+        <span className="ml-auto text-[9px] text-muted-foreground">{sourceLabel}</span>
       </div>
         {isPattern && patternName && (
           <p className="mb-2 text-[10px] font-medium leading-snug text-[#0202ff]">
