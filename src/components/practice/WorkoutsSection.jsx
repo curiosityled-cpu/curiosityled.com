@@ -55,7 +55,7 @@ function scoreExercise(exercise, goals, trends, insight) {
   return score;
 }
 
-export default function WorkoutsSection({ goals = [], trends = null, insight = null, callout = null }) {
+export default function WorkoutsSection({ goals = [], trends = null, insight = null }) {
   const { user } = useAuth();
   const { openWithContext } = useAtreusChat();
   const [dynamicWorkouts, setDynamicWorkouts] = useState([]);
@@ -122,7 +122,7 @@ export default function WorkoutsSection({ goals = [], trends = null, insight = n
             <Dumbbell className="w-3.5 h-3.5 text-violet-600" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-900">Daily Gym</p>
+            <p className="text-sm font-semibold text-gray-900">Workouts</p>
             <p className="text-[10px] text-gray-400">
               {dynamicWorkouts.length > 0
                 ? `${dynamicWorkouts.length} pattern-driven ${dynamicWorkouts.length === 1 ? 'workout' : 'workouts'} ready`
@@ -136,9 +136,6 @@ export default function WorkoutsSection({ goals = [], trends = null, insight = n
       </button>
       {expanded && (
       <CardContent className="px-5 pt-2 pb-5 space-y-2">
-        {/* Today's prescription — the one workout to do first */}
-        {callout}
-
         {/* Dynamic pattern-driven workouts */}
         {loadingDynamic ? (
           <div className="py-6 flex justify-center">

@@ -69,21 +69,16 @@ export default function PracticeStudio() {
         <div className="grid grid-cols-1 items-start gap-[18px] lg:grid-cols-[280px_minmax(0,1fr)]">
           {/* ── Central practice column ── */}
           <div className="flex min-w-0 flex-col gap-4 lg:col-start-2 lg:row-start-1">
+            <PrescribedPracticeCard
+              crossToolData={crossToolData}
+              bpoPatterns={bpoPatterns}
+              trends={trends}
+              recentSessionIds={recentSessionIds}
+              onSessionLogged={handleSessionLogged}
+            />
+
             <div id="daily-gym" className="scroll-mt-24">
-              <WorkoutsSection
-                goals={goals}
-                trends={trends}
-                insight={insight}
-                callout={
-                  <PrescribedPracticeCard
-                    crossToolData={crossToolData}
-                    bpoPatterns={bpoPatterns}
-                    trends={trends}
-                    recentSessionIds={recentSessionIds}
-                    onSessionLogged={handleSessionLogged}
-                  />
-                }
-              />
+              <WorkoutsSection goals={goals} trends={trends} insight={insight} />
             </div>
 
             <CoachingFlowsCard onStartFlow={handleStartFlow} />
