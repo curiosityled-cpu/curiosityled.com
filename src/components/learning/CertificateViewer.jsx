@@ -103,7 +103,7 @@ export default function CertificateViewer() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all bg-gradient-to-br from-amber-50 to-yellow-50 border-l-4 border-l-amber-500">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-all bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/50 dark:to-yellow-950/40 border-l-4 border-l-amber-500">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <Award className="w-12 h-12 text-amber-600" />
