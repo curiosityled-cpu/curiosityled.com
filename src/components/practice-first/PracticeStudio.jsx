@@ -1,10 +1,9 @@
 /**
  * PracticeStudio — the Practice chapter of the combined Practice First page.
  *
- * Three columns, as in the approved canvas: a narrow Leadership Tools rail, the
- * central practice action column (session summary, prescribed practice, daily
- * gym, coaching flows) and a contextual sidebar (development progress, recent
- * sessions, assessments). A started coaching flow takes the full width.
+ * Two columns: the practice action column, and a left column holding the
+ * Leadership Tools rail with recent sessions and assessments beneath it. A
+ * started coaching flow takes the full width.
  */
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
@@ -19,7 +18,6 @@ import CoachingFlowsCard from "@/components/practice/CoachingFlowsCard";
 import WorkoutsSection from "@/components/practice/WorkoutsSection";
 import PracticeSessionsLog from "@/components/practice/PracticeSessionsLog";
 import AssessmentsCard from "@/components/practice/AssessmentsCard";
-import DevelopmentProgressCard from "@/components/practice/DevelopmentProgressCard";
 import PracticeFlow from "@/components/practice/PracticeFlow";
 
 function ToolTile({ icon: Icon, label, to, accent }) {
@@ -69,24 +67,9 @@ export default function PracticeStudio() {
       </AnimatePresence>
 
       {!activeFlow && (
-        <div className="grid grid-cols-1 items-start gap-[18px] lg:grid-cols-[150px_minmax(0,1fr)] xl:grid-cols-[150px_minmax(0,1fr)_280px]">
-          {/* ── Leadership Tools rail ── */}
-          <div className="pf-white rounded-[20px] border border-[#cfd8de] p-4 shadow-[0_10px_26px_rgba(23,40,50,0.1)]">
-            <p className="px-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-[#3B7890]">
-              Leadership Tools
-            </p>
-            <p className="px-1.5 pb-2 pt-1 text-[11px] leading-[1.4] text-[#5c707c]">
-              Jump to a structured tool to capture, plan, or review.
-            </p>
-            <div className="flex flex-col gap-2.5">
-              <ToolTile icon={Brain} label="Leadership Support Tool" to="/decision-journal" />
-              <ToolTile icon={Users} label="1:1 prep & notes" to="/one-on-ones" />
-              <ToolTile icon={Layers} label="Delegation planner" to="/delegation-planner" accent />
-            </div>
-          </div>
-
+        <div className="grid grid-cols-1 items-start gap-[18px] lg:grid-cols-[280px_minmax(0,1fr)]">
           {/* ── Central practice column ── */}
-          <div className="flex min-w-0 flex-col gap-4">
+          <div className="flex min-w-0 flex-col gap-4 lg:col-start-2 lg:row-start-1">
             <div
               className="relative overflow-hidden rounded-[20px] border border-[#3B7890] p-7 text-[#E9EEF2] shadow-[0_10px_26px_rgba(23,40,50,0.1)]"
               style={{ background: "linear-gradient(160deg,#172832,#1f3b4a)" }}
@@ -125,12 +108,26 @@ export default function PracticeStudio() {
             <CoachingFlowsCard onStartFlow={handleStartFlow} />
           </div>
 
-          {/* ── Context sidebar ── */}
-          <div className="flex flex-col gap-3.5 lg:col-span-2 lg:grid lg:grid-cols-2 lg:items-start xl:col-span-1 xl:flex xl:flex-col">
-            <DevelopmentProgressCard />
+          {/* ── Leadership Tools + practice context ── */}
+          <div className="flex flex-col gap-3.5 lg:col-start-1 lg:row-start-1">
+            <div className="pf-white rounded-[20px] border border-[#cfd8de] p-4 shadow-[0_10px_26px_rgba(23,40,50,0.1)]">
+              <p className="px-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-[#3B7890]">
+                Leadership Tools
+              </p>
+              <p className="px-1.5 pb-2 pt-1 text-[11px] leading-[1.4] text-[#5c707c]">
+                Jump to a structured tool to capture, plan, or review.
+              </p>
+              <div className="flex flex-col gap-2.5">
+                <ToolTile icon={Brain} label="Leadership Support Tool" to="/decision-journal" />
+                <ToolTile icon={Users} label="1:1 prep & notes" to="/one-on-ones" />
+                <ToolTile icon={Layers} label="Delegation planner" to="/delegation-planner" accent />
+              </div>
+            </div>
+
             <div id="practice-sessions" className="scroll-mt-24">
               <PracticeSessionsLog />
             </div>
+
             <AssessmentsCard />
           </div>
         </div>
