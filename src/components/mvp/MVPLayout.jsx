@@ -8,7 +8,7 @@ import { base44 } from "@/api/base44Client";
 import {
   Brain, Target, Home, BarChart2, Users, LogOut, Menu, X,
   ChevronRight, ChevronLeft, Bell, User, ArrowLeft,
-  Settings, Shield, UserCog, Sun, Moon, ChevronDown, FolderOpen,
+  Settings, Shield, UserCog, Dumbbell, Sun, Moon, ChevronDown, FolderOpen,
   ClipboardList, Layers, Network, GraduationCap, PenLine, Lock } from "lucide-react";
 import { useModuleAccess, PATH_MODULE_KEY } from "@/lib/moduleAccess";
 import { useTheme } from "@/lib/ThemeContext";
@@ -68,12 +68,12 @@ const NAV_CONFIG = {
   manager: [
   { label: 'Lead', path: '/today', icon: Home },
   { label: 'Team', path: '/team', icon: Users },
-  { label: 'Develop', path: '/develop', icon: GraduationCap }],
+  { label: 'Practice', path: '/practice', icon: Dumbbell }],
 
   buyer: [
   { label: 'Lead', path: '/today', icon: Home },
   { label: 'Team', path: '/team', icon: Users },
-  { label: 'Develop', path: '/develop', icon: GraduationCap },
+  { label: 'Practice', path: '/practice', icon: Dumbbell },
   { label: 'Administration', icon: FolderOpen, group: true, children: [
      { label: 'Leadership Intelligence', path: '/Insights?tab=org', icon: Brain },
      { label: 'Development Manager', path: '/DevelopmentManager', icon: Users },
