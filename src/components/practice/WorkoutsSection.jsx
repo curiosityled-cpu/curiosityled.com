@@ -55,10 +55,7 @@ function scoreExercise(exercise, goals, trends, insight) {
   return score;
 }
 
-export default function WorkoutsSection({ goals = [], trends = null, insight = null, variant }) {
-  // "flat" drops the card shell and header — the section is rendered inside the
-  // Daily Gym panel, which owns the title and the prescription callout.
-  const flat = variant === "flat";
+export default function WorkoutsSection({ goals = [], trends = null, insight = null }) {
   const { user } = useAuth();
   const { openWithContext } = useAtreusChat();
   const [dynamicWorkouts, setDynamicWorkouts] = useState([]);
@@ -114,12 +111,8 @@ export default function WorkoutsSection({ goals = [], trends = null, insight = n
 
   const isDynamicDone = (id) => completedIds.includes(id);
 
-  const Shell = flat ? "div" : Card;
-  const Body = flat ? "div" : CardContent;
-
   return (
-    <Shell className={flat ? "" : "shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden"}>
-      {!flat && (
+    <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
       <button
         onClick={() => { const v = !expanded; setExpanded(v); try { localStorage.setItem("cl_collapse_workouts", JSON.stringify(v)); } catch {} }}
         className="px-5 pt-5 pb-2 flex items-center justify-between w-full text-left group"
@@ -141,16 +134,8 @@ export default function WorkoutsSection({ goals = [], trends = null, insight = n
           ? <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
           : <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />}
       </button>
-      )}
-      {(expanded || flat) && (
-      <Body className={flat ? "divide-y divide-[var(--pf-border)]" : "px-5 pt-2 pb-5 space-y-2"}>
-        {flat && (
-          <p className="mt-5 pb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--pf-muted)]">
-            {dynamicWorkouts.length > 0
-              ? `${dynamicWorkouts.length} more to run`
-              : "More to run"}
-          </p>
-        )}
+      {expanded && (
+      <CardContent className="px-5 pt-2 pb-5 space-y-2">
         {/* Dynamic pattern-driven workouts */}
         {loadingDynamic ? (
           <div className="py-6 flex justify-center">
@@ -166,9 +151,7 @@ export default function WorkoutsSection({ goals = [], trends = null, insight = n
             return (
               <div
                 key={m.id}
-                className={flat
-                  ? `py-3.5 transition-opacity ${done ? 'opacity-50' : ''}`
-                  : `p-4 rounded-xl border transition-all ${done ? 'bg-gray-50 border-gray-100 opacity-60' : 'bg-white border-gray-100 hover:border-gray-200'}`}
+                className={`p-4 rounded-xl border transition-all ${done ? 'bg-gray-50 border-gray-100 opacity-60' : 'bg-white border-gray-100 hover:border-gray-200'}`}
               >
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="flex-1 min-w-0">
@@ -195,9 +178,7 @@ export default function WorkoutsSection({ goals = [], trends = null, insight = n
                   <div className="flex gap-2 mt-3">
                     <Button
                       size="sm"
-                      className={flat
-                        ? "flex-1 bg-[#E1A45E] hover:bg-[#d59a52] text-[#172832] font-semibold text-xs h-7"
-                        : "flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-7"}
+                      className="flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-7"
                       onClick={() => startWorkout(m)}
                     >
                       <Brain className="w-3 h-3 mr-1" /> Start with Atreus
@@ -205,9 +186,7 @@ export default function WorkoutsSection({ goals = [], trends = null, insight = n
                     <Button
                       size="sm"
                       variant="outline"
-                      className={flat
-                        ? "text-xs h-7 border-[var(--pf-border)] bg-transparent text-[var(--pf-muted)] hover:bg-[var(--pf-soft)] hover:text-[var(--pf-text)]"
-                        : "text-xs h-7 border-gray-200 text-gray-500 hover:bg-gray-50"}
+                      className="text-xs h-7 border-gray-200 text-gray-500 hover:bg-gray-50"
                       onClick={() => setCompletingId(m.id)}
                     >
                       Done
@@ -254,9 +233,7 @@ export default function WorkoutsSection({ goals = [], trends = null, insight = n
               return (
                 <div
                   key={ex.id}
-                  className={flat
-                    ? `py-3.5 transition-opacity ${done ? 'opacity-50' : ''}`
-                    : `p-4 rounded-xl border transition-all ${done ? 'bg-gray-50 border-gray-100 opacity-60' : 'bg-white border-gray-100 hover:border-gray-200'}`}
+                  className={`p-4 rounded-xl border transition-all ${done ? 'bg-gray-50 border-gray-100 opacity-60' : 'bg-white border-gray-100 hover:border-gray-200'}`}
                 >
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex-1 min-w-0">
@@ -273,9 +250,7 @@ export default function WorkoutsSection({ goals = [], trends = null, insight = n
                     <div className="flex gap-2 mt-3">
                       <Button
                         size="sm"
-                        className={flat
-                          ? "flex-1 bg-[#E1A45E] hover:bg-[#d59a52] text-[#172832] font-semibold text-xs h-7"
-                          : "flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-7"}
+                        className="flex-1 bg-[#0202ff] hover:bg-[#0101dd] text-white text-xs h-7"
                         onClick={() => openWithContext({ context: { pageType: 'practice', exercise: ex.id }, starterMessage: ex.prompt })}
                       >
                         <Brain className="w-3 h-3 mr-1" /> Start with Atreus
@@ -283,9 +258,7 @@ export default function WorkoutsSection({ goals = [], trends = null, insight = n
                       <Button
                         size="sm"
                         variant="outline"
-                        className={flat
-                          ? "text-xs h-7 border-[var(--pf-border)] bg-transparent text-[var(--pf-muted)] hover:bg-[var(--pf-soft)] hover:text-[var(--pf-text)]"
-                          : "text-xs h-7 border-gray-200 text-gray-500 hover:bg-gray-50"}
+                        className="text-xs h-7 border-gray-200 text-gray-500 hover:bg-gray-50"
                         onClick={() => {
                           const next = [...completedIds, ex.id];
                           setCompletedIds(next);
@@ -313,8 +286,8 @@ export default function WorkoutsSection({ goals = [], trends = null, insight = n
             <RotateCcw className="w-3 h-3" /> Reset completed
           </button>
         )}
-      </Body>
+      </CardContent>
       )}
-    </Shell>
+    </Card>
   );
 }
