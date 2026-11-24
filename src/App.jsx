@@ -26,6 +26,7 @@ import ComparePage from './pages/ComparePage';
 import RadarLabelSample from './pages/RadarLabelSample';
 import DiagnosticAnalytics from './pages/DiagnosticAnalytics';
 import MyLeadership from './pages/MyLeadership';
+import Develop from './pages/Develop';
 import MyDevelopment from './pages/MyDevelopment';
 import JourneyDetail from './pages/JourneyDetail';
 import CoursePlayer from './pages/CoursePlayer';
@@ -241,7 +242,9 @@ const AuthenticatedApp = () => {
       <Route path="/AssessmentResults" element={<Navigate to="/practice" replace />} />
       <Route path="/AssessmentAnalyticsDashboard" element={<Navigate to="/DevelopmentManager?tab=signals" replace />} />
       <Route path="/CustomAssessmentBuilder" element={<Navigate to="/DevelopmentManager?tab=signals" replace />} />
-      <Route path="/my-development" element={<MVPLayout><MyDevelopment /></MVPLayout>} />
+      <Route path="/develop" element={<MVPLayout><Develop /></MVPLayout>} />
+      <Route path="/develop/journey" element={<MVPLayout><MyDevelopment /></MVPLayout>} />
+      <Route path="/my-development" element={<Navigate to="/develop/journey" replace />} />
       <Route path="/journey/:journeyId" element={<MVPLayout><JourneyDetail /></MVPLayout>} />
       <Route path="/course/:courseId" element={<MVPLayout><CoursePlayer /></MVPLayout>} />
       <Route path="/signal/:id" element={<MVPPage><SignalPlayer /></MVPPage>} />

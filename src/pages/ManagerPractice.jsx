@@ -33,6 +33,7 @@ import AssessmentsCard from "@/components/practice/AssessmentsCard";
 import DevelopmentProgressCard from "@/components/practice/DevelopmentProgressCard";
 import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
 import PracticeSettings from "@/components/practice/PracticeSettings";
+import DevelopAreaHeader from "@/components/develop/DevelopAreaHeader";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
@@ -217,6 +218,10 @@ export default function ManagerPractice() {
 
   return (
     <div className="px-4 py-6 max-w-6xl mx-auto">
+      <div className="mb-4">
+        <DevelopAreaHeader />
+      </div>
+
       {/* ── Animated hero ── */}
       <PracticeHeroHeader
         firstName={firstName}
