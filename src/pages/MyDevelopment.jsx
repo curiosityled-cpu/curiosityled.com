@@ -5,11 +5,12 @@ import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import MVPPageLayout from "@/components/mvp/MVPPageLayout";
-import LearningInbox from "@/components/learning/LearningInbox";
+import LearningShelf from "@/components/learning/LearningShelf";
 import CertificateViewer from "@/components/learning/CertificateViewer";
 import MyLearningRecord from "@/components/learning/MyLearningRecord";
 import CollapsibleSection from "@/components/learning/CollapsibleSection";
-import ExperienceCard from "@/components/development/ExperienceCard";
+import ExperienceShelfCard from "@/components/development/ExperienceShelfCard";
+import ShelfCarousel from "@/components/journey-home/ShelfCarousel";
 import useMyLearning from "@/hooks/useMyLearning";
 import ExperienceFormModal from "@/components/development/ExperienceFormModal";
 import CreateDevelopmentPlanModal from "@/components/development/CreateDevelopmentPlanModal";
@@ -70,6 +71,7 @@ export default function MyDevelopment() {
 
   const activeJourneys = journeyItems.filter((item) => item.status !== "completed");
   const activeLearning = learningItems.filter((item) => item.status !== "completed");
+  const completedLearning = learningItems.filter((item) => item.status === "completed");
   const completedCount =
     journeyItems.filter((item) => item.status === "completed").length +
     learningItems.filter((item) => item.status === "completed").length;
@@ -122,7 +124,7 @@ export default function MyDevelopment() {
         transition={{ delay: 0.05 }}
       >
         <SectionHeader
-          title="Your journeys"
+          title="My Journeys"
           subtitle="Multi-step development paths — resume where you left off."
           action={
             <button
@@ -167,7 +169,7 @@ export default function MyDevelopment() {
         transition={{ delay: 0.1 }}
       >
         <SectionHeader
-          title="Courses & learning"
+          title="My Courses & Learning"
           subtitle="Assigned courses, resources and conversations."
           action={
             <button
@@ -179,7 +181,11 @@ export default function MyDevelopment() {
             </button>
           }
         />
-        <LearningInbox status={showCompletedLearning ? "completed" : "active"} />
+        <LearningShelf
+          items={showCompletedLearning ? completedLearning : activeLearning}
+          loading={loading}
+          onChanged={reload}
+        />
       </motion.section>
 
       <motion.section
@@ -188,7 +194,7 @@ export default function MyDevelopment() {
         transition={{ delay: 0.15 }}
       >
         <SectionHeader
-          title="Experiences"
+          title="My Experiences"
           subtitle="Coaching, stretch projects, mentorship and more."
           action={
             <div className="flex items-center gap-3">
@@ -213,52 +219,56 @@ export default function MyDevelopment() {
           }
         />
 
-        <div className="space-y-3">
-          {shownExperiences.map((exp, index) => (
-            <ExperienceCard
-              key={exp.id}
-              exp={exp}
-              index={index}
-              onEdit={() => {
-                setEditingExp(exp);
-                setShowExpModal(true);
-              }}
-              onDelete={async () => {
-                await base44.entities.DevelopmentExperience.delete(exp.id);
-                loadExperiences();
-              }}
-              onAdopt={loadExperiences}
-            />
-          ))}
-
-          {loadingExperiences && (
-            <div className="h-24 animate-pulse rounded-2xl border border-border bg-card" />
-          )}
-
-          {!loadingExperiences && shownExperiences.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
-              <Star className="mx-auto mb-3 h-9 w-9 text-muted-foreground/40" />
-              <p className="font-medium text-foreground">
-                {showCompletedExperiences ? "No completed experiences yet" : "No active experiences"}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Log coaching, stretch projects, mentorship and more.
-              </p>
-              {!showCompletedExperiences && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditingExp(null);
-                    setShowExpModal(true);
-                  }}
-                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#0202ff] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#0101dd]"
-                >
-                  Log experience
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+        {loadingExperiences ? (
+          <div className="flex gap-3 overflow-hidden">
+            {[0, 1, 2].map((key) => (
+              <div
+                key={key}
+                className="h-48 w-[280px] flex-shrink-0 animate-pulse rounded-2xl border border-border bg-card"
+              />
+            ))}
+          </div>
+        ) : shownExperiences.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
+            <Star className="mx-auto mb-3 h-9 w-9 text-muted-foreground/40" />
+            <p className="font-medium text-foreground">
+              {showCompletedExperiences ? "No completed experiences yet" : "No active experiences"}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Log coaching, stretch projects, mentorship and more.
+            </p>
+            {!showCompletedExperiences && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingExp(null);
+                  setShowExpModal(true);
+                }}
+                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#0202ff] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#0101dd]"
+              >
+                Log experience
+              </button>
+            )}
+          </div>
+        ) : (
+          <ShelfCarousel
+            items={shownExperiences}
+            renderItem={(exp) => (
+              <ExperienceShelfCard
+                exp={exp}
+                onEdit={() => {
+                  setEditingExp(exp);
+                  setShowExpModal(true);
+                }}
+                onDelete={async () => {
+                  await base44.entities.DevelopmentExperience.delete(exp.id);
+                  loadExperiences();
+                }}
+                onAdopt={loadExperiences}
+              />
+            )}
+          />
+        )}
       </motion.section>
 
       <AchievementsStrip />

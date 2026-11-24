@@ -11,7 +11,7 @@ export default function JourneyCard({ item, onOpen, onEdit, onDelete }) {
   const complete = item.status === "completed";
 
   return (
-    <div className="group flex h-full w-[280px] flex-shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#0202ff]/30 hover:shadow-md">
+    <div className="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#0202ff]/30 hover:shadow-md">
       <button type="button" onClick={() => onOpen(item)} className="flex flex-1 flex-col text-left">
         <div className="relative h-28 w-full overflow-hidden">
           {journey.thumbnail_url ? (
