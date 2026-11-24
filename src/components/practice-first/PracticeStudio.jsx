@@ -36,8 +36,7 @@ export default function PracticeStudio() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [activeFlow, setActiveFlow] = useState(null);
-  const { goals, trends, insight, bpoPatterns, crossToolData, weekCount, recentSessionIds, statusText } =
-    usePracticeStudio();
+  const { goals, trends, insight, bpoPatterns, crossToolData, recentSessionIds } = usePracticeStudio();
 
   const handleStartFlow = (flowKey) => {
     setActiveFlow(flowKey);
@@ -70,29 +69,6 @@ export default function PracticeStudio() {
         <div className="grid grid-cols-1 items-start gap-[18px] lg:grid-cols-[280px_minmax(0,1fr)]">
           {/* ── Central practice column ── */}
           <div className="flex min-w-0 flex-col gap-4 lg:col-start-2 lg:row-start-1">
-            <div
-              className="relative overflow-hidden rounded-[20px] border border-[#3B7890] p-7 text-[#E9EEF2] shadow-[0_10px_26px_rgba(23,40,50,0.1)]"
-              style={{ background: "linear-gradient(160deg,#172832,#1f3b4a)" }}
-            >
-              <span className="absolute inset-x-0 top-0 h-1 bg-[#E1A45E]" />
-              <h2 className="text-[22px] font-extrabold leading-[1.3] tracking-[-0.015em]">Practice sessions</h2>
-              <p className="mt-1.5 text-[13px] leading-[1.5] text-[#E9EEF2]/75">{statusText}</p>
-              <div className="mt-4 flex flex-wrap gap-2.5">
-                <a
-                  href="#daily-gym"
-                  className="rounded-xl border border-[#E9EEF2]/20 bg-[#E9EEF2]/10 px-3.5 py-2 text-xs font-semibold text-[#E9EEF2] transition-colors duration-200 hover:bg-[#E9EEF2]/20"
-                >
-                  Daily Gym
-                </a>
-                <a
-                  href="#practice-sessions"
-                  className="rounded-xl border border-[#E9EEF2]/20 bg-[#E9EEF2]/10 px-3.5 py-2 text-xs font-semibold text-[#E9EEF2] transition-colors duration-200 hover:bg-[#E9EEF2]/20"
-                >
-                  Practice sessions · {weekCount} this week
-                </a>
-              </div>
-            </div>
-
             <PrescribedPracticeCard
               crossToolData={crossToolData}
               bpoPatterns={bpoPatterns}

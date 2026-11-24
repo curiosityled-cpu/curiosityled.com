@@ -5,6 +5,7 @@ import { SlidersHorizontal, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import useMyLearning from "@/hooks/useMyLearning";
+import usePracticeStudio from "@/hooks/usePracticeStudio";
 import PracticeCanvasHero from "@/components/practice-first/PracticeCanvasHero";
 import PracticeStudio from "@/components/practice-first/PracticeStudio";
 import DevelopLibrary from "@/components/practice-first/DevelopLibrary";
@@ -36,6 +37,7 @@ export default function MyDevelopment() {
 
   const email = user?.email || user?.data?.email;
   const { items, loading, reload } = useMyLearning();
+  const { weekCount } = usePracticeStudio();
 
   const loadExperiences = useCallback(async () => {
     if (!email) {
@@ -105,6 +107,7 @@ export default function MyDevelopment() {
         percent={overallPercent}
         activeJourneys={activeJourneys.length}
         activeLearning={activeLearning.length}
+        sessionsThisWeek={weekCount}
         onSettingsClick={() => setShowSettings((s) => !s)}
       />
 

@@ -13,6 +13,7 @@ export default function PracticeCanvasHero({
   percent = 0,
   activeJourneys = 0,
   activeLearning = 0,
+  sessionsThisWeek = 0,
   onSettingsClick,
 }) {
   const dashOffset = 270 - (270 * Math.min(100, Math.max(0, percent))) / 100;
@@ -99,6 +100,10 @@ export default function PracticeCanvasHero({
               <p className="flex items-baseline">
                 <b className="mr-2 text-[26px] font-extrabold text-[#E9EEF2]">{activeLearning}</b>
                 learning active
+              </p>
+              <p className="flex items-baseline">
+                <b className="mr-2 text-[26px] font-extrabold text-[#E1A45E]">{sessionsThisWeek}</b>
+                practice sessions this week
               </p>
             </div>
           </div>
