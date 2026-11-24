@@ -23,7 +23,7 @@ export default function JourneyHomeHero({ firstName, percent, activeJourneys, ac
         <div className="min-w-0 max-w-xl">
           <p className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wider text-white/80">
             <Compass className="w-3 h-3" />
-            My journey
+            My development
           </p>
           <h1 className="mt-3 text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight">
             {firstName ? `${firstName}, here's where you're growing` : "Here's where you're growing"}

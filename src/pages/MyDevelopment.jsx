@@ -19,7 +19,6 @@ import JourneyHomeHero from "@/components/journey-home/JourneyHomeHero";
 import JourneyCarousel from "@/components/journey-home/JourneyCarousel";
 import SectionHeader from "@/components/journey-home/SectionHeader";
 import AchievementsStrip from "@/components/journey-home/AchievementsStrip";
-import DevelopAreaHeader from "@/components/develop/DevelopAreaHeader";
 
 const STATUS_RANK = { in_progress: 0, not_started: 1, completed: 2 };
 
@@ -109,8 +108,6 @@ export default function MyDevelopment() {
 
   return (
     <MVPPageLayout>
-      <DevelopAreaHeader />
-
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
         <JourneyHomeHero
           firstName={firstName}
