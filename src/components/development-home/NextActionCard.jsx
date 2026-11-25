@@ -26,12 +26,14 @@ export default function NextActionCard({ item, onOpen }) {
   const kindLabel = item ? (KIND_META[item.kind] || KIND_META.resource).label : null;
 
   return (
-    <section className="relative h-full overflow-hidden rounded-[24px] bg-[#0202ff] p-6 text-white shadow-[0_16px_36px_rgba(2,2,255,0.22)] sm:p-8">
+    <section className="group relative h-full overflow-hidden rounded-[24px] bg-[#0202ff] p-6 text-white shadow-[0_16px_36px_rgba(2,2,255,0.22)] sm:p-8">
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#2222ff] via-[#0202ff] to-[#0404b4]" />
+      {/* Hover pans and lifts the backdrop. One transition both ways, so leaving
+          mid-way reverses from wherever it got to and re-entering resumes there. */}
       <img
         src={BACKDROP_IMAGE}
         alt=""
-        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-60 mix-blend-screen"
+        className="pointer-events-none absolute inset-0 h-full w-full origin-right scale-100 object-cover opacity-60 mix-blend-screen transition-[transform,opacity] duration-[1400ms] ease-in-out will-change-transform group-hover:-translate-x-4 group-hover:-translate-y-3 group-hover:scale-[1.14] group-hover:opacity-75"
       />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#0202ff]/85 via-[#0202ff]/50 to-[#0202ff]/15" />
 
