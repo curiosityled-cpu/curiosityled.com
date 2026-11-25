@@ -76,8 +76,9 @@ function LearningLibrary() {
   const [displayLimit] = useState(20);
 
   useEffect(() => {
+    if (!user?.email) return;
     loadData();
-  }, []);
+  }, [user?.email]);
 
   useEffect(() => {
     applyFilters();
@@ -86,10 +87,10 @@ function LearningLibrary() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [resourcesData, assessments] = await Promise.all([
-        base44.entities.LearningResource.filter({ is_active: true }),
-        base44.entities.Assessment.filter({ email: user.email }, '-created_date', 1)
-      ]);
+      const resourcesData = await base44.entities.LearningResource.filter({ is_active: true });
+      const assessments = await base44.entities.Assessment
+        .filter({ email: user?.email }, '-created_date', 1)
+        .catch(() => []);
 
       setAllResources(resourcesData);
 
