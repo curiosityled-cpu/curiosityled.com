@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowUpRight, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DUE_TONE_CLASSES, KIND_META, dueMeta } from "@/lib/learning";
+import NextUpSparks from "@/components/development-home/NextUpSparks";
 
 const BACKDROP_IMAGE =
   "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/7bf92102343e8d0a7e30b33399f6a9c1_generated_image.png";
@@ -39,6 +40,7 @@ export default function NextActionCard({ item, onOpen }) {
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="nextup-sheen absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent blur-xl" />
       </div>
+      <NextUpSparks />
 
       {item ? (
         <div className="relative flex h-full flex-col">
