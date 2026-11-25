@@ -314,6 +314,7 @@ export default async function (req) {
       aggregates: emptyAggregates(),
       at_risk: [],
       subtree_cards: [],
+      hierarchy: [],
       team_pulse: null,
     };
 
@@ -487,6 +488,61 @@ export default async function (req) {
       }
     }
 
+    // ── Hierarchy (org chart across the full scope) ─────────────────────
+    // One flat node list carrying parent_email and depth, so the team card can
+    // draw the reporting structure instead of only listing direct reports.
+    // Aggregated-only scopes get no nodes: individual names are withheld there.
+    let hierarchy: any[] = [];
+    if (detailLevel !== "aggregated") {
+      const rootEmail = currentUser.email;
+      const scopedUsers = allUsers.filter(
+        (u) => u.email && (scopeEmails.includes(u.email) || (scopeType === "vertical" && u.email === rootEmail))
+      );
+      const byEmail = new Map(scopedUsers.map((u) => [u.email, u]));
+      const parentOf = new Map<string, string | null>();
+      for (const u of scopedUsers) {
+        const parent = u.email === rootEmail
+          ? null
+          : u.manager_email && byEmail.has(u.manager_email) && u.manager_email !== u.email
+            ? u.manager_email
+            : null;
+        parentOf.set(u.email, parent);
+      }
+      const childrenOf = new Map<string, any[]>();
+      for (const [email, parent] of parentOf) {
+        if (!parent) continue;
+        if (!childrenOf.has(parent)) childrenOf.set(parent, []);
+        childrenOf.get(parent).push(byEmail.get(email));
+      }
+      const atRiskSet = new Set(atRisk.map((r) => r.email));
+      const seen = new Set<string>();
+      let frontier = scopedUsers
+        .filter((u) => !parentOf.get(u.email))
+        .map((u) => ({ user: u, depth: 0 }));
+      while (frontier.length > 0 && hierarchy.length < 400) {
+        const next: any[] = [];
+        for (const { user: u, depth } of frontier) {
+          if (!u?.email || seen.has(u.email)) continue;
+          seen.add(u.email);
+          const kids = childrenOf.get(u.email) || [];
+          hierarchy.push({
+            email: u.email,
+            full_name: u.full_name || u.email,
+            current_role: u.current_role || u.app_role || "",
+            parent_email: parentOf.get(u.email) || null,
+            depth,
+            report_count: kids.length,
+            is_root: depth === 0,
+            at_risk: atRiskSet.has(u.email),
+          });
+          if (depth < 8) {
+            for (const k of kids) next.push({ user: k, depth: depth + 1 });
+          }
+        }
+        frontier = next;
+      }
+    }
+
     // ── Frontline ICs (non-user staff) reporting into someone in scope ──
     let frontlineMembers: any[] = [];
     if (detailEmails.length > 0) {
@@ -527,6 +583,7 @@ export default async function (req) {
       aggregates,
       at_risk: atRisk,
       subtree_cards: subtreeCards,
+      hierarchy,
       team_pulse: teamPulse,
     });
   } catch (error) {
