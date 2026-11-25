@@ -32,6 +32,7 @@ export default function NextActionCard({ item, onOpen }) {
         src={BACKDROP_IMAGE}
         alt=""
         className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-60 mix-blend-screen"
+        style={{ animation: "nextup-drift 28s ease-in-out infinite" }}
       />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#0202ff]/85 via-[#0202ff]/50 to-[#0202ff]/15" />
 

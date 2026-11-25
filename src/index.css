@@ -687,6 +687,12 @@ h4.text-xs {
   100% { height: 22px; opacity: 0.65; }
 }
 
+/* ── Next Up card: slow drift on the brand backdrop ─────────────────────── */
+@keyframes nextup-drift {
+  0%, 100% { transform: scale(1) translate3d(0, 0, 0); }
+  50% { transform: scale(1.09) translate3d(-1.5%, -1%, 0); }
+}
+
 /* ── Practice hero: "training room at dusk + energy pulse" ──────────────── */
 @keyframes practice-breathe {
   0%, 100% { transform: scale(1); }
