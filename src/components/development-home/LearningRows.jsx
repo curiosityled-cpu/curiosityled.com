@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { AlertTriangle, BookOpen, Check, Clock, GraduationCap, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DUE_TONE_CLASSES, KIND_META, dueMeta } from "@/lib/learning";
@@ -25,9 +26,17 @@ export default function LearningRows({
       title="My courses & learning"
       subtitle="Assigned courses, resources and conversations."
       actions={
-        <SectionLink onClick={onToggleCompleted}>
-          {showCompleted ? "Show active" : "Show completed"}
-        </SectionLink>
+        <>
+          <Link
+            to="/LearningLibrary"
+            className="text-xs font-bold text-[var(--pf-accent)] transition-colors hover:text-[#E1A45E] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pf-accent)]"
+          >
+            Course library
+          </Link>
+          <SectionLink onClick={onToggleCompleted}>
+            {showCompleted ? "Show active" : "Show completed"}
+          </SectionLink>
+        </>
       }
     >
       {loading ? (
@@ -37,6 +46,14 @@ export default function LearningRows({
           icon={GraduationCap}
           title={showCompleted ? "Nothing completed yet" : "Nothing assigned right now"}
           text="When your program team assigns a course, resource or conversation it lands here."
+          action={
+            <Link
+              to="/LearningLibrary"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#3B7890] bg-[#3B7890] px-3.5 py-1.5 text-xs font-bold text-white transition-colors hover:bg-[#2f6379]"
+            >
+              Browse the course library
+            </Link>
+          }
         />
       ) : (
         <>
