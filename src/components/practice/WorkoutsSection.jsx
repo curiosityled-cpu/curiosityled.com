@@ -10,7 +10,7 @@
  * returns and captures their commitment to mark the workout complete.
  */
 import React, { useState, useEffect } from "react";
-import { Dumbbell, CheckCircle2, Brain, RotateCcw, Clock, Target, Zap, ChevronDown, ChevronUp } from "lucide-react";
+import { Dumbbell, CheckCircle2, Brain, RotateCcw, Clock, Target, Zap, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
@@ -111,6 +111,15 @@ export default function WorkoutsSection({ goals = [], trends = null, insight = n
 
   const isDynamicDone = (id) => completedIds.includes(id);
 
+  // Static workouts ranked for this user — the first one is the day's recommendation.
+  const staticRanked = [...EXERCISE_LIBRARY]
+    .map((ex) => ({ ...ex, score: scoreExercise(ex, goals, trends, insight) }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3);
+  const topWorkoutTitle = dynamicWorkouts.length
+    ? dynamicWorkouts[0]?.module?.title
+    : staticRanked[0]?.title;
+
   return (
     <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl overflow-hidden">
       <div className="px-5 pt-5 pb-3 flex items-center justify-between gap-2">
@@ -140,6 +149,19 @@ export default function WorkoutsSection({ goals = [], trends = null, insight = n
 
       {expanded && (
       <div className="border-t border-gray-100 px-5 pt-4 pb-5">
+        {!loadingDynamic && topWorkoutTitle && (
+          <div className="mb-3 flex items-start gap-2.5 rounded-xl border border-[var(--pf-soft-border)] bg-[var(--pf-soft)] px-3.5 py-2.5">
+            <span className="mt-0.5 grid h-6 w-6 flex-shrink-0 place-items-center rounded-lg bg-[#0202ff]/10 text-[#0202ff]">
+              <Sparkles className="h-3.5 w-3.5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--pf-muted)]">
+                Today's recommended workout
+              </p>
+              <p className="truncate text-sm font-bold text-[var(--pf-text)]">{topWorkoutTitle}</p>
+            </div>
+          </div>
+        )}
         <div className="space-y-2">
         {/* Dynamic pattern-driven workouts */}
         {loadingDynamic ? (
@@ -229,11 +251,7 @@ export default function WorkoutsSection({ goals = [], trends = null, insight = n
           })
         ) : (
           /* Static fallback — no dynamic workouts */
-          [...EXERCISE_LIBRARY]
-            .map((ex) => ({ ...ex, score: scoreExercise(ex, goals, trends, insight) }))
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 3)
-            .map((ex) => {
+          staticRanked.map((ex) => {
               const done = completedIds.includes(ex.id);
               return (
                 <div

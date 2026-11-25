@@ -19,8 +19,8 @@ import { DevSection } from "@/components/development-home/DevSection";
 import PracticeStudio from "@/components/practice-first/PracticeStudio";
 import PracticeSettings from "@/components/practice/PracticeSettings";
 import DevelopRecord from "@/components/practice-first/DevelopRecord";
-import AchievementsStrip from "@/components/journey-home/AchievementsStrip";
-import CertificateViewer from "@/components/learning/CertificateViewer";
+import EarnedBadgesCard from "@/components/gamification/EarnedBadgesCard";
+import MyCertificatesCard from "@/components/learning/MyCertificatesCard";
 import MyLearningRecord from "@/components/learning/MyLearningRecord";
 import ExperienceFormModal from "@/components/development/ExperienceFormModal";
 import CreateDevelopmentPlanModal from "@/components/development/CreateDevelopmentPlanModal";
@@ -212,7 +212,7 @@ export default function MyDevelopment() {
         {/* Practice and tools */}
         <div className="mt-8">
           <DevSection
-            title="Practice & tools"
+            title="Practice"
             subtitle="Short, structured sessions you can run in a few minutes."
           >
             <PracticeToolsGrid onStartFlow={setActiveFlow} />
@@ -227,19 +227,19 @@ export default function MyDevelopment() {
           </div>
         </div>
 
-        {/* Achievements and records */}
+        {/* Milestones */}
         <div className="mt-8">
           <DevSection
-            title="Achievements & records"
-            subtitle="Milestones, certificates and your full learning history."
+            title="Milestones"
+            subtitle="Badges earned, certificates issued and your complete learning record."
           >
-            <AchievementsStrip />
-            <div className="mt-3 flex flex-col gap-2.5">
-              <DevelopRecord title="My certificates" defaultOpen={false}>
-                <CertificateViewer />
-              </DevelopRecord>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <EarnedBadgesCard />
+              <MyCertificatesCard />
+            </div>
+            <div className="mt-3">
               <DevelopRecord title="My learning record" defaultOpen={false}>
-                <MyLearningRecord email={email} />
+                <MyLearningRecord email={email} items={items} experiences={experiences} />
               </DevelopRecord>
             </div>
           </DevSection>
