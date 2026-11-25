@@ -25,13 +25,7 @@ import {
   TrendingUp, Activity, ChevronRight, Brain, ClipboardList, Layers,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import TeamMemberRow from "@/components/team/TeamMemberRow";
-import TeamPulseHero from "@/components/team/TeamPulseHero";
-import SubtreeCardGrid from "@/components/team/SubtreeCardGrid";
 import TeamHeroHeader from "@/components/team/TeamHeroHeader";
-import ZoneCard from "@/components/density/ZoneCard";
-import TeamTalentScorecard from "@/components/team/TeamTalentScorecard";
-import TeamRosterCard from "@/components/team/TeamRosterCard";
 
 function ActionTile({ icon: Icon, iconBg, iconColor, title, description, to }) {
   const content = (
@@ -64,12 +58,7 @@ export default function ManagerTeam() {
   });
 
   const rollup = data;
-  const aggregates = rollup?.aggregates;
-  const members = rollup?.members || [];
   const subtreeCards = rollup?.subtree_cards || [];
-  const kpis = aggregates?.kpis || [];
-  const atRisk = rollup?.at_risk || [];
-  const atRiskEmails = new Set(atRisk.map((r) => r.email));
 
   const scopeLabel = rollup?.scope_label || "Team";
   const scopeSize = rollup?.scope_size || 0;
@@ -77,10 +66,8 @@ export default function ManagerTeam() {
   const detailLevel = rollup?.detail_level || "full";
   const scopeType = rollup?.scope_type || "vertical";
   const leaderLevel = rollup?.leader_level || 1;
-  const isAggregatedOnly = detailLevel === "aggregated";
   const isDirectsOnly = detailLevel === "directs";
 
-  const isSubtreeLevel = subtreeCards.length > 0 && leaderLevel >= 3;
   const isICLevel = scopeType === "vertical" && leaderLevel <= 1 && subtreeCards.length === 0;
 
   const subtitle = isDirectsOnly
@@ -152,24 +139,6 @@ export default function ManagerTeam() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
             {/* Left — Main content */}
             <div className="space-y-4">
-              {/* Team Pulse — synthesized situational read */}
-              {rollup?.team_pulse && <TeamPulseHero rollup={rollup} />}
-
-              {/* Combined Team card: roster/subtree + at-risk signals */}
-              {isSubtreeLevel && subtreeCards.length > 0 ? (
-                <TeamRosterCard count={subtreeCards.length} atRisk={!isAggregatedOnly ? atRisk : []}>
-                  <SubtreeCardGrid subtreeCards={subtreeCards} level={leaderLevel} atRisk={atRisk} />
-                </TeamRosterCard>
-              ) : !isAggregatedOnly && members.length > 0 ? (
-                <TeamRosterCard count={members.length} atRisk={atRisk}>
-                  <div className="divide-y divide-border">
-                    {members.map((m) => (
-                      <TeamMemberRow key={m.id || m.email} member={m} isAtRisk={atRiskEmails.has(m.email)} />
-                    ))}
-                  </div>
-                </TeamRosterCard>
-              ) : null}
-
               {/* Frontline staff (non-user ICs) reporting into this team */}
               {rollup?.frontline_members?.length > 0 && (
                 <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl">
@@ -216,9 +185,6 @@ export default function ManagerTeam() {
 
             {/* Right — Context sidebar */}
             <div className="space-y-4 md:sticky md:top-20 md:self-start">
-              {/* Combined Team Talent Scorecard (Team Health + KPIs) */}
-              <TeamTalentScorecard aggregates={aggregates} kpis={kpis} teamSize={scopeSize} />
-
               {/* Team Tools */}
               <div className="space-y-3">
                 <div className="px-1 pt-1">

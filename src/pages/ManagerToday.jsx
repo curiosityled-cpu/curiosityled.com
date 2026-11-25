@@ -32,6 +32,7 @@ import { runBpoPatternEngine } from "@/components/patterns/bpoPatternEngine";
 import TodaysPlaybook from "@/components/lead/TodaysPlaybook";
 import CheckInTrendDashboard from "@/components/patterns/CheckInTrendDashboard";
 import TalentScorecard from "@/components/lead/TalentScoreCard";
+import TeamOverviewSection from "@/components/team/TeamOverviewSection";
 import DecisionJournalCard from "@/components/lead/DecisionJournalCard";
 import { useActiveClientId } from "@/components/contexts/ClientContext";
 
@@ -356,6 +357,19 @@ export default function ManagerToday() {
     enabled: !!user?.email, staleTime: 5 * 60 * 1000,
   });
 
+  const { data: teamRollup } = useQuery({
+    queryKey: ["teamRollup", user?.email, activeClientId],
+    queryFn: async () => {
+      const res = await base44.functions.invoke(
+        "getTeamRollup",
+        activeClientId ? { client_id: activeClientId } : {}
+      );
+      return res.data;
+    },
+    enabled: !!user?.email,
+    staleTime: 60_000,
+  });
+
   // Only surface tone onboarding once the preference query has resolved —
   // otherwise the banner flashes on every load while tonePref is still null
   // during the initial fetch (the "old-style Atreus settings" flash).
@@ -585,6 +599,21 @@ export default function ManagerToday() {
           </ZoneCard>
         </div>
       </div>
+
+      {/* ── Your team: pulse, roster and talent read ── */}
+      {teamRollup?.scope_size > 0 && (
+        <div className="mt-6">
+          <div className="mb-3 px-1">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Your team
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Pulse, roster and talent read across your reporting tree.
+            </p>
+          </div>
+          <TeamOverviewSection rollup={teamRollup} />
+        </div>
+      )}
 
       {/* Weekly reflection modal */}
       <WeeklyRhythmReflection
