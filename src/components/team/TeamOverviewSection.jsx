@@ -9,8 +9,7 @@ import React, { useState } from "react";
 import { List, Network } from "lucide-react";
 import TeamPulseHero from "@/components/team/TeamPulseHero";
 import TeamRosterCard from "@/components/team/TeamRosterCard";
-import SubtreeCardGrid from "@/components/team/SubtreeCardGrid";
-import TeamMemberRow from "@/components/team/TeamMemberRow";
+import TeamPeopleList from "@/components/team/TeamPeopleList";
 import TeamHierarchyView from "@/components/team/TeamHierarchyView";
 import TeamTalentScorecard from "@/components/team/TeamTalentScorecard";
 
@@ -44,30 +43,21 @@ export default function TeamOverviewSection({ rollup }) {
   if (!rollup) return null;
 
   const members = rollup.members || [];
-  const subtreeCards = rollup.subtree_cards || [];
   const hierarchy = rollup.hierarchy || [];
   const atRisk = rollup.at_risk || [];
-  const atRiskEmails = new Set(atRisk.map((r) => r.email));
   const detailLevel = rollup.detail_level || "full";
-  const leaderLevel = rollup.leader_level || 1;
   const scopeSize = rollup.scope_size || 0;
   const isAggregatedOnly = detailLevel === "aggregated";
-  const isSubtreeLevel = subtreeCards.length > 0 && leaderLevel >= 3;
   const canChart = hierarchy.length > 0;
   const showingChart = canChart && view === "chart";
+  const peopleCount = hierarchy.length || members.length;
 
-  const listContent = isSubtreeLevel ? (
-    <SubtreeCardGrid subtreeCards={subtreeCards} level={leaderLevel} atRisk={atRisk} />
-  ) : !isAggregatedOnly && members.length > 0 ? (
-    <div className="divide-y divide-border">
-      {members.map((m) => (
-        <TeamMemberRow key={m.id || m.email} member={m} isAtRisk={atRiskEmails.has(m.email)} />
-      ))}
-    </div>
-  ) : (
-    <p className="px-4 py-6 text-xs text-muted-foreground text-center">
-      No one reports to you yet.
-    </p>
+  const listContent = (
+    <TeamPeopleList
+      hierarchy={hierarchy}
+      members={isAggregatedOnly ? [] : members}
+      atRisk={isAggregatedOnly ? [] : atRisk}
+    />
   );
 
   return (
@@ -77,7 +67,7 @@ export default function TeamOverviewSection({ rollup }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
         <TeamRosterCard
-          count={showingChart ? hierarchy.length : isSubtreeLevel ? subtreeCards.length : members.length}
+          count={peopleCount}
           atRisk={isAggregatedOnly ? [] : atRisk}
         >
           <div className="flex items-center justify-between gap-2 px-3 pt-3 pb-2.5 border-b border-border/70">

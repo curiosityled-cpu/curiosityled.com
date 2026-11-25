@@ -17,7 +17,7 @@ function initials(name) {
   return name.split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase();
 }
 
-export default function TeamMemberRow({ member, isAtRisk }) {
+export default function TeamMemberRow({ member, isAtRisk, hideStats = false }) {
   const [open, setOpen] = useState(false);
   const m = member;
   const name = m.full_name || m.email;
@@ -38,10 +38,12 @@ export default function TeamMemberRow({ member, isAtRisk }) {
           </div>
           <p className="text-[10px] text-gray-500 truncate">{m.current_role || m.app_role || m.email}</p>
         </div>
-        <div className="hidden sm:flex items-center gap-4">
-          <StatPill icon={Target} label="Goals" value={`${m.goals.completed}/${m.goals.total}`} color="text-[#0202ff]" />
-          <StatPill icon={BarChart3} label="Score" value={m.assessments.latest_overall_pct != null ? `${m.assessments.latest_overall_pct}%` : "—"} color="text-emerald-600" />
-        </div>
+        {!hideStats && (
+          <div className="hidden sm:flex items-center gap-4">
+            <StatPill icon={Target} label="Goals" value={`${m.goals.completed}/${m.goals.total}`} color="text-[#0202ff]" />
+            <StatPill icon={BarChart3} label="Score" value={m.assessments.latest_overall_pct != null ? `${m.assessments.latest_overall_pct}%` : "—"} color="text-emerald-600" />
+          </div>
+        )}
         {open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
       </button>
 
