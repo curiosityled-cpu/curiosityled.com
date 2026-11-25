@@ -227,18 +227,26 @@ export default function MyDevelopment() {
           </div>
         </div>
 
-        {/* Milestones */}
+        {/* Achievements */}
         <div className="mt-8">
           <DevSection
-            title="Milestones"
+            title="Achievements"
             subtitle="Badges earned, certificates issued and your complete learning record."
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <EarnedBadgesCard />
               <MyCertificatesCard />
             </div>
-            <div className="mt-3">
-              <DevelopRecord title="My learning record" defaultOpen={false}>
+            <div className="mt-5">
+              <div className="mb-2 px-1">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--pf-muted)]">
+                  Learning Records
+                </p>
+                <p className="mt-0.5 text-xs leading-[1.4] text-[var(--pf-muted)]">
+                  Every completion across journeys, courses and experiences, with a downloadable copy.
+                </p>
+              </div>
+              <DevelopRecord title="Learning Record" defaultOpen={false}>
                 <MyLearningRecord email={email} items={items} experiences={experiences} />
               </DevelopRecord>
             </div>

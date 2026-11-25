@@ -56,7 +56,7 @@ export default function MyCertificatesCard() {
           <span className="grid h-7 w-7 place-items-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-300">
             <Award className="h-3.5 w-3.5" />
           </span>
-          <h3 className="text-sm font-bold text-[var(--pf-text)]">My certificates</h3>
+          <h3 className="text-sm font-bold text-[var(--pf-text)]">Certificates</h3>
         </div>
         <span className="text-[11px] font-semibold text-[var(--pf-muted)]">
           {certificates.length} earned
