@@ -31,10 +31,10 @@ export default function NextActionCard({ item, onOpen }) {
       <img
         src={BACKDROP_IMAGE}
         alt=""
-        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-60 mix-blend-screen"
-        style={{ animation: "nextup-drift 28s ease-in-out infinite" }}
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-75"
+        style={{ animation: "nextup-drift 18s ease-in-out infinite", transformOrigin: "60% 50%" }}
       />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#0202ff]/85 via-[#0202ff]/50 to-[#0202ff]/15" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#0202ff]/90 via-[#0202ff]/55 to-[#0202ff]/10" />
 
       {item ? (
         <div className="relative flex h-full flex-col">
