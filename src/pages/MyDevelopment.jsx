@@ -215,6 +215,14 @@ export default function MyDevelopment() {
             title="Practice"
             subtitle="Short, structured sessions you can run in a few minutes."
           >
+            <div className="mb-2 px-1">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--pf-muted)]">
+                Coaching flows
+              </p>
+              <p className="mt-0.5 text-xs leading-[1.4] text-[var(--pf-muted)]">
+                Guided sessions that walk you through one conversation, moment or reflection.
+              </p>
+            </div>
             <PracticeToolsGrid onStartFlow={setActiveFlow} />
           </DevSection>
 
