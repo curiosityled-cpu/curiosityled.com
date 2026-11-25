@@ -40,7 +40,7 @@ function rankOf(row) {
   return 3;
 }
 
-export default function DevelopmentProgressCard() {
+export default function DevelopmentProgressCard({ title = "Development", hideLink = false }) {
   const { items, loading } = useMyLearning();
   const [selected, setSelected] = useState(null);
 
@@ -75,14 +75,16 @@ export default function DevelopmentProgressCard() {
           <Layers className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-300" />
         </div>
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex-1">
-          Development
+          {title}
         </p>
-        <Link
-          to="/my-development"
-          className="text-[11px] font-semibold text-[#0202ff] dark:text-blue-300 hover:underline flex items-center gap-0.5"
-        >
-          View all <ChevronRight className="w-3 h-3" />
-        </Link>
+        {!hideLink && (
+          <Link
+            to="/my-development"
+            className="text-[11px] font-semibold text-[#0202ff] dark:text-blue-300 hover:underline flex items-center gap-0.5"
+          >
+            View all <ChevronRight className="w-3 h-3" />
+          </Link>
+        )}
       </div>
 
       {loading ? (
