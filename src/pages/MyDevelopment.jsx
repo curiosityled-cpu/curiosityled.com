@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { SlidersHorizontal, X } from "lucide-react";
+import { FileText, SlidersHorizontal, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import useMyLearning from "@/hooks/useMyLearning";
@@ -18,7 +18,6 @@ import PracticeToolsGrid from "@/components/development-home/PracticeToolsGrid";
 import { DevSection } from "@/components/development-home/DevSection";
 import PracticeStudio from "@/components/practice-first/PracticeStudio";
 import PracticeSettings from "@/components/practice/PracticeSettings";
-import DevelopRecord from "@/components/practice-first/DevelopRecord";
 import EarnedBadgesCard from "@/components/gamification/EarnedBadgesCard";
 import MyCertificatesCard from "@/components/learning/MyCertificatesCard";
 import MyLearningRecord from "@/components/learning/MyLearningRecord";
@@ -227,21 +226,31 @@ export default function MyDevelopment() {
           </div>
         </div>
 
-        {/* Milestones */}
+        {/* Achievements */}
         <div className="mt-8">
           <DevSection
-            title="Milestones"
+            title="Achievements"
             subtitle="Badges earned, certificates issued and your complete learning record."
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <EarnedBadgesCard />
               <MyCertificatesCard />
             </div>
-            <div className="mt-3">
-              <DevelopRecord title="My learning record" defaultOpen={false}>
-                <MyLearningRecord email={email} items={items} experiences={experiences} />
-              </DevelopRecord>
-            </div>
+
+            <section className="mt-3 rounded-[14px] border border-[var(--pf-border)] bg-[var(--pf-surface)] p-4 shadow-[0_4px_12px_rgba(23,40,50,0.06)]">
+              <div className="mb-3 flex items-center gap-2">
+                <span className="grid h-7 w-7 place-items-center rounded-lg bg-[#0202ff]/10 text-[#0202ff]">
+                  <FileText className="h-3.5 w-3.5" />
+                </span>
+                <div className="min-w-0">
+                  <h3 className="text-sm font-bold text-[var(--pf-text)]">Learning Record</h3>
+                  <p className="mt-0.5 text-[11px] leading-[1.4] text-[var(--pf-muted)]">
+                    Every completion across journeys, courses, conversations and experiences.
+                  </p>
+                </div>
+              </div>
+              <MyLearningRecord email={email} items={items} experiences={experiences} />
+            </section>
           </DevSection>
         </div>
       </div>
