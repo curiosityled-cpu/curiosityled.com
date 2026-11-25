@@ -514,6 +514,27 @@ export default async function (req) {
         if (!childrenOf.has(parent)) childrenOf.set(parent, []);
         childrenOf.get(parent).push(byEmail.get(email));
       }
+      // Per-person signals already fetched for the scope, indexed once so every
+      // node in the chart can be opened and read without another round trip.
+      const goalsByEmail = new Map<string, { total: number; completed: number }>();
+      for (const g of goals) {
+        if (!g.created_by) continue;
+        const cur = goalsByEmail.get(g.created_by) || { total: 0, completed: 0 };
+        cur.total += 1;
+        if (g.status === "completed") cur.completed += 1;
+        goalsByEmail.set(g.created_by, cur);
+      }
+      const assessmentByEmail = new Map<string, number>();
+      for (const a of assessments) {
+        if (a.overall_pct == null || !a.email) continue;
+        if (!assessmentByEmail.has(a.email)) assessmentByEmail.set(a.email, a.overall_pct);
+      }
+      const checkinsByEmail = new Map<string, number>();
+      for (const c of checkins) {
+        if (!c.employee_email) continue;
+        checkinsByEmail.set(c.employee_email, (checkinsByEmail.get(c.employee_email) || 0) + 1);
+      }
+
       const atRiskSet = new Set(atRisk.map((r) => r.email));
       const seen = new Set<string>();
       let frontier = scopedUsers
@@ -534,6 +555,9 @@ export default async function (req) {
             report_count: kids.length,
             is_root: depth === 0,
             at_risk: atRiskSet.has(u.email),
+            goals: goalsByEmail.get(u.email) || { total: 0, completed: 0 },
+            assessment_pct: assessmentByEmail.get(u.email) ?? null,
+            checkins: checkinsByEmail.get(u.email) || 0,
           });
           if (depth < 8) {
             for (const k of kids) next.push({ user: k, depth: depth + 1 });
