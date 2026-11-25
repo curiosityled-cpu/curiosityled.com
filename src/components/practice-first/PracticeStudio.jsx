@@ -1,11 +1,13 @@
 /**
- * PracticeStudio — the Practice chapter of the combined Practice First page.
+ * PracticeStudio — the Practice chapter of My Development.
  *
- * Two columns: the practice action column (today's prescription, coaching flows,
- * Leadership Tools) and a context column (development progress, Daily Gym,
+ * Two columns: the practice action column (development progress, coaching flows,
+ * Leadership Tools) and a context column (today's prescription, Daily Gym,
  * recent sessions, assessments). A started coaching flow takes the full width.
+ * The flow itself is owned by the page so the Practice & tools tiles above can
+ * start the same flows.
  */
-import React, { useState } from "react";
+import React from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "@/lib/AuthContext";
@@ -19,16 +21,10 @@ import PracticeSessionsLog from "@/components/practice/PracticeSessionsLog";
 import AssessmentsCard from "@/components/practice/AssessmentsCard";
 import PracticeFlow from "@/components/practice/PracticeFlow";
 
-export default function PracticeStudio() {
+export default function PracticeStudio({ activeFlow, onStartFlow, onCloseFlow }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [activeFlow, setActiveFlow] = useState(null);
   const { goals, trends, insight, bpoPatterns, crossToolData, recentSessionIds } = usePracticeStudio();
-
-  const handleStartFlow = (flowKey) => {
-    setActiveFlow(flowKey);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   const handleSessionLogged = () => {
     queryClient.invalidateQueries({ queryKey: ["mp-sessions", user?.email] });
@@ -47,7 +43,7 @@ export default function PracticeStudio() {
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
           >
-            <PracticeFlow flowKey={activeFlow} onClose={() => setActiveFlow(null)} />
+            <PracticeFlow flowKey={activeFlow} onClose={onCloseFlow} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -58,7 +54,7 @@ export default function PracticeStudio() {
           <div className="flex min-w-0 flex-col gap-4">
             <DevelopmentProgressCard />
 
-            <CoachingFlowsCard onStartFlow={handleStartFlow} />
+            <CoachingFlowsCard onStartFlow={onStartFlow} />
 
             <LeadershipToolsCard />
           </div>

@@ -6,10 +6,22 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import useMyLearning from "@/hooks/useMyLearning";
 import usePracticeStudio from "@/hooks/usePracticeStudio";
-import PracticeCanvasHero from "@/components/practice-first/PracticeCanvasHero";
+import useLearnerActions from "@/hooks/useLearnerActions";
+import { dueMeta } from "@/lib/learning";
+import DevHomeHeader from "@/components/development-home/DevHomeHeader";
+import NextActionCard from "@/components/development-home/NextActionCard";
+import MomentumCard from "@/components/development-home/MomentumCard";
+import JourneyPreviewRow from "@/components/development-home/JourneyPreviewRow";
+import LearningRows from "@/components/development-home/LearningRows";
+import ExperienceRows from "@/components/development-home/ExperienceRows";
+import PracticeToolsGrid from "@/components/development-home/PracticeToolsGrid";
+import { DevSection } from "@/components/development-home/DevSection";
 import PracticeStudio from "@/components/practice-first/PracticeStudio";
-import DevelopLibrary from "@/components/practice-first/DevelopLibrary";
 import PracticeSettings from "@/components/practice/PracticeSettings";
+import DevelopRecord from "@/components/practice-first/DevelopRecord";
+import AchievementsStrip from "@/components/journey-home/AchievementsStrip";
+import CertificateViewer from "@/components/learning/CertificateViewer";
+import MyLearningRecord from "@/components/learning/MyLearningRecord";
 import ExperienceFormModal from "@/components/development/ExperienceFormModal";
 import CreateDevelopmentPlanModal from "@/components/development/CreateDevelopmentPlanModal";
 import DeleteJourneyDialog from "@/components/development/DeleteJourneyDialog";
@@ -17,9 +29,33 @@ import DeleteJourneyDialog from "@/components/development/DeleteJourneyDialog";
 const STATUS_RANK = { in_progress: 0, not_started: 1, completed: 2 };
 
 /**
- * Practice First — the learner's single development home. Practice sits at the
- * top as the immediate starting point; the Develop library below holds journeys,
- * courses, experiences and records.
+ * The single next action. Deliberately deterministic and auditable:
+ *   1. something already started (resume before suggesting anything new)
+ *   2. the most overdue required work
+ *   3. the soonest due date
+ *   4. the furthest along, then title, so the result never flickers
+ */
+function selectNextAction(items) {
+  const open = items.filter((item) => item.status !== "completed");
+  if (!open.length) return null;
+  const started = (item) => (item.status === "in_progress" ? 0 : 1);
+  const overdue = (item) => (dueMeta(item.due_date)?.tone === "danger" ? 0 : 1);
+  const dueAt = (item) =>
+    item.due_date ? new Date(item.due_date).getTime() : Number.MAX_SAFE_INTEGER;
+
+  return [...open].sort(
+    (a, b) =>
+      started(a) - started(b) ||
+      overdue(a) - overdue(b) ||
+      dueAt(a) - dueAt(b) ||
+      (b.percent || 0) - (a.percent || 0) ||
+      String(a.title).localeCompare(String(b.title))
+  )[0];
+}
+
+/**
+ * My Development — one pathway: the next useful step, momentum, journeys,
+ * courses, experiences and practice tools, in that order.
  */
 export default function MyDevelopment() {
   const { user } = useAuth();
@@ -34,10 +70,12 @@ export default function MyDevelopment() {
   const [showExpModal, setShowExpModal] = useState(false);
   const [editingExp, setEditingExp] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [activeFlow, setActiveFlow] = useState(null);
 
   const email = user?.email || user?.data?.email;
   const { items, loading, reload } = useMyLearning();
   const { weekCount } = usePracticeStudio();
+  const { open, markComplete, busyId } = useLearnerActions({ onChanged: reload });
 
   const loadExperiences = useCallback(async () => {
     if (!email) {
@@ -69,14 +107,28 @@ export default function MyDevelopment() {
   const activeJourneys = journeyItems.filter((item) => item.status !== "completed");
   const activeLearning = learningItems.filter((item) => item.status !== "completed");
   const completedLearning = learningItems.filter((item) => item.status === "completed");
-  const completedCount =
-    journeyItems.filter((item) => item.status === "completed").length +
-    learningItems.filter((item) => item.status === "completed").length;
-  const overallPercent = items.length ? Math.round((completedCount / items.length) * 100) : 0;
+  const completedCount = items.filter((item) => item.status === "completed").length;
+  const overdueCount = items.filter(
+    (item) => item.status !== "completed" && dueMeta(item.due_date)?.tone === "danger"
+  ).length;
 
-  const activeExperiences = experiences.filter((e) => e.status !== "completed" && e.status !== "cancelled");
-  const completedExperiences = experiences.filter((e) => e.status === "completed");
+  const nextAction = useMemo(() => selectNextAction(items), [items]);
+
+  const activeExperiences = experiences.filter(
+    (exp) => exp.status !== "completed" && exp.status !== "cancelled"
+  );
+  const completedExperiences = experiences.filter((exp) => exp.status === "completed");
   const shownExperiences = showCompletedExperiences ? completedExperiences : activeExperiences;
+
+  // Journeys open their own detail route; everything else goes through the
+  // shared learner actions so resume/mark-in-progress behave as before.
+  const openItem = (item) => {
+    if (item.kind === "journey") {
+      navigate(`/journey/${item.launch.journey.id}`);
+      return;
+    }
+    open(item);
+  };
 
   const openCreate = () => {
     setEditingJourney(null);
@@ -92,64 +144,106 @@ export default function MyDevelopment() {
   };
 
   return (
-    <div className="pf-canvas relative min-h-screen overflow-hidden pb-10">
-      {/* Copper thread traced from the banner down through Practice into Develop */}
-      <div
-        className="pointer-events-none absolute left-10 top-[300px] hidden h-[1380px] w-[3px] rounded-[2px] lg:block"
-        style={{
-          background: "linear-gradient(#E1A45E,#E1A45E 60%,rgba(225,164,94,.2))",
-          transformOrigin: "top",
-          animation: "pf-draw 1.6s ease-out both",
-        }}
-      />
-
-      <PracticeCanvasHero
-        percent={overallPercent}
-        activeJourneys={activeJourneys.length}
-        activeLearning={activeLearning.length}
-        sessionsThisWeek={weekCount}
-        onSettingsClick={() => setShowSettings((s) => !s)}
-      />
-
-      <div
-        className="relative mx-4 mt-7 sm:mx-6 sm:ml-12 lg:ml-16"
-        style={{ animation: "pf-rise .8s ease-out both", animationDelay: ".3s" }}
-      >
-        <PracticeStudio />
-      </div>
-
-      <div
-        className="relative mx-4 mt-[34px] sm:mx-6 sm:ml-12 lg:ml-16"
-        style={{ animation: "pf-rise .8s ease-out both", animationDelay: ".55s" }}
-      >
-        <DevelopLibrary
-          journeyItems={journeyItems}
-          learningItems={showCompletedLearning ? completedLearning : activeLearning}
-          showCompletedLearning={showCompletedLearning}
-          onToggleCompletedLearning={() => setShowCompletedLearning((prev) => !prev)}
-          experiences={shownExperiences}
-          showCompletedExperiences={showCompletedExperiences}
-          onToggleCompletedExperiences={() => setShowCompletedExperiences((prev) => !prev)}
-          loading={loading}
-          loadingExperiences={loadingExperiences}
-          email={email}
-          onOpenJourney={(item) => navigate(`/journey/${item.launch.journey.id}`)}
-          onEditJourney={openEdit}
-          onDeleteJourney={(item) => setDeletingJourney(item.launch.journey)}
-          canManageJourney={(item) => item.launch?.journey?.author_email === email}
-          onNewJourney={openCreate}
-          onLearningChanged={reload}
-          onLogExperience={openExperience}
-          onEditExperience={(exp) => {
-            setEditingExp(exp);
-            setShowExpModal(true);
-          }}
-          onDeleteExperience={async (exp) => {
-            await base44.entities.DevelopmentExperience.delete(exp.id);
-            loadExperiences();
-          }}
-          onAdoptExperience={loadExperiences}
+    <div className="pf-canvas relative min-h-screen pb-14">
+      <div className="mx-auto w-full max-w-[1240px] px-4 pt-5 sm:px-6 lg:px-8">
+        <DevHomeHeader
+          activeJourneys={activeJourneys.length}
+          activeLearning={activeLearning.length}
+          sessionsThisWeek={weekCount}
+          onSettingsClick={() => setShowSettings((s) => !s)}
         />
+
+        {/* Next action + momentum */}
+        <div className="mt-6 grid gap-4 lg:grid-cols-3">
+          <div className="min-w-0 lg:col-span-2">
+            <NextActionCard item={nextAction} onOpen={openItem} />
+          </div>
+          <MomentumCard
+            completed={completedCount}
+            total={items.length}
+            nextTitle={nextAction?.title}
+            overdue={overdueCount}
+            sessionsThisWeek={weekCount}
+          />
+        </div>
+
+        {/* Journeys */}
+        <div className="mt-8">
+          <JourneyPreviewRow
+            items={journeyItems}
+            onOpen={openItem}
+            onEdit={openEdit}
+            onDelete={(item) => setDeletingJourney(item.launch.journey)}
+            canManage={(item) => item.launch?.journey?.author_email === email}
+            onNewJourney={openCreate}
+          />
+        </div>
+
+        {/* Courses and experiences */}
+        <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          <LearningRows
+            items={showCompletedLearning ? completedLearning : activeLearning}
+            loading={loading}
+            showCompleted={showCompletedLearning}
+            onToggleCompleted={() => setShowCompletedLearning((prev) => !prev)}
+            onOpen={openItem}
+            onMarkComplete={markComplete}
+            busyId={busyId}
+          />
+
+          <ExperienceRows
+            experiences={shownExperiences}
+            loading={loadingExperiences}
+            showCompleted={showCompletedExperiences}
+            onToggleCompleted={() => setShowCompletedExperiences((prev) => !prev)}
+            onLog={openExperience}
+            onEdit={(exp) => {
+              setEditingExp(exp);
+              setShowExpModal(true);
+            }}
+            onDelete={async (exp) => {
+              await base44.entities.DevelopmentExperience.delete(exp.id);
+              loadExperiences();
+            }}
+            onAdopt={loadExperiences}
+          />
+        </div>
+
+        {/* Practice and tools */}
+        <div className="mt-8">
+          <DevSection
+            title="Practice & tools"
+            subtitle="Short, structured sessions you can run in a few minutes."
+          >
+            <PracticeToolsGrid onStartFlow={setActiveFlow} />
+          </DevSection>
+
+          <div className="mt-4">
+            <PracticeStudio
+              activeFlow={activeFlow}
+              onStartFlow={setActiveFlow}
+              onCloseFlow={() => setActiveFlow(null)}
+            />
+          </div>
+        </div>
+
+        {/* Achievements and records */}
+        <div className="mt-8">
+          <DevSection
+            title="Achievements & records"
+            subtitle="Milestones, certificates and your full learning history."
+          >
+            <AchievementsStrip />
+            <div className="mt-3 flex flex-col gap-2.5">
+              <DevelopRecord title="My certificates" defaultOpen={false}>
+                <CertificateViewer />
+              </DevelopRecord>
+              <DevelopRecord title="My learning record" defaultOpen={false}>
+                <MyLearningRecord email={email} />
+              </DevelopRecord>
+            </div>
+          </DevSection>
+        </div>
       </div>
 
       {/* ── Settings slide-out ── */}
