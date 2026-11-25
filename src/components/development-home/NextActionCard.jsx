@@ -28,12 +28,17 @@ export default function NextActionCard({ item, onOpen }) {
   return (
     <section className="relative h-full overflow-hidden rounded-[24px] bg-[#0202ff] p-6 text-white shadow-[0_16px_36px_rgba(2,2,255,0.22)] sm:p-8">
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#2222ff] via-[#0202ff] to-[#0404b4]" />
-      <img
-        src={BACKDROP_IMAGE}
-        alt=""
-        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-60 mix-blend-screen"
-      />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <img
+          src={BACKDROP_IMAGE}
+          alt=""
+          className="nextup-drift h-full w-full object-cover opacity-60 mix-blend-screen will-change-transform"
+        />
+      </div>
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#0202ff]/85 via-[#0202ff]/50 to-[#0202ff]/15" />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="nextup-sheen absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent blur-xl" />
+      </div>
 
       {item ? (
         <div className="relative flex h-full flex-col">
