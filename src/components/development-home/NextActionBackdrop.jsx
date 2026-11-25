@@ -3,7 +3,8 @@
  *
  * A slow-panning brand-blue image with a light shaft, a travelling sheen and
  * points of light that drift upward, swell and fade like embers catching the
- * light. Built for this artwork, not reused from the page hero.
+ * light. On hover the points scatter outward from the centre; when the pointer
+ * leaves they drift back into formation.
  */
 import React, { useMemo } from "react";
 
@@ -16,7 +17,7 @@ function seeded(i, salt = 1) {
   return x - Math.floor(x);
 }
 
-export default function NextActionBackdrop() {
+export default function NextActionBackdrop({ active = false }) {
   const motes = useMemo(
     () =>
       Array.from({ length: 20 }, (_, i) => {
@@ -24,15 +25,21 @@ export default function NextActionBackdrop() {
         const r2 = seeded(i + 1, 2.7);
         const r3 = seeded(i + 1, 4.3);
         const flare = i % 6 === 0;
+        const left = 32 + r1 * 66;
+        const top = 8 + r2 * 84;
         return {
-          left: 32 + r1 * 66,
-          top: 8 + r2 * 84,
+          left,
+          top,
           size: flare ? 7 + r3 * 3 : 2.5 + r3 * 3,
           duration: 6 + r1 * 9,
           delay: r2 * 7,
           drift: (r3 > 0.5 ? 1 : -1) * (8 + r1 * 18),
           rise: 30 + r2 * 46,
           flare,
+          // Scatter away from the card's centre, with a light upward bias.
+          dx: (left - 50) * 2.4,
+          dy: (top - 50) * 1.8 - 10,
+          tilt: (r1 > 0.5 ? 1 : -1) * (10 + r3 * 16),
         };
       }),
     []
@@ -58,26 +65,38 @@ export default function NextActionBackdrop() {
         }}
       />
 
-      {/* Points of light */}
+      {/* Points of light: outer span scatters, inner span keeps drifting */}
       {motes.map((m, i) => (
         <span
           key={i}
-          className="absolute rounded-full"
+          className="absolute"
           style={{
             left: `${m.left}%`,
             top: `${m.top}%`,
-            width: `${m.size}px`,
-            height: `${m.size}px`,
-            backgroundColor: m.flare ? "rgba(255,248,224,0.98)" : "rgba(255,244,214,0.9)",
-            boxShadow: m.flare
-              ? "0 0 14px 4px rgba(255,236,190,0.65)"
-              : "0 0 7px 2px rgba(255,238,198,0.5)",
-            filter: m.flare ? "blur(0.3px)" : "blur(0.4px)",
-            animation: `na-mote ${m.duration}s ease-in-out ${m.delay}s infinite`,
-            "--na-drift": `${m.drift}px`,
-            "--na-rise": `${m.rise}px`,
+            transform: active
+              ? `translate3d(${m.dx}px, ${m.dy}px, 0) rotate(${m.tilt}deg)`
+              : "translate3d(0, 0, 0)",
+            transition: `transform 720ms cubic-bezier(0.22, 1, 0.36, 1) ${(i % 7) * 24}ms`,
+            willChange: "transform",
           }}
-        />
+        >
+          <span
+            className="block rounded-full"
+            style={{
+              width: `${m.size}px`,
+              height: `${m.size}px`,
+              backgroundColor: m.flare ? "rgba(255,248,224,0.98)" : "rgba(255,244,214,0.9)",
+              boxShadow: m.flare
+                ? "0 0 14px 4px rgba(255,236,190,0.65)"
+                : "0 0 7px 2px rgba(255,238,198,0.5)",
+              filter: m.flare ? "blur(0.3px)" : "blur(0.4px)",
+              animation: `na-mote ${m.duration}s ease-in-out ${m.delay}s infinite`,
+              animationPlayState: active ? "paused" : "running",
+              "--na-drift": `${m.drift}px`,
+              "--na-rise": `${m.rise}px`,
+            }}
+          />
+        </span>
       ))}
     </div>
   );

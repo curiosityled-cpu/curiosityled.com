@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -22,11 +22,16 @@ export default function NextActionCard({ item, onOpen }) {
   const due = item ? dueMeta(item.due_date) : null;
   const percent = Math.min(100, Math.round(item?.percent || 0));
   const kindLabel = item ? (KIND_META[item.kind] || KIND_META.resource).label : null;
+  const [hovered, setHovered] = useState(false);
 
   return (
-    <section className="relative h-full overflow-hidden rounded-[24px] bg-[#0202ff] p-6 text-white shadow-[0_16px_36px_rgba(2,2,255,0.22)] sm:p-8">
+    <section
+      className="relative h-full overflow-hidden rounded-[24px] bg-[#0202ff] p-6 text-white shadow-[0_16px_36px_rgba(2,2,255,0.22)] sm:p-8"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#2222ff] via-[#0202ff] to-[#0404b4]" />
-      <NextActionBackdrop />
+      <NextActionBackdrop active={hovered} />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#0202ff]/85 via-[#0202ff]/50 to-[#0202ff]/15" />
 
       {item ? (
