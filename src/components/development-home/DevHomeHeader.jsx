@@ -1,5 +1,6 @@
 import React from "react";
 import { SlidersHorizontal, Sparkles, Flame } from "lucide-react";
+import EnergyPulseOverlay from "@/components/practice/EnergyPulseOverlay";
 
 /**
  * DevHomeHeader — the masthead for My Development.
@@ -68,8 +69,14 @@ export default function DevHomeHeader({
 
   return (
     <section className="relative overflow-hidden rounded-2xl shadow-lg" style={{ minHeight: "210px" }}>
-      <img src={HERO_IMAGE} alt="" className="absolute inset-0 h-full w-full object-cover" />
+      <div
+        className="absolute inset-0"
+        style={{ animation: "practice-breathe 22s ease-in-out infinite" }}
+      >
+        <img src={HERO_IMAGE} alt="" className="h-full w-full object-cover" />
+      </div>
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/45 to-black/20" />
+      <EnergyPulseOverlay />
 
       {onSettingsClick && (
         <button
