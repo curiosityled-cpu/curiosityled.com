@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DUE_TONE_CLASSES, KIND_META, dueMeta } from "@/lib/learning";
-import EnergyPulseOverlay from "@/components/practice/EnergyPulseOverlay";
 
 const BACKDROP_IMAGE =
   "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/7bf92102343e8d0a7e30b33399f6a9c1_generated_image.png";
@@ -22,45 +21,23 @@ function ctaLabel(item) {
  * choice stays auditable and never duplicates another primary call to action.
  */
 export default function NextActionCard({ item, onOpen }) {
-  // Hover is driven by transitions, not keyframes, so reversing mid-flight
-  // carries on from wherever the previous run had reached.
-  const [hovered, setHovered] = useState(false);
   const due = item ? dueMeta(item.due_date) : null;
   const percent = Math.min(100, Math.round(item?.percent || 0));
   const kindLabel = item ? (KIND_META[item.kind] || KIND_META.resource).label : null;
 
   return (
-    <section
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className={cn(
-        "relative h-full overflow-hidden rounded-[24px] bg-[#0202ff] p-6 text-white shadow-[0_16px_36px_rgba(2,2,255,0.22)] sm:p-8",
-        "transition-shadow duration-700 ease-out",
-        hovered && "shadow-[0_22px_48px_rgba(2,2,255,0.38)]"
-      )}
-    >
+    <section className="relative h-full overflow-hidden rounded-[24px] bg-[#0202ff] p-6 text-white shadow-[0_16px_36px_rgba(2,2,255,0.22)] sm:p-8">
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#2222ff] via-[#0202ff] to-[#0404b4]" />
-      <div
-        className={cn(
-          "pointer-events-none absolute inset-0 overflow-hidden transition-transform duration-700 ease-out",
-          hovered ? "scale-110" : "scale-100"
-        )}
-      >
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <img
           src={BACKDROP_IMAGE}
           alt=""
-          className={cn(
-            "nextup-drift h-full w-full object-cover mix-blend-screen will-change-transform transition-opacity duration-700 ease-out",
-            hovered ? "opacity-80" : "opacity-60"
-          )}
+          className="nextup-drift h-full w-full object-cover opacity-60 mix-blend-screen will-change-transform"
         />
       </div>
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#0202ff]/85 via-[#0202ff]/50 to-[#0202ff]/15" />
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="nextup-sheen absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent blur-xl" />
-      </div>
-      <div className="pointer-events-none absolute inset-0 opacity-80">
-        <EnergyPulseOverlay />
       </div>
 
       {item ? (
