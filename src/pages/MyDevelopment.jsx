@@ -6,17 +6,9 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import useMyLearning from "@/hooks/useMyLearning";
 import usePracticeStudio from "@/hooks/usePracticeStudio";
-import useLearnerActions from "@/hooks/useLearnerActions";
-import { rankDevelopmentItems } from "@/lib/nextStep";
-import DevelopmentHeader from "@/components/development-home/DevelopmentHeader";
-import NextStepCard from "@/components/development-home/NextStepCard";
-import JourneySection from "@/components/development-home/JourneySection";
-import LearningSection from "@/components/development-home/LearningSection";
-import ExperienceSection from "@/components/development-home/ExperienceSection";
-import RecordsSection from "@/components/development-home/RecordsSection";
-import { SectionHeading } from "@/components/development-home/ui";
-import DevelopmentProgressCard from "@/components/practice/DevelopmentProgressCard";
+import PracticeCanvasHero from "@/components/practice-first/PracticeCanvasHero";
 import PracticeStudio from "@/components/practice-first/PracticeStudio";
+import DevelopLibrary from "@/components/practice-first/DevelopLibrary";
 import PracticeSettings from "@/components/practice/PracticeSettings";
 import ExperienceFormModal from "@/components/development/ExperienceFormModal";
 import CreateDevelopmentPlanModal from "@/components/development/CreateDevelopmentPlanModal";
@@ -25,14 +17,17 @@ import DeleteJourneyDialog from "@/components/development/DeleteJourneyDialog";
 const STATUS_RANK = { in_progress: 0, not_started: 1, completed: 2 };
 
 /**
- * My Development — one next step, then the journeys, learning and experiences
- * that make it up, with practice kept close but quiet.
+ * Practice First — the learner's single development home. Practice sits at the
+ * top as the immediate starting point; the Develop library below holds journeys,
+ * courses, experiences and records.
  */
 export default function MyDevelopment() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [experiences, setExperiences] = useState([]);
   const [loadingExperiences, setLoadingExperiences] = useState(true);
+  const [showCompletedLearning, setShowCompletedLearning] = useState(false);
+  const [showCompletedExperiences, setShowCompletedExperiences] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingJourney, setEditingJourney] = useState(null);
   const [deletingJourney, setDeletingJourney] = useState(null);
@@ -43,7 +38,6 @@ export default function MyDevelopment() {
   const email = user?.email || user?.data?.email;
   const { items, loading, reload } = useMyLearning();
   const { weekCount } = usePracticeStudio();
-  const { open: openLearning, markComplete, busyId } = useLearnerActions({ onChanged: reload });
 
   const loadExperiences = useCallback(async () => {
     if (!email) {
@@ -74,19 +68,15 @@ export default function MyDevelopment() {
 
   const activeJourneys = journeyItems.filter((item) => item.status !== "completed");
   const activeLearning = learningItems.filter((item) => item.status !== "completed");
-  const completedCount = items.filter((item) => item.status === "completed").length;
+  const completedLearning = learningItems.filter((item) => item.status === "completed");
+  const completedCount =
+    journeyItems.filter((item) => item.status === "completed").length +
+    learningItems.filter((item) => item.status === "completed").length;
   const overallPercent = items.length ? Math.round((completedCount / items.length) * 100) : 0;
 
-  const { ranked, overdue, dueSoon } = useMemo(() => rankDevelopmentItems(items), [items]);
-
-  const openItem = (item) => {
-    if (item.kind === "journey") {
-      const journeyId = item.launch?.journey?.id;
-      if (journeyId) navigate(`/journey/${journeyId}`);
-      return;
-    }
-    openLearning(item);
-  };
+  const activeExperiences = experiences.filter((e) => e.status !== "completed" && e.status !== "cancelled");
+  const completedExperiences = experiences.filter((e) => e.status === "completed");
+  const shownExperiences = showCompletedExperiences ? completedExperiences : activeExperiences;
 
   const openCreate = () => {
     setEditingJourney(null);
@@ -102,75 +92,65 @@ export default function MyDevelopment() {
   };
 
   return (
-    <div className="pf-canvas min-h-screen pb-12">
-      <DevelopmentHeader
+    <div className="pf-canvas relative min-h-screen overflow-hidden pb-10">
+      {/* Copper thread traced from the banner down through Practice into Develop */}
+      <div
+        className="pointer-events-none absolute left-10 top-[300px] hidden h-[1380px] w-[3px] rounded-[2px] lg:block"
+        style={{
+          background: "linear-gradient(#E1A45E,#E1A45E 60%,rgba(225,164,94,.2))",
+          transformOrigin: "top",
+          animation: "pf-draw 1.6s ease-out both",
+        }}
+      />
+
+      <PracticeCanvasHero
         percent={overallPercent}
-        completedCount={completedCount}
-        totalCount={items.length}
         activeJourneys={activeJourneys.length}
         activeLearning={activeLearning.length}
         sessionsThisWeek={weekCount}
-        onSettingsClick={() => setShowSettings((prev) => !prev)}
+        onSettingsClick={() => setShowSettings((s) => !s)}
       />
 
-      {/* Next step + momentum */}
-      <div className="mx-4 mt-5 grid items-stretch gap-4 sm:mx-6 sm:ml-12 lg:ml-16 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
-        <NextStepCard
-          items={ranked.slice(0, 5)}
-          overdue={overdue}
-          dueSoon={dueSoon}
-          onOpen={openItem}
-        />
-        <DevelopmentProgressCard title="Momentum" hideLink />
+      <div
+        className="relative mx-4 mt-7 sm:mx-6 sm:ml-12 lg:ml-16"
+        style={{ animation: "pf-rise .8s ease-out both", animationDelay: ".3s" }}
+      >
+        <PracticeStudio />
       </div>
 
-      <JourneySection
-        items={journeyItems}
-        loading={loading}
-        onOpen={openItem}
-        onEdit={openEdit}
-        onDelete={(item) => setDeletingJourney(item.launch.journey)}
-        canManage={(item) => item.launch?.journey?.author_email === email}
-        onNew={openCreate}
-      />
-
-      <LearningSection
-        items={learningItems}
-        loading={loading}
-        onOpen={openItem}
-        onMarkComplete={markComplete}
-        busyId={busyId}
-      />
-
-      <ExperienceSection
-        experiences={experiences}
-        loading={loadingExperiences}
-        onLog={openExperience}
-        onEdit={(exp) => {
-          setEditingExp(exp);
-          setShowExpModal(true);
-        }}
-        onDelete={async (exp) => {
-          await base44.entities.DevelopmentExperience.delete(exp.id);
-          loadExperiences();
-        }}
-        onAdopt={loadExperiences}
-      />
-
-      {/* Practice & tools — everything that was here before, kept quiet */}
-      <section
-        id="practice-tools"
-        className="mx-4 mt-10 scroll-mt-6 sm:mx-6 sm:ml-12 lg:ml-16"
+      <div
+        className="relative mx-4 mt-[34px] sm:mx-6 sm:ml-12 lg:ml-16"
+        style={{ animation: "pf-rise .8s ease-out both", animationDelay: ".55s" }}
       >
-        <SectionHeading
-          eyebrow="Practice & tools"
-          title="Keep the habit"
-          subtitle="Short, structured practice — and the tools that turn it into action at work."
+        <DevelopLibrary
+          journeyItems={journeyItems}
+          learningItems={showCompletedLearning ? completedLearning : activeLearning}
+          showCompletedLearning={showCompletedLearning}
+          onToggleCompletedLearning={() => setShowCompletedLearning((prev) => !prev)}
+          experiences={shownExperiences}
+          showCompletedExperiences={showCompletedExperiences}
+          onToggleCompletedExperiences={() => setShowCompletedExperiences((prev) => !prev)}
+          loading={loading}
+          loadingExperiences={loadingExperiences}
+          email={email}
+          onOpenJourney={(item) => navigate(`/journey/${item.launch.journey.id}`)}
+          onEditJourney={openEdit}
+          onDeleteJourney={(item) => setDeletingJourney(item.launch.journey)}
+          canManageJourney={(item) => item.launch?.journey?.author_email === email}
+          onNewJourney={openCreate}
+          onLearningChanged={reload}
+          onLogExperience={openExperience}
+          onEditExperience={(exp) => {
+            setEditingExp(exp);
+            setShowExpModal(true);
+          }}
+          onDeleteExperience={async (exp) => {
+            await base44.entities.DevelopmentExperience.delete(exp.id);
+            loadExperiences();
+          }}
+          onAdoptExperience={loadExperiences}
         />
-        <PracticeStudio />
-      </section>
-
-      <RecordsSection email={email} />
+      </div>
 
       {/* ── Settings slide-out ── */}
       <AnimatePresence>
@@ -197,7 +177,6 @@ export default function MyDevelopment() {
                 </div>
                 <button
                   onClick={() => setShowSettings(false)}
-                  aria-label="Close settings"
                   className="text-muted-foreground transition-colors hover:text-foreground"
                 >
                   <X className="h-5 w-5" />

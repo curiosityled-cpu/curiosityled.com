@@ -11,6 +11,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "@/lib/AuthContext";
 import usePracticeStudio from "@/hooks/usePracticeStudio";
 import PrescribedPracticeCard from "@/components/practice/PrescribedPracticeCard";
+import DevelopmentProgressCard from "@/components/practice/DevelopmentProgressCard";
 import CoachingFlowsCard from "@/components/practice/CoachingFlowsCard";
 import LeadershipToolsCard from "@/components/practice-first/LeadershipToolsCard";
 import WorkoutsSection from "@/components/practice/WorkoutsSection";
@@ -26,12 +27,7 @@ export default function PracticeStudio() {
 
   const handleStartFlow = (flowKey) => {
     setActiveFlow(flowKey);
-    // The practice chapter sits below the development lists — bring it back into view.
-    requestAnimationFrame(() => {
-      document
-        .getElementById("practice-tools")
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleSessionLogged = () => {
@@ -60,6 +56,15 @@ export default function PracticeStudio() {
         <div className="grid grid-cols-1 items-start gap-[18px] lg:grid-cols-2">
           {/* ── Practice actions ── */}
           <div className="flex min-w-0 flex-col gap-4">
+            <DevelopmentProgressCard />
+
+            <CoachingFlowsCard onStartFlow={handleStartFlow} />
+
+            <LeadershipToolsCard />
+          </div>
+
+          {/* ── Development + practice context ── */}
+          <div className="flex min-w-0 flex-col gap-4">
             <PrescribedPracticeCard
               crossToolData={crossToolData}
               bpoPatterns={bpoPatterns}
@@ -68,13 +73,6 @@ export default function PracticeStudio() {
               onSessionLogged={handleSessionLogged}
             />
 
-            <CoachingFlowsCard onStartFlow={handleStartFlow} />
-
-            <LeadershipToolsCard />
-          </div>
-
-          {/* ── Practice context ── */}
-          <div className="flex min-w-0 flex-col gap-4">
             <div id="daily-gym" className="flex scroll-mt-24 flex-col gap-2">
               <div className="px-1">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--pf-muted)]">
