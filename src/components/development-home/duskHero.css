@@ -1,0 +1,288 @@
+/* ── Dusk Gym hero — My Development masthead ─────────────────────────────────
+   Scoped to the header only: dark photographic band, ember accents, a streak
+   dial that draws itself in and counts that rise on load.
+─────────────────────────────────────────────────────────────────────────── */
+.dusk-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 150px;
+  padding: 16px 18px 15px 20px;
+  border: 1px solid #37383a;
+  border-radius: 16px;
+  background: #0e0f11;
+  color: #f5f3ef;
+  box-shadow: 0 8px 22px #16171926;
+}
+
+.dusk-hero img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
+  animation: dusk-drift 20s ease-in-out infinite alternate;
+}
+
+.dusk-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(90deg, #0e0f11ed 0%, #0e0f11cf 48%, #0e0f11b0 100%),
+    linear-gradient(0deg, #0e0f11e8 0%, transparent 46%);
+}
+
+.dusk-copy {
+  min-width: 0;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.dusk-eyebrow {
+  margin: 0;
+  color: #e8a33d;
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 750;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.dusk-title {
+  margin: 0;
+  font-family: Impact, "Arial Narrow", system-ui, sans-serif;
+  font-size: clamp(26px, 3.7vw, 40px);
+  line-height: 1.02;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+  text-shadow: 0 0 14px #e8a33d52;
+}
+
+.dusk-desc {
+  margin: 0;
+  color: #d0cfcb;
+  font-size: 11px;
+  line-height: 1.35;
+  max-width: 460px;
+}
+
+.dusk-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-left: 8px;
+}
+
+.dusk-stats {
+  align-self: stretch;
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  position: relative;
+  padding-bottom: 4px;
+}
+
+.dusk-stats::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 26px;
+  height: 1px;
+  background: #f5f3ef4d;
+}
+
+.dusk-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 48px;
+  position: relative;
+}
+
+.dusk-num {
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 800;
+  color: #f5f3ef;
+  animation: dusk-count-in 0.8s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+.dusk-stat:last-child .dusk-num {
+  color: #e8a33d;
+}
+
+.dusk-label {
+  font-size: 9px;
+  line-height: 1.1;
+  color: #c2c0ba;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.dusk-dial {
+  width: 64px;
+  height: 64px;
+  flex: none;
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.dusk-dial svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.dusk-track {
+  fill: none;
+  stroke: #f5f3ef32;
+  stroke-width: 3;
+}
+
+.dusk-arc {
+  fill: none;
+  stroke: #e8a33d;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 138;
+  stroke-dashoffset: 138;
+  animation: dusk-draw 1.5s cubic-bezier(0.22, 0.7, 0.18, 1) 0.2s forwards;
+}
+
+.dusk-settings {
+  position: absolute;
+  right: 14px;
+  top: 9px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border: 1px solid #f5f3ef38;
+  border-radius: 999px;
+  background: #1b1d21b8;
+  color: #f5f3ef;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+}
+
+.dusk-settings svg {
+  width: 11px;
+  height: 11px;
+}
+
+.dusk-settings:hover {
+  background: #34312b;
+  color: #ffd18a;
+  box-shadow: 0 0 12px #e8a33d32;
+}
+
+.dusk-settings:active {
+  background: #50402b;
+}
+
+.dusk-settings:focus-visible {
+  outline: 2px solid #e8a33d;
+  outline-offset: 2px;
+}
+
+/* ── Larger band from tablet up, matching the approved proportions ───────── */
+@media (min-width: 768px) {
+  .dusk-hero {
+    min-height: 220px;
+    padding: 22px 26px 20px 32px;
+    gap: 20px;
+    border-radius: 18px;
+  }
+  .dusk-eyebrow {
+    font-size: 11px;
+  }
+  .dusk-desc {
+    font-size: 12px;
+    max-width: 500px;
+  }
+  .dusk-right {
+    gap: 22px;
+  }
+  .dusk-stats {
+    gap: 20px;
+    padding-bottom: 6px;
+  }
+  .dusk-stats::before {
+    bottom: 32px;
+  }
+  .dusk-stat {
+    min-width: 60px;
+    gap: 7px;
+  }
+  .dusk-num {
+    font-size: 28px;
+  }
+  .dusk-label {
+    font-size: 10px;
+  }
+  .dusk-dial {
+    width: 96px;
+    height: 96px;
+  }
+  .dusk-settings {
+    right: 20px;
+    top: 14px;
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+  .dusk-settings svg {
+    width: 13px;
+    height: 13px;
+  }
+}
+
+@media (max-width: 639px) {
+  .dusk-dial {
+    display: none;
+  }
+}
+
+@keyframes dusk-drift {
+  from {
+    transform: scale(1.04) translateX(-0.5%);
+  }
+  to {
+    transform: scale(1.1) translateX(0.7%);
+  }
+}
+
+@keyframes dusk-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes dusk-count-in {
+  from {
+    opacity: 0.35;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
