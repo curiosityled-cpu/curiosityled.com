@@ -21,6 +21,15 @@ const asArray = (result) => (Array.isArray(result) ? result : result?.items || [
 
 const OPEN_JOURNEY_STATUSES = ["published", "active"];
 
+const CACHE_TTL_MS = 60_000;
+
+/** The catalogue is the same for a learner for a minute — don't re-ask on every visit. */
+let catalogCache = { email: null, at: 0, data: null };
+
+const isRateLimited = (error) => /rate limit/i.test(error?.message || "");
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 function countLessons(course) {
   return (course.modules || []).reduce((sum, m) => sum + (m.lessons || []).length, 0);
 }
@@ -120,14 +129,33 @@ export default function LearnerCatalog() {
   const [journeys, setJourneys] = useState([]);
   const [progressByCourse, setProgressByCourse] = useState({});
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [search, setSearch] = useState("");
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     if (!email) return;
     let cancelled = false;
 
-    const load = async () => {
-      setLoading(true);
+    const apply = (data) => {
+      setCourses(data.courses);
+      setJourneys(data.journeys);
+      setProgressByCourse(data.progressByCourse);
+    };
+
+    const cached = catalogCache.data;
+    const cacheFresh =
+      cached && catalogCache.email === email && Date.now() - catalogCache.at < CACHE_TTL_MS;
+
+    if (cacheFresh && reloadToken === 0) {
+      apply(cached);
+      setLoading(false);
+      return;
+    }
+
+    const load = async (attempt = 0) => {
+      setLoading(attempt === 0 && !cached);
       try {
         const [courseRows, journeyRows, progressRows] = await Promise.all([
           base44.entities.Course.filter({ status: "published" }),
@@ -136,15 +164,33 @@ export default function LearnerCatalog() {
         ]);
         if (cancelled) return;
 
-        setCourses(asArray(courseRows));
-        setJourneys(
-          asArray(journeyRows).filter((row) => OPEN_JOURNEY_STATUSES.includes(row.status))
-        );
-        setProgressByCourse(
-          Object.fromEntries(
+        const data = {
+          courses: asArray(courseRows),
+          journeys: asArray(journeyRows).filter((row) =>
+            OPEN_JOURNEY_STATUSES.includes(row.status)
+          ),
+          progressByCourse: Object.fromEntries(
             asArray(progressRows).map((row) => [row.course_id, row.overall_percentage || 0])
-          )
-        );
+          ),
+        };
+
+        catalogCache = { email, at: Date.now(), data };
+        apply(data);
+        setBusy(false);
+        setFailed(false);
+      } catch (error) {
+        if (cancelled) return;
+
+        // The app shares one list budget per caller, so another screen can use it
+        // up. Wait out the window once rather than failing the whole page.
+        if (isRateLimited(error) && attempt < 2) {
+          setBusy(true);
+          await wait(5000);
+          if (!cancelled) await load(attempt + 1);
+          return;
+        }
+        setBusy(false);
+        setFailed(true);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -154,7 +200,7 @@ export default function LearnerCatalog() {
     return () => {
       cancelled = true;
     };
-  }, [email]);
+  }, [email, reloadToken]);
 
   const term = search.trim().toLowerCase();
 
@@ -182,8 +228,13 @@ export default function LearnerCatalog() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
         <Loader2 className="w-6 h-6 animate-spin text-[#0202ff]" />
+        {busy && (
+          <p className="text-sm text-muted-foreground">
+            The app is busy right now — loading your catalogue in a moment.
+          </p>
+        )}
       </div>
     );
   }
@@ -199,6 +250,24 @@ export default function LearnerCatalog() {
         </p>
       </div>
 
+      {busy && (
+        <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/40 px-3 py-2">
+          <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+          <span className="text-xs text-muted-foreground flex-1">
+            The app is busy right now — refreshing the catalogue.
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs"
+            onClick={() => setReloadToken((token) => token + 1)}
+          >
+            Retry now
+          </Button>
+        </div>
+      )}
+
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
@@ -209,7 +278,26 @@ export default function LearnerCatalog() {
         />
       </div>
 
-      {isEmpty ? (
+      {failed && isEmpty ? (
+        <Card className="border border-border rounded-2xl">
+          <CardContent className="p-10 text-center">
+            <BookOpen className="w-9 h-9 text-muted-foreground/40 mx-auto mb-3" />
+            <p className="text-sm font-medium text-foreground">
+              The catalogue didn't load
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              The app was busy. Try again in a few seconds.
+            </p>
+            <Button
+              type="button"
+              onClick={() => setReloadToken((token) => token + 1)}
+              className="mt-4 bg-[#0202ff] hover:bg-[#0101dd] text-white h-9 text-xs"
+            >
+              Try again
+            </Button>
+          </CardContent>
+        </Card>
+      ) : isEmpty ? (
         <Card className="border border-dashed border-border rounded-2xl">
           <CardContent className="p-10 text-center">
             <BookOpen className="w-9 h-9 text-muted-foreground/40 mx-auto mb-3" />
