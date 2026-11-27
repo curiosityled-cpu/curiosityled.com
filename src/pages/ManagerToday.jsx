@@ -554,10 +554,13 @@ export default function ManagerToday() {
         onSettingsClick={() => setShowSettings(s => !s)}
       />
 
-      {/* ── Main grid: Rhythm + Patterns (left) | Scorecard + Reflect (right) ── */}
+      {/* ── Main grid: Rhythm (left) | Patterns + Scorecard + Reflect (right) ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
         <div className="space-y-4">
           {rhythmContent}
+        </div>
+
+        <div className="space-y-4">
           <ZoneCard
             title="Patterns"
             icon={TrendingUp}
@@ -594,9 +597,7 @@ export default function ManagerToday() {
             <UpcomingFrictionCard trends={trends} goals={goals} pulses={recentPulses} onOpenAtreus={openAtreus} />
             <LeadershipNarrativeCard trends={trends} insight={insight} goals={goals} pulses={recentPulses} onOpenAtreus={openAtreus} />
           </ZoneCard>
-        </div>
 
-        <div className="space-y-4">
           <TalentScorecard kpis={kpis} cascadedGoals={cascadedGoals} goals={goals} />
           <ZoneCard
             title="Reflect"
