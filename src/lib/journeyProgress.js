@@ -12,10 +12,27 @@ export const contentItemId = (entry) => entry?.learning_resource_id || entry?.re
 export const progressByContentId = (contentProgress = []) =>
   Object.fromEntries((contentProgress || []).map((row) => [row.learning_resource_id, row.status]));
 
+/**
+ * The author's sequence. An explicit `order` value is the sequence the builder saved
+ * when steps were arranged by hand, so it wins over the position in the array; a list
+ * with no order values is already in the order it was authored.
+ */
+const inAuthoredOrder = (list = []) => {
+  const everyEntryOrdered = list.every(
+    (entry) => Number.isFinite(Number(entry?.order)) && Number(entry.order) > 0
+  );
+  if (!list.length || !everyEntryOrdered) return list;
+  return [...list].sort((a, b) => Number(a.order) - Number(b.order));
+};
+
 /** The first required-or-not item the learner has not finished yet. */
 export const nextContentItem = (journey, contentProgress) => {
   const done = progressByContentId(contentProgress);
-  return journeyContent(journey).find((entry) => done[contentItemId(entry)] !== "completed") || null;
+  return (
+    inAuthoredOrder(journeyContent(journey)).find(
+      (entry) => done[contentItemId(entry)] !== "completed"
+    ) || null
+  );
 };
 
 /**
@@ -59,9 +76,15 @@ export const journeyProgressPatch = (journey, contentProgress, targetId, nowComp
   };
 };
 
-/** One ordered trail: learning resources, then signals, then off-platform experiences. */
+/**
+ * One ordered trail, in the sequence the journey was authored in.
+ *
+ * The builder lays a journey out as experiences, then learning resources, then signals,
+ * so the trail follows that same order — and each list keeps the arrangement the author
+ * gave it (including any explicit `order` saved by reordering steps by hand).
+ */
 export const journeySteps = (journey) => {
-  const resourceSteps = journeyContent(journey).map((entry, index) => ({
+  const resourceSteps = inAuthoredOrder(journeyContent(journey)).map((entry, index) => ({
     key: `resource:${contentItemId(entry) || index}`,
     kind: "resource",
     id: contentItemId(entry),
@@ -81,7 +104,7 @@ export const journeySteps = (journey) => {
     sequential: false,
   }));
 
-  const experienceSteps = (journey?.experiences || []).map((entry, index) => ({
+  const experienceSteps = inAuthoredOrder(journey?.experiences || []).map((entry, index) => ({
     key: `experience:${index}`,
     kind: "experience",
     title: entry.title || "Experience",
@@ -91,5 +114,5 @@ export const journeySteps = (journey) => {
     entry,
   }));
 
-  return [...resourceSteps, ...signalSteps, ...experienceSteps];
+  return [...experienceSteps, ...resourceSteps, ...signalSteps];
 };
