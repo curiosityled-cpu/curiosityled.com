@@ -1,5 +1,5 @@
 import React from "react";
-import { SlidersHorizontal, Sparkles, Flame } from "lucide-react";
+import { SlidersHorizontal, Sparkles } from "lucide-react";
 import EnergyPulseOverlay from "@/components/practice/EnergyPulseOverlay";
 
 /**
@@ -12,55 +12,9 @@ import EnergyPulseOverlay from "@/components/practice/EnergyPulseOverlay";
 const HERO_IMAGE =
   "https://media.base44.com/images/public/69d4650b54be3dc79a1fd0b9/5365205b0_generated_image.png";
 
-function WeekRing({ count = 0 }) {
-  const target = 5;
-  const pct = Math.min(100, Math.round((count / target) * 100));
-  const circumference = 2 * Math.PI * 18;
-  const dash = (pct / 100) * circumference;
-
-  return (
-    <div className="flex items-center gap-2.5">
-      <div className="relative h-12 w-12 flex items-center justify-center">
-        <svg width="48" height="48" viewBox="0 0 48 48" className="-rotate-90">
-          <circle
-            cx="24"
-            cy="24"
-            r="18"
-            fill="none"
-            stroke="rgba(255,255,255,0.18)"
-            strokeWidth="3.5"
-          />
-          <circle
-            cx="24"
-            cy="24"
-            r="18"
-            fill="none"
-            stroke="rgba(255, 206, 120, 0.95)"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-            strokeDasharray={`${dash} ${circumference}`}
-            style={{ transition: "stroke-dasharray 0.6s ease" }}
-          />
-        </svg>
-        <Flame
-          className="absolute h-4 w-4 text-amber-200/90"
-          style={{ filter: "drop-shadow(0 0 4px rgba(255,180,80,0.5))" }}
-        />
-      </div>
-      <div className="leading-tight">
-        <p className="text-base font-bold text-white">{count}</p>
-        <p className="text-[9px] font-medium uppercase tracking-wider text-white/65">
-          this week
-        </p>
-      </div>
-    </div>
-  );
-}
-
 export default function DevHomeHeader({
   activeJourneys = 0,
   activeLearning = 0,
-  sessionsThisWeek = 0,
   onSettingsClick,
   firstName,
 }) {
@@ -128,7 +82,6 @@ export default function DevHomeHeader({
                 </dt>
               </div>
             </dl>
-            <WeekRing count={sessionsThisWeek} />
           </div>
         </div>
       </div>

@@ -16,6 +16,7 @@ import { SlidersHorizontal } from "lucide-react";
 import HeadlineSignal from "@/components/density/HeadlineSignal";
 import WeatherOverlay from "@/components/lead/WeatherOverlay";
 import LeadWeekRow from "@/components/lead/LeadWeekRow";
+import StreakRing from "@/components/lead/StreakRing";
 
 // 20 images: 4 time periods × 5 weather conditions.
 // Time periods for IMAGES: morning, afternoon, evening, night.
@@ -163,12 +164,19 @@ export default function DynamicHeroHeader({ firstName, greeting, day, hour, toda
 
       {/* Content */}
       <div className="relative z-10 px-6 py-5 flex flex-col justify-end" style={{ minHeight: "180px" }}>
-        <p className="text-[10px] font-semibold text-white/70 uppercase tracking-widest mb-1">{day}</p>
-        <h1 className="text-2xl font-bold text-white tracking-tight" style={{ fontSize: "clamp(1.5rem, 2.5vw, 2.25rem)" }}>
-          {greeting}, {firstName}.
-        </h1>
-        <div className="mt-3">
-          <LeadWeekRow days={weekDays} streak={streak} />
+        <div className="flex items-end justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold text-white/70 uppercase tracking-widest mb-1">{day}</p>
+            <h1 className="text-2xl font-bold text-white tracking-tight" style={{ fontSize: "clamp(1.5rem, 2.5vw, 2.25rem)" }}>
+              {greeting}, {firstName}.
+            </h1>
+            <div className="mt-3">
+              <LeadWeekRow days={weekDays} streak={streak} />
+            </div>
+          </div>
+          <div className="hidden flex-shrink-0 pb-1 sm:block">
+            <StreakRing days={streak} />
+          </div>
         </div>
         <div className="mt-2.5">
           <HeadlineSignal todayRecord={todayRecord} hasCheckedIn={!!todayRecord} userEmail={userEmail} hour={hour} />

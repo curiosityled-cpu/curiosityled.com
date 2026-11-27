@@ -149,7 +149,6 @@ export default function MyDevelopment() {
         <DevHomeHeader
           activeJourneys={activeJourneys.length}
           activeLearning={activeLearning.length}
-          sessionsThisWeek={weekCount}
           onSettingsClick={() => setShowSettings((s) => !s)}
           firstName={
             user?.first_name ||
