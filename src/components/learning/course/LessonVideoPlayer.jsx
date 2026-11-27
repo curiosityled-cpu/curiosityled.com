@@ -48,6 +48,7 @@ export default function LessonVideoPlayer({
   captionsUrl = null,
   allowSeeking = true,
   allowSpeed = true,
+  playerApi = null,
   onEnded,
   title,
 }) {
@@ -215,6 +216,18 @@ export default function LessonVideoPlayer({
     video.currentTime = seconds;
     video.play().catch(() => {});
   };
+
+  // Lets the lesson's notes panel read the playhead and jump back to a bookmark.
+  useEffect(() => {
+    if (!playerApi) return undefined;
+    playerApi.current = {
+      seek: seekTo,
+      time: () => videoRef.current?.currentTime ?? 0,
+    };
+    return () => {
+      playerApi.current = null;
+    };
+  }, [playerApi, seekTo]);
 
   const handleBarKeyDown = (event) => {
     const video = videoRef.current;

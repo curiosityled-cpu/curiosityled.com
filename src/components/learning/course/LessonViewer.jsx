@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Loader2, Check, ExternalLink, MessageSquare, ClipboardList, CalendarDays } from "lucide-react";
@@ -8,6 +8,7 @@ import { useAtreusChat } from "@/components/ai/AtreusContext";
 import ResourceFileViewer from "@/components/learning/ResourceFileViewer";
 import InlineDocument from "@/components/journey-trail/InlineDocument";
 import ReadingBody from "@/components/learning/ReadingBody";
+import LessonNotesPanel from "@/components/learning/course/LessonNotesPanel";
 import LessonVideoPlayer from "@/components/learning/course/LessonVideoPlayer";
 import { getResourceFileUri, getResourceMediaKind } from "@/lib/resourceFile";
 import { getResourceVideoEmbed } from "@/lib/videoEmbed";
@@ -19,6 +20,7 @@ export default function LessonViewer({ lesson, complete, onComplete, onAdvance }
   const { user } = useAuth();
   const { openWithContext } = useAtreusChat();
   const [state, setState] = useState({ loading: true });
+  const playerApi = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -131,6 +133,7 @@ export default function LessonViewer({ lesson, complete, onComplete, onAdvance }
                 captionsUrl={lesson.captions_url}
                 allowSeeking={lesson.allow_seeking !== false}
                 allowSpeed={lesson.allow_speed_adjust !== false}
+                playerApi={playerApi}
                 title={title}
                 onEnded={() => {
                   if (!complete) onComplete?.(lesson);
@@ -175,6 +178,12 @@ export default function LessonViewer({ lesson, complete, onComplete, onAdvance }
                 This content is no longer available. Ask your program team to check the lesson link.
               </p>
             )}
+
+            <LessonNotesPanel
+              resourceId={lesson.reference_id}
+              lessonTitle={title}
+              playerApi={playerApi}
+            />
           </div>
         )}
 
