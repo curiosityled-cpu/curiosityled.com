@@ -81,7 +81,7 @@ export default function ManagerTeam() {
     : "No reports in your tree yet.";
 
   return (
-    <div className="pf-canvas lead-tokens min-h-screen">
+    <div className="lead-canvas min-h-screen">
       <div className="mx-auto max-w-6xl px-4 py-6">
       {isLoading ? (
         <div className="flex items-center justify-center py-20">

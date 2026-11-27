@@ -812,8 +812,7 @@ h4.text-xs {
    orange that carries the active state instead of the brand blue. Inverted
    under .dark so the area has a real dark mode rather than a lit sheet.
 ─────────────────────────────────────────────────────────────────────────── */
-.lead-canvas,
-.lead-tokens {
+.lead-canvas {
   --ld-bg: #fbf7f2;
   --ld-surface: #ffffff;
   --ld-panel: #f9f6f3;
@@ -826,16 +825,10 @@ h4.text-xs {
   --ld-green: #4cae7a;
   --ld-purple: #9c4de6;
   --ld-dash: #e7dccd;
-  color: var(--ld-text);
-}
-
-/* The warm paper ground. A page that takes its ground from somewhere else
-   (Lead and Team sit on the Develop canvas) uses .lead-tokens instead and
-   keeps only the palette. */
-.lead-canvas {
   position: relative;
   isolation: isolate;
   background-color: var(--ld-bg);
+  color: var(--ld-text);
 }
 
 /* The ground fills the whole window, not just the centred column, so a narrow
@@ -850,8 +843,7 @@ h4.text-xs {
   background-size: 22px 22px;
 }
 
-.dark .lead-canvas,
-.dark .lead-tokens {
+.dark .lead-canvas {
   --ld-bg: #14100c;
   --ld-surface: #1d1813;
   --ld-panel: #221c16;
