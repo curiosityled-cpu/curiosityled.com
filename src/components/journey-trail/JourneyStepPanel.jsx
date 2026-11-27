@@ -2,6 +2,7 @@ import React from "react";
 import { Check, ExternalLink, Loader2, MessageSquare } from "lucide-react";
 import LessonVideoPlayer from "@/components/learning/course/LessonVideoPlayer";
 import InlineDocument from "@/components/journey-trail/InlineDocument";
+import ReadingBody from "@/components/learning/ReadingBody";
 import { getResourceFileUri, getResourceMediaKind } from "@/lib/resourceFile";
 import { getResourceVideoEmbed } from "@/lib/videoEmbed";
 
@@ -19,8 +20,12 @@ export default function JourneyStepPanel({ step, resource, done, busy, onToggle,
     <div className="mt-3 rounded-2xl border border-[var(--pf-soft-border)] bg-[var(--pf-panel)] p-3 sm:p-4">
       {step.kind === "resource" && (
         <div className="space-y-3">
-          {resource?.description && (
-            <p className="text-sm leading-relaxed text-[var(--pf-text)]">{resource.description}</p>
+          {resource?.content ? (
+            <ReadingBody content={resource.content} className="text-[var(--pf-text)]" />
+          ) : (
+            resource?.description && (
+              <p className="text-sm leading-relaxed text-[var(--pf-text)]">{resource.description}</p>
+            )
           )}
 
           {playsVideoFile ? (

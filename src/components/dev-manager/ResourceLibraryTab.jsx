@@ -51,7 +51,7 @@ const DIFFICULTY_COLORS = {
 };
 
 const EMPTY_RESOURCE = {
-  title: "", description: "", type: "course", provider: "", author: "",
+  title: "", description: "", content: "", type: "course", provider: "", author: "",
   url: "", document_url: "", embed_code: "", difficulty_level: "beginner",
   duration_string: "", access: "Free", is_active: true, is_premium: false,
   year: new Date().getFullYear(), tags: [], competencies: [], points_value: "",
@@ -225,6 +225,21 @@ function ResourceFormDialog({ open, onClose, resource, onSaved }) {
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0202ff] resize-none"
                 rows={3} value={form.description} onChange={e => set("description", e.target.value)}
                 placeholder="Brief description of the learning resource"
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="text-sm font-medium text-gray-700 mb-1 block">
+                Reading body{" "}
+                <span className="text-xs font-normal text-gray-400">
+                  (the lesson text learners read in place, Markdown supported)
+                </span>
+              </label>
+              <textarea
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0202ff] resize-y"
+                rows={8}
+                value={form.content || ""}
+                onChange={e => set("content", e.target.value)}
+                placeholder="Write the lesson here. Leave blank when the material is a file or an external link."
               />
             </div>
             <div className="col-span-2">

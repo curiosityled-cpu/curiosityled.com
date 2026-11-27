@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import ResourceFileViewer from "@/components/learning/ResourceFileViewer";
 import InlineDocument from "@/components/journey-trail/InlineDocument";
+import ReadingBody from "@/components/learning/ReadingBody";
 import LessonVideoPlayer from "@/components/learning/course/LessonVideoPlayer";
 import { getResourceFileUri, getResourceMediaKind } from "@/lib/resourceFile";
 import { getResourceVideoEmbed } from "@/lib/videoEmbed";
@@ -111,9 +112,13 @@ export default function LessonViewer({ lesson, complete, onComplete, onAdvance }
 
         {!state.loading && lesson.content_type === "resource" && (
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              {state.resource?.description || "Open this resource to work through the material."}
-            </p>
+            {state.resource?.content ? (
+              <ReadingBody content={state.resource.content} />
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {state.resource?.description || "Open this resource to work through the material."}
+              </p>
+            )}
             <p className="text-xs text-muted-foreground">
               {[state.resource?.provider, state.resource?.type, state.resource?.duration_string]
                 .filter(Boolean)

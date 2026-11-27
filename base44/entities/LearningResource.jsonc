@@ -10,6 +10,10 @@
       "type": "string",
       "description": "Brief description of the resource"
     },
+    "content": {
+      "type": "string",
+      "description": "The lesson's own text in Markdown, shown as a readable page inside the learner's path. When set, this is what the learner reads instead of being sent to a file or an external link."
+    },
     "type": {
       "type": "string",
       "enum": [
