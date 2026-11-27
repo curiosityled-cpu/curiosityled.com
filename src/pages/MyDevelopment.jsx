@@ -216,7 +216,7 @@ export default function MyDevelopment() {
         </div>
 
         {/* Practice and tools */}
-        <div className="mt-8">
+        <div className="mt-8 scroll-mt-24" id="practice">
           <DevSection
             title="Practice"
             subtitle="Short, structured sessions you can run in a few minutes."

@@ -243,6 +243,7 @@ const AuthenticatedApp = () => {
       <Route path="/my-development" element={<MVPLayout><MyDevelopment /></MVPLayout>} />
       <Route path="/journey/:journeyId" element={<MVPLayout><JourneyDetail /></MVPLayout>} />
       <Route path="/course/:courseId" element={<MVPLayout><CoursePlayer /></MVPLayout>} />
+      <Route path="/course/:courseId/:lessonId" element={<MVPLayout><CoursePlayer /></MVPLayout>} />
       <Route path="/signal/:id" element={<MVPPage><SignalPlayer /></MVPPage>} />
       <Route path="/experience-overview" element={<MVPLayout><ExperienceOverview /></MVPLayout>} />
       <Route path="/report-builder-mvp" element={<MVPPage><ReportBuilderMVP /></MVPPage>} />

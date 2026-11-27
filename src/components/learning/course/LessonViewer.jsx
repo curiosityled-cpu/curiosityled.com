@@ -6,6 +6,7 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useAtreusChat } from "@/components/ai/AtreusContext";
 import ResourceFileViewer from "@/components/learning/ResourceFileViewer";
+import InlineDocument from "@/components/journey-trail/InlineDocument";
 import LessonVideoPlayer from "@/components/learning/course/LessonVideoPlayer";
 import { getResourceFileUri, getResourceMediaKind } from "@/lib/resourceFile";
 import { getResourceVideoEmbed } from "@/lib/videoEmbed";
@@ -130,6 +131,19 @@ export default function LessonViewer({ lesson, complete, onComplete, onAdvance }
                   if (!complete) onComplete?.(lesson);
                 }}
               />
+            ) : state.resource && getResourceMediaKind(state.resource) === "document" ? (
+              <div className="space-y-3">
+                <InlineDocument resource={state.resource} />
+                {lesson.allow_download === true && (
+                  <ResourceFileViewer
+                    resource={state.resource}
+                    allowDownload
+                    onEnded={() => {
+                      if (!complete) onComplete?.(lesson);
+                    }}
+                  />
+                )}
+              </div>
             ) : (
               state.resource && (
                 <ResourceFileViewer
