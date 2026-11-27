@@ -27,7 +27,6 @@ import RadarLabelSample from './pages/RadarLabelSample';
 import DiagnosticAnalytics from './pages/DiagnosticAnalytics';
 import MyLeadership from './pages/MyLeadership';
 import MyDevelopment from './pages/MyDevelopment';
-import LearningRedesignPreview from './pages/LearningRedesignPreview';
 import JourneyDetail from './pages/JourneyDetail';
 import CoursePlayer from './pages/CoursePlayer';
 import SignalPlayer from './pages/SignalPlayer';
@@ -242,7 +241,6 @@ const AuthenticatedApp = () => {
       <Route path="/AssessmentAnalyticsDashboard" element={<Navigate to="/DevelopmentManager?tab=signals" replace />} />
       <Route path="/CustomAssessmentBuilder" element={<Navigate to="/DevelopmentManager?tab=signals" replace />} />
       <Route path="/my-development" element={<MVPLayout><MyDevelopment /></MVPLayout>} />
-      <Route path="/learning-redesign" element={<LearningRedesignPreview />} />
       <Route path="/journey/:journeyId" element={<MVPLayout><JourneyDetail /></MVPLayout>} />
       <Route path="/course/:courseId" element={<MVPLayout><CoursePlayer /></MVPLayout>} />
       <Route path="/signal/:id" element={<MVPPage><SignalPlayer /></MVPPage>} />
