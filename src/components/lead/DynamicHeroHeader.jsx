@@ -127,7 +127,7 @@ export default function DynamicHeroHeader({ firstName, greeting, day, hour, toda
   }, []);
 
   return (
-    <div className="relative rounded-2xl overflow-hidden mb-5 shadow-lg" style={{ minHeight: "180px" }}>
+    <div className="relative mb-6 overflow-hidden rounded-3xl shadow-sm" style={{ minHeight: "200px" }}>
       {/* Background image with breathing animation */}
       <div className="absolute inset-0" style={{ animation: "hero-breathe 20s ease-in-out infinite" }}>
         <img src={bgImage} alt="" className="w-full h-full object-cover" />
@@ -161,7 +161,7 @@ export default function DynamicHeroHeader({ firstName, greeting, day, hour, toda
       )}
 
       {/* Content */}
-      <div className="relative z-10 px-6 py-5 flex flex-col justify-end" style={{ minHeight: "180px" }}>
+      <div className="relative z-10 flex flex-col justify-end px-6 py-6" style={{ minHeight: "200px" }}>
         <p className="text-[10px] font-semibold text-white/70 uppercase tracking-widest mb-1">{day}</p>
         <h1 className="text-2xl font-bold text-white tracking-tight" style={{ fontSize: "clamp(1.5rem, 2.5vw, 2.25rem)" }}>
           {greeting}, {firstName}.

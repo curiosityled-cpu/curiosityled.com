@@ -44,6 +44,7 @@ import TopPatternsMoveCard from "@/components/lead/TopPatternsMoveCard";
 import { useManagerPreferences } from "@/hooks/useManagerPreferences";
 import ZoneCard from "@/components/density/ZoneCard";
 import DynamicHeroHeader from "@/components/lead/DynamicHeroHeader";
+import LeadSection from "@/components/lead/LeadSection";
 
 function getFirstName(user) {
   const raw = user?.display_name || user?.data?.display_name || user?.full_name;
@@ -508,7 +509,8 @@ export default function ManagerToday() {
   );
 
   return (
-    <div className="px-4 py-6 max-w-6xl mx-auto">
+    <div className="pf-canvas lead-shell min-h-screen">
+      <div className="px-4 py-6 max-w-6xl mx-auto">
       {/* Tone onboarding banner (if needed) */}
       {needsToneOnboarding && (
         <div className="mb-4 bg-white rounded-2xl border border-[#0202ff]/20 shadow-sm overflow-hidden">
@@ -602,17 +604,12 @@ export default function ManagerToday() {
 
       {/* ── Your team: pulse, roster and talent read ── */}
       {teamRollup?.scope_size > 0 && (
-        <div className="mt-6">
-          <div className="mb-3 px-1">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Your team
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Pulse, roster and talent read across your reporting tree.
-            </p>
-          </div>
+        <LeadSection
+          eyebrow="Your team"
+          description="Pulse, roster and talent read across your reporting tree."
+        >
           <TeamOverviewSection rollup={teamRollup} />
-        </div>
+        </LeadSection>
       )}
 
       {/* Weekly reflection modal */}
@@ -661,6 +658,7 @@ export default function ManagerToday() {
           </>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 }
