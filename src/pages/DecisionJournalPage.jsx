@@ -21,6 +21,7 @@ import DecisionPreMortemPanel from "@/components/intelligence/DecisionPreMortemP
 import DQIStateCard from "@/components/intelligence/DQIStateCard";
 import DecisionAuditDrawer from "@/components/intelligence/DecisionAuditDrawer";
 import PostDecisionReviewDrawer from "@/components/intelligence/PostDecisionReviewDrawer";
+import LeadSection from "@/components/lead/ui/LeadSection";
 
 const CONFIDENCE_LEVELS = [
   { value: 'low', label: "Low — I'm not sure", color: 'bg-rose-50 text-rose-700 border-rose-200' },
@@ -712,7 +713,7 @@ export default function DecisionJournalPage() {
   const pendingCount = decisions.filter(d => d.status !== 'completed').length;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+    <div className="lead-canvas max-w-2xl mx-auto px-4 py-6 space-y-4">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="pt-1">
@@ -721,7 +722,7 @@ export default function DecisionJournalPage() {
         </div>
         <Button
           size="sm"
-          className="bg-[#0202ff] hover:bg-[#0101dd] text-white gap-1.5 mt-2"
+          className="bg-[var(--ld-accent)] hover:bg-[var(--ld-accent-hover)] text-white gap-1.5 mt-2"
           onClick={() => setShowForm(true)}
         >
           <Plus className="w-4 h-4" /> Capture your thinking
@@ -763,9 +764,8 @@ export default function DecisionJournalPage() {
 
       {/* Decision list label */}
       {decisions.length > 0 && !showForm && (
-        <div className="flex items-center gap-2 pt-2">
-          <FileText className="w-4 h-4 text-muted-foreground" />
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Your Thinking Log</h2>
+        <div className="pt-2">
+          <LeadSection label="Your Thinking Log" />
         </div>
       )}
 
@@ -782,7 +782,7 @@ export default function DecisionJournalPage() {
             <p className="text-xs text-muted-foreground max-w-xs mx-auto mb-4 leading-relaxed">
               Capture leadership moments as you face them — context, confidence level, and assumptions. Come back in a few days to review outcomes and spot patterns.
             </p>
-            <Button size="sm" onClick={() => setShowForm(true)} className="bg-[#0202ff] hover:bg-[#0101dd] text-white">
+            <Button size="sm" onClick={() => setShowForm(true)} className="bg-[var(--ld-accent)] hover:bg-[var(--ld-accent-hover)] text-white">
               <Plus className="w-3.5 h-3.5 mr-1.5" /> Capture your first entry
             </Button>
           </CardContent>

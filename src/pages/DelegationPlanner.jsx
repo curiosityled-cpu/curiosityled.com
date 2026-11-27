@@ -384,7 +384,7 @@ export default function DelegationPlanner() {
   });
 
   return (
-    <div className="max-w-3xl mx-auto px-4 pt-6 pb-10">
+    <div className="lead-canvas max-w-3xl mx-auto px-4 pt-6 pb-10">
       {/* Header */}
       <div className="flex items-center justify-between pb-4">
         <div>
@@ -407,7 +407,7 @@ export default function DelegationPlanner() {
       <AnimatePresence mode="wait">
         {showForm ? (
           <motion.div key="form" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <div className="rounded-2xl border border-[var(--ld-border)] bg-[var(--ld-surface)] p-5 shadow-sm">
               <h2 className="text-sm font-semibold mb-4">{editing?.id ? 'Edit plan' : 'New delegation plan'}</h2>
               <PlanForm initial={editing} onSave={handleSave} onCancel={handleCancel} />
             </div>

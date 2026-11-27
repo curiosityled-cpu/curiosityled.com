@@ -15,6 +15,7 @@ import React, { useState, useEffect } from "react";
 import { SlidersHorizontal } from "lucide-react";
 import HeadlineSignal from "@/components/density/HeadlineSignal";
 import WeatherOverlay from "@/components/lead/WeatherOverlay";
+import LeadWeekRow from "@/components/lead/LeadWeekRow";
 
 // 20 images: 4 time periods × 5 weather conditions.
 // Time periods for IMAGES: morning, afternoon, evening, night.
@@ -84,7 +85,7 @@ function Birds({ color }) {
   );
 }
 
-export default function DynamicHeroHeader({ firstName, greeting, day, hour, todayRecord, userEmail, onSettingsClick }) {
+export default function DynamicHeroHeader({ firstName, greeting, day, hour, todayRecord, userEmail, onSettingsClick, weekDays = [], streak = 0 }) {
   const [weather, setWeather] = useState(null);
 
   // Greeting time-of-day (morning / afternoon / evening) — unchanged by night
@@ -166,7 +167,10 @@ export default function DynamicHeroHeader({ firstName, greeting, day, hour, toda
         <h1 className="text-2xl font-bold text-white tracking-tight" style={{ fontSize: "clamp(1.5rem, 2.5vw, 2.25rem)" }}>
           {greeting}, {firstName}.
         </h1>
-        <div className="mt-2">
+        <div className="mt-3">
+          <LeadWeekRow days={weekDays} streak={streak} />
+        </div>
+        <div className="mt-2.5">
           <HeadlineSignal todayRecord={todayRecord} hasCheckedIn={!!todayRecord} userEmail={userEmail} hour={hour} />
         </div>
       </div>

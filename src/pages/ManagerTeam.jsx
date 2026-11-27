@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import TeamHeroHeader from "@/components/team/TeamHeroHeader";
+import LeadSection from "@/components/lead/ui/LeadSection";
 
 function ActionTile({ icon: Icon, iconBg, iconColor, title, description, to }) {
   const content = (
@@ -80,10 +81,11 @@ export default function ManagerTeam() {
     : "No reports in your tree yet.";
 
   return (
-    <div className="px-4 py-6 max-w-6xl mx-auto">
+    <div className="lead-canvas min-h-screen">
+      <div className="mx-auto max-w-6xl px-4 py-6">
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 text-[#0202ff] animate-spin" />
+          <Loader2 className="w-6 h-6 text-[var(--ld-accent)] animate-spin" />
         </div>
       ) : !rollup || scopeSize === 0 ? (
         <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl">
@@ -127,8 +129,8 @@ export default function ManagerTeam() {
 
           {/* Scope note for directs-only */}
           {isDirectsOnly && detailSize < scopeSize && (
-            <div className="flex items-start gap-2 px-4 py-2.5 mb-4 bg-[#0202ff]/5 border border-[#0202ff]/15 rounded-xl">
-              <Info className="w-3.5 h-3.5 text-[#0202ff] mt-0.5 flex-shrink-0" />
+            <div className="flex items-start gap-2 px-4 py-2.5 mb-4 bg-[var(--ld-accent-soft)] border border-[var(--ld-border)] rounded-xl">
+              <Info className="w-3.5 h-3.5 text-[var(--ld-accent)] mt-0.5 flex-shrink-0" />
               <p className="text-xs text-gray-600">
                 Aggregates span your full reporting tree of {scopeSize} people. Individual results show your {detailSize} direct {detailSize === 1 ? "report" : "reports"}.
               </p>
@@ -144,7 +146,7 @@ export default function ManagerTeam() {
                 <Card className="shadow-sm border border-gray-100 bg-white rounded-2xl">
                   <div className="px-5 py-4 border-b border-border">
                     <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-[#0202ff]" />
+                      <Users className="w-4 h-4 text-[var(--ld-accent)]" />
                       <p className="text-sm font-semibold text-card-foreground">
                         Frontline staff ({rollup.frontline_members.length})
                       </p>
@@ -187,15 +189,11 @@ export default function ManagerTeam() {
             <div className="space-y-4 md:sticky md:top-20 md:self-start">
               {/* Team Tools */}
               <div className="space-y-3">
-                <div className="px-1 pt-1">
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Team Tools
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Jump to a structured tool to prepare, plan, or review with your team.
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                <LeadSection
+                  label="Team Tools"
+                  description="Jump to a structured tool to prepare, plan, or review with your team."
+                />
+                <div className="rounded-2xl border border-[var(--ld-border)] bg-[var(--ld-surface)] shadow-sm overflow-hidden">
                   <div className="divide-y divide-border">
                     <ActionTile
                       icon={Users}
@@ -228,6 +226,7 @@ export default function ManagerTeam() {
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }

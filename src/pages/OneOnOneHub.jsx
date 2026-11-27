@@ -13,6 +13,7 @@ import AttendeeSelector from "@/components/oneonone/AttendeeSelector";
 import PrepSection from "@/components/oneonone/PrepSection";
 import ScheduleSection from "@/components/oneonone/ScheduleSection";
 import PracticeRolePlay from "@/components/oneonone/PracticeRolePlay";
+import LeadSection from "@/components/lead/ui/LeadSection";
 
 // ── Helpers ──
 function formatMeetingDate(dateStr, startTime) {
@@ -373,7 +374,8 @@ export default function OneOnOneHub() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 pt-6 pb-10">
+    <div className="lead-canvas min-h-screen">
+      <div className="mx-auto max-w-5xl px-4 pt-6 pb-10">
       {/* Header */}
       <div className="pb-4 flex items-start justify-between gap-3">
         <div>
@@ -437,15 +439,13 @@ export default function OneOnOneHub() {
       <div className="mt-8 space-y-8">
         {/* Upcoming 1:1s */}
         <section className="space-y-3">
-          <div className="flex items-end justify-between px-1">
-            <div>
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Upcoming</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Synced from your calendar. Tap to prepare.</p>
-            </div>
-            {!loadingCalendar && !calendarConnected && (
+          <LeadSection
+            label="Upcoming"
+            description="Synced from your calendar. Tap to prepare."
+            action={!loadingCalendar && !calendarConnected ? (
               <Badge variant="outline" className="text-[10px]">Calendar not connected</Badge>
-            )}
-          </div>
+            ) : null}
+          />
           {loadingCalendar ? (
             <div className="space-y-2">
               {[1, 2].map(i => <div key={i} className="h-20 rounded-2xl bg-muted animate-pulse" />)}
@@ -486,10 +486,10 @@ export default function OneOnOneHub() {
         {/* Pending Debriefs */}
         {pendingDebriefs.length > 0 && (
           <section className="space-y-3">
-            <div className="px-1">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Pending Debriefs</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Recent meetings that need your notes or follow-up.</p>
-            </div>
+            <LeadSection
+              label="Pending Debriefs"
+              description="Recent meetings that need your notes or follow-up."
+            />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {pendingDebriefs.map((record) => (
                 <DebriefCard key={record.id} record={record} onOpen={handleOpenDebrief} />
@@ -501,9 +501,7 @@ export default function OneOnOneHub() {
         {/* Recent History */}
         {pastRecords.length > 0 && (
           <section className="space-y-3">
-            <div className="px-1">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Recent History</p>
-            </div>
+            <LeadSection label="Recent History" tone="green" />
             <div className="space-y-2">
               {pastRecords.map((record) => (
                 <PastCard key={record.id} record={record} onOpen={handleOpenDebrief} />
@@ -522,6 +520,7 @@ export default function OneOnOneHub() {
             </p>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

@@ -46,6 +46,7 @@ import ZoneCard from "@/components/density/ZoneCard";
 import DynamicHeroHeader from "@/components/lead/DynamicHeroHeader";
 import LeadCard from "@/components/lead/ui/LeadCard";
 import LeadSection from "@/components/lead/ui/LeadSection";
+import { buildLeadWeek } from "@/lib/leadWeek";
 
 function getFirstName(user) {
   const raw = user?.display_name || user?.data?.display_name || user?.full_name;
@@ -395,6 +396,12 @@ export default function ManagerToday() {
   const allDone = todayRecord?.morning_completed && todayRecord?.evening_completed;
   const hasHistoricalData = checkInHistory.length >= 1;
 
+  // This week's check-ins, for the strip under the hero greeting
+  const { days: weekDays, streak: checkInStreak } = useMemo(
+    () => buildLeadWeek(todayRecord ? [todayRecord, ...checkInHistory] : checkInHistory, todayET),
+    [checkInHistory, todayRecord, todayET]
+  );
+
   // ── Headline derivations ──
   const etHour = hour;
   const greeting = etHour < 12 ? 'Good morning' : etHour < 17 ? 'Good afternoon' : 'Good evening';
@@ -543,6 +550,8 @@ export default function ManagerToday() {
         hour={hour}
         todayRecord={todayRecord}
         userEmail={user?.email}
+        weekDays={weekDays}
+        streak={checkInStreak}
         onSettingsClick={() => setShowSettings(s => !s)}
       />
 

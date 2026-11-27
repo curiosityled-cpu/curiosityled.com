@@ -825,10 +825,22 @@ h4.text-xs {
   --ld-green: #4cae7a;
   --ld-purple: #9c4de6;
   --ld-dash: #e7dccd;
+  position: relative;
+  isolation: isolate;
+  background-color: var(--ld-bg);
+  color: var(--ld-text);
+}
+
+/* The ground fills the whole window, not just the centred column, so a narrow
+   page reads as the same paper as the wide ones. */
+.lead-canvas::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
   background-color: var(--ld-bg);
   background-image: radial-gradient(circle, var(--ld-dash) 1px, transparent 1px);
   background-size: 22px 22px;
-  color: var(--ld-text);
 }
 
 .dark .lead-canvas {
