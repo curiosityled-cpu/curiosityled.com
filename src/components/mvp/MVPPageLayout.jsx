@@ -9,7 +9,7 @@ export default function MVPPageLayout({ title, subtitle, action, children }) {
   const { collapsed } = useSidebar();
 
   return (
-    <div className="min-h-screen bg-gray-50 transition-all duration-200">
+    <div className="min-h-screen transition-all duration-200">
       <div className="w-full min-w-0 overflow-x-hidden px-4 sm:px-6 py-4 sm:py-6 space-y-4 transition-all duration-200">
         {/* Page header */}
         {(title || action) && (
