@@ -42,9 +42,9 @@ export default function StreakRing({ days = 0 }) {
           style={{ filter: "drop-shadow(0 0 4px rgba(255,180,80,0.5))" }}
         />
       </div>
-      <div className="leading-tight">
-        <p className="text-base font-bold text-white">{days}</p>
-        <p className="text-[9px] font-medium uppercase tracking-wider text-white/65">
+      <div className="text-right leading-tight">
+        <p className="text-[20px] font-extrabold leading-none text-white">{days}</p>
+        <p className="mt-1 text-[9px] font-medium uppercase tracking-[0.1em] text-white/60">
           day streak
         </p>
       </div>
