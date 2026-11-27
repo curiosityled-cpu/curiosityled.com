@@ -624,17 +624,6 @@ h4.text-xs {
   background-color: rgba(0, 0, 0, 0.78);
 }
 
-/* ── Lead page shell ────────────────────────────────────────────────────────
-   One surface treatment for every card on the Lead page: the same radius and
-   the same hairline as the rest of the canvas, so a stack of cards reads as one
-   page rather than a collection of panels. Card internals are untouched.
-─────────────────────────────────────────────────────────────────────────── */
-.lead-shell :is(.bg-card, .bg-white).rounded-2xl {
-  border-radius: 1.25rem;
-  border-color: var(--pf-soft-border);
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
-}
-
 /* ── Hero header animations ─────────────────────────────────────────────── */
 @keyframes hero-breathe {
   0%, 100% { transform: scale(1); }
