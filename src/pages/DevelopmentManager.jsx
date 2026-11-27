@@ -227,7 +227,7 @@ export default function DevelopmentManager() {
       {/* ── CONTENT (the authoring home: library, courses, conversational) ── */}
       {section === 'content' && (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <AdminLearningManagementTab user={user} />
+          <AdminLearningManagementTab user={user} onOpenExperiences={() => setSection('experiences')} />
         </motion.div>
       )}
 
