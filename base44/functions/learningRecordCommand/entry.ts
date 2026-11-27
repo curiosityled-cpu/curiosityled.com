@@ -265,6 +265,7 @@ export default async function (req) {
             unlock_offset_days: lesson.unlock_offset_days ?? null,
             allow_seeking: lesson.allow_seeking !== false,
             allow_speed_adjust: lesson.allow_speed_adjust !== false,
+            allow_download: lesson.allow_download === true,
             captions_url: lesson.captions_url || null,
           })),
         })),

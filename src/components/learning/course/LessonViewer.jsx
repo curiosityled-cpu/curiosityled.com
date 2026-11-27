@@ -134,6 +134,7 @@ export default function LessonViewer({ lesson, complete, onComplete, onAdvance }
               state.resource && (
                 <ResourceFileViewer
                   resource={state.resource}
+                  allowDownload={lesson.allow_download === true}
                   onEnded={() => {
                     if (!complete) onComplete?.(lesson);
                   }}

@@ -118,6 +118,11 @@
                   "default": true,
                   "description": "Whether the learner may change playback speed on this video lesson. When false the video stays at normal speed."
                 },
+                "allow_download": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "Whether the learner may download the file attached to this resource lesson. Off by default: the file stays view-only inside the course unless the course author turns it on for this lesson."
+                },
                 "captions_url": {
                   "type": "string",
                   "description": "Closed-caption file for this video lesson (WebVTT): a private storage URI or a plain https URL. When set, learners get a CC toggle."

@@ -2,14 +2,17 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Play, FileText, Loader2 } from "lucide-react";
+import { Play, FileText, Loader2, Lock } from "lucide-react";
 import { getResourceFileUri, getResourceMediaKind, resolveResourceFileUrl } from "@/lib/resourceFile";
 
 /**
  * Learner-facing access to a resource's attached file: plays videos inline
  * and opens documents in a new tab. Private files are fetched through a signed URL.
+ *
+ * Documents only open when the lesson's author allowed downloads for it — the
+ * opened file can be saved, so access is the course author's decision.
  */
-export default function ResourceFileViewer({ resource, onEnded }) {
+export default function ResourceFileViewer({ resource, onEnded, allowDownload = false }) {
   const [open, setOpen] = useState(false);
   const [url, setUrl] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -17,8 +20,26 @@ export default function ResourceFileViewer({ resource, onEnded }) {
 
   const hasFile = !!getResourceFileUri(resource);
   const kind = getResourceMediaKind(resource);
+  const blocked = kind === "document" && !allowDownload;
 
   if (!hasFile || !kind) return null;
+
+  if (blocked) {
+    return (
+      <div className="mb-4 p-3 rounded-lg border border-border bg-muted/40 space-y-2">
+        <div className="flex items-center gap-2">
+          <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+          <span className="text-xs text-muted-foreground truncate flex-1">
+            {resource.uploaded_file_name || "Attached file"}
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          This file is view-only in this course and cannot be downloaded. Ask your program team if
+          you need a copy.
+        </p>
+      </div>
+    );
+  }
 
   const handleOpen = async () => {
     setLoading(true);

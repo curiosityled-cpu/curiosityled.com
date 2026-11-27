@@ -82,7 +82,7 @@ const CourseBuilder = forwardRef(({ editingCourse, clientId, onClose }, ref) => 
 
   // ── Lesson helpers ──
   const addLesson = (modId) => {
-    const newLesson = { id: genId("les"), content_type: null, reference_id: null, reference_title: null, gate: false };
+    const newLesson = { id: genId("les"), content_type: null, reference_id: null, reference_title: null, gate: false, allow_download: false };
     update({
       modules: (course.modules || []).map(m =>
         m.id === modId ? { ...m, lessons: [...m.lessons, newLesson] } : m

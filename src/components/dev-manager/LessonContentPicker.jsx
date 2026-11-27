@@ -63,6 +63,7 @@ export default function LessonContentPicker({ lesson, pacing, onChange }) {
 
   const playsUploadedVideo =
     getResourceMediaKind(videoResource) === "video" && !!getResourceFileUri(videoResource);
+  const hasUploadedFile = !!getResourceFileUri(videoResource);
 
   const handleCaptionsUpload = async (event) => {
     const file = event.target.files?.[0];
@@ -193,6 +194,30 @@ export default function LessonContentPicker({ lesson, pacing, onChange }) {
               Gate next lesson until this is complete
             </Label>
           </div>
+
+          {hasUploadedFile && (
+            <div className="space-y-2 rounded-xl border border-gray-100 bg-gray-50 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                File access
+              </p>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="lesson-allow-download"
+                  checked={lesson.allow_download === true}
+                  onCheckedChange={(checked) =>
+                    onChange({ ...lesson, allow_download: !!checked })
+                  }
+                />
+                <Label htmlFor="lesson-allow-download" className="text-sm cursor-pointer">
+                  Allow learners to download this file
+                </Label>
+              </div>
+              <p className="text-xs text-gray-400">
+                Off by default. Learners can work with the file inside the lesson but cannot save a
+                copy of it.
+              </p>
+            </div>
+          )}
 
           {playsUploadedVideo && (
             <div className="space-y-3 rounded-xl border border-gray-100 bg-gray-50 p-3">
