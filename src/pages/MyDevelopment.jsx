@@ -151,6 +151,12 @@ export default function MyDevelopment() {
           activeLearning={activeLearning.length}
           sessionsThisWeek={weekCount}
           onSettingsClick={() => setShowSettings((s) => !s)}
+          firstName={
+            user?.first_name ||
+            user?.full_name?.split(" ")[0] ||
+            user?.display_name?.split(" ")[0] ||
+            ""
+          }
         />
 
         {/* Next action + momentum */}

@@ -62,6 +62,7 @@ export default function DevHomeHeader({
   activeLearning = 0,
   sessionsThisWeek = 0,
   onSettingsClick,
+  firstName,
 }) {
   const today = new Date()
     .toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
@@ -97,7 +98,7 @@ export default function DevHomeHeader({
         <div className="mt-1.5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
           <div className="min-w-0">
             <h1 className="max-w-[620px] text-[26px] font-extrabold leading-[1.05] tracking-[-0.02em] text-white sm:text-[34px]">
-              Keep growing, one moment at a time.
+              {firstName ? `Ready to grow, ${firstName}?` : "Ready to grow?"}
             </h1>
             <p className="mt-2 max-w-[520px] text-[13px] leading-[1.55] text-white/70">
               Your journeys, courses and experiences in one place — with the next useful step already picked out.
