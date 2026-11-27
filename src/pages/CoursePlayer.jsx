@@ -138,6 +138,18 @@ export default function CoursePlayer() {
   };
 
   const position = computed.lessons.findIndex((lesson) => lesson.id === currentId) + 1;
+
+  // The course carries one authored duration; spread it across the lessons still to do.
+  const minutesLeft =
+    course?.estimated_duration_minutes && computed.total > 0
+      ? Math.max(
+          1,
+          Math.round(
+            (course.estimated_duration_minutes * (computed.total - computed.completedCount)) /
+              computed.total
+          )
+        )
+      : null;
   const currentLesson = computed.lessons.find((lesson) => lesson.id === currentId) || null;
 
   const goRelative = (offset) => {
@@ -270,6 +282,7 @@ export default function CoursePlayer() {
                 position={position}
                 total={computed.total}
                 percent={computed.percent}
+                minutesLeft={minutesLeft}
                 onPrev={() => goRelative(-1)}
                 onNext={() => goRelative(1)}
               />

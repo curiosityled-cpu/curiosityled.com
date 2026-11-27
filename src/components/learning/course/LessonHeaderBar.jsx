@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /** The lesson shell: where the learner is, and the two moves that matter. */
-export default function LessonHeaderBar({ position, total, percent, onPrev, onNext }) {
+export default function LessonHeaderBar({ position, total, percent, minutesLeft, onPrev, onNext }) {
   const atStart = position <= 1;
   const atEnd = position >= total;
 
@@ -25,7 +25,9 @@ export default function LessonHeaderBar({ position, total, percent, onPrev, onNe
             <p className="truncate text-xs font-semibold text-foreground">
               Lesson {position || "—"} of {total}
             </p>
-            <p className="text-[11px] font-medium tabular-nums text-muted-foreground">{percent}%</p>
+            <p className="text-[11px] font-medium tabular-nums text-muted-foreground">
+              {minutesLeft ? `~${minutesLeft} min left` : `${percent}%`}
+            </p>
           </div>
           <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
             <div

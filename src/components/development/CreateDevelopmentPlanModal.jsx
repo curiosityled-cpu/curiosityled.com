@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import ExperienceSelector from "@/components/journey/ExperienceSelector";
+import PathSequenceEditor from "@/components/journey/PathSequenceEditor";
 import ThumbnailPicker from "@/components/dev-manager/ThumbnailPicker";
 
 const COMPETENCIES = [
@@ -47,6 +48,7 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
     target_date: plan?.target_date || "",
     experiences: plan?.experiences?.length ? plan.experiences : [],
     learning_items: plan?.learning_items?.length ? plan.learning_items : [],
+    step_order: plan?.step_order || [],
   }));
 
   const [saving, setSaving] = useState(false);
@@ -83,6 +85,7 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
       target_date: plan?.target_date || "",
       experiences: plan?.experiences?.length ? plan.experiences : [],
       learning_items: plan?.learning_items?.length ? plan.learning_items : [],
+      step_order: plan?.step_order || [],
     });
     setExpandedExp(null);
     setSearchQuery("");
@@ -562,6 +565,13 @@ export default function CreateDevelopmentPlanModal({ open, onClose, onSaved, use
               </div>
             </DragDropContext>
           </div>
+
+          <PathSequenceEditor
+            learningItems={form.learning_items}
+            experiences={form.experiences}
+            value={form.step_order || []}
+            onChange={(step_order) => setForm((f) => ({ ...f, step_order }))}
+          />
 
           {saveError && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs">

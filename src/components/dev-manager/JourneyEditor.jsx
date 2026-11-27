@@ -228,6 +228,7 @@ Keep it practical and specific to the title.`,
         experiences: form.experiences,
         learning_items: form.learning_items,
         signal_items: form.signal_items,
+        step_order: form.step_order || undefined,
         assigned_to_emails: form.assigned_to_emails,
         assigned_to_cohort_ids: form.assigned_to_cohort_ids || [],
       };

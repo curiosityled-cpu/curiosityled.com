@@ -235,6 +235,13 @@
       },
       "description": "Signals (assessments, quizzes, surveys, pulses, feedback) included in this journey"
     },
+    "step_order": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The sequence the author arranged the journey's steps in, across every kind of step. Each entry is a step key: 'resource:<learning resource id>', 'experience:<position in the experiences list>' or 'signal:<signal id>'. When present the learner's trail follows this order exactly, so a video, an assessment and a workshop can alternate. When absent the trail falls back to experiences, then learning resources, then signals."
+    },
     "target_competencies": {
       "type": "array",
       "items": {
