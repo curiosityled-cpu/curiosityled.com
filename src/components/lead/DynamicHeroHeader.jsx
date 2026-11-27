@@ -129,14 +129,14 @@ export default function DynamicHeroHeader({ firstName, greeting, day, hour, toda
   }, []);
 
   return (
-    <div className="relative rounded-2xl overflow-hidden mb-5 shadow-lg" style={{ minHeight: "210px" }}>
+    <div className="relative rounded-2xl overflow-hidden mb-5 shadow-lg" style={{ minHeight: "180px" }}>
       {/* Background image with breathing animation */}
-      <div className="absolute inset-0" style={{ animation: "practice-breathe 22s ease-in-out infinite" }}>
+      <div className="absolute inset-0" style={{ animation: "hero-breathe 20s ease-in-out infinite" }}>
         <img src={bgImage} alt="" className="w-full h-full object-cover" />
       </div>
 
       {/* Gradient overlay for text readability */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/45 to-black/20" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
 
       {/* Weather overlay */}
       {weather && <WeatherOverlay condition={weather.condition} windSpeed={weather.windSpeed} />}
@@ -155,31 +155,29 @@ export default function DynamicHeroHeader({ firstName, greeting, day, hour, toda
       {onSettingsClick && (
         <button
           onClick={onSettingsClick}
-          className="absolute right-3 top-3 z-20 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/15 px-3 py-1.5 text-xs font-medium text-white/85 backdrop-blur-sm transition-colors hover:bg-white/25 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
+          className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/15 backdrop-blur-sm text-white/80 hover:text-white hover:bg-white/25 transition-colors text-xs font-medium"
         >
-          <SlidersHorizontal className="h-3.5 w-3.5" />
-          Settings
+          <SlidersHorizontal className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Settings</span>
         </button>
       )}
 
       {/* Content */}
-      <div className="relative z-10 flex min-h-[210px] flex-col justify-end px-6 py-5">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/70">
-          {day}
-        </p>
-
-        <div className="mt-1.5 min-w-0">
-          <h1 className="max-w-[620px] text-[26px] font-extrabold leading-[1.05] tracking-[-0.02em] text-white sm:text-[34px]">
-            {greeting}, {firstName}.
-          </h1>
-          <div className="mt-3">
-            <LeadWeekRow days={weekDays} />
+      <div className="relative z-10 px-6 py-5 flex flex-col justify-end" style={{ minHeight: "180px" }}>
+        <div className="flex items-end justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold text-white/70 uppercase tracking-widest mb-1">{day}</p>
+            <h1 className="text-2xl font-bold text-white tracking-tight" style={{ fontSize: "clamp(1.5rem, 2.5vw, 2.25rem)" }}>
+              {greeting}, {firstName}.
+            </h1>
+            <div className="mt-3">
+              <LeadWeekRow days={weekDays} streak={streak} />
+            </div>
           </div>
-          <div className="mt-3">
+          <div className="hidden flex-shrink-0 pb-1 sm:block">
             <StreakRing days={streak} />
           </div>
         </div>
-
         <div className="mt-2.5">
           <HeadlineSignal todayRecord={todayRecord} hasCheckedIn={!!todayRecord} userEmail={userEmail} hour={hour} />
         </div>
