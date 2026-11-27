@@ -805,3 +805,43 @@ h4.text-xs {
   --pf-dash: #35474f;
   --pf-accent: #6fb4cd;
 }
+
+/* ── Lead canvas ────────────────────────────────────────────────────────────
+   The Lead area's own palette, taken from the design standard: a warm paper
+   ground with a faint dot grid, white cards with soft shadows, and a warm
+   orange that carries the active state instead of the brand blue. Inverted
+   under .dark so the area has a real dark mode rather than a lit sheet.
+─────────────────────────────────────────────────────────────────────────── */
+.lead-canvas {
+  --ld-bg: #fbf7f2;
+  --ld-surface: #ffffff;
+  --ld-panel: #f9f6f3;
+  --ld-text: #1a1a1a;
+  --ld-muted: #6e665d;
+  --ld-border: #ede6dc;
+  --ld-accent: #e6843c;
+  --ld-accent-hover: #d2762f;
+  --ld-accent-soft: #fdf1e5;
+  --ld-green: #4cae7a;
+  --ld-purple: #9c4de6;
+  --ld-dash: #e7dccd;
+  background-color: var(--ld-bg);
+  background-image: radial-gradient(circle, var(--ld-dash) 1px, transparent 1px);
+  background-size: 22px 22px;
+  color: var(--ld-text);
+}
+
+.dark .lead-canvas {
+  --ld-bg: #14100c;
+  --ld-surface: #1d1813;
+  --ld-panel: #221c16;
+  --ld-text: #f6efe6;
+  --ld-muted: #a99c8d;
+  --ld-border: #2e2620;
+  --ld-accent: #f0914b;
+  --ld-accent-hover: #ffa25c;
+  --ld-accent-soft: #2a1f14;
+  --ld-green: #5fc08c;
+  --ld-purple: #b47bf0;
+  --ld-dash: #2a231c;
+}

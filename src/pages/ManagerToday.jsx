@@ -44,6 +44,8 @@ import TopPatternsMoveCard from "@/components/lead/TopPatternsMoveCard";
 import { useManagerPreferences } from "@/hooks/useManagerPreferences";
 import ZoneCard from "@/components/density/ZoneCard";
 import DynamicHeroHeader from "@/components/lead/DynamicHeroHeader";
+import LeadCard from "@/components/lead/ui/LeadCard";
+import LeadSection from "@/components/lead/ui/LeadSection";
 
 function getFirstName(user) {
   const raw = user?.display_name || user?.data?.display_name || user?.full_name;
@@ -495,7 +497,7 @@ export default function ManagerToday() {
           className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors group"
         >
           <div className="flex items-center gap-3">
-            <Sparkles className="w-4 h-4 text-[#0202ff] flex-shrink-0" />
+            <Sparkles className="w-4 h-4 text-[var(--ld-accent)] flex-shrink-0" />
             <div className="text-left">
               <p className="text-sm font-semibold text-slate-900">Weekly reflections</p>
               <p className="text-[10px] text-slate-500">Charts, AI narrative, risks, recognition & next steps</p>
@@ -508,12 +510,13 @@ export default function ManagerToday() {
   );
 
   return (
-    <div className="px-4 py-6 max-w-6xl mx-auto">
+    <div className="lead-canvas min-h-screen">
+      <div className="mx-auto max-w-6xl px-4 py-6">
       {/* Tone onboarding banner (if needed) */}
       {needsToneOnboarding && (
         <div className="mb-4 bg-white rounded-2xl border border-[#0202ff]/20 shadow-sm overflow-hidden">
           <div className="px-4 pt-4 pb-2 flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-[#0202ff] flex items-center justify-center flex-shrink-0">
+            <div className="w-6 h-6 rounded-lg bg-[var(--ld-accent)] flex items-center justify-center flex-shrink-0">
               <MessageSquare className="w-3 h-3 text-white" />
             </div>
             <p className="text-xs font-semibold text-slate-900">How should Atreus talk to you?</p>
@@ -550,8 +553,8 @@ export default function ManagerToday() {
           <ZoneCard
             title="Patterns"
             icon={TrendingUp}
-            iconColor="text-[#0202ff]"
-            accentColor="#0202ff"
+            iconColor="text-[var(--ld-accent)]"
+            accentColor="#e6843c"
             collapsible
             defaultExpanded
           >
@@ -590,8 +593,8 @@ export default function ManagerToday() {
           <ZoneCard
             title="Reflect"
             icon={Lightbulb}
-            iconColor="text-violet-500"
-            accentColor="#8b5cf6"
+            iconColor="text-[var(--ld-purple)]"
+            accentColor="#9c4de6"
             collapsible
             defaultExpanded
           >
@@ -603,15 +606,14 @@ export default function ManagerToday() {
       {/* ── Your team: pulse, roster and talent read ── */}
       {teamRollup?.scope_size > 0 && (
         <div className="mt-6">
-          <div className="mb-3 px-1">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Your team
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Pulse, roster and talent read across your reporting tree.
-            </p>
-          </div>
-          <TeamOverviewSection rollup={teamRollup} />
+          <LeadSection
+            label="Your team"
+            description="Pulse, roster and talent read across your reporting tree."
+          >
+            <LeadCard padded={false} className="overflow-hidden">
+              <TeamOverviewSection rollup={teamRollup} />
+            </LeadCard>
+          </LeadSection>
         </div>
       )}
 
@@ -661,6 +663,7 @@ export default function ManagerToday() {
           </>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 }
