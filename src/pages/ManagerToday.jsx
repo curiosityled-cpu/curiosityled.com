@@ -44,7 +44,6 @@ import TopPatternsMoveCard from "@/components/lead/TopPatternsMoveCard";
 import { useManagerPreferences } from "@/hooks/useManagerPreferences";
 import ZoneCard from "@/components/density/ZoneCard";
 import DynamicHeroHeader from "@/components/lead/DynamicHeroHeader";
-import LeadCard from "@/components/lead/ui/LeadCard";
 import LeadSection from "@/components/lead/ui/LeadSection";
 import { buildLeadWeek } from "@/lib/leadWeek";
 
@@ -619,9 +618,7 @@ export default function ManagerToday() {
             label="Your team"
             description="Pulse, roster and talent read across your reporting tree."
           >
-            <LeadCard padded={false} className="overflow-hidden">
-              <TeamOverviewSection rollup={teamRollup} />
-            </LeadCard>
+            <TeamOverviewSection rollup={teamRollup} />
           </LeadSection>
         </div>
       )}
