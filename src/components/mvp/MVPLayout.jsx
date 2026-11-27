@@ -365,7 +365,7 @@ function MVPLayoutInner({ children }) {
 
   return (
     <SidebarContext.Provider value={{ collapsed }}>
-    <div className={`${isDark ? 'cl-dark' : ''} min-h-screen flex bg-background`}>
+    <div className={`${isDark ? 'cl-dark' : ''} lead-canvas min-h-screen flex bg-background`}>
       {/* Desktop Sidebar */}
       <aside
         className={`hidden sm:flex flex-col ${sidebarWidth} fixed inset-y-0 left-0 z-20 transition-all duration-200`}

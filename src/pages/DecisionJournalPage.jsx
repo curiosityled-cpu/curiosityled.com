@@ -713,7 +713,7 @@ export default function DecisionJournalPage() {
   const pendingCount = decisions.filter(d => d.status !== 'completed').length;
 
   return (
-    <div className="lead-canvas max-w-2xl mx-auto px-4 py-6 space-y-4">
+    <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="pt-1">

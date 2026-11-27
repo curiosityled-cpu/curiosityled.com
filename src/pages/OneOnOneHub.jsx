@@ -374,7 +374,7 @@ export default function OneOnOneHub() {
   };
 
   return (
-    <div className="lead-canvas min-h-screen">
+    <div className="min-h-screen">
       <div className="mx-auto max-w-5xl px-4 pt-6 pb-10">
       {/* Header */}
       <div className="pb-4 flex items-start justify-between gap-3">
